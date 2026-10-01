@@ -22,23 +22,29 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats) {
   const stats = { ...levelStats };
   const damageBonus = {};
   const specials = {}; // thorns, lifesteal, skillDamage, critDamage (all in %)
-  const apply = (e) => {
+  // `factor` shrinks an effect for extra copies of an item that has `falloffRatio`.
+  const apply = (e, factor = 1) => {
     if (e.special) {
-      specials[e.special] = (specials[e.special] || 0) + e.percent;
+      specials[e.special] = (specials[e.special] || 0) + e.percent * factor;
     } else if (e.damageBonus) {
-      damageBonus[e.damageBonus] = (damageBonus[e.damageBonus] || 0) + e.percent;
+      damageBonus[e.damageBonus] = (damageBonus[e.damageBonus] || 0) + e.percent * factor;
     } else if (e.percent !== undefined) {
-      stats[e.stat] += (levelStats[e.stat] * e.percent) / 100;
+      stats[e.stat] += ((levelStats[e.stat] * e.percent) / 100) * factor;
     } else {
-      stats[e.stat] += e.flat;
+      stats[e.stat] += e.flat * factor;
     }
   };
   for (const holder of heroes) {
     if (!holder.alive) continue;
+    const copies = {}; // how many copies of each item we have already counted for this hero
     for (const id of holder.items) {
+      const index = copies[id] || 0;
+      copies[id] = index + 1;
       const item = itemDefs[id];
       if (item.scope !== 'squad' && holder !== hero) continue;
-      item.effects.forEach(apply);
+      // Each extra copy of an item with a falloffRatio adds a bit less than the one before:
+      // the nth copy gives (effect x ratio^(n-1)).
+      for (const e of item.effects) apply(e, e.falloffRatio ? Math.pow(e.falloffRatio, index) : 1);
     }
   }
   // Temporary buffs from skills.

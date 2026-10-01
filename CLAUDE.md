@@ -52,6 +52,7 @@ All numbers below go in JSON/config so they are easy to tune.
 - `src/main.js`  Phaser game config
 - `src/config.js`  size/colour constants
 - `src/scenes/`  one file per scene
+- `src/entities/`  reusable game objects (e.g. Character built from parts)
 - `src/data/`  JSON game data
 - `public/`  static assets
 - `docs/`  design docs

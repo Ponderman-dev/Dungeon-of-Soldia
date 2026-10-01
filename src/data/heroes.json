@@ -1,0 +1,26 @@
+[
+  {
+    "id": "knight",
+    "name": "Knight",
+    "damageType": "melee",
+    "stats": {
+      "health": 120,
+      "mana": 30,
+      "attack": 12,
+      "defense": 10,
+      "resist": 5,
+      "evasion": 3,
+      "crit": 5,
+      "attackEfficiency": 100
+    },
+    "parts": {
+      "body":   { "w": 14, "h": 16, "x": 0,  "y": -8,  "color": "0x3b6fd4",
+                  "idle": { "dy": -1, "duration": 500 } },
+      "head":   { "w": 10, "h": 10, "x": 0,  "y": -21, "color": "0xf2c9a0",
+                  "idle": { "dy": -1.5, "duration": 500, "delay": 120 } },
+      "weapon": { "w": 3,  "h": 18, "x": 9,  "y": -6,  "color": "0xc8ccd6",
+                  "pivotY": 1,
+                  "idle": { "angle": 8, "duration": 700 } }
+    }
+  }
+]

@@ -5,7 +5,8 @@
       { "floor": 1, "enemies": ["slime", "goblin"] },
       { "floor": 2, "enemies": ["slime", "slime", "bat"] },
       { "floor": 3, "enemies": ["goblin", "bat", "bat"] },
-      { "floor": 4, "enemies": ["goblin", "goblin", "slime", "bat"] }
+      { "floor": 4, "enemies": ["goblin", "goblin", "slime"] },
+      { "floor": 21, "enemies": ["goblin", "goblin", "slime", "bat"] }
     ]
   }
 }

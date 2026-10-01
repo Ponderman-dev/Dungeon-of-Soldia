@@ -32,6 +32,7 @@ Engine: Phaser 3 + plain JS, wrapped for Android with Capacitor later. Fully vib
 ## Run structure
 - Endless until the squad dies, then restart from floor 1.
 - About 30 seconds per floor.
+- Between floors: the door at the top of the screen opens, the heroes walk through it, the camera slides up to the new floor, and the heroes enter from the bottom of the screen to their positions.
 - Boss every 10 floors.
 - Floor 100 is the super boss of Dungeon A. Floor 101 would start a new dungeon.
 - v1 ships with Dungeon A only. Clearing it is a win and more dungeons come later.

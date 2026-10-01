@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, CHAR_SCALE } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE } from '../config.js';
 import heroDefs from '../data/heroes.json';
 import enemyDefs from '../data/enemies.json';
 import dungeons from '../data/dungeons.json';
@@ -15,9 +15,17 @@ const SLOT_Y = 720;
 const SLOT_WIDTH = GAME_WIDTH / 4;
 const ENEMY_Y = 340;
 const BAR_WIDTH = 44;
+const WALL_H = 200; // the back wall (with the door) fills the top of each floor
+const DOOR_X = GAME_WIDTH / 2;
+const T = combatRules.transition;
+
+// Depth order: floor < slots < hero < hero bars < popups < banner/HUD
+const DEPTH = { floor: 0, slot: 1, marker: 2, hero: 5, heroBar: 6, popup: 10, hud: 20 };
 
 // The battle screen: enemies at the top, four heroes at the bottom, everyone auto-attacks.
-// The fight rules live in systems/BattleState.js; this scene only draws what happens.
+// After a win the heroes walk through the door, the floor slides down, and they walk in
+// from the bottom of the screen. The fight rules live in systems/BattleState.js; this scene
+// only draws what happens.
 export default class BattleScene extends Phaser.Scene {
   constructor() {
     super('Battle');
@@ -28,8 +36,8 @@ export default class BattleScene extends Phaser.Scene {
     for (const problem of validateDungeon(this.dungeon, enemyDefs)) console.error('Dungeon data:', problem);
 
     this.floor = 1;
-    this.mode = 'fighting'; // 'fighting' | 'won' | 'lost'
-    this.views = new Map(); // unit uid -> { unit, ch, bg, fill, groundY }
+    this.mode = 'entering'; // 'entering' | 'fighting' | 'won' | 'lost'
+    this.views = new Map(); // unit uid -> { unit, ch, bg, fill, groundY, ... }
     this.state = new BattleState({
       heroDefs: heroDefs.slice(0, 4),
       enemyDefs,
@@ -39,29 +47,42 @@ export default class BattleScene extends Phaser.Scene {
     });
 
     this.drawHeroSlots();
-    this.floorText = this.add.text(GAME_WIDTH / 2, 24, '', { fontFamily: 'monospace', fontSize: '16px', color: '#9a8fc0' }).setOrigin(0.5);
-    this.banner = this.add
-      .text(GAME_WIDTH / 2, 520, '', { fontFamily: 'monospace', fontSize: '24px', color: '#ffffff', stroke: '#000000', strokeThickness: 4 })
+    this.floorText = this.add
+      .text(GAME_WIDTH / 2, 24, '', { fontFamily: 'monospace', fontSize: '16px', color: '#9a8fc0' })
       .setOrigin(0.5)
-      .setDepth(20);
-    this.focusMarker = this.add.ellipse(0, 0, 70, 18).setStrokeStyle(2, 0xff4d4d).setVisible(false);
+      .setDepth(DEPTH.hud);
+    this.banner = this.add
+      .text(GAME_WIDTH / 2, 520, '', { fontFamily: 'monospace', fontSize: '24px', color: '#ffffff', stroke: '#000000', strokeThickness: 4, align: 'center' })
+      .setOrigin(0.5)
+      .setDepth(DEPTH.hud);
+    this.focusMarker = this.add.ellipse(0, 0, 70, 18).setStrokeStyle(2, 0xff4d4d).setVisible(false).setDepth(DEPTH.marker);
 
-    this.startFloor(1);
+    this.layer = this.buildFloor(1, 0);
+    this.floorText.setText('Floor 1');
+    this.enterHeroes(() => (this.mode = 'fighting'));
   }
 
   drawHeroSlots() {
     this.state.heroes.forEach((unit, i) => {
       const cx = SLOT_WIDTH * i + SLOT_WIDTH / 2;
-      this.add.rectangle(cx, SLOT_Y - 40, SLOT_WIDTH - 12, 110, 0x1d1730).setStrokeStyle(1, 0x3a3057);
-      const label = this.add.text(cx, SLOT_Y + 28, '', { fontFamily: 'monospace', fontSize: '12px', color: '#9a8fc0' }).setOrigin(0.5);
+      this.add.rectangle(cx, SLOT_Y - 40, SLOT_WIDTH - 12, 110, 0x1d1730, 0.85).setStrokeStyle(1, 0x3a3057).setDepth(DEPTH.slot);
+      const label = this.add
+        .text(cx, SLOT_Y + 28, '', { fontFamily: 'monospace', fontSize: '12px', color: '#9a8fc0' })
+        .setOrigin(0.5)
+        .setDepth(DEPTH.slot);
       const view = this.makeView(unit, cx, SLOT_Y);
       view.label = label;
+      view.slotX = cx;
+      view.ch.setDepth(DEPTH.hero);
+      view.bg.setDepth(DEPTH.heroBar);
+      view.fill.setDepth(DEPTH.heroBar);
       this.setLabel(view);
     });
   }
 
   // Draws one fighter: the character, plus a health bar above it.
-  makeView(unit, x, groundY) {
+  // Enemies are added to `parent` (their floor) so they slide with it.
+  makeView(unit, x, groundY, parent = null) {
     const hover = unit.flying ? unit.def.hover || 0 : 0;
     const ch = new Character(this, x, groundY - hover, unit.def);
     const barY = groundY - hover - unit.def.height * CHAR_SCALE - 10;
@@ -78,24 +99,142 @@ export default class BattleScene extends Phaser.Scene {
       ch.setInteractive(new Phaser.Geom.Rectangle(-16, -h - 2, 32, h + 4), Phaser.Geom.Rectangle.Contains);
       ch.on('pointerdown', () => this.state.setFocus(unit.uid));
     }
+    if (parent) parent.add([ch, bg, fill]);
     return view;
   }
 
-  startFloor(n) {
-    this.floor = n;
-    const floors = this.dungeon.floors;
-    // Use the last defined floor once we run past the end of the list.
-    const entry = [...floors].reverse().find((f) => f.floor <= n) || floors[0];
-    const enemies = this.state.spawnEnemies(entry.enemies, n);
+  // Builds one floor: back wall, door, tiled ground and the enemies. yOffset places it off-screen.
+  buildFloor(n, yOffset) {
+    const container = this.add.container(0, yOffset).setDepth(DEPTH.floor);
+    const colors = this.dungeon.tileColors;
+    const base = Number(colors[(n - 1) % colors.length]);
+    const line = Phaser.Display.Color.ValueToColor(base).brighten(10).color;
+    const wall = Phaser.Display.Color.ValueToColor(base).darken(25).color;
 
+    const g = this.add.graphics();
+    g.fillStyle(base, 1).fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    g.fillStyle(wall, 1).fillRect(0, 0, GAME_WIDTH, WALL_H);
+    g.lineStyle(1, line, 0.6);
+    // Brick rows: every other row is shifted sideways.
+    const rows = [[WALL_H, GAME_HEIGHT, 44, 78], [0, WALL_H, 25, 50]];
+    for (const [top, bottom, rowH, brickW] of rows) {
+      let row = 0;
+      for (let y = top; y <= bottom; y += rowH, row++) {
+        g.lineBetween(0, y, GAME_WIDTH, y);
+        for (let x = (row % 2) * (brickW / 2); x < GAME_WIDTH; x += brickW) g.lineBetween(x, y, x, Math.min(y + rowH, bottom));
+      }
+    }
+    container.add(g);
+
+    // The door in the back wall (purple frame, dark inside; glows when open).
+    const frameColor = 0x7a3fb8;
+    const dark = 0x120b1f;
+    const parts = [
+      this.add.rectangle(DOOR_X, WALL_H - 28, 52, 56, frameColor),
+      this.add.ellipse(DOOR_X, WALL_H - 56, 52, 36, frameColor),
+    ];
+    const inner = [
+      this.add.rectangle(DOOR_X, WALL_H - 26, 36, 52, dark),
+      this.add.ellipse(DOOR_X, WALL_H - 52, 36, 28, dark),
+    ];
+    container.add([...parts, ...inner]);
+
+    const entry = [...this.dungeon.floors].reverse().find((f) => f.floor <= n) || this.dungeon.floors[0];
+    const enemies = this.state.spawnEnemies(entry.enemies, n);
     enemies.forEach((unit, i) => {
       const x = (GAME_WIDTH * (i + 1)) / (enemies.length + 1);
-      this.makeView(unit, x, ENEMY_Y);
+      this.makeView(unit, x, ENEMY_Y, container);
     });
 
-    this.floorText.setText(`Floor ${n}`);
-    this.banner.setText('');
-    this.mode = 'fighting';
+    return {
+      container,
+      setDoorOpen: (open) => inner.forEach((p) => p.setFillStyle(open ? 0xffd98a : dark)),
+    };
+  }
+
+  // Keeps a fighter's health bar attached to it while it moves.
+  syncBar(view) {
+    const y = view.ch.y - view.unit.def.height * view.ch.scaleX - 10;
+    view.bg.setPosition(view.ch.x, y).setAlpha(view.ch.alpha);
+    view.fill.setPosition(view.ch.x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
+  }
+
+  livingHeroViews() {
+    return this.state.heroes.filter((h) => h.alive).map((h) => this.views.get(h.uid));
+  }
+
+  // Heroes walk up from below the screen to their slots, then call done.
+  enterHeroes(done) {
+    const living = this.livingHeroViews();
+    let left = living.length;
+    if (!left) return done();
+    living.forEach((v, i) => {
+      v.ch.setScale(CHAR_SCALE).setAlpha(1).setVisible(true).setPosition(v.slotX, GAME_HEIGHT + 90);
+      v.bg.setVisible(true);
+      v.fill.setVisible(true);
+      this.syncBar(v);
+      this.tweens.add({
+        targets: v.ch,
+        y: SLOT_Y,
+        delay: i * T.walkStaggerMs,
+        duration: T.enterMs,
+        ease: 'Sine.easeOut',
+        onUpdate: () => this.syncBar(v),
+        onComplete: () => {
+          v.ch.homeX = v.slotX;
+          v.ch.homeY = SLOT_Y;
+          this.syncBar(v);
+          if (--left === 0) done();
+        },
+      });
+    });
+  }
+
+  // Heroes walk up to the door and disappear into it, then call done.
+  heroesWalkToDoor(done) {
+    const living = this.livingHeroViews();
+    let left = living.length;
+    if (!left) return done();
+    living.forEach((v, i) => {
+      this.tweens.add({
+        targets: v.ch,
+        x: DOOR_X + (i - (living.length - 1) / 2) * 8,
+        y: WALL_H + 6,
+        scaleX: CHAR_SCALE * 0.5,
+        scaleY: CHAR_SCALE * 0.5,
+        alpha: 0,
+        delay: i * T.walkStaggerMs,
+        duration: T.walkToDoorMs,
+        ease: 'Sine.easeIn',
+        onUpdate: () => this.syncBar(v),
+        onComplete: () => {
+          v.ch.setVisible(false);
+          v.bg.setVisible(false);
+          v.fill.setVisible(false);
+          if (--left === 0) done();
+        },
+      });
+    });
+  }
+
+  // The camera slides up: the old floor drops away and the new floor comes in from above.
+  slideToNextFloor(done) {
+    const old = this.layer;
+    this.floor += 1;
+    const next = this.buildFloor(this.floor, -GAME_HEIGHT);
+    this.tweens.add({ targets: old.container, y: GAME_HEIGHT, duration: T.slideMs, ease: 'Sine.easeInOut' });
+    this.tweens.add({
+      targets: next.container,
+      y: 0,
+      duration: T.slideMs,
+      ease: 'Sine.easeInOut',
+      onComplete: () => {
+        old.container.destroy();
+        this.layer = next;
+        this.floorText.setText(`Floor ${this.floor}`);
+        done();
+      },
+    });
   }
 
   update(time, delta) {
@@ -130,7 +269,7 @@ export default class BattleScene extends Phaser.Scene {
       this.setBar(t);
       const { amount, crit, mult } = e.result;
       const mark = mult > 1 ? '!' : mult < 1 ? '…' : '';
-      const color = e.attacker.side === 'hero' ? this.damageTypes()[e.attacker.damageType].color : '#ff6b6b';
+      const color = e.attacker.side === 'hero' ? damageTypes[e.attacker.damageType].color : '#ff6b6b';
       this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : color, crit);
     } else if (e.type === 'levelup') {
       const v = this.views.get(e.unit.uid);
@@ -148,10 +287,6 @@ export default class BattleScene extends Phaser.Scene {
         v.fill.setAlpha(0.4);
       }
     }
-  }
-
-  damageTypes() {
-    return damageTypes;
   }
 
   setLabel(view) {
@@ -184,20 +319,25 @@ export default class BattleScene extends Phaser.Scene {
         strokeThickness: 3,
       })
       .setOrigin(0.5)
-      .setDepth(10);
+      .setDepth(DEPTH.popup);
     this.tweens.add({ targets: t, y: y - 30, alpha: 0, duration: 800, onComplete: () => t.destroy() });
   }
 
   onWin() {
     this.mode = 'won';
+    this.focusMarker.setVisible(false);
     this.banner.setText(`Floor ${this.floor} cleared!`);
-    this.time.delayedCall(combatRules.nextFloorDelayMs, () => {
-      for (const { unit, amount } of this.state.healHeroes(combatRules.winHealPercent)) {
-        const v = this.views.get(unit.uid);
-        this.setBar(v);
-        if (amount > 0) this.popText(v, `+${amount}`, '#6dff8f');
-      }
-      this.startFloor(this.floor + 1);
+    this.layer.setDoorOpen(true);
+
+    for (const { unit, amount } of this.state.healHeroes(combatRules.winHealPercent)) {
+      const v = this.views.get(unit.uid);
+      this.setBar(v);
+      if (amount > 0) this.popText(v, `+${amount}`, '#6dff8f');
+    }
+
+    this.time.delayedCall(T.clearPauseMs, () => {
+      this.banner.setText('');
+      this.heroesWalkToDoor(() => this.slideToNextFloor(() => this.enterHeroes(() => (this.mode = 'fighting'))));
     });
   }
 

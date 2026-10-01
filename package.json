@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview --host"
+    "preview": "vite preview --host",
+    "build:page": "vite build && node scripts/make-page.mjs dist-page.html"
   },
   "dependencies": {
     "phaser": "^4.2.1",

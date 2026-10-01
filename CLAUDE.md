@@ -46,6 +46,13 @@ All numbers below go in JSON/config so they are easy to tune.
 - `npm install`  install dependencies
 - `npm run dev`  start dev server (http://localhost:5173)
 - `npm run build`  production build into `dist/`
+- `npm run build:page`  build + pack into ONE file `dist-page.html` (for the claude.ai preview page)
+
+## Preview page
+The user previews the game on a claude.ai page (not by running it locally).
+After each working step: `npm run build:page`, copy `dist-page.html` to the scratchpad as
+`dungeon-of-soldia.html`, and republish it with the Artifact tool to the SAME url
+(https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr). Ignore the "download link" warning; it is a false alarm from Phaser's code.
 
 ## Layout
 - `index.html`  page shell
@@ -57,3 +64,4 @@ All numbers below go in JSON/config so they are easy to tune.
 - `src/data/`  JSON game data
 - `public/`  static assets
 - `docs/`  design docs
+- `scripts/`  helper scripts (make-page.mjs)

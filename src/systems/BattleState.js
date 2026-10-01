@@ -69,10 +69,9 @@ export default class BattleState {
 
   pickTarget(unit) {
     if (unit.side === 'hero') {
-      // Melee heroes can't hit flying enemies.
-      const valid = this.enemies.filter((e) => e.alive && !(unit.damageType === 'melee' && e.flying));
-      const focus = valid.find((e) => e.uid === this.focusUid);
-      return focus || valid[0] || null;
+      const alive = this.enemies.filter((e) => e.alive);
+      const focus = alive.find((e) => e.uid === this.focusUid);
+      return focus || alive[0] || null;
     }
     const alive = this.heroes.filter((h) => h.alive);
     return alive.length ? alive[Math.floor(this.rng() * alive.length)] : null;

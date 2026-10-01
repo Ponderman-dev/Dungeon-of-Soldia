@@ -7,6 +7,11 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng) {
   const evasion = Math.min(defender.stats.evasion, cap.evasion);
   if (rng() * 100 < evasion) return { dodged: true, crit: false, amount: 0, mult: 1 };
 
+  // Melee swings often miss flying enemies.
+  if (attacker.damageType === 'melee' && defender.flying && rng() * 100 < rules.meleeVsFlyingMissPercent) {
+    return { dodged: true, crit: false, amount: 0, mult: 1 };
+  }
+
   const crit = rng() * 100 < attacker.stats.crit;
   let amount = attacker.stats.attack * (crit ? rules.critMultiplier : 1);
 

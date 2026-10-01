@@ -3,9 +3,17 @@
   "critMultiplier": 2,
   "weakMultiplier": 1.5,
   "resistMultiplier": 0.5,
-  "caps": { "defense": 75, "resist": 75, "evasion": 60 },
+  "caps": {
+    "defense": 75,
+    "resist": 75,
+    "evasion": 60
+  },
   "winHealPercent": 25,
-  "floorScaling": { "hpPerFloor": 0.1, "attackPerFloor": 0.06 },
+  "floorScaling": {
+    "hpPerFloor": 0.1,
+    "attackPerFloor": 0.06
+  },
   "nextFloorDelayMs": 1800,
-  "restartDelayMs": 3000
+  "restartDelayMs": 3000,
+  "meleeVsFlyingMissPercent": 40
 }

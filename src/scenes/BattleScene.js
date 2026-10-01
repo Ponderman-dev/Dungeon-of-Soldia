@@ -501,6 +501,8 @@ export default class BattleScene extends Phaser.Scene {
         this.popText(v, statusInfo[e.status.type].label + '!', statusInfo[e.status.type].color);
       }
       if (e.status.type === 'buff') this.drawAllBars();
+    } else if (e.type === 'proc') {
+      this.popText(this.views.get(e.unit.uid), e.label, '#ffd24d', true);
     } else if (e.type === 'heal') {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);

@@ -143,7 +143,10 @@ export default class RewardScene extends Phaser.Scene {
     const lines = [];
     const seen = new Set();
     for (const e of item.effects) {
-      if (e.special) {
+      if (e.proc) {
+        const copies = countOf(hero, item.id);
+        lines.push({ text: `${e.label.replace('!', '').toUpperCase()} ${copies * e.chance}>${(copies + 1) * e.chance}%`, up: true });
+      } else if (e.special) {
         const before = hero.specials[e.special] || 0;
         const now = after.specials[e.special] || 0;
         const round = (v) => Math.round(v * 10) / 10;

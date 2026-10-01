@@ -7,7 +7,7 @@ import { computeHeroStats } from './items.js';
 //
 // Health regeneration (specials.regen) happens silently inside update(); the scene just redraws bars.
 // Events: attack, death, levelup, cast, status (apply / expire), dot (poison tick),
-//         heal (lifesteal), thorns (reflected damage)
+//         heal (lifesteal), thorns (reflected damage), proc (an item's chance effect went off)
 export default class BattleState {
   constructor({ heroDefs, enemyDefs, itemDefs = {}, skillDefs = {}, rules, damageTypes, leveling, rng = Math.random }) {
     this.rules = rules;
@@ -51,6 +51,7 @@ export default class BattleState {
       statuses: [],
       damageBonus: {},
       specials: {},
+      procs: [],
       alive: true,
       damageType: def.damageType,
       flying: !!def.flying,
@@ -147,9 +148,24 @@ export default class BattleState {
       if (!result.dodged) target.hp = Math.max(0, target.hp - result.amount);
       events.push({ type: 'attack', attacker: unit, target, result });
       if (!result.dodged) this.afterHit(unit, target, result.amount, events);
+      this.rollProcs(unit, 'onAttack', events);
       if (target.hp <= 0 && target.alive) this.killUnit(target, events);
     }
     return events;
+  }
+
+  // Items with a chance effect (e.g. War Banner): each copy rolls separately every time the
+  // trigger happens. A proc can give a status to the holder or to the whole squad.
+  rollProcs(hero, trigger, events) {
+    if (hero.side !== 'hero' || !hero.alive) return;
+    for (const proc of [...hero.procs]) {
+      if (proc.proc !== trigger || this.rng() * 100 >= proc.chance) continue;
+      const targets = proc.targets === 'squad' ? this.heroes.filter((h) => h.alive) : [hero];
+      events.push({ type: 'proc', unit: hero, label: proc.label });
+      for (const spec of proc.apply || []) {
+        for (const target of targets) this.applyStatus(target, spec, hero, `proc_${proc.itemId}`, events);
+      }
+    }
   }
 
   // Item specials that trigger when a hit lands: lifesteal heals the attacker, thorns reflects
@@ -308,12 +324,13 @@ export default class BattleState {
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
       const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
-      const { stats, damageBonus, specials } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats);
+      const { stats, damageBonus, specials, procs } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats);
       const hpDelta = stats.health - hero.maxHp;
       const manaDelta = stats.mana - hero.maxMana;
       hero.stats = stats;
       hero.damageBonus = damageBonus;
       hero.specials = specials;
+      hero.procs = procs;
       hero.maxHp = stats.health;
       hero.hp = Math.max(1, hpDelta > 0 ? hero.hp + hpDelta : Math.min(hero.hp, hero.maxHp));
       hero.maxMana = stats.mana;

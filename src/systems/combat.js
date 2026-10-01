@@ -20,6 +20,10 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
   const evasion = Math.min(defender.stats.evasion, rules.caps.evasion);
   if (rng() * 100 < evasion) return { dodged: true, crit: false, amount: 0, mult: 1 };
 
+  // Block (Shield Totem): a hit is stopped completely.
+  const block = (defender.specials && defender.specials.block) || 0;
+  if (rng() * 100 < block) return { dodged: true, blocked: true, crit: false, amount: 0, mult: 1 };
+
   // Melee swings often miss flying enemies.
   if (type === 'melee' && defender.flying && rng() * 100 < rules.meleeVsFlyingMissPercent) {
     return { dodged: true, crit: false, amount: 0, mult: 1 };

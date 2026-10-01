@@ -12,7 +12,7 @@ const MUTE = '#9a8fb8';
 const FONT = 'system-ui, Arial, sans-serif';
 const CARD_W = 358;
 const CARD_H = 112;
-const SPECIAL_LABEL = { regen: 'REGEN/s', thorns: 'THORNS', lifesteal: 'LIFESTEAL', skillDamage: 'SKILL DMG', critDamage: 'CRIT DMG' };
+const SPECIAL_LABEL = { block: 'BLOCK', regen: 'REGEN/s', thorns: 'THORNS', lifesteal: 'LIFESTEAL', skillDamage: 'SKILL DMG', critDamage: 'CRIT DMG' };
 const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD', mana: 'MANA' };
 
 // The reward screen: pick 1 of 3 items, then choose which hero gets it.

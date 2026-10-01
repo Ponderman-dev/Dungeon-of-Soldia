@@ -478,7 +478,8 @@ export default class BattleScene extends Phaser.Scene {
       const t = this.views.get(e.target.uid);
       a.ch.lunge(t.ch.homeX, t.ch.homeY);
       if (e.result.dodged) {
-        this.popText(t, 'Miss', '#aaaaaa');
+        if (e.result.blocked) this.popText(t, 'Blocked!', '#9fc4ff', true);
+        else this.popText(t, 'Miss', '#aaaaaa');
         return;
       }
       t.ch.flash();

@@ -11,7 +11,7 @@
       "melee"
     ],
     "stats": {
-      "health": 182,
+      "health": 164,
       "attack": 4,
       "defense": 3,
       "attackEfficiency": 80
@@ -49,7 +49,7 @@
     "weak": [],
     "resists": [],
     "stats": {
-      "health": 238,
+      "health": 214,
       "attack": 6,
       "defense": 4,
       "attackEfficiency": 100
@@ -103,7 +103,7 @@
     ],
     "resists": [],
     "stats": {
-      "health": 105,
+      "health": 94,
       "attack": 4,
       "defense": 0,
       "evasion": 20,

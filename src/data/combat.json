@@ -30,7 +30,7 @@
   "enemyAttackSpeedMultiplier": 0.65,
   "bigFightEase": {
     "minEnemies": 4,
-    "fromFloor": 21,
+    "fromFloor": 32,
     "startScale": 0.87,
     "rampFloors": 8
   }

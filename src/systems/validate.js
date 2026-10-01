@@ -2,7 +2,7 @@
 export function validateDungeon(dungeon, enemyDefs) {
   const problems = [];
   for (const f of dungeon.floors) {
-    for (const id of f.enemies) {
+    for (const id of [...f.enemies, ...(f.otherwise || [])]) {
       if (!enemyDefs[id]) problems.push(`Floor ${f.floor}: unknown enemy "${id}"`);
     }
   }

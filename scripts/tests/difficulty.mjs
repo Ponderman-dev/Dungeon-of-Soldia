@@ -4,6 +4,7 @@ import fs from 'fs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems, canReceive } from '../../src/systems/items.js';
 import { rollChoices } from '../../src/systems/rewards.js';
+import { enemiesForFloor } from '../../src/systems/dungeon.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const heroDefs = r('heroes.json'), enemyDefs = r('enemies.json'), damageTypes = r('damageTypes.json'), leveling = r('leveling.json'), dungeon = r('dungeons.json').A;
 const itemDefs = loadItems(r('items.json')), skillDefs = r('skills.json'), rarities = r('rarities.json'), rw = r('rewards.json');
@@ -18,8 +19,7 @@ for (let run = 0; run < N; run++) {
   const s = new BattleState({ heroDefs, enemyDefs, itemDefs, skillDefs, rules, damageTypes, leveling });
   let floor = 1;
   while (floor <= MAX) {
-    const entry = [...dungeon.floors].reverse().find((f) => f.floor <= floor);
-    s.spawnEnemies(entry.enemies, floor);
+    s.spawnEnemies(enemiesForFloor(dungeon, floor), floor);
     reached[floor]++;
     const before = s.heroes.filter((h) => h.alive).reduce((a, h) => a + h.hp / h.maxHp, 0) / Math.max(1, s.heroes.filter((h) => h.alive).length);
     let t = 0;

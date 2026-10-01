@@ -15,6 +15,7 @@ import statusInfo from '../data/statuses.json';
 import Character from '../entities/Character.js';
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon } from '../systems/validate.js';
+import { enemiesForFloor } from '../systems/dungeon.js';
 import { loadItems } from '../systems/items.js';
 import { rollChoices } from '../systems/rewards.js';
 
@@ -246,8 +247,7 @@ export default class BattleScene extends Phaser.Scene {
     container.add(parts);
     front.add(inner);
 
-    const entry = [...this.dungeon.floors].reverse().find((f) => f.floor <= n) || this.dungeon.floors[0];
-    const enemies = this.state.spawnEnemies(entry.enemies, n);
+    const enemies = this.state.spawnEnemies(enemiesForFloor(this.dungeon, n), n);
     enemies.forEach((unit, i) => {
       const x = (GAME_WIDTH * (i + 1)) / (enemies.length + 1);
       this.makeView(unit, x, ENEMY_Y, container);

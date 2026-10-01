@@ -19,7 +19,9 @@ export default class BattleState {
     if (side === 'enemy') {
       const s = this.rules.floorScaling;
       stats.health = Math.round(stats.health * (1 + s.hpPerFloor * (floor - 1)));
-      stats.attack = Math.round(stats.attack * (1 + s.attackPerFloor * (floor - 1)));
+      // Attack grows in steps: +attackPerStep every attackStepFloors floors.
+      const steps = Math.floor((floor - 1) / s.attackStepFloors);
+      stats.attack = Math.round(stats.attack * (1 + s.attackPerStep * steps));
     }
     const unit = {
       uid: this.nextUid++,

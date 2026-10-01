@@ -11,7 +11,8 @@
   "winHealPercent": 25,
   "floorScaling": {
     "hpPerFloor": 0.05,
-    "attackPerFloor": 0.06
+    "attackPerStep": 0.06,
+    "attackStepFloors": 3
   },
   "nextFloorDelayMs": 1800,
   "restartDelayMs": 3000,

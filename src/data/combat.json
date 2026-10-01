@@ -10,10 +10,10 @@
   },
   "winHealPercent": 25,
   "floorScaling": {
-    "hpPerStep": 0.4,
-    "hpStepFloors": 4,
-    "attackPerStep": 0.45,
-    "attackStepFloors": 3
+    "hpPerStep": 0.12,
+    "hpStepFloors": 1,
+    "attackPerStep": 0.18,
+    "attackStepFloors": 1
   },
   "restartDelayMs": 3000,
   "meleeVsFlyingMissPercent": 40,
@@ -26,5 +26,12 @@
     "slideMs": 1000
   },
   "manaRegenPerSec": 2,
-  "winManaPercent": 20
+  "winManaPercent": 20,
+  "enemyAttackSpeedMultiplier": 0.65,
+  "bigFightEase": {
+    "minEnemies": 4,
+    "fromFloor": 21,
+    "startScale": 0.87,
+    "rampFloors": 8
+  }
 }

@@ -21,7 +21,7 @@ keep replies short, republish the preview page once per batch or when asked, not
 ## Tests and tuning (in the repo)
 - `npm test` runs `scripts/tests/*.test.mjs` (rules of skills, statuses, items, rewards, each reworked item).
 - `npm run sim` = average death floor for a bot that casts every ready skill and gets random rewards (about floor 18-19).
-  `node scripts/tests/sim.mjs noskills` is the baseline (about floor 10; the user tuned enemy growth for that). Enemy growth lives in `combat.json` `floorScaling`.
+  `node scripts/tests/sim.mjs noskills` is the baseline (about floor 10; the user tuned enemy growth for that). Enemy growth lives in `combat.json` `floorScaling` (now per-floor, see CLAUDE.md "Difficulty curve"); `node scripts/tests/difficulty.mjs` prints a per-floor report.
 - `node scripts/tests/tune-enemies.mjs <hpPerStep list> <attackPerStep list>` searches enemy growth numbers.
 - Browser checks were done with `playwright-core` (not in the project; `npm i playwright-core` in a scratch folder), Chromium at
   `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`, with `page.clock.install()` + `clock.runFor()` to fast-forward time.

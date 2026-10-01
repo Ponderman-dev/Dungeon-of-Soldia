@@ -23,7 +23,7 @@ export default class BattleState {
     this.enemies = [];
   }
 
-  makeUnit(def, side, floor) {
+  makeUnit(def, side, floor, fightSize = 1) {
     const stats = { defense: 0, resist: 0, evasion: 0, crit: 0, attackEfficiency: 100, mana: 0, ...def.stats };
     if (side === 'enemy') {
       const s = this.rules.floorScaling;
@@ -32,6 +32,14 @@ export default class BattleState {
       stats.health = Math.round(stats.health * (1 + s.hpPerStep * hpSteps));
       const atkSteps = Math.floor((floor - 1) / s.attackStepFloors);
       stats.attack = Math.round(stats.attack * (1 + s.attackPerStep * atkSteps));
+      stats.attackEfficiency *= this.rules.enemyAttackSpeedMultiplier ?? 1; // global enemy slowdown
+      // Fights with 4+ enemies start a bit weaker and ramp up, so floor 21 isn't a cliff.
+      const ease = this.rules.bigFightEase;
+      if (ease && fightSize >= ease.minEnemies && floor >= ease.fromFloor) {
+        const scale = ease.startScale + (1 - ease.startScale) * Math.min(1, (floor - ease.fromFloor) / ease.rampFloors);
+        stats.health = Math.round(stats.health * scale);
+        stats.attack = Math.round(stats.attack * scale);
+      }
     }
     const unit = {
       uid: this.nextUid++,
@@ -77,7 +85,7 @@ export default class BattleState {
 
   spawnEnemies(ids, floor) {
     this.focusUid = null;
-    this.enemies = ids.map((id) => this.makeUnit(this.enemyDefs[id], 'enemy', floor));
+    this.enemies = ids.map((id) => this.makeUnit(this.enemyDefs[id], 'enemy', floor, ids.length));
     return this.enemies;
   }
 

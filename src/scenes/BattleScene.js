@@ -5,6 +5,7 @@ import enemyDefs from '../data/enemies.json';
 import dungeons from '../data/dungeons.json';
 import combatRules from '../data/combat.json';
 import damageTypes from '../data/damageTypes.json';
+import leveling from '../data/leveling.json';
 import Character from '../entities/Character.js';
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon } from '../systems/validate.js';
@@ -34,6 +35,7 @@ export default class BattleScene extends Phaser.Scene {
       enemyDefs,
       rules: combatRules,
       damageTypes,
+      leveling,
     });
 
     this.drawHeroSlots();
@@ -51,8 +53,10 @@ export default class BattleScene extends Phaser.Scene {
     this.state.heroes.forEach((unit, i) => {
       const cx = SLOT_WIDTH * i + SLOT_WIDTH / 2;
       this.add.rectangle(cx, SLOT_Y - 40, SLOT_WIDTH - 12, 110, 0x1d1730).setStrokeStyle(1, 0x3a3057);
-      this.add.text(cx, SLOT_Y + 28, unit.name, { fontFamily: 'monospace', fontSize: '12px', color: '#9a8fc0' }).setOrigin(0.5);
-      this.makeView(unit, cx, SLOT_Y);
+      const label = this.add.text(cx, SLOT_Y + 28, '', { fontFamily: 'monospace', fontSize: '12px', color: '#9a8fc0' }).setOrigin(0.5);
+      const view = this.makeView(unit, cx, SLOT_Y);
+      view.label = label;
+      this.setLabel(view);
     });
   }
 
@@ -128,6 +132,11 @@ export default class BattleScene extends Phaser.Scene {
       const mark = mult > 1 ? '!' : mult < 1 ? '…' : '';
       const color = e.attacker.side === 'hero' ? this.damageTypes()[e.attacker.damageType].color : '#ff6b6b';
       this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : color, crit);
+    } else if (e.type === 'levelup') {
+      const v = this.views.get(e.unit.uid);
+      this.setLabel(v);
+      this.setBar(v);
+      this.popText(v, `Level up! Lv${e.unit.level}`, '#ffd24d', true);
     } else if (e.type === 'death') {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
@@ -143,6 +152,10 @@ export default class BattleScene extends Phaser.Scene {
 
   damageTypes() {
     return damageTypes;
+  }
+
+  setLabel(view) {
+    view.label.setText(`${view.unit.name} Lv${view.unit.level}`);
   }
 
   setBar(view) {

@@ -1,10 +1,12 @@
 import { computeDamage } from './combat.js';
+import { xpForNextLevel, statsAtLevel } from './leveling.js';
 
 // The fight itself: who is alive, who attacks whom and when.
 // No Phaser in here. update() returns a list of events and the scene draws them.
 export default class BattleState {
-  constructor({ heroDefs, enemyDefs, rules, damageTypes, rng = Math.random }) {
+  constructor({ heroDefs, enemyDefs, rules, damageTypes, leveling, rng = Math.random }) {
     this.rules = rules;
+    this.leveling = leveling;
     this.damageTypes = damageTypes;
     this.enemyDefs = enemyDefs;
     this.rng = rng;
@@ -32,6 +34,9 @@ export default class BattleState {
       stats,
       hp: stats.health,
       maxHp: stats.health,
+      baseStats: { ...stats },
+      level: 1,
+      xp: 0,
       alive: true,
       damageType: def.damageType,
       flying: !!def.flying,
@@ -104,9 +109,34 @@ export default class BattleState {
         target.alive = false;
         if (this.focusUid === target.uid) this.focusUid = null;
         events.push({ type: 'death', unit: target });
+        if (target.side === 'enemy') this.awardXp(target, events);
       }
     }
     return events;
+  }
+
+  // Splits an enemy's XP between the living heroes. Dead heroes get nothing.
+  awardXp(enemy, events) {
+    const living = this.heroes.filter((h) => h.alive);
+    if (!living.length) return;
+    const share = (enemy.def.xp || 0) / living.length;
+    for (const hero of living) {
+      hero.xp += share;
+      while (hero.xp >= xpForNextLevel(hero.level, this.leveling)) {
+        hero.xp -= xpForNextLevel(hero.level, this.leveling);
+        this.levelUp(hero);
+        events.push({ type: 'levelup', unit: hero });
+      }
+    }
+  }
+
+  // Raises a hero one level. Max health rises and current health rises by the same amount.
+  levelUp(hero) {
+    hero.level += 1;
+    const oldMax = hero.maxHp;
+    hero.stats = statsAtLevel(hero.baseStats, hero.def, hero.level);
+    hero.maxHp = hero.stats.health;
+    hero.hp += hero.maxHp - oldMax;
   }
 
   // Heals every living hero by a % of their max health. Returns [{ unit, amount }].

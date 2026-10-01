@@ -50,6 +50,14 @@
           "duration": 700
         }
       }
+    },
+    "growthPercent": {
+      "health": 6,
+      "attack": 3
+    },
+    "growthFlat": {
+      "defense": 0.6,
+      "resist": 0.3
     }
   },
   {
@@ -103,6 +111,13 @@
           "duration": 600
         }
       }
+    },
+    "growthPercent": {
+      "health": 4,
+      "attack": 5
+    },
+    "growthFlat": {
+      "crit": 0.3
     }
   },
   {
@@ -156,6 +171,15 @@
           "duration": 400
         }
       }
+    },
+    "growthPercent": {
+      "health": 3,
+      "attack": 4
+    },
+    "growthFlat": {
+      "evasion": 0.4,
+      "crit": 0.4,
+      "attackEfficiency": 0.5
     }
   },
   {
@@ -208,6 +232,14 @@
           "duration": 800
         }
       }
+    },
+    "growthPercent": {
+      "health": 3,
+      "attack": 5
+    },
+    "growthFlat": {
+      "crit": 0.3,
+      "resist": 0.2
     }
   }
 ]

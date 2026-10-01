@@ -12,7 +12,7 @@ const MUTE = '#9a8fb8';
 const FONT = 'system-ui, Arial, sans-serif';
 const CARD_W = 358;
 const CARD_H = 112;
-const SPECIAL_LABEL = { thorns: 'THORNS', lifesteal: 'LIFESTEAL', skillDamage: 'SKILL DMG', critDamage: 'CRIT DMG' };
+const SPECIAL_LABEL = { regen: 'REGEN/s', thorns: 'THORNS', lifesteal: 'LIFESTEAL', skillDamage: 'SKILL DMG', critDamage: 'CRIT DMG' };
 const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD', mana: 'MANA' };
 
 // The reward screen: pick 1 of 3 items, then choose which hero gets it.
@@ -146,7 +146,8 @@ export default class RewardScene extends Phaser.Scene {
       if (e.special) {
         const before = hero.specials[e.special] || 0;
         const now = after.specials[e.special] || 0;
-        lines.push({ text: `${SPECIAL_LABEL[e.special]} ${before}>${now}%`, up: true });
+        const round = (v) => Math.round(v * 10) / 10;
+        lines.push({ text: `${SPECIAL_LABEL[e.special]} ${round(before)}>${round(now)}%`, up: true });
       } else if (e.damageBonus) {
         const before = hero.damageBonus[e.damageBonus] || 0;
         const now = after.damageBonus[e.damageBonus] || 0;

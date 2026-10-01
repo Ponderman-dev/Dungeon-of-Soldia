@@ -5,6 +5,7 @@ import { computeHeroStats } from './items.js';
 // The fight itself: who is alive, who attacks whom and when, mana, skills and statuses.
 // No Phaser in here. update() and castSkill() return a list of events and the scene draws them.
 //
+// Health regeneration (specials.regen) happens silently inside update(); the scene just redraws bars.
 // Events: attack, death, levelup, cast, status (apply / expire), dot (poison tick),
 //         heal (lifesteal), thorns (reflected damage)
 export default class BattleState {
@@ -120,9 +121,11 @@ export default class BattleState {
     const events = [];
     this.tickStatuses(dt, events);
 
-    // Mana comes back and skill cooldowns run down.
+    // Mana comes back, health regenerates (Heart Charm) and skill cooldowns run down.
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
+      const regen = (hero.specials && hero.specials.regen) || 0; // % of max health per second
+      if (regen > 0) hero.hp = Math.min(hero.maxHp, hero.hp + (hero.maxHp * regen * dt) / 100000);
       hero.mana = Math.min(hero.maxMana, hero.mana + (this.rules.manaRegenPerSec * dt) / 1000);
       for (const slot of hero.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - dt);
     }

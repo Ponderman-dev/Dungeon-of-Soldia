@@ -156,6 +156,7 @@ export default class BattleScene extends Phaser.Scene {
     for (const hero of this.state.heroes) {
       const view = this.views.get(hero.uid);
       this.setMana(view);
+      if (hero.alive) this.setBar(view); // health regeneration moves the bar
       view.skillButtons.forEach((b, j) => {
         const slot = hero.skills[j];
         const skill = skillDefs[slot.id];

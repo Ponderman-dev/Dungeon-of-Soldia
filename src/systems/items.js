@@ -21,8 +21,11 @@ export function canReceive(unit, item) {
 export function computeHeroStats(hero, heroes, itemDefs, levelStats) {
   const stats = { ...levelStats };
   const damageBonus = {};
+  const specials = {}; // thorns, lifesteal, skillDamage, critDamage (all in %)
   const apply = (e) => {
-    if (e.damageBonus) {
+    if (e.special) {
+      specials[e.special] = (specials[e.special] || 0) + e.percent;
+    } else if (e.damageBonus) {
       damageBonus[e.damageBonus] = (damageBonus[e.damageBonus] || 0) + e.percent;
     } else if (e.percent !== undefined) {
       stats[e.stat] += (levelStats[e.stat] * e.percent) / 100;
@@ -46,5 +49,5 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats) {
   stats.attack = Math.max(1, stats.attack);
   stats.attackEfficiency = Math.max(10, stats.attackEfficiency);
   for (const key of ['mana', 'defense', 'resist', 'evasion', 'crit']) stats[key] = Math.max(0, stats[key] || 0);
-  return { stats, damageBonus };
+  return { stats, damageBonus, specials };
 }

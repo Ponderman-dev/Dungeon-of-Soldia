@@ -3,5 +3,6 @@
   "autoPickDelayMs": 2000,
   "autoHighlightMs": 500,
   "autoAssignDelayMs": 800,
-  "autoConfirmDelayMs": 600
+  "autoConfirmDelayMs": 600,
+  "potionChance": 0.05
 }

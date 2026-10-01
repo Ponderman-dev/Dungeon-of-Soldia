@@ -26,7 +26,8 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
   }
 
   const crit = rng() * 100 < attacker.stats.crit;
-  let amount = attacker.stats.attack * (opts.multiplier || 1) * (crit ? rules.critMultiplier : 1);
+  const critMultiplier = rules.critMultiplier + ((attacker.specials && attacker.specials.critDamage) || 0) / 100;
+  let amount = attacker.stats.attack * (opts.multiplier || 1) * (crit ? critMultiplier : 1);
 
   const mult = weakResistMultiplier(defender, type, rules);
   amount *= mult;

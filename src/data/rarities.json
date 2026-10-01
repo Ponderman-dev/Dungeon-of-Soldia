@@ -1,6 +1,22 @@
 {
-  "common":    { "label": "COMMON",    "color": "0x8f8aa3", "weight": 60 },
-  "rare":      { "label": "RARE",      "color": "0x3b8ee0", "weight": 30 },
-  "epic":      { "label": "EPIC",      "color": "0xa45be6", "weight": 9 },
-  "legendary": { "label": "LEGENDARY", "color": "0xf2b632", "weight": 1 }
+  "common": {
+    "label": "COMMON",
+    "color": "0x8f8aa3",
+    "weight": 60
+  },
+  "rare": {
+    "label": "RARE",
+    "color": "0x3b8ee0",
+    "weight": 30
+  },
+  "epic": {
+    "label": "EPIC",
+    "color": "0xa45be6",
+    "weight": 9
+  },
+  "legendary": {
+    "label": "LEGENDARY",
+    "color": "0xf2b632",
+    "weight": 3
+  }
 }

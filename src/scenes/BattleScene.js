@@ -490,6 +490,15 @@ export default class BattleScene extends Phaser.Scene {
         this.popText(v, statusInfo[e.status.type].label + '!', statusInfo[e.status.type].color);
       }
       if (e.status.type === 'buff') this.drawAllBars();
+    } else if (e.type === 'heal') {
+      const v = this.views.get(e.unit.uid);
+      this.setBar(v);
+      this.popText(v, `+${e.amount}`, '#6dff8f');
+    } else if (e.type === 'thorns') {
+      const v = this.views.get(e.unit.uid);
+      v.ch.flash();
+      this.setBar(v);
+      this.popText(v, `${e.amount} thorns`, '#e8a0ff');
     } else if (e.type === 'dot') {
       const v = this.views.get(e.unit.uid);
       v.ch.flash();
@@ -592,7 +601,7 @@ export default class BattleScene extends Phaser.Scene {
 
   // Shows the reward screen. When it is done, the hero gets the item and `next` runs.
   showReward(next) {
-    const choices = rollChoices({ itemDefs, rarities, count: rewardRules.choices, heroes: this.state.heroes });
+    const choices = rollChoices({ itemDefs, rarities, count: rewardRules.choices, heroes: this.state.heroes, potionChance: rewardRules.potionChance });
     if (!choices.length) return next();
     this.scene.launch('Reward', {
       state: this.state,
@@ -601,11 +610,22 @@ export default class BattleScene extends Phaser.Scene {
       onDone: (itemId, heroUid) => {
         this.scene.stop('Reward');
         this.scene.resume();
-        this.giveItem(itemId, heroUid);
+        this.applyReward(itemId, heroUid);
         this.time.delayedCall(700, next); // a moment to see the new dot
       },
     });
     this.scene.pause();
+  }
+
+  // Applies the chosen reward: a potion heals every living hero; an item goes to the chosen hero.
+  applyReward(itemId, heroUid) {
+    const item = itemDefs[itemId];
+    if (item.kind !== 'potion') return this.giveItem(itemId, heroUid);
+    for (const { unit, amount } of this.state.healHeroes(item.healPercent)) {
+      const v = this.views.get(unit.uid);
+      this.setBar(v);
+      if (amount > 0) this.popText(v, `+${amount}`, '#6dff8f', true);
+    }
   }
 
   giveItem(itemId, heroUid) {

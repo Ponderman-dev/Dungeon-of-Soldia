@@ -5,7 +5,8 @@ import { computeHeroStats } from './items.js';
 // The fight itself: who is alive, who attacks whom and when, mana, skills and statuses.
 // No Phaser in here. update() and castSkill() return a list of events and the scene draws them.
 //
-// Events: attack, death, levelup, cast, status (apply / expire), dot (poison tick)
+// Events: attack, death, levelup, cast, status (apply / expire), dot (poison tick),
+//         heal (lifesteal), thorns (reflected damage)
 export default class BattleState {
   constructor({ heroDefs, enemyDefs, itemDefs = {}, skillDefs = {}, rules, damageTypes, leveling, rng = Math.random }) {
     this.rules = rules;
@@ -48,6 +49,7 @@ export default class BattleState {
       skills: (def.skills || []).map((id) => ({ id, cooldownLeft: 0 })),
       statuses: [],
       damageBonus: {},
+      specials: {},
       alive: true,
       damageType: def.damageType,
       flying: !!def.flying,
@@ -141,9 +143,30 @@ export default class BattleState {
       const result = computeDamage(unit, target, this.rules, this.damageTypes, this.rng);
       if (!result.dodged) target.hp = Math.max(0, target.hp - result.amount);
       events.push({ type: 'attack', attacker: unit, target, result });
+      if (!result.dodged) this.afterHit(unit, target, result.amount, events);
       if (target.hp <= 0 && target.alive) this.killUnit(target, events);
     }
     return events;
+  }
+
+  // Item specials that trigger when a hit lands: lifesteal heals the attacker, thorns reflects
+  // some of a MELEE hit back at the attacker.
+  afterHit(attacker, target, amount, events) {
+    const lifesteal = (attacker.specials && attacker.specials.lifesteal) || 0;
+    if (lifesteal > 0 && attacker.alive) {
+      const heal = Math.min(attacker.maxHp - attacker.hp, Math.max(1, Math.round((amount * lifesteal) / 100)));
+      if (heal > 0) {
+        attacker.hp += heal;
+        events.push({ type: 'heal', unit: attacker, amount: heal });
+      }
+    }
+    const thorns = (target.specials && target.specials.thorns) || 0;
+    if (thorns > 0 && target.alive && target.hp > 0 && attacker.damageType === 'melee' && attacker.alive) {
+      const back = Math.max(1, Math.round((amount * thorns) / 100));
+      attacker.hp = Math.max(0, attacker.hp - back);
+      events.push({ type: 'thorns', unit: attacker, amount: back });
+      if (attacker.hp <= 0) this.killUnit(attacker, events);
+    }
   }
 
   // ---- statuses (stun, slow, poison, buffs) ----------------------------------------------
@@ -235,12 +258,13 @@ export default class BattleState {
     for (const target of targets) {
       if (skill.damageMultiplier) {
         const result = computeDamage(hero, target, this.rules, this.damageTypes, this.rng, {
-          multiplier: skill.damageMultiplier,
+          multiplier: skill.damageMultiplier * (1 + ((hero.specials && hero.specials.skillDamage) || 0) / 100),
           damageType: skill.damageType,
         });
         if (!result.dodged) target.hp = Math.max(0, target.hp - result.amount);
         events.push({ type: 'attack', attacker: hero, target, result, skill });
         if (result.dodged) continue;
+        this.afterHit(hero, target, result.amount, events);
         if (target.hp <= 0) {
           this.killUnit(target, events);
           continue;
@@ -281,11 +305,12 @@ export default class BattleState {
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
       const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
-      const { stats, damageBonus } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats);
+      const { stats, damageBonus, specials } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats);
       const hpDelta = stats.health - hero.maxHp;
       const manaDelta = stats.mana - hero.maxMana;
       hero.stats = stats;
       hero.damageBonus = damageBonus;
+      hero.specials = specials;
       hero.maxHp = stats.health;
       hero.hp = Math.max(1, hpDelta > 0 ? hero.hp + hpDelta : Math.min(hero.hp, hero.maxHp));
       hero.maxMana = stats.mana;

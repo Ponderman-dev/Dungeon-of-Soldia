@@ -1,5 +1,6 @@
 # Item ideas (DRAFT, plain words, not final)
 
+> UPDATE: numbers raised ~50%. The 4 trade-off items lost their negatives, became Epic/Legendary and got new abilities (thorns, skill damage, lifesteal, crit damage). A very rare Shared Potion reward heals the party 25%. See src/data/items.json for the real numbers.
 > Built so far: 14 of these are in `src/data/items.json` (the ones that work without skills or magic).
 > Rarity names now follow the wireframes: Common (grey), Rare (blue, was "Uncommon"), Epic (purple, was "Rare"), Legendary (gold).
 

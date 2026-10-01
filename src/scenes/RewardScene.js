@@ -12,6 +12,7 @@ const MUTE = '#9a8fb8';
 const FONT = 'system-ui, Arial, sans-serif';
 const CARD_W = 358;
 const CARD_H = 112;
+const SPECIAL_LABEL = { thorns: 'THORNS', lifesteal: 'LIFESTEAL', skillDamage: 'SKILL DMG', critDamage: 'CRIT DMG' };
 const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD', mana: 'MANA' };
 
 // The reward screen: pick 1 of 3 items, then choose which hero gets it.
@@ -92,7 +93,7 @@ export default class RewardScene extends Phaser.Scene {
     this.text(ix, iy + 18, itemTypes[item.type].label, 9, MUTE, true).setOrigin(0.5);
 
     const tx = x + 14 + 64 + 14;
-    this.text(tx, y + 14, `${rarities[item.rarity].label} ITEM`, 11, `#${rc.toString(16).padStart(6, '0')}`, true);
+    this.text(tx, y + 14, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : 'ITEM'}`, 11, `#${rc.toString(16).padStart(6, '0')}`, true);
     this.text(tx, y + 32, item.name, 17, INK, true);
     this.text(tx, y + 56, item.description, 13, MUTE, false, CARD_W - (tx - x) - 14);
     return g;
@@ -124,6 +125,12 @@ export default class RewardScene extends Phaser.Scene {
 
   chooseCard(item) {
     this.chosen = item;
+    if (item.kind === 'potion') {
+      // The potion heals the whole party, so there is no hero to choose.
+      this.cancelAuto();
+      this.payload.onDone(item.id, null);
+      return;
+    }
     this.showAssign();
     if (this.registry.get('autoRewards')) this.startAuto();
   }
@@ -136,7 +143,11 @@ export default class RewardScene extends Phaser.Scene {
     const lines = [];
     const seen = new Set();
     for (const e of item.effects) {
-      if (e.damageBonus) {
+      if (e.special) {
+        const before = hero.specials[e.special] || 0;
+        const now = after.specials[e.special] || 0;
+        lines.push({ text: `${SPECIAL_LABEL[e.special]} ${before}% > ${now}%`, up: true });
+      } else if (e.damageBonus) {
         const before = hero.damageBonus[e.damageBonus] || 0;
         const now = after.damageBonus[e.damageBonus] || 0;
         lines.push({ text: `${e.damageBonus.toUpperCase()} DMG +${before}% > +${now}%`, up: true });

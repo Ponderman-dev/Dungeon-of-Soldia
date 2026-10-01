@@ -36,6 +36,7 @@ All numbers below go in JSON/config so they are easy to tune.
 - **Item numbers:** defense, resist, evasion, crit items add FLAT points (+8 defense = 8% less physical damage). Attack, health, mana items add a % of the hero's base stat.
 - **Items on dead heroes:** ALL items on a dead hero stop working (squad-wide ones too). Dead heroes lose their gear for the run.
 - **Boss stun/slow:** bosses take half-length stun and slow (value lives in the boss JSON).
+- **Items are passive only:** never tappable or activatable. The player only taps skills and enemies.
 - **Stacking:** items stack with no cap, except dodge/crit-type items, whose cap is set in the item JSON.
 - **Dungeons:** floors, enemies and bosses are grouped by dungeon id ("A") so Dungeon B is data-only.
 - **Saving:** unlocks saved in browser localStorage (works in Capacitor too).

@@ -7,6 +7,7 @@ Dot colour = item type. Dot border = rarity.
 - Defense, resist, evasion, crit items add flat points. Attack, health, mana items add % of base.
 - All items on a dead hero stop working (including squad-wide ones).
 - Bosses take half-length stun and slow.
+- Items are passive only. The player never taps them.
 
 ## Stat (red) - always on
 | Name | Rarity | Effect |

@@ -25,6 +25,7 @@ All numbers below go in JSON/config so they are easy to tune.
 - **Resist:** new stat, same idea but for MAGICAL damage (cap 75%). Heroes now have 8 stats.
 - **Weak/resist per enemy:** each enemy lists `weak` and `resists` damage types in JSON (weak = +50% damage, resists = -50%).
 - **Melee vs ranged:** ranged attacks can hit flying enemies, melee can't. No formation rules yet.
+- **Every fight must contain at least one enemy that melee can hit** (not flying). Enforce this in the floor/encounter data.
 - **Evasion:** % chance to fully dodge a hit of any type, capped at 60%.
 - **Crit:** % chance to deal 2x damage.
 - **Attack efficiency:** attack speed. 100 = 1 attack per second.

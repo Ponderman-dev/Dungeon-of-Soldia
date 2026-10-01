@@ -10,10 +10,10 @@
   },
   "winHealPercent": 25,
   "floorScaling": {
-    "hpPerStep": 0.12,
-    "hpStepFloors": 1,
-    "attackPerStep": 0.18,
-    "attackStepFloors": 1
+    "hpPerStep": 0.36,
+    "hpStepFloors": 3,
+    "attackPerStep": 0.54,
+    "attackStepFloors": 3
   },
   "restartDelayMs": 3000,
   "meleeVsFlyingMissPercent": 40,

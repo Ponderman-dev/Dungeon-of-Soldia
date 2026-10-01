@@ -33,6 +33,9 @@ All numbers below go in JSON/config so they are easy to tune.
 - **Healing:** each hero heals 25% of max health after a win (bigger after bosses).
 - **Dead heroes:** stay dead for the rest of the run. Run ends when all 4 are dead.
 - **Tap-to-focus:** all heroes attack the tapped enemy until it dies, then go back to auto-target.
+- **Item numbers:** defense, resist, evasion, crit items add FLAT points (+8 defense = 8% less physical damage). Attack, health, mana items add a % of the hero's base stat.
+- **Items on dead heroes:** ALL items on a dead hero stop working (squad-wide ones too). Dead heroes lose their gear for the run.
+- **Boss stun/slow:** bosses take half-length stun and slow (value lives in the boss JSON).
 - **Stacking:** items stack with no cap, except dodge/crit-type items, whose cap is set in the item JSON.
 - **Dungeons:** floors, enemies and bosses are grouped by dungeon id ("A") so Dungeon B is data-only.
 - **Saving:** unlocks saved in browser localStorage (works in Capacitor too).

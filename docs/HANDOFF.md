@@ -27,6 +27,8 @@ keep replies short, republish the preview page once per batch or when asked, not
   `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`, with `page.clock.install()` + `clock.runFor()` to fast-forward time.
   Always revert temporary test builds (e.g. forced reward choices) and grep to be sure.
 
+- Hero buff (after the item batch 2 session): Rogue 100 hp / 6 def / 25 evasion, Archer 95 hp / 6 def / 15 evasion (more evasion per level too). The bot's average death floor went from about 24.7 to 32.5, so enemy growth may need retuning.
+
 ## Gotchas learned
 - Never pass the `apply` function in items.js straight to `forEach` (index becomes the multiplier). That once silently disabled skill buffs.
 - A hero's stats come from `refreshStats()` (level + items + buffs); call it after anything that changes them.

@@ -252,20 +252,21 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // Heroes gather into a line at the centre and walk into the door one after another.
+  // Heroes in the outer slots have further to walk to reach the line, so each start delay is
+  // worked out from when that hero reaches the line. That keeps the gaps in the line equal.
   heroesWalkToDoor(done) {
     const living = this.livingHeroViews();
     let left = living.length;
     if (!left) return done();
+    const gather = { x: DOOR_X, y: SLOT_Y - 120 };
+    const toLine = living.map((v) => Math.hypot(gather.x - v.slotX, gather.y - SLOT_Y));
+    const base = Math.max(...toLine.map((len, i) => len - i * T.lineGapPx));
     living.forEach((v, i) => {
       this.walkPath(
         v,
-        [
-          { x: v.slotX, y: SLOT_Y },
-          { x: DOOR_X, y: SLOT_Y - 120 },
-          { x: DOOR_X, y: WALL_H - 10 },
-        ],
+        [{ x: v.slotX, y: SLOT_Y }, gather, { x: DOOR_X, y: WALL_H - 10 }],
         {
-          delay: this.lineDelay(i),
+          delay: ((base - toLine[i] + i * T.lineGapPx) * 1000) / T.walkSpeedPxPerSec,
           onDone: () => {
             v.ch.setVisible(false);
             if (--left === 0) done();

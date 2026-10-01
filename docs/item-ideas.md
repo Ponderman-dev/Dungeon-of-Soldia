@@ -19,12 +19,12 @@ Dot colour = item type. Dot border = rarity.
 ## On-hit (purple) - when this hero hits
 | Name | Rarity | Effect |
 |---|---|---|
-| Ember Blade | Uncommon | 15% chance to burn the enemy |
-| Venom Fang | Uncommon | 15% chance to poison the enemy |
+| Ember Blade | Uncommon | 15% chance to burn the enemy (fire) |
+| Venom Fang | Uncommon | 15% chance to poison the enemy (dark) |
 | Executioner's Mark | Uncommon | +30% damage to enemies below 25% health |
-| Frost Ring | Rare | 10% chance to slow the enemy |
+| Frost Ring | Rare | 10% chance to slow the enemy (ice) |
 | Vampire Tooth | Rare | heal 5% of damage dealt |
-| Thunder Shard | Rare | 10% chance to chain lightning to another enemy |
+| Thunder Shard | Rare | 10% chance to chain lightning to another enemy (electric) |
 | Dazing Bell | Legendary | 5% chance to stun the enemy for 2 seconds |
 
 ## Skill (cyan) - changes skills
@@ -56,5 +56,14 @@ Dot colour = item type. Dot border = rarity.
 | Gambler's Dice | Rare | +15% crit chance, -10% defense |
 | Hollow Core | Rare | +50% skill damage, skills cost 30% more mana |
 | Soul Pact | Legendary | +40% attack and defense, lose 10% health at the start of each floor |
+
+## Damage-type items (ideas to add)
+Damage types: physical (melee, ranged), magical (fire, ice, electric, dark).
+Heroes also have a new Resist stat (magic version of defense).
+- Sharp Edge (Common): +10% melee damage
+- Eagle Eye (Common): +10% ranged damage
+- Fire Brand / Frost Charm / Storm Charm / Shadow Charm (Uncommon): +15% fire / ice / electric / dark damage
+- Mage Cloak (Common): +8% resist
+- Prism (Legendary): your attacks deal a random magic type each hit
 
 32 items: 7 Common-ish starters, many Uncommon, 4 Legendary.

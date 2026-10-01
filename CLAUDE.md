@@ -20,8 +20,12 @@ and ask before big decisions (new libraries, big refactors, design changes).
 
 ## Fight rules (decided)
 All numbers below go in JSON/config so they are easy to tune.
-- **Defense:** % damage cut (10 defense = 10% less), capped at 75%.
-- **Evasion:** % chance to fully dodge a hit, capped at 60%.
+- **Damage types:** physical (melee, ranged) and magical (fire, ice, electric, dark). Every attack and skill has one type.
+- **Defense:** % cut of PHYSICAL damage (10 defense = 10% less), capped at 75%.
+- **Resist:** new stat, same idea but for MAGICAL damage (cap 75%). Heroes now have 8 stats.
+- **Weak/resist per enemy:** each enemy lists `weak` and `resists` damage types in JSON (weak = +50% damage, resists = -50%).
+- **Melee vs ranged:** ranged attacks can hit flying enemies, melee can't. No formation rules yet.
+- **Evasion:** % chance to fully dodge a hit of any type, capped at 60%.
 - **Crit:** % chance to deal 2x damage.
 - **Attack efficiency:** attack speed. 100 = 1 attack per second.
 - **Mana:** regens slowly during a fight; carries over between floors with a small top-up.

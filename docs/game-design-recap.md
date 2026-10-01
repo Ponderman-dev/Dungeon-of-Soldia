@@ -13,7 +13,8 @@ Engine: Phaser 3 + plain JS, wrapped for Android with Capacitor later. Fully vib
 
 ## Heroes
 - 9 heroes in total; the player brings 4 per run.
-- Stats: health, mana, attack, defense, evasion, crit, attack efficiency.
+- Stats: health, mana, attack, defense (physical), resist (magical), evasion, crit, attack efficiency.
+- Damage types: physical (melee, ranged) and magical (fire, ice, electric, dark). Enemies can be weak or resistant to types. Ranged can hit flying enemies; melee can't.
 - Levelling is automatic and only raises stats.
 - Placeholder roster (to be redone): Knight, Berserker, Rogue, Archer, Mage, Cleric, Necromancer, Bard, Alchemist.
 - Each hero has one fixed weapon in v1 (no swappable weapons).

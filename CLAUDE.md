@@ -32,6 +32,7 @@ All numbers below go in JSON/config so they are easy to tune.
 - **Healing:** each hero heals 25% of max health after a win (bigger after bosses).
 - **Dead heroes:** stay dead for the rest of the run. Run ends when all 4 are dead.
 - **Tap-to-focus:** all heroes attack the tapped enemy until it dies, then go back to auto-target.
+- **Levelling (decided, not built yet):** heroes gain XP from kills (XP per enemy in enemies.json). Each hero has its OWN growth per level in heroes.json. Only stats rise. Dead heroes get no XP (frozen). Levels reset every run.
 - **Item numbers:** defense, resist, evasion, crit items add FLAT points (+8 defense = 8% less physical damage). Attack, health, mana items add a % of the hero's base stat.
 - **Items on dead heroes:** ALL items on a dead hero stop working (squad-wide ones too). Dead heroes lose their gear for the run.
 - **Boss stun/slow:** bosses take half-length stun and slow (value lives in the boss JSON).

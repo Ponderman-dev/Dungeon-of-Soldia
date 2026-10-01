@@ -8,7 +8,7 @@ Engine: Phaser 3 + plain JS, wrapped for Android with Capacitor later. Fully vib
 - Enemies at the top, 4 heroes at the bottom. Everyone auto-attacks about once per second.
 - Each fight has 2-4 enemies, sometimes 1 if it is tougher. Bosses appear at set floors.
 - Heroes auto-target by default. The player can tap an enemy to focus it.
-- Each hero has 2 active skills (blue squares) that the player taps to cast. Skills cost mana.
+- Each hero has 2 active skills (blue squares) that the player taps to cast. Skills cost mana and have a cooldown. Skills can stun, slow or poison enemies, or buff the caster.
 - Items show as dots above each hero's head.
 
 ## Heroes

@@ -6,7 +6,7 @@
     "height": 28,
     "stats": {
       "health": 120,
-      "mana": 30,
+      "mana": 60,
       "attack": 20,
       "defense": 10,
       "resist": 5,
@@ -53,12 +53,17 @@
     },
     "growthPercent": {
       "health": 6,
-      "attack": 3
+      "attack": 3,
+      "mana": 2
     },
     "growthFlat": {
       "defense": 0.6,
       "resist": 0.3
-    }
+    },
+    "skills": [
+      "shield_bash",
+      "guard"
+    ]
   },
   {
     "id": "berserker",
@@ -67,7 +72,7 @@
     "height": 28,
     "stats": {
       "health": 105,
-      "mana": 20,
+      "mana": 60,
       "attack": 26,
       "defense": 4,
       "resist": 2,
@@ -114,11 +119,16 @@
     },
     "growthPercent": {
       "health": 4,
-      "attack": 5
+      "attack": 5,
+      "mana": 2
     },
     "growthFlat": {
       "crit": 0.3
-    }
+    },
+    "skills": [
+      "cleave",
+      "rage"
+    ]
   },
   {
     "id": "rogue",
@@ -127,7 +137,7 @@
     "height": 26,
     "stats": {
       "health": 85,
-      "mana": 25,
+      "mana": 60,
       "attack": 19,
       "defense": 3,
       "resist": 3,
@@ -174,13 +184,18 @@
     },
     "growthPercent": {
       "health": 3,
-      "attack": 4
+      "attack": 4,
+      "mana": 2
     },
     "growthFlat": {
       "evasion": 0.4,
       "crit": 0.4,
       "attackEfficiency": 0.5
-    }
+    },
+    "skills": [
+      "venom_strike",
+      "smoke"
+    ]
   },
   {
     "id": "archer",
@@ -189,7 +204,7 @@
     "height": 28,
     "stats": {
       "health": 80,
-      "mana": 30,
+      "mana": 60,
       "attack": 17,
       "defense": 3,
       "resist": 4,
@@ -235,11 +250,16 @@
     },
     "growthPercent": {
       "health": 3,
-      "attack": 5
+      "attack": 5,
+      "mana": 2
     },
     "growthFlat": {
       "crit": 0.3,
       "resist": 0.2
-    }
+    },
+    "skills": [
+      "power_shot",
+      "ensnare_shot"
+    ]
   }
 ]

@@ -1,0 +1,45 @@
+{
+  "shield_bash": {
+    "name": "Shield Bash", "short": "SB", "target": "enemy", "manaCost": 12, "cooldownMs": 8000,
+    "damageMultiplier": 1.5,
+    "apply": [ { "status": "stun", "durationMs": 1500 } ],
+    "description": "Hit one enemy for 150% damage and stun it for 1.5s."
+  },
+  "guard": {
+    "name": "Guard", "short": "GD", "target": "self", "manaCost": 10, "cooldownMs": 12000,
+    "apply": [ { "status": "buff", "durationMs": 6000, "mods": [ { "stat": "defense", "flat": 25 } ] } ],
+    "description": "+25 defense for 6s."
+  },
+  "cleave": {
+    "name": "Cleave", "short": "CL", "target": "allEnemies", "manaCost": 20, "cooldownMs": 8000,
+    "damageMultiplier": 0.9,
+    "description": "Hit all enemies for 90% damage."
+  },
+  "rage": {
+    "name": "Rage", "short": "RG", "target": "self", "manaCost": 15, "cooldownMs": 14000,
+    "apply": [ { "status": "buff", "durationMs": 6000, "mods": [ { "stat": "attackEfficiency", "percent": 50 } ] } ],
+    "description": "+50% attack speed for 6s."
+  },
+  "venom_strike": {
+    "name": "Venom Strike", "short": "VS", "target": "enemy", "manaCost": 15, "cooldownMs": 8000,
+    "damageMultiplier": 0.8,
+    "apply": [ { "status": "poison", "durationMs": 6000, "tickMs": 1000, "damageMultiplier": 0.35, "damageType": "dark" } ],
+    "description": "Hit one enemy for 80% damage and poison it (dark damage every second for 6s)."
+  },
+  "smoke": {
+    "name": "Smoke", "short": "SM", "target": "self", "manaCost": 15, "cooldownMs": 12000,
+    "apply": [ { "status": "buff", "durationMs": 5000, "mods": [ { "stat": "evasion", "flat": 30 } ] } ],
+    "description": "+30 evasion for 5s."
+  },
+  "power_shot": {
+    "name": "Power Shot", "short": "PS", "target": "enemy", "manaCost": 15, "cooldownMs": 7000,
+    "damageMultiplier": 2.2,
+    "description": "A ranged shot for 220% damage."
+  },
+  "ensnare_shot": {
+    "name": "Ensnare Shot", "short": "ES", "target": "enemy", "manaCost": 18, "cooldownMs": 9000,
+    "damageMultiplier": 0.7,
+    "apply": [ { "status": "slow", "durationMs": 5000, "attackSpeedPercent": -40 } ],
+    "description": "Hit one enemy for 70% damage and slow its attack speed by 40% for 5s."
+  }
+}

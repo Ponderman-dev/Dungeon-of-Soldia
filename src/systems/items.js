@@ -21,21 +21,26 @@ export function canReceive(unit, item) {
 export function computeHeroStats(hero, heroes, itemDefs, levelStats) {
   const stats = { ...levelStats };
   const damageBonus = {};
+  const apply = (e) => {
+    if (e.damageBonus) {
+      damageBonus[e.damageBonus] = (damageBonus[e.damageBonus] || 0) + e.percent;
+    } else if (e.percent !== undefined) {
+      stats[e.stat] += (levelStats[e.stat] * e.percent) / 100;
+    } else {
+      stats[e.stat] += e.flat;
+    }
+  };
   for (const holder of heroes) {
     if (!holder.alive) continue;
     for (const id of holder.items) {
       const item = itemDefs[id];
       if (item.scope !== 'squad' && holder !== hero) continue;
-      for (const e of item.effects) {
-        if (e.damageBonus) {
-          damageBonus[e.damageBonus] = (damageBonus[e.damageBonus] || 0) + e.percent;
-        } else if (e.percent !== undefined) {
-          stats[e.stat] += (levelStats[e.stat] * e.percent) / 100;
-        } else {
-          stats[e.stat] += e.flat;
-        }
-      }
+      item.effects.forEach(apply);
     }
+  }
+  // Temporary buffs from skills.
+  for (const status of hero.statuses || []) {
+    if (status.type === 'buff') status.mods.forEach(apply);
   }
   stats.health = Math.max(1, Math.round(stats.health));
   stats.attack = Math.max(1, stats.attack);

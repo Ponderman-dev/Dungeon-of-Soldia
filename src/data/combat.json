@@ -24,5 +24,7 @@
     "stepLenPx": 90,
     "stepHeight": 6,
     "slideMs": 1000
-  }
+  },
+  "manaRegenPerSec": 2,
+  "winManaPercent": 20
 }

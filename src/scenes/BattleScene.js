@@ -10,6 +10,8 @@ import rawItems from '../data/items.json';
 import itemTypes from '../data/itemTypes.json';
 import rarities from '../data/rarities.json';
 import rewardRules from '../data/rewards.json';
+import rawSkills from '../data/skills.json';
+import statusInfo from '../data/statuses.json';
 import Character from '../entities/Character.js';
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon } from '../systems/validate.js';
@@ -25,6 +27,11 @@ const WALL_H = 200; // the back wall (with the door) fills the top of each floor
 const DOOR_X = GAME_WIDTH / 2;
 const T = combatRules.transition;
 const itemDefs = loadItems(rawItems);
+const skillDefs = rawSkills;
+const BOX_TOP = 596; // the hero boxes at the bottom run from here to the screen edge
+const SKILL_Y = 772; // centre of the skill squares
+const SKILL_W = 40;
+const SKILL_H = 44;
 
 // Depth order: floor < slots < hero < hero bars < popups < banner/HUD
 const DEPTH = { floor: 0, slot: 1, marker: 2, hero: 5, heroBar: 6, doorFront: 7, popup: 10, hud: 20 };
@@ -49,6 +56,7 @@ export default class BattleScene extends Phaser.Scene {
       heroDefs: heroDefs.slice(0, 4),
       enemyDefs,
       itemDefs,
+      skillDefs,
       rules: combatRules,
       damageTypes,
       leveling,
@@ -77,6 +85,7 @@ export default class BattleScene extends Phaser.Scene {
     for (const h of this.state.heroes) {
       const v = this.views.get(h.uid);
       targets.push(v.slotBox, v.label);
+      for (const b of v.skillButtons) targets.push(b.g, b.code, b.cost, b.cd);
     }
     this.tweens.add({ targets, alpha: show ? 1 : 0, duration });
   }
@@ -89,9 +98,10 @@ export default class BattleScene extends Phaser.Scene {
   drawHeroSlots() {
     this.state.heroes.forEach((unit, i) => {
       const cx = SLOT_WIDTH * i + SLOT_WIDTH / 2;
-      const box = this.add.rectangle(cx, SLOT_Y - 40, SLOT_WIDTH - 12, 110, 0x1d1730, 0.85).setStrokeStyle(1, 0x3a3057).setDepth(DEPTH.slot);
+      const boxH = GAME_HEIGHT - 8 - BOX_TOP;
+      const box = this.add.rectangle(cx, BOX_TOP + boxH / 2, SLOT_WIDTH - 12, boxH, 0x1d1730, 0.85).setStrokeStyle(1, 0x3a3057).setDepth(DEPTH.slot);
       const label = this.add
-        .text(cx, SLOT_Y + 28, '', { fontFamily: 'monospace', fontSize: '12px', color: '#9a8fc0' })
+        .text(cx, GAME_HEIGHT - 22, '', { fontFamily: 'monospace', fontSize: '12px', color: '#9a8fc0' })
         .setOrigin(0.5)
         .setDepth(DEPTH.slot);
       const view = this.makeView(unit, cx, SLOT_Y);
@@ -99,10 +109,60 @@ export default class BattleScene extends Phaser.Scene {
       view.slotBox = box;
       view.slotX = cx;
       view.ch.setDepth(DEPTH.hero);
-      view.bg.setDepth(DEPTH.heroBar);
-      view.fill.setDepth(DEPTH.heroBar);
+      for (const part of [view.bg, view.fill, view.mbg, view.mfill]) part.setDepth(DEPTH.heroBar);
+      view.chipBox.setDepth(DEPTH.heroBar);
+
+      // The two skill squares under the hero: tap to cast.
+      view.skillButtons = unit.skills.map((slot, j) => {
+        const x = cx + (j === 0 ? -22 : 22);
+        const textStyle = { fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color: '#f3eefc' };
+        const button = {
+          x: x - SKILL_W / 2,
+          y: SKILL_Y - SKILL_H / 2,
+          g: this.add.graphics().setDepth(3),
+          code: this.add.text(x, SKILL_Y - 6, skillDefs[slot.id].short, textStyle).setOrigin(0.5).setDepth(4),
+          cost: this.add.text(x, SKILL_Y + 12, String(skillDefs[slot.id].manaCost), { ...textStyle, fontSize: '10px' }).setOrigin(0.5).setDepth(4),
+          cd: this.add.text(x, SKILL_Y - 6, '', { ...textStyle, fontSize: '16px', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5),
+        };
+        this.add
+          .zone(x, SKILL_Y, SKILL_W + 6, SKILL_H + 6)
+          .setInteractive()
+          .setDepth(6)
+          .on('pointerdown', () => this.castFromUI(unit.uid, j));
+        return button;
+      });
       this.setLabel(view);
     });
+  }
+
+  // Taps on a skill square.
+  castFromUI(heroUid, index) {
+    if (this.mode !== 'fighting') return;
+    for (const e of this.state.castSkill(heroUid, index)) this.showEvent(e);
+  }
+
+  // Redraws the skill squares and mana bars (ready / cooling down / not enough mana).
+  refreshHud() {
+    for (const hero of this.state.heroes) {
+      const view = this.views.get(hero.uid);
+      this.setMana(view);
+      view.skillButtons.forEach((b, j) => {
+        const slot = hero.skills[j];
+        const skill = skillDefs[slot.id];
+        const ready = this.mode === 'fighting' && this.state.canCast(hero, j);
+        const g = b.g;
+        g.clear();
+        g.fillStyle(ready ? 0x2a4fb8 : 0x1b2347, hero.alive ? 1 : 0.5).fillRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
+        if (slot.cooldownLeft > 0) {
+          const frac = slot.cooldownLeft / skill.cooldownMs;
+          g.fillStyle(0x000000, 0.55).fillRoundedRect(b.x, b.y, SKILL_W, SKILL_H * frac, 8);
+        }
+        g.lineStyle(ready ? 3 : 2, ready ? 0xf2b632 : 0x3b6fe0, ready ? 1 : 0.5).strokeRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
+        b.cd.setText(slot.cooldownLeft > 0 ? String(Math.ceil(slot.cooldownLeft / 1000)) : '');
+        b.cost.setColor(hero.mana >= skill.manaCost ? '#8fb0ff' : '#ff8c8c');
+        b.code.setAlpha(ready ? 1 : 0.6);
+      });
+    }
   }
 
   // Draws one fighter: the character, plus a health bar above it.
@@ -116,7 +176,11 @@ export default class BattleScene extends Phaser.Scene {
       .rectangle(x - BAR_WIDTH / 2, barY, BAR_WIDTH, 5, unit.side === 'hero' ? 0x4cd16a : 0xe04b4b)
       .setOrigin(0, 0.5);
     const view = { unit, ch, bg, fill, groundY };
+    // Status tags (STUN, SLOW, PSN, BUFF) next to the bars.
+    view.chipBox = this.add.container(x, barY + (unit.side === 'hero' ? 20 : -22));
     if (unit.side === 'hero') {
+      view.mbg = this.add.rectangle(x, barY + 8, BAR_WIDTH + 2, 5, 0x000000);
+      view.mfill = this.add.rectangle(x - BAR_WIDTH / 2, barY + 8, BAR_WIDTH, 3, 0x3b6fe0).setOrigin(0, 0.5);
       // Item dots above the health bar: dot colour = item type, ring = rarity.
       view.dots = this.add.graphics().setPosition(x, barY - 12).setDepth(DEPTH.heroBar);
     }
@@ -128,7 +192,7 @@ export default class BattleScene extends Phaser.Scene {
       ch.setInteractive(new Phaser.Geom.Rectangle(-16, -h - 2, 32, h + 4), Phaser.Geom.Rectangle.Contains);
       ch.on('pointerdown', () => this.state.setFocus(unit.uid));
     }
-    if (parent) parent.add([ch, bg, fill]);
+    if (parent) parent.add([ch, bg, fill, view.chipBox]);
     return view;
   }
 
@@ -191,6 +255,11 @@ export default class BattleScene extends Phaser.Scene {
     view.bg.setPosition(view.ch.x, y).setAlpha(view.ch.alpha);
     view.fill.setPosition(view.ch.x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
     if (view.dots) view.dots.setPosition(view.ch.x, y - 12).setAlpha(view.ch.alpha);
+    if (view.mbg) {
+      view.mbg.setPosition(view.ch.x, y + 8).setAlpha(view.ch.alpha);
+      view.mfill.setPosition(view.ch.x - BAR_WIDTH / 2, y + 8).setAlpha(view.ch.alpha);
+    }
+    view.chipBox.setPosition(view.ch.x, y + (view.unit.side === 'hero' ? 20 : -22)).setAlpha(view.ch.alpha);
   }
 
   // Shows or hides a fighter's health bar (and item dots).
@@ -198,6 +267,32 @@ export default class BattleScene extends Phaser.Scene {
     view.bg.setVisible(visible);
     view.fill.setVisible(visible);
     if (view.dots) view.dots.setVisible(visible);
+    if (view.mbg) {
+      view.mbg.setVisible(visible);
+      view.mfill.setVisible(visible);
+    }
+    view.chipBox.setVisible(visible);
+  }
+
+  setMana(view) {
+    if (view.mfill) view.mfill.width = BAR_WIDTH * (view.unit.mana / view.unit.maxMana);
+  }
+
+  // Redraws the status tags on a fighter: one tag per kind of status it has right now.
+  drawChips(view) {
+    view.chipBox.removeAll(true);
+    const kinds = [...new Set(view.unit.statuses.map((st) => st.type))];
+    let x = 0;
+    for (const kind of kinds) {
+      const info = statusInfo[kind];
+      const chip = this.add
+        .text(x, 0, info.label, { fontFamily: 'monospace', fontSize: '9px', fontStyle: 'bold', color: info.textColor, backgroundColor: info.color, padding: { x: 2, y: 1 } })
+        .setOrigin(0, 0.5);
+      view.chipBox.add(chip);
+      x += chip.width + 3;
+    }
+    // Centre the row on the fighter.
+    view.chipBox.iterate((chip) => (chip.x -= (x - 3) / 2));
   }
 
   // Redraws the dots for a hero's items: one dot per item copy, up to 6 per row, rows going up.
@@ -347,6 +442,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    this.refreshHud();
     if (this.mode !== 'fighting') return;
 
     // Cap the step so switching browser tabs doesn't cause a huge jump.
@@ -380,6 +476,25 @@ export default class BattleScene extends Phaser.Scene {
       const mark = mult > 1 ? '!' : mult < 1 ? '…' : '';
       const color = e.attacker.side === 'hero' ? damageTypes[e.attacker.damageType].color : '#ff6b6b';
       this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : color, crit);
+    } else if (e.type === 'cast') {
+      const caster = this.views.get(e.unit.uid);
+      this.popText(caster, e.skill.name, '#9fc4ff');
+      if (e.skill.target !== 'self' && e.targets[0]) {
+        const t = this.views.get(e.targets[0].uid);
+        caster.ch.lunge(t.ch.homeX, t.ch.homeY);
+      }
+    } else if (e.type === 'status') {
+      const v = this.views.get(e.unit.uid);
+      this.drawChips(v);
+      if (e.change === 'apply' && e.status.type !== 'buff') {
+        this.popText(v, statusInfo[e.status.type].label + '!', statusInfo[e.status.type].color);
+      }
+      if (e.status.type === 'buff') this.drawAllBars();
+    } else if (e.type === 'dot') {
+      const v = this.views.get(e.unit.uid);
+      v.ch.flash();
+      this.setBar(v);
+      this.popText(v, String(e.amount), damageTypes[e.damageType].color);
     } else if (e.type === 'levelup') {
       const v = this.views.get(e.unit.uid);
       this.setLabel(v);
@@ -389,12 +504,16 @@ export default class BattleScene extends Phaser.Scene {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
       if (e.unit.side === 'enemy') {
+        this.drawChips(v);
         this.tweens.add({ targets: [v.ch, v.bg, v.fill], alpha: 0, duration: 400, onComplete: () => this.removeView(e.unit.uid) });
       } else {
         v.ch.setAlpha(0.25);
         v.bg.setAlpha(0.4);
         v.fill.setAlpha(0.4);
         if (v.dots) v.dots.setAlpha(0.4);
+        v.mbg.setAlpha(0.4);
+        v.mfill.setAlpha(0.4);
+        this.drawChips(v);
         this.drawAllBars(); // squad items from this hero stop working, so max health may change
       }
     }
@@ -419,12 +538,19 @@ export default class BattleScene extends Phaser.Scene {
     v.bg.destroy();
     v.fill.destroy();
     if (v.dots) v.dots.destroy();
+    if (v.mbg) {
+      v.mbg.destroy();
+      v.mfill.destroy();
+    }
+    v.chipBox.destroy();
     this.views.delete(uid);
   }
 
   // Floating number above a fighter.
   popText(view, text, color, big = false) {
-    const y = view.ch.homeY - view.unit.def.height * CHAR_SCALE - 22;
+    // Pop-ups that appear together stack upwards instead of overlapping.
+    view.popSlot = ((view.popSlot ?? -1) + 1) % 4;
+    const y = view.ch.homeY - view.unit.def.height * CHAR_SCALE - 22 - view.popSlot * 15;
     const t = this.add
       .text(view.ch.homeX, y, text, {
         fontFamily: 'monospace',
@@ -436,6 +562,7 @@ export default class BattleScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setDepth(DEPTH.popup);
+    t.x = Phaser.Math.Clamp(t.x, t.width / 2 + 4, GAME_WIDTH - t.width / 2 - 4); // keep it on screen
     this.tweens.add({ targets: t, y: y - 30, alpha: 0, duration: 800, onComplete: () => t.destroy() });
   }
 
@@ -445,6 +572,9 @@ export default class BattleScene extends Phaser.Scene {
     this.banner.setText(`Floor ${this.floor} cleared!`);
     this.layer.setDoorOpen(true);
 
+    this.state.restoreMana(combatRules.winManaPercent);
+    this.state.clearStatuses();
+    for (const h of this.state.heroes) this.drawChips(this.views.get(h.uid));
     for (const { unit, amount } of this.state.healHeroes(combatRules.winHealPercent)) {
       const v = this.views.get(unit.uid);
       this.setBar(v);

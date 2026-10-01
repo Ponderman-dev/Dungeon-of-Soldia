@@ -57,21 +57,38 @@ export default class BattleScene extends Phaser.Scene {
       .setDepth(DEPTH.hud);
     this.focusMarker = this.add.ellipse(0, 0, 70, 18).setStrokeStyle(2, 0xff4d4d).setVisible(false).setDepth(DEPTH.marker);
 
+    this.showSlots(false, 0);
     this.layer = this.buildFloor(1, 0);
     this.floorText.setText('Floor 1');
-    this.enterHeroes(() => (this.mode = 'fighting'));
+    this.enterHeroes(() => this.startFighting());
+  }
+
+  // The boxes (and name labels) under the heroes are hidden while the floor changes.
+  showSlots(show, duration = 250) {
+    const targets = [];
+    for (const h of this.state.heroes) {
+      const v = this.views.get(h.uid);
+      targets.push(v.slotBox, v.label);
+    }
+    this.tweens.add({ targets, alpha: show ? 1 : 0, duration });
+  }
+
+  startFighting() {
+    this.showSlots(true);
+    this.mode = 'fighting';
   }
 
   drawHeroSlots() {
     this.state.heroes.forEach((unit, i) => {
       const cx = SLOT_WIDTH * i + SLOT_WIDTH / 2;
-      this.add.rectangle(cx, SLOT_Y - 40, SLOT_WIDTH - 12, 110, 0x1d1730, 0.85).setStrokeStyle(1, 0x3a3057).setDepth(DEPTH.slot);
+      const box = this.add.rectangle(cx, SLOT_Y - 40, SLOT_WIDTH - 12, 110, 0x1d1730, 0.85).setStrokeStyle(1, 0x3a3057).setDepth(DEPTH.slot);
       const label = this.add
         .text(cx, SLOT_Y + 28, '', { fontFamily: 'monospace', fontSize: '12px', color: '#9a8fc0' })
         .setOrigin(0.5)
         .setDepth(DEPTH.slot);
       const view = this.makeView(unit, cx, SLOT_Y);
       view.label = label;
+      view.slotBox = box;
       view.slotX = cx;
       view.ch.setDepth(DEPTH.hero);
       view.bg.setDepth(DEPTH.heroBar);
@@ -397,7 +414,8 @@ export default class BattleScene extends Phaser.Scene {
 
     this.time.delayedCall(T.clearPauseMs, () => {
       this.banner.setText('');
-      this.heroesWalkToDoor(() => this.slideToNextFloor(() => this.enterHeroes(() => (this.mode = 'fighting'))));
+      this.showSlots(false);
+      this.heroesWalkToDoor(() => this.slideToNextFloor(() => this.enterHeroes(() => this.startFighting())));
     });
   }
 

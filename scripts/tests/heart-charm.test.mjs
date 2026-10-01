@@ -1,0 +1,15 @@
+import fs from 'fs';
+import BattleState from '../../src/systems/BattleState.js';
+import { loadItems } from '../../src/systems/items.js';
+const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
+const itemDefs = loadItems(r('items.json'));
+const mk = () => new BattleState({ heroDefs: r('heroes.json'), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+const s = mk(); s.enemies = [];
+const k = s.heroes[0]; const hp0 = k.maxHp; s.giveItem(k.uid, 'heart_charm');
+console.log('max hp', hp0, '->', k.maxHp, '(+22% =', Math.round(hp0 * 1.22) + ')');
+k.hp = 10; for (let t = 0; t < 10000; t += 50) s.update(50);
+const gained = k.hp - 10; const expect = k.maxHp * 0.005 * 10;
+console.log('regen over 10s:', gained.toFixed(2), 'expected', expect.toFixed(2), Math.abs(gained - expect) < 0.5 ? 'PASS' : 'FAIL');
+const b = s.heroes[1]; s.giveItem(b.uid, 'heart_charm'); s.giveItem(b.uid, 'heart_charm'); b.hp = 10; for (let t = 0; t < 10000; t += 50) s.update(50);
+console.log('2 charms regen over 10s:', (b.hp - 10).toFixed(2), 'expected', (b.maxHp * 0.01 * 10).toFixed(2));
+const d = s.heroes[2]; d.hp = 1; d.alive = false; for (let t = 0; t < 2000; t += 50) s.update(50); console.log('dead hero no regen', d.hp === 1 ? 'PASS' : 'FAIL');

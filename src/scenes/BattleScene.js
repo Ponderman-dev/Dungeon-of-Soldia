@@ -486,8 +486,10 @@ export default class BattleScene extends Phaser.Scene {
       this.setBar(t);
       const { amount, crit, mult } = e.result;
       const mark = mult > 1 ? '!' : mult < 1 ? '…' : '';
-      const color = e.attacker.side === 'hero' ? damageTypes[e.attacker.damageType].color : '#ff6b6b';
+      const color = e.attacker.side === 'hero' ? damageTypes[e.damageType || e.attacker.damageType].color : '#ff6b6b';
       this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : color, crit);
+    } else if (e.type === 'projectile') {
+      this.showProjectile(this.views.get(e.from.uid), this.views.get(e.to.uid), e.kind);
     } else if (e.type === 'cast') {
       const caster = this.views.get(e.unit.uid);
       this.popText(caster, e.skill.name, '#9fc4ff');
@@ -542,6 +544,23 @@ export default class BattleScene extends Phaser.Scene {
         this.drawAllBars(); // squad items from this hero stop working, so max health may change
       }
     }
+  }
+
+  // Placeholder projectiles: a fire bomb flies in an arc, lightning is a zig-zag line that fades.
+  showProjectile(from, to, kind) {
+    if (!from || !to) return;
+    const sx = from.ch.homeX, sy = from.ch.homeY - 14, tx = to.ch.homeX, ty = to.ch.homeY - 14;
+    if (kind === 'lightning') {
+      const g = this.add.graphics().setDepth(DEPTH.popup);
+      g.lineStyle(3, 0xffe94d, 1).beginPath().moveTo(sx, sy);
+      for (let i = 1; i < 5; i++) g.lineTo(sx + ((tx - sx) * i) / 5 + Phaser.Math.Between(-10, 10), sy + ((ty - sy) * i) / 5 + Phaser.Math.Between(-10, 10));
+      g.lineTo(tx, ty).strokePath();
+      this.tweens.add({ targets: g, alpha: 0, duration: 350, onComplete: () => g.destroy() });
+      return;
+    }
+    const b = this.add.circle(sx, sy, 5, 0xff7a3d).setStrokeStyle(2, 0xffd24d).setDepth(DEPTH.popup);
+    this.tweens.add({ targets: b, x: tx, duration: 280, ease: 'Sine.easeIn' });
+    this.tweens.add({ targets: b, y: { from: sy, to: ty }, duration: 280, ease: 'Quad.easeOut', onComplete: () => { b.destroy(); } });
   }
 
   drawAllBars() {
@@ -600,7 +619,7 @@ export default class BattleScene extends Phaser.Scene {
     this.state.restoreMana(combatRules.winManaPercent);
     this.state.clearStatuses();
     for (const h of this.state.heroes) this.drawChips(this.views.get(h.uid));
-    for (const { unit, amount } of this.state.healHeroes(combatRules.winHealPercent)) {
+    for (const { unit, amount } of this.state.winHeal(combatRules.winHealPercent)) {
       const v = this.views.get(unit.uid);
       this.setBar(v);
       if (amount > 0) this.popText(v, `+${amount}`, '#6dff8f');

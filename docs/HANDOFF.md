@@ -33,7 +33,7 @@ keep replies short, republish the preview page once per batch or when asked, not
 - Dead heroes: items stop working; the figure freezes and disappears after the survivors descend.
 
 ## Next steps (ask the user which)
-1. More item edits: the user is going through the item list one by one (next: Quick Gloves, then Whetstone, Padded Vest, Sharp Edge, Eagle Eye, the specials). They may send a batch.
+1. More item edits: the user is going through the item list one by one (batch 2 done: Whetstone, Quick Gloves, Siege Cannon, Bloodlust Mask, Gambler's Dice + new Fire Bombs, Chill Band, Static Crystal, Aid Kit; still to review: Padded Vest, Sharp Edge, Eagle Eye, Feather Boots, Bulwark Plate). Numbers to tune are all in items.json.
 2. Build the rest of the draft items (`docs/item-ideas.md`): on-hit effects (burn, poison, slow, stun), skill/mana items, Phoenix Feather.
 3. Skill books in the reward pool (new skill replaces one; upgrade book strengthens one).
 4. Bosses every 10 floors (stun/slow scale 0.5), floor 100 super boss.

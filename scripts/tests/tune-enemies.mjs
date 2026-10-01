@@ -11,7 +11,7 @@ function run(rules) {
     let t = 0;
     while (!s.allEnemiesDead() && !s.allHeroesDead() && t < 600000) { s.update(50); t += 50; }
     if (s.allHeroesDead()) break;
-    s.healHeroes(rules.winHealPercent);
+    s.winHeal(rules.winHealPercent);
     floor++;
   }
   return floor;

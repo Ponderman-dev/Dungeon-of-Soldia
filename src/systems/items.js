@@ -31,6 +31,7 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats) {
     } else if (e.special) {
       specials[e.special] = (specials[e.special] || 0) + e.percent * factor;
       if (e.cooldownMs) specials[e.special + 'CooldownMs'] = e.cooldownMs; // e.g. blockCooldownMs
+      if (e.debuffs) specials[e.special + 'List'] = e.debuffs; // e.g. critDebuffList
     } else if (e.damageBonus) {
       damageBonus[e.damageBonus] = (damageBonus[e.damageBonus] || 0) + e.percent * factor;
     } else if (e.percent !== undefined) {

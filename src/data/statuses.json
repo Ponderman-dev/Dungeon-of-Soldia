@@ -1,6 +1,28 @@
 {
-  "stun":   { "label": "STUN", "color": "#d9a400", "textColor": "#000000" },
-  "slow":   { "label": "SLOW", "color": "#3b8ee0", "textColor": "#ffffff" },
-  "poison": { "label": "PSN",  "color": "#3fae6a", "textColor": "#000000" },
-  "buff":   { "label": "BUFF", "color": "#f2b632", "textColor": "#000000" }
+  "stun": {
+    "label": "STUN",
+    "color": "#d9a400",
+    "textColor": "#000000"
+  },
+  "slow": {
+    "label": "SLOW",
+    "color": "#3b8ee0",
+    "textColor": "#ffffff"
+  },
+  "poison": {
+    "label": "PSN",
+    "color": "#3fae6a",
+    "textColor": "#000000"
+  },
+  "buff": {
+    "label": "BUFF",
+    "color": "#f2b632",
+    "textColor": "#000000"
+  },
+  "blockCooldown": {
+    "label": "BLOCK CD",
+    "color": "#6b6b80",
+    "textColor": "#ffffff",
+    "popup": false
+  }
 }

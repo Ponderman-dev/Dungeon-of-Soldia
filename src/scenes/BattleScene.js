@@ -498,7 +498,7 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'status') {
       const v = this.views.get(e.unit.uid);
       this.drawChips(v);
-      if (e.change === 'apply' && e.status.type !== 'buff') {
+      if (e.change === 'apply' && e.status.type !== 'buff' && statusInfo[e.status.type].popup !== false) {
         this.popText(v, statusInfo[e.status.type].label + '!', statusInfo[e.status.type].color);
       }
       if (e.status.type === 'buff') this.drawAllBars();

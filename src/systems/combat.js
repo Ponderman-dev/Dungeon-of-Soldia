@@ -21,8 +21,10 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
   if (rng() * 100 < evasion) return { dodged: true, crit: false, amount: 0, mult: 1 };
 
   // Block (Shield Totem): a hit is stopped completely.
+  // While the totems recharge (a 'blockCooldown' status) nothing is blocked.
   const block = (defender.specials && defender.specials.block) || 0;
-  if (rng() * 100 < block) return { dodged: true, blocked: true, crit: false, amount: 0, mult: 1 };
+  const recharging = defender.statuses && defender.statuses.some((st) => st.type === 'blockCooldown');
+  if (block > 0 && !recharging && rng() * 100 < block) return { dodged: true, blocked: true, crit: false, amount: 0, mult: 1 };
 
   // Melee swings often miss flying enemies.
   if (type === 'melee' && defender.flying && rng() * 100 < rules.meleeVsFlyingMissPercent) {

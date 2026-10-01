@@ -30,6 +30,7 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats) {
       if (holder === hero) procs.push({ ...e, itemId: e.itemId });
     } else if (e.special) {
       specials[e.special] = (specials[e.special] || 0) + e.percent * factor;
+      if (e.cooldownMs) specials[e.special + 'CooldownMs'] = e.cooldownMs; // e.g. blockCooldownMs
     } else if (e.damageBonus) {
       damageBonus[e.damageBonus] = (damageBonus[e.damageBonus] || 0) + e.percent * factor;
     } else if (e.percent !== undefined) {

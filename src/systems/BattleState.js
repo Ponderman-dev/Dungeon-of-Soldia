@@ -147,6 +147,11 @@ export default class BattleState {
       const result = computeDamage(unit, target, this.rules, this.damageTypes, this.rng);
       if (!result.dodged) target.hp = Math.max(0, target.hp - result.amount);
       events.push({ type: 'attack', attacker: unit, target, result });
+      if (result.blocked) {
+        // A successful block sends the holder's Shield Totems on cooldown.
+        const spec = { status: 'blockCooldown', durationMs: target.specials.blockCooldownMs || 2500 };
+        this.applyStatus(target, spec, target, 'totem', events);
+      }
       if (!result.dodged) this.afterHit(unit, target, result.amount, events);
       this.rollProcs(unit, 'onAttack', events);
       if (target.hp <= 0 && target.alive) this.killUnit(target, events);

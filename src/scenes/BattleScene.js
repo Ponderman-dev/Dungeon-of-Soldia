@@ -81,13 +81,23 @@ export default class BattleScene extends Phaser.Scene {
 
   // The boxes (and name labels) under the heroes are hidden while the floor changes.
   showSlots(show, duration = 250) {
-    const targets = [];
     for (const h of this.state.heroes) {
       const v = this.views.get(h.uid);
-      targets.push(v.slotBox, v.label);
-      for (const b of v.skillButtons) targets.push(b.g, b.code, b.cost, b.cd);
+      // A fallen hero's box stays dim and has no skill squares.
+      this.tweens.add({ targets: [v.slotBox, v.label], alpha: show ? (h.alive ? 1 : 0.3) : 0, duration });
+      const buttons = v.skillButtons.flatMap((b) => [b.g, b.code, b.cost, b.cd]);
+      this.tweens.add({ targets: buttons, alpha: show && h.alive ? 1 : 0, duration });
     }
-    this.tweens.add({ targets, alpha: show ? 1 : 0, duration });
+  }
+
+  // After the survivors go through the door, the fallen heroes are gone from the screen.
+  removeFallenHeroes() {
+    for (const h of this.state.heroes) {
+      if (h.alive) continue;
+      const v = this.views.get(h.uid);
+      v.ch.setVisible(false);
+      this.setBarsVisible(v, false);
+    }
   }
 
   startFighting() {
@@ -160,7 +170,7 @@ export default class BattleScene extends Phaser.Scene {
         g.lineStyle(ready ? 3 : 2, ready ? 0xf2b632 : 0x3b6fe0, ready ? 1 : 0.5).strokeRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
         b.cd.setText(slot.cooldownLeft > 0 ? String(Math.ceil(slot.cooldownLeft / 1000)) : '');
         b.cost.setColor(hero.mana >= skill.manaCost ? '#8fb0ff' : '#ff8c8c');
-        b.code.setAlpha(ready ? 1 : 0.6);
+        b.code.setColor(ready ? '#f3eefc' : '#8a86a0');
       });
     }
   }
@@ -516,7 +526,9 @@ export default class BattleScene extends Phaser.Scene {
         this.drawChips(v);
         this.tweens.add({ targets: [v.ch, v.bg, v.fill], alpha: 0, duration: 400, onComplete: () => this.removeView(e.unit.uid) });
       } else {
+        v.ch.freeze(); // stop floating
         v.ch.setAlpha(0.25);
+        v.skillButtons.forEach((b) => [b.g, b.code, b.cost, b.cd].forEach((o) => o.setAlpha(0)));
         v.bg.setAlpha(0.4);
         v.fill.setAlpha(0.4);
         if (v.dots) v.dots.setAlpha(0.4);
@@ -594,7 +606,10 @@ export default class BattleScene extends Phaser.Scene {
       this.banner.setText('');
       this.showReward(() => {
         this.showSlots(false);
-        this.heroesWalkToDoor(() => this.slideToNextFloor(() => this.enterHeroes(() => this.startFighting())));
+        this.heroesWalkToDoor(() => {
+          this.removeFallenHeroes();
+          this.slideToNextFloor(() => this.enterHeroes(() => this.startFighting()));
+        });
       });
     });
   }

@@ -52,6 +52,12 @@ export default class Character extends Phaser.GameObjects.Container {
     }
   }
 
+  // Stops the idle animation (the character holds its current pose). Used when a hero dies.
+  freeze() {
+    for (const t of this.idleTweens) t.stop();
+    this.idleTweens = [];
+  }
+
   destroy(fromScene) {
     for (const t of this.idleTweens) t.remove();
     super.destroy(fromScene);

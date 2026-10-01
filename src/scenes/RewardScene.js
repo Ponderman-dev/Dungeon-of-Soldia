@@ -146,11 +146,11 @@ export default class RewardScene extends Phaser.Scene {
       if (e.special) {
         const before = hero.specials[e.special] || 0;
         const now = after.specials[e.special] || 0;
-        lines.push({ text: `${SPECIAL_LABEL[e.special]} ${before}% > ${now}%`, up: true });
+        lines.push({ text: `${SPECIAL_LABEL[e.special]} ${before}>${now}%`, up: true });
       } else if (e.damageBonus) {
         const before = hero.damageBonus[e.damageBonus] || 0;
         const now = after.damageBonus[e.damageBonus] || 0;
-        lines.push({ text: `${e.damageBonus.toUpperCase()} DMG +${before}% > +${now}%`, up: true });
+        lines.push({ text: `${e.damageBonus.toUpperCase()} DMG ${before}>${now}%`, up: true });
       } else if (!seen.has(e.stat)) {
         seen.add(e.stat);
         const before = Math.round(hero.stats[e.stat]);
@@ -192,7 +192,7 @@ export default class RewardScene extends Phaser.Scene {
 
       if (ok) {
         this.previewLines(hero, item).forEach((line, li) => {
-          this.text(x + 12, y + 96 + li * 18, line.text, 13, line.up ? '#6dff8f' : '#ff8c8c', true);
+          this.text(x + 12, y + 96 + li * 18, line.text, 12, line.up ? '#6dff8f' : '#ff8c8c', true);
         });
       } else {
         this.text(x + 12, y + 96, hero.alive ? 'Max stacks' : 'Fallen', 13, MUTE, true);

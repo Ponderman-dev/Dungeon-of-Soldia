@@ -1,5 +1,8 @@
 # Item ideas (DRAFT, plain words, not final)
 
+> Built so far: 14 of these are in `src/data/items.json` (the ones that work without skills or magic).
+> Rarity names now follow the wireframes: Common (grey), Rare (blue, was "Uncommon"), Epic (purple, was "Rare"), Legendary (gold).
+
 Dot colour = item type. Dot border = rarity.
 - Types: Stat = red, On-hit = purple, Skill = cyan, Squad = yellow, Trade-off = pink
 - Rarity borders: Common = grey, Uncommon = green, Rare = blue, Legendary = orange

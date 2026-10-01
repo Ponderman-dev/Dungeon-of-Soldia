@@ -6,9 +6,15 @@ import dungeons from '../data/dungeons.json';
 import combatRules from '../data/combat.json';
 import damageTypes from '../data/damageTypes.json';
 import leveling from '../data/leveling.json';
+import rawItems from '../data/items.json';
+import itemTypes from '../data/itemTypes.json';
+import rarities from '../data/rarities.json';
+import rewardRules from '../data/rewards.json';
 import Character from '../entities/Character.js';
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon } from '../systems/validate.js';
+import { loadItems } from '../systems/items.js';
+import { rollChoices } from '../systems/rewards.js';
 
 const DUNGEON_ID = 'A';
 const SLOT_Y = 720;
@@ -18,6 +24,7 @@ const BAR_WIDTH = 44;
 const WALL_H = 200; // the back wall (with the door) fills the top of each floor
 const DOOR_X = GAME_WIDTH / 2;
 const T = combatRules.transition;
+const itemDefs = loadItems(rawItems);
 
 // Depth order: floor < slots < hero < hero bars < popups < banner/HUD
 const DEPTH = { floor: 0, slot: 1, marker: 2, hero: 5, heroBar: 6, doorFront: 7, popup: 10, hud: 20 };
@@ -41,6 +48,7 @@ export default class BattleScene extends Phaser.Scene {
     this.state = new BattleState({
       heroDefs: heroDefs.slice(0, 4),
       enemyDefs,
+      itemDefs,
       rules: combatRules,
       damageTypes,
       leveling,
@@ -48,8 +56,8 @@ export default class BattleScene extends Phaser.Scene {
 
     this.drawHeroSlots();
     this.floorText = this.add
-      .text(GAME_WIDTH / 2, 24, '', { fontFamily: 'monospace', fontSize: '16px', color: '#9a8fc0' })
-      .setOrigin(0.5)
+      .text(16, 24, '', { fontFamily: 'monospace', fontSize: '16px', color: '#9a8fc0' })
+      .setOrigin(0, 0.5)
       .setDepth(DEPTH.hud);
     this.banner = this.add
       .text(GAME_WIDTH / 2, 520, '', { fontFamily: 'monospace', fontSize: '24px', color: '#ffffff', stroke: '#000000', strokeThickness: 4, align: 'center' })
@@ -108,6 +116,10 @@ export default class BattleScene extends Phaser.Scene {
       .rectangle(x - BAR_WIDTH / 2, barY, BAR_WIDTH, 5, unit.side === 'hero' ? 0x4cd16a : 0xe04b4b)
       .setOrigin(0, 0.5);
     const view = { unit, ch, bg, fill, groundY };
+    if (unit.side === 'hero') {
+      // Item dots above the health bar: dot colour = item type, ring = rarity.
+      view.dots = this.add.graphics().setPosition(x, barY - 12).setDepth(DEPTH.heroBar);
+    }
     this.views.set(unit.uid, view);
 
     if (unit.side === 'enemy') {
@@ -178,6 +190,31 @@ export default class BattleScene extends Phaser.Scene {
     const y = baseY - view.unit.def.height * view.ch.scaleX - 10;
     view.bg.setPosition(view.ch.x, y).setAlpha(view.ch.alpha);
     view.fill.setPosition(view.ch.x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
+    if (view.dots) view.dots.setPosition(view.ch.x, y - 12).setAlpha(view.ch.alpha);
+  }
+
+  // Shows or hides a fighter's health bar (and item dots).
+  setBarsVisible(view, visible) {
+    view.bg.setVisible(visible);
+    view.fill.setVisible(visible);
+    if (view.dots) view.dots.setVisible(visible);
+  }
+
+  // Redraws the dots for a hero's items: one dot per item copy, up to 6 per row, rows going up.
+  drawDots(view) {
+    const g = view.dots;
+    g.clear();
+    const items = view.unit.items;
+    const perRow = 6;
+    items.forEach((id, i) => {
+      const def = itemDefs[id];
+      const row = Math.floor(i / perRow);
+      const inRow = Math.min(perRow, items.length - row * perRow);
+      const x = ((i % perRow) - (inRow - 1) / 2) * 10;
+      const y = -row * 10;
+      g.fillStyle(Number(itemTypes[def.type].color), 1).fillCircle(x, y, 3.5);
+      g.lineStyle(1.5, Number(rarities[def.rarity].color), 1).strokeCircle(x, y, 4.5);
+    });
   }
 
   livingHeroViews() {
@@ -205,10 +242,7 @@ export default class BattleScene extends Phaser.Scene {
       delay,
       duration: (total / T.walkSpeedPxPerSec) * 1000,
       ease: 'Linear',
-      onStart: () => {
-        view.bg.setVisible(false); // health bars would clutter the line
-        view.fill.setVisible(false);
-      },
+      onStart: () => this.setBarsVisible(view, false), // bars and dots would clutter the line
       onUpdate: (tween) => {
         let d = tween.getValue() * total;
         let i = 0;
@@ -243,8 +277,7 @@ export default class BattleScene extends Phaser.Scene {
     if (!left) return done();
     living.forEach((v, i) => {
       v.ch.setScale(CHAR_SCALE).setAlpha(1).setVisible(true).setPosition(DOOR_X, GAME_HEIGHT + 90);
-      v.bg.setVisible(false);
-      v.fill.setVisible(false);
+      this.setBarsVisible(v, false);
       this.walkPath(
         v,
         [
@@ -258,8 +291,7 @@ export default class BattleScene extends Phaser.Scene {
             v.ch.setScale(CHAR_SCALE).setDepth(DEPTH.hero);
             v.ch.homeX = v.slotX;
             v.ch.homeY = SLOT_Y;
-            v.bg.setVisible(true);
-            v.fill.setVisible(true);
+            this.setBarsVisible(v, true);
             this.syncBar(v);
             if (--left === 0) done();
           },
@@ -362,8 +394,14 @@ export default class BattleScene extends Phaser.Scene {
         v.ch.setAlpha(0.25);
         v.bg.setAlpha(0.4);
         v.fill.setAlpha(0.4);
+        if (v.dots) v.dots.setAlpha(0.4);
+        this.drawAllBars(); // squad items from this hero stop working, so max health may change
       }
     }
+  }
+
+  drawAllBars() {
+    for (const h of this.state.heroes) this.setBar(this.views.get(h.uid));
   }
 
   setLabel(view) {
@@ -380,6 +418,7 @@ export default class BattleScene extends Phaser.Scene {
     v.ch.destroy();
     v.bg.destroy();
     v.fill.destroy();
+    if (v.dots) v.dots.destroy();
     this.views.delete(uid);
   }
 
@@ -414,9 +453,38 @@ export default class BattleScene extends Phaser.Scene {
 
     this.time.delayedCall(T.clearPauseMs, () => {
       this.banner.setText('');
-      this.showSlots(false);
-      this.heroesWalkToDoor(() => this.slideToNextFloor(() => this.enterHeroes(() => this.startFighting())));
+      this.showReward(() => {
+        this.showSlots(false);
+        this.heroesWalkToDoor(() => this.slideToNextFloor(() => this.enterHeroes(() => this.startFighting())));
+      });
     });
+  }
+
+  // Shows the reward screen. When it is done, the hero gets the item and `next` runs.
+  showReward(next) {
+    const choices = rollChoices({ itemDefs, rarities, count: rewardRules.choices, heroes: this.state.heroes });
+    if (!choices.length) return next();
+    this.scene.launch('Reward', {
+      state: this.state,
+      choices,
+      floor: this.floor,
+      onDone: (itemId, heroUid) => {
+        this.scene.stop('Reward');
+        this.scene.resume();
+        this.giveItem(itemId, heroUid);
+        this.time.delayedCall(700, next); // a moment to see the new dot
+      },
+    });
+    this.scene.pause();
+  }
+
+  giveItem(itemId, heroUid) {
+    this.state.giveItem(heroUid, itemId);
+    const item = itemDefs[itemId];
+    this.drawAllBars();
+    const view = this.views.get(heroUid);
+    this.drawDots(view);
+    this.popText(view, `+${item.name}`, `#${Number(rarities[item.rarity].color).toString(16).padStart(6, '0')}`, true);
   }
 
   onLoss() {

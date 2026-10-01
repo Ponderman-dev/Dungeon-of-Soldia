@@ -12,6 +12,7 @@ export default class Character extends Phaser.GameObjects.Container {
     this.homeX = x;
     this.homeY = y;
     this.lunging = false;
+    this.idleTweens = [];
 
     for (const [name, p] of Object.entries(def.parts)) {
       const block = scene.add.rectangle(p.x, p.y, p.w, p.h, Number(p.color));
@@ -47,8 +48,13 @@ export default class Character extends Phaser.GameObjects.Container {
       };
       if (idle.dy) tween.y = block.y + idle.dy;
       if (idle.angle) tween.angle = idle.angle;
-      this.scene.tweens.add(tween);
+      this.idleTweens.push(this.scene.tweens.add(tween));
     }
+  }
+
+  destroy(fromScene) {
+    for (const t of this.idleTweens) t.remove();
+    super.destroy(fromScene);
   }
 
   // Quick jab towards a point and back.

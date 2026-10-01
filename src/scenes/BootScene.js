@@ -8,5 +8,6 @@ export default class BootScene extends Phaser.Scene {
 
   create() {
     this.scene.start('Battle');
+    this.scene.launch('Debug'); // test button, always on top
   }
 }

@@ -1,0 +1,7 @@
+{
+  "stat":     { "label": "STAT",      "color": "0xe0524d" },
+  "onhit":    { "label": "ON-HIT",    "color": "0xa45be6" },
+  "skill":    { "label": "SKILL",     "color": "0x33c4d6" },
+  "squad":    { "label": "SQUAD",     "color": "0xf2d03a" },
+  "tradeoff": { "label": "TRADE-OFF", "color": "0xf06ab4" }
+}

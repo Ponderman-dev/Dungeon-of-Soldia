@@ -1,11 +1,13 @@
 import { computeDamage } from './combat.js';
 import { xpForNextLevel, statsAtLevel } from './leveling.js';
+import { computeHeroStats } from './items.js';
 
 // The fight itself: who is alive, who attacks whom and when.
 // No Phaser in here. update() returns a list of events and the scene draws them.
 export default class BattleState {
-  constructor({ heroDefs, enemyDefs, rules, damageTypes, leveling, rng = Math.random }) {
+  constructor({ heroDefs, enemyDefs, itemDefs = {}, rules, damageTypes, leveling, rng = Math.random }) {
     this.rules = rules;
+    this.itemDefs = itemDefs;
     this.leveling = leveling;
     this.damageTypes = damageTypes;
     this.enemyDefs = enemyDefs;
@@ -37,6 +39,8 @@ export default class BattleState {
       baseStats: { ...stats },
       level: 1,
       xp: 0,
+      items: [],
+      damageBonus: {},
       alive: true,
       damageType: def.damageType,
       flying: !!def.flying,
@@ -110,6 +114,7 @@ export default class BattleState {
         if (this.focusUid === target.uid) this.focusUid = null;
         events.push({ type: 'death', unit: target });
         if (target.side === 'enemy') this.awardXp(target, events);
+        else this.refreshStats(); // items on the dead hero stop working
       }
     }
     return events;
@@ -130,13 +135,42 @@ export default class BattleState {
     }
   }
 
-  // Raises a hero one level. Max health rises and current health rises by the same amount.
+  // Raises a hero one level.
   levelUp(hero) {
     hero.level += 1;
-    const oldMax = hero.maxHp;
-    hero.stats = statsAtLevel(hero.baseStats, hero.def, hero.level);
-    hero.maxHp = hero.stats.health;
-    hero.hp += hero.maxHp - oldMax;
+    this.refreshStats();
+  }
+
+  // Works out every living hero's stats again (level + items). If max health goes up, current
+  // health goes up by the same amount; if it goes down, current health is capped to the new max.
+  refreshStats() {
+    for (const hero of this.heroes) {
+      if (!hero.alive) continue;
+      const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
+      const { stats, damageBonus } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats);
+      const delta = stats.health - hero.maxHp;
+      hero.stats = stats;
+      hero.damageBonus = damageBonus;
+      hero.maxHp = stats.health;
+      hero.hp = Math.max(1, delta > 0 ? hero.hp + delta : Math.min(hero.hp, hero.maxHp));
+    }
+  }
+
+  // Gives a hero an item.
+  giveItem(heroUid, itemId) {
+    const hero = this.heroes.find((h) => h.uid === heroUid);
+    hero.items.push(itemId);
+    this.refreshStats();
+  }
+
+  // What a hero's stats WOULD be with one more copy of an item (nothing changes).
+  previewStats(heroUid, itemId) {
+    const hero = this.heroes.find((h) => h.uid === heroUid);
+    hero.items.push(itemId);
+    const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
+    const result = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats);
+    hero.items.pop();
+    return result;
   }
 
   // Heals every living hero by a % of their max health. Returns [{ unit, amount }].

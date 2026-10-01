@@ -1,0 +1,7 @@
+{
+  "choices": 3,
+  "autoPickDelayMs": 2000,
+  "autoHighlightMs": 500,
+  "autoAssignDelayMs": 800,
+  "autoConfirmDelayMs": 600
+}

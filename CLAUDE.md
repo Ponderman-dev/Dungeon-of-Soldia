@@ -33,6 +33,8 @@ All numbers below go in JSON/config so they are easy to tune.
 - **Dead heroes:** stay dead for the rest of the run. Run ends when all 4 are dead.
 - **Tap-to-focus:** all heroes attack the tapped enemy until it dies, then go back to auto-target.
 - **Levelling:** heroes gain XP from kills (`xp` per enemy in enemies.json). An enemy's XP is SPLIT between living heroes; dead heroes are frozen. Needed XP: `xpBase * xpGrowth^(level-1)` (leveling.json). Each hero has its own `growthPercent` (% of base per level: health, attack, mana) and `growthFlat` (points per level: defense, resist, evasion, crit, attackEfficiency) in heroes.json. On level-up, max health rises and current health rises by the same amount. Levels reset every run.
+- **Rewards:** after every floor clear a full-screen reward scene (RewardScene, layout from the user's wireframes) shows 3 items (rarity-weighted, `rewards.json` / `rarities.json`), then a "Who gets it?" screen (2x2 hero cards with before > after stats, then a Give button). Only items for now; skill books come with skills. Rarities: common (grey), rare (blue), epic (purple), legendary (gold). Items: `items.json` (effects: `stat` + `percent` or `flat`, or `damageBonus` + `percent`; `scope` self or squad; optional `maxStacks`). Items show as dots above the hero's health bar: dot colour = type (`itemTypes.json`), ring = rarity. Only items whose effects work today are in the pool (no magic/mana items yet).
+- **TEST auto-reward:** `DebugScene` draws a TEST button (top right) that toggles the registry flag `autoRewards` (default ON). When ON the reward scene waits 2s, picks a random card, then gives it to a random living hero. The user does NOT want to play the reward screen yet, but it is a definite game feature. Remove DebugScene and the auto code when rewards go live.
 - **Item numbers:** defense, resist, evasion, crit items add FLAT points (+8 defense = 8% less physical damage). Attack, health, mana items add a % of the hero's base stat.
 - **Items on dead heroes:** ALL items on a dead hero stop working (squad-wide ones too). Dead heroes lose their gear for the run.
 - **Boss stun/slow:** bosses take half-length stun and slow (value lives in the boss JSON).
@@ -62,7 +64,7 @@ After each working step: `npm run build:page`, copy `dist-page.html` to the scra
 - `src/config.js`  size/colour constants
 - `src/scenes/`  one file per scene
 - `src/entities/`  reusable game objects (e.g. Character built from parts)
-- `src/systems/`  fight logic with no Phaser in it (BattleState, combat maths, data checks)
+- `src/systems/`  logic with no Phaser in it (BattleState, combat maths, items, rewards, data checks)
 - `src/data/`  JSON game data
 - `public/`  static assets
 - `docs/`  design docs

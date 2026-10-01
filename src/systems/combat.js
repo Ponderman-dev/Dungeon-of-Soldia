@@ -19,6 +19,7 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng) {
   if (defender.weak.includes(attacker.damageType)) mult = rules.weakMultiplier;
   else if (defender.resists.includes(attacker.damageType)) mult = rules.resistMultiplier;
   amount *= mult;
+  amount *= 1 + ((attacker.damageBonus && attacker.damageBonus[attacker.damageType]) || 0) / 100;
 
   // Physical hits are cut by Defense, magical hits by Resist.
   const physical = damageTypes[attacker.damageType].category === 'physical';

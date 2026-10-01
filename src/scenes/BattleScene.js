@@ -153,8 +153,8 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // Keeps a fighter's health bar attached to it while it moves.
-  syncBar(view) {
-    const y = view.ch.y - view.unit.def.height * view.ch.scaleX - 10;
+  syncBar(view, baseY = view.ch.y) {
+    const y = baseY - view.unit.def.height * view.ch.scaleX - 10;
     view.bg.setPosition(view.ch.x, y).setAlpha(view.ch.alpha);
     view.fill.setPosition(view.ch.x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
   }
@@ -163,7 +163,36 @@ export default class BattleScene extends Phaser.Scene {
     return this.state.heroes.filter((h) => h.alive).map((h) => this.views.get(h.uid));
   }
 
-  // Heroes walk up from below the screen to their slots, then call done.
+  // One hero walks in a straight line at a steady pace, hopping with each step.
+  //   shrinkTo: scale at the end (smaller = further away). fadeOut: fade away near the end.
+  walkTo(view, { x, y, shrinkTo = CHAR_SCALE, fadeOut = false, delay, duration, onDone }) {
+    const ch = view.ch;
+    const from = { x: ch.x, y: ch.y, scale: ch.scaleX };
+    const steps = Math.max(2, Math.round(duration / T.stepMs));
+    this.tweens.addCounter({
+      from: 0,
+      to: 1,
+      delay,
+      duration,
+      ease: 'Linear',
+      onUpdate: (tween) => {
+        const p = tween.getValue();
+        const baseY = from.y + (y - from.y) * p;
+        ch.x = from.x + (x - from.x) * p;
+        ch.y = baseY - Math.abs(Math.sin(p * steps * Math.PI)) * T.stepHeight; // the hop
+        ch.setScale(from.scale + (shrinkTo - from.scale) * p);
+        if (fadeOut) ch.setAlpha(p < 0.7 ? 1 : 1 - (p - 0.7) / 0.3);
+        this.syncBar(view, baseY);
+      },
+      onComplete: () => {
+        ch.setPosition(x, y);
+        this.syncBar(view);
+        onDone();
+      },
+    });
+  }
+
+  // Heroes walk up from below the screen to their slots, one after another, then call done.
   enterHeroes(done) {
     const living = this.livingHeroViews();
     let left = living.length;
@@ -173,41 +202,34 @@ export default class BattleScene extends Phaser.Scene {
       v.bg.setVisible(true);
       v.fill.setVisible(true);
       this.syncBar(v);
-      this.tweens.add({
-        targets: v.ch,
+      this.walkTo(v, {
+        x: v.slotX,
         y: SLOT_Y,
         delay: i * T.walkStaggerMs,
         duration: T.enterMs,
-        ease: 'Sine.easeOut',
-        onUpdate: () => this.syncBar(v),
-        onComplete: () => {
+        onDone: () => {
           v.ch.homeX = v.slotX;
           v.ch.homeY = SLOT_Y;
-          this.syncBar(v);
           if (--left === 0) done();
         },
       });
     });
   }
 
-  // Heroes walk up to the door and disappear into it, then call done.
+  // Heroes walk up to the door one after another and disappear into it, then call done.
   heroesWalkToDoor(done) {
     const living = this.livingHeroViews();
     let left = living.length;
     if (!left) return done();
     living.forEach((v, i) => {
-      this.tweens.add({
-        targets: v.ch,
-        x: DOOR_X + (i - (living.length - 1) / 2) * 8,
+      this.walkTo(v, {
+        x: DOOR_X,
         y: WALL_H + 6,
-        scaleX: CHAR_SCALE * 0.5,
-        scaleY: CHAR_SCALE * 0.5,
-        alpha: 0,
+        shrinkTo: CHAR_SCALE * 0.5,
+        fadeOut: true,
         delay: i * T.walkStaggerMs,
         duration: T.walkToDoorMs,
-        ease: 'Sine.easeIn',
-        onUpdate: () => this.syncBar(v),
-        onComplete: () => {
+        onDone: () => {
           v.ch.setVisible(false);
           v.bg.setVisible(false);
           v.fill.setVisible(false);

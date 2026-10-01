@@ -18,10 +18,12 @@
   "restartDelayMs": 3000,
   "meleeVsFlyingMissPercent": 40,
   "transition": {
-    "clearPauseMs": 700,
-    "walkToDoorMs": 1000,
-    "walkStaggerMs": 120,
-    "slideMs": 1100,
-    "enterMs": 900
+    "clearPauseMs": 600,
+    "walkToDoorMs": 800,
+    "walkStaggerMs": 300,
+    "slideMs": 1000,
+    "enterMs": 800,
+    "stepMs": 260,
+    "stepHeight": 6
   }
 }

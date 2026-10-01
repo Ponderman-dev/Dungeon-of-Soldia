@@ -38,7 +38,7 @@ All numbers below go in JSON/config so they are easy to tune.
 - **Boss stun/slow:** bosses take half-length stun and slow (value lives in the boss JSON).
 - **Items are passive only:** never tappable or activatable. The player only taps skills and enemies.
 - **Stacking:** items stack with no cap, except dodge/crit-type items, whose cap is set in the item JSON.
-- **Floor flow:** each floor has a door in the back wall (top of screen). After a clear: door opens and glows, living heroes heal, they walk up and vanish through the door, the camera slides up (old floor drops away, new floor with its enemies comes down from the top), then the living heroes walk in from the bottom edge to their slots and the fight starts. Dead heroes stay in their slots, dimmed. Timings are in combat.json `transition`.
+- **Floor flow:** each floor has a door in the back wall (top of screen). After a clear: door opens and glows, living heroes heal, they walk up ONE AFTER ANOTHER (steady pace, hopping each step) and vanish through the door, the camera slides up (old floor drops away, new floor with its enemies comes down from the top), then the living heroes walk in one after another from the bottom edge to their slots and the fight starts. Dead heroes stay in their slots, dimmed. Timings are in combat.json `transition`.
 - **Enemies per fight:** 1-3 enemies up to floor 20; four-enemy fights only from floor 21 (set in dungeons.json). A floor entry applies until the next listed floor.
 - **Dungeons:** floors, enemies and bosses are grouped by dungeon id ("A") so Dungeon B is data-only.
 - **Saving:** unlocks saved in browser localStorage (works in Capacitor too).

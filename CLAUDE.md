@@ -53,6 +53,7 @@ All numbers below go in JSON/config so they are easy to tune.
 - `src/config.js`  size/colour constants
 - `src/scenes/`  one file per scene
 - `src/entities/`  reusable game objects (e.g. Character built from parts)
+- `src/systems/`  fight logic with no Phaser in it (BattleState, combat maths, data checks)
 - `src/data/`  JSON game data
 - `public/`  static assets
 - `docs/`  design docs

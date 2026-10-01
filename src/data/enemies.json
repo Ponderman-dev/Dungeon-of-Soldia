@@ -1,0 +1,144 @@
+{
+  "slime": {
+    "name": "Slime",
+    "damageType": "melee",
+    "flying": false,
+    "height": 14,
+    "weak": [
+      "ranged"
+    ],
+    "resists": [
+      "melee"
+    ],
+    "stats": {
+      "health": 260,
+      "attack": 4,
+      "defense": 3,
+      "attackEfficiency": 80
+    },
+    "parts": {
+      "body": {
+        "w": 20,
+        "h": 12,
+        "x": 0,
+        "y": -6,
+        "color": "0x57c26a",
+        "idle": {
+          "dy": -1,
+          "duration": 600
+        }
+      },
+      "eyes": {
+        "w": 10,
+        "h": 3,
+        "x": 0,
+        "y": -8,
+        "color": "0x1a1020",
+        "idle": {
+          "dy": -1,
+          "duration": 600
+        }
+      }
+    }
+  },
+  "goblin": {
+    "name": "Goblin",
+    "damageType": "melee",
+    "flying": false,
+    "height": 26,
+    "weak": [],
+    "resists": [],
+    "stats": {
+      "health": 340,
+      "attack": 6,
+      "defense": 4,
+      "attackEfficiency": 100
+    },
+    "parts": {
+      "body": {
+        "w": 12,
+        "h": 14,
+        "x": 0,
+        "y": -7,
+        "color": "0x6b8e23",
+        "idle": {
+          "dy": -1,
+          "duration": 450
+        }
+      },
+      "head": {
+        "w": 11,
+        "h": 10,
+        "x": 0,
+        "y": -19,
+        "color": "0x8fbc3a",
+        "idle": {
+          "dy": -1.5,
+          "duration": 450,
+          "delay": 100
+        }
+      },
+      "weapon": {
+        "w": 4,
+        "h": 13,
+        "x": -9,
+        "y": -5,
+        "color": "0x8b5a2b",
+        "pivotY": 1,
+        "idle": {
+          "angle": -10,
+          "duration": 650
+        }
+      }
+    }
+  },
+  "bat": {
+    "name": "Bat",
+    "damageType": "melee",
+    "flying": true,
+    "hover": 34,
+    "height": 12,
+    "weak": [
+      "ranged"
+    ],
+    "resists": [],
+    "stats": {
+      "health": 150,
+      "attack": 4,
+      "defense": 0,
+      "evasion": 20,
+      "attackEfficiency": 130
+    },
+    "parts": {
+      "body": {
+        "w": 10,
+        "h": 8,
+        "x": 0,
+        "y": -4,
+        "color": "0x5b3f8f"
+      },
+      "wingL": {
+        "w": 9,
+        "h": 4,
+        "x": -9,
+        "y": -6,
+        "color": "0x7a5cb8",
+        "idle": {
+          "dy": -3,
+          "duration": 180
+        }
+      },
+      "wingR": {
+        "w": 9,
+        "h": 4,
+        "x": 9,
+        "y": -6,
+        "color": "0x7a5cb8",
+        "idle": {
+          "dy": -3,
+          "duration": 180
+        }
+      }
+    }
+  }
+}

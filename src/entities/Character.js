@@ -9,10 +9,14 @@ export default class Character extends Phaser.GameObjects.Container {
     super(scene, x, y);
     this.def = def;
     this.parts = {};
+    this.homeX = x;
+    this.homeY = y;
+    this.lunging = false;
 
     for (const [name, p] of Object.entries(def.parts)) {
       const block = scene.add.rectangle(p.x, p.y, p.w, p.h, Number(p.color));
       block.setStrokeStyle(1, 0x1a1020);
+      block.baseColor = Number(p.color);
       if (p.pivotY !== undefined) {
         // Rotate around this point (e.g. a sword turns from its handle).
         block.setOrigin(0.5, p.pivotY);
@@ -45,5 +49,35 @@ export default class Character extends Phaser.GameObjects.Container {
       if (idle.angle) tween.angle = idle.angle;
       this.scene.tweens.add(tween);
     }
+  }
+
+  // Quick jab towards a point and back.
+  lunge(toX, toY) {
+    if (this.lunging) return;
+    this.lunging = true;
+    const dx = toX - this.homeX;
+    const dy = toY - this.homeY;
+    const len = Math.hypot(dx, dy) || 1;
+    this.scene.tweens.add({
+      targets: this,
+      x: this.homeX + (dx / len) * 26,
+      y: this.homeY + (dy / len) * 26,
+      duration: 90,
+      yoyo: true,
+      onComplete: () => {
+        this.x = this.homeX;
+        this.y = this.homeY;
+        this.lunging = false;
+      },
+    });
+  }
+
+  // Turn every part white for a moment (hit feedback).
+  flash() {
+    for (const block of Object.values(this.parts)) block.setFillStyle(0xffffff);
+    this.scene.time.delayedCall(80, () => {
+      if (!this.active) return;
+      for (const block of Object.values(this.parts)) block.setFillStyle(block.baseColor);
+    });
   }
 }

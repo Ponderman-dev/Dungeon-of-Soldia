@@ -1,0 +1,8 @@
+{
+  "melee":    { "category": "physical", "color": "#f2f2f2" },
+  "ranged":   { "category": "physical", "color": "#e6e6b8" },
+  "fire":     { "category": "magical",  "color": "#ff7a3d" },
+  "ice":      { "category": "magical",  "color": "#7fd8ff" },
+  "electric": { "category": "magical",  "color": "#ffe94d" },
+  "dark":     { "category": "magical",  "color": "#b07cff" }
+}

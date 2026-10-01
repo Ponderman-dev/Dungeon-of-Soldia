@@ -20,7 +20,7 @@ const DOOR_X = GAME_WIDTH / 2;
 const T = combatRules.transition;
 
 // Depth order: floor < slots < hero < hero bars < popups < banner/HUD
-const DEPTH = { floor: 0, slot: 1, marker: 2, hero: 5, heroBar: 6, popup: 10, hud: 20 };
+const DEPTH = { floor: 0, slot: 1, marker: 2, hero: 5, heroBar: 6, doorFront: 7, popup: 10, hud: 20 };
 
 // The battle screen: enemies at the top, four heroes at the bottom, everyone auto-attacks.
 // After a win the heroes walk through the door, the floor slides down, and they walk in
@@ -106,6 +106,8 @@ export default class BattleScene extends Phaser.Scene {
   // Builds one floor: back wall, door, tiled ground and the enemies. yOffset places it off-screen.
   buildFloor(n, yOffset) {
     const container = this.add.container(0, yOffset).setDepth(DEPTH.floor);
+    // The inside of the door is drawn in front of the heroes, so they seem to step into it.
+    const front = this.add.container(0, yOffset).setDepth(DEPTH.doorFront);
     const colors = this.dungeon.tileColors;
     const base = Number(colors[(n - 1) % colors.length]);
     const line = Phaser.Display.Color.ValueToColor(base).brighten(10).color;
@@ -137,7 +139,8 @@ export default class BattleScene extends Phaser.Scene {
       this.add.rectangle(DOOR_X, WALL_H - 26, 36, 52, dark),
       this.add.ellipse(DOOR_X, WALL_H - 52, 36, 28, dark),
     ];
-    container.add([...parts, ...inner]);
+    container.add(parts);
+    front.add(inner);
 
     const entry = [...this.dungeon.floors].reverse().find((f) => f.floor <= n) || this.dungeon.floors[0];
     const enemies = this.state.spawnEnemies(entry.enemies, n);
@@ -148,6 +151,7 @@ export default class BattleScene extends Phaser.Scene {
 
     return {
       container,
+      front,
       setDoorOpen: (open) => inner.forEach((p) => p.setFillStyle(open ? 0xffd98a : dark)),
     };
   }
@@ -163,79 +167,111 @@ export default class BattleScene extends Phaser.Scene {
     return this.state.heroes.filter((h) => h.alive).map((h) => this.views.get(h.uid));
   }
 
-  // One hero walks in a straight line at a steady pace, hopping with each step.
-  //   shrinkTo: scale at the end (smaller = further away). fadeOut: fade away near the end.
-  walkTo(view, { x, y, shrinkTo = CHAR_SCALE, fadeOut = false, delay, duration, onDone }) {
+  // One hero walks along a path of points at a steady pace, hopping with each step.
+  // The further up the screen, the smaller the hero (perspective). Heroes lower on the
+  // screen are drawn in front of heroes higher up.
+  walkPath(view, points, { delay, onDone }) {
     const ch = view.ch;
-    const from = { x: ch.x, y: ch.y, scale: ch.scaleX };
-    const steps = Math.max(2, Math.round(duration / T.stepMs));
+    const lengths = [];
+    let total = 0;
+    for (let i = 1; i < points.length; i++) {
+      const len = Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+      lengths.push(len);
+      total += len;
+    }
+    const doorY = WALL_H - 10;
+    const scaleAt = (y) => Phaser.Math.Clamp(CHAR_SCALE * (0.5 + 0.5 * ((y - doorY) / (SLOT_Y - doorY))), CHAR_SCALE * 0.5, CHAR_SCALE * 1.3);
+
     this.tweens.addCounter({
       from: 0,
       to: 1,
       delay,
-      duration,
+      duration: (total / T.walkSpeedPxPerSec) * 1000,
       ease: 'Linear',
+      onStart: () => {
+        view.bg.setVisible(false); // health bars would clutter the line
+        view.fill.setVisible(false);
+      },
       onUpdate: (tween) => {
-        const p = tween.getValue();
-        const baseY = from.y + (y - from.y) * p;
-        ch.x = from.x + (x - from.x) * p;
-        ch.y = baseY - Math.abs(Math.sin(p * steps * Math.PI)) * T.stepHeight; // the hop
-        ch.setScale(from.scale + (shrinkTo - from.scale) * p);
-        if (fadeOut) ch.setAlpha(p < 0.7 ? 1 : 1 - (p - 0.7) / 0.3);
-        this.syncBar(view, baseY);
+        let d = tween.getValue() * total;
+        let i = 0;
+        while (i < lengths.length - 1 && d > lengths[i]) d -= lengths[i++];
+        const t = lengths[i] ? d / lengths[i] : 1;
+        const x = points[i].x + (points[i + 1].x - points[i].x) * t;
+        const y = points[i].y + (points[i + 1].y - points[i].y) * t;
+        const walked = tween.getValue() * total;
+        ch.x = x;
+        ch.y = y - Math.abs(Math.sin((walked / T.stepLenPx) * Math.PI)) * T.stepHeight; // the hop
+        ch.setScale(scaleAt(y));
+        ch.setDepth(DEPTH.hero + y / 10000);
       },
       onComplete: () => {
-        ch.setPosition(x, y);
-        this.syncBar(view);
+        const last = points[points.length - 1];
+        ch.setPosition(last.x, last.y);
+        ch.setScale(scaleAt(last.y));
         onDone();
       },
     });
   }
 
-  // Heroes walk up from below the screen to their slots, one after another, then call done.
+  // Delay before the nth hero starts, so the heroes keep a gap of lineGapPx in the line.
+  lineDelay(i) {
+    return (i * T.lineGapPx * 1000) / T.walkSpeedPxPerSec;
+  }
+
+  // Heroes come up from below the screen in a line at the centre, then fan out to their slots.
   enterHeroes(done) {
     const living = this.livingHeroViews();
     let left = living.length;
     if (!left) return done();
     living.forEach((v, i) => {
-      v.ch.setScale(CHAR_SCALE).setAlpha(1).setVisible(true).setPosition(v.slotX, GAME_HEIGHT + 90);
-      v.bg.setVisible(true);
-      v.fill.setVisible(true);
-      this.syncBar(v);
-      this.walkTo(v, {
-        x: v.slotX,
-        y: SLOT_Y,
-        delay: i * T.walkStaggerMs,
-        duration: T.enterMs,
-        onDone: () => {
-          v.ch.homeX = v.slotX;
-          v.ch.homeY = SLOT_Y;
-          if (--left === 0) done();
+      v.ch.setScale(CHAR_SCALE).setAlpha(1).setVisible(true).setPosition(DOOR_X, GAME_HEIGHT + 90);
+      v.bg.setVisible(false);
+      v.fill.setVisible(false);
+      this.walkPath(
+        v,
+        [
+          { x: DOOR_X, y: GAME_HEIGHT + 90 },
+          { x: DOOR_X, y: SLOT_Y + 70 },
+          { x: v.slotX, y: SLOT_Y },
+        ],
+        {
+          delay: this.lineDelay(i),
+          onDone: () => {
+            v.ch.setScale(CHAR_SCALE).setDepth(DEPTH.hero);
+            v.ch.homeX = v.slotX;
+            v.ch.homeY = SLOT_Y;
+            v.bg.setVisible(true);
+            v.fill.setVisible(true);
+            this.syncBar(v);
+            if (--left === 0) done();
+          },
         },
-      });
+      );
     });
   }
 
-  // Heroes walk up to the door one after another and disappear into it, then call done.
+  // Heroes gather into a line at the centre and walk into the door one after another.
   heroesWalkToDoor(done) {
     const living = this.livingHeroViews();
     let left = living.length;
     if (!left) return done();
     living.forEach((v, i) => {
-      this.walkTo(v, {
-        x: DOOR_X,
-        y: WALL_H + 6,
-        shrinkTo: CHAR_SCALE * 0.5,
-        fadeOut: true,
-        delay: i * T.walkStaggerMs,
-        duration: T.walkToDoorMs,
-        onDone: () => {
-          v.ch.setVisible(false);
-          v.bg.setVisible(false);
-          v.fill.setVisible(false);
-          if (--left === 0) done();
+      this.walkPath(
+        v,
+        [
+          { x: v.slotX, y: SLOT_Y },
+          { x: DOOR_X, y: SLOT_Y - 120 },
+          { x: DOOR_X, y: WALL_H - 10 },
+        ],
+        {
+          delay: this.lineDelay(i),
+          onDone: () => {
+            v.ch.setVisible(false);
+            if (--left === 0) done();
+          },
         },
-      });
+      );
     });
   }
 
@@ -244,14 +280,15 @@ export default class BattleScene extends Phaser.Scene {
     const old = this.layer;
     this.floor += 1;
     const next = this.buildFloor(this.floor, -GAME_HEIGHT);
-    this.tweens.add({ targets: old.container, y: GAME_HEIGHT, duration: T.slideMs, ease: 'Sine.easeInOut' });
+    this.tweens.add({ targets: [old.container, old.front], y: GAME_HEIGHT, duration: T.slideMs, ease: 'Sine.easeInOut' });
     this.tweens.add({
-      targets: next.container,
+      targets: [next.container, next.front],
       y: 0,
       duration: T.slideMs,
       ease: 'Sine.easeInOut',
       onComplete: () => {
         old.container.destroy();
+        old.front.destroy();
         this.layer = next;
         this.floorText.setText(`Floor ${this.floor}`);
         done();

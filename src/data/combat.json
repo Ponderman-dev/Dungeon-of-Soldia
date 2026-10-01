@@ -19,11 +19,10 @@
   "meleeVsFlyingMissPercent": 40,
   "transition": {
     "clearPauseMs": 600,
-    "walkToDoorMs": 800,
-    "walkStaggerMs": 300,
-    "slideMs": 1000,
-    "enterMs": 800,
-    "stepMs": 260,
-    "stepHeight": 6
+    "walkSpeedPxPerSec": 420,
+    "lineGapPx": 80,
+    "stepLenPx": 90,
+    "stepHeight": 6,
+    "slideMs": 1000
   }
 }

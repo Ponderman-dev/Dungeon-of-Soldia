@@ -19,11 +19,13 @@ export default class BattleScene extends Phaser.Scene {
       this.add.rectangle(cx, SLOT_Y - 40, SLOT_WIDTH - 12, 110, 0x1d1730).setStrokeStyle(1, 0x3a3057);
     }
 
-    // Put the first hero from heroes.json in slot 1.
-    const def = heroes[0];
-    new Character(this, SLOT_WIDTH / 2, SLOT_Y, def);
-    this.add
-      .text(SLOT_WIDTH / 2, SLOT_Y + 18, def.name, { fontFamily: 'monospace', fontSize: '12px', color: '#9a8fc0' })
-      .setOrigin(0.5);
+    // Put the first four heroes from heroes.json into the four slots.
+    heroes.slice(0, 4).forEach((def, i) => {
+      const cx = SLOT_WIDTH * i + SLOT_WIDTH / 2;
+      new Character(this, cx, SLOT_Y, def);
+      this.add
+        .text(cx, SLOT_Y + 28, def.name, { fontFamily: 'monospace', fontSize: '12px', color: '#9a8fc0' })
+        .setOrigin(0.5);
+    });
   }
 }

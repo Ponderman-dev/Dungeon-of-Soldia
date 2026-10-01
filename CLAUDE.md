@@ -2,7 +2,7 @@
 
 Mobile auto-battler roguelike. Phaser 3 + Vite + plain JavaScript (ES modules, no TypeScript).
 Will be wrapped for Android later (Solana Seeker dApp Store).
-Full design lives in the "game-design-recap" doc.
+Full design: `docs/game-design-recap.md`. Read it before designing features.
 
 ## About the user
 Total beginner, fully vibe coding. Explain simply, work in small steps,
@@ -18,6 +18,21 @@ and ask before big decisions (new libraries, big refactors, design changes).
 - **Git:** commit after every working step, with a clear message. Don't commit broken code.
 - **Small steps:** do one step at a time, then stop and tell the user how to see it.
 
+## Fight rules (decided)
+All numbers below go in JSON/config so they are easy to tune.
+- **Defense:** % damage cut (10 defense = 10% less), capped at 75%.
+- **Evasion:** % chance to fully dodge a hit, capped at 60%.
+- **Crit:** % chance to deal 2x damage.
+- **Attack efficiency:** attack speed. 100 = 1 attack per second.
+- **Mana:** regens slowly during a fight; carries over between floors with a small top-up.
+- **Healing:** each hero heals 25% of max health after a win (bigger after bosses).
+- **Dead heroes:** stay dead for the rest of the run. Run ends when all 4 are dead.
+- **Tap-to-focus:** all heroes attack the tapped enemy until it dies, then go back to auto-target.
+- **Stacking:** items stack with no cap, except dodge/crit-type items, whose cap is set in the item JSON.
+- **Dungeons:** floors, enemies and bosses are grouped by dungeon id ("A") so Dungeon B is data-only.
+- **Saving:** unlocks saved in browser localStorage (works in Capacitor too).
+- **Git workflow:** work on one branch (`claude/dungeon-soldia-scaffold-4utyba`). Do not open PRs unless asked.
+
 ## Commands
 - `npm install`  install dependencies
 - `npm run dev`  start dev server (http://localhost:5173)
@@ -30,3 +45,4 @@ and ask before big decisions (new libraries, big refactors, design changes).
 - `src/scenes/`  one file per scene
 - `src/data/`  JSON game data
 - `public/`  static assets
+- `docs/`  design docs

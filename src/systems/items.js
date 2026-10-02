@@ -1,4 +1,5 @@
 // Item maths (no Phaser here).
+import { perkMods, moraleTier } from './party.js';
 
 // Turns items.json (keyed by id) into a map where every item also knows its own id.
 export function loadItems(raw) {
@@ -18,7 +19,7 @@ export function canReceive(unit, item) {
 //   - the hero's own items (while the hero is alive)
 //   - squad items held by any LIVING hero
 // Items on a dead hero stop working. `percent` is a % of the level stat; `flat` adds points.
-export function computeHeroStats(hero, heroes, itemDefs, levelStats) {
+export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules = {}) {
   const stats = { ...levelStats };
   const damageBonus = {};
   const specials = {}; // thorns, lifesteal, skillDamage, critDamage, regen (all in %)
@@ -53,6 +54,11 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats) {
       for (const e of item.effects) apply(e.proc ? { ...e, itemId: id } : e, e.falloffRatio ? Math.pow(e.falloffRatio, index) : 1, holder);
     }
   }
+  // Hero perks: every living hero's perk helps the whole party (a fallen hero's perk is lost).
+  for (const holder of heroes) if (holder.alive) perkMods(holder).forEach((m) => apply(m));
+  // Morale: the party is weaker once heroes have fallen.
+  const tier = moraleRules[moraleTier(heroes)];
+  if (tier) tier.mods.forEach((m) => apply(m));
   // Temporary buffs from skills.
   for (const status of hero.statuses || []) {
     if (status.type === 'buff') status.mods.forEach((m) => apply(m));

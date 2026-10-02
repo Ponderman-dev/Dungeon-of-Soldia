@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE } from '../config.js';
-import heroDefs from '../data/heroes.json';
+import allHeroDefs from '../data/heroes.json';
+import squadIds from '../data/squad.json';
 import enemyDefs from '../data/enemies.json';
 import dungeons from '../data/dungeons.json';
 import combatRules from '../data/combat.json';
@@ -16,12 +17,15 @@ import Character from '../entities/Character.js';
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon } from '../systems/validate.js';
 import { enemiesForFloor } from '../systems/dungeon.js';
+import { pickSquad, perkMods } from '../systems/party.js';
 import { loadItems } from '../systems/items.js';
 import { rollChoices } from '../systems/rewards.js';
 
 const DUNGEON_ID = 'A';
+const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD', mana: 'MANA' };
 const SLOT_Y = 720;
-const SLOT_WIDTH = GAME_WIDTH / 4;
+const heroDefs = pickSquad(allHeroDefs, squadIds);
+const SLOT_WIDTH = GAME_WIDTH / heroDefs.length;
 const ENEMY_Y = 340;
 const BAR_WIDTH = 44;
 const WALL_H = 200; // the back wall (with the door) fills the top of each floor
@@ -29,7 +33,6 @@ const DOOR_X = GAME_WIDTH / 2;
 const T = combatRules.transition;
 const itemDefs = loadItems(rawItems);
 const skillDefs = rawSkills;
-const BOX_TOP = 596; // the hero boxes at the bottom run from here to the screen edge
 const SKILL_Y = 772; // centre of the skill squares
 const SKILL_W = 40;
 const SKILL_H = 44;
@@ -37,7 +40,7 @@ const SKILL_H = 44;
 // Depth order: floor < slots < hero < hero bars < popups < banner/HUD
 const DEPTH = { floor: 0, slot: 1, marker: 2, hero: 5, heroBar: 6, doorFront: 7, popup: 10, hud: 20 };
 
-// The battle screen: enemies at the top, four heroes at the bottom, everyone auto-attacks.
+// The battle screen: enemies at the top, the squad (3 heroes) at the bottom, everyone auto-attacks.
 // After a win the heroes walk through the door, the floor slides down, and they walk in
 // from the bottom of the screen. The fight rules live in systems/BattleState.js; this scene
 // only draws what happens.
@@ -54,7 +57,7 @@ export default class BattleScene extends Phaser.Scene {
     this.mode = 'entering'; // 'entering' | 'fighting' | 'won' | 'lost'
     this.views = new Map(); // unit uid -> { unit, ch, bg, fill, groundY, ... }
     this.state = new BattleState({
-      heroDefs: heroDefs.slice(0, 4),
+      heroDefs,
       enemyDefs,
       itemDefs,
       skillDefs,
@@ -80,12 +83,12 @@ export default class BattleScene extends Phaser.Scene {
     this.enterHeroes(() => this.startFighting());
   }
 
-  // The boxes (and name labels) under the heroes are hidden while the floor changes.
+  // The name labels under the heroes are hidden while the floor changes.
   showSlots(show, duration = 250) {
     for (const h of this.state.heroes) {
       const v = this.views.get(h.uid);
-      // A fallen hero's box stays dim and has no skill squares.
-      this.tweens.add({ targets: [v.slotBox, v.label], alpha: show ? (h.alive ? 1 : 0.3) : 0, duration });
+      // A fallen hero's labels stay dim and have no skill squares.
+      this.tweens.add({ targets: [v.label, v.perkLabel], alpha: show ? (h.alive ? 1 : 0.3) : 0, duration });
       const buttons = v.skillButtons.flatMap((b) => [b.g, b.code, b.cost, b.cd]);
       this.tweens.add({ targets: buttons, alpha: show && h.alive ? 1 : 0, duration });
     }
@@ -109,15 +112,18 @@ export default class BattleScene extends Phaser.Scene {
   drawHeroSlots() {
     this.state.heroes.forEach((unit, i) => {
       const cx = SLOT_WIDTH * i + SLOT_WIDTH / 2;
-      const boxH = GAME_HEIGHT - 8 - BOX_TOP;
-      const box = this.add.rectangle(cx, BOX_TOP + boxH / 2, SLOT_WIDTH - 12, boxH, 0x1d1730, 0.85).setStrokeStyle(1, 0x3a3057).setDepth(DEPTH.slot);
       const label = this.add
         .text(cx, GAME_HEIGHT - 22, '', { fontFamily: 'monospace', fontSize: '12px', color: '#9a8fc0' })
         .setOrigin(0.5)
         .setDepth(DEPTH.slot);
+      // The hero's party perk, under the name.
+      const perkLabel = this.add
+        .text(cx, GAME_HEIGHT - 8, '', { fontFamily: 'monospace', fontSize: '9px', color: '#7fd8a0' })
+        .setOrigin(0.5)
+        .setDepth(DEPTH.slot);
       const view = this.makeView(unit, cx, SLOT_Y);
       view.label = label;
-      view.slotBox = box;
+      view.perkLabel = perkLabel;
       view.slotX = cx;
       view.ch.setDepth(DEPTH.hero);
       for (const part of [view.bg, view.fill, view.mbg, view.mfill]) part.setDepth(DEPTH.heroBar);
@@ -295,9 +301,12 @@ export default class BattleScene extends Phaser.Scene {
   drawChips(view) {
     view.chipBox.removeAll(true);
     const kinds = [...new Set(view.unit.statuses.map((st) => st.type))];
+    const tags = kinds.map((kind) => statusInfo[kind]);
+    // The party's morale tag (INCOMPLETE / ALL ALONE) shows on every living hero.
+    const morale = view.unit.side === 'hero' && view.unit.alive ? combatRules.morale[this.state.morale] : null;
+    if (morale) tags.unshift(morale);
     let x = 0;
-    for (const kind of kinds) {
-      const info = statusInfo[kind];
+    for (const info of tags) {
       const chip = this.add
         .text(x, 0, info.label, { fontFamily: 'monospace', fontSize: '9px', fontStyle: 'bold', color: info.textColor, backgroundColor: info.color, padding: { x: 2, y: 1 } })
         .setOrigin(0, 0.5);
@@ -533,6 +542,13 @@ export default class BattleScene extends Phaser.Scene {
       v.ch.flash();
       this.setBar(v);
       this.popText(v, String(e.amount), damageTypes[e.damageType].color);
+    } else if (e.type === 'morale') {
+      for (const h of this.state.heroes) {
+        const v = this.views.get(h.uid);
+        this.setBar(v);
+        this.drawChips(v);
+        if (h.alive) this.popText(v, `${combatRules.morale[e.tier].label}!`, combatRules.morale[e.tier].popupColor, true);
+      }
     } else if (e.type === 'levelup') {
       const v = this.views.get(e.unit.uid);
       this.setLabel(v);
@@ -546,6 +562,7 @@ export default class BattleScene extends Phaser.Scene {
         this.tweens.add({ targets: [v.ch, v.bg, v.fill], alpha: 0, duration: 400, onComplete: () => this.removeView(e.unit.uid) });
       } else {
         v.ch.freeze(); // stop floating
+        v.perkLabel.setText('perk lost');
         v.ch.setAlpha(0.25);
         v.skillButtons.forEach((b) => [b.g, b.code, b.cost, b.cd].forEach((o) => o.setAlpha(0)));
         v.bg.setAlpha(0.4);
@@ -582,6 +599,10 @@ export default class BattleScene extends Phaser.Scene {
 
   setLabel(view) {
     view.label.setText(`${view.unit.name} Lv${view.unit.level}`);
+    // e.g. "Team +10% HP" (the hero's perk; it grows with the hero's level)
+    const unit = view.unit;
+    const bits = perkMods(unit).map((m) => `${m.percent !== undefined ? `+${Math.round(m.percent * 10) / 10}%` : `+${Math.round(m.flat * 10) / 10}`} ${STAT_SHORT[m.stat]}`);
+    view.perkLabel.setText(unit.def.perk ? `Team ${bits.join(' ')}` : '');
   }
 
   setBar(view) {

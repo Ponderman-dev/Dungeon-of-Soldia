@@ -178,7 +178,10 @@ export default class RewardScene extends Phaser.Scene {
     const colW = (CARD_W - 12) / 2;
     const cardH = 190;
     this.payload.state.heroes.forEach((hero, i) => {
-      const x = 16 + (i % 2) * (colW + 12);
+      // Two cards per row; a lonely last card (3 heroes) sits in the middle.
+      const total = this.payload.state.heroes.length;
+      const alone = i === total - 1 && total % 2 === 1;
+      const x = alone ? 16 + (colW + 12) / 2 : 16 + (i % 2) * (colW + 12);
       const y = 240 + Math.floor(i / 2) * (cardH + 12);
       const ok = canReceive(hero, item);
       const g = this.track(this.add.graphics());

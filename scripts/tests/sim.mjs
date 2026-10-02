@@ -3,8 +3,9 @@ import BattleState from '../../src/systems/BattleState.js';
 import { loadItems, canReceive } from '../../src/systems/items.js';
 import { rollChoices } from '../../src/systems/rewards.js';
 import { enemiesForFloor } from '../../src/systems/dungeon.js';
+import { pickSquad } from '../../src/systems/party.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
-const heroDefs = r('heroes.json'), enemyDefs = r('enemies.json'), rules = r('combat.json'), damageTypes = r('damageTypes.json'), leveling = r('leveling.json'), dungeon = r('dungeons.json').A;
+const heroDefs = pickSquad(r('heroes.json'), r('squad.json')), enemyDefs = r('enemies.json'), rules = r('combat.json'), damageTypes = r('damageTypes.json'), leveling = r('leveling.json'), dungeon = r('dungeons.json').A;
 const itemDefs = loadItems(r('items.json')), skillDefs = r('skills.json'), rarities = r('rarities.json'), rw = r('rewards.json');
 const mode = process.argv[2] || 'skills';   // 'noskills' | 'skills'
 const rewards = process.argv[3] === 'rewards';

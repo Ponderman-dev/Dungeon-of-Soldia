@@ -10,9 +10,9 @@
   },
   "winHealPercent": 25,
   "floorScaling": {
-    "hpPerStep": 0.36,
+    "hpPerStep": 0.45,
     "hpStepFloors": 3,
-    "attackPerStep": 0.54,
+    "attackPerStep": 0.675,
     "attackStepFloors": 3
   },
   "restartDelayMs": 3000,
@@ -33,5 +33,55 @@
     "fromFloor": 32,
     "startScale": 0.87,
     "rampFloors": 8
+  },
+  "morale": {
+    "incomplete": {
+      "label": "INCOMPLETE",
+      "color": "#8a4fd0",
+      "textColor": "#ffffff",
+      "mods": [
+        {
+          "stat": "attack",
+          "percent": -10
+        },
+        {
+          "stat": "attackEfficiency",
+          "percent": -10
+        },
+        {
+          "stat": "defense",
+          "flat": -3
+        },
+        {
+          "stat": "resist",
+          "flat": -3
+        }
+      ],
+      "popupColor": "#c58bff"
+    },
+    "alone": {
+      "label": "ALL ALONE",
+      "color": "#b03030",
+      "textColor": "#ffffff",
+      "mods": [
+        {
+          "stat": "attack",
+          "percent": -25
+        },
+        {
+          "stat": "attackEfficiency",
+          "percent": -25
+        },
+        {
+          "stat": "defense",
+          "flat": -8
+        },
+        {
+          "stat": "resist",
+          "flat": -8
+        }
+      ],
+      "popupColor": "#ff6b6b"
+    }
   }
 }

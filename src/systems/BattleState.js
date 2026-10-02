@@ -1,13 +1,15 @@
 import { computeDamage, computeDotDamage } from './combat.js';
 import { xpForNextLevel, statsAtLevel } from './leveling.js';
 import { computeHeroStats } from './items.js';
+import { moraleTier } from './party.js';
 
 // The fight itself: who is alive, who attacks whom and when, mana, skills and statuses.
 // No Phaser in here. update() and castSkill() return a list of events and the scene draws them.
 //
 // Health regeneration (specials.regen) happens silently inside update(); the scene just redraws bars.
 // Events: attack, death, levelup, cast, status (apply / expire), dot (poison tick),
-//         heal (lifesteal), thorns (reflected damage), proc (an item's chance effect went off)
+//         heal (lifesteal), thorns (reflected damage), proc (an item's chance effect went off),
+//         morale (the party became 'incomplete' or 'alone' because a hero fell)
 export default class BattleState {
   constructor({ heroDefs, enemyDefs, itemDefs = {}, skillDefs = {}, rules, damageTypes, leveling, rng = Math.random }) {
     this.rules = rules;
@@ -21,6 +23,8 @@ export default class BattleState {
     this.focusUid = null;
     this.heroes = heroDefs.map((d) => this.makeUnit(d, 'hero', 1));
     this.enemies = [];
+    this.morale = 'full';
+    this.refreshStats(); // perks count from the start
   }
 
   makeUnit(def, side, floor, fightSize = 1) {
@@ -118,12 +122,16 @@ export default class BattleState {
 
   // Marks a unit dead. Enemies give XP; a dead hero's items stop working.
   killUnit(target, events) {
+    const was = this.morale;
     target.alive = false;
     target.statuses = [];
     if (this.focusUid === target.uid) this.focusUid = null;
     events.push({ type: 'death', unit: target });
     if (target.side === 'enemy') this.awardXp(target, events);
-    else this.refreshStats();
+    else {
+      this.refreshStats();
+      if (this.morale !== was) events.push({ type: 'morale', tier: this.morale });
+    }
   }
 
   // Moves the fight forward by dt milliseconds. Returns events for the scene to show.
@@ -404,10 +412,11 @@ export default class BattleState {
   // current health goes up by the same amount; if it goes down, current health is capped to the
   // new max. Mana works the same way.
   refreshStats() {
+    this.morale = moraleTier(this.heroes);
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
       const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
-      const { stats, damageBonus, specials, procs } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats);
+      const { stats, damageBonus, specials, procs } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale);
       const hpDelta = stats.health - hero.maxHp;
       const manaDelta = stats.mana - hero.maxMana;
       hero.stats = stats;
@@ -433,7 +442,7 @@ export default class BattleState {
     const hero = this.heroes.find((h) => h.uid === heroUid);
     hero.items.push(itemId);
     const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
-    const result = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats);
+    const result = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale);
     hero.items.pop();
     return result;
   }

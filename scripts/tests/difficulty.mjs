@@ -5,14 +5,15 @@ import BattleState from '../../src/systems/BattleState.js';
 import { loadItems, canReceive } from '../../src/systems/items.js';
 import { rollChoices } from '../../src/systems/rewards.js';
 import { enemiesForFloor } from '../../src/systems/dungeon.js';
+import { pickSquad } from '../../src/systems/party.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
-const heroDefs = r('heroes.json'), enemyDefs = r('enemies.json'), damageTypes = r('damageTypes.json'), leveling = r('leveling.json'), dungeon = r('dungeons.json').A;
+const heroDefs = pickSquad(r('heroes.json'), r('squad.json')), enemyDefs = r('enemies.json'), damageTypes = r('damageTypes.json'), leveling = r('leveling.json'), dungeon = r('dungeons.json').A;
 const itemDefs = loadItems(r('items.json')), skillDefs = r('skills.json'), rarities = r('rarities.json'), rw = r('rewards.json');
 const rules = JSON.parse(JSON.stringify(r('combat.json')));
 if (process.argv[2]) rules.enemyAttackSpeedMultiplier = Number(process.argv[2]);
 if (process.argv[3]) rules.floorScaling.hpPerStep = Number(process.argv[3]);
 if (process.argv[4]) rules.floorScaling.attackPerStep = Number(process.argv[4]);
-const N = 150, MAX = 60;
+const N = 100, MAX = 120;
 const reached = Array(MAX + 2).fill(0), died = Array(MAX + 2).fill(0), lost = Array(MAX + 2).fill(0), secs = Array(MAX + 2).fill(0), cleared = Array(MAX + 2).fill(0);
 let sum = 0;
 for (let run = 0; run < N; run++) {

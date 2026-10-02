@@ -9,7 +9,7 @@ keep replies short, republish the preview page once per batch or when asked, not
 
 ## What is built (all on branch `claude/dungeon-soldia-scaffold-4utyba`, no PRs unless asked)
 - Phaser 3 project (npm installed Phaser v4.x in practice), 390x844 portrait, placeholder block characters made from parts.
-- Battle: 4 heroes (Knight, Berserker, Rogue, Archer), enemies (Slime, Goblin, Bat), auto-attacks, tap-to-focus,
+- Battle: 3 heroes (Knight, Rogue, Archer; Berserker on the bench) with party perks and morale debuffs, enemies (Slime, Goblin, Bat), auto-attacks, tap-to-focus,
   damage types, defense/resist/evasion/crit, XP + per-hero levelling, floors with scaling in `src/data/*.json`.
 - Floor flow: door, heroes walk in a line, camera slide, entry from the bottom (see CLAUDE.md "Floor flow").
 - Skills (2 per hero) + mana + cooldowns + statuses (stun, slow, poison, buff). One-tap casting.
@@ -28,6 +28,8 @@ keep replies short, republish the preview page once per batch or when asked, not
   Always revert temporary test builds (e.g. forced reward choices) and grep to be sure.
 
 - Hero buff (after the item batch 2 session): Rogue 100 hp / 6 def / 25 evasion, Archer 95 hp / 6 def / 15 evasion (more evasion per level too). The bot's average death floor went from about 24.7 to 32.5, so enemy growth may need retuning.
+
+- Squad/perks/morale step done (steps a-c). Next in that plan: (d) redo the skills (user to decide: 1 or 2 tappable skills per hero, attack vs team-support focus). Enemy growth was retuned for 3 heroes (+45% hp / +67.5% attack per 3 floors, mean death floor about 26). Knight-only item stacking no longer beats spreading items (about 26 vs 27).
 
 ## Gotchas learned
 - Never pass the `apply` function in items.js straight to `forEach` (index becomes the multiplier). That once silently disabled skill buffs.

@@ -63,7 +63,17 @@
     "skills": [
       "shield_bash",
       "guard"
-    ]
+    ],
+    "perk": {
+      "name": "Stalwart",
+      "mods": [
+        {
+          "stat": "health",
+          "percent": 10,
+          "growth": 0.4
+        }
+      ]
+    }
   },
   {
     "id": "berserker",
@@ -128,7 +138,17 @@
     "skills": [
       "cleave",
       "rage"
-    ]
+    ],
+    "perk": {
+      "name": "Battle Fury",
+      "mods": [
+        {
+          "stat": "attackEfficiency",
+          "percent": 8,
+          "growth": 0.3
+        }
+      ]
+    }
   },
   {
     "id": "rogue",
@@ -195,7 +215,17 @@
     "skills": [
       "venom_strike",
       "smoke"
-    ]
+    ],
+    "perk": {
+      "name": "Keen Eyes",
+      "mods": [
+        {
+          "stat": "crit",
+          "flat": 6,
+          "growth": 0.15
+        }
+      ]
+    }
   },
   {
     "id": "archer",
@@ -261,6 +291,16 @@
     "skills": [
       "power_shot",
       "ensnare_shot"
-    ]
+    ],
+    "perk": {
+      "name": "Marksman",
+      "mods": [
+        {
+          "stat": "attack",
+          "percent": 10,
+          "growth": 0.4
+        }
+      ]
+    }
   }
 ]

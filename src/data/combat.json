@@ -33,6 +33,5 @@
     "fromFloor": 32,
     "startScale": 0.87,
     "rampFloors": 8
-  },
-  "maxItemsPerHero": 8
+  }
 }

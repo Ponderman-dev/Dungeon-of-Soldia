@@ -194,7 +194,9 @@ export default class BattleScene extends Phaser.Scene {
       view.mbg = this.add.rectangle(x, barY + 8, BAR_WIDTH + 2, 5, 0x000000);
       view.mfill = this.add.rectangle(x - BAR_WIDTH / 2, barY + 8, BAR_WIDTH, 3, 0x3b6fe0).setOrigin(0, 0.5);
       // Item dots above the health bar: dot colour = item type, ring = rarity.
-      view.dots = this.add.graphics().setPosition(x, barY - 12).setDepth(DEPTH.heroBar);
+      // A container so the count numbers move, fade and hide together with the dots.
+      view.dotsG = this.add.graphics();
+      view.dots = this.add.container(x, barY - 12, [view.dotsG]).setDepth(DEPTH.heroBar);
     }
     this.views.set(unit.uid, view);
 
@@ -306,20 +308,31 @@ export default class BattleScene extends Phaser.Scene {
     view.chipBox.iterate((chip) => (chip.x -= (x - 3) / 2));
   }
 
-  // Redraws the dots for a hero's items: one dot per item copy, up to 6 per row, rows going up.
+  // Redraws the dots for a hero's items: one dot per kind of item, with a small number beside it
+  // when the hero has several copies. Up to 5 dots per row, rows going up.
   drawDots(view) {
-    const g = view.dots;
+    const g = view.dotsG;
     g.clear();
-    const items = view.unit.items;
-    const perRow = 6;
-    items.forEach((id, i) => {
+    view.dots.list.slice(1).forEach((o) => o.destroy()); // old count labels
+    const counts = new Map();
+    for (const id of view.unit.items) counts.set(id, (counts.get(id) || 0) + 1);
+    const kinds = [...counts.entries()];
+    const perRow = 5;
+    const gap = 16;
+    kinds.forEach(([id, count], i) => {
       const def = itemDefs[id];
       const row = Math.floor(i / perRow);
-      const inRow = Math.min(perRow, items.length - row * perRow);
-      const x = ((i % perRow) - (inRow - 1) / 2) * 10;
-      const y = -row * 10;
+      const inRow = Math.min(perRow, kinds.length - row * perRow);
+      const x = ((i % perRow) - (inRow - 1) / 2) * gap;
+      const y = -row * 11;
       g.fillStyle(Number(itemTypes[def.type].color), 1).fillCircle(x, y, 3.5);
       g.lineStyle(1.5, Number(rarities[def.rarity].color), 1).strokeCircle(x, y, 4.5);
+      if (count > 1) {
+        const label = this.add
+          .text(x + 5, y + 1, String(count), { fontFamily: 'monospace', fontSize: '9px', fontStyle: 'bold', color: '#ffffff', stroke: '#000000', strokeThickness: 2 })
+          .setOrigin(0, 0.5);
+        view.dots.add(label);
+      }
     });
   }
 

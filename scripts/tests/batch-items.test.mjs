@@ -48,7 +48,8 @@ const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker 
   ok('mask heals self 20', ev.some((x) => x.type === 'heal' && x.unit === k && x.amount === 20));
   ok('and the other 3 heroes', ev.filter((x) => x.type === 'heal' && x.unit !== k).length === 3);
   ev = []; s.afterHit(k, s.enemies[0], 400, ev, {}); ok('no second share inside 3s', ev.filter((x) => x.type === 'heal').length === 1);
-  for (let t = 0; t < 3100; t += 50) s.update(50); s.heroes.forEach((h) => (h.hp = 1)); ev = []; s.afterHit(k, s.enemies[0], 400, ev, {});
+  s.heroes.forEach((h) => h.statuses.push({ key: 'wait', type: 'stun', remaining: 1e12, total: 1e12 })); // heroes must not attack (and re-arm the cooldown) while we wait
+  for (let t = 0; t < 3100; t += 50) s.update(50); s.heroes.forEach((h) => { h.statuses = []; h.hp = 1; }); ev = []; s.afterHit(k, s.enemies[0], 400, ev, {});
   ok('shares again after 3s', ev.filter((x) => x.type === 'heal').length === 4); }
 // Gambler's Dice: crit puts a random debuff on the enemy
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'gamblers_dice'); const [e] = dummy(s); const seen = new Set();

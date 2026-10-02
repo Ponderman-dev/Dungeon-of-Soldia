@@ -9,9 +9,10 @@ export function countOf(unit, itemId) {
   return unit.items.filter((id) => id === itemId).length;
 }
 
-// Can this hero take another copy of this item? (Dead heroes can't. Some items have a stack limit.)
+// Can this hero take another copy of this item? (Dead heroes can't. Heroes have a limited number of
+// item slots, and some items have a stack limit.)
 export function canReceive(unit, item) {
-  return unit.alive && countOf(unit, item.id) < (item.maxStacks ?? Infinity);
+  return unit.alive && unit.items.length < (unit.maxItems ?? Infinity) && countOf(unit, item.id) < (item.maxStacks ?? Infinity);
 }
 
 // A hero's stats = their level stats + every item that currently works for them.

@@ -55,6 +55,7 @@ export default class BattleState {
       level: 1,
       xp: 0,
       items: [],
+      maxItems: side === 'hero' ? this.rules.maxItemsPerHero ?? Infinity : 0, // item slots (copies count one each)
       skills: (def.skills || []).map((id) => ({ id, cooldownLeft: 0 })),
       statuses: [],
       damageBonus: {},

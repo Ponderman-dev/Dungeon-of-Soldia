@@ -192,14 +192,14 @@ export default class RewardScene extends Phaser.Scene {
       this.track(ch);
 
       this.text(x + 76, y + 14, hero.name, 16, INK, true).setAlpha(ok ? 1 : 0.5);
-      this.text(x + 76, y + 36, `Lv${hero.level}`, 12, MUTE).setAlpha(ok ? 1 : 0.5);
+      this.text(x + 76, y + 36, `Lv${hero.level}   Items ${hero.items.length}/${hero.maxItems}`, 12, MUTE).setAlpha(ok ? 1 : 0.5);
 
       if (ok) {
         this.previewLines(hero, item).forEach((line, li) => {
           this.text(x + 12, y + 96 + li * 18, line.text, 12, line.up ? '#6dff8f' : '#ff8c8c', true);
         });
       } else {
-        this.text(x + 12, y + 96, hero.alive ? 'Max stacks' : 'Fallen', 13, MUTE, true);
+        this.text(x + 12, y + 96, !hero.alive ? 'Fallen' : hero.items.length >= hero.maxItems ? 'Slots full' : 'Max stacks', 13, MUTE, true);
       }
 
       // Items this hero already has (the same dots as above their head in battle).

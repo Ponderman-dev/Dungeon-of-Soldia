@@ -28,7 +28,8 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
   const apply = (e, factor = 1, holder = null) => {
     if (e.proc) {
       // One entry per copy, so every copy rolls its own chance. Only the holder's own attacks roll.
-      if (holder === hero) procs.push({ ...e, itemId: e.itemId });
+      // `unique` effects only count once however many copies the hero has (e.g. a freeze chance that doesn't stack).
+      if (holder === hero && !(e.unique && procs.some((p) => p.unique && p.itemId === e.itemId))) procs.push({ ...e, itemId: e.itemId });
     } else if (e.special) {
       specials[e.special] = (specials[e.special] || 0) + e.percent * factor;
       if (e.cooldownMs) specials[e.special + 'CooldownMs'] = e.cooldownMs; // e.g. blockCooldownMs

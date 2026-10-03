@@ -24,5 +24,10 @@
     "color": "#6b6b80",
     "textColor": "#ffffff",
     "popup": false
+  },
+  "freeze": {
+    "label": "FREEZE",
+    "color": "#9fe8ff",
+    "textColor": "#000000"
   }
 }

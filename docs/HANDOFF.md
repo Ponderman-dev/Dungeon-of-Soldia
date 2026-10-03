@@ -29,7 +29,7 @@ keep replies short, republish the preview page once per batch or when asked, not
 
 - Hero buff (after the item batch 2 session): Rogue 100 hp / 6 def / 25 evasion, Archer 95 hp / 6 def / 15 evasion (more evasion per level too). The bot's average death floor went from about 24.7 to 32.5, so enemy growth may need retuning.
 
-- Squad/perks/morale step done (steps a-c). Next in that plan: (d) redo the skills (user to decide: 1 or 2 tappable skills per hero, attack vs team-support focus). Enemy growth was retuned for 3 heroes (+45% hp / +67.5% attack per 3 floors, mean death floor about 26). Knight-only item stacking no longer beats spreading items (about 26 vs 27).
+- Squad/perks/morale step done (steps a-c). Next in that plan: (d) redo the skills (user to decide: 1 or 2 tappable skills per hero, attack vs team-support focus). Enemy growth was retuned for 3 heroes (+35% hp / +52.5% attack per 3 floors, mean death floor about 26; it was retuned again after heroes switched to random targeting). Knight-only item stacking no longer beats spreading items (about 26 vs 27).
 
 ## Gotchas learned
 - Never pass the `apply` function in items.js straight to `forEach` (index becomes the multiplier). That once silently disabled skill buffs.

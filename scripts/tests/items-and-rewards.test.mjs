@@ -12,7 +12,7 @@ const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
   ok('siege cannon +40% attack', Math.abs(k.stats.attack - atk * 1.4) < 0.01, `${atk} -> ${k.stats.attack}`);
   ok('skillDamage special stored', k.specials.skillDamage === 30); }
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'bulwark_plate'); ok('plate +30 def & thorns', k.stats.defense === 40 && k.specials.thorns === 25, `${k.stats.defense}`); }
-{ const s = mk(); const [e] = s.spawnEnemies(['goblin'], 1); const k = s.heroes[0]; s.giveItem(k.uid, 'bulwark_plate'); e.hp = 1000; e.maxHp = 1000;
+{ const s = mk(); const [e] = s.spawnEnemies(['goblin'], 1); const k = s.heroes[0]; s.giveItem(k.uid, 'bulwark_plate'); e.hp = 1000; e.maxHp = 1000; s.heroes.slice(1).forEach((h) => (h.alive = false)); // the goblin can only hit the Knight
   const hp0 = e.hp; k.stats.evasion = 0; let reflected = 0; for (let i = 0; i < 400; i++) for (const ev of s.update(50)) if (ev.type === 'thorns') reflected += ev.amount;
   ok('thorns reflect melee damage', reflected > 0, `reflected=${reflected}`); }
 { const s = mk(); const [e] = s.spawnEnemies(['goblin'], 1); e.stats.evasion = 0; e.hp = e.maxHp = 99999; const b = s.heroes[1]; s.giveItem(b.uid, 'bloodlust_mask'); b.hp = 10; let heals = 0;

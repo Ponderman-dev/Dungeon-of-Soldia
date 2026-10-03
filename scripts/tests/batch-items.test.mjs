@@ -21,13 +21,21 @@ const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker 
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'fire_bombs'); const [e] = dummy(s); s.rng = () => 0.001; k.stats.crit = 0; const ev = []; s.rollProcs(k, 'onAttack', ev, { target: e });
   const a = attacks(ev, k)[0]; ok('bomb is fire, 250% of attack', a && a.damageType === 'fire' && a.result.amount === Math.round(k.stats.attack * 2.5), JSON.stringify(a && a.result));
   ok('bomb draws a projectile', ev.some((x) => x.type === 'projectile' && x.kind === 'bomb')); }
-// Chill Band: ice hit (10%) + slow, does not stack, max 1
+// Chill Band: every attack adds a 10% ice hit per band (stacks); 50% freeze that does not stack
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'chill_band'); const [e] = dummy(s); s.rng = () => 0.001; k.stats.crit = 0;
-  const before = s.interval(e); let ev = []; s.rollProcs(k, 'onAttack', ev, { target: e }); s.rollProcs(k, 'onAttack', ev, { target: e });
-  ok('chill band slows enemy by 25%', Math.abs(s.interval(e) - before / 0.75) < 1, `${before} -> ${s.interval(e)}`);
-  ok('slow does not stack', e.statuses.filter((x) => x.type === 'slow').length === 1);
-  ok('ice hit is 10% attack', attacks(ev, k)[0].damageType === 'ice' && attacks(ev, k)[0].result.amount === Math.max(1, Math.round(k.stats.attack * 0.1)));
-  ok('max 1 chill band', itemDefs.chill_band.maxStacks === 1); }
+  let ev = []; s.rollProcs(k, 'onAttack', ev, { target: e, hit: true });
+  const ice = (x) => attacks(x, k).filter((a) => a.damageType === 'ice');
+  ok('one band: one ice hit of 10% attack', ice(ev).length === 1 && ice(ev)[0].result.amount === Math.max(1, Math.round(k.stats.attack * 0.1)));
+  ok('freeze stops the enemy acting', s.isStunned(e) && e.statuses.some((x) => x.type === 'freeze'));
+  ok('ice hit makes no popup, freeze does', ev.filter((x) => x.type === 'proc').length === 1);
+  s.giveItem(k.uid, 'chill_band'); e.statuses = []; ev = []; s.rollProcs(k, 'onAttack', ev, { target: e, hit: true });
+  ok('two bands: two ice hits (stacks)', ice(ev).length === 2);
+  ok('two bands: still one freeze roll', k.procs.filter((p) => p.unique).length === 1 && e.statuses.filter((x) => x.type === 'freeze').length === 1);
+  s.rng = Math.random; let f = 0; const N = 20000; for (let i = 0; i < N; i++) { e.statuses = []; s.rollProcs(k, 'onAttack', [], { target: e, hit: true }); if (e.statuses.some((x) => x.type === 'freeze')) f++; }
+  ok('freeze chance ~50% even with 2 bands', Math.abs(f / N - 0.5) < 0.02, `${(100 * f / N).toFixed(1)}%`);
+  e.statuses = []; s.rng = () => 0.001; s.rollProcs(k, 'onAttack', [], { target: e, hit: false });
+  ok('no freeze if the attack missed', !e.statuses.some((x) => x.type === 'freeze'));
+  ok('frozen enemy lasts 0.7s then recovers', (() => { s.rollProcs(k, 'onAttack', [], { target: e, hit: true }); s.heroes.forEach((h) => h.statuses.push({ key: 'wait', type: 'stun', remaining: 1e12, total: 1e12 })); for (let t = 0; t < 750; t += 50) s.update(50); return !s.isStunned(e); })()); }
 // Static Crystal: hits 3 different enemies for 300% electric
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'static_crystal'); const es = dummy(s, ['goblin', 'goblin', 'goblin', 'bat']); s.rng = () => 0.001; k.stats.crit = 0;
   const ev = []; s.rollProcs(k, 'onAttack', ev, { target: es[1] }); const a = attacks(ev, k);
@@ -61,3 +69,7 @@ const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker 
 { const s = mk(); const k = s.heroes[0]; k.hp = 1; s.giveItem(k.uid, 'aid_kit'); const pct = (p) => { k.hp = 1; return s.winHeal(p).find((x) => x.unit === k).amount / k.maxHp * 100; };
   const one = pct(0); s.giveItem(k.uid, 'aid_kit'); const two = pct(0); s.giveItem(k.uid, 'aid_kit'); const three = pct(0);
   ok('1 kit = 5%', Math.abs(one - 5) < 0.5, one.toFixed(1)); ok('2 kits = 5+4.25', Math.abs(two - 9.25) < 0.5, two.toFixed(1)); ok('3 kits add less each time', three - two < two - one, three.toFixed(1)); }
+// Heroes pick random enemies by default (not always the leftmost); a tapped enemy is still focused
+{ const s = mk(); const es = dummy(s, ['goblin', 'goblin', 'goblin']); const hit = new Set(); for (let i = 0; i < 200; i++) hit.add(s.pickTarget(s.heroes[0]).uid);
+  ok('default target is random', hit.size === 3);
+  s.focusUid = es[2].uid; const f = new Set(); for (let i = 0; i < 50; i++) f.add(s.pickTarget(s.heroes[0]).uid); ok('tapped enemy is still focused', f.size === 1 && f.has(es[2].uid)); }

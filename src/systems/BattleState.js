@@ -84,7 +84,7 @@ export default class BattleState {
   }
 
   isStunned(unit) {
-    return unit.statuses.some((s) => s.type === 'stun');
+    return unit.statuses.some((s) => s.type === 'stun' || s.type === 'freeze'); // frozen = can't act
   }
 
   spawnEnemies(ids, floor) {
@@ -114,7 +114,8 @@ export default class BattleState {
     if (unit.side === 'hero') {
       const alive = this.enemies.filter((e) => e.alive);
       const focus = alive.find((e) => e.uid === this.focusUid);
-      return focus || alive[0] || null;
+      // No tapped enemy: pick any living enemy at random (every attack).
+      return focus || (alive.length ? alive[Math.floor(this.rng() * alive.length)] : null);
     }
     const alive = this.heroes.filter((h) => h.alive);
     return alive.length ? alive[Math.floor(this.rng() * alive.length)] : null;
@@ -162,8 +163,8 @@ export default class BattleState {
       }
       unit.timer -= interval;
 
-      this.strike(unit, target, events);
-      this.rollProcs(unit, 'onAttack', events, { target });
+      const hit = this.strike(unit, target, events);
+      this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged });
     }
     return events;
   }
@@ -191,14 +192,15 @@ export default class BattleState {
   //   doubleHit  - hit the same target once more (Quick Gloves)
   //   strike     - an extra hit { damageMultiplier, damageType, projectile } (Fire Bombs, Chill Band)
   //   chain      - a bolt that jumps to other enemies { jumps, damageMultiplier, damageType } (Static Crystal)
-  //   apply      - give statuses to `targets`: self, squad or target (the hit enemy)
+  //   apply      - give statuses to `targets`: self, squad or target (the hit enemy; only if the attack connected)
+  //   silent     - no popup (for effects that go off on every attack)
   rollProcs(hero, trigger, events, ctx = {}) {
     if (hero.side !== 'hero' || !hero.alive) return;
     for (const proc of [...hero.procs]) {
       if (proc.proc !== trigger || this.rng() * 100 >= proc.chance) continue;
-      events.push({ type: 'proc', unit: hero, label: proc.label });
+      if (!proc.silent) events.push({ type: 'proc', unit: hero, label: proc.label });
       const enemy = ctx.target && ctx.target.alive ? ctx.target : null;
-      let landed = true;
+      let landed = ctx.hit !== false; // statuses on the target need the attack to have connected
       if (proc.doubleHit && enemy) this.strike(hero, enemy, events);
       if (proc.strike && enemy) {
         const hit = this.strike(hero, enemy, events, {

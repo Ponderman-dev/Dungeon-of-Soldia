@@ -145,7 +145,10 @@ export default class RewardScene extends Phaser.Scene {
     for (const e of item.effects) {
       if (e.proc) {
         const copies = countOf(hero, item.id);
-        lines.push({ text: `${e.label.replace('!', '').toUpperCase()} ${copies * e.chance}>${(copies + 1) * e.chance}%`, up: true });
+        const name = e.label.replace('!', '').toUpperCase();
+        if (e.unique) lines.push({ text: `${name} ${copies ? e.chance : 0}>${e.chance}%`, up: true }); // more copies do not add chance
+        else if (e.chance >= 100 && e.strike) lines.push({ text: `${name} ${copies * e.strike.damageMultiplier * 100}>${(copies + 1) * e.strike.damageMultiplier * 100}% ATK`, up: true });
+        else lines.push({ text: `${name} ${copies * e.chance}>${(copies + 1) * e.chance}%`, up: true });
       } else if (e.special) {
         const before = hero.specials[e.special] || 0;
         const now = after.specials[e.special] || 0;

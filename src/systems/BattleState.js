@@ -1,13 +1,15 @@
 import { computeDamage, computeDotDamage } from './combat.js';
 import { xpForNextLevel, statsAtLevel } from './leveling.js';
 import { computeHeroStats } from './items.js';
+import { moraleTier } from './party.js';
 
 // The fight itself: who is alive, who attacks whom and when, mana, skills and statuses.
 // No Phaser in here. update() and castSkill() return a list of events and the scene draws them.
 //
 // Health regeneration (specials.regen) happens silently inside update(); the scene just redraws bars.
 // Events: attack, death, levelup, cast, status (apply / expire), dot (poison tick),
-//         heal (lifesteal), thorns (reflected damage), proc (an item's chance effect went off)
+//         heal (lifesteal), thorns (reflected damage), proc (an item's chance effect went off),
+//         morale (the party became 'incomplete' or 'alone' because a hero fell)
 export default class BattleState {
   constructor({ heroDefs, enemyDefs, itemDefs = {}, skillDefs = {}, rules, damageTypes, leveling, rng = Math.random }) {
     this.rules = rules;
@@ -21,9 +23,11 @@ export default class BattleState {
     this.focusUid = null;
     this.heroes = heroDefs.map((d) => this.makeUnit(d, 'hero', 1));
     this.enemies = [];
+    this.morale = 'full';
+    this.refreshStats(); // perks count from the start
   }
 
-  makeUnit(def, side, floor) {
+  makeUnit(def, side, floor, fightSize = 1) {
     const stats = { defense: 0, resist: 0, evasion: 0, crit: 0, attackEfficiency: 100, mana: 0, ...def.stats };
     if (side === 'enemy') {
       const s = this.rules.floorScaling;
@@ -32,6 +36,14 @@ export default class BattleState {
       stats.health = Math.round(stats.health * (1 + s.hpPerStep * hpSteps));
       const atkSteps = Math.floor((floor - 1) / s.attackStepFloors);
       stats.attack = Math.round(stats.attack * (1 + s.attackPerStep * atkSteps));
+      stats.attackEfficiency *= this.rules.enemyAttackSpeedMultiplier ?? 1; // global enemy slowdown
+      // Fights with 4+ enemies start a bit weaker and ramp up, so floor 21 isn't a cliff.
+      const ease = this.rules.bigFightEase;
+      if (ease && fightSize >= ease.minEnemies && floor >= ease.fromFloor) {
+        const scale = ease.startScale + (1 - ease.startScale) * Math.min(1, (floor - ease.fromFloor) / ease.rampFloors);
+        stats.health = Math.round(stats.health * scale);
+        stats.attack = Math.round(stats.attack * scale);
+      }
     }
     const unit = {
       uid: this.nextUid++,
@@ -52,6 +64,7 @@ export default class BattleState {
       damageBonus: {},
       specials: {},
       procs: [],
+      shareCd: 0, // Bloodlust Mask: ms until its lifesteal can be shared again
       alive: true,
       damageType: def.damageType,
       flying: !!def.flying,
@@ -71,12 +84,12 @@ export default class BattleState {
   }
 
   isStunned(unit) {
-    return unit.statuses.some((s) => s.type === 'stun');
+    return unit.statuses.some((s) => s.type === 'stun' || s.type === 'freeze'); // frozen = can't act
   }
 
   spawnEnemies(ids, floor) {
     this.focusUid = null;
-    this.enemies = ids.map((id) => this.makeUnit(this.enemyDefs[id], 'enemy', floor));
+    this.enemies = ids.map((id) => this.makeUnit(this.enemyDefs[id], 'enemy', floor, ids.length));
     return this.enemies;
   }
 
@@ -101,7 +114,8 @@ export default class BattleState {
     if (unit.side === 'hero') {
       const alive = this.enemies.filter((e) => e.alive);
       const focus = alive.find((e) => e.uid === this.focusUid);
-      return focus || alive[0] || null;
+      // No tapped enemy: pick any living enemy at random (every attack).
+      return focus || (alive.length ? alive[Math.floor(this.rng() * alive.length)] : null);
     }
     const alive = this.heroes.filter((h) => h.alive);
     return alive.length ? alive[Math.floor(this.rng() * alive.length)] : null;
@@ -109,12 +123,16 @@ export default class BattleState {
 
   // Marks a unit dead. Enemies give XP; a dead hero's items stop working.
   killUnit(target, events) {
+    const was = this.morale;
     target.alive = false;
     target.statuses = [];
     if (this.focusUid === target.uid) this.focusUid = null;
     events.push({ type: 'death', unit: target });
     if (target.side === 'enemy') this.awardXp(target, events);
-    else this.refreshStats();
+    else {
+      this.refreshStats();
+      if (this.morale !== was) events.push({ type: 'morale', tier: this.morale });
+    }
   }
 
   // Moves the fight forward by dt milliseconds. Returns events for the scene to show.
@@ -128,6 +146,7 @@ export default class BattleState {
       const regen = (hero.specials && hero.specials.regen) || 0; // % of max health per second
       if (regen > 0) hero.hp = Math.min(hero.maxHp, hero.hp + (hero.maxHp * regen * dt) / 100000);
       hero.mana = Math.min(hero.maxMana, hero.mana + (this.rules.manaRegenPerSec * dt) / 1000);
+      hero.shareCd = Math.max(0, hero.shareCd - dt);
       for (const slot of hero.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - dt);
     }
 
@@ -144,45 +163,112 @@ export default class BattleState {
       }
       unit.timer -= interval;
 
-      const result = computeDamage(unit, target, this.rules, this.damageTypes, this.rng);
-      if (!result.dodged) target.hp = Math.max(0, target.hp - result.amount);
-      events.push({ type: 'attack', attacker: unit, target, result });
-      if (result.blocked) {
-        // A successful block sends the holder's Shield Totems on cooldown.
-        const spec = { status: 'blockCooldown', durationMs: target.specials.blockCooldownMs || 2500 };
-        this.applyStatus(target, spec, target, 'totem', events);
-      }
-      if (!result.dodged) this.afterHit(unit, target, result.amount, events);
-      this.rollProcs(unit, 'onAttack', events);
-      if (target.hp <= 0 && target.alive) this.killUnit(target, events);
+      const hit = this.strike(unit, target, events);
+      this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged });
     }
     return events;
   }
 
+  // One hit: damage, block cooldown, lifesteal/thorns/crit debuffs, death. Used by basic attacks,
+  // skills and item procs. opts: multiplier, damageType (see computeDamage), skill (the skill def),
+  // projectile ('bomb', 'lightning': the scene draws it flying from the attacker).
+  strike(attacker, target, events, opts = {}) {
+    const result = computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, opts);
+    if (!result.dodged) target.hp = Math.max(0, target.hp - result.amount);
+    if (opts.projectile) events.push({ type: 'projectile', from: opts.from || attacker, to: target, kind: opts.projectile });
+    events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType });
+    if (result.blocked) {
+      // A successful block sends the holder's Shield Totems on cooldown.
+      const spec = { status: 'blockCooldown', durationMs: target.specials.blockCooldownMs || 2500 };
+      this.applyStatus(target, spec, target, 'totem', events);
+    }
+    if (!result.dodged) this.afterHit(attacker, target, result.amount, events, result);
+    if (target.hp <= 0 && target.alive) this.killUnit(target, events);
+    return result;
+  }
+
   // Items with a chance effect (e.g. War Banner): each copy rolls separately every time the
-  // trigger happens. A proc can give a status to the holder or to the whole squad.
-  rollProcs(hero, trigger, events) {
+  // trigger happens. ctx.target is the enemy that was just attacked. A proc can:
+  //   doubleHit  - hit the same target once more (Quick Gloves)
+  //   strike     - an extra hit { damageMultiplier, damageType, projectile } (Fire Bombs, Chill Band)
+  //   chain      - a bolt that jumps to other enemies { jumps, damageMultiplier, damageType } (Static Crystal)
+  //   apply      - give statuses to `targets`: self, squad or target (the hit enemy; only if the attack connected)
+  //   silent     - no popup (for effects that go off on every attack)
+  rollProcs(hero, trigger, events, ctx = {}) {
     if (hero.side !== 'hero' || !hero.alive) return;
     for (const proc of [...hero.procs]) {
       if (proc.proc !== trigger || this.rng() * 100 >= proc.chance) continue;
-      const targets = proc.targets === 'squad' ? this.heroes.filter((h) => h.alive) : [hero];
-      events.push({ type: 'proc', unit: hero, label: proc.label });
+      if (!proc.silent) events.push({ type: 'proc', unit: hero, label: proc.label });
+      const enemy = ctx.target && ctx.target.alive ? ctx.target : null;
+      let landed = ctx.hit !== false; // statuses on the target need the attack to have connected
+      if (proc.doubleHit && enemy) this.strike(hero, enemy, events);
+      if (proc.strike && enemy) {
+        const hit = this.strike(hero, enemy, events, {
+          multiplier: proc.strike.damageMultiplier,
+          damageType: proc.strike.damageType,
+          projectile: proc.strike.projectile,
+        });
+        landed = !hit.dodged;
+      }
+      if (proc.chain && enemy) this.chainHit(hero, enemy, proc.chain, events);
+      const targets = proc.targets === 'squad' ? this.heroes.filter((h) => h.alive) : proc.targets === 'target' ? (enemy && landed ? [enemy] : []) : [hero];
       for (const spec of proc.apply || []) {
         for (const target of targets) this.applyStatus(target, spec, hero, `proc_${proc.itemId}`, events);
       }
     }
   }
 
+  // Slot neighbours of an enemy: the living enemies standing right next to it.
+  neighbours(enemy) {
+    const i = this.enemies.indexOf(enemy);
+    return [this.enemies[i - 1], this.enemies[i + 1]].filter((e) => e && e.alive);
+  }
+
+  // A bolt hits `first`, then jumps `jumps` more times to the closest enemies not hit yet.
+  chainHit(hero, first, chain, events) {
+    const hit = new Set([first]);
+    let from = hero;
+    let target = first;
+    for (let jump = 0; target; jump++) {
+      this.strike(hero, target, events, { multiplier: chain.damageMultiplier, damageType: chain.damageType, projectile: 'lightning', from });
+      if (jump >= chain.jumps) break;
+      from = target;
+      const here = this.enemies.indexOf(from);
+      const next = this.enemies.filter((e) => e.alive && !hit.has(e)).sort((a, b) => Math.abs(this.enemies.indexOf(a) - here) - Math.abs(this.enemies.indexOf(b) - here))[0];
+      if (next) hit.add(next);
+      target = next;
+    }
+  }
+
   // Item specials that trigger when a hit lands: lifesteal heals the attacker, thorns reflects
   // some of a MELEE hit back at the attacker.
-  afterHit(attacker, target, amount, events) {
+  afterHit(attacker, target, amount, events, result = {}) {
     const lifesteal = (attacker.specials && attacker.specials.lifesteal) || 0;
     if (lifesteal > 0 && attacker.alive) {
-      const heal = Math.min(attacker.maxHp - attacker.hp, Math.max(1, Math.round((amount * lifesteal) / 100)));
+      const base = Math.max(1, Math.round((amount * lifesteal) / 100));
+      const heal = Math.min(attacker.maxHp - attacker.hp, base);
       if (heal > 0) {
         attacker.hp += heal;
         events.push({ type: 'heal', unit: attacker, amount: heal });
       }
+      // Bloodlust Mask: sometimes the heal is shared with the rest of the squad (then a cooldown).
+      const share = attacker.specials.lifestealShare || 0;
+      if (share > 0 && attacker.shareCd <= 0 && this.rng() * 100 < share) {
+        attacker.shareCd = attacker.specials.lifestealShareCooldownMs || 3000;
+        events.push({ type: 'proc', unit: attacker, label: 'Life Share!' });
+        for (const ally of this.heroes) {
+          const got = ally === attacker || !ally.alive ? 0 : Math.min(ally.maxHp - ally.hp, base);
+          if (got <= 0) continue;
+          ally.hp += got;
+          events.push({ type: 'heal', unit: ally, amount: got });
+        }
+      }
+    }
+    // Gambler's Dice: a crit also gives the enemy a random debuff.
+    const dice = attacker.specials && attacker.specials.critDebuffList;
+    if (result.crit && dice && dice.length && target.alive && target.hp > 0 && this.rng() * 100 < attacker.specials.critDebuff) {
+      const spec = dice[Math.floor(this.rng() * dice.length)];
+      this.applyStatus(target, spec, attacker, `dice_${attacker.uid}`, events);
     }
     const thorns = (target.specials && target.specials.thorns) || 0;
     if (thorns > 0 && target.alive && target.hp > 0 && attacker.damageType === 'melee' && attacker.alive) {
@@ -274,6 +360,14 @@ export default class BattleState {
     if (skill.target === 'self') targets = [hero];
     else if (skill.target === 'allEnemies') targets = this.enemies.filter((e) => e.alive);
     else targets = [this.pickTarget(hero)];
+    const splash = (hero.specials && hero.specials.skillSplash) || 0; // Siege Cannon: % chance to hit the neighbours too
+    if (skill.target === 'enemy' && skill.damageMultiplier && splash > 0 && this.rng() * 100 < splash) {
+      const near = this.neighbours(targets[0]);
+      if (near.length) {
+        targets = [...targets, ...near];
+        events.push({ type: 'proc', unit: hero, label: 'Splash!' });
+      }
+    }
 
     hero.mana -= skill.manaCost;
     slot.cooldownLeft = skill.cooldownMs;
@@ -281,18 +375,12 @@ export default class BattleState {
 
     for (const target of targets) {
       if (skill.damageMultiplier) {
-        const result = computeDamage(hero, target, this.rules, this.damageTypes, this.rng, {
+        const result = this.strike(hero, target, events, {
           multiplier: skill.damageMultiplier * (1 + ((hero.specials && hero.specials.skillDamage) || 0) / 100),
           damageType: skill.damageType,
+          skill,
         });
-        if (!result.dodged) target.hp = Math.max(0, target.hp - result.amount);
-        events.push({ type: 'attack', attacker: hero, target, result, skill });
-        if (result.dodged) continue;
-        this.afterHit(hero, target, result.amount, events);
-        if (target.hp <= 0) {
-          this.killUnit(target, events);
-          continue;
-        }
+        if (result.dodged || !target.alive) continue;
       }
       for (const spec of skill.apply || []) this.applyStatus(target, spec, hero, slot.id, events);
     }
@@ -326,10 +414,11 @@ export default class BattleState {
   // current health goes up by the same amount; if it goes down, current health is capped to the
   // new max. Mana works the same way.
   refreshStats() {
+    this.morale = moraleTier(this.heroes);
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
       const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
-      const { stats, damageBonus, specials, procs } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats);
+      const { stats, damageBonus, specials, procs } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale);
       const hpDelta = stats.health - hero.maxHp;
       const manaDelta = stats.mana - hero.maxMana;
       hero.stats = stats;
@@ -355,7 +444,7 @@ export default class BattleState {
     const hero = this.heroes.find((h) => h.uid === heroUid);
     hero.items.push(itemId);
     const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
-    const result = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats);
+    const result = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale);
     hero.items.pop();
     return result;
   }
@@ -366,6 +455,19 @@ export default class BattleState {
     for (const h of this.heroes) {
       if (!h.alive) continue;
       const amount = Math.min(Math.round((h.maxHp * percent) / 100), h.maxHp - h.hp);
+      h.hp += amount;
+      healed.push({ unit: h, amount });
+    }
+    return healed;
+  }
+
+  // The heal after a won floor: the normal % plus each hero's own Aid Kits.
+  winHeal(percent) {
+    const healed = [];
+    for (const h of this.heroes) {
+      if (!h.alive) continue;
+      const bonus = (h.specials && h.specials.clearHeal) || 0;
+      const amount = Math.min(Math.round((h.maxHp * (percent + bonus)) / 100), h.maxHp - h.hp);
       h.hp += amount;
       healed.push({ unit: h, amount });
     }

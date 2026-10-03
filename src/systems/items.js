@@ -1,4 +1,5 @@
 // Item maths (no Phaser here).
+import { perkMods, moraleTier } from './party.js';
 
 // Turns items.json (keyed by id) into a map where every item also knows its own id.
 export function loadItems(raw) {
@@ -18,7 +19,7 @@ export function canReceive(unit, item) {
 //   - the hero's own items (while the hero is alive)
 //   - squad items held by any LIVING hero
 // Items on a dead hero stop working. `percent` is a % of the level stat; `flat` adds points.
-export function computeHeroStats(hero, heroes, itemDefs, levelStats) {
+export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules = {}) {
   const stats = { ...levelStats };
   const damageBonus = {};
   const specials = {}; // thorns, lifesteal, skillDamage, critDamage, regen (all in %)
@@ -27,10 +28,12 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats) {
   const apply = (e, factor = 1, holder = null) => {
     if (e.proc) {
       // One entry per copy, so every copy rolls its own chance. Only the holder's own attacks roll.
-      if (holder === hero) procs.push({ ...e, itemId: e.itemId });
+      // `unique` effects only count once however many copies the hero has (e.g. a freeze chance that doesn't stack).
+      if (holder === hero && !(e.unique && procs.some((p) => p.unique && p.itemId === e.itemId))) procs.push({ ...e, itemId: e.itemId });
     } else if (e.special) {
       specials[e.special] = (specials[e.special] || 0) + e.percent * factor;
       if (e.cooldownMs) specials[e.special + 'CooldownMs'] = e.cooldownMs; // e.g. blockCooldownMs
+      if (e.debuffs) specials[e.special + 'List'] = e.debuffs; // e.g. critDebuffList
     } else if (e.damageBonus) {
       damageBonus[e.damageBonus] = (damageBonus[e.damageBonus] || 0) + e.percent * factor;
     } else if (e.percent !== undefined) {
@@ -52,6 +55,11 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats) {
       for (const e of item.effects) apply(e.proc ? { ...e, itemId: id } : e, e.falloffRatio ? Math.pow(e.falloffRatio, index) : 1, holder);
     }
   }
+  // Hero perks: every living hero's perk helps the whole party (a fallen hero's perk is lost).
+  for (const holder of heroes) if (holder.alive) perkMods(holder).forEach((m) => apply(m));
+  // Morale: the party is weaker once heroes have fallen.
+  const tier = moraleRules[moraleTier(heroes)];
+  if (tier) tier.mods.forEach((m) => apply(m));
   // Temporary buffs from skills.
   for (const status of hero.statuses || []) {
     if (status.type === 'buff') status.mods.forEach((m) => apply(m));

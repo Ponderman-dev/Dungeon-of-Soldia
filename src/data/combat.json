@@ -10,9 +10,9 @@
   },
   "winHealPercent": 25,
   "floorScaling": {
-    "hpPerStep": 0.4,
-    "hpStepFloors": 4,
-    "attackPerStep": 0.45,
+    "hpPerStep": 0.35,
+    "hpStepFloors": 3,
+    "attackPerStep": 0.525,
     "attackStepFloors": 3
   },
   "restartDelayMs": 3000,
@@ -26,5 +26,62 @@
     "slideMs": 1000
   },
   "manaRegenPerSec": 2,
-  "winManaPercent": 20
+  "winManaPercent": 20,
+  "enemyAttackSpeedMultiplier": 0.65,
+  "bigFightEase": {
+    "minEnemies": 4,
+    "fromFloor": 32,
+    "startScale": 0.87,
+    "rampFloors": 8
+  },
+  "morale": {
+    "incomplete": {
+      "label": "INCOMPLETE",
+      "color": "#8a4fd0",
+      "textColor": "#ffffff",
+      "mods": [
+        {
+          "stat": "attack",
+          "percent": -10
+        },
+        {
+          "stat": "attackEfficiency",
+          "percent": -10
+        },
+        {
+          "stat": "defense",
+          "flat": -3
+        },
+        {
+          "stat": "resist",
+          "flat": -3
+        }
+      ],
+      "popupColor": "#c58bff"
+    },
+    "alone": {
+      "label": "ALL ALONE",
+      "color": "#b03030",
+      "textColor": "#ffffff",
+      "mods": [
+        {
+          "stat": "attack",
+          "percent": -25
+        },
+        {
+          "stat": "attackEfficiency",
+          "percent": -25
+        },
+        {
+          "stat": "defense",
+          "flat": -8
+        },
+        {
+          "stat": "resist",
+          "flat": -8
+        }
+      ],
+      "popupColor": "#ff6b6b"
+    }
+  }
 }

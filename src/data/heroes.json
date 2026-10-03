@@ -63,7 +63,17 @@
     "skills": [
       "shield_bash",
       "guard"
-    ]
+    ],
+    "perk": {
+      "name": "Stalwart",
+      "mods": [
+        {
+          "stat": "health",
+          "percent": 10,
+          "growth": 0.4
+        }
+      ]
+    }
   },
   {
     "id": "berserker",
@@ -128,7 +138,17 @@
     "skills": [
       "cleave",
       "rage"
-    ]
+    ],
+    "perk": {
+      "name": "Battle Fury",
+      "mods": [
+        {
+          "stat": "attackEfficiency",
+          "percent": 8,
+          "growth": 0.3
+        }
+      ]
+    }
   },
   {
     "id": "rogue",
@@ -136,12 +156,12 @@
     "damageType": "melee",
     "height": 26,
     "stats": {
-      "health": 85,
+      "health": 100,
       "mana": 60,
       "attack": 19,
-      "defense": 3,
+      "defense": 6,
       "resist": 3,
-      "evasion": 15,
+      "evasion": 25,
       "crit": 20,
       "attackEfficiency": 140
     },
@@ -188,14 +208,24 @@
       "mana": 2
     },
     "growthFlat": {
-      "evasion": 0.4,
+      "evasion": 0.6,
       "crit": 0.4,
       "attackEfficiency": 0.5
     },
     "skills": [
       "venom_strike",
       "smoke"
-    ]
+    ],
+    "perk": {
+      "name": "Keen Eyes",
+      "mods": [
+        {
+          "stat": "crit",
+          "flat": 6,
+          "growth": 0.15
+        }
+      ]
+    }
   },
   {
     "id": "archer",
@@ -203,12 +233,12 @@
     "damageType": "ranged",
     "height": 28,
     "stats": {
-      "health": 80,
+      "health": 95,
       "mana": 60,
       "attack": 17,
-      "defense": 3,
+      "defense": 6,
       "resist": 4,
-      "evasion": 5,
+      "evasion": 15,
       "crit": 12,
       "attackEfficiency": 100
     },
@@ -255,11 +285,22 @@
     },
     "growthFlat": {
       "crit": 0.3,
-      "resist": 0.2
+      "resist": 0.2,
+      "evasion": 0.4
     },
     "skills": [
       "power_shot",
       "ensnare_shot"
-    ]
+    ],
+    "perk": {
+      "name": "Marksman",
+      "mods": [
+        {
+          "stat": "attack",
+          "percent": 10,
+          "growth": 0.4
+        }
+      ]
+    }
   }
 ]

@@ -1,9 +1,10 @@
 import fs from 'fs';
+import { noPerks } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems, canReceive } from '../../src/systems/items.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const itemDefs = loadItems(r('items.json'));
-const s = new BattleState({ heroDefs: r('heroes.json'), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+const s = new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
 const rogue = s.heroes[2]; const base = rogue.stats.crit; const rows = [];
 let prev = base;
 for (let n = 1; n <= 10; n++) { s.giveItem(rogue.uid, 'lucky_coin'); rows.push(`${n}: +${(rogue.stats.crit - prev).toFixed(1)} -> ${(rogue.stats.crit - base).toFixed(1)}`); prev = rogue.stats.crit; }

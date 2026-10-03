@@ -1,17 +1,18 @@
 import fs from 'fs';
 import BattleState from '../../src/systems/BattleState.js';
+import { enemiesForFloor } from '../../src/systems/dungeon.js';
+import { pickSquad } from '../../src/systems/party.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
-const heroDefs = r('heroes.json'), enemyDefs = r('enemies.json'), baseRules = r('combat.json'), damageTypes = r('damageTypes.json'), leveling = r('leveling.json'), dungeon = r('dungeons.json').A;
+const heroDefs = pickSquad(r('heroes.json'), r('squad.json')), enemyDefs = r('enemies.json'), baseRules = r('combat.json'), damageTypes = r('damageTypes.json'), leveling = r('leveling.json'), dungeon = r('dungeons.json').A;
 function run(rules) {
   const s = new BattleState({ heroDefs, enemyDefs, rules, damageTypes, leveling });
   let floor = 1;
   while (floor < 80) {
-    const entry = [...dungeon.floors].reverse().find((f) => f.floor <= floor);
-    s.spawnEnemies(entry.enemies, floor);
+    s.spawnEnemies(enemiesForFloor(dungeon, floor), floor);
     let t = 0;
     while (!s.allEnemiesDead() && !s.allHeroesDead() && t < 600000) { s.update(50); t += 50; }
     if (s.allHeroesDead()) break;
-    s.healHeroes(rules.winHealPercent);
+    s.winHeal(rules.winHealPercent);
     floor++;
   }
   return floor;

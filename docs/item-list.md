@@ -42,10 +42,10 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Fire Bombs | on-hit | BUILT | 5% per attack: bomb, 250% fire damage (ranged) | Each copy rolls its own 5% separately |
 | Chill Band | on-hit | BUILT | every attack adds a 10% ice hit per band, 50% chance to freeze 0.7s (no stack) | Ice hit adds per band (+10% each). The 50% freeze is unique: more bands do NOT raise it |
 | Fire Arrows | on-hit | NEW | ranged attacks 50% chance (no stack) for an extra fire hit; extra copies raise fire damage | Chance does NOT stack (stays 50%). Extra copies add to the fire hit damage (stacks) |
-| Ember Charm | on-hit | NEW | 8% chance per attack to Burn the target (fire damage over time, 3s) | (suggest) Each copy rolls its own 8%. Burn from the same item refreshes, it does not stack |
-| Serrated Edge | on-hit | NEW | 10% chance per attack to make the target Bleed | (suggest) Each copy rolls its own 10%. Bleed from the same item refreshes (unless Knife Fan allows stacking) |
-| Venom Fang | on-hit | NEW | 10% chance per attack to Poison the target | (suggest) Each copy rolls its own 10%. Poison from the same item refreshes |
-| Rusty Nails | on-hit | NEW | 8% chance per attack to Armor Break the target (-defense) | (suggest) Each copy rolls its own 8%. Armor Break refreshes. Total defense cut is capped |
+| Ember Charm | on-hit | NEW | 8% chance per attack to Burn the target (fire damage over time, 3s) | Burn chance adds up per copy (8% each) AND burn damage adds up per copy. Burn from these charms refreshes, it does not stack as separate burns |
+| Serrated Edge | on-hit | NEW | 10% chance per attack to make the target Bleed | Chance adds up but with diminishing returns per extra copy (suggest 0.8x the last: 10%, 8%, 6.4%...) |
+| Venom Fang | on-hit | NEW | 10% chance per attack to Poison the target | Chance adds up normally (10% per copy). Poison from the same item refreshes |
+| Rusty Nails | on-hit | NEW | 8% chance per attack to Armor Break the target (-defense) | Chance adds up normally (8% per copy). Armor Break refreshes, it does not stack |
 | Executioner's Mark | special | NEW | +30% damage to enemies under 25% health | (suggest) Diminishing: each extra copy adds 0.8x the last |
 | Bulwark Charm | stat | NEW | shields the holder receives are 30% bigger | (suggest) Additive (+30% each) |
 | Overheal Ring | special | NEW | healing above full health becomes a shield | (suggest) Each copy converts 50% of overheal to shield, max 100% (2 copies) |

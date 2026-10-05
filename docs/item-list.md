@@ -50,10 +50,10 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Bulwark Charm | stat | NEW | shields the holder receives are 30% bigger | Additive (+30% each), no cap |
 | Overheal Ring | special | NEW | healing above full health becomes a shield | A % of the healing above 100% health is converted to shield (suggest 40% per copy). Each extra copy adds more %, up to 100% |
 | Provoker's Horn | special | NEW | taunt chance +10%, taunted enemies take +15% damage | Both add up per copy (+10% taunt chance and +15% damage vs taunted), no cap |
-| Hourglass | skill | NEW | skill cooldowns 12% shorter (diminishing per copy) | (suggest) Diminishing per copy, capped at 50% shorter cooldowns |
-| Conductor's Baton | skill | NEW | support skill effects 25% stronger and 25% longer | (suggest) Strength and length add up; diminishing after 3 copies |
-| Bone Charm | minion | NEW | all minions (weak and greater) +30% health and attack | (suggest) Stats add up per copy, no cap |
-| Overseer's Whistle | minion | NEW | weak minion cap +1, weak minions attack 15% faster | (suggest) +1 weak minion cap per copy. Attack speed adds up |
+| Hourglass | skill | NEW | skill cooldowns 5% shorter (lowered from 12%, so it needs several copies) | Additive (-5% per copy). Cap not stated: suggest 50% shorter total |
+| Conductor's Baton | skill | NEW | support skill effects 25% stronger and 25% longer | Diminishing: each extra copy adds less to both strength and length (suggest 0.85x the last) |
+| Bone Charm | minion | NEW | all minions (weak and greater) +20% health and attack (lowered from 30%) | Additive (+20% each), no cap |
+| Overseer's Whistle | minion | NEW | weak minion cap +1, weak minions attack 15% faster | +1 weak minion cap per copy, max +4 total. Attack speed bonus adds up (+15% each) |
 | Wisp Lantern | minion | NEW | every 15s a flying Wisp (weak minion, ranged magic) | Spawn in bursts: each extra copy adds one more Wisp to every spawn. One shared timer. Weak minion cap is shared |
 | Gargoyle Idol | minion | NEW | greater minion: a slow, tanky Gargoyle that draws enemy attacks | Greater minion: 1 Gargoyle however many copies. Extra copies only stack its stats |
 

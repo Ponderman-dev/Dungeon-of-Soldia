@@ -1,5 +1,5 @@
 {
-  "_about": "Status tags and rules. dot: damage over time, every application adds a STACK (no limit, each stack has its own timer, all stacks of one kind tick together every tickMs). control: bosses take it for half as long (statusDurationScale). Numbers here are defaults a skill/item spec can override. stacking: like dot it stacks (each stack own timer) but deals no damage (chill). instant: no lasting status (knockback).",
+  "_about": "Status tags and rules. dot: damage over time, every application adds a STACK (no limit, each stack has its own timer, all stacks of one kind tick together every tickMs). control: bosses take it for half as long (statusDurationScale). Numbers here are defaults a skill/item spec can override. stacking: like dot it stacks (each stack own timer) but deals no damage (chill). instant: no lasting status (knockback). Stat debuffs (weaken, armorBreak, curse, blind, mark) refresh per source; different sources add up.",
   "bleed": {
     "label": "BLEED",
     "color": "#c0303a",
@@ -80,6 +80,36 @@
     "color": "#8a86a0",
     "textColor": "#ffffff",
     "control": true
+  },
+  "weaken": {
+    "label": "WEAK",
+    "color": "#9a6b3a",
+    "textColor": "#ffffff",
+    "attackPercent": -20
+  },
+  "armorBreak": {
+    "label": "ARMOR-",
+    "color": "#b0b0b0",
+    "textColor": "#000000",
+    "defenseFlat": -15
+  },
+  "curse": {
+    "label": "CURSE",
+    "color": "#5a2a7a",
+    "textColor": "#ffffff",
+    "resistFlat": -15
+  },
+  "blind": {
+    "label": "BLIND",
+    "color": "#333333",
+    "textColor": "#ffffff",
+    "missPercent": 25
+  },
+  "mark": {
+    "label": "MARK",
+    "color": "#ff3d6e",
+    "textColor": "#ffffff",
+    "damageTakenPercent": 15
   },
   "buff": {
     "label": "BUFF",

@@ -343,6 +343,10 @@ export default class BattleState {
       status.total = duration;
       if (spec.status === 'buff') status.mods = spec.mods;
       if (spec.status === 'taunt') status.sourceUid = source.uid;
+      // Stat debuffs: the number comes from the skill/item, or the default in statuses.json.
+      for (const field of ['attackPercent', 'defenseFlat', 'resistFlat', 'missPercent', 'damageTakenPercent']) {
+        if (spec[field] !== undefined || info[field] !== undefined) status[field] = spec[field] ?? info[field];
+      }
       if (spec.status === 'shock') {
         status.attackSpeedPercent = spec.attackSpeedPercent ?? info.attackSpeedPercent ?? 0;
         status.fumbleChance = spec.fumbleChance ?? info.fumbleChance ?? 0;

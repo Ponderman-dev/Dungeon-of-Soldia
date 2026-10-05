@@ -1,5 +1,16 @@
 // Pure fight maths (no Phaser here), so it can be tested without a screen.
 
+// Adds up one number from every status of one kind on a unit (e.g. all Weaken on it: -20 + -20).
+// Different sources add up; the same source refreshes instead (see BattleState.applyStatus).
+function statusSum(unit, type, field) {
+  return (unit.statuses || []).reduce((sum, s) => (s.type === type ? sum + (s[field] || 0) : sum), 0);
+}
+
+// Mark: the unit takes more damage from everything (hits and damage over time).
+function markMultiplier(defender) {
+  return 1 + statusSum(defender, 'mark', 'damageTakenPercent') / 100;
+}
+
 // An enemy's `weak` / `resists` lists can name a damage type ("fire") or a whole category
 // ("magical", "physical").
 function weakResistMultiplier(defender, type, rules, damageTypes) {
@@ -21,9 +32,13 @@ export function armorPercent(points, rules) {
 }
 
 // Physical hits are cut by Defense, magical hits by Resist (same curve for both).
+// Armor Break lowers defense, Curse lowers resist (they can go below 0: then the hit does MORE damage).
 function armourCut(defender, type, rules, damageTypes) {
   const physical = damageTypes[type].category === 'physical';
-  return armorPercent(physical ? defender.stats.defense : defender.stats.resist, rules);
+  const points = physical
+    ? defender.stats.defense + statusSum(defender, 'armorBreak', 'defenseFlat')
+    : defender.stats.resist + statusSum(defender, 'curse', 'resistFlat');
+  return armorPercent(points, rules);
 }
 
 // Works out one hit. Returns { dodged, crit, amount, mult }.
@@ -40,6 +55,10 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
   const recharging = defender.statuses && defender.statuses.some((st) => st.type === 'blockCooldown');
   if (block > 0 && !recharging && rng() * 100 < block) return { dodged: true, blocked: true, crit: false, amount: 0, mult: 1 };
 
+  // Blind: the attacker misses some of its attacks.
+  const blind = statusSum(attacker, 'blind', 'missPercent');
+  if (blind > 0 && rng() * 100 < blind) return { dodged: true, missed: true, crit: false, amount: 0, mult: 1 };
+
   // Melee swings often miss flying enemies.
   if (type === 'melee' && defender.flying && rng() * 100 < rules.meleeVsFlyingMissPercent) {
     return { dodged: true, crit: false, amount: 0, mult: 1 };
@@ -47,12 +66,15 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
 
   const crit = rng() * 100 < Math.min(attacker.stats.crit, rules.caps.crit);
   const critMultiplier = rules.critMultiplier + ((attacker.specials && attacker.specials.critDamage) || 0) / 100;
-  let amount = attacker.stats.attack * (opts.multiplier || 1) * (crit ? critMultiplier : 1);
+  // Weaken: the attacker hits softer.
+  const attack = attacker.stats.attack * Math.max(0, 1 + statusSum(attacker, 'weaken', 'attackPercent') / 100);
+  let amount = attack * (opts.multiplier || 1) * (crit ? critMultiplier : 1);
 
   const mult = weakResistMultiplier(defender, type, rules, damageTypes);
   amount *= mult;
   amount *= 1 + ((attacker.damageBonus && attacker.damageBonus[type]) || 0) / 100;
   amount *= 1 - armourCut(defender, type, rules, damageTypes) / 100;
+  amount *= markMultiplier(defender);
 
   return { dodged: false, crit, amount: Math.max(1, Math.round(amount)), mult };
 }
@@ -63,5 +85,5 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
 export function computeDotDamage(defender, amount, type, rules, damageTypes, opts = {}) {
   const mult = weakResistMultiplier(defender, type, rules, damageTypes);
   const cut = opts.ignoresArmor ? 0 : armourCut(defender, type, rules, damageTypes);
-  return Math.max(1, Math.round(amount * mult * (1 - cut / 100)));
+  return Math.max(1, Math.round(amount * mult * (1 - cut / 100) * markMultiplier(defender)));
 }

@@ -1,52 +1,51 @@
 # Hand-off notes (read after CLAUDE.md)
 
-Start of a new session: read `CLAUDE.md` (all decided rules), `docs/game-design-recap.md` (the design) and this file.
+Start of a new session: read `CLAUDE.md` (all decided rules), then this file, then `docs/big-update-plan.md` (the plan and the BUILD ORDER) and `docs/item-list.md` (72 items). `docs/game-design-recap.md` is the original design.
 
 ## The user
-Total beginner, fully vibe coding. Explain simply, small steps, ask before big decisions.
-**Credits are limited**: batch changes (the user will send a list), avoid unnecessary screenshots,
-keep replies short, republish the preview page once per batch or when asked, not after every tweak.
+Total beginner, fully vibe coding. Explain simply, small steps, ask before big decisions (CLAUDE.md "About the user").
+Wants: **the preview page republished after EVERY change** (for now), short replies, one step at a time, "yes start X" before each step.
+They review by LOOKING at the preview page, so always check the game in the browser before publishing, and tell them what to look for.
+Preview page: https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr (private; publish the SAME url with the Artifact tool, see CLAUDE.md "Preview page").
 
-## What is built (work branch: `claude/quick-gloves-item-changes-ofzyqe`, PR https://github.com/Ponderman-dev/Dungeon-of-Soldia/pull/1 already exists; pushing to the branch updates it)
-- Phaser 3 project (npm installed Phaser v4.x in practice), 390x844 portrait, placeholder block characters made from parts.
-- Battle: 3 heroes (Knight, Rogue, Archer; Berserker on the bench) with party perks and morale debuffs, enemies (Slime, Goblin, Bat), auto-attacks, tap-to-focus,
-  damage types, defense/resist/evasion/crit, XP + per-hero levelling, floors with scaling in `src/data/*.json`.
-- Floor flow: door, heroes walk in a line, camera slide, entry from the bottom (see CLAUDE.md "Floor flow").
-- Skills (2 per hero) + cooldowns (mana removed in step A1) + statuses (stun, slow, poison, buff). One-tap casting.
-- Reward screen (pick 1 of 3 items, then choose a hero), 14+ items with dots above heroes, Shared Potion, TEST auto-reward button.
-- Items already reworked with the user: Lucky Coin (diminishing crit), Heart Charm (+regen), War Banner (Battle Cry proc),
-  Shield Totem (block + 2.5s recharge), special items (Bulwark Plate, Siege Cannon, Bloodlust Mask, Gambler's Dice).
-- Preview page: https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr (private, republish with `npm run build:page`, see CLAUDE.md).
+## Branch
+Work branch: `claude/quick-gloves-item-changes-ofzyqe` (PR https://github.com/Ponderman-dev/Dungeon-of-Soldia/pull/1 exists; pushing updates it). Commit + push after every step. Do not open new PRs unless asked. Commit messages end with the attribution lines the session gives you.
 
-## Tests and tuning (in the repo)
-- `npm test` runs `scripts/tests/*.test.mjs` (rules of skills, statuses, items, rewards, each reworked item).
-- `npm run sim` = average death floor for a bot that casts every ready skill and gets random rewards (about floor 18-19).
-  `node scripts/tests/sim.mjs noskills` is the baseline (about floor 10; the user tuned enemy growth for that). Enemy growth lives in `combat.json` `floorScaling` (now per-floor, see CLAUDE.md "Difficulty curve"); `node scripts/tests/difficulty.mjs` prints a per-floor report.
-- `node scripts/tests/tune-enemies.mjs <hpPerStep list> <attackPerStep list>` searches enemy growth numbers.
-- Browser checks were done with `playwright-core` (not in the project; `npm i playwright-core` in a scratch folder), Chromium at
-  `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`, with `page.clock.install()` + `clock.runFor()` to fast-forward time.
-  Always revert temporary test builds (e.g. forced reward choices) and grep to be sure.
+## WHERE WE ARE: the BIG UPDATE (docs/big-update-plan.md "BUILD ORDER")
+DONE: all of Phase A (A1 no mana, A2 attack/support skill slots, A3 defense/resist curve + caps, A4 new drop roll, A5 damage types, A6 debuff engine) and all of Phase B (B1 attack start/hit split, B2-B4 heroes/enemies walk + arrows, B5 melee movement rework).
+NEXT: **Phase C (feel)**:
+- C1 skill wind-up (`castMs`, longer than a normal attack). OPEN QUESTION the user has not answered yet: if a hero is stunned/frozen during a skill's wind-up, is the skill (a) lost + goes on cooldown, (b) lost + cooldown refunded (my suggestion), or (c) always cast?
+- C2 skill cast visuals (colour flash, ring burst, name banner, bigger coloured numbers, screen shake / hit-stop; skills must look clearly different from normal hits).
+- C3 morale overlay instead of text (very faint tint on living heroes: light = INCOMPLETE, darker = ALL ALONE; remove the tag/popup).
+Then Phase D (shields, taunt on enemies, "every 4th attack" counters, minion system), E (10 heroes one by one), F (squad select + unlock saving), G (72 items in groups), H (update test bot + ONE tuning pass).
 
-- Hero buff (after the item batch 2 session): Rogue 100 hp / 6 def / 25 evasion, Archer 95 hp / 6 def / 15 evasion (more evasion per level too). The bot's average death floor went from about 24.7 to 32.5, so enemy growth may need retuning.
+## How the fight works now (so you do not break it)
+- BattleState (no Phaser) is the rules; BattleScene draws events. Events: attackStart (attacker, target, hitInMs, approach), attackRetarget, attackCancel (reason), attack (result, basic flag), status, dot, proc, heal, death...
+- A basic attack has a start and a hit (`hitDelay`, combat.json `attackTiming` per side: melee walk-over 600ms, swing 220ms, arrows 260ms). Melee fighters walk STRAIGHT to their target and STAY next to it (`engagedUid`, `foe`); enemies pick the NEAREST hero (`nearest()`, by lane) and keep it; ranged heroes pick random targets. Movement is constant speed with a hop per step (Character.chase). Projectiles aim at `center(view)` (where the target is NOW). The red focus circle follows the enemy. See CLAUDE.md "MELEE MOVEMENT".
+- Statuses live in `statuses.json` (+ `statusDefs` passed to BattleState). Bleed/burn/poison stack with no limit (each stack its own timer); chill stacks, 5 = freeze; shock, fear, knockback, taunt, silence, weaken, armor break, curse, blind, mark all work (tests in dots / control / stat-debuffs). Only the Rogue's poison and Gambler's Dice use them in the game yet; heroes/items come in phases E/G.
+- Skills: `skills: { attack, support }` per hero, skills.json has `kind`. The Archer's support is a PLACEHOLDER (Eagle Focus) until his redo. Hero stats still have a dormant `mana` field (nothing reads it).
 
-- Squad/perks/morale step done (steps a-c). Next in that plan: (d) redo the skills (user to decide: 1 or 2 tappable skills per hero, attack vs team-support focus). Enemy growth was retuned for 3 heroes (+35% hp / +52.5% attack per 3 floors, mean death floor about 26; it was retuned again after heroes switched to random targeting). Knight-only item stacking no longer beats spreading items (about 26 vs 27).
+## Tests and tuning
+- `npm test` runs `scripts/tests/*.test.mjs` (18 files, all must pass before every commit). `node scripts/tests/sim.mjs skills rewards` = average death floor of a bot (now ~94: far too high, see below).
+- KNOWN BALANCE DRIFT (leave until phase H): the bot went from ~28 (start of the update) to ~94 because of better late rarity odds, enemies attacking whoever is nearest, and stun/freeze cancelling attacks in flight. Tune in phase H (enemy `floorScaling`, `rarityOdds`, attack timings).
+- `node scripts/tests/difficulty.mjs`, `tune-enemies.mjs` also exist (see CLAUDE.md "Difficulty curve").
+
+## Browser checks (do this before every publish)
+1. `npm run build:page` (makes `dist-page.html`; also `dist/` via `npm run build`), copy `dist-page.html` to your scratchpad as `dungeon-of-soldia.html`, publish it to the artifact URL.
+2. To SEE the game: `npm i playwright-core` in a scratch folder, copy `scripts/dev/browser-frames.mjs` there, run `npx vite preview --port 4173` in the project (in the background), then `node browser-frames.mjs 2600 4 150` and Read the `frameN.png` files. Add `tapX tapY` to tap an enemy (e.g. 130 318 = the slime on floor 1).
+3. NEVER run `pkill -f "vite preview"` in the same shell command as the thing that started it (it kills its own shell and aborts the command). Start the server with `&`, remember `$!`, and `kill` that.
+4. Floor 2 has a bat (flying), floor 3 two bats; the fight starts about 1.5s after load with the fake clock.
 
 ## Gotchas learned
 - Never pass the `apply` function in items.js straight to `forEach` (index becomes the multiplier). That once silently disabled skill buffs.
 - A hero's stats come from `refreshStats()` (level + items + buffs); call it after anything that changes them.
 - Dead heroes: items stop working; the figure freezes and disappears after the survivors descend.
+- Python replace scripts: check the exact old text exists (they raise if not) and re-run the tests after every edit.
+- Phaser: `Character.hopOffset` is the walking hop; bars/popups/the focus circle use `ch.y + ch.hopOffset`. `Character.stopMove()` stops walks and jabs.
 
-## BIG UPDATE (current work)
-All planning is done and approved: `docs/big-update-plan.md` (mechanics, 10 heroes, debuffs, minions, BUILD ORDER) and `docs/item-list.md` (72 items, stacking, drop weights, rules). `docs/item-review.md` = the approved item review.
-Progress: A1 (remove mana), A2 (attack/support skill slots), A3 (defense/resist curve, evasion 70%, crit 100%), A4 (new drop roll), A5 (damage types: category weak/resist, DoT bonus, data check) DONE. A6 in 3 parts: A6 debuff engine DONE (A6a stacking bleed/burn/poison, A6b chill>freeze/shock/fear/knockback/taunt/silence, A6c weaken/armor break/curse/blind/mark). PHASE A DONE. B1 (attack start / hit lands) and B2 (hero melee run-up, ranged arrows; attackTiming.hero 420/260 ms, attackMotion in combat.json) DONE. B3 (enemies run up too; runners chase a moving target) DONE. B4 (retarget mid-run, knockback/fear/stun cancel, arrows home in, bats OK) DONE. B5 MELEE MOVEMENT (user changes: melee walk STRAIGHT to their target and stay, no middle rows, no running back; hopping constant-speed movement; enemies target the nearest hero; red focus circle follows the enemy; projectiles track their target) DONE. PHASE B DONE. Next: Phase C (C1 skill wind-up castMs). Open question for C1: stun during a skill wind-up = (a) lost + cooldown, (b) lost + cooldown refunded (suggested), (c) always goes off. Browser check helpers live in the scratchpad (check.sh, frames.sh); never `pkill -f "vite preview"` in the same command (it kills its own shell). NOTE: the sim bot jumped to ~54 mean death floor because deeper floors now give more epics/legendaries (flat odds give ~32): retune in phase H. Ask the user before each step. The user wants the preview page REPUBLISHED AFTER EVERY CHANGE (for now).
-
-## Older next-steps list (superseded by the build order)
-0. **IN PROGRESS: redo the skills (step d of the squad plan).** Open questions for the user: (1) 2 tappable skills per hero, or 1 tappable skill + the passive perk? (2) should skills be mostly attack, or mostly team support (heals, shields, rally)? Ask these first. Done already in this plan: 3-hero squad, hero perks, morale debuffs (INCOMPLETE / ALL ALONE), random default targeting, Chill Band rework (stackable ice hit + non-stacking 50% freeze). An 8-items-per-hero slot limit was tried and reverted (user did not want it); Knight-only item stacking is now already worse than spreading because of perks and morale.
-1. More item edits: the user is going through the item list one by one (batch 2 done: Whetstone, Quick Gloves, Siege Cannon, Bloodlust Mask, Gambler's Dice + new Fire Bombs, Chill Band, Static Crystal, Aid Kit; still to review: Padded Vest, Sharp Edge, Eagle Eye, Feather Boots, Bulwark Plate). Numbers to tune are all in items.json.
-2. Build the rest of the draft items (`docs/item-ideas.md`): on-hit effects (burn, poison, slow, stun), skill/mana items, Phoenix Feather.
-3. Skill books in the reward pool (new skill replaces one; upgrade book strengthens one).
-4. Bosses every 10 floors (stun/slow scale 0.5), floor 100 super boss.
-5. Other screens: main menu, squad select (9 heroes, pick 3), game over, pause; saving unlocks in localStorage.
-6. More heroes (Mage, Cleric, Necromancer, Bard, Alchemist) and magic damage (needed for fire/ice/electric/dark items).
-7. Retune enemy growth once the item and skill pool is final; remove the TEST auto-reward button when rewards go live.
-8. Later: wrap with Capacitor for Android (Solana Seeker).
+## Other open decisions (from the plan doc)
+- Squad select / which heroes unlock when (phase F). Start squad stays Knight, Rogue, Archer.
+- Phoenix Feather item was NOT added (user said no). Hex Doll / Dread Bell / Gag Rune etc. are in the item list for phase G.
+- Skill books (attack book / support book), bosses every 10 floors, floor 100 super boss, enemy skills (Silence needs them), main menu / game over / pause screens: all LATER, after the big update.
+- Remove the TEST auto-reward button (DebugScene) only when rewards go live (user does not want to play the reward screen yet).
+- Later: wrap with Capacitor for Android (Solana Seeker).

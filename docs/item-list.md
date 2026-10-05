@@ -68,10 +68,10 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Shatter Hammer | special | NEW | hits on a frozen enemy deal +60% damage and break the freeze | Damage bonus adds up per copy (+60% each). The freeze breaks once per hit |
 | Blood Chalice | special | NEW | bleeding enemies take +20% damage from the holder, killing one heals the holder 3% | Both add up per copy (+20% damage, +3% heal) |
 | Plague Flask | special | NEW | when a poisoned enemy dies, its poison spreads to another enemy | +1 enemy it spreads to per copy. If there are no fresh enemies left, extra spread goes to enemies already poisoned and adds a poison STACK on them (an exception to the refresh rule) |
-| Exploiter's Lens | special | NEW | +20% damage to enemies with 2 or more different debuffs | (suggest) Diminishing: each extra copy adds 0.8x the last |
-| Hunter's Sigil | special | NEW | first hit on each enemy Marks it; marked enemies take +10% damage from the whole squad | (suggest) Mark is unique (no stack). Squad damage bonus adds per copy, diminishing |
-| Spiked Aegis | special | NEW | when the holder's shield breaks it explodes, damaging all enemies | (suggest) Explosion damage adds up per copy |
-| Spite Mail | special | NEW | while the holder is taunting: +30 defense and reflect damage | (suggest) Defense and reflect add up per copy |
+| Exploiter's Lens | special | NEW | +20% damage to enemies with 3 or more different debuffs (raised from 2) | Additive (+20% each), no cap |
+| Hunter's Sigil | special | NEW | first hit on each enemy Marks it; marked enemies take +10% damage from the whole squad | Mark is unique (one mark per enemy). Squad damage bonus adds up per copy (+10% each) AND each extra copy makes the mark last longer |
+| Spiked Aegis | special | NEW | when the holder's shield breaks it explodes, damaging all enemies | Explosion damage adds up per copy |
+| Spite Mail | special | NEW | while the holder is taunting: +30 defense and reflect damage | Both add up per copy (+30 defense and reflect %); total defense is still capped at 75% damage cut |
 | Echo Rune | skill | NEW | 15% chance a skill casts twice | (suggest) Chance adds up per copy, capped at 60% |
 | Metronome | skill | NEW | empowered 4th-beat hits (Rhythm, Spellweaver, Cleric heal) deal +50% | (suggest) Bonus adds up per copy (+50% each) |
 | Knife Fan (working name) | on-hit | NEW | melee seldom applies Bleed, up to 3 stacking bleeds; an enemy dying while bleeding bursts knives into nearby enemies | Max 3 stacking bleeds on one enemy (fixed, extra copies do not raise it). Extra copies raise bleed chance and the knife burst damage |

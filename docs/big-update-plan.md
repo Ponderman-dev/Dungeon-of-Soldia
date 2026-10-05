@@ -146,6 +146,27 @@ The roster is now 10 heroes: 4 melee (Knight, Berserker, Rogue, Samurai) + 6 ran
 - New items the user wants. Items that use the new debuffs.
 - Magic damage becomes real here (fire/ice/electric/dark heroes and items).
 
+### Minion system (DECIDED, shared by the Necromancer and items; data in a new `minions.json`)
+- Minions are units on the hero side. Not heroes: no XP, perks or morale effects, never count as living heroes. Squad buffs and heals can affect them.
+- WEAK minion: many at once (cap per source, boosters raise it; Necromancer's skeleton cap is 4), vanish when the floor ends. A new one just spawns on its timer.
+- GREATER minion: max 1 per item; extra copies of the item only stack its STATS (no second minion). It persists across floors (walks with the squad through the door). It does NOT heal after a win; only skills/healing can heal it, buffs affect it. If it dies, the party must clear 2 floors before it can be summoned again (comes back at the start of the next floor).
+- Minions vanish if the hero holding their item dies (items on dead heroes stop working).
+- Design goal: minion items should NOT always go to the toughest hero. See the item draft section for the chosen rule.
+
+### Draft new items (Part 3, in progress, numbers are placeholders)
+Burn: Kindling (common, +15% fire dmg), Ember Charm (rare, 8% burn on hit), Magma Core (epic, +25% dmg to burning, burn ticks 30% faster).
+Freeze: Frost Charm (common, +15% ice dmg), Shatter Hammer (epic, +60% dmg on frozen enemies, breaks the freeze).
+Bleed: Serrated Edge (rare, 10% bleed on hit), Blood Chalice (epic, +20% dmg to bleeding, kill heals 3%).
+Poison: Venom Fang (rare, 10% poison on hit), Plague Flask (epic, poison spreads on death).
+Armor break: Rusty Nails (rare, 8% armor break on hit), Exploiter's Lens (epic, +20% dmg vs 2+ different debuffs).
+Mark: Executioner's Mark (rare, +30% vs enemies under 25%), Hunter's Sigil (epic, first hit marks, marked take +10% from squad).
+Shield: Bulwark Charm (rare, +30% shields), Spiked Aegis (epic, shield break explodes), Overheal Ring (rare, overheal becomes shield).
+Taunt: Provoker's Horn (rare, +10% taunt chance, taunted take +15%), Spite Mail (epic, taunting gives +30 defense and reflect).
+Skills (no mana): Hourglass (rare, cooldowns -12%, diminishing), Conductor's Baton (rare, support skills +25% strength/length), Echo Rune (epic, 15% skill casts twice), Metronome (epic, empowered 4th-beat hits +50%).
+Minion boosters: Bone Charm (rare, all minions +30% hp/attack), Overseer's Whistle (rare, weak cap +1, weak attack 15% faster), Grave Dust (epic, weak minions explode on death), Necro Crown (legendary, weak cap +2, every enemy kill raises a weak minion).
+Weak spawners: Rat Cage (common, rat every 12s), Wisp Lantern (rare, flying ranged wisp every 15s), Fire Imp Brazier (epic, imp every 10s, applies burn), Mimic Chest (epic, 10% when holder is hit, mimic pops out and explodes).
+Greater spawners: Gargoyle Idol (rare, slow tanky, draws attacks), Spirit Knight Banner (epic, balanced fighter that grows each floor survived), Phoenix Hatchling (legendary, flying fire minion, heals squad a little when hit).
+
 ## Part 4: Tests and one tuning pass
 - Update tests for the new content, then balance once at the end.
 

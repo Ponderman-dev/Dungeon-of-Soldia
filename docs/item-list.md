@@ -46,10 +46,10 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Serrated Edge | on-hit | NEW | 10% chance per attack to make the target Bleed | Chance adds up but with diminishing returns per extra copy (suggest 0.8x the last: 10%, 8%, 6.4%...) |
 | Venom Fang | on-hit | NEW | 10% chance per attack to Poison the target | Chance adds up normally (10% per copy). Poison from the same item refreshes |
 | Rusty Nails | on-hit | NEW | 8% chance per attack to Armor Break the target (-defense) | Chance adds up normally (8% per copy). Armor Break refreshes, it does not stack |
-| Executioner's Mark | special | NEW | +30% damage to enemies under 25% health | (suggest) Diminishing: each extra copy adds 0.8x the last |
-| Bulwark Charm | stat | NEW | shields the holder receives are 30% bigger | (suggest) Additive (+30% each) |
-| Overheal Ring | special | NEW | healing above full health becomes a shield | (suggest) Each copy converts 50% of overheal to shield, max 100% (2 copies) |
-| Provoker's Horn | special | NEW | taunt chance +10%, taunted enemies take +15% damage | (suggest) Taunt chance adds up (+10% each). The +15% damage vs taunted is unique (no stack) |
+| Executioner's Mark | special | NEW | +30% damage to enemies under 25% health | Diminishing with a very small gap (suggest 0.95x the last: +30%, +28.5%, +27%...) |
+| Bulwark Charm | stat | NEW | shields the holder receives are 30% bigger | Additive (+30% each), no cap |
+| Overheal Ring | special | NEW | healing above full health becomes a shield | A % of the healing above 100% health is converted to shield (suggest 40% per copy). Each extra copy adds more %, up to 100% |
+| Provoker's Horn | special | NEW | taunt chance +10%, taunted enemies take +15% damage | Both add up per copy (+10% taunt chance and +15% damage vs taunted), no cap |
 | Hourglass | skill | NEW | skill cooldowns 12% shorter (diminishing per copy) | (suggest) Diminishing per copy, capped at 50% shorter cooldowns |
 | Conductor's Baton | skill | NEW | support skill effects 25% stronger and 25% longer | (suggest) Strength and length add up; diminishing after 3 copies |
 | Bone Charm | minion | NEW | all minions (weak and greater) +30% health and attack | (suggest) Stats add up per copy, no cap |

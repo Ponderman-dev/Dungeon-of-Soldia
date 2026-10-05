@@ -119,6 +119,15 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 - Style: wildcard mixer (high variety, some randomness).
 - Open: does the support flask target skeletons too? (suggest: heroes only, living). Is it OK that the same hero can get both flasks?
 
+## Stats (DECIDED for now, tuned last)
+Base stats level 1 (health / attack / defense / resist / evasion / crit / attack speed), no mana:
+Knight 120/20/10/5/3/5/100, Berserker 105/26/4/2/3/8/110, Rogue 100/19/6/3/25/20/140, Archer 95/17/6/4/15/12/100,
+Mage 80/22/2/10/5/8/90, Cleric 100/14/5/12/4/5/95, Necromancer 85/15/3/10/5/6/90, Bard 90/13/4/8/10/8/100, Alchemist 90/15/4/8/8/6/95.
+Growth: Mage atk +5% hp +3% resist +0.5; Cleric hp +4% atk +3% resist +0.5; Necromancer atk +4% hp +3% resist +0.4; Bard hp +3% atk +3% speed +0.3; Alchemist atk +4% hp +3% crit +0.2. (Existing four keep their growth in heroes.json.)
+Skeleton minion (starting idea): about 25 health, 6 attack, 100 attack speed, no defense.
+Start squad: Knight, Rogue, Archer; the others unlock by going deeper. Squad select (pick 3) is part of this big update.
+A 10th hero (another MELEE) is being designed (roster is 3 melee + 6 ranged now).
+
 ## Roster status: all 9 heroes designed: Knight, Berserker, Rogue, Archer, Mage, Cleric, Necromancer, Bard, Alchemist.
 ## Still open for Part 2: base stats and growth per hero (melee/ranged, health, attack, defense, resist, evasion, crit, attack speed), squad select/unlock order, which 3 start unlocked, passives' exact numbers (tuned last).
 - Final roster of 9 (3 per run), role, stats, growth, perk, one attack + one support skill, melee or ranged.

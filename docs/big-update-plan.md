@@ -67,7 +67,14 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 - Style: medium health, stays alive by hitting (works with Bloodlust Mask style items).
 - Open: Savage Leap's "bleeding" bonus needs a bleed source (new debuff from Part 1, or items); say if the bonus should only use the 50% health part until then.
 
-### Still to do: Rogue, Archer, Mage, Cleric, Necromancer, Bard, Alchemist (user may replace these concepts)
+### Rogue (melee, debuff enabler) DECIDED
+- Passive "Opportunist": deals +damage and +crit to any enemy that has a debuff (poison, slow, stun, bleed, burn...). PLUS debuffs are a bit easier to apply (his chance-based debuffs get a bonus).
+- Attack "Fan of Knives": throws knives at ALL enemies from his slot (no run-up). It counts as a RANGED attack, so ranged-attack-boost items feed it. Each knife can crit separately; (idea) a crit applies bleed.
+- Support "Smoke Bomb": squad gets +evasion for 4s, enemies get Blind (miss more attacks).
+- Style: debuff enabler; low health, high crit potential.
+- Open: "easier to apply debuffs" is not fixed yet. Options: only his own chances +25%, or the whole squad's chance-based debuffs +10% while he lives. Also: his normal attacks are melee, only the skill is ranged.
+
+### Still to do: Archer, Mage, Cleric, Necromancer, Bard, Alchemist (user may replace these concepts)
 - Final roster of 9 (3 per run), role, stats, growth, perk, one attack + one support skill, melee or ranged.
 - Redo the existing four, add the rest.
 

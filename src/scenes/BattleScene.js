@@ -112,19 +112,6 @@ export default class BattleScene extends Phaser.Scene {
   startFighting() {
     this.showSlots(true);
     this.mode = 'fighting';
-    this.advanceToFront();
-  }
-
-  // Front line: at the start of a fight melee heroes walk up and melee enemies walk down, so the two
-  // lines meet in the middle (combat.json attackMotion heroFrontY / enemyFrontY). Ranged ones stay back.
-  advanceToFront() {
-    for (const u of [...this.state.heroes, ...this.state.enemies]) {
-      const v = this.views.get(u.uid);
-      if (!v || !u.alive || u.damageType !== 'melee' || v.ch.moveTween) continue;
-      const hover = v.groundY - v.ch.homeY;
-      const y = (u.side === 'hero' ? M.heroFrontY : M.enemyFrontY) - hover;
-      v.ch.moveTo(v.ch.x, y, M.advanceMs, { onUpdate: () => this.syncBar(v) });
-    }
   }
 
   drawHeroSlots() {
@@ -284,7 +271,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // Keeps a fighter's health bar attached to it while it moves.
-  syncBar(view, baseY = view.ch.y) {
+  syncBar(view, baseY = view.ch.y + view.ch.hopOffset) {
     const y = baseY - view.unit.def.height * view.ch.scaleX - 10;
     view.bg.setPosition(view.ch.x, y).setAlpha(view.ch.alpha);
     view.fill.setPosition(view.ch.x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
@@ -492,7 +479,8 @@ export default class BattleScene extends Phaser.Scene {
     const focus = this.state.focusUnit;
     if (focus) {
       const v = this.views.get(focus.uid);
-      this.focusMarker.setPosition(v.ch.homeX, v.groundY + 6).setVisible(true);
+      // The red circle stays under the enemy wherever it is now (it may have walked down to fight).
+      this.focusMarker.setPosition(v.ch.x, v.ch.y + v.ch.hopOffset + (v.groundY - v.ch.homeY) + 6).setVisible(true);
     } else {
       this.focusMarker.setVisible(false);
     }
@@ -518,11 +506,7 @@ export default class BattleScene extends Phaser.Scene {
       else if (a.arrow && a.arrow.active) this.flyArrow(a, a.arrow, t, e.hitInMs);
     } else if (e.type === 'attackCancel') {
       const c = this.views.get(e.unit.uid);
-      if (c && c.arrow && c.arrow.active) {
-        c.arrow.flight.stop(); // a cancelled shot vanishes
-        c.arrow.destroy();
-        c.arrow = null;
-      }
+      if (c) this.landArrow(c); // a cancelled shot vanishes
       // Feared: it backs away to its own spot. Stunned/frozen or nothing left: it stops where it is.
       // (Knocked back: the knockback status already pushed it.)
       if (c && e.reason === 'fear') this.runHome(c);
@@ -532,6 +516,7 @@ export default class BattleScene extends Phaser.Scene {
       const t = this.views.get(e.target.uid);
       if (e.basic) {
         // The walk/swing or the arrow already showed this attack. Melee fighters STAY where they are.
+        this.landArrow(a); // the arrow reaches its target exactly as the damage lands
       } else if (!a.ch.moveTween) {
         a.ch.lunge(t.ch.homeX, t.ch.homeY); // skills and item hits: a small jab (not while running)
       }
@@ -622,12 +607,10 @@ export default class BattleScene extends Phaser.Scene {
 
   // ---- hero attack motion (melee run-up, arrows) --------------------------------------------
 
-  // A melee fighter (hero or enemy) walks to where it can hit its target, arriving as the swing lands.
-  // FRONT LINE: if the target stands on its side's front row, the fighter stays on ITS OWN front row
-  // and just slides across to face it (the two rows face each other in the middle). Otherwise (a
-  // ranged hero at the back, an enemy that stayed back) it walks right up to the target: heroes stand
-  // just below an enemy, enemies just above a hero. Several fighters on one target stand side by side.
-  // The spot follows the target if it moves.
+  // A melee fighter (hero or enemy) walks STRAIGHT to its target and stands next to it, arriving as
+  // the swing lands. Heroes stand just below an enemy, enemies just above a hero. Several fighters on
+  // one target stand side by side (the first one straight across, the others to the side they came
+  // from). The spot follows the target if it moves. It stays there afterwards (no walking back).
   runToTarget(a, t, hitInMs) {
     this.releaseSpot(a.unit.uid);
     const spots = this.engaged.get(t.unit.uid) || new Map();
@@ -635,24 +618,18 @@ export default class BattleScene extends Phaser.Scene {
     let index = 0;
     while ([...spots.values()].includes(index)) index++;
     spots.set(a.unit.uid, index);
-    // The first fighter stands straight across from its target; extra ones stand to the side, the
-    // first of them on the side it came from.
     const homeSide = a.ch.homeX >= t.ch.x ? 1 : -1;
     const side = index === 0 ? 0 : index % 2 === 1 ? homeSide : -homeSide;
     const offsetX = side * Math.ceil(index / 2) * M.spacingPx;
+    const offsetY = a.unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY;
     const hover = (v) => v.groundY - v.ch.homeY; // flying units float above their ground line
-    const rowY = (u) => (u.side === 'hero' ? M.heroFrontY : M.enemyFrontY);
-    // A melee fighter belongs to its front row, unless it walked off to fight someone at the back.
-    const onFrontRow = t.unit.damageType === 'melee' && !t.offRow;
-    a.offRow = !onFrontRow;
-    const getSpot = () => {
-      const x = Phaser.Math.Clamp(t.ch.x + offsetX, 28, GAME_WIDTH - 28);
-      if (onFrontRow) return { x, y: rowY(a.unit) - hover(a) };
-      const offsetY = a.unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY;
-      return { x, y: t.ch.y + hover(t) + offsetY - hover(a) };
-    };
+    const getSpot = () => ({
+      x: Phaser.Math.Clamp(t.ch.x + offsetX, 28, GAME_WIDTH - 28),
+      y: t.ch.y + t.ch.hopOffset + hover(t) + offsetY - hover(a),
+    });
     const swingMs = combatRules.attackTiming[a.unit.side].swingMs;
     a.ch.chase(getSpot, Math.max(60, hitInMs - swingMs), {
+      hop: { height: M.hopHeight, length: M.hopLengthPx },
       onUpdate: () => this.syncBar(a),
       onDone: () => a.ch.swing(swingMs),
     });
@@ -663,9 +640,9 @@ export default class BattleScene extends Phaser.Scene {
   runHome(v, duration = M.returnMs) {
     if (!v) return;
     this.releaseSpot(v.unit.uid);
-    v.offRow = false;
     if (v.ch.x === v.ch.homeX && v.ch.y === v.ch.homeY) return;
     v.ch.moveTo(v.ch.homeX, v.ch.homeY, duration, {
+      hop: { height: M.hopHeight, length: M.hopLengthPx },
       onUpdate: () => this.syncBar(v),
       onDone: () => {
         if (v.unit.side === 'hero') v.ch.setDepth(DEPTH.hero);
@@ -688,9 +665,15 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // A ranged fighter's basic attack: an arrow that flies to the target and arrives as the hit lands.
+  // The middle of a fighter's body right now (where shots aim): above its feet, wherever it stands.
+  center(v) {
+    return { x: v.ch.x, y: v.ch.y + v.ch.hopOffset - (v.unit.def.height * v.ch.scaleY) / 2 };
+  }
+
   shootArrow(a, t, hitInMs) {
+    const from = this.center(a);
     // Placeholder arrow: a shaft with a small head (real art later).
-    const arrow = this.add.container(a.ch.x, a.ch.y - 40, [
+    const arrow = this.add.container(from.x, from.y, [
       this.add.rectangle(-4, 0, 22, 3, Number(M.arrowColor)),
       this.add.triangle(9, 0, 0, -4, 0, 4, 7, 0, 0xffffff),
     ]).setDepth(DEPTH.popup - 1);
@@ -711,33 +694,48 @@ export default class BattleScene extends Phaser.Scene {
       duration: Math.max(1, ms),
       onUpdate: (tween) => {
         const p = tween.getValue();
-        const tx = t.ch.x;
-        const ty = t.ch.y - 20;
-        arrow.setPosition(fromX + (tx - fromX) * p, fromY + (ty - fromY) * p);
-        arrow.rotation = Math.atan2(ty - fromY, tx - fromX);
+        const to = this.center(t); // aims at where the target is NOW, so it always hits
+        arrow.setPosition(fromX + (to.x - fromX) * p, fromY + (to.y - fromY) * p);
+        arrow.rotation = Math.atan2(to.y - fromY, to.x - fromX);
       },
-      onComplete: () => {
-        arrow.destroy();
-        if (a.arrow === arrow) a.arrow = null;
-      },
+      onComplete: () => this.landArrow(a),
     });
   }
 
-  // Placeholder projectiles: a fire bomb flies in an arc, lightning is a zig-zag line that fades.
+  // The arrow is used up (it hit, or it was cancelled).
+  landArrow(a) {
+    if (!a.arrow) return;
+    if (a.arrow.flight) a.arrow.flight.stop();
+    a.arrow.destroy();
+    a.arrow = null;
+  }
+
+  // Placeholder projectiles: a fire bomb flies to its target (and follows it), lightning is a zig-zag
+  // line between the two fighters (drawn where they stand now) that fades.
   showProjectile(from, to, kind) {
     if (!from || !to) return;
-    const sx = from.ch.homeX, sy = from.ch.homeY - 14, tx = to.ch.homeX, ty = to.ch.homeY - 14;
+    const start = this.center(from);
+    const end = this.center(to);
     if (kind === 'lightning') {
       const g = this.add.graphics().setDepth(DEPTH.popup);
-      g.lineStyle(3, 0xffe94d, 1).beginPath().moveTo(sx, sy);
-      for (let i = 1; i < 5; i++) g.lineTo(sx + ((tx - sx) * i) / 5 + Phaser.Math.Between(-10, 10), sy + ((ty - sy) * i) / 5 + Phaser.Math.Between(-10, 10));
-      g.lineTo(tx, ty).strokePath();
+      g.lineStyle(3, 0xffe94d, 1).beginPath().moveTo(start.x, start.y);
+      for (let i = 1; i < 5; i++) g.lineTo(start.x + ((end.x - start.x) * i) / 5 + Phaser.Math.Between(-10, 10), start.y + ((end.y - start.y) * i) / 5 + Phaser.Math.Between(-10, 10));
+      g.lineTo(end.x, end.y).strokePath();
       this.tweens.add({ targets: g, alpha: 0, duration: 350, onComplete: () => g.destroy() });
       return;
     }
-    const b = this.add.circle(sx, sy, 5, 0xff7a3d).setStrokeStyle(2, 0xffd24d).setDepth(DEPTH.popup);
-    this.tweens.add({ targets: b, x: tx, duration: 280, ease: 'Sine.easeIn' });
-    this.tweens.add({ targets: b, y: { from: sy, to: ty }, duration: 280, ease: 'Quad.easeOut', onComplete: () => { b.destroy(); } });
+    const b = this.add.circle(start.x, start.y, 5, 0xff7a3d).setStrokeStyle(2, 0xffd24d).setDepth(DEPTH.popup);
+    this.tweens.addCounter({
+      from: 0,
+      to: 1,
+      duration: 280,
+      onUpdate: (tween) => {
+        const p = tween.getValue();
+        const now = this.center(to); // follows the target, so the bomb always lands on it
+        b.setPosition(start.x + (now.x - start.x) * p, start.y + (now.y - start.y) * p - Math.sin(p * Math.PI) * 24);
+      },
+      onComplete: () => b.destroy(),
+    });
   }
 
   drawAllBars() {
@@ -772,7 +770,7 @@ export default class BattleScene extends Phaser.Scene {
     // Pop-ups that appear together stack upwards instead of overlapping.
     view.popSlot = ((view.popSlot ?? -1) + 1) % 4;
     // Above where the fighter is right now (a hero may be away at an enemy).
-    const y = view.ch.y - view.unit.def.height * CHAR_SCALE - 22 - view.popSlot * 15;
+    const y = view.ch.y + view.ch.hopOffset - view.unit.def.height * CHAR_SCALE - 22 - view.popSlot * 15;
     const t = this.add
       .text(view.ch.x, y, text, {
         fontFamily: 'monospace',

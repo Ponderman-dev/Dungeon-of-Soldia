@@ -1,6 +1,5 @@
-// B5a front line: melee fighters keep their opponent, walk over once (meleeHitMs) and then only swing
-// (swingMs); enemies go for the nearest melee hero, sometimes a ranged one; knockback/walking away
-// breaks the engagement.
+// B5 front line: melee fighters keep their opponent, walk over once (meleeHitMs) and then only swing
+// (swingMs); enemies go for the nearest hero across the screen; knockback/walking away breaks the engagement.
 import fs from 'fs';
 import { noPerks } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
@@ -54,10 +53,14 @@ const startOf = (ev, u) => ev.find((e) => e.type === 'attackStart' && e.attacker
   ok('enemy walks off to the archer', st.approach && st.target === h[1]);
   ok('the knight it left is no longer standing next to it', knight.engagedUid === null); }
 
-// Enemies prefer the front line (melee heroes); some go for the back line.
-{ let back = 0; const N = 4000;
-  for (let i = 0; i < N; i++) { const { s, es } = mk(); const t = s.pickTarget(es[1]); if (t.damageType !== 'melee') back++; }
-  ok(`enemies pick a ranged hero about ${T.backlineTargetChance}% of the time`, Math.abs((100 * back) / N - T.backlineTargetChance) < 3, `${((100 * back) / N).toFixed(1)}%`); }
+// Enemies go for the NEAREST hero across the screen (melee or ranged), one per lane.
+{ const { s, es, h } = mk();
+  ok('left enemy takes the left hero, middle the middle, right the right', s.pickTarget(es[0]) === h[0] && s.pickTarget(es[1]) === h[1] && s.pickTarget(es[2]) === h[2]); }
+{ const { s, es, h } = mk(['knight', 'rogue', 'archer'], ['goblin', 'goblin']);
+  ok('with 2 enemies they take the nearest heroes: left and right', s.pickTarget(es[0]) === h[0] && s.pickTarget(es[1]) === h[2]); }
+{ let ranged = 0; const N = 2000;
+  for (let i = 0; i < N; i++) { const { s, es } = mk(); if (s.pickTarget(es[2]).damageType !== 'melee') ranged++; }
+  ok('a ranged hero in the nearest lane IS targeted (no front-line rule any more)', ranged === N); }
 { const { s, es } = mk(); const t = s.pickTarget(es[0]);
   let same = true; for (let i = 0; i < 50; i++) if (s.pickTarget(es[0]) !== t) same = false;
   ok('an enemy keeps its opponent', same); }

@@ -229,7 +229,7 @@ Update CLAUDE.md / HANDOFF.md when a rule in them changes. Data stays in JSON. P
 - B3. DONE. Enemies run up / shoot the same way.
 - B4. DONE. Edge cases: target dies mid-run (retarget), stunned/frozen mid-run (go back), flying targets.
 
-### B5. FRONT LINE (user change after B4: the run-up-and-back looked like a chaotic jumble)
+### B5. FRONT LINE (REWORKED, see CLAUDE.md MELEE MOVEMENT: no middle rows, melee walk straight to their target and stay, enemies target the nearest hero; user change after B4: the run-up-and-back looked like a chaotic jumble)
 Decided with the user:
 - At the start of a fight melee heroes walk up and melee enemies walk down: they MEET IN THE MIDDLE and STAY there fighting (short swings in place, no running back). Ranged heroes stay at the back.
 - A melee fighter keeps its opponent; it only moves when it needs a new target (opponent died, a tap-focus, knocked back, or its opponent walked away to someone else).

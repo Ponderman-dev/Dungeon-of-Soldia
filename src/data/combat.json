@@ -22,18 +22,16 @@
   "attackTiming": {
     "hero": { "meleeHitMs": 600, "swingMs": 220, "rangedHitMs": 260 },
     "enemy": { "meleeHitMs": 600, "swingMs": 220, "rangedHitMs": 260 },
-    "retargetMinMs": 200,
-    "backlineTargetChance": 25
+    "retargetMinMs": 200
   },
   "attackMotion": {
     "returnMs": 280,
+    "hopHeight": 7,
+    "hopLengthPx": 38,
     "standOffY": 76,
     "enemyStandOffY": 64,
     "spacingPx": 52,
     "arrowColor": "0xe6e6b8",
-    "heroFrontY": 565,
-    "enemyFrontY": 465,
-    "advanceMs": 700,
     "knockbackPx": 40,
     "knockbackMs": 160
   },

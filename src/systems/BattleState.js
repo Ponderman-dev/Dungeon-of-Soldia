@@ -157,10 +157,9 @@ export default class BattleState {
   // Who a unit attacks next (basic attacks, and single-target skills with no tapped enemy).
   //  - Taunted: whoever taunted it.
   //  - Heroes: the tapped enemy if there is one. Melee heroes keep their opponent (`foe`) until it
-  //    dies, then take the nearest enemy. Ranged heroes pick any enemy at random.
-  //  - Melee enemies keep their opponent too. A new one: usually the nearest MELEE hero (the front
-  //    line), but `backlineTargetChance` % of the time a ranged hero behind it. No melee heroes left:
-  //    the nearest hero. Ranged enemies pick at random.
+  //    dies, then take the NEAREST enemy. Ranged heroes pick any enemy at random.
+  //  - Melee enemies keep their opponent too, and a new one is always the NEAREST hero (closest
+  //    across the screen, whether melee or ranged). Ranged enemies pick at random.
   pickTarget(unit) {
     const taunt = unit.statuses.find((s) => s.type === 'taunt');
     if (taunt) {
@@ -176,12 +175,7 @@ export default class BattleState {
     if (unit.damageType !== 'melee') return foes[Math.floor(this.rng() * foes.length)];
     const current = foes.find((u) => u.uid === unit.foe);
     if (current) return current;
-    if (unit.side === 'hero') return this.setFoe(unit, this.nearest(unit, foes));
-    const front = foes.filter((h) => h.damageType === 'melee');
-    const back = foes.filter((h) => h.damageType !== 'melee');
-    const chance = (this.rules.attackTiming && this.rules.attackTiming.backlineTargetChance) || 0;
-    const goBack = !front.length || (back.length && this.rng() * 100 < chance);
-    return this.setFoe(unit, this.nearest(unit, goBack ? back : front));
+    return this.setFoe(unit, this.nearest(unit, foes));
   }
 
   setFoe(unit, foe) {

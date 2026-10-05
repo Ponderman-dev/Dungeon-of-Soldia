@@ -30,6 +30,7 @@ All numbers below go in JSON/config so they are easy to tune.
 - **Evasion:** % chance to fully dodge a hit of any type, capped at 70% (`caps.evasion`).
 - **Crit:** % chance to deal 2x damage, capped at 100% (`caps.crit`).
 - **Attack efficiency:** attack speed. 100 = 1 attack per second.
+- **Attack timing:** a basic attack STARTS (`attackStart` event: attacker, target, `hitInMs`) and LANDS later (`attack` event). Delay = combat.json `attackTiming` (`meleeHitMs`, `rangedHitMs`; 0 = instant). If the target died meanwhile the hit goes to a new target; if the attacker is stunned/frozen/feared meanwhile the attack is cancelled (`attackCancel`). The delay doesn't change attack speed. Tests: `attack-timing.test.mjs`.
 - **No mana (for now):** mana is switched off. Skills run on COOLDOWN ONLY. The `mana` stat/growth in heroes.json, `manaCost` in skills.json and the mana rules in combat.json are dormant (nothing reads them).
 - **Healing:** each hero heals 25% of max health after a win (bigger after bosses).
 - **Squad of 3:** a run has 3 heroes (`squad.json`: Knight, Rogue, Archer; Berserker and later heroes stay in `heroes.json` as the bench; `pickSquad()` in `src/systems/party.js`). No boxes behind the hero slots any more; name, perk line and skill squares sit under each hero.

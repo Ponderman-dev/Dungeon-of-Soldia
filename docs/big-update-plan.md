@@ -224,7 +224,7 @@ Update CLAUDE.md / HANDOFF.md when a rule in them changes. Data stays in JSON. P
 - A6. DONE. Debuff engine: Bleed/Burn/Poison with unlimited stacks (own timers), Chill (5 = Freeze), Shock, Armor Break, Curse, Weaken, Blind, Mark, Fear, Knockback, Taunt, Silence (data only). Boss rule: control halved, DoTs full. Status tags show stack counts. Tests for each.
 
 ### Phase B: Movement (the big visible change)
-- B1. Split an attack into "start" and "hit lands" in BattleState (no visual change yet). Tests.
+- B1. DONE. Split an attack into "start" and "hit lands" in BattleState (no visual change yet). Tests.
 - B2. Hero melee run-up (hit, run back, offsets when several melee share a target) and ranged projectiles.
 - B3. Enemies run up / shoot the same way.
 - B4. Edge cases: target dies mid-run (retarget), stunned/frozen mid-run (go back), flying targets.

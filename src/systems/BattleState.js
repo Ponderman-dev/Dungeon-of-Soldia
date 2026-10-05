@@ -12,7 +12,9 @@ export const SKILL_SLOTS = ['attack', 'support'];
 // Health regeneration (specials.regen) happens silently inside update(); the scene just redraws bars.
 // Events: attack, death, levelup, cast, status (apply / expire), dot (a damage-over-time tick: bleed, burn, poison),
 //         heal (lifesteal), thorns (reflected damage), proc (an item's chance effect went off),
-//         morale (the party became 'incomplete' or 'alone' because a hero fell)
+//         morale (the party became 'incomplete' or 'alone' because a hero fell),
+//         attackStart (a basic attack begins: { attacker, target, hitInMs }; its 'attack' event comes when it lands),
+//         attackCancel (an attack in progress was stopped: the attacker got stunned, frozen or feared)
 export default class BattleState {
   constructor({ heroDefs, enemyDefs, itemDefs = {}, skillDefs = {}, statusDefs = {}, rules, damageTypes, leveling, rng = Math.random }) {
     this.rules = rules;
@@ -66,6 +68,7 @@ export default class BattleState {
       skills: SKILL_SLOTS.filter((kind) => def.skills && def.skills[kind]).map((kind) => ({ id: def.skills[kind], kind, cooldownLeft: 0 })),
       statuses: [],
       dotClocks: {}, // damage over time: ms since the last tick, per kind (bleed, burn, poison)
+      pending: null, // a basic attack that has started but not landed yet: { target, remaining }
       damageBonus: {},
       specials: {},
       procs: [],
@@ -101,6 +104,7 @@ export default class BattleState {
 
   spawnEnemies(ids, floor) {
     this.focusUid = null;
+    for (const h of this.heroes) h.pending = null; // attacks aimed at the last floor's enemies are gone
     this.enemies = ids.map((id) => this.makeUnit(this.enemyDefs[id], 'enemy', floor, ids.length));
     return this.enemies;
   }
@@ -145,6 +149,7 @@ export default class BattleState {
     target.alive = false;
     target.statuses = [];
     target.dotClocks = {};
+    target.pending = null; // an attack it had started never lands
     if (this.focusUid === target.uid) this.focusUid = null;
     events.push({ type: 'death', unit: target });
     if (target.side === 'enemy') this.awardXp(target, events);
@@ -169,10 +174,30 @@ export default class BattleState {
     }
 
     for (const unit of [...this.heroes, ...this.enemies]) {
-      if (!unit.alive || this.isStunned(unit) || this.has(unit, 'fear')) continue; // feared units don't attack
+      if (!unit.alive) continue;
+      const busy = this.isStunned(unit) || this.has(unit, 'fear'); // stunned, frozen or feared: no attacks
+      // An attack in progress (started, not landed yet): it lands when its time runs out.
+      if (unit.pending) {
+        if (busy) {
+          unit.pending = null; // interrupted: the attack is lost
+          events.push({ type: 'attackCancel', unit });
+        } else {
+          unit.pending.remaining -= dt;
+          if (unit.pending.remaining <= 0) {
+            const { target } = unit.pending;
+            unit.pending = null;
+            this.landAttack(unit, target, events);
+          }
+        }
+      }
+      if (!unit.alive || busy) continue;
       unit.timer += dt;
       const interval = this.interval(unit);
       if (unit.timer < interval) continue;
+      if (unit.pending) {
+        unit.timer = interval; // still busy with the last attack: start the next one right after
+        continue;
+      }
 
       // Shocked: sometimes the attack fumbles and the unit is stunned for a moment instead.
       const shock = unit.statuses.find((s) => s.type === 'shock');
@@ -190,10 +215,28 @@ export default class BattleState {
       }
       unit.timer -= interval;
 
-      const hit = this.strike(unit, target, events);
-      this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged });
+      // The attack starts now and lands after `hitDelay` (melee: the run-up and swing, ranged: the
+      // shot's flight). With a delay of 0 it lands at once.
+      const hitInMs = this.hitDelay(unit);
+      events.push({ type: 'attackStart', attacker: unit, target, hitInMs });
+      if (hitInMs > 0) unit.pending = { target, remaining: hitInMs };
+      else this.landAttack(unit, target, events);
     }
     return events;
+  }
+
+  // How long a basic attack takes from start to hit (combat.json `attackTiming`).
+  hitDelay(unit) {
+    const timing = this.rules.attackTiming || {};
+    return (unit.damageType === 'melee' ? timing.meleeHitMs : timing.rangedHitMs) || 0;
+  }
+
+  // A basic attack hits. If its target died in the meantime it goes to a new target instead.
+  landAttack(unit, target, events) {
+    if (!target.alive) target = this.pickTarget(unit);
+    if (!target) return;
+    const hit = this.strike(unit, target, events);
+    this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged });
   }
 
   // One hit: damage, block cooldown, lifesteal/thorns/crit debuffs, death. Used by basic attacks,

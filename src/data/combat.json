@@ -19,6 +19,10 @@
   },
   "restartDelayMs": 3000,
   "meleeVsFlyingMissPercent": 40,
+  "attackTiming": {
+    "meleeHitMs": 0,
+    "rangedHitMs": 0
+  },
   "transition": {
     "clearPauseMs": 600,
     "walkSpeedPxPerSec": 420,

@@ -226,7 +226,7 @@ Update CLAUDE.md / HANDOFF.md when a rule in them changes. Data stays in JSON. P
 ### Phase B: Movement (the big visible change)
 - B1. DONE. Split an attack into "start" and "hit lands" in BattleState (no visual change yet). Tests.
 - B2. DONE. Hero melee run-up (hit, run back, offsets when several melee share a target) and ranged projectiles.
-- B3. Enemies run up / shoot the same way.
+- B3. DONE. Enemies run up / shoot the same way.
 - B4. Edge cases: target dies mid-run (retarget), stunned/frozen mid-run (go back), flying targets.
 
 ### Phase C: Feel

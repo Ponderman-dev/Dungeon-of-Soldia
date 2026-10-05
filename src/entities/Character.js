@@ -104,6 +104,31 @@ export default class Character extends Phaser.GameObjects.Container {
     });
   }
 
+  // Runs towards a spot that may move (getSpot() is asked every frame, e.g. a target that is itself
+  // running), arriving after `duration` ms, then calls onDone.
+  chase(getSpot, duration, { onDone, onUpdate } = {}) {
+    this.stopMove();
+    const fromX = this.x;
+    const fromY = this.y;
+    this.moveTween = this.scene.tweens.addCounter({
+      from: 0,
+      to: 1,
+      duration: Math.max(1, duration),
+      ease: 'Quad.easeOut',
+      onUpdate: (tween) => {
+        const p = tween.getValue();
+        const spot = getSpot();
+        this.x = fromX + (spot.x - fromX) * p;
+        this.y = fromY + (spot.y - fromY) * p;
+        if (onUpdate) onUpdate();
+      },
+      onComplete: () => {
+        this.moveTween = null;
+        if (onDone) onDone();
+      },
+    });
+  }
+
   // Stops a run (moveTo) or a jab (lunge) where it is.
   stopMove() {
     if (this.moveTween) this.moveTween.stop();

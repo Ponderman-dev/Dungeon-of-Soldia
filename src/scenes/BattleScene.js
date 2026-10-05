@@ -492,20 +492,20 @@ export default class BattleScene extends Phaser.Scene {
     if (e.type === 'attackStart') {
       const a = this.views.get(e.attacker.uid);
       const t = this.views.get(e.target.uid);
-      if (e.attacker.side !== 'hero' || !a || !t) return; // enemies still just lunge when they hit (until B3)
+      if (!a || !t) return;
       if (e.attacker.damageType === 'melee') this.runToTarget(a, t, e.hitInMs);
       else this.shootArrow(a, t, e.hitInMs);
     } else if (e.type === 'attackCancel') {
       const v = this.views.get(e.unit.uid);
-      if (v && e.unit.side === 'hero') this.runHome(v);
+      if (v) this.runHome(v);
     } else if (e.type === 'attack') {
       const a = this.views.get(e.attacker.uid);
       const t = this.views.get(e.target.uid);
-      if (e.attacker.side === 'hero' && e.basic) {
-        // The run-up / arrow already showed this attack. After a melee hit the hero runs back.
+      if (e.basic) {
+        // The run-up / arrow already showed this attack. After a melee hit the fighter runs back.
         if (e.attacker.damageType === 'melee') this.runHome(a);
       } else if (!a.ch.moveTween) {
-        a.ch.lunge(t.ch.homeX, t.ch.homeY); // enemies, skills and item hits: a small jab (not while running)
+        a.ch.lunge(t.ch.homeX, t.ch.homeY); // skills and item hits: a small jab (not while running)
       }
       if (e.result.dodged) {
         if (e.result.blocked) this.popText(t, 'Blocked!', '#9fc4ff', true);
@@ -567,6 +567,8 @@ export default class BattleScene extends Phaser.Scene {
       this.setBar(v);
       if (e.unit.side === 'enemy') {
         this.engaged.delete(e.unit.uid);
+        this.releaseSpot(e.unit.uid);
+        v.ch.stopMove(); // it fades out where it fell
         this.drawChips(v);
         this.tweens.add({ targets: [v.ch, v.bg, v.fill], alpha: 0, duration: 400, onComplete: () => this.removeView(e.unit.uid) });
       } else {
@@ -590,8 +592,9 @@ export default class BattleScene extends Phaser.Scene {
 
   // ---- hero attack motion (melee run-up, arrows) --------------------------------------------
 
-  // A melee hero runs to a spot just in front of its target, arriving as the swing lands.
-  // Several melee heroes on one enemy stand side by side (spots 0, 1, 2... = centre, left, right...).
+  // A melee fighter (hero or enemy) runs to a spot next to its target, arriving as the swing lands.
+  // Heroes stand just below an enemy, enemies just above a hero. The spot follows the target if it
+  // moves (it may be running too). Several fighters on one target stand side by side (spots 0, 1, 2...).
   runToTarget(a, t, hitInMs) {
     this.releaseSpot(a.unit.uid);
     const spots = this.engaged.get(t.unit.uid) || new Map();
@@ -600,18 +603,18 @@ export default class BattleScene extends Phaser.Scene {
     while ([...spots.values()].includes(index)) index++;
     spots.set(a.unit.uid, index);
     const side = index === 0 ? 0 : index % 2 === 1 ? -1 : 1;
-    const x = t.ch.x + side * Math.ceil(index / 2) * M.spacingPx;
-    const y = t.groundY + M.standOffY;
-    const runMs = Math.max(60, hitInMs - M.swingMs);
-    a.ch.moveTo(x, y, runMs, {
-      ease: 'Quad.easeOut',
+    const offsetX = side * Math.ceil(index / 2) * M.spacingPx;
+    const offsetY = a.unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY;
+    const hover = (v) => v.groundY - v.ch.homeY; // flying units float above their ground line
+    const getSpot = () => ({ x: t.ch.x + offsetX, y: t.ch.y + hover(t) + offsetY - hover(a) });
+    a.ch.chase(getSpot, Math.max(60, hitInMs - M.swingMs), {
       onUpdate: () => this.syncBar(a),
       onDone: () => a.ch.swing(M.swingMs),
     });
-    a.ch.setDepth(DEPTH.hero + 1); // in front of the other heroes while it is out there
+    if (a.unit.side === 'hero') a.ch.setDepth(DEPTH.hero + 1); // in front of the other heroes while it is out there
   }
 
-  // A hero goes back to its slot (after a hit, a cancelled attack, a win...).
+  // A fighter goes back to its spot (after a hit, a cancelled attack, a win...).
   runHome(v, duration = M.returnMs) {
     if (!v) return;
     this.releaseSpot(v.unit.uid);
@@ -619,18 +622,18 @@ export default class BattleScene extends Phaser.Scene {
     v.ch.moveTo(v.ch.homeX, v.ch.homeY, duration, {
       onUpdate: () => this.syncBar(v),
       onDone: () => {
-        v.ch.setDepth(DEPTH.hero);
+        if (v.unit.side === 'hero') v.ch.setDepth(DEPTH.hero);
         this.syncBar(v);
       },
     });
   }
 
-  // Frees the spot a melee hero had at an enemy.
-  releaseSpot(heroUid) {
-    for (const spots of this.engaged.values()) spots.delete(heroUid);
+  // Frees the spot a melee fighter had next to its target.
+  releaseSpot(uid) {
+    for (const spots of this.engaged.values()) spots.delete(uid);
   }
 
-  // A ranged hero's basic attack: an arrow that flies to the target and arrives as the hit lands.
+  // A ranged fighter's basic attack: an arrow that flies to the target and arrives as the hit lands.
   shootArrow(a, t, hitInMs) {
     const sx = a.ch.x, sy = a.ch.y - 40, tx = t.ch.x, ty = t.ch.y - 20;
     // Placeholder arrow: a shaft with a small head (real art later).

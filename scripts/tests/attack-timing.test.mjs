@@ -1,5 +1,5 @@
 // B1: a basic attack STARTS (attackStart event) and LANDS later (attack event).
-// Melee / ranged delays come from combat.json attackTiming (0 = instant, as before).
+// Melee / ranged delays come from combat.json attackTiming, per side (hero / enemy).
 import fs from 'fs';
 import { noPerks } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
@@ -16,7 +16,7 @@ const mk = (timing) => {
 const step = (s, ms) => { const ev = []; for (let t = 0; t < ms; t += 50) ev.push(...s.update(50)); return ev; };
 const ready = (s, u) => (u.timer = s.interval(u) - 1); // this unit starts an attack on the next update
 
-ok('heroes have real timings, enemies are still instant', base.attackTiming.hero.meleeHitMs > 0 && base.attackTiming.hero.rangedHitMs > 0 && !base.attackTiming.enemy.meleeHitMs);
+ok('heroes and enemies both have real timings', ['hero', 'enemy'].every((side) => base.attackTiming[side].meleeHitMs > 0 && base.attackTiming[side].rangedHitMs > 0));
 
 { const { s, knight } = mk({ meleeHitMs: 400, rangedHitMs: 250 });
   ready(s, knight); const ev = s.update(50);
@@ -53,3 +53,9 @@ ok('heroes have real timings, enemies are still instant', base.attackTiming.hero
 { const count = (timing) => { const { s, knight } = mk(timing); knight.timer = 0; return step(s, 10000).filter((e) => e.type === 'attack' && e.attacker === knight).length; };
   const a = count({ meleeHitMs: 0, rangedHitMs: 0 }), b = count({ meleeHitMs: 400, rangedHitMs: 250 });
   ok('same attacks per 10s with or without the delay', Math.abs(a - b) <= 1, `${a} vs ${b}`); }
+
+// Enemies use their own side's timing.
+{ const rules = { ...base, attackTiming: { hero: { meleeHitMs: 100, rangedHitMs: 100 }, enemy: { meleeHitMs: 500, rangedHitMs: 300 } } };
+  const s = new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs: {}, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+  const [g] = s.spawnEnemies(['goblin'], 1);
+  ok('enemy melee uses enemy timing', s.hitDelay(g) === 500 && s.hitDelay(s.heroes[0]) === 100); }

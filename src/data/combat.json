@@ -21,12 +21,13 @@
   "meleeVsFlyingMissPercent": 40,
   "attackTiming": {
     "hero": { "meleeHitMs": 420, "rangedHitMs": 260 },
-    "enemy": { "meleeHitMs": 0, "rangedHitMs": 0 }
+    "enemy": { "meleeHitMs": 420, "rangedHitMs": 260 }
   },
   "attackMotion": {
     "swingMs": 120,
     "returnMs": 280,
     "standOffY": 76,
+    "enemyStandOffY": 64,
     "spacingPx": 34,
     "arrowColor": "0xe6e6b8"
   },

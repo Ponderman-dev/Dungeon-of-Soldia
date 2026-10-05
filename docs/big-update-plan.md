@@ -81,7 +81,15 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 - Style: crowd shooter, strongest against 3-4 enemies.
 - Open: is Rain of Arrows one long cast (Archer is busy for 2s) or does he keep attacking while arrows fall? Suggest: he is busy for the 2s (skills take longer than normal attacks).
 
-### Still to do: Mage, Cleric, Necromancer, Bard, Alchemist (user may replace these concepts)
+### Mage (ranged, elemental combo hero) DECIDED
+- Passive "Spellweaver": every 4th basic attack he makes is a free empowered spell (bonus magic damage, applies his element's debuff). Feeds on-hit items. Self only.
+- Attack "Elemental Rotation": ONE skill that rotates each cast: 1st cast Fireball (big fire hit on one enemy, splash to neighbours, sets Burn), 2nd cast Frost Nova (ice burst on ALL enemies, small damage, slows, chance to freeze), 3rd cast Chain Lightning (electric bolt jumping through all enemies, stronger against burning/frozen ones), then back to Fireball. The skill square shows which spell is next. Each spell needs its own visual.
+- Support "Arcane Ward": squad gets a magic shield (absorbs damage, +resist), lasts 4 seconds.
+- Style: elemental combo hero (fire, ice, electric all in one hero; best for elemental item builds).
+- Needs: magic damage types become real (fire/ice/electric), burn status, shield status, and the "next spell in rotation" state on the hero.
+- Open: should the rotation keep its place between floors and reset each run? (suggest: keeps its place, resets each run). Does the Spellweaver 4th-attack counter also run through the same element rotation, or is it plain arcane damage? (suggest: it follows the same rotation element for the debuff.)
+
+### Still to do: Cleric, Necromancer, Bard, Alchemist (user may replace these concepts)
 - Final roster of 9 (3 per run), role, stats, growth, perk, one attack + one support skill, melee or ranged.
 - Redo the existing four, add the rest.
 

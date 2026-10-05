@@ -495,9 +495,21 @@ export default class BattleScene extends Phaser.Scene {
       if (!a || !t) return;
       if (e.attacker.damageType === 'melee') this.runToTarget(a, t, e.hitInMs);
       else this.shootArrow(a, t, e.hitInMs);
+    } else if (e.type === 'attackRetarget') {
+      // Its target died mid-attack: the runner turns to the new target, an arrow bends towards it.
+      const a = this.views.get(e.attacker.uid);
+      const t = this.views.get(e.target.uid);
+      if (!a || !t) return;
+      if (e.attacker.damageType === 'melee') this.runToTarget(a, t, e.hitInMs);
+      else if (a.arrow && a.arrow.active) this.flyArrow(a, a.arrow, t, e.hitInMs);
     } else if (e.type === 'attackCancel') {
-      const v = this.views.get(e.unit.uid);
-      if (v) this.runHome(v);
+      const c = this.views.get(e.unit.uid);
+      if (c && c.arrow && c.arrow.active) {
+        c.arrow.flight.stop(); // a cancelled shot vanishes
+        c.arrow.destroy();
+        c.arrow = null;
+      }
+      if (c) this.runHome(c);
     } else if (e.type === 'attack') {
       const a = this.views.get(e.attacker.uid);
       const t = this.views.get(e.target.uid);
@@ -635,15 +647,38 @@ export default class BattleScene extends Phaser.Scene {
 
   // A ranged fighter's basic attack: an arrow that flies to the target and arrives as the hit lands.
   shootArrow(a, t, hitInMs) {
-    const sx = a.ch.x, sy = a.ch.y - 40, tx = t.ch.x, ty = t.ch.y - 20;
     // Placeholder arrow: a shaft with a small head (real art later).
-    const arrow = this.add.container(sx, sy, [
+    const arrow = this.add.container(a.ch.x, a.ch.y - 40, [
       this.add.rectangle(-4, 0, 22, 3, Number(M.arrowColor)),
       this.add.triangle(9, 0, 0, -4, 0, 4, 7, 0, 0xffffff),
     ]).setDepth(DEPTH.popup - 1);
-    arrow.rotation = Math.atan2(ty - sy, tx - sx);
-    this.tweens.add({ targets: arrow, x: tx, y: ty, duration: hitInMs, ease: 'Linear', onComplete: () => arrow.destroy() });
-    a.ch.lunge(tx, ty); // a small recoil-like jab as it shoots
+    a.arrow = arrow;
+    this.flyArrow(a, arrow, t, hitInMs);
+    a.ch.lunge(t.ch.x, t.ch.y); // a small recoil-like jab as it shoots
+  }
+
+  // Flies an arrow from where it is now to a target (which may move), arriving after `ms`.
+  // Called again with a new target if the old one dies while the arrow is in the air.
+  flyArrow(a, arrow, t, ms) {
+    if (arrow.flight) arrow.flight.stop();
+    const fromX = arrow.x;
+    const fromY = arrow.y;
+    arrow.flight = this.tweens.addCounter({
+      from: 0,
+      to: 1,
+      duration: Math.max(1, ms),
+      onUpdate: (tween) => {
+        const p = tween.getValue();
+        const tx = t.ch.x;
+        const ty = t.ch.y - 20;
+        arrow.setPosition(fromX + (tx - fromX) * p, fromY + (ty - fromY) * p);
+        arrow.rotation = Math.atan2(ty - fromY, tx - fromX);
+      },
+      onComplete: () => {
+        arrow.destroy();
+        if (a.arrow === arrow) a.arrow = null;
+      },
+    });
   }
 
   // Placeholder projectiles: a fire bomb flies in an arc, lightning is a zig-zag line that fades.

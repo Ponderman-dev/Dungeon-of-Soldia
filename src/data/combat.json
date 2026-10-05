@@ -21,7 +21,8 @@
   "meleeVsFlyingMissPercent": 40,
   "attackTiming": {
     "hero": { "meleeHitMs": 420, "rangedHitMs": 260 },
-    "enemy": { "meleeHitMs": 420, "rangedHitMs": 260 }
+    "enemy": { "meleeHitMs": 420, "rangedHitMs": 260 },
+    "retargetMinMs": 200
   },
   "attackMotion": {
     "swingMs": 120,

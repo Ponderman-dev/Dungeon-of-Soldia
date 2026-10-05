@@ -14,7 +14,9 @@ export const SKILL_SLOTS = ['attack', 'support'];
 //         heal (lifesteal), thorns (reflected damage), proc (an item's chance effect went off),
 //         morale (the party became 'incomplete' or 'alone' because a hero fell),
 //         attackStart (a basic attack begins: { attacker, target, hitInMs }; its 'attack' event comes when it lands),
-//         attackCancel (an attack in progress was stopped: the attacker got stunned, frozen or feared)
+//         attackCancel (an attack in progress was stopped: the attacker got stunned, frozen, feared,
+//                       knocked back, or nothing is left to hit),
+//         attackRetarget (an attack in progress lost its target, it now goes for { target, hitInMs })
 export default class BattleState {
   constructor({ heroDefs, enemyDefs, itemDefs = {}, skillDefs = {}, statusDefs = {}, rules, damageTypes, leveling, rng = Math.random }) {
     this.rules = rules;
@@ -150,6 +152,7 @@ export default class BattleState {
     target.statuses = [];
     target.dotClocks = {};
     target.pending = null; // an attack it had started never lands
+    this.retargetAttacksOn(target, events);
     if (this.focusUid === target.uid) this.focusUid = null;
     events.push({ type: 'death', unit: target });
     if (target.side === 'enemy') this.awardXp(target, events);
@@ -223,6 +226,23 @@ export default class BattleState {
       else this.landAttack(unit, target, events);
     }
     return events;
+  }
+
+  // Attacks that were on their way to a unit that just died go for someone else (or are cancelled
+  // if nobody is left). They get at least `retargetMinMs` to reach the new target.
+  retargetAttacksOn(dead, events) {
+    for (const unit of [...this.heroes, ...this.enemies]) {
+      if (!unit.alive || !unit.pending || unit.pending.target !== dead) continue;
+      const next = this.pickTarget(unit);
+      if (!next) {
+        unit.pending = null;
+        events.push({ type: 'attackCancel', unit });
+        continue;
+      }
+      unit.pending.target = next;
+      unit.pending.remaining = Math.max(unit.pending.remaining, (this.rules.attackTiming && this.rules.attackTiming.retargetMinMs) || 0);
+      events.push({ type: 'attackRetarget', attacker: unit, target: next, hitInMs: unit.pending.remaining });
+    }
   }
 
   // How long a basic attack takes from start to hit (combat.json `attackTiming`, per side:
@@ -369,8 +389,15 @@ export default class BattleState {
     const key = `${spec.status}:${skillId}`;
 
     if (info.instant) {
-      // Knockback: the next attack starts over (a boss only loses part of its wind-up).
-      if (spec.status === 'knockback') target.timer *= 1 - scale;
+      // Knockback: the next attack starts over (a boss only loses part of its wind-up), and an attack
+      // already on its way is stopped.
+      if (spec.status === 'knockback') {
+        target.timer *= 1 - scale;
+        if (target.pending) {
+          target.pending = null;
+          events.push({ type: 'attackCancel', unit: target });
+        }
+      }
       events.push({ type: 'status', unit: target, change: 'apply', status: { key, type: spec.status, remaining: 0, total: 0 } });
       return;
     }

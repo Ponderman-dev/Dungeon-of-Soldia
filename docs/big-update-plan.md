@@ -168,15 +168,15 @@ Minion boosters: Bone Charm (rare, all minions +30% hp/attack), Overseer's Whist
 Weak spawners: Rat Cage (common, rat every 12s), Wisp Lantern (rare, flying ranged wisp every 15s), Fire Imp Brazier (epic, imp every 10s, applies burn), Mimic Chest (epic, 10% when holder is hit, mimic pops out and explodes).
 Greater spawners: Gargoyle Idol (rare, slow tanky, draws attacks), Spirit Knight Banner (epic, balanced fighter that grows each floor survived), Phoenix Hatchling (legendary, flying fire minion, heals squad a little when hit).
 
-### User item ideas (batch 1, in the user's words, interpretation to confirm)
-- Lost Cleric's Grimoire (Legendary): a % of your heal launches a green fire projectile at a random enemy for big damage. Rapid-healing combo: the more you heal, the more fireballs.
-- Excalibur (Legendary): 8% chance on a melee attack to spawn a tornado for 5s that damages every enemy around it (ticks). Max 3 tornadoes at a time.
-- Fan of Knives item (Epic, NAME CLASHES with the Rogue skill, rename): melee attacks seldom apply 3x Bleed; if an enemy dies while bleeding, knives burst out of it and damage nearby enemies.
-- Martyr's Shield (Epic): small chance to block an enemy attack aimed at another hero, taking the damage yourself (thorns-style but for the team, at your own cost).
-- Jolly Banner (Legendary): 5% chance: you and one random other hero get great regen, guaranteed crits and an attack speed buff for 2s.
-- Frozen Thunderbolt (Legendary): your lightning attacks cause an ice burst around you dealing freeze/ice damage.
-- Fire Heart (Legendary): at the start of each floor, a fire shield worth a % of your health: it slowly heals itself, blocks damage and burns attackers.
-- Fire Arrows (Rare): ranged attacks have 50% chance to add fire damage (chance does not stack); more copies increase the fire damage (stacks).
+### User item ideas (batch 1) DECIDED, numbers are placeholders
+- Lost Cleric's Grimoire (Legendary): a % chance on every heal the HOLDER RECEIVES (from anyone: skills, regen, lifesteal) to launch a green fire projectile at a random enemy for big damage. Healing combo: the more heals the holder gets, the more fireballs. Pairs with the Cleric, Bard Ballad of Rest, Heart Charm regen and the Cleric regen scaling.
+- Excalibur (Legendary): 8% chance on a melee attack to spawn a tornado for 5s that DRIFTS between enemies, ticking damage on every enemy it touches. Max 3 tornadoes at a time. Tick damage = a % of the holder's attack (suggest).
+- Knife Fan (Epic; working name, the old name clashes with the Rogue skill, change if you like): melee attacks seldom apply Bleed, and this item lets an enemy hold up to 3 STACKING bleeds (an exception to the no-stack rule, each ticks on its own); when an enemy dies while bleeding, knives burst out of it and damage nearby enemies.
+- Martyr's Shield (Epic): FIXED 8% chance when an enemy hits another hero to take the hit instead (holder's defense/evasion apply), at the holder's own health cost. Extra copies do not raise the chance; each extra copy REDUCES the block cooldown and REDUCES the health cost. Needs: a block cooldown (like the Shield Totem) and a health-cost rule.
+- Jolly Banner (Legendary): 5% chance per attack: the holder and 1 random other living hero get great regen, guaranteed crits and an attack speed buff for 2s.
+- Frozen Thunderbolt (Legendary): every electric hit (Static Crystal, Mage's Chain Lightning, any electric damage) causes an ice burst around the enemy that was hit, dealing ice damage and freezing nearby enemies. A chain of 3 enemies makes bursts on each? (decided: on the HIT enemy; chain targets count as hit enemies, tune if too strong).
+- Fire Heart (Legendary): at the start of every floor the holder gets a fire shield worth a % of max health. Extra copies make the shield bigger. The shield slowly regenerates (until broken), blocks damage and burns the attacker.
+- Fire Arrows (Rare): each ranged attack has a 50% chance (does NOT stack) to add an extra fire hit (a % of attack); extra copies raise the fire hit damage (stacks). Counts rangers and ranged-type skills (Rogue Fan of Knives, Samurai Wind Cutter, Archer arrows).
 
 ## Part 4: Tests and one tuning pass
 - Update tests for the new content, then balance once at the end.

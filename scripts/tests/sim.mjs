@@ -6,7 +6,7 @@ import { enemiesForFloor } from '../../src/systems/dungeon.js';
 import { pickSquad } from '../../src/systems/party.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const heroDefs = pickSquad(r('heroes.json'), r('squad.json')), enemyDefs = r('enemies.json'), rules = r('combat.json'), damageTypes = r('damageTypes.json'), leveling = r('leveling.json'), dungeon = r('dungeons.json').A;
-const itemDefs = loadItems(r('items.json')), skillDefs = r('skills.json'), rarities = r('rarities.json'), rw = r('rewards.json');
+const itemDefs = loadItems(r('items.json')), skillDefs = r('skills.json'), rw = r('rewards.json');
 const mode = process.argv[2] || 'skills';   // 'noskills' | 'skills'
 const rewards = process.argv[3] === 'rewards';
 const N = 40; let sum = 0, min = 99, max = 0, casts = 0;
@@ -23,7 +23,7 @@ for (let run = 0; run < N; run++) {
     if (s.allHeroesDead()) break;
     s.winHeal(rules.winHealPercent);
     if (rewards) {
-      const choices = rollChoices({ itemDefs, rarities, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance });
+      const choices = rollChoices({ itemDefs, rules: rw, floor, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance });
       if (choices.length) { const item = choices[Math.floor(Math.random() * choices.length)]; if (item.kind === 'potion') s.healHeroes(item.healPercent); else { const tg = s.heroes.filter((h) => canReceive(h, item)); s.giveItem(tg[Math.floor(Math.random() * tg.length)].uid, item.id); } }
     }
     floor++;

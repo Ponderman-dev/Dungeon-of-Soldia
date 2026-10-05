@@ -4,7 +4,7 @@ import BattleState from '../../src/systems/BattleState.js';
 import { loadItems } from '../../src/systems/items.js';
 import { rollChoices } from '../../src/systems/rewards.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
-const itemDefs = loadItems(r('items.json')), rarities = r('rarities.json');
+const itemDefs = loadItems(r('items.json')), rw = r('rewards.json');
 let seed = 7; const rng = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const mk = () => new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });
 const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
@@ -21,10 +21,10 @@ const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
 { const s = mk(); const g = s.heroes[2]; const c0 = g.stats.crit; s.giveItem(g.uid, 'gamblers_dice'); ok('dice +20 crit, crit dmg +50%', g.stats.crit === c0 + 20 && g.specials.critDamage === 50); }
 // potion appears rarely and only when someone is hurt
 { const s = mk(); let n = 0; const T = 4000; s.heroes[0].hp -= 10;
-  for (let i = 0; i < T; i++) { const ch = rollChoices({ itemDefs, rarities, count: 3, heroes: s.heroes, potionChance: 0.05, rng: Math.random }); if (ch.some((x) => x.kind === 'potion')) n++; }
+  for (let i = 0; i < T; i++) { const ch = rollChoices({ itemDefs, rules: rw, count: 3, heroes: s.heroes, potionChance: 0.05, rng: Math.random }); if (ch.some((x) => x.kind === 'potion')) n++; }
   ok('potion offered ~5% when hurt', n / T > 0.03 && n / T < 0.07, `${(100 * n / T).toFixed(1)}%`); }
-{ const s = mk(); let n = 0; for (let i = 0; i < 2000; i++) if (rollChoices({ itemDefs, rarities, count: 3, heroes: s.heroes, potionChance: 1, rng: Math.random }).some((x) => x.kind === 'potion')) n++;
+{ const s = mk(); let n = 0; for (let i = 0; i < 2000; i++) if (rollChoices({ itemDefs, rules: rw, count: 3, heroes: s.heroes, potionChance: 1, rng: Math.random }).some((x) => x.kind === 'potion')) n++;
   ok('potion never offered when nobody is hurt', n === 0); }
 // rarity frequency
-{ const s = mk(); const tally = {}; for (let i = 0; i < 6000; i++) for (const it of rollChoices({ itemDefs, rarities, count: 3, heroes: s.heroes })) tally[it.rarity] = (tally[it.rarity] || 0) + 1;
+{ const s = mk(); const tally = {}; for (let i = 0; i < 6000; i++) for (const it of rollChoices({ itemDefs, rules: rw, count: 3, heroes: s.heroes })) tally[it.rarity] = (tally[it.rarity] || 0) + 1;
   const tot = Object.values(tally).reduce((a, b) => a + b, 0); console.log('rarity mix:', Object.fromEntries(Object.entries(tally).map(([k, v]) => [k, (100 * v / tot).toFixed(1) + '%']))); }

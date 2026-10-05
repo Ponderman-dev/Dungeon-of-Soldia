@@ -652,7 +652,7 @@ export default class BattleScene extends Phaser.Scene {
 
   // Shows the reward screen. When it is done, the hero gets the item and `next` runs.
   showReward(next) {
-    const choices = rollChoices({ itemDefs, rarities, count: rewardRules.choices, heroes: this.state.heroes, potionChance: rewardRules.potionChance });
+    const choices = rollChoices({ itemDefs, rules: rewardRules, floor: this.floor, count: rewardRules.choices, heroes: this.state.heroes, potionChance: rewardRules.potionChance });
     if (!choices.length) return next();
     this.scene.launch('Reward', {
       state: this.state,

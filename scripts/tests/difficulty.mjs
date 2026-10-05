@@ -8,7 +8,7 @@ import { enemiesForFloor } from '../../src/systems/dungeon.js';
 import { pickSquad } from '../../src/systems/party.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const heroDefs = pickSquad(r('heroes.json'), r('squad.json')), enemyDefs = r('enemies.json'), damageTypes = r('damageTypes.json'), leveling = r('leveling.json'), dungeon = r('dungeons.json').A;
-const itemDefs = loadItems(r('items.json')), skillDefs = r('skills.json'), rarities = r('rarities.json'), rw = r('rewards.json');
+const itemDefs = loadItems(r('items.json')), skillDefs = r('skills.json'), rw = r('rewards.json');
 const rules = JSON.parse(JSON.stringify(r('combat.json')));
 if (process.argv[2]) rules.enemyAttackSpeedMultiplier = Number(process.argv[2]);
 if (process.argv[3]) rules.floorScaling.hpPerStep = Number(process.argv[3]);
@@ -33,7 +33,7 @@ for (let run = 0; run < N; run++) {
     lost[floor] += before - living.reduce((a, h) => a + h.hp / h.maxHp, 0) / living.length; // average health lost on this floor (before the win heal)
     secs[floor] += t / 1000; cleared[floor]++;
     s.winHeal(rules.winHealPercent); s.clearStatuses();
-    const choices = rollChoices({ itemDefs, rarities, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance });
+    const choices = rollChoices({ itemDefs, rules: rw, floor, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance });
     if (choices.length) { const item = choices[Math.floor(Math.random() * choices.length)]; if (item.kind === 'potion') s.healHeroes(item.healPercent); else { const tg = s.heroes.filter((h) => canReceive(h, item)); s.giveItem(tg[Math.floor(Math.random() * tg.length)].uid, item.id); } }
     floor++;
   }

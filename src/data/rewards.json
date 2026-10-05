@@ -4,5 +4,12 @@
   "autoHighlightMs": 500,
   "autoAssignDelayMs": 800,
   "autoConfirmDelayMs": 600,
-  "potionChance": 0.05
+  "potionChance": 0.05,
+  "rarityOdds": [
+    { "fromFloor": 1, "odds": { "common": 62, "rare": 29, "epic": 7.5, "legendary": 1.5 } },
+    { "fromFloor": 11, "odds": { "common": 52, "rare": 32, "epic": 13, "legendary": 3 } },
+    { "fromFloor": 31, "odds": { "common": 42, "rare": 34, "epic": 19, "legendary": 5 } }
+  ],
+  "defaultDropWeight": 100,
+  "needsMissingFactor": 0.25
 }

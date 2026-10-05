@@ -179,7 +179,7 @@ Greater spawners: Gargoyle Idol (rare, slow tanky, draws attacks), Spirit Knight
 - Fire Arrows (Rare): each ranged attack has a 50% chance (does NOT stack) to add an extra fire hit (a % of attack); extra copies raise the fire hit damage (stacks). Counts rangers and ranged-type skills (Rogue Fan of Knives, Samurai Wind Cutter, Archer arrows).
 
 ### Rule changes decided during item review
-- Defense: replace the hard 75% cap with a diminishing curve (never reaches 100%; low values stay close to today, formula tuned last). Suggest the same for resist (to confirm).
+- Defense: replace the hard 75% cap with a diminishing curve (never reaches 100%; low values stay close to today, formula tuned last). Resist uses the same curve (decided).
 - Evasion cap: 60% > 70%.
 - CLAUDE.md fight rules must be updated when these are built.
 

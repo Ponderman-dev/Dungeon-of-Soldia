@@ -5,7 +5,7 @@ No mana items. Items are passive only. Items on a dead hero stop working. Detail
 
 ## General stacking rules
 - Copies of an item stack by default with no cap, unless the Stacking column says otherwise.
-- RULE CHANGES (decided): defense no longer has a hard 75% cap; it uses a diminishing curve that never reaches 100% (formula tuned last, keep low values close to today: 10 defense is about 10% less). Evasion cap is now 70% (was 60%). Crit caps stay item-set. Resist: suggest the same curve as defense (to confirm).
+- RULE CHANGES (decided): defense no longer has a hard 75% cap; it uses a diminishing curve that never reaches 100% (formula tuned last, keep low values close to today: 10 defense is about 10% less). Evasion cap is now 70% (was 60%). Crit caps stay item-set. Resist uses the same curve as defense (decided).
 - Defense, resist, evasion, crit items add flat points; attack, health items add a % of the hero's base stat.
 - Chance effects: each copy rolls separately, unless noted as unique (does not stack). Same status from the same source refreshes instead of stacking.
 - Dodge/crit-type chances have caps set in the item JSON. `falloffRatio` means diminishing returns (each extra copy adds ratio^(copies-1) of the effect).

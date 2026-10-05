@@ -4,9 +4,11 @@
   "weakMultiplier": 1.5,
   "resistMultiplier": 0.5,
   "caps": {
-    "defense": 75,
-    "resist": 75,
-    "evasion": 60
+    "evasion": 70,
+    "crit": 100
+  },
+  "armorCurve": {
+    "linearUpTo": 50
   },
   "winHealPercent": 25,
   "floorScaling": {

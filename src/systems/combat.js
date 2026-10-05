@@ -6,10 +6,20 @@ function weakResistMultiplier(defender, type, rules) {
   return 1;
 }
 
-// Physical hits are cut by Defense, magical hits by Resist (both capped).
+// How much % damage a number of Defense (or Resist) points cuts. No hard cap:
+// up to `linearUpTo` points it is 1 point = 1% (10 defense = 10% less), after that each extra
+// point is worth a bit less and the cut creeps toward 100% without ever reaching it.
+export function armorPercent(points, rules) {
+  const knee = rules.armorCurve.linearUpTo;
+  if (points <= knee) return points;
+  const room = 100 - knee;
+  return knee + room * (1 - Math.exp(-(points - knee) / room));
+}
+
+// Physical hits are cut by Defense, magical hits by Resist (same curve for both).
 function armourCut(defender, type, rules, damageTypes) {
   const physical = damageTypes[type].category === 'physical';
-  return Math.min(physical ? defender.stats.defense : defender.stats.resist, physical ? rules.caps.defense : rules.caps.resist);
+  return armorPercent(physical ? defender.stats.defense : defender.stats.resist, rules);
 }
 
 // Works out one hit. Returns { dodged, crit, amount, mult }.
@@ -31,7 +41,7 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
     return { dodged: true, crit: false, amount: 0, mult: 1 };
   }
 
-  const crit = rng() * 100 < attacker.stats.crit;
+  const crit = rng() * 100 < Math.min(attacker.stats.crit, rules.caps.crit);
   const critMultiplier = rules.critMultiplier + ((attacker.specials && attacker.specials.critDamage) || 0) / 100;
   let amount = attacker.stats.attack * (opts.multiplier || 1) * (crit ? critMultiplier : 1);
 

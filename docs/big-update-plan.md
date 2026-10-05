@@ -105,7 +105,14 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 - New systems needed: minions as units on the hero side (not part of the squad of 3: no XP, no perks, no morale, don't count as living heroes), minion stats in JSON, minion spawn animation.
 - DECIDED: max 4 skeletons at once (the oldest is removed when a new one rises). Skeletons vanish at the end of each floor. At the START of every floor he summons one skeleton right away, then the 8-10s timer runs. Squad-wide buffs and effects (War Cry, Rally Cry, shields...) also affect skeletons.
 
-### Still to do: Bard, Alchemist (user may replace these concepts)
+### Bard (ranged, combo conductor) DECIDED
+- Passive "Rhythm": every 4th attack of ANY hero in the squad is empowered (bonus damage). A shared squad beat counter with a visible cue (e.g. a beat pulse on the hero whose attack lands the beat). Pairs with every attacker and on-hit items.
+- Attack "Crescendo": a song that builds: damage to all enemies grows each second for 3 seconds, then a final big hit. Needs a build-up visual (rising music notes / growing glow).
+- Support "Ballad of Rest": a BIG regen boost for the squad for 4 seconds (heal over time, much stronger per second than normal regen; scales with the Cleric's regen scaling and regen items).
+- Style: combo conductor.
+- Open: does the Rhythm beat count skeleton and skill hits? (suggest: basic attacks of the 3 heroes only, skeletons excluded). Does the beat counter reset each floor? (suggest: no, it keeps counting through the run).
+
+### Still to do: Alchemist (user may replace these concepts)
 - Final roster of 9 (3 per run), role, stats, growth, perk, one attack + one support skill, melee or ranged.
 - Redo the existing four, add the rest.
 

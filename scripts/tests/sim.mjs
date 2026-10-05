@@ -11,7 +11,7 @@ const mode = process.argv[2] || 'skills';   // 'noskills' | 'skills'
 const rewards = process.argv[3] === 'rewards';
 const N = 40; let sum = 0, min = 99, max = 0, casts = 0;
 for (let run = 0; run < N; run++) {
-  const s = new BattleState({ heroDefs, enemyDefs, itemDefs, skillDefs, rules, damageTypes, leveling });
+  const s = new BattleState({ heroDefs, enemyDefs, itemDefs, skillDefs, statusDefs: r('statuses.json'), rules, damageTypes, leveling });
   let floor = 1;
   while (floor < 120) {
     s.spawnEnemies(enemiesForFloor(dungeon, floor), floor);

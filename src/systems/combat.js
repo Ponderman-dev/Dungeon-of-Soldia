@@ -59,7 +59,9 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
 
 // Damage over time (poison...): can't be dodged or crit, but weakness, resist and armour still apply.
 // (The caster's damage bonus for this type is already inside `amount`, see BattleState.applyStatus.)
-export function computeDotDamage(defender, amount, type, rules, damageTypes) {
+// opts.ignoresArmor: Bleed goes straight through defense.
+export function computeDotDamage(defender, amount, type, rules, damageTypes, opts = {}) {
   const mult = weakResistMultiplier(defender, type, rules, damageTypes);
-  return Math.max(1, Math.round(amount * mult * (1 - armourCut(defender, type, rules, damageTypes) / 100)));
+  const cut = opts.ignoresArmor ? 0 : armourCut(defender, type, rules, damageTypes);
+  return Math.max(1, Math.round(amount * mult * (1 - cut / 100)));
 }

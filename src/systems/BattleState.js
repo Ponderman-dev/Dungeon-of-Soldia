@@ -10,12 +10,13 @@ export const SKILL_SLOTS = ['attack', 'support'];
 // No Phaser in here. update() and castSkill() return a list of events and the scene draws them.
 //
 // Health regeneration (specials.regen) happens silently inside update(); the scene just redraws bars.
-// Events: attack, death, levelup, cast, status (apply / expire), dot (poison tick),
+// Events: attack, death, levelup, cast, status (apply / expire), dot (a damage-over-time tick: bleed, burn, poison),
 //         heal (lifesteal), thorns (reflected damage), proc (an item's chance effect went off),
 //         morale (the party became 'incomplete' or 'alone' because a hero fell)
 export default class BattleState {
-  constructor({ heroDefs, enemyDefs, itemDefs = {}, skillDefs = {}, rules, damageTypes, leveling, rng = Math.random }) {
+  constructor({ heroDefs, enemyDefs, itemDefs = {}, skillDefs = {}, statusDefs = {}, rules, damageTypes, leveling, rng = Math.random }) {
     this.rules = rules;
+    this.statusDefs = statusDefs; // statuses.json: tags plus rules (dot, control, tickMs...)
     this.itemDefs = itemDefs;
     this.skillDefs = skillDefs;
     this.leveling = leveling;
@@ -64,6 +65,7 @@ export default class BattleState {
       // Slot 0 = attack skill, slot 1 = support skill (heroes.json `skills: { attack, support }`).
       skills: SKILL_SLOTS.filter((kind) => def.skills && def.skills[kind]).map((kind) => ({ id: def.skills[kind], kind, cooldownLeft: 0 })),
       statuses: [],
+      dotClocks: {}, // damage over time: ms since the last tick, per kind (bleed, burn, poison)
       damageBonus: {},
       specials: {},
       procs: [],
@@ -129,6 +131,7 @@ export default class BattleState {
     const was = this.morale;
     target.alive = false;
     target.statuses = [];
+    target.dotClocks = {};
     if (this.focusUid === target.uid) this.focusUid = null;
     events.push({ type: 'death', unit: target });
     if (target.side === 'enemy') this.awardXp(target, events);
@@ -281,15 +284,20 @@ export default class BattleState {
     }
   }
 
-  // ---- statuses (stun, slow, poison, buffs) ----------------------------------------------
+  // ---- statuses (statuses.json) ----------------------------------------------------------
 
-  // Gives a unit a status. The same status from the same skill just restarts its timer.
-  // Bosses can have `statusDurationScale` (e.g. 0.5) in their data to shorten statuses on them.
+  // Gives a unit a status.
+  //  - Damage over time (statuses.json `dot`: bleed, burn, poison): EVERY application adds a new
+  //    stack, with no limit. Each stack has its own timer; all stacks of one kind tick together.
+  //  - Anything else: the same status from the same source (skill/item) just restarts its timer.
+  // Bosses have `statusDurationScale` (e.g. 0.5): CONTROL statuses (statuses.json `control`:
+  // stun, freeze, slow...) last less on them. Damage over time is never shortened.
   applyStatus(target, spec, source, skillId, events) {
-    const scale = target.def.statusDurationScale ?? 1;
+    const info = this.statusDefs[spec.status] || {};
+    const scale = info.control ? target.def.statusDurationScale ?? 1 : 1;
     const duration = spec.durationMs * scale;
     const key = `${spec.status}:${skillId}`;
-    let status = target.statuses.find((s) => s.key === key);
+    let status = info.dot ? null : target.statuses.find((s) => s.key === key);
     if (!status) {
       status = { key, type: spec.status };
       target.statuses.push(status);
@@ -298,44 +306,63 @@ export default class BattleState {
     status.total = duration;
     if (spec.status === 'slow') status.attackSpeedPercent = spec.attackSpeedPercent;
     if (spec.status === 'buff') status.mods = spec.mods;
-    if (spec.status === 'poison') {
-      status.tickMs = spec.tickMs;
-      status.tickTimer = status.tickTimer || 0;
-      status.damageType = spec.damageType || 'dark';
+    if (info.dot) {
+      status.stack = true;
+      status.damageType = spec.damageType || info.damageType || 'dark';
+      status.ignoresArmor = spec.ignoresArmor ?? !!info.ignoresArmor;
       // Damage-type items boost damage over time of that type too (e.g. +15% dark boosts poison).
       const bonus = ((source.damageBonus && source.damageBonus[status.damageType]) || 0) / 100;
       status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus)));
+      if (!(spec.status in target.dotClocks)) target.dotClocks[spec.status] = 0; // first stack: start the tick clock
     }
     if (spec.status === 'buff') this.refreshStats();
     events.push({ type: 'status', unit: target, change: 'apply', status });
   }
 
-  // Counts statuses down, poison ticks, and removes finished statuses.
+  // How many stacks of a status a unit has (damage over time: one per application).
+  stacks(unit, type) {
+    return unit.statuses.filter((s) => s.type === type).length;
+  }
+
+  // Counts statuses down, ticks damage over time, and removes finished statuses.
   tickStatuses(dt, events) {
     let buffEnded = false;
     for (const unit of [...this.heroes, ...this.enemies]) {
       if (!unit.alive) continue;
+      for (const status of unit.statuses) status.remaining -= dt;
+      this.tickDots(unit, dt, events);
+      if (!unit.alive) continue;
       for (const status of [...unit.statuses]) {
-        status.remaining -= dt;
-        if (status.type === 'poison') {
-          status.tickTimer += dt;
-          while (status.tickTimer >= status.tickMs && unit.alive) {
-            status.tickTimer -= status.tickMs;
-            const amount = computeDotDamage(unit, status.damage, status.damageType, this.rules, this.damageTypes);
-            unit.hp = Math.max(0, unit.hp - amount);
-            events.push({ type: 'dot', unit, amount, damageType: status.damageType });
-            if (unit.hp <= 0) this.killUnit(unit, events);
-          }
-        }
-        if (!unit.alive) break;
-        if (status.remaining <= 0) {
-          unit.statuses.splice(unit.statuses.indexOf(status), 1);
-          if (status.type === 'buff') buffEnded = true;
-          events.push({ type: 'status', unit, change: 'expire', status });
-        }
+        if (status.remaining > 0) continue;
+        unit.statuses.splice(unit.statuses.indexOf(status), 1);
+        if (status.type === 'buff') buffEnded = true;
+        events.push({ type: 'status', unit, change: 'expire', status });
       }
     }
     if (buffEnded) this.refreshStats();
+  }
+
+  // Damage over time: all stacks of one kind (bleed, burn, poison) tick together every `tickMs`
+  // (statuses.json). One tick = the sum of every stack's damage, shown as one number.
+  tickDots(unit, dt, events) {
+    for (const type of Object.keys(unit.dotClocks)) {
+      const stacks = unit.statuses.filter((s) => s.type === type);
+      if (!stacks.length) {
+        delete unit.dotClocks[type]; // last stack gone: the next one starts a fresh clock
+        continue;
+      }
+      const tickMs = (this.statusDefs[type] && this.statusDefs[type].tickMs) || 1000;
+      unit.dotClocks[type] += dt;
+      while (unit.dotClocks[type] >= tickMs && unit.alive) {
+        unit.dotClocks[type] -= tickMs;
+        const total = stacks.reduce((sum, s) => sum + s.damage, 0);
+        const { damageType, ignoresArmor } = stacks[0];
+        const amount = computeDotDamage(unit, total, damageType, this.rules, this.damageTypes, { ignoresArmor });
+        unit.hp = Math.max(0, unit.hp - amount);
+        events.push({ type: 'dot', unit, amount, damageType, status: type, stacks: stacks.length });
+        if (unit.hp <= 0) this.killUnit(unit, events);
+      }
+    }
   }
 
   // ---- skills -------------------------------------------------------------------------
@@ -476,7 +503,10 @@ export default class BattleState {
 
   // Removes every status from the heroes (called when a floor is cleared).
   clearStatuses() {
-    for (const h of this.heroes) h.statuses = [];
+    for (const h of this.heroes) {
+      h.statuses = [];
+      h.dotClocks = {};
+    }
     this.refreshStats();
   }
 }

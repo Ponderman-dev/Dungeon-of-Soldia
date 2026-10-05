@@ -1,18 +1,47 @@
 {
-  "stun": {
-    "label": "STUN",
-    "color": "#d9a400",
-    "textColor": "#000000"
+  "_about": "Status tags and rules. dot: damage over time, every application adds a STACK (no limit, each stack has its own timer, all stacks of one kind tick together every tickMs). control: bosses take it for half as long (statusDurationScale). Numbers here are defaults a skill/item spec can override.",
+  "bleed": {
+    "label": "BLEED",
+    "color": "#c0303a",
+    "textColor": "#ffffff",
+    "dot": true,
+    "tickMs": 1000,
+    "damageType": "melee",
+    "ignoresArmor": true
   },
-  "slow": {
-    "label": "SLOW",
-    "color": "#3b8ee0",
-    "textColor": "#ffffff"
+  "burn": {
+    "label": "BURN",
+    "color": "#ff7a3d",
+    "textColor": "#000000",
+    "dot": true,
+    "tickMs": 500,
+    "damageType": "fire"
   },
   "poison": {
     "label": "PSN",
     "color": "#3fae6a",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "dot": true,
+    "tickMs": 1000,
+    "damageType": "dark"
+  },
+  "stun": {
+    "label": "STUN",
+    "color": "#d9a400",
+    "textColor": "#000000",
+    "control": true
+  },
+  "freeze": {
+    "label": "FREEZE",
+    "color": "#9fe8ff",
+    "textColor": "#000000",
+    "control": true
+  },
+  "slow": {
+    "label": "SLOW",
+    "color": "#3b8ee0",
+    "textColor": "#ffffff",
+    "control": true
   },
   "buff": {
     "label": "BUFF",
@@ -24,10 +53,5 @@
     "color": "#6b6b80",
     "textColor": "#ffffff",
     "popup": false
-  },
-  "freeze": {
-    "label": "FREEZE",
-    "color": "#9fe8ff",
-    "textColor": "#000000"
   }
 }

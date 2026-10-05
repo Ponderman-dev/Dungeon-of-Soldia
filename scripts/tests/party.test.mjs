@@ -5,7 +5,7 @@ import { pickSquad, moraleTier } from '../../src/systems/party.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const itemDefs = loadItems(r('items.json'));
 const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
-const mk = () => new BattleState({ heroDefs: pickSquad(r('heroes.json'), r('squad.json')), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+const mk = () => new BattleState({ heroDefs: pickSquad(r('heroes.json'), r('squad.json')), enemyDefs: r('enemies.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
 const base = (name) => r('heroes.json').find((h) => h.name === name).stats;
 const kill = (s, h) => { const ev = []; s.killUnit(h, ev); return ev; };
 

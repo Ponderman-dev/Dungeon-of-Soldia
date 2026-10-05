@@ -17,7 +17,7 @@ const N = 100, MAX = 120;
 const reached = Array(MAX + 2).fill(0), died = Array(MAX + 2).fill(0), lost = Array(MAX + 2).fill(0), secs = Array(MAX + 2).fill(0), cleared = Array(MAX + 2).fill(0);
 let sum = 0;
 for (let run = 0; run < N; run++) {
-  const s = new BattleState({ heroDefs, enemyDefs, itemDefs, skillDefs, rules, damageTypes, leveling });
+  const s = new BattleState({ heroDefs, enemyDefs, itemDefs, skillDefs, statusDefs: r('statuses.json'), rules, damageTypes, leveling });
   let floor = 1;
   while (floor <= MAX) {
     s.spawnEnemies(enemiesForFloor(dungeon, floor), floor);

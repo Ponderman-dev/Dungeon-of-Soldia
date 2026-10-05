@@ -63,6 +63,7 @@ export default class BattleScene extends Phaser.Scene {
       enemyDefs,
       itemDefs,
       skillDefs,
+      statusDefs: statusInfo,
       rules: combatRules,
       damageTypes,
       leveling,
@@ -288,7 +289,11 @@ export default class BattleScene extends Phaser.Scene {
   drawChips(view) {
     view.chipBox.removeAll(true);
     const kinds = [...new Set(view.unit.statuses.map((st) => st.type))];
-    const tags = kinds.map((kind) => statusInfo[kind]);
+    // Stacking statuses (bleed, burn, poison) show how many stacks there are: "PSN x3".
+    const tags = kinds.map((kind) => {
+      const n = this.state.stacks(view.unit, kind);
+      return statusInfo[kind].dot && n > 1 ? { ...statusInfo[kind], label: `${statusInfo[kind].label} x${n}` } : statusInfo[kind];
+    });
     // The party's morale tag (INCOMPLETE / ALL ALONE) shows on every living hero.
     const morale = view.unit.side === 'hero' && view.unit.alive ? combatRules.morale[this.state.morale] : null;
     if (morale) tags.unshift(morale);

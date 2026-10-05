@@ -8,7 +8,7 @@ const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, impor
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const itemDefs = loadItems(r('items.json')), rw = r('rewards.json');
 const heroDefs = noPerks(r('heroes.json'));
-const mk = (ids) => new BattleState({ heroDefs: ids.map((id) => heroDefs.find((h) => h.id === id)), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+const mk = (ids) => new BattleState({ heroDefs: ids.map((id) => heroDefs.find((h) => h.id === id)), enemyDefs: r('enemies.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
 
 ok('floor 1-10 odds', rarityOddsFor(1, rw).legendary === 1.5 && rarityOddsFor(10, rw).legendary === 1.5);
 ok('floor 11-30 odds', rarityOddsFor(11, rw).legendary === 3 && rarityOddsFor(30, rw).epic === 13);

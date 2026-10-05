@@ -5,7 +5,7 @@ import { loadItems } from '../../src/systems/items.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const itemDefs = loadItems(r('items.json'));
 const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
-const mk = () => new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+const mk = () => new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
 const dummy = (s, ids = ['goblin']) => { const es = s.spawnEnemies(ids, 1); es.forEach((e) => { e.hp = e.maxHp = 1e12; e.stats.evasion = 0; e.stats.defense = 0; e.stats.resist = 0; e.weak = []; e.resists = []; e.flying = false; }); return es; };
 const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker === who);
 

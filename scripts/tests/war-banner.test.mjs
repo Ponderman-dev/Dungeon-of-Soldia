@@ -5,7 +5,7 @@ import { loadItems } from '../../src/systems/items.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const itemDefs = loadItems(r('items.json'));
 const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
-const mk = () => new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), rules: { ...r('combat.json'), morale: {} }, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+const mk = () => new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: { ...r('combat.json'), morale: {} }, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
 // proc rate: ~8% of the holder's attacks
 { const s = mk(); const [e] = s.spawnEnemies(['goblin'], 1); e.hp = e.maxHp = 1e12; e.statuses.push({ key: 'x', type: 'stun', remaining: 1e12, total: 1e12 }); const k = s.heroes[0]; s.giveItem(k.uid, 'war_banner');
   ok('banner gives no flat stats', k.stats.attack === 20, `${k.stats.attack}`);

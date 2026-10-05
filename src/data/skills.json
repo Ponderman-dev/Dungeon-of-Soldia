@@ -23,7 +23,7 @@
   "venom_strike": {
     "name": "Venom Strike", "short": "VS", "kind": "attack", "target": "enemy", "manaCost": 15, "cooldownMs": 8000,
     "damageMultiplier": 0.8,
-    "apply": [ { "status": "poison", "durationMs": 6000, "tickMs": 1000, "damageMultiplier": 0.35, "damageType": "dark" } ],
+    "apply": [ { "status": "poison", "durationMs": 6000, "damageMultiplier": 0.35, "damageType": "dark" } ],
     "description": "Hit one enemy for 80% damage and poison it (dark damage every second for 6s)."
   },
   "smoke": {

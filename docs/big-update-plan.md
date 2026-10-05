@@ -168,6 +168,16 @@ Minion boosters: Bone Charm (rare, all minions +30% hp/attack), Overseer's Whist
 Weak spawners: Rat Cage (common, rat every 12s), Wisp Lantern (rare, flying ranged wisp every 15s), Fire Imp Brazier (epic, imp every 10s, applies burn), Mimic Chest (epic, 10% when holder is hit, mimic pops out and explodes).
 Greater spawners: Gargoyle Idol (rare, slow tanky, draws attacks), Spirit Knight Banner (epic, balanced fighter that grows each floor survived), Phoenix Hatchling (legendary, flying fire minion, heals squad a little when hit).
 
+### User item ideas (batch 1, in the user's words, interpretation to confirm)
+- Lost Cleric's Grimoire (Legendary): a % of your heal launches a green fire projectile at a random enemy for big damage. Rapid-healing combo: the more you heal, the more fireballs.
+- Excalibur (Legendary): 8% chance on a melee attack to spawn a tornado for 5s that damages every enemy around it (ticks). Max 3 tornadoes at a time.
+- Fan of Knives item (Epic, NAME CLASHES with the Rogue skill, rename): melee attacks seldom apply 3x Bleed; if an enemy dies while bleeding, knives burst out of it and damage nearby enemies.
+- Martyr's Shield (Epic): small chance to block an enemy attack aimed at another hero, taking the damage yourself (thorns-style but for the team, at your own cost).
+- Jolly Banner (Legendary): 5% chance: you and one random other hero get great regen, guaranteed crits and an attack speed buff for 2s.
+- Frozen Thunderbolt (Legendary): your lightning attacks cause an ice burst around you dealing freeze/ice damage.
+- Fire Heart (Legendary): at the start of each floor, a fire shield worth a % of your health: it slowly heals itself, blocks damage and burns attackers.
+- Fire Arrows (Rare): ranged attacks have 50% chance to add fire damage (chance does not stack); more copies increase the fire damage (stacks).
+
 ## Part 4: Tests and one tuning pass
 - Update tests for the new content, then balance once at the end.
 

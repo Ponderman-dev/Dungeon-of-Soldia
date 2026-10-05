@@ -22,10 +22,10 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Sharp Edge | stat | BUILT | +15% melee damage (not reviewed yet) | Fully additive, no cap |
 | Eagle Eye | stat | BUILT | +15% ranged damage (not reviewed yet) | Fully additive, no cap |
 | Aid Kit | special | BUILT | heal 5% max health when a floor is cleared, falloff per extra kit | Diminishing: each extra kit adds 0.85x the last |
-| Sucker Punch Glove | on-hit | NEW | first attack on each enemy deals +50% damage | (suggest) Bonus adds up per copy (+50% each). First-attack tracking is shared |
-| Bandage Roll | special | NEW | holder heals 3% max health on each kill | (suggest) Heal adds up per copy; each heal counts as a heal received |
-| Second Wind Flask | special | NEW | first time each floor the holder drops below 40% health, heal 15% max health | (suggest) Each copy heals once per floor on its own, all at the same moment if the threshold is crossed |
-| Full Vigor | special | NEW | +15% damage while the holder is at full health | (suggest) Bonus adds up per copy (+15% each) |
+| Sucker Punch Glove | on-hit | NEW | first attack on each enemy deals +50% damage | Bonus adds up per copy (+50% each). First-attack tracking is shared |
+| Bandage Roll | special | NEW | holder heals 3% max health on each kill | Heal adds up per copy (3% each), no cap |
+| Second Wind Flask | special | NEW | CONSUMABLE: when the holder drops below 40% health, one flask is used up and heals 30% max health (raised from 15%) | Each copy is one use, like potions in an inventory: a trigger deletes one copy, the remaining copies wait for the next trigger. Stacking = more uses, not a bigger heal |
+| Full Vigor | special | NEW | +15% damage while the holder is at full health | Bonus adds up per copy (+15% each) |
 | Brawler's Streak | on-hit | NEW | each consecutive hit on the same target adds +2% damage (max +10%), resets on a new target | (suggest) Per-hit bonus and max both add up per copy |
 | Tough Skin | special | NEW | the first hit the holder takes each floor deals 50% less damage | (suggest) Each copy protects one more hit per floor (first N hits deal 50% less) |
 | Kindling | stat | NEW | +15% fire damage | Additive, no cap |

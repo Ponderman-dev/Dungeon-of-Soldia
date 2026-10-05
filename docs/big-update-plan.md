@@ -87,7 +87,8 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 - Support "Arcane Ward": squad gets a magic shield (absorbs damage, +resist), lasts 4 seconds.
 - Style: elemental combo hero (fire, ice, electric all in one hero; best for elemental item builds).
 - Needs: magic damage types become real (fire/ice/electric), burn status, shield status, and the "next spell in rotation" state on the hero.
-- Open: should the rotation keep its place between floors and reset each run? (suggest: keeps its place, resets each run). Does the Spellweaver 4th-attack counter also run through the same element rotation, or is it plain arcane damage? (suggest: it follows the same rotation element for the debuff.)
+- DECIDED: the rotation advances every time he casts the skill (Fireball > Frost Nova > Chain Lightning > Fireball...).
+- DECIDED: the 4th-attack Spellweaver spell triggers ALL of the Mage's elemental on-hit item effects at once (every fire, ice/chill and lightning item he holds applies its debuff or proc on that hit, guaranteed). So the more elemental items he holds, the better the 4th attack. Not tied to the rotation.
 
 ### Still to do: Cleric, Necromancer, Bard, Alchemist (user may replace these concepts)
 - Final roster of 9 (3 per run), role, stats, growth, perk, one attack + one support skill, melee or ranged.

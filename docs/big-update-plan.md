@@ -74,7 +74,14 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 - Style: debuff enabler; low health, high crit potential.
 - Open: "easier to apply debuffs" is not fixed yet. Options: only his own chances +25%, or the whole squad's chance-based debuffs +10% while he lives. Also: his normal attacks are melee, only the skill is ranged.
 
-### Still to do: Archer, Mage, Cleric, Necromancer, Bard, Alchemist (user may replace these concepts)
+### Archer (ranged, crowd shooter) DECIDED
+- Passive "Steady Aim": while he has not been hit for 3s he gains attack speed and crit; being hit resets it. Self only. Pairs with the Knight's taunt (enemies hit the Knight instead).
+- Attack "Rain of Arrows": arrows fall on ALL enemies for about 2 seconds (several waves of moderate damage, a chance to slow each hit). Needs its own strong visual: a shower of arrows from above landing on each enemy for the whole 2s. Ranged damage, so ranged-boost items feed it.
+- Support "Hunter's Mark": marks an enemy: it takes +% damage from everyone for a few seconds (squad-wide payoff, pairs with the Rogue and tap-to-focus).
+- Style: crowd shooter, strongest against 3-4 enemies.
+- Open: is Rain of Arrows one long cast (Archer is busy for 2s) or does he keep attacking while arrows fall? Suggest: he is busy for the 2s (skills take longer than normal attacks).
+
+### Still to do: Mage, Cleric, Necromancer, Bard, Alchemist (user may replace these concepts)
 - Final roster of 9 (3 per run), role, stats, growth, perk, one attack + one support skill, melee or ranged.
 - Redo the existing four, add the rest.
 

@@ -152,7 +152,7 @@ The roster is now 10 heroes: 4 melee (Knight, Berserker, Rogue, Samurai) + 6 ran
 - GREATER minion: max 1 per item; extra copies of the item only stack its STATS (no second minion). It persists across floors (walks with the squad through the door). It does NOT heal after a win; only skills/healing can heal it, buffs affect it. If it dies, the party must clear 2 floors before it can be summoned again (comes back at the start of the next floor).
 - Minions vanish if the hero holding their item dies (items on dead heroes stop working).
 - Design goal: minion items should NOT always go to the toughest hero.
-- DECIDED rule: UPKEEP COST. While any minion from the holder's items is alive, the holder pays a small upkeep (suggest -8% attack speed AND -8% max health per minion item, so damage dealers lose damage, tanks lose bulk, and the cheapest holders are skill/support heroes: Cleric, Bard, Alchemist, Necromancer). Minion stats do not scale off the holder. Exact numbers tuned last.
+- DECIDED rule: UPKEEP COST. While any minion from the holder's items is alive, the holder pays an upkeep in ATTACK SPEED and DEFENSE (bigger than the first idea; suggest -12% attack speed and -12% defense per minion item, exact numbers tuned last). Hurts damage dealers (speed) and tanks (defense), so the cheapest holders are skill/support heroes: Cleric, Bard, Alchemist, Necromancer. Minion stats do not scale off the holder.
 
 ### Draft new items (Part 3, in progress, numbers are placeholders)
 Burn: Kindling (common, +15% fire dmg), Ember Charm (rare, 8% burn on hit), Magma Core (epic, +25% dmg to burning, burn ticks 30% faster).

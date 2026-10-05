@@ -3,6 +3,12 @@
 Goal: add lots of features first (mechanics, heroes, items), balance and tune afterwards.
 Order: Part 1 mechanics > Part 2 heroes > Part 3 items > Part 4 tests + one tuning pass.
 
+## DECISION: no mana for now
+Mana is skipped until there is a meaningful use for it. Skills run on COOLDOWN ONLY.
+- Hero mana stat, mana bar, mana regen, mana top-up after a win, and mana items (Mana Crystal, Focus Lens, Mana Siphon, Archmage Crown, Hollow Core's mana part) are out of the pool/UI for now.
+- Mana fields can stay dormant in the JSON so it can come back later; nothing new should depend on mana (no mana refunds in passives or items).
+- Skill balance now comes from cooldown length and effect strength.
+
 ## Part 1: Mechanics (decided)
 
 ### 1.1 Melee runs, ranged shoots

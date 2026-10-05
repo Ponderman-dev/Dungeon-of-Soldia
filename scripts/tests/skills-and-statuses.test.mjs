@@ -11,7 +11,6 @@ const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name,
 { const s = mk(); const [g] = s.spawnEnemies(['goblin'], 1); g.stats.evasion = 0; g.hp = g.maxHp = 99999;
   const ev = s.castSkill(s.heroes[0].uid, 0);
   ok('shield bash stuns', s.isStunned(g) && ev.some((e) => e.type === 'status'));
-  ok('mana spent', s.heroes[0].mana === 60 - 12, `mana=${s.heroes[0].mana}`);
   ok('cooldown set', s.heroes[0].skills[0].cooldownLeft === 8000);
   ok('cannot recast on cooldown', s.castSkill(s.heroes[0].uid, 0).length === 0);
   const hits = []; for (let t = 0; t < 1400; t += 50) hits.push(...s.update(50).filter((e) => e.type === 'attack' && e.attacker === g));
@@ -50,9 +49,7 @@ const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name,
 { const s = mk(); const es = s.spawnEnemies(['slime', 'goblin', 'slime'], 1); es.forEach((e) => (e.stats.evasion = 0));
   const ev = s.castSkill(s.heroes[1].uid, 0); ok('cleave hits all 3', ev.filter((e) => e.type === 'attack').length === 3); }
 
-// Not enough mana / boss status scale
-{ const s = mk(); s.spawnEnemies(['goblin'], 1); s.heroes[0].mana = 5; ok('no cast without mana', s.castSkill(s.heroes[0].uid, 0).length === 0); }
+// Skills cost no mana: a hero can cast as soon as the cooldown is over / boss status scale
+{ const s = mk(); s.spawnEnemies(['goblin'], 1); ok('casts with no mana stat', s.castSkill(s.heroes[0].uid, 0).length > 0 && s.heroes[0].mana === undefined); }
 { const s = mk(); const [g] = s.spawnEnemies(['goblin'], 1); g.def = { ...g.def, statusDurationScale: 0.5 }; g.stats.evasion = 0; s.castSkill(s.heroes[0].uid, 0);
   ok('boss status half length', g.statuses[0] && g.statuses[0].remaining === 750, `${g.statuses[0] && g.statuses[0].remaining}`); }
-// Mana regen
-{ const s = mk(); s.spawnEnemies(['goblin'], 1); s.heroes[0].mana = 10; for (let t = 0; t < 5000; t += 50) s.update(50); ok('mana regen 2/s', Math.abs(s.heroes[0].mana - 20) < 0.5, `${s.heroes[0].mana}`); }

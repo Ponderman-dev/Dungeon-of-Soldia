@@ -67,6 +67,6 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
   stats.health = Math.max(1, Math.round(stats.health));
   stats.attack = Math.max(1, stats.attack);
   stats.attackEfficiency = Math.max(10, stats.attackEfficiency);
-  for (const key of ['mana', 'defense', 'resist', 'evasion', 'crit']) stats[key] = Math.max(0, stats[key] || 0);
+  for (const key of ['defense', 'resist', 'evasion', 'crit']) stats[key] = Math.max(0, stats[key] || 0);
   return { stats, damageBonus, specials, procs };
 }

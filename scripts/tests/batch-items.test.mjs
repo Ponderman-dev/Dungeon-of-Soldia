@@ -45,11 +45,11 @@ const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker 
   const s2 = mk(); const k2 = s2.heroes[0]; s2.giveItem(k2.uid, 'static_crystal'); const e2 = dummy(s2, ['goblin']); s2.rng = () => 0.001; const ev2 = []; s2.rollProcs(k2, 'onAttack', ev2, { target: e2[0] });
   ok('lone enemy: only one bolt', attacks(ev2, k2).length === 1); }
 // Siege Cannon: 5% chance skill also hits neighbours
-{ const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'siege_cannon'); const es = dummy(s, ['goblin', 'goblin', 'goblin']); k.mana = 999; s.focusUid = es[1].uid; s.rng = () => 0.001;
+{ const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'siege_cannon'); const es = dummy(s, ['goblin', 'goblin', 'goblin']); s.focusUid = es[1].uid; s.rng = () => 0.001;
   const idx = k.skills.findIndex((x) => s.skillDefs[x.id].target === 'enemy' && s.skillDefs[x.id].damageMultiplier);
   if (idx < 0) ok('knight has a single-target damage skill', false); else { const ev = s.castSkill(k.uid, idx); const hit = new Set(attacks(ev, k).map((x) => x.target));
     ok('splash hits target and both neighbours', hit.size === 3 && hit.has(es[0]) && hit.has(es[2])); }
-  const s2 = mk(); const k2 = s2.heroes[0]; s2.giveItem(k2.uid, 'siege_cannon'); const es2 = dummy(s2, ['goblin', 'goblin', 'goblin']); k2.mana = 999; s2.focusUid = es2[1].uid; s2.rng = () => 0.99;
+  const s2 = mk(); const k2 = s2.heroes[0]; s2.giveItem(k2.uid, 'siege_cannon'); const es2 = dummy(s2, ['goblin', 'goblin', 'goblin']); s2.focusUid = es2[1].uid; s2.rng = () => 0.99;
   if (idx >= 0) ok('no splash when the roll fails', new Set(attacks(s2.castSkill(k2.uid, idx), k2).map((x) => x.target)).size === 1); }
 // Bloodlust Mask: shared heal + 3s cooldown
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'bloodlust_mask'); dummy(s); s.heroes.forEach((h) => (h.hp = 1)); s.rng = () => 0.001;

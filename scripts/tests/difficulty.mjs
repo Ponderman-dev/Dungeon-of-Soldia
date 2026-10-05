@@ -32,7 +32,7 @@ for (let run = 0; run < N; run++) {
     const living = s.heroes.filter((h) => h.alive);
     lost[floor] += before - living.reduce((a, h) => a + h.hp / h.maxHp, 0) / living.length; // average health lost on this floor (before the win heal)
     secs[floor] += t / 1000; cleared[floor]++;
-    s.winHeal(rules.winHealPercent); s.restoreMana(rules.winManaPercent); s.clearStatuses();
+    s.winHeal(rules.winHealPercent); s.clearStatuses();
     const choices = rollChoices({ itemDefs, rarities, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance });
     if (choices.length) { const item = choices[Math.floor(Math.random() * choices.length)]; if (item.kind === 'potion') s.healHeroes(item.healPercent); else { const tg = s.heroes.filter((h) => canReceive(h, item)); s.giveItem(tg[Math.floor(Math.random() * tg.length)].uid, item.id); } }
     floor++;

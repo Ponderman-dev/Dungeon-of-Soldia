@@ -22,7 +22,7 @@ import { loadItems } from '../systems/items.js';
 import { rollChoices } from '../systems/rewards.js';
 
 const DUNGEON_ID = 'A';
-const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD', mana: 'MANA' };
+const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
 const SLOT_Y = 720;
 const heroDefs = pickSquad(allHeroDefs, squadIds);
 const SLOT_WIDTH = GAME_WIDTH / heroDefs.length;
@@ -89,7 +89,7 @@ export default class BattleScene extends Phaser.Scene {
       const v = this.views.get(h.uid);
       // A fallen hero's labels stay dim and have no skill squares.
       this.tweens.add({ targets: [v.label, v.perkLabel], alpha: show ? (h.alive ? 1 : 0.3) : 0, duration });
-      const buttons = v.skillButtons.flatMap((b) => [b.g, b.code, b.cost, b.cd]);
+      const buttons = v.skillButtons.flatMap((b) => [b.g, b.code, b.cd]);
       this.tweens.add({ targets: buttons, alpha: show && h.alive ? 1 : 0, duration });
     }
   }
@@ -126,7 +126,7 @@ export default class BattleScene extends Phaser.Scene {
       view.perkLabel = perkLabel;
       view.slotX = cx;
       view.ch.setDepth(DEPTH.hero);
-      for (const part of [view.bg, view.fill, view.mbg, view.mfill]) part.setDepth(DEPTH.heroBar);
+      for (const part of [view.bg, view.fill]) part.setDepth(DEPTH.heroBar);
       view.chipBox.setDepth(DEPTH.heroBar);
 
       // The two skill squares under the hero: tap to cast.
@@ -137,9 +137,8 @@ export default class BattleScene extends Phaser.Scene {
           x: x - SKILL_W / 2,
           y: SKILL_Y - SKILL_H / 2,
           g: this.add.graphics().setDepth(3),
-          code: this.add.text(x, SKILL_Y - 6, skillDefs[slot.id].short, textStyle).setOrigin(0.5).setDepth(4),
-          cost: this.add.text(x, SKILL_Y + 12, String(skillDefs[slot.id].manaCost), { ...textStyle, fontSize: '10px' }).setOrigin(0.5).setDepth(4),
-          cd: this.add.text(x, SKILL_Y - 6, '', { ...textStyle, fontSize: '16px', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5),
+          code: this.add.text(x, SKILL_Y, skillDefs[slot.id].short, textStyle).setOrigin(0.5).setDepth(4),
+          cd: this.add.text(x, SKILL_Y, '', { ...textStyle, fontSize: '16px', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5),
         };
         this.add
           .zone(x, SKILL_Y, SKILL_W + 6, SKILL_H + 6)
@@ -158,11 +157,10 @@ export default class BattleScene extends Phaser.Scene {
     for (const e of this.state.castSkill(heroUid, index)) this.showEvent(e);
   }
 
-  // Redraws the skill squares and mana bars (ready / cooling down / not enough mana).
+  // Redraws the skill squares (ready / cooling down) and health bars.
   refreshHud() {
     for (const hero of this.state.heroes) {
       const view = this.views.get(hero.uid);
-      this.setMana(view);
       if (hero.alive) this.setBar(view); // health regeneration moves the bar
       view.skillButtons.forEach((b, j) => {
         const slot = hero.skills[j];
@@ -177,7 +175,6 @@ export default class BattleScene extends Phaser.Scene {
         }
         g.lineStyle(ready ? 3 : 2, ready ? 0xf2b632 : 0x3b6fe0, ready ? 1 : 0.5).strokeRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
         b.cd.setText(slot.cooldownLeft > 0 ? String(Math.ceil(slot.cooldownLeft / 1000)) : '');
-        b.cost.setColor(hero.mana >= skill.manaCost ? '#8fb0ff' : '#ff8c8c');
         b.code.setColor(ready ? '#f3eefc' : '#8a86a0');
       });
     }
@@ -197,8 +194,6 @@ export default class BattleScene extends Phaser.Scene {
     // Status tags (STUN, SLOW, PSN, BUFF) next to the bars.
     view.chipBox = this.add.container(x, barY + (unit.side === 'hero' ? 20 : -22));
     if (unit.side === 'hero') {
-      view.mbg = this.add.rectangle(x, barY + 8, BAR_WIDTH + 2, 5, 0x000000);
-      view.mfill = this.add.rectangle(x - BAR_WIDTH / 2, barY + 8, BAR_WIDTH, 3, 0x3b6fe0).setOrigin(0, 0.5);
       // Item dots above the health bar: dot colour = item type, ring = rarity.
       // A container so the count numbers move, fade and hide together with the dots.
       view.dotsG = this.add.graphics();
@@ -274,10 +269,6 @@ export default class BattleScene extends Phaser.Scene {
     view.bg.setPosition(view.ch.x, y).setAlpha(view.ch.alpha);
     view.fill.setPosition(view.ch.x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
     if (view.dots) view.dots.setPosition(view.ch.x, y - 12).setAlpha(view.ch.alpha);
-    if (view.mbg) {
-      view.mbg.setPosition(view.ch.x, y + 8).setAlpha(view.ch.alpha);
-      view.mfill.setPosition(view.ch.x - BAR_WIDTH / 2, y + 8).setAlpha(view.ch.alpha);
-    }
     view.chipBox.setPosition(view.ch.x, y + (view.unit.side === 'hero' ? 20 : -22)).setAlpha(view.ch.alpha);
   }
 
@@ -286,15 +277,7 @@ export default class BattleScene extends Phaser.Scene {
     view.bg.setVisible(visible);
     view.fill.setVisible(visible);
     if (view.dots) view.dots.setVisible(visible);
-    if (view.mbg) {
-      view.mbg.setVisible(visible);
-      view.mfill.setVisible(visible);
-    }
     view.chipBox.setVisible(visible);
-  }
-
-  setMana(view) {
-    if (view.mfill) view.mfill.width = BAR_WIDTH * (view.unit.mana / view.unit.maxMana);
   }
 
   // Redraws the status tags on a fighter: one tag per kind of status it has right now.
@@ -564,12 +547,10 @@ export default class BattleScene extends Phaser.Scene {
         v.ch.freeze(); // stop floating
         v.perkLabel.setText('perk lost');
         v.ch.setAlpha(0.25);
-        v.skillButtons.forEach((b) => [b.g, b.code, b.cost, b.cd].forEach((o) => o.setAlpha(0)));
+        v.skillButtons.forEach((b) => [b.g, b.code, b.cd].forEach((o) => o.setAlpha(0)));
         v.bg.setAlpha(0.4);
         v.fill.setAlpha(0.4);
         if (v.dots) v.dots.setAlpha(0.4);
-        v.mbg.setAlpha(0.4);
-        v.mfill.setAlpha(0.4);
         this.drawChips(v);
         this.drawAllBars(); // squad items from this hero stop working, so max health may change
       }
@@ -616,10 +597,6 @@ export default class BattleScene extends Phaser.Scene {
     v.bg.destroy();
     v.fill.destroy();
     if (v.dots) v.dots.destroy();
-    if (v.mbg) {
-      v.mbg.destroy();
-      v.mfill.destroy();
-    }
     v.chipBox.destroy();
     this.views.delete(uid);
   }
@@ -650,7 +627,6 @@ export default class BattleScene extends Phaser.Scene {
     this.banner.setText(`Floor ${this.floor} cleared!`);
     this.layer.setDoorOpen(true);
 
-    this.state.restoreMana(combatRules.winManaPercent);
     this.state.clearStatuses();
     for (const h of this.state.heroes) this.drawChips(this.views.get(h.uid));
     for (const { unit, amount } of this.state.winHeal(combatRules.winHealPercent)) {

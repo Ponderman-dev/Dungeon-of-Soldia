@@ -21,7 +21,7 @@ for (let run = 0; run < N; run++) {
       if (mode === 'skills') for (const h of s.heroes) for (let i = 0; i < h.skills.length; i++) if (s.castSkill(h.uid, i).length) casts++;  // a bot taps every ready skill
     }
     if (s.allHeroesDead()) break;
-    s.winHeal(rules.winHealPercent); s.restoreMana(rules.winManaPercent);
+    s.winHeal(rules.winHealPercent);
     if (rewards) {
       const choices = rollChoices({ itemDefs, rarities, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance });
       if (choices.length) { const item = choices[Math.floor(Math.random() * choices.length)]; if (item.kind === 'potion') s.healHeroes(item.healPercent); else { const tg = s.heroes.filter((h) => canReceive(h, item)); s.giveItem(tg[Math.floor(Math.random() * tg.length)].uid, item.id); } }

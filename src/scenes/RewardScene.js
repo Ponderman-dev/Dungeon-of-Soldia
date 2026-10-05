@@ -13,7 +13,7 @@ const FONT = 'system-ui, Arial, sans-serif';
 const CARD_W = 358;
 const CARD_H = 112;
 const SPECIAL_LABEL = { block: 'BLOCK', regen: 'REGEN/s', thorns: 'THORNS', lifesteal: 'LIFESTEAL', skillDamage: 'SKILL DMG', critDamage: 'CRIT DMG', skillSplash: 'SPLASH', lifestealShare: 'SHARE', critDebuff: 'CRIT DEBUFF', clearHeal: 'CLEAR HEAL' };
-const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD', mana: 'MANA' };
+const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
 
 // The reward screen: pick 1 of 3 items, then choose which hero gets it.
 // It only shows choices and reports the result through payload.onDone(itemId, heroUid).

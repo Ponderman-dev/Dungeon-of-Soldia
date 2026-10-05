@@ -12,7 +12,7 @@ keep replies short, republish the preview page once per batch or when asked, not
 - Battle: 3 heroes (Knight, Rogue, Archer; Berserker on the bench) with party perks and morale debuffs, enemies (Slime, Goblin, Bat), auto-attacks, tap-to-focus,
   damage types, defense/resist/evasion/crit, XP + per-hero levelling, floors with scaling in `src/data/*.json`.
 - Floor flow: door, heroes walk in a line, camera slide, entry from the bottom (see CLAUDE.md "Floor flow").
-- Skills (2 per hero) + mana + cooldowns + statuses (stun, slow, poison, buff). One-tap casting.
+- Skills (2 per hero) + cooldowns (mana removed in step A1) + statuses (stun, slow, poison, buff). One-tap casting.
 - Reward screen (pick 1 of 3 items, then choose a hero), 14+ items with dots above heroes, Shared Potion, TEST auto-reward button.
 - Items already reworked with the user: Lucky Coin (diminishing crit), Heart Charm (+regen), War Banner (Battle Cry proc),
   Shield Totem (block + 2.5s recharge), special items (Bulwark Plate, Siege Cannon, Bloodlust Mask, Gambler's Dice).
@@ -36,7 +36,11 @@ keep replies short, republish the preview page once per batch or when asked, not
 - A hero's stats come from `refreshStats()` (level + items + buffs); call it after anything that changes them.
 - Dead heroes: items stop working; the figure freezes and disappears after the survivors descend.
 
-## Next steps (ask the user which)
+## BIG UPDATE (current work)
+All planning is done and approved: `docs/big-update-plan.md` (mechanics, 10 heroes, debuffs, minions, BUILD ORDER) and `docs/item-list.md` (72 items, stacking, drop weights, rules). `docs/item-review.md` = the approved item review.
+Progress: A1 (remove mana) DONE. Next: A2 (attack/support skill slots). Ask the user before each step; republish the preview once per phase.
+
+## Older next-steps list (superseded by the build order)
 0. **IN PROGRESS: redo the skills (step d of the squad plan).** Open questions for the user: (1) 2 tappable skills per hero, or 1 tappable skill + the passive perk? (2) should skills be mostly attack, or mostly team support (heals, shields, rally)? Ask these first. Done already in this plan: 3-hero squad, hero perks, morale debuffs (INCOMPLETE / ALL ALONE), random default targeting, Chill Band rework (stackable ice hit + non-stacking 50% freeze). An 8-items-per-hero slot limit was tried and reverted (user did not want it); Knight-only item stacking is now already worse than spreading because of perks and morale.
 1. More item edits: the user is going through the item list one by one (batch 2 done: Whetstone, Quick Gloves, Siege Cannon, Bloodlust Mask, Gambler's Dice + new Fire Bombs, Chill Band, Static Crystal, Aid Kit; still to review: Padded Vest, Sharp Edge, Eagle Eye, Feather Boots, Bulwark Plate). Numbers to tune are all in items.json.
 2. Build the rest of the draft items (`docs/item-ideas.md`): on-hit effects (burn, poison, slow, stun), skill/mana items, Phoenix Feather.

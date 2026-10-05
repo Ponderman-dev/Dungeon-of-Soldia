@@ -3,6 +3,7 @@
 Mobile auto-battler roguelike. Phaser 3 + Vite + plain JavaScript (ES modules, no TypeScript).
 Will be wrapped for Android later (Solana Seeker dApp Store).
 Full design: `docs/game-design-recap.md`. Read it before designing features.
+BIG UPDATE in progress: `docs/big-update-plan.md` (plan + BUILD ORDER, phases A-H) and `docs/item-list.md` (all 72 items). Follow the build order one step at a time.
 
 ## About the user
 Total beginner, fully vibe coding. Explain simply, work in small steps,
@@ -28,7 +29,7 @@ All numbers below go in JSON/config so they are easy to tune.
 - **Evasion:** % chance to fully dodge a hit of any type, capped at 60%.
 - **Crit:** % chance to deal 2x damage.
 - **Attack efficiency:** attack speed. 100 = 1 attack per second.
-- **Mana:** regens slowly during a fight; carries over between floors with a small top-up.
+- **No mana (for now):** mana is switched off. Skills run on COOLDOWN ONLY. The `mana` stat/growth in heroes.json, `manaCost` in skills.json and the mana rules in combat.json are dormant (nothing reads them).
 - **Healing:** each hero heals 25% of max health after a win (bigger after bosses).
 - **Squad of 3:** a run has 3 heroes (`squad.json`: Knight, Rogue, Archer; Berserker and later heroes stay in `heroes.json` as the bench; `pickSquad()` in `src/systems/party.js`). No boxes behind the hero slots any more; name, perk line and skill squares sit under each hero.
 - **Hero perks (party buffs):** each hero has a `perk` in heroes.json (`mods` shaped like item effects, plus `growth` per level). While that hero is ALIVE the whole party gets it (the hero too). Knight Stalwart +10% max health (+0.4%/level), Rogue Keen Eyes +6 crit (+0.15/level), Archer Marksman +10% attack (+0.4%/level), Berserker (bench) Battle Fury +8% attack speed. A dead hero's perk is lost. Shown as "Team +10% HP" under the hero name ("perk lost" when dead).
@@ -36,7 +37,7 @@ All numbers below go in JSON/config so they are easy to tune.
 - **Dead heroes:** stay dead for the rest of the run. Run ends when all 3 are dead.
 - **Tap-to-focus:** all heroes attack the tapped enemy until it dies, then go back to auto-target. Auto-target = a RANDOM living enemy on every attack (not the leftmost); single-target skills with no tapped enemy also pick randomly.
 - **Levelling:** heroes gain XP from kills (`xp` per enemy in enemies.json). An enemy's XP is SPLIT between living heroes; dead heroes are frozen. Needed XP: `xpBase * xpGrowth^(level-1)` (leveling.json). Each hero has its own `growthPercent` (% of base per level: health, attack, mana) and `growthFlat` (points per level: defense, resist, evasion, crit, attackEfficiency) in heroes.json. On level-up, max health rises and current health rises by the same amount. Levels reset every run.
-- **Skills & mana:** each hero has 2 skills (`skills` in heroes.json, defined in skills.json). Tap a skill square under the hero to cast. One tap: single-target skills hit the focused enemy, else the hero's usual target. Cost mana (pool 60, regen 2/sec in fights, +20% after a win) AND have a per-skill cooldown (cooldowns/mana only run during fights). Skill damage = attack x `damageMultiplier`, uses the skill's `damageType` or the hero's. Targets: `enemy`, `allEnemies`, `self`. Skills can `apply` statuses.
+- **Skills:** each hero has 2 skills (`skills` in heroes.json, defined in skills.json). Tap a skill square under the hero to cast. One tap: single-target skills hit the focused enemy, else the hero's usual target. Each skill has a cooldown (cooldowns only run during fights). No mana cost. Skill damage = attack x `damageMultiplier`, uses the skill's `damageType` or the hero's. Targets: `enemy`, `allEnemies`, `self`. Skills can `apply` statuses.
 - **Statuses:** stun (can't attack or cast), slow (`attackSpeedPercent`), poison (dark damage over time; `damageMultiplier` x caster attack per tick, ignores dodge/crit), buff (temporary stat `mods`, same shape as item effects). Same status from the same skill refreshes instead of stacking. Enemy `statusDurationScale` (e.g. 0.5 for bosses) shortens statuses on them. Hero statuses are cleared when a floor is cleared. Status tags (STUN/SLOW/PSN/BUFF) show by the health bar (`statuses.json`).
 - **Rewards:** after every floor clear a full-screen reward scene (RewardScene, layout from the user's wireframes) shows 3 items (rarity-weighted, `rewards.json` / `rarities.json`), then a "Who gets it?" screen (hero cards, 2 per row with the third centred, with before > after stats, then a Give button). Only items for now; skill books come next. Rarities: common (grey), rare (blue), epic (purple), legendary (gold). Items: `items.json` (effects: `stat` + `percent` or `flat`; `damageBonus` + `percent`; or `special` + `percent`; `scope` self or squad; optional `maxStacks`). Items show as dots above the hero's health bar: dot colour = type (`itemTypes.json`), ring = rarity. Only items whose effects work today are in the pool (no magic/mana items yet).
 - **Special items (no negatives, epic/legendary):** Bulwark Plate (+defense, `thorns`: reflects % of melee damage taken), Siege Cannon (+attack, `skillDamage`), Bloodlust Mask (+attack speed, `lifesteal`), Gambler's Dice (+crit, `critDamage`). Trade-off items with negatives no longer exist.
@@ -46,7 +47,7 @@ All numbers below go in JSON/config so they are easy to tune.
 - **Heart Charm:** +22% max health AND `regen` special: 0.5% of max health per second per charm, during fights only (silent, the bar creeps up).
 - **Shared Potion:** very rare (`potionChance` 5% per reward screen, only if a living hero is hurt) replaces one of the 3 cards; picking it heals every living hero by `healPercent` (25%) and skips the hero-choice step.
 - **TEST auto-reward:** `DebugScene` draws a TEST button (top right) that toggles the registry flag `autoRewards` (default ON). When ON the reward scene waits 2s, picks a random card, then gives it to a random living hero. The user does NOT want to play the reward screen yet, but it is a definite game feature. Remove DebugScene and the auto code when rewards go live.
-- **Item numbers:** defense, resist, evasion, crit items add FLAT points (+8 defense = 8% less physical damage). Attack, health, mana items add a % of the hero's base stat.
+- **Item numbers:** defense, resist, evasion, crit items add FLAT points (+8 defense = 8% less physical damage). Attack and health items add a % of the hero's base stat.
 - **Items on dead heroes:** ALL items on a dead hero stop working (squad-wide ones too). Dead heroes lose their gear for the run.
 - **Boss stun/slow:** bosses take half-length stun and slow (value lives in the boss JSON).
 - **Items are passive only:** never tappable or activatable. The player only taps skills and enemies.

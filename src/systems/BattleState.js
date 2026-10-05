@@ -3,7 +3,7 @@ import { xpForNextLevel, statsAtLevel } from './leveling.js';
 import { computeHeroStats } from './items.js';
 import { moraleTier } from './party.js';
 
-// The fight itself: who is alive, who attacks whom and when, mana, skills and statuses.
+// The fight itself: who is alive, who attacks whom and when, skills and statuses.
 // No Phaser in here. update() and castSkill() return a list of events and the scene draws them.
 //
 // Health regeneration (specials.regen) happens silently inside update(); the scene just redraws bars.
@@ -28,7 +28,8 @@ export default class BattleState {
   }
 
   makeUnit(def, side, floor, fightSize = 1) {
-    const stats = { defense: 0, resist: 0, evasion: 0, crit: 0, attackEfficiency: 100, mana: 0, ...def.stats };
+    const stats = { defense: 0, resist: 0, evasion: 0, crit: 0, attackEfficiency: 100, ...def.stats };
+    delete stats.mana; // mana is switched off for now (skills run on cooldown only)
     if (side === 'enemy') {
       const s = this.rules.floorScaling;
       // Health and attack grow in steps: +perStep every stepFloors floors.
@@ -53,8 +54,6 @@ export default class BattleState {
       stats,
       hp: stats.health,
       maxHp: stats.health,
-      mana: stats.mana,
-      maxMana: stats.mana,
       baseStats: { ...stats },
       level: 1,
       xp: 0,
@@ -140,12 +139,11 @@ export default class BattleState {
     const events = [];
     this.tickStatuses(dt, events);
 
-    // Mana comes back, health regenerates (Heart Charm) and skill cooldowns run down.
+    // Health regenerates (Heart Charm) and skill cooldowns run down.
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
       const regen = (hero.specials && hero.specials.regen) || 0; // % of max health per second
       if (regen > 0) hero.hp = Math.min(hero.maxHp, hero.hp + (hero.maxHp * regen * dt) / 100000);
-      hero.mana = Math.min(hero.maxMana, hero.mana + (this.rules.manaRegenPerSec * dt) / 1000);
       hero.shareCd = Math.max(0, hero.shareCd - dt);
       for (const slot of hero.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - dt);
     }
@@ -337,12 +335,12 @@ export default class BattleState {
   // ---- skills -------------------------------------------------------------------------
 
   // Can this hero cast this skill right now? Returns false if not (dead, stunned, cooling down,
-  // not enough mana, or nothing to aim at).
+  // or nothing to aim at). Skills cost no mana: only the cooldown limits them.
   canCast(hero, index) {
     const slot = hero.skills[index];
     if (!slot || !hero.alive || this.isStunned(hero)) return false;
     const skill = this.skillDefs[slot.id];
-    if (slot.cooldownLeft > 0 || hero.mana < skill.manaCost) return false;
+    if (slot.cooldownLeft > 0) return false;
     if (skill.target === 'self') return true;
     return this.enemies.some((e) => e.alive);
   }
@@ -369,7 +367,6 @@ export default class BattleState {
       }
     }
 
-    hero.mana -= skill.manaCost;
     slot.cooldownLeft = skill.cooldownMs;
     events.push({ type: 'cast', unit: hero, skill, targets });
 
@@ -412,7 +409,7 @@ export default class BattleState {
 
   // Works out every living hero's stats again (level + items + buffs). If max health goes up,
   // current health goes up by the same amount; if it goes down, current health is capped to the
-  // new max. Mana works the same way.
+  // new max.
   refreshStats() {
     this.morale = moraleTier(this.heroes);
     for (const hero of this.heroes) {
@@ -420,15 +417,12 @@ export default class BattleState {
       const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
       const { stats, damageBonus, specials, procs } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale);
       const hpDelta = stats.health - hero.maxHp;
-      const manaDelta = stats.mana - hero.maxMana;
       hero.stats = stats;
       hero.damageBonus = damageBonus;
       hero.specials = specials;
       hero.procs = procs;
       hero.maxHp = stats.health;
       hero.hp = Math.max(1, hpDelta > 0 ? hero.hp + hpDelta : Math.min(hero.hp, hero.maxHp));
-      hero.maxMana = stats.mana;
-      hero.mana = manaDelta > 0 ? hero.mana + manaDelta : Math.min(hero.mana, hero.maxMana);
     }
   }
 
@@ -478,12 +472,5 @@ export default class BattleState {
   clearStatuses() {
     for (const h of this.heroes) h.statuses = [];
     this.refreshStats();
-  }
-
-  // Gives every living hero back a % of their max mana.
-  restoreMana(percent) {
-    for (const h of this.heroes) {
-      if (h.alive) h.mana = Math.min(h.maxMana, h.mana + (h.maxMana * percent) / 100);
-    }
   }
 }

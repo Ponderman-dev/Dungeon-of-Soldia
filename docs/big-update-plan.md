@@ -178,6 +178,11 @@ Greater spawners: Gargoyle Idol (rare, slow tanky, draws attacks), Spirit Knight
 - Fire Heart (Legendary): at the start of every floor the holder gets a fire shield worth a % of max health. Extra copies make the shield bigger. The shield slowly regenerates (until broken), blocks damage and burns the attacker.
 - Fire Arrows (Rare): each ranged attack has a 50% chance (does NOT stack) to add an extra fire hit (a % of attack); extra copies raise the fire hit damage (stacks). Counts rangers and ranged-type skills (Rogue Fan of Knives, Samurai Wind Cutter, Archer arrows).
 
+### Rule changes decided during item review
+- Defense: replace the hard 75% cap with a diminishing curve (never reaches 100%; low values stay close to today, formula tuned last). Suggest the same for resist (to confirm).
+- Evasion cap: 60% > 70%.
+- CLAUDE.md fight rules must be updated when these are built.
+
 ## Part 4: Tests and one tuning pass
 - Update tests for the new content, then balance once at the end.
 

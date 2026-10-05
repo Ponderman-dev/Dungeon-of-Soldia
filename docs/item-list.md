@@ -5,6 +5,7 @@ No mana items. Items are passive only. Items on a dead hero stop working. Detail
 
 ## General stacking rules
 - Copies of an item stack by default with no cap, unless the Stacking column says otherwise.
+- RULE CHANGES (decided): defense no longer has a hard 75% cap; it uses a diminishing curve that never reaches 100% (formula tuned last, keep low values close to today: 10 defense is about 10% less). Evasion cap is now 70% (was 60%). Crit caps stay item-set. Resist: suggest the same curve as defense (to confirm).
 - Defense, resist, evasion, crit items add flat points; attack, health items add a % of the hero's base stat.
 - Chance effects: each copy rolls separately, unless noted as unique (does not stack). Same status from the same source refreshes instead of stacking.
 - Dodge/crit-type chances have caps set in the item JSON. `falloffRatio` means diminishing returns (each extra copy adds ratio^(copies-1) of the effect).
@@ -17,10 +18,10 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Item | Type | Status | Effect | Stacking |
 |---|---|---|---|---|
 | Whetstone | stat | BUILT | +12% attack and +3 attack | Fully additive, no cap |
-| Padded Vest | stat | BUILT | +12 defense (not reviewed yet) | Flat points add up, no item cap (total defense is capped at 75% damage cut) |
+| Padded Vest | stat | BUILT | +12 defense (reviewed, kept) | Flat points add up with no item cap. Defense now uses a diminishing curve instead of the hard 75% cap (see rule changes) |
 | Lucky Coin | stat | BUILT | +10 crit, diminishing, max 10 coins = +75 | Diminishing: each extra coin adds 0.934x the last. Max 10 coins (+75 total) |
-| Sharp Edge | stat | BUILT | +15% melee damage (not reviewed yet) | Fully additive, no cap |
-| Eagle Eye | stat | BUILT | +15% ranged damage (not reviewed yet) | Fully additive, no cap |
+| Sharp Edge | stat | BUILT | +15% melee damage (reviewed, kept) | Fully additive, no cap |
+| Eagle Eye | stat | BUILT | +15% ranged damage (reviewed, kept) | Fully additive, no cap |
 | Aid Kit | special | BUILT | heal 5% max health when a floor is cleared, falloff per extra kit | Diminishing: each extra kit adds 0.85x the last |
 | Sucker Punch Glove | on-hit | NEW | first attack on each enemy deals +50% damage | Bonus adds up per copy (+50% each). First-attack tracking is shared |
 | Bandage Roll | special | NEW | holder heals 3% max health on each kill | Heal adds up per copy (3% each), no cap |
@@ -35,7 +36,7 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 ## RARE (21)
 | Item | Type | Status | Effect | Stacking |
 |---|---|---|---|---|
-| Feather Boots | stat | BUILT | +8 evasion (not reviewed yet) | Flat points add up, capped (cap set in the item JSON; evasion is also capped at 60%) |
+| Feather Boots | stat | BUILT | +8 evasion (reviewed, kept) | Flat points add up. Evasion cap raised to 70% for everyone (was 60%) |
 | Heart Charm | stat | BUILT | +22% max health and regen 0.5% max health per second in fights | Health % and regen both add up per charm, no cap |
 | War Banner | squad | BUILT | 8% per attack: Battle Cry, squad +25% attack speed 2s | Each copy rolls its own 8% separately. The buff refreshes, it does not stack |
 | Shield Totem | special | BUILT | 10% block chance, 2.5s recharge, max 6 | +10% block chance per totem, max 6. Any block recharges ALL totems together |
@@ -61,7 +62,7 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Item | Type | Status | Effect | Stacking |
 |---|---|---|---|---|
 | Quick Gloves | stat | BUILT | +18% attack speed, 5% per attack to hit twice | Attack speed adds up. Each copy rolls its own double-hit chance |
-| Bulwark Plate | special | BUILT | +30 defense, reflects 25% of melee damage taken (not reviewed yet) | Defense and thorns % both add up |
+| Bulwark Plate | special | BUILT | +30 defense, reflects 25% of melee damage taken (reviewed, kept) | Defense and thorns % both add up. Defense uses the diminishing curve |
 | Siege Cannon | special | BUILT | +40% attack, skills +30% damage, 5% skill splash | Attack, skill damage and splash chance all add up |
 | Static Crystal | on-hit | BUILT | 10% per attack: chain lightning, 300% electric, jumps to 2 more enemies | Each copy rolls its own 10% separately |
 | Magma Core | special | NEW | burning enemies take +25% damage from the holder, burn ticks 30% faster | Damage bonus adds up (+25% each). Burn speed bonus adds up but is capped (suggest +100% total) |
@@ -104,6 +105,6 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 Burn, bleed (with stacking exception), armor break, mark, taunt, shield (absorb), block cooldown, minions (weak and greater), floor-start shield, heal-received hooks, kill hooks, first-hit-per-enemy tracking, per-floor once-only triggers, tornado objects, consecutive-hit counter.
 
 ## Still to do
-- Review the old unreviewed items: Padded Vest, Sharp Edge, Eagle Eye, Feather Boots, Bulwark Plate.
+- DONE: the 5 old items were reviewed and kept as they were (Padded Vest, Sharp Edge, Eagle Eye, Feather Boots, Bulwark Plate).
 - Decide which of the 66 to build first. Idea: build in groups, with the systems each group needs.
 - Rarity weights and Shared Potion stay as they are (`rarities.json`, `rewards.json`).

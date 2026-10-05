@@ -110,7 +110,7 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 - Attack "Crescendo": a song that builds: damage to all enemies grows each second for 3 seconds, then a final big hit. Needs a build-up visual (rising music notes / growing glow).
 - Support "Ballad of Rest": a BIG regen boost for the squad for 4 seconds (heal over time, much stronger per second than normal regen; scales with the Cleric's regen scaling and regen items).
 - Style: combo conductor.
-- Open: does the Rhythm beat count skeleton and skill hits? (suggest: basic attacks of the 3 heroes only, skeletons excluded). Does the beat counter reset each floor? (suggest: no, it keeps counting through the run).
+- DECIDED: the beat counts only the basic attacks of the 3 heroes (not skeletons, not skills). The counter resets after every 4th attack (beat 1, 2, 3, then the empowered 4th, then back to 1). Assumed: it does not also reset at floor changes (say if it should).
 
 ### Still to do: Alchemist (user may replace these concepts)
 - Final roster of 9 (3 per run), role, stats, growth, perk, one attack + one support skill, melee or ranged.

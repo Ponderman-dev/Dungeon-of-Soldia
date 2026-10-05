@@ -31,6 +31,7 @@ const BAR_WIDTH = 44;
 const WALL_H = 200; // the back wall (with the door) fills the top of each floor
 const DOOR_X = GAME_WIDTH / 2;
 const T = combatRules.transition;
+const M = combatRules.attackMotion; // how heroes run up, swing, run back and shoot
 const itemDefs = loadItems(rawItems);
 const skillDefs = rawSkills;
 const SKILL_Y = 772; // centre of the skill squares
@@ -58,6 +59,7 @@ export default class BattleScene extends Phaser.Scene {
     this.floor = 1;
     this.mode = 'entering'; // 'entering' | 'fighting' | 'won' | 'lost'
     this.views = new Map(); // unit uid -> { unit, ch, bg, fill, groundY, ... }
+    this.engaged = new Map(); // enemy uid -> Map(hero uid -> spot index): melee heroes standing at that enemy
     this.state = new BattleState({
       heroDefs,
       enemyDefs,
@@ -487,10 +489,24 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   showEvent(e) {
-    if (e.type === 'attack') {
+    if (e.type === 'attackStart') {
       const a = this.views.get(e.attacker.uid);
       const t = this.views.get(e.target.uid);
-      a.ch.lunge(t.ch.homeX, t.ch.homeY);
+      if (e.attacker.side !== 'hero' || !a || !t) return; // enemies still just lunge when they hit (until B3)
+      if (e.attacker.damageType === 'melee') this.runToTarget(a, t, e.hitInMs);
+      else this.shootArrow(a, t, e.hitInMs);
+    } else if (e.type === 'attackCancel') {
+      const v = this.views.get(e.unit.uid);
+      if (v && e.unit.side === 'hero') this.runHome(v);
+    } else if (e.type === 'attack') {
+      const a = this.views.get(e.attacker.uid);
+      const t = this.views.get(e.target.uid);
+      if (e.attacker.side === 'hero' && e.basic) {
+        // The run-up / arrow already showed this attack. After a melee hit the hero runs back.
+        if (e.attacker.damageType === 'melee') this.runHome(a);
+      } else if (!a.ch.moveTween) {
+        a.ch.lunge(t.ch.homeX, t.ch.homeY); // enemies, skills and item hits: a small jab (not while running)
+      }
       if (e.result.dodged) {
         if (e.result.blocked) this.popText(t, 'Blocked!', '#9fc4ff', true);
         else this.popText(t, 'Miss', '#aaaaaa');
@@ -550,9 +566,15 @@ export default class BattleScene extends Phaser.Scene {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
       if (e.unit.side === 'enemy') {
+        this.engaged.delete(e.unit.uid);
         this.drawChips(v);
         this.tweens.add({ targets: [v.ch, v.bg, v.fill], alpha: 0, duration: 400, onComplete: () => this.removeView(e.unit.uid) });
       } else {
+        // A hero who falls while away at an enemy is put back in its slot.
+        v.ch.stopMove();
+        this.releaseSpot(e.unit.uid);
+        v.ch.setPosition(v.ch.homeX, v.ch.homeY).setDepth(DEPTH.hero);
+        this.syncBar(v);
         v.ch.freeze(); // stop floating
         v.perkLabel.setText('perk lost');
         v.ch.setAlpha(0.25);
@@ -564,6 +586,61 @@ export default class BattleScene extends Phaser.Scene {
         this.drawAllBars(); // squad items from this hero stop working, so max health may change
       }
     }
+  }
+
+  // ---- hero attack motion (melee run-up, arrows) --------------------------------------------
+
+  // A melee hero runs to a spot just in front of its target, arriving as the swing lands.
+  // Several melee heroes on one enemy stand side by side (spots 0, 1, 2... = centre, left, right...).
+  runToTarget(a, t, hitInMs) {
+    this.releaseSpot(a.unit.uid);
+    const spots = this.engaged.get(t.unit.uid) || new Map();
+    this.engaged.set(t.unit.uid, spots);
+    let index = 0;
+    while ([...spots.values()].includes(index)) index++;
+    spots.set(a.unit.uid, index);
+    const side = index === 0 ? 0 : index % 2 === 1 ? -1 : 1;
+    const x = t.ch.x + side * Math.ceil(index / 2) * M.spacingPx;
+    const y = t.groundY + M.standOffY;
+    const runMs = Math.max(60, hitInMs - M.swingMs);
+    a.ch.moveTo(x, y, runMs, {
+      ease: 'Quad.easeOut',
+      onUpdate: () => this.syncBar(a),
+      onDone: () => a.ch.swing(M.swingMs),
+    });
+    a.ch.setDepth(DEPTH.hero + 1); // in front of the other heroes while it is out there
+  }
+
+  // A hero goes back to its slot (after a hit, a cancelled attack, a win...).
+  runHome(v, duration = M.returnMs) {
+    if (!v) return;
+    this.releaseSpot(v.unit.uid);
+    if (v.ch.x === v.ch.homeX && v.ch.y === v.ch.homeY) return;
+    v.ch.moveTo(v.ch.homeX, v.ch.homeY, duration, {
+      onUpdate: () => this.syncBar(v),
+      onDone: () => {
+        v.ch.setDepth(DEPTH.hero);
+        this.syncBar(v);
+      },
+    });
+  }
+
+  // Frees the spot a melee hero had at an enemy.
+  releaseSpot(heroUid) {
+    for (const spots of this.engaged.values()) spots.delete(heroUid);
+  }
+
+  // A ranged hero's basic attack: an arrow that flies to the target and arrives as the hit lands.
+  shootArrow(a, t, hitInMs) {
+    const sx = a.ch.x, sy = a.ch.y - 40, tx = t.ch.x, ty = t.ch.y - 20;
+    // Placeholder arrow: a shaft with a small head (real art later).
+    const arrow = this.add.container(sx, sy, [
+      this.add.rectangle(-4, 0, 22, 3, Number(M.arrowColor)),
+      this.add.triangle(9, 0, 0, -4, 0, 4, 7, 0, 0xffffff),
+    ]).setDepth(DEPTH.popup - 1);
+    arrow.rotation = Math.atan2(ty - sy, tx - sx);
+    this.tweens.add({ targets: arrow, x: tx, y: ty, duration: hitInMs, ease: 'Linear', onComplete: () => arrow.destroy() });
+    a.ch.lunge(tx, ty); // a small recoil-like jab as it shoots
   }
 
   // Placeholder projectiles: a fire bomb flies in an arc, lightning is a zig-zag line that fades.
@@ -614,9 +691,10 @@ export default class BattleScene extends Phaser.Scene {
   popText(view, text, color, big = false) {
     // Pop-ups that appear together stack upwards instead of overlapping.
     view.popSlot = ((view.popSlot ?? -1) + 1) % 4;
-    const y = view.ch.homeY - view.unit.def.height * CHAR_SCALE - 22 - view.popSlot * 15;
+    // Above where the fighter is right now (a hero may be away at an enemy).
+    const y = view.ch.y - view.unit.def.height * CHAR_SCALE - 22 - view.popSlot * 15;
     const t = this.add
-      .text(view.ch.homeX, y, text, {
+      .text(view.ch.x, y, text, {
         fontFamily: 'monospace',
         fontSize: big ? '20px' : '14px',
         fontStyle: 'bold',
@@ -637,7 +715,11 @@ export default class BattleScene extends Phaser.Scene {
     this.layer.setDoorOpen(true);
 
     this.state.clearStatuses();
-    for (const h of this.state.heroes) this.drawChips(this.views.get(h.uid));
+    for (const h of this.state.heroes) {
+      const v = this.views.get(h.uid);
+      if (h.alive) this.runHome(v, 200); // anyone still out at an enemy comes back before the walk
+      this.drawChips(v);
+    }
     for (const { unit, amount } of this.state.winHeal(combatRules.winHealPercent)) {
       const v = this.views.get(unit.uid);
       this.setBar(v);

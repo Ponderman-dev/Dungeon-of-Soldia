@@ -7,7 +7,7 @@ const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, impor
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const base = r('combat.json');
 const mk = (timing) => {
-  const rules = { ...base, attackTiming: timing };
+  const rules = { ...base, attackTiming: { hero: timing, enemy: timing } };
   const s = new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs: {}, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
   const es = s.spawnEnemies(['goblin', 'goblin'], 1);
   for (const u of [...s.heroes, ...es]) { u.hp = u.maxHp = 1e9; u.stats.evasion = 0; u.timer = -1e12; } // nobody attacks unless we say so
@@ -16,7 +16,7 @@ const mk = (timing) => {
 const step = (s, ms) => { const ev = []; for (let t = 0; t < ms; t += 50) ev.push(...s.update(50)); return ev; };
 const ready = (s, u) => (u.timer = s.interval(u) - 1); // this unit starts an attack on the next update
 
-ok('default timing is instant (0 ms)', (base.attackTiming.meleeHitMs || 0) === 0 && (base.attackTiming.rangedHitMs || 0) === 0);
+ok('heroes have real timings, enemies are still instant', base.attackTiming.hero.meleeHitMs > 0 && base.attackTiming.hero.rangedHitMs > 0 && !base.attackTiming.enemy.meleeHitMs);
 
 { const { s, knight } = mk({ meleeHitMs: 400, rangedHitMs: 250 });
   ready(s, knight); const ev = s.update(50);

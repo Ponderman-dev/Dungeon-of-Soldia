@@ -20,8 +20,15 @@
   "restartDelayMs": 3000,
   "meleeVsFlyingMissPercent": 40,
   "attackTiming": {
-    "meleeHitMs": 0,
-    "rangedHitMs": 0
+    "hero": { "meleeHitMs": 420, "rangedHitMs": 260 },
+    "enemy": { "meleeHitMs": 0, "rangedHitMs": 0 }
+  },
+  "attackMotion": {
+    "swingMs": 120,
+    "returnMs": 280,
+    "standOffY": 76,
+    "spacingPx": 34,
+    "arrowColor": "0xe6e6b8"
   },
   "transition": {
     "clearPauseMs": 600,

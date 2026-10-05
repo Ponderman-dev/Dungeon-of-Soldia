@@ -225,9 +225,10 @@ export default class BattleState {
     return events;
   }
 
-  // How long a basic attack takes from start to hit (combat.json `attackTiming`).
+  // How long a basic attack takes from start to hit (combat.json `attackTiming`, per side:
+  // hero / enemy). Melee: the run-up and swing. Ranged: the shot's flight.
   hitDelay(unit) {
-    const timing = this.rules.attackTiming || {};
+    const timing = (this.rules.attackTiming && this.rules.attackTiming[unit.side]) || {};
     return (unit.damageType === 'melee' ? timing.meleeHitMs : timing.rangedHitMs) || 0;
   }
 
@@ -235,18 +236,19 @@ export default class BattleState {
   landAttack(unit, target, events) {
     if (!target.alive) target = this.pickTarget(unit);
     if (!target) return;
-    const hit = this.strike(unit, target, events);
+    const hit = this.strike(unit, target, events, { basic: true });
     this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged });
   }
 
   // One hit: damage, block cooldown, lifesteal/thorns/crit debuffs, death. Used by basic attacks,
   // skills and item procs. opts: multiplier, damageType (see computeDamage), skill (the skill def),
+  // basic (a hero's/enemy's normal attack, not a skill or item hit),
   // projectile ('bomb', 'lightning': the scene draws it flying from the attacker).
   strike(attacker, target, events, opts = {}) {
     const result = computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, opts);
     if (!result.dodged) target.hp = Math.max(0, target.hp - result.amount);
     if (opts.projectile) events.push({ type: 'projectile', from: opts.from || attacker, to: target, kind: opts.projectile });
-    events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType });
+    events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic });
     if (result.blocked) {
       // A successful block sends the holder's Shield Totems on cooldown.
       const spec = { status: 'blockCooldown', durationMs: target.specials.blockCooldownMs || 2500 };

@@ -65,12 +65,13 @@ export default class Character extends Phaser.GameObjects.Container {
 
   // Quick jab towards a point and back.
   lunge(toX, toY) {
-    if (this.lunging) return;
+    // Only from its home spot (not while running or standing at an enemy).
+    if (this.lunging || this.moveTween || this.x !== this.homeX || this.y !== this.homeY) return;
     this.lunging = true;
     const dx = toX - this.homeX;
     const dy = toY - this.homeY;
     const len = Math.hypot(dx, dy) || 1;
-    this.scene.tweens.add({
+    this.lungeTween = this.scene.tweens.add({
       targets: this,
       x: this.homeX + (dx / len) * 26,
       y: this.homeY + (dy / len) * 26,
@@ -80,6 +81,53 @@ export default class Character extends Phaser.GameObjects.Container {
         this.x = this.homeX;
         this.y = this.homeY;
         this.lunging = false;
+        this.lungeTween = null;
+      },
+    });
+  }
+
+  // Moves to (x, y) in `duration` ms, then calls onDone. Any move already running is stopped first.
+  // onUpdate runs every frame (e.g. to keep the health bar attached).
+  moveTo(x, y, duration, { onDone, onUpdate, ease = 'Sine.easeInOut' } = {}) {
+    this.stopMove();
+    this.moveTween = this.scene.tweens.add({
+      targets: this,
+      x,
+      y,
+      duration: Math.max(1, duration),
+      ease,
+      onUpdate,
+      onComplete: () => {
+        this.moveTween = null;
+        if (onDone) onDone();
+      },
+    });
+  }
+
+  // Stops a run (moveTo) or a jab (lunge) where it is.
+  stopMove() {
+    if (this.moveTween) this.moveTween.stop();
+    this.moveTween = null;
+    if (this.lungeTween) this.lungeTween.stop();
+    this.lungeTween = null;
+    this.lunging = false;
+  }
+
+  // Swings the weapon part (if there is one) down and back up again.
+  swing(duration) {
+    const weapon = this.parts.weapon;
+    if (!weapon) return;
+    if (this.swingTween) this.swingTween.stop();
+    const start = weapon.angle;
+    this.swingTween = this.scene.tweens.add({
+      targets: weapon,
+      angle: start + 75,
+      duration: duration / 2,
+      yoyo: true,
+      ease: 'Quad.easeIn',
+      onComplete: () => {
+        weapon.angle = start;
+        this.swingTween = null;
       },
     });
   }

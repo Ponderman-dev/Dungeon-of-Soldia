@@ -237,7 +237,7 @@ Decided with the user:
 - Tap-focus: everyone follows; melee heroes walk to the tapped enemy wherever it is.
 - RULE CHANGE: heroes no longer pick a random enemy on every attack. Melee heroes keep their target until it dies, then take the nearest enemy (by lane). Ranged heroes still pick at random (arrows don't move anyone).
 - Stunned/frozen while walking: they stop where they are. Knockback: pushed back, must walk in again (breaks the engagement).
-- Build: B5a rules in BattleState (sticky targets, engagement, approach vs swing timing) + tests; B5b the scene (advance to the front, stay, no bouncing).
+- DONE (B5a + B5b). Build: B5a rules in BattleState (sticky targets, engagement, approach vs swing timing) + tests; B5b the scene (advance to the front, stay, no bouncing).
 
 ### Phase C: Feel
 - C1. Skill wind-up (`castMs`), longer than a normal attack; stun/freeze during wind-up cancels the cast (to confirm).

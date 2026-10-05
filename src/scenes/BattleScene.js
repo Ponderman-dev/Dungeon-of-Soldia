@@ -112,6 +112,19 @@ export default class BattleScene extends Phaser.Scene {
   startFighting() {
     this.showSlots(true);
     this.mode = 'fighting';
+    this.advanceToFront();
+  }
+
+  // Front line: at the start of a fight melee heroes walk up and melee enemies walk down, so the two
+  // lines meet in the middle (combat.json attackMotion heroFrontY / enemyFrontY). Ranged ones stay back.
+  advanceToFront() {
+    for (const u of [...this.state.heroes, ...this.state.enemies]) {
+      const v = this.views.get(u.uid);
+      if (!v || !u.alive || u.damageType !== 'melee' || v.ch.moveTween) continue;
+      const hover = v.groundY - v.ch.homeY;
+      const y = (u.side === 'hero' ? M.heroFrontY : M.enemyFrontY) - hover;
+      v.ch.moveTo(v.ch.x, y, M.advanceMs, { onUpdate: () => this.syncBar(v) });
+    }
   }
 
   drawHeroSlots() {
@@ -493,8 +506,9 @@ export default class BattleScene extends Phaser.Scene {
       const a = this.views.get(e.attacker.uid);
       const t = this.views.get(e.target.uid);
       if (!a || !t) return;
-      if (e.attacker.damageType === 'melee') this.runToTarget(a, t, e.hitInMs);
-      else this.shootArrow(a, t, e.hitInMs);
+      if (e.attacker.damageType !== 'melee') this.shootArrow(a, t, e.hitInMs);
+      else if (e.approach) this.runToTarget(a, t, e.hitInMs); // walk over to the target, then swing
+      else a.ch.swing(e.hitInMs); // already standing at it: just swing
     } else if (e.type === 'attackRetarget') {
       // Its target died mid-attack: the runner turns to the new target, an arrow bends towards it.
       const a = this.views.get(e.attacker.uid);
@@ -509,13 +523,15 @@ export default class BattleScene extends Phaser.Scene {
         c.arrow.destroy();
         c.arrow = null;
       }
-      if (c) this.runHome(c);
+      // Feared: it backs away to its own spot. Stunned/frozen or nothing left: it stops where it is.
+      // (Knocked back: the knockback status already pushed it.)
+      if (c && e.reason === 'fear') this.runHome(c);
+      else if (c && e.reason !== 'knockback') c.ch.stopMove();
     } else if (e.type === 'attack') {
       const a = this.views.get(e.attacker.uid);
       const t = this.views.get(e.target.uid);
       if (e.basic) {
-        // The run-up / arrow already showed this attack. After a melee hit the fighter runs back.
-        if (e.attacker.damageType === 'melee') this.runHome(a);
+        // The walk/swing or the arrow already showed this attack. Melee fighters STAY where they are.
       } else if (!a.ch.moveTween) {
         a.ch.lunge(t.ch.homeX, t.ch.homeY); // skills and item hits: a small jab (not while running)
       }
@@ -542,6 +558,8 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'status') {
       const v = this.views.get(e.unit.uid);
       this.drawChips(v);
+      if (e.change === 'apply' && e.status.type === 'knockback') this.pushBack(v);
+      if (e.change === 'apply' && e.status.type === 'fear') this.runHome(v); // backs away to its spot
       if (e.change === 'apply' && e.status.type !== 'buff' && statusInfo[e.status.type].popup !== false) {
         this.popText(v, statusInfo[e.status.type].label + '!', statusInfo[e.status.type].color);
       }
@@ -604,9 +622,12 @@ export default class BattleScene extends Phaser.Scene {
 
   // ---- hero attack motion (melee run-up, arrows) --------------------------------------------
 
-  // A melee fighter (hero or enemy) runs to a spot next to its target, arriving as the swing lands.
-  // Heroes stand just below an enemy, enemies just above a hero. The spot follows the target if it
-  // moves (it may be running too). Several fighters on one target stand side by side (spots 0, 1, 2...).
+  // A melee fighter (hero or enemy) walks to where it can hit its target, arriving as the swing lands.
+  // FRONT LINE: if the target stands on its side's front row, the fighter stays on ITS OWN front row
+  // and just slides across to face it (the two rows face each other in the middle). Otherwise (a
+  // ranged hero at the back, an enemy that stayed back) it walks right up to the target: heroes stand
+  // just below an enemy, enemies just above a hero. Several fighters on one target stand side by side.
+  // The spot follows the target if it moves.
   runToTarget(a, t, hitInMs) {
     this.releaseSpot(a.unit.uid);
     const spots = this.engaged.get(t.unit.uid) || new Map();
@@ -614,14 +635,26 @@ export default class BattleScene extends Phaser.Scene {
     let index = 0;
     while ([...spots.values()].includes(index)) index++;
     spots.set(a.unit.uid, index);
-    const side = index === 0 ? 0 : index % 2 === 1 ? -1 : 1;
+    // The first fighter stands straight across from its target; extra ones stand to the side, the
+    // first of them on the side it came from.
+    const homeSide = a.ch.homeX >= t.ch.x ? 1 : -1;
+    const side = index === 0 ? 0 : index % 2 === 1 ? homeSide : -homeSide;
     const offsetX = side * Math.ceil(index / 2) * M.spacingPx;
-    const offsetY = a.unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY;
     const hover = (v) => v.groundY - v.ch.homeY; // flying units float above their ground line
-    const getSpot = () => ({ x: t.ch.x + offsetX, y: t.ch.y + hover(t) + offsetY - hover(a) });
-    a.ch.chase(getSpot, Math.max(60, hitInMs - M.swingMs), {
+    const rowY = (u) => (u.side === 'hero' ? M.heroFrontY : M.enemyFrontY);
+    // A melee fighter belongs to its front row, unless it walked off to fight someone at the back.
+    const onFrontRow = t.unit.damageType === 'melee' && !t.offRow;
+    a.offRow = !onFrontRow;
+    const getSpot = () => {
+      const x = Phaser.Math.Clamp(t.ch.x + offsetX, 28, GAME_WIDTH - 28);
+      if (onFrontRow) return { x, y: rowY(a.unit) - hover(a) };
+      const offsetY = a.unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY;
+      return { x, y: t.ch.y + hover(t) + offsetY - hover(a) };
+    };
+    const swingMs = combatRules.attackTiming[a.unit.side].swingMs;
+    a.ch.chase(getSpot, Math.max(60, hitInMs - swingMs), {
       onUpdate: () => this.syncBar(a),
-      onDone: () => a.ch.swing(M.swingMs),
+      onDone: () => a.ch.swing(swingMs),
     });
     if (a.unit.side === 'hero') a.ch.setDepth(DEPTH.hero + 1); // in front of the other heroes while it is out there
   }
@@ -630,6 +663,7 @@ export default class BattleScene extends Phaser.Scene {
   runHome(v, duration = M.returnMs) {
     if (!v) return;
     this.releaseSpot(v.unit.uid);
+    v.offRow = false;
     if (v.ch.x === v.ch.homeX && v.ch.y === v.ch.homeY) return;
     v.ch.moveTo(v.ch.homeX, v.ch.homeY, duration, {
       onUpdate: () => this.syncBar(v),
@@ -638,6 +672,14 @@ export default class BattleScene extends Phaser.Scene {
         this.syncBar(v);
       },
     });
+  }
+
+  // Knocked back: pushed a little towards its own side (away from the enemy line).
+  pushBack(v) {
+    this.releaseSpot(v.unit.uid);
+    const dir = v.unit.side === 'hero' ? 1 : -1; // heroes are pushed down, enemies up
+    const y = Phaser.Math.Clamp(v.ch.y + dir * M.knockbackPx, Math.min(v.ch.y, v.ch.homeY), Math.max(v.ch.y, v.ch.homeY));
+    v.ch.moveTo(v.ch.x, y, M.knockbackMs, { ease: 'Quad.easeOut', onUpdate: () => this.syncBar(v) });
   }
 
   // Frees the spot a melee fighter had next to its target.

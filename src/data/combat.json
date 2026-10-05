@@ -20,17 +20,22 @@
   "restartDelayMs": 3000,
   "meleeVsFlyingMissPercent": 40,
   "attackTiming": {
-    "hero": { "meleeHitMs": 420, "rangedHitMs": 260 },
-    "enemy": { "meleeHitMs": 420, "rangedHitMs": 260 },
-    "retargetMinMs": 200
+    "hero": { "meleeHitMs": 600, "swingMs": 220, "rangedHitMs": 260 },
+    "enemy": { "meleeHitMs": 600, "swingMs": 220, "rangedHitMs": 260 },
+    "retargetMinMs": 200,
+    "backlineTargetChance": 25
   },
   "attackMotion": {
-    "swingMs": 120,
     "returnMs": 280,
     "standOffY": 76,
     "enemyStandOffY": 64,
-    "spacingPx": 34,
-    "arrowColor": "0xe6e6b8"
+    "spacingPx": 52,
+    "arrowColor": "0xe6e6b8",
+    "heroFrontY": 565,
+    "enemyFrontY": 465,
+    "advanceMs": 700,
+    "knockbackPx": 40,
+    "knockbackMs": 160
   },
   "transition": {
     "clearPauseMs": 600,

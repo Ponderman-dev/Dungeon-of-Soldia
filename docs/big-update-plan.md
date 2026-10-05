@@ -141,7 +141,7 @@ The roster is now 10 heroes: 4 melee (Knight, Berserker, Rogue, Samurai) + 6 ran
 - Final roster of 9 (3 per run), role, stats, growth, perk, one attack + one support skill, melee or ranged.
 - Redo the existing four, add the rest.
 
-## Part 3: Items (to plan next)
+## Part 3: Items (master list now in `docs/item-list.md`, 66 items)
 - Remaining draft items (`docs/item-ideas.md`): burn/poison/slow/stun on-hit, skill and mana items, Phoenix Feather, Prism, damage-type items.
 - New items the user wants. Items that use the new debuffs.
 - Magic damage becomes real here (fire/ice/electric/dark heroes and items).

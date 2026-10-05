@@ -112,7 +112,15 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 - Style: combo conductor.
 - DECIDED: the beat counts only the basic attacks of the 3 heroes (not skeletons, not skills). The counter resets after every 4th attack (beat 1, 2, 3, then the empowered 4th, then back to 1). Assumed: it does not also reset at floor changes (say if it should).
 
-### Still to do: Alchemist (user may replace these concepts)
+### Alchemist (ranged, wildcard mixer) DECIDED
+- Passive "Catalyst": while he is alive, status effects on ENEMIES (burn, poison, freeze, slow, bleed, weaken...) last longer and tick/hit harder. Squad-wide payoff, pairs with every debuffer and DoT item (Rogue, Mage, Cleric Smite debuffs, Necromancer curses).
+- Attack "Flask Barrage": throws 3 random flasks (fire, ice or poison cloud) at random enemies; each flask applies its element's debuff. Flask-in-the-air visual per flask.
+- Support "Mystery Brew": throws 2 random flasks at random teammates; each flask is a random one of: heal, speed boost (attack speed), or shield. (Can hit the same hero twice.) Flask visuals coloured per effect.
+- Style: wildcard mixer (high variety, some randomness).
+- Open: does the support flask target skeletons too? (suggest: heroes only, living). Is it OK that the same hero can get both flasks?
+
+## Roster status: all 9 heroes designed: Knight, Berserker, Rogue, Archer, Mage, Cleric, Necromancer, Bard, Alchemist.
+## Still open for Part 2: base stats and growth per hero (melee/ranged, health, attack, defense, resist, evasion, crit, attack speed), squad select/unlock order, which 3 start unlocked, passives' exact numbers (tuned last).
 - Final roster of 9 (3 per run), role, stats, growth, perk, one attack + one support skill, melee or ranged.
 - Redo the existing four, add the rest.
 

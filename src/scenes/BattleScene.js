@@ -178,6 +178,7 @@ export default class BattleScene extends Phaser.Scene {
         g.lineStyle(ready ? 3 : 2, ready ? 0xf2b632 : colors.ready, ready ? 1 : 0.5).strokeRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
         b.cd.setText(slot.cooldownLeft > 0 ? String(Math.ceil(slot.cooldownLeft / 1000)) : '');
         b.code.setColor(ready ? '#f3eefc' : '#8a86a0');
+        b.code.setVisible(slot.cooldownLeft <= 0); // the cooldown number takes the letters' place
       });
     }
   }

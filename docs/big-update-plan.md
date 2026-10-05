@@ -212,7 +212,7 @@ Greater spawners: Gargoyle Idol (rare, slow tanky, draws attacks), Spirit Knight
 
 ## BUILD ORDER (approved plan, one step at a time)
 Rules for every step: keep the game working, run `npm test`, commit with a clear message, push.
-Republish the preview page once per PHASE (not every step) unless the user asks, to save credits.
+Republish the preview page after EVERY change (the user asked for this, for now).
 Update CLAUDE.md / HANDOFF.md when a rule in them changes. Data stays in JSON. Placeholder art only.
 
 ### Phase A: Foundations (rules and data, little to see)

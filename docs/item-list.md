@@ -24,6 +24,7 @@ Totals: 72 items. Common 22, Rare 23, Epic 17, Legendary 10 (Shared Potion inclu
 - Only a shield broken by damage counts as "broken". Timed shields that run out do not.
 - The Knight has NO shield in his kit (shield items do not pair with him).
 - Lucky Coin and crit: total crit is capped at 100%.
+- Debuffs follow the redone list in docs/big-update-plan.md 1.3: Bleed/Burn/Poison stack with no limit (each stack own timer), Chill stacks to Freeze at 5, Shock = jitter, plain Slow no longer exists.
 
 ## COMMON (22)
 | Item | Type | Status | Effect | Stacking | Drop weight | Needs |
@@ -43,8 +44,8 @@ Totals: 72 items. Common 22, Rare 23, Epic 17, Legendary 10 (Shared Potion inclu
 | Kindling | stat | NEW | +15% fire damage (also boosts Burn damage) | Additive (+15% each), no cap | 100 | fire |
 | Frost Charm | stat | NEW | +15% ice damage (also boosts Chill Band ice hits and Frozen Thunderbolt bursts) | Additive (+15% each), no cap | 100 | ice |
 | Rat Cage | minion | NEW | every 12s a Rat (weak minion) bites a random enemy | Spawn in bursts: each extra copy adds one more minion to every spawn (1 rat, then 2 rats at once...). One shared timer. Weak minion cap is shared | 80 | - |
-| Ember Charm | on-hit | NEW | 6% chance per attack to Burn the target (fire damage over time, 3s) | Burn chance adds up per copy (6% each) AND burn damage adds up per copy. Burn from these charms refreshes, it does not stack as separate burns | 100 | - |
-| Venom Fang | on-hit | NEW | 8% chance per attack to Poison the target | Chance adds up normally (8% per copy). Poison from the same item refreshes | 100 | - |
+| Ember Charm | on-hit | NEW | 6% chance per attack to Burn the target (fire damage over time, 3s) | Chance adds up per copy (6% each) AND burn damage adds up per copy. Each proc adds a Burn STACK (DoTs stack with no limit) | 100 | - |
+| Venom Fang | on-hit | NEW | 8% chance per attack to Poison the target | Chance adds up normally (8% per copy). Each proc adds a Poison STACK | 100 | - |
 | Rusty Nails | on-hit | NEW | 8% chance per attack to Armor Break the target (-defense) | Chance adds up normally (8% per copy). Armor Break refreshes, it does not stack | 90 | - |
 | Hourglass | skill | NEW | skill cooldowns 5% shorter (lowered from 12%, so it needs several copies) | Additive (-5% per copy). Cap not stated: suggest 50% shorter total | 100 | - |
 | Storm Charm | stat | NEW | +15% electric damage | Additive (+15% each), no cap | 100 | electric |
@@ -59,9 +60,9 @@ Totals: 72 items. Common 22, Rare 23, Epic 17, Legendary 10 (Shared Potion inclu
 | War Banner | squad | BUILT | 8% per attack: Battle Cry, squad +25% attack speed 2s | Each copy rolls its own 8% separately. The buff refreshes, it does not stack | 100 | - |
 | Shield Totem | special | BUILT | 10% block chance, 2.5s recharge, max 6 | +10% block chance per totem, max 6. Any block recharges ALL totems together | 90 | - |
 | Fire Bombs | on-hit | BUILT | 5% per attack: bomb, 250% fire damage (ranged) | Each copy rolls its own 5% separately | 100 | - |
-| Chill Band | on-hit | BUILT | every attack adds a 10% ice hit per band, 50% chance to freeze 0.7s (no stack) (watch in testing: lower to 35% if too strong) | Ice hit adds per band (+10% each). The 50% freeze is unique: more bands do NOT raise it | 80 | - |
+| Chill Band | on-hit | BUILT | every attack adds a 10% ice hit per band AND 1 Chill stack (5 Chill = Freeze) | Ice hit adds per band (+10% each). Chill: 1 stack per attack (does not grow with more bands) | 80 | - |
 | Fire Arrows | on-hit | NEW | ranged attacks 50% chance (no stack) for an extra fire hit; extra copies raise fire damage | Chance does NOT stack (stays 50%). Extra copies add to the fire hit damage (stacks) | 100 | ranged |
-| Serrated Edge | on-hit | NEW | 10% chance per attack to make the target Bleed | Chance adds up but with diminishing returns per extra copy (suggest 0.8x the last: 10%, 8%, 6.4%...) | 100 | - |
+| Serrated Edge | on-hit | NEW | 10% chance per attack to make the target Bleed | Chance adds up with diminishing returns (suggest 0.8x the last: 10%, 8%, 6.4%...). Each proc adds a Bleed STACK | 100 | - |
 | Executioner's Axe | special | NEW | +30% damage to enemies under 25% health | Diminishing with a very small gap (suggest 0.95x the last: +30%, +28.5%, +27%...) | 100 | - |
 | Warding Charm | stat | NEW | shields the holder receives are 30% bigger | Additive (+30% each), no cap | 80 | shield |
 | Overheal Ring | special | NEW | a % of healing above full health becomes a shield, capped at 25% of max health | A % of the healing above 100% health is converted to shield (suggest 40% per copy). Each extra copy adds more %, up to 100% | 80 | heal |
@@ -83,17 +84,17 @@ Totals: 72 items. Common 22, Rare 23, Epic 17, Legendary 10 (Shared Potion inclu
 |---|---|---|---|---|---|---|
 | Quick Gloves | stat | BUILT | +18% attack speed, 5% per attack to hit twice | Attack speed adds up. Each copy rolls its own double-hit chance | 100 | - |
 | Bulwark Plate | special | BUILT | +30 defense, reflects 25% of melee damage taken (reviewed, kept) | Defense and thorns % both add up. No max stacks any more (was 3); defense uses the diminishing curve | 100 | - |
-| Static Crystal | on-hit | BUILT | 10% per attack: chain lightning, 300% electric, jumps to 2 more enemies | Each copy rolls its own 10% separately | 100 | - |
+| Static Crystal | on-hit | BUILT | 10% per attack: chain lightning, 300% electric, jumps to 2 more enemies, applies Shock to every enemy hit | Each copy rolls its own 10% separately | 100 | - |
 | Magma Core | special | NEW | burning enemies take +25% damage from the holder, burn ticks 30% faster | Damage bonus adds up (+25% each). Burn speed bonus adds up but is capped (suggest +100% total) | 90 | burn |
-| Shatter Hammer | special | NEW | hits on a frozen enemy deal +60% damage and break the freeze | Damage bonus adds up per copy (+60% each). The freeze breaks once per hit | 90 | freeze |
+| Shatter Hammer | special | NEW | hits on a frozen enemy deal +60% damage and break the freeze | Damage bonus adds up per copy (+60% each). The freeze breaks once per hit | 90 | freeze (Chill sources count) |
 | Blood Chalice | special | NEW | bleeding enemies take +20% damage from the holder, killing one heals the holder 3% | Both add up per copy (+20% damage, +3% heal) | 90 | bleed |
-| Plague Flask | special | NEW | when a poisoned enemy dies, its poison spreads to another enemy | +1 enemy it spreads to per copy. If there are no fresh enemies left, extra spread goes to enemies already poisoned and adds a poison STACK on them (an exception to the refresh rule) | 80 | poison |
+| Plague Flask | special | NEW | when a poisoned enemy dies, HALF its poison stacks spread to another enemy | +1 enemy it spreads to per copy (each gets half the stacks). If there are no other enemies, nothing happens | 80 | poison |
 | Exploiter's Lens | special | NEW | +30% damage to enemies with 3 or more different debuffs | Additive (+30% each), no cap | 80 | - |
 | Hunter's Sigil | special | NEW | first hit on each enemy Marks it; marked enemies take +10% damage from the whole squad | Mark is unique (one mark per enemy). Squad damage bonus adds up per copy (+10% each) AND each extra copy makes the mark last longer | 100 | - |
 | Spiked Aegis | special | NEW | when the holder's shield is BROKEN by damage it explodes, damaging all enemies (shields that just run out do not) | Explosion damage adds up per copy | 80 | shield |
 | Spite Mail | special | NEW | while the holder is taunting: +30 defense and reflect damage | Both add up per copy (+30 defense and reflect %); defense uses the diminishing curve | 80 | taunt |
 | Echo Rune | skill | NEW | 15% chance a skill casts twice. An echo cannot echo; the Mage rotation moves forward once | Chance adds up (+15% per copy), capped at 60% total. The echo cast deals only 60% of the original; each extra copy raises that toward 100% | 90 | - |
-| Thousand Cuts | on-hit | NEW | melee seldom applies Bleed, up to 3 stacking bleeds; an enemy dying while bleeding bursts knives into nearby enemies | Max 3 stacking bleeds on one enemy (fixed, extra copies do not raise it). Extra copies raise bleed chance and the knife burst damage | 100 | - |
+| Thousand Cuts | on-hit | NEW | melee hits seldom apply Bleed; whenever the holder applies Bleed it adds 1 EXTRA Bleed stack; an enemy dying while bleeding bursts knives into nearby enemies | Extra copies raise the bleed chance and the knife burst damage (still +1 extra stack per bleed, does not grow) | 100 | - |
 | Martyr's Shield | special | NEW | fixed 8% chance to take an ally's hit; extra copies shorten the block cooldown and reduce the health cost | Chance fixed at 8%, does not stack. Each extra copy shortens the block cooldown and lowers the health cost | 90 | - |
 | Fire Imp Brazier | minion | NEW | every 10s an Imp (weak minion, ranged fire, applies Burn) | Spawn in bursts: each extra copy adds one more Imp to every spawn. One shared timer. Weak minion cap is shared | 90 | - |
 | Spirit Knight Banner | minion | NEW | greater minion: a Spirit Knight, balanced melee fighter that grows +5% each floor it survives (max +100%) | Greater minion: 1 Spirit Knight however many copies. Extra copies add +25% to its stats each (additive) | 90 | - |
@@ -103,11 +104,11 @@ Totals: 72 items. Common 22, Rare 23, Epic 17, Legendary 10 (Shared Potion inclu
 | Item | Type | Status | Effect | Stacking | Drop weight | Needs |
 |---|---|---|---|---|---|---|
 | Bloodlust Mask | special | BUILT | +30% attack speed, lifesteal 5%, 10% chance the heal is shared (3s cooldown) | Attack speed and lifesteal add up. Share chance adds up; the 3s share cooldown is shared | 100 | - |
-| Gambler's Dice | special | BUILT | +20 crit, crits +50% damage and add a random debuff (slow, poison or stun) | Crit is capped (cap in the item JSON). Crit damage adds up. One random debuff per crit however many copies | 100 | - |
+| Gambler's Dice | special | BUILT | +20 crit, crits +50% damage and add a random debuff (Chill, Poison, Stun or Shock) | Crit is capped (cap in the item JSON). Crit damage adds up. One random debuff per crit however many copies | 100 | - |
 | Shared Potion | potion | BUILT | reward only: heals every living hero 25% | Not a hero item. One-use reward | - | - |
 | Lost Cleric's Grimoire | special | NEW | % chance on every heal the holder RECEIVES to launch a green fire projectile at a random enemy (regen counts once per second; heals at full health do not count; fireballs do not lifesteal) | Chance adds up per copy, capped (suggest 50% total). Fireball damage adds up per copy | 80 | heal |
 | Excalibur | on-hit | NEW | 8% chance on a melee attack to spawn a tornado (5s, drifts between enemies, ticks damage), max 3 at once | Chance adds up per copy (8% each), capped (suggest 30% total). The tornado cap stays 3 at once | 100 | melee |
-| Frozen Thunderbolt | on-hit | NEW | every electric hit causes an ice burst around the enemy hit (ice damage and freeze) | Ice burst damage adds up per copy. Freeze chance is unique (does not stack) | 70 | electric |
+| Frozen Thunderbolt | on-hit | NEW | every electric hit causes an ice burst around the enemy hit: ice damage and 2 Chill stacks on nearby enemies | Ice burst damage adds up per copy. Chill stays 2 stacks per burst | 70 | electric |
 | Fire Heart | special | NEW | at the start of each floor a fire shield (a % of max health, bigger per copy) that slowly regenerates, blocks damage and burns attackers | Extra copies make the shield bigger (one shield per hero per floor) | 100 | - |
 | Necro Crown | minion | NEW | weak minion cap +2, and every enemy kill by anyone raises a weak minion | +2 weak minion cap per copy, capped at +6 total. The kill-spawn effect is unique (one minion per kill, no stacking) | 80 | - |
 | Phoenix Hatchling | minion | NEW | greater minion: a flying fire Phoenix that heals the squad a little when it is hit | Greater minion: 1 Phoenix however many copies. Extra copies add +25% to its stats and the squad heal each (additive) | 90 | - |

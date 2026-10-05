@@ -54,6 +54,8 @@ Every damage type has a signature. Same list works on heroes later (enemy skills
 
 **Default rule for everything that is not a DoT or Chill:** the same debuff refreshes its timer (no stacking).
 
+**Updated to these rules:** Rain of Arrows = chance to Armor Break; Frost Nova adds 2 Chill to all; Chain Lightning and Static Crystal apply Shock; Chill Band adds 1 Chill per attack; Frozen Thunderbolt adds 2 Chill; Gambler's Dice list = Chill/Poison/Stun/Shock; Thousand Cuts = +1 extra Bleed stack; Plague Flask spreads half the stacks. Alchemist flasks = Burn / Chill / Poison.
+
 **Damage types:** physical (melee, ranged), fire, ice, electric, dark. No holy type: the Cleric's Smite is PHYSICAL (ranged).
 
 ### 1.4 Morale: overlay instead of text
@@ -97,14 +99,14 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 
 ### Archer (ranged, crowd shooter) DECIDED
 - Passive "Steady Aim": while he has not been hit for 3s he gains attack speed and crit; being hit resets it. Self only. Pairs with the Knight's taunt (enemies hit the Knight instead).
-- Attack "Rain of Arrows": arrows fall on ALL enemies for about 2 seconds (several waves of moderate damage, a chance to slow each hit). Needs its own strong visual: a shower of arrows from above landing on each enemy for the whole 2s. Ranged damage, so ranged-boost items feed it.
+- Attack "Rain of Arrows": arrows fall on ALL enemies for about 2 seconds (several waves of moderate damage, each hit has a chance to Armor Break; UPDATED, slow no longer exists). Needs its own strong visual: a shower of arrows from above landing on each enemy for the whole 2s. Ranged damage, so ranged-boost items feed it.
 - Support "Hunter's Mark": marks an enemy: it takes +% damage from everyone for a few seconds (squad-wide payoff, pairs with the Rogue and tap-to-focus).
 - Style: crowd shooter, strongest against 3-4 enemies.
 - Open: is Rain of Arrows one long cast (Archer is busy for 2s) or does he keep attacking while arrows fall? Suggest: he is busy for the 2s (skills take longer than normal attacks).
 
 ### Mage (ranged, elemental combo hero) DECIDED
 - Passive "Spellweaver": every 4th basic attack he makes is a free empowered spell (bonus magic damage, applies his element's debuff). Feeds on-hit items. Self only.
-- Attack "Elemental Rotation": ONE skill that rotates each cast: 1st cast Fireball (big fire hit on one enemy, splash to neighbours, sets Burn), 2nd cast Frost Nova (ice burst on ALL enemies, small damage, slows, chance to freeze), 3rd cast Chain Lightning (electric bolt jumping through all enemies, stronger against burning/frozen ones), then back to Fireball. The skill square shows which spell is next. Each spell needs its own visual.
+- Attack "Elemental Rotation": ONE skill that rotates each cast: 1st cast Fireball (big fire hit on one enemy, splash to neighbours, sets Burn), 2nd cast Frost Nova (ice burst on ALL enemies, small damage, adds 2 Chill stacks), 3rd cast Chain Lightning (electric bolt jumping through all enemies, applies Shock, stronger against burning/frozen ones), then back to Fireball. The skill square shows which spell is next. Each spell needs its own visual.
 - Support "Arcane Ward": squad gets a magic shield (absorbs damage, +resist), lasts 4 seconds.
 - Style: elemental combo hero (fire, ice, electric all in one hero; best for elemental item builds).
 - Needs: magic damage types become real (fire/ice/electric), burn status, shield status, and the "next spell in rotation" state on the hero.

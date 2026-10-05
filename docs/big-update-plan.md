@@ -229,6 +229,16 @@ Update CLAUDE.md / HANDOFF.md when a rule in them changes. Data stays in JSON. P
 - B3. DONE. Enemies run up / shoot the same way.
 - B4. DONE. Edge cases: target dies mid-run (retarget), stunned/frozen mid-run (go back), flying targets.
 
+### B5. FRONT LINE (user change after B4: the run-up-and-back looked like a chaotic jumble)
+Decided with the user:
+- At the start of a fight melee heroes walk up and melee enemies walk down: they MEET IN THE MIDDLE and STAY there fighting (short swings in place, no running back). Ranged heroes stay at the back.
+- A melee fighter keeps its opponent; it only moves when it needs a new target (opponent died, a tap-focus, knocked back, or its opponent walked away to someone else).
+- Enemies target the NEAREST hero first (the melee hero facing them) and stick to it. While melee heroes stand, an enemy picking a new target still goes for a ranged hero sometimes (`backlineTargetChance`, start 25%), walking past the line. No melee heroes left: enemies walk to the back line.
+- Tap-focus: everyone follows; melee heroes walk to the tapped enemy wherever it is.
+- RULE CHANGE: heroes no longer pick a random enemy on every attack. Melee heroes keep their target until it dies, then take the nearest enemy (by lane). Ranged heroes still pick at random (arrows don't move anyone).
+- Stunned/frozen while walking: they stop where they are. Knockback: pushed back, must walk in again (breaks the engagement).
+- Build: B5a rules in BattleState (sticky targets, engagement, approach vs swing timing) + tests; B5b the scene (advance to the front, stay, no bouncing).
+
 ### Phase C: Feel
 - C1. Skill wind-up (`castMs`), longer than a normal attack; stun/freeze during wind-up cancels the cast (to confirm).
 - C2. Skill cast visuals: colour flash, ring burst, name banner, bigger coloured numbers, screen shake / hit-stop.

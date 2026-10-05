@@ -27,13 +27,34 @@ Mana is skipped until there is a meaningful use for it. Skills run on COOLDOWN O
 - Skill books (built later) come as a pair: attack skill book / support skill book. Each one swaps or upgrades the matching slot.
 - Existing skills sorted: Shield Bash, Cleave, Venom Strike, Power Shot, Ensnare Shot = attack. Guard, Rage, Smoke = support.
 
-### 1.3 Debuffs (all of them, data in `statuses.json`)
-- Have: stun, slow, freeze, poison.
-- Control: silence (no skills), knockback/delay (resets attack timer), fear (skips attacks briefly).
-- Damage over time: burn (fire, stronger/shorter than poison), bleed (physical, ignores defense).
-- Stat debuffs: weaken (-attack), armor break (-defense), curse (-resist), blind (misses a % of attacks), mark (takes +% damage).
-- Same rules as today: same status from the same source refreshes (no stacking), bosses use `statusDurationScale`.
-- Enemies need ways to receive them (skills and items apply them); enemy skills that debuff heroes can come with the enemy pass.
+### 1.3 Debuffs (REDONE: element signatures, data in `statuses.json`)
+Every damage type has a signature. Same list works on heroes later (enemy skills).
+
+**Damage over time (DoT): stacks with NO limit.** Every application adds a stack; each stack has its OWN timer and falls off on its own (so the number of stacks is limited by how fast you apply them). Damage = per-stack tick x number of stacks.
+- Bleed (physical): damage per tick, ignores defense.
+- Burn (fire): strongest tick, short duration.
+- Poison (dark): weaker tick, long duration.
+
+**Element signatures (not damage):**
+- Chill (ice): slows attack speed. STACKS; at 5 stacks the enemy FREEZES and all chill clears. Plain "Slow" no longer exists (slowing is ice only).
+- Shock (electric): "jitter": the enemy attacks slower and has a small chance to fumble each attack (a 0.3s stun). Refreshes (does not stack).
+- Armor Break (physical): -defense.
+- Curse (dark): -resist.
+
+**Hard control** (bosses get half length via `statusDurationScale`; DoTs are NOT shortened on bosses):
+- Stun: can't act (physical and electric sources).
+- Freeze: can't act (ice; reached through Chill or directly). Shatter Hammer cashes it in.
+- Fear: stops attacking and backs away to its spot (dark / Bard style sources).
+- Knockback: resets the attack timer.
+- Taunt: must attack the taunter.
+- Silence: can't use skills. Kept for later, when enemies get skills.
+
+**Weakening:**
+- Weaken: -attack. Blind: misses a % of attacks. Mark: takes +% damage from everyone (marks from different sources add up).
+
+**Default rule for everything that is not a DoT or Chill:** the same debuff refreshes its timer (no stacking).
+
+**Damage types:** physical (melee, ranged), fire, ice, electric, dark. No holy type: the Cleric's Smite is PHYSICAL (ranged).
 
 ### 1.4 Morale: overlay instead of text
 - Remove the morale text tag and popup.

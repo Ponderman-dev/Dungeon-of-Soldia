@@ -126,15 +126,15 @@ Mage 80/22/2/10/5/8/90, Cleric 100/14/5/12/4/5/95, Necromancer 85/15/3/10/5/6/90
 Growth: Mage atk +5% hp +3% resist +0.5; Cleric hp +4% atk +3% resist +0.5; Necromancer atk +4% hp +3% resist +0.4; Bard hp +3% atk +3% speed +0.3; Alchemist atk +4% hp +3% crit +0.2. (Existing four keep their growth in heroes.json.)
 Skeleton minion (starting idea): about 25 health, 6 attack, 100 attack speed, no defense.
 Start squad: Knight, Rogue, Archer; the others unlock by going deeper. Squad select (pick 3) is part of this big update.
-The roster is now 10 heroes: 4 melee (Knight, Berserker, Rogue, Spearman) + 6 ranged.
+The roster is now 10 heroes: 4 melee (Knight, Berserker, Rogue, Samurai) + 6 ranged.
 
-### Spearman (melee, fire, burn spreader) DECIDED (10th hero)
-- Passive "Reach": his basic attacks pierce: they also hit the enemy behind the target for half damage, and that second hit ALSO applies his on-hit effects (items, burn). Self only.
-- Attack "Whirling Spear": spins the spear, hits ALL enemies with FIRE damage and knockback (resets their attack timers); applies Burn.
-- Support "Spear Wall": he plants his spear for 4s: he blocks the first hits, and enemies that hit him take fire damage (burn) and are knocked back.
-- Style: burn spreader (fire melee: pierce + sweep spread burn across the enemy line; strong with burn/debuff items, Mage and Alchemist).
-- Stats (starting idea): melee, 105 health / 21 attack / 6 def / 4 resist / 6 evasion / 8 crit / 105 speed. Growth: attack +4%, health +4%, crit +0.2.
-- Open: how does he get Burn from basic attacks? Suggest his basic attacks do FIRE damage with a built-in chance to burn (Reach then spreads it to the enemy behind). Name "Spearman" is a placeholder.
+### Samurai (melee, pure physical, crit executioner) DECIDED (10th hero, replaces the Spearman idea)
+- Passive "Focused Strike": his attacks are SLOWER (longer time between attacks) but each hit deals MORE damage, with a big chance to apply Bleed (physical damage over time, ignores defense), and his debuffs are a bit easier to apply. Self only.
+- Attack "Wind Cutter": sends a crescent slash across the field: hits ALL enemies for ranged-type physical damage (so ranged-attack-boost items feed it) and applies Armor Break. Needs a crescent-wave visual. He stays in his slot for this (no run-up).
+- Support "Focus Stance": 4s of stance: he blocks/parries hits against him and his next attack is a guaranteed crit.
+- Style: crit executioner (big crit hits, strongest vs single high-health enemies; bleed from his hits).
+- Stats (starting idea): melee, 100 health / 30 attack / 5 def / 3 resist / 5 evasion / 12 crit / 70 attack speed (slow, hits hard). Growth: attack +5%, health +3%, crit +0.4.
+- Open: "easier to apply debuffs" for him and for the Rogue: only their own chance-based debuffs (suggest, as the Rogue's earlier question is still open). Bleed is physical (ignores defense). Samurai + Berserker's Savage Leap (double damage on bleeding) now has a real bleed source.
 
 ## Roster status: all 9 heroes designed: Knight, Berserker, Rogue, Archer, Mage, Cleric, Necromancer, Bard, Alchemist.
 ## Still open for Part 2: base stats and growth per hero (melee/ranged, health, attack, defense, resist, evasion, crit, attack speed), squad select/unlock order, which 3 start unlocked, passives' exact numbers (tuned last).

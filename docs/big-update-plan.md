@@ -60,7 +60,14 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 - Support "Rally Cry": squad gets +defense and each hero loses one debuff; (taunt-all idea was not picked, keep it simple).
 - DECIDED: the armor from the passive goes only to the Knight himself (taunt still pulls enemy attacks off the squad). No squad-wide stat part.
 
-### Still to do: Berserker, Rogue, Archer, Mage, Cleric, Necromancer, Bard, Alchemist (user may replace these concepts)
+### Berserker (melee, lifesteal bruiser) DECIDED
+- Passive "Bloodrage": gains attack speed for each % of health he is missing (the more hurt, the faster). Self only. Feeds lifesteal/regen items.
+- Attack "Savage Leap": jumps to one enemy for big damage; deals double to enemies already bleeding or below 50% health.
+- Support "War Cry": squad gets +attack for 5s AND enemies get Weaken (-attack) for the same time.
+- Style: medium health, stays alive by hitting (works with Bloodlust Mask style items).
+- Open: Savage Leap's "bleeding" bonus needs a bleed source (new debuff from Part 1, or items); say if the bonus should only use the 50% health part until then.
+
+### Still to do: Rogue, Archer, Mage, Cleric, Necromancer, Bard, Alchemist (user may replace these concepts)
 - Final roster of 9 (3 per run), role, stats, growth, perk, one attack + one support skill, melee or ranged.
 - Redo the existing four, add the rest.
 

@@ -58,7 +58,7 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 - Passive "Taunt Wall": 10% chance on each of his attacks to TAUNT the enemies hit for 3s (they must attack the Knight); the Knight gains some armor (defense) for 3s. New status: `taunt` (enemy side) + defense buff on the Knight.
 - Attack "Ground Pound": slams the floor, damages ALL enemies and knocks them back (resets their attack timers). Uses the knockback debuff.
 - Support "Rally Cry": squad gets +defense and each hero loses one debuff; (taunt-all idea was not picked, keep it simple).
-- Open: is the passive squad-wide or only the Knight's own attacks? (As written the trigger is the Knight's attacks; the taunt helps the whole squad.)
+- DECIDED: the armor from the passive goes only to the Knight himself (taunt still pulls enemy attacks off the squad). No squad-wide stat part.
 
 ### Still to do: Berserker, Rogue, Archer, Mage, Cleric, Necromancer, Bard, Alchemist (user may replace these concepts)
 - Final roster of 9 (3 per run), role, stats, growth, perk, one attack + one support skill, melee or ranged.

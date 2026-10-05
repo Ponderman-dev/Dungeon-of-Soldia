@@ -9,7 +9,7 @@ No mana items. Items are passive only. Items on a dead hero stop working. Detail
 - Chance effects: each copy rolls separately, unless noted as unique (does not stack). Same status from the same source refreshes instead of stacking.
 - Dodge/crit-type chances have caps set in the item JSON. `falloffRatio` means diminishing returns (each extra copy adds ratio^(copies-1) of the effect).
 - Greater minion items: one minion per item, extra copies stack only its stats. Weak minion items: each copy has its own spawn timer, with a shared cap.
-- "(suggest)" in the Stacking column = my suggestion, not decided yet. Everything else is decided or already built.
+- All stacking rules were reviewed with the user one by one. A few exact numbers marked "(suggest)" inside a row are still my starting values to tune last.
 
 Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 
@@ -24,7 +24,7 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Aid Kit | special | BUILT | heal 5% max health when a floor is cleared, falloff per extra kit | Diminishing: each extra kit adds 0.85x the last |
 | Sucker Punch Glove | on-hit | NEW | first attack on each enemy deals +50% damage | Bonus adds up per copy (+50% each). First-attack tracking is shared |
 | Bandage Roll | special | NEW | holder heals 3% max health on each kill | Heal adds up per copy (3% each), no cap |
-| Second Wind Flask | special | NEW | CONSUMABLE: when the holder drops below 40% health, one flask is used up and heals 30% max health (raised from 15%) | Each copy is one use, like potions in an inventory: a trigger deletes one copy, the remaining copies wait for the next trigger. Stacking = more uses, not a bigger heal |
+| Second Wind Flask | special | NEW | CONSUMABLE: when the holder drops below 40% health, one flask is used up and heals 30% max health (raised from 15%) | CONSUMABLE: each copy is one use (like potions in an inventory). A trigger uses up one copy and the rest wait. At most ONE trigger per floor per holder. Stacking = more uses over the run, not a bigger heal |
 | Full Vigor | special | NEW | +15% damage while the holder is at full health | Bonus adds up per copy (+15% each) |
 | Brawler's Streak | on-hit | NEW | each consecutive hit on the same target adds +2% damage (max +10%), resets on a new target | Per-hit bonus stays +2%. Each extra copy raises the MAX (+10%, +20%, +30%...), so the streak takes longer to build but gets bigger |
 | Tough Skin | special | NEW | the first hit the holder takes each floor deals 50% less damage | One protected hit per floor. Each extra copy makes the cut bigger (50%, 65%, 75%... capped at 90%) |
@@ -55,7 +55,7 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Bone Charm | minion | NEW | all minions (weak and greater) +20% health and attack (lowered from 30%) | Additive (+20% each), no cap |
 | Overseer's Whistle | minion | NEW | weak minion cap +1, weak minions attack 15% faster | +1 weak minion cap per copy, max +4 total. Attack speed bonus adds up (+15% each) |
 | Wisp Lantern | minion | NEW | every 15s a flying Wisp (weak minion, ranged magic) | Spawn in bursts: each extra copy adds one more Wisp to every spawn. One shared timer. Weak minion cap is shared |
-| Gargoyle Idol | minion | NEW | greater minion: a slow, tanky Gargoyle that draws enemy attacks | Greater minion: 1 Gargoyle however many copies. Extra copies only stack its stats |
+| Gargoyle Idol | minion | NEW | greater minion: a slow, tanky Gargoyle that draws enemy attacks | Greater minion: 1 Gargoyle however many copies. Extra copies add +25% to its stats each (additive) |
 
 ## EPIC (20)
 | Item | Type | Status | Effect | Stacking |
@@ -79,7 +79,7 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Grave Dust | minion | NEW | weak minions explode when they die | Explosion damage adds up per copy |
 | Fire Imp Brazier | minion | NEW | every 10s an Imp (weak minion, ranged fire, applies Burn) | Spawn in bursts: each extra copy adds one more Imp to every spawn. One shared timer. Weak minion cap is shared |
 | Mimic Chest | minion | NEW | when the holder is hit, 10% chance a Mimic (weak minion) pops out and explodes when it dies | Chance stays 10% (does not stack). Each extra copy makes the Mimic stronger and its explosion bigger |
-| Spirit Knight Banner | minion | NEW | greater minion: a Spirit Knight, balanced melee fighter that grows each floor it survives | Greater minion: 1 Spirit Knight however many copies. Extra copies only stack its stats |
+| Spirit Knight Banner | minion | NEW | greater minion: a Spirit Knight, balanced melee fighter that grows each floor it survives | Greater minion: 1 Spirit Knight however many copies. Extra copies add +25% to its stats each (additive) |
 
 ## LEGENDARY (10)
 | Item | Type | Status | Effect | Stacking |
@@ -92,8 +92,8 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Jolly Banner | squad | NEW | 5% per attack: holder + 1 random ally get great regen, guaranteed crits and attack speed for 2s | Chance stays 5%. Each extra copy extends the buff duration (+0.5s). The buff refreshes, it does not stack |
 | Frozen Thunderbolt | on-hit | NEW | every electric hit causes an ice burst around the enemy hit (ice damage and freeze) | Ice burst damage adds up per copy. Freeze chance is unique (does not stack) |
 | Fire Heart | special | NEW | at the start of each floor a fire shield (a % of max health, bigger per copy) that slowly regenerates, blocks damage and burns attackers | Extra copies make the shield bigger (one shield per hero per floor) |
-| Necro Crown | minion | NEW | weak minion cap +2, and every enemy kill by anyone raises a weak minion | (suggest) +2 weak minion cap per copy. The kill-spawn effect is unique (no stack) |
-| Phoenix Hatchling | minion | NEW | greater minion: a flying fire Phoenix that heals the squad a little when it is hit | Greater minion: 1 Phoenix however many copies. Extra copies only stack its stats and the squad heal |
+| Necro Crown | minion | NEW | weak minion cap +2, and every enemy kill by anyone raises a weak minion | +2 weak minion cap per copy, capped at +6 total. The kill-spawn effect is unique (one minion per kill, no stacking) |
+| Phoenix Hatchling | minion | NEW | greater minion: a flying fire Phoenix that heals the squad a little when it is hit | Greater minion: 1 Phoenix however many copies. Extra copies add +25% to its stats and the squad heal each (additive) |
 
 ## Minion item rules (summary)
 - Weak minions: many, vanish at floor end. Greater minions: max 1 per item, persist across floors, extra copies only stack its stats, no healing after a win (skills can heal it, buffs affect it), when dead the party clears 2 floors before it can be summoned again.

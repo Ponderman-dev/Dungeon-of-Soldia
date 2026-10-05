@@ -1,7 +1,7 @@
 # Item review (full pass over all 66 items)
 
-This is a REVIEW with recommendations only. Nothing here is decided until the user approves it,
-and nothing is built. The master list stays `docs/item-list.md`; approved changes get copied there.
+STATUS: the user APPROVED every recommendation except Phoenix Feather (not added). Applied to `docs/item-list.md`.
+Jolly Banner moved to epic (not the 8%/3s alternative). Nothing is built yet. The master list stays `docs/item-list.md`; approved changes get copied there.
 
 Sections:
 1. Problems found (rules that must be decided before building)

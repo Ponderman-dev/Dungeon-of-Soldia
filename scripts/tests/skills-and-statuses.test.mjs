@@ -18,10 +18,10 @@ const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name,
   let after = []; for (let t = 0; t < 3000; t += 50) after.push(...s.update(50).filter((e) => e.type === 'attack' && e.attacker === g));
   ok('enemy attacks again after stun', after.length > 0); }
 
-// Slow: Ensnare Shot lengthens the enemy's attack interval by 1/0.6 (no hero has it any more, so the test puts it in the Archer's slot)
+// Chill: Ensnare Shot adds 2 Chill = 20% slower attacks, interval x1/0.8 (no hero has it any more, so the test puts it in the Archer's slot)
 { const s = mk(); const [g] = s.spawnEnemies(['goblin'], 1); const before = s.interval(g);
   g.stats.evasion = 0; s.heroes[3].skills[1].id = 'ensnare_shot'; s.castSkill(s.heroes[3].uid, 1);
-  ok('slow lengthens interval', Math.abs(s.interval(g) - before / 0.6) < 1, `${before} -> ${s.interval(g).toFixed(0)}`); }
+  ok('2 chill lengthens interval', Math.abs(s.interval(g) - before / 0.8) < 1, `${before} -> ${s.interval(g).toFixed(0)}`); }
 
 // Poison: Venom Strike (Rogue, slot 0) ticks dark damage and can kill (and award XP)
 { const s = mk(); const [sl] = s.spawnEnemies(['slime'], 1); sl.stats.evasion = 0; sl.hp = 12; sl.resists = [];

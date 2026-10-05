@@ -39,8 +39,8 @@
   "ensnare_shot": {
     "name": "Ensnare Shot", "short": "ES", "kind": "attack", "target": "enemy", "manaCost": 18, "cooldownMs": 9000,
     "damageMultiplier": 0.7,
-    "apply": [ { "status": "slow", "durationMs": 5000, "attackSpeedPercent": -40 } ],
-    "description": "Hit one enemy for 70% damage and slow its attack speed by 40% for 5s."
+    "apply": [ { "status": "chill", "durationMs": 5000, "stacks": 2 } ],
+    "description": "Hit one enemy for 70% damage and add 2 Chill (slower attacks; 5 Chill = Freeze)."
   },
   "eagle_focus": {
     "name": "Eagle Focus", "short": "EF", "kind": "support", "target": "self", "cooldownMs": 12000,

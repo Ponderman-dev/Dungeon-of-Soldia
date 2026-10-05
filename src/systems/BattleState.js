@@ -81,15 +81,22 @@ export default class BattleState {
     return unit;
   }
 
-  // Milliseconds between attacks. Slow makes it longer.
+  // Milliseconds between attacks. Chill (per stack) and Shock make it longer.
   interval(unit) {
-    const slow = unit.statuses.filter((s) => s.type === 'slow').reduce((sum, s) => sum + s.attackSpeedPercent, 0);
-    const speed = (unit.stats.attackEfficiency / 100) * Math.max(0.2, 1 + slow / 100);
+    const chill = this.statusDefs.chill || {};
+    let change = -this.stacks(unit, 'chill') * (chill.slowPerStackPercent || 0);
+    for (const s of unit.statuses) if (s.type === 'shock') change += s.attackSpeedPercent;
+    const speed = (unit.stats.attackEfficiency / 100) * Math.max(0.2, 1 + change / 100);
     return this.rules.baseAttackIntervalMs / speed;
   }
 
+  has(unit, type) {
+    return unit.statuses.some((s) => s.type === type);
+  }
+
+  // Stunned or frozen: can't attack or cast.
   isStunned(unit) {
-    return unit.statuses.some((s) => s.type === 'stun' || s.type === 'freeze'); // frozen = can't act
+    return unit.statuses.some((s) => s.type === 'stun' || s.type === 'freeze');
   }
 
   spawnEnemies(ids, floor) {
@@ -116,6 +123,12 @@ export default class BattleState {
   }
 
   pickTarget(unit) {
+    // Taunted: must attack whoever taunted it (while that one is alive).
+    const taunt = unit.statuses.find((s) => s.type === 'taunt');
+    if (taunt) {
+      const taunter = [...this.heroes, ...this.enemies].find((u) => u.uid === taunt.sourceUid);
+      if (taunter && taunter.alive && taunter.side !== unit.side) return taunter;
+    }
     if (unit.side === 'hero') {
       const alive = this.enemies.filter((e) => e.alive);
       const focus = alive.find((e) => e.uid === this.focusUid);
@@ -156,10 +169,19 @@ export default class BattleState {
     }
 
     for (const unit of [...this.heroes, ...this.enemies]) {
-      if (!unit.alive || this.isStunned(unit)) continue;
+      if (!unit.alive || this.isStunned(unit) || this.has(unit, 'fear')) continue; // feared units don't attack
       unit.timer += dt;
       const interval = this.interval(unit);
       if (unit.timer < interval) continue;
+
+      // Shocked: sometimes the attack fumbles and the unit is stunned for a moment instead.
+      const shock = unit.statuses.find((s) => s.type === 'shock');
+      if (shock && this.rng() * 100 < shock.fumbleChance) {
+        unit.timer -= interval;
+        events.push({ type: 'proc', unit, label: 'Fumble!' });
+        this.applyStatus(unit, { status: 'stun', durationMs: shock.fumbleStunMs }, unit, 'shock_fumble', events);
+        continue;
+      }
 
       const target = this.pickTarget(unit);
       if (!target) {
@@ -286,37 +308,64 @@ export default class BattleState {
 
   // ---- statuses (statuses.json) ----------------------------------------------------------
 
-  // Gives a unit a status.
-  //  - Damage over time (statuses.json `dot`: bleed, burn, poison): EVERY application adds a new
-  //    stack, with no limit. Each stack has its own timer; all stacks of one kind tick together.
+  // Gives a unit a status (rules in statuses.json).
+  //  - Damage over time (`dot`: bleed, burn, poison) and `stacking` statuses (chill): EVERY
+  //    application adds a new stack (spec.stacks, default 1), with no limit, each with its own timer.
+  //    All stacks of one damage-over-time kind tick together.
+  //  - Chill: at `freezeAt` stacks the unit freezes for `freezeMs` and all its chill is removed.
+  //  - `instant` statuses (knockback) happen once and leave nothing behind.
   //  - Anything else: the same status from the same source (skill/item) just restarts its timer.
   // Bosses have `statusDurationScale` (e.g. 0.5): CONTROL statuses (statuses.json `control`:
-  // stun, freeze, slow...) last less on them. Damage over time is never shortened.
+  // stun, freeze, chill, fear...) last less on them. Damage over time is never shortened.
   applyStatus(target, spec, source, skillId, events) {
     const info = this.statusDefs[spec.status] || {};
     const scale = info.control ? target.def.statusDurationScale ?? 1 : 1;
     const duration = spec.durationMs * scale;
     const key = `${spec.status}:${skillId}`;
-    let status = info.dot ? null : target.statuses.find((s) => s.key === key);
-    if (!status) {
-      status = { key, type: spec.status };
-      target.statuses.push(status);
+
+    if (info.instant) {
+      // Knockback: the next attack starts over (a boss only loses part of its wind-up).
+      if (spec.status === 'knockback') target.timer *= 1 - scale;
+      events.push({ type: 'status', unit: target, change: 'apply', status: { key, type: spec.status, remaining: 0, total: 0 } });
+      return;
     }
-    status.remaining = duration;
-    status.total = duration;
-    if (spec.status === 'slow') status.attackSpeedPercent = spec.attackSpeedPercent;
-    if (spec.status === 'buff') status.mods = spec.mods;
-    if (info.dot) {
-      status.stack = true;
-      status.damageType = spec.damageType || info.damageType || 'dark';
-      status.ignoresArmor = spec.ignoresArmor ?? !!info.ignoresArmor;
-      // Damage-type items boost damage over time of that type too (e.g. +15% dark boosts poison).
-      const bonus = ((source.damageBonus && source.damageBonus[status.damageType]) || 0) / 100;
-      status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus)));
-      if (!(spec.status in target.dotClocks)) target.dotClocks[spec.status] = 0; // first stack: start the tick clock
+
+    const stacking = info.dot || info.stacking;
+    const count = stacking ? spec.stacks || 1 : 1;
+    let status;
+    for (let i = 0; i < count; i++) {
+      status = stacking ? null : target.statuses.find((s) => s.key === key);
+      if (!status) {
+        status = { key, type: spec.status };
+        target.statuses.push(status);
+      }
+      status.remaining = duration;
+      status.total = duration;
+      if (spec.status === 'buff') status.mods = spec.mods;
+      if (spec.status === 'taunt') status.sourceUid = source.uid;
+      if (spec.status === 'shock') {
+        status.attackSpeedPercent = spec.attackSpeedPercent ?? info.attackSpeedPercent ?? 0;
+        status.fumbleChance = spec.fumbleChance ?? info.fumbleChance ?? 0;
+        status.fumbleStunMs = spec.fumbleStunMs ?? info.fumbleStunMs ?? 300;
+      }
+      if (info.dot) {
+        status.stack = true;
+        status.damageType = spec.damageType || info.damageType || 'dark';
+        status.ignoresArmor = spec.ignoresArmor ?? !!info.ignoresArmor;
+        // Damage-type items boost damage over time of that type too (e.g. +15% dark boosts poison).
+        const bonus = ((source.damageBonus && source.damageBonus[status.damageType]) || 0) / 100;
+        status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus)));
+        if (!(spec.status in target.dotClocks)) target.dotClocks[spec.status] = 0; // first stack: start the tick clock
+      }
     }
     if (spec.status === 'buff') this.refreshStats();
     events.push({ type: 'status', unit: target, change: 'apply', status });
+
+    // Enough chill: the unit freezes and the chill is used up.
+    if (spec.status === 'chill' && info.freezeAt && this.stacks(target, 'chill') >= info.freezeAt) {
+      target.statuses = target.statuses.filter((s) => s.type !== 'chill');
+      this.applyStatus(target, { status: 'freeze', durationMs: info.freezeMs }, source, 'chill', events);
+    }
   }
 
   // How many stacks of a status a unit has (damage over time: one per application).
@@ -371,7 +420,7 @@ export default class BattleState {
   // or nothing to aim at). Skills cost no mana: only the cooldown limits them.
   canCast(hero, index) {
     const slot = hero.skills[index];
-    if (!slot || !hero.alive || this.isStunned(hero)) return false;
+    if (!slot || !hero.alive || this.isStunned(hero) || this.has(hero, 'silence')) return false;
     const skill = this.skillDefs[slot.id];
     if (slot.cooldownLeft > 0) return false;
     if (skill.target === 'self') return true;

@@ -63,7 +63,7 @@ const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker 
 // Gambler's Dice: crit puts a random debuff on the enemy
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'gamblers_dice'); const [e] = dummy(s); const seen = new Set();
   for (let i = 0; i < 300; i++) { e.statuses = []; s.afterHit(k, e, 10, [], { crit: true }); for (const st of e.statuses) seen.add(st.type); }
-  ok('crit gives slow, poison and stun over time', seen.has('slow') && seen.has('poison') && seen.has('stun'), [...seen].join());
+  ok('crit gives chill, poison, stun and shock over time', seen.has('chill') && seen.has('poison') && seen.has('stun') && seen.has('shock'), [...seen].join());
   e.statuses = []; s.afterHit(k, e, 10, [], { crit: false }); ok('no debuff without a crit', e.statuses.length === 0); }
 // Aid Kit: heals % on clear, diminishing
 { const s = mk(); const k = s.heroes[0]; k.hp = 1; s.giveItem(k.uid, 'aid_kit'); const pct = (p) => { k.hp = 1; return s.winHeal(p).find((x) => x.unit === k).amount / k.maxHp * 100; };

@@ -1,8 +1,9 @@
 import fs from 'fs';
+import { noPerks } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const mk = () => { let seed = 1; const rng = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const s = new BattleState({ heroDefs: r('heroes.json'), enemyDefs: r('enemies.json'), itemDefs: {}, skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });
+  const s = new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs: {}, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });
   return s; };
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 
@@ -10,7 +11,6 @@ const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name,
 { const s = mk(); const [g] = s.spawnEnemies(['goblin'], 1); g.stats.evasion = 0; g.hp = g.maxHp = 99999;
   const ev = s.castSkill(s.heroes[0].uid, 0);
   ok('shield bash stuns', s.isStunned(g) && ev.some((e) => e.type === 'status'));
-  ok('mana spent', s.heroes[0].mana === 60 - 12, `mana=${s.heroes[0].mana}`);
   ok('cooldown set', s.heroes[0].skills[0].cooldownLeft === 8000);
   ok('cannot recast on cooldown', s.castSkill(s.heroes[0].uid, 0).length === 0);
   const hits = []; for (let t = 0; t < 1400; t += 50) hits.push(...s.update(50).filter((e) => e.type === 'attack' && e.attacker === g));
@@ -18,10 +18,10 @@ const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name,
   let after = []; for (let t = 0; t < 3000; t += 50) after.push(...s.update(50).filter((e) => e.type === 'attack' && e.attacker === g));
   ok('enemy attacks again after stun', after.length > 0); }
 
-// Slow: Ensnare Shot (Archer, slot 1) lengthens the enemy's attack interval by 1/0.6
+// Chill: Ensnare Shot adds 2 Chill = 20% slower attacks, interval x1/0.8 (no hero has it any more, so the test puts it in the Archer's slot)
 { const s = mk(); const [g] = s.spawnEnemies(['goblin'], 1); const before = s.interval(g);
-  g.stats.evasion = 0; s.castSkill(s.heroes[3].uid, 1);
-  ok('slow lengthens interval', Math.abs(s.interval(g) - before / 0.6) < 1, `${before} -> ${s.interval(g).toFixed(0)}`); }
+  g.stats.evasion = 0; s.heroes[3].skills[1].id = 'ensnare_shot'; s.castSkill(s.heroes[3].uid, 1);
+  ok('2 chill lengthens interval', Math.abs(s.interval(g) - before / 0.8) < 1, `${before} -> ${s.interval(g).toFixed(0)}`); }
 
 // Poison: Venom Strike (Rogue, slot 0) ticks dark damage and can kill (and award XP)
 { const s = mk(); const [sl] = s.spawnEnemies(['slime'], 1); sl.stats.evasion = 0; sl.hp = 12; sl.resists = [];
@@ -49,9 +49,7 @@ const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name,
 { const s = mk(); const es = s.spawnEnemies(['slime', 'goblin', 'slime'], 1); es.forEach((e) => (e.stats.evasion = 0));
   const ev = s.castSkill(s.heroes[1].uid, 0); ok('cleave hits all 3', ev.filter((e) => e.type === 'attack').length === 3); }
 
-// Not enough mana / boss status scale
-{ const s = mk(); s.spawnEnemies(['goblin'], 1); s.heroes[0].mana = 5; ok('no cast without mana', s.castSkill(s.heroes[0].uid, 0).length === 0); }
+// Skills cost no mana: a hero can cast as soon as the cooldown is over / boss status scale
+{ const s = mk(); s.spawnEnemies(['goblin'], 1); ok('casts with no mana stat', s.castSkill(s.heroes[0].uid, 0).length > 0 && s.heroes[0].mana === undefined); }
 { const s = mk(); const [g] = s.spawnEnemies(['goblin'], 1); g.def = { ...g.def, statusDurationScale: 0.5 }; g.stats.evasion = 0; s.castSkill(s.heroes[0].uid, 0);
   ok('boss status half length', g.statuses[0] && g.statuses[0].remaining === 750, `${g.statuses[0] && g.statuses[0].remaining}`); }
-// Mana regen
-{ const s = mk(); s.spawnEnemies(['goblin'], 1); s.heroes[0].mana = 10; for (let t = 0; t < 5000; t += 50) s.update(50); ok('mana regen 2/s', Math.abs(s.heroes[0].mana - 20) < 0.5, `${s.heroes[0].mana}`); }

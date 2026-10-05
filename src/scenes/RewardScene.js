@@ -12,8 +12,8 @@ const MUTE = '#9a8fb8';
 const FONT = 'system-ui, Arial, sans-serif';
 const CARD_W = 358;
 const CARD_H = 112;
-const SPECIAL_LABEL = { block: 'BLOCK', regen: 'REGEN/s', thorns: 'THORNS', lifesteal: 'LIFESTEAL', skillDamage: 'SKILL DMG', critDamage: 'CRIT DMG' };
-const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD', mana: 'MANA' };
+const SPECIAL_LABEL = { block: 'BLOCK', regen: 'REGEN/s', thorns: 'THORNS', lifesteal: 'LIFESTEAL', skillDamage: 'SKILL DMG', critDamage: 'CRIT DMG', skillSplash: 'SPLASH', lifestealShare: 'SHARE', critDebuff: 'CRIT DEBUFF', clearHeal: 'CLEAR HEAL' };
+const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
 
 // The reward screen: pick 1 of 3 items, then choose which hero gets it.
 // It only shows choices and reports the result through payload.onDone(itemId, heroUid).
@@ -145,7 +145,10 @@ export default class RewardScene extends Phaser.Scene {
     for (const e of item.effects) {
       if (e.proc) {
         const copies = countOf(hero, item.id);
-        lines.push({ text: `${e.label.replace('!', '').toUpperCase()} ${copies * e.chance}>${(copies + 1) * e.chance}%`, up: true });
+        const name = e.label.replace('!', '').toUpperCase();
+        if (e.unique) lines.push({ text: `${name} ${copies ? e.chance : 0}>${e.chance}%`, up: true }); // more copies do not add chance
+        else if (e.chance >= 100 && e.strike) lines.push({ text: `${name} ${copies * e.strike.damageMultiplier * 100}>${(copies + 1) * e.strike.damageMultiplier * 100}% ATK`, up: true });
+        else lines.push({ text: `${name} ${copies * e.chance}>${(copies + 1) * e.chance}%`, up: true });
       } else if (e.special) {
         const before = hero.specials[e.special] || 0;
         const now = after.specials[e.special] || 0;
@@ -178,7 +181,10 @@ export default class RewardScene extends Phaser.Scene {
     const colW = (CARD_W - 12) / 2;
     const cardH = 190;
     this.payload.state.heroes.forEach((hero, i) => {
-      const x = 16 + (i % 2) * (colW + 12);
+      // Two cards per row; a lonely last card (3 heroes) sits in the middle.
+      const total = this.payload.state.heroes.length;
+      const alone = i === total - 1 && total % 2 === 1;
+      const x = alone ? 16 + (colW + 12) / 2 : 16 + (i % 2) * (colW + 12);
       const y = 240 + Math.floor(i / 2) * (cardH + 12);
       const ok = canReceive(hero, item);
       const g = this.track(this.add.graphics());

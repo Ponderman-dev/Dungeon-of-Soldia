@@ -1,17 +1,18 @@
 import fs from 'fs';
+import { noPerks } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems } from '../../src/systems/items.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const itemDefs = loadItems(r('items.json'));
 const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
-const mk = () => new BattleState({ heroDefs: r('heroes.json'), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+const mk = () => new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: { ...r('combat.json'), morale: {} }, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
 // proc rate: ~8% of the holder's attacks
 { const s = mk(); const [e] = s.spawnEnemies(['goblin'], 1); e.hp = e.maxHp = 1e12; e.statuses.push({ key: 'x', type: 'stun', remaining: 1e12, total: 1e12 }); const k = s.heroes[0]; s.giveItem(k.uid, 'war_banner');
   ok('banner gives no flat stats', k.stats.attack === 20, `${k.stats.attack}`);
   let attacks = 0, procs = 0; for (let t = 0; t < 8000000; t += 50) { for (const ev of s.update(50)) { if (ev.type === 'attack' && ev.attacker === k && !ev.skill) attacks++; if (ev.type === 'proc') procs++; } }
   ok('proc rate ~8% of holder attacks', Math.abs(procs / attacks - 0.08) < 0.01, `${(100 * procs / attacks).toFixed(1)}% of ${attacks} attacks`); }
 // the buff reaches all living heroes, is +25% attack speed, lasts 2s and refreshes (does not stack)
-{ const s = mk(); s.spawnEnemies(['goblin'], 1); const k = s.heroes[0]; s.giveItem(k.uid, 'war_banner'); s.heroes[3].alive = false;
+{ const s = mk(); s.spawnEnemies(['goblin'], 1); const k = s.heroes[0]; s.giveItem(k.uid, 'war_banner'); s.heroes[3].alive = false; s.refreshStats();
   const before = s.heroes.map((h) => s.interval(h)); const ev = []; s.rng = () => 0;   // force the proc
   s.rollProcs(k, 'onAttack', ev);
   const after = s.heroes.map((h) => s.interval(h));

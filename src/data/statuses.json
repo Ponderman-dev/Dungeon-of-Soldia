@@ -1,18 +1,115 @@
 {
-  "stun": {
-    "label": "STUN",
-    "color": "#d9a400",
-    "textColor": "#000000"
+  "_about": "Status tags and rules. dot: damage over time, every application adds a STACK (no limit, each stack has its own timer, all stacks of one kind tick together every tickMs). control: bosses take it for half as long (statusDurationScale). Numbers here are defaults a skill/item spec can override. stacking: like dot it stacks (each stack own timer) but deals no damage (chill). instant: no lasting status (knockback). Stat debuffs (weaken, armorBreak, curse, blind, mark) refresh per source; different sources add up.",
+  "bleed": {
+    "label": "BLEED",
+    "color": "#c0303a",
+    "textColor": "#ffffff",
+    "dot": true,
+    "tickMs": 1000,
+    "damageType": "melee",
+    "ignoresArmor": true
   },
-  "slow": {
-    "label": "SLOW",
-    "color": "#3b8ee0",
-    "textColor": "#ffffff"
+  "burn": {
+    "label": "BURN",
+    "color": "#ff7a3d",
+    "textColor": "#000000",
+    "dot": true,
+    "tickMs": 500,
+    "damageType": "fire"
   },
   "poison": {
     "label": "PSN",
     "color": "#3fae6a",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "dot": true,
+    "tickMs": 1000,
+    "damageType": "dark"
+  },
+  "chill": {
+    "label": "CHILL",
+    "color": "#7fd8ff",
+    "textColor": "#000000",
+    "stacking": true,
+    "control": true,
+    "slowPerStackPercent": 10,
+    "freezeAt": 5,
+    "freezeMs": 1500
+  },
+  "freeze": {
+    "label": "FREEZE",
+    "color": "#9fe8ff",
+    "textColor": "#000000",
+    "control": true
+  },
+  "shock": {
+    "label": "SHOCK",
+    "color": "#ffe94d",
+    "textColor": "#000000",
+    "control": true,
+    "attackSpeedPercent": -20,
+    "fumbleChance": 10,
+    "fumbleStunMs": 300
+  },
+  "stun": {
+    "label": "STUN",
+    "color": "#d9a400",
+    "textColor": "#000000",
+    "control": true
+  },
+  "fear": {
+    "label": "FEAR",
+    "color": "#6a3fa0",
+    "textColor": "#ffffff",
+    "control": true
+  },
+  "knockback": {
+    "label": "KNOCKBACK",
+    "color": "#c9b18a",
+    "textColor": "#000000",
+    "control": true,
+    "instant": true
+  },
+  "taunt": {
+    "label": "TAUNT",
+    "color": "#e05a2a",
+    "textColor": "#ffffff",
+    "control": true
+  },
+  "silence": {
+    "label": "SILENCE",
+    "color": "#8a86a0",
+    "textColor": "#ffffff",
+    "control": true
+  },
+  "weaken": {
+    "label": "WEAK",
+    "color": "#9a6b3a",
+    "textColor": "#ffffff",
+    "attackPercent": -20
+  },
+  "armorBreak": {
+    "label": "ARMOR-",
+    "color": "#b0b0b0",
+    "textColor": "#000000",
+    "defenseFlat": -15
+  },
+  "curse": {
+    "label": "CURSE",
+    "color": "#5a2a7a",
+    "textColor": "#ffffff",
+    "resistFlat": -15
+  },
+  "blind": {
+    "label": "BLIND",
+    "color": "#333333",
+    "textColor": "#ffffff",
+    "missPercent": 25
+  },
+  "mark": {
+    "label": "MARK",
+    "color": "#ff3d6e",
+    "textColor": "#ffffff",
+    "damageTakenPercent": 15
   },
   "buff": {
     "label": "BUFF",

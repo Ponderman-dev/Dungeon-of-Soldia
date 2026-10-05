@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE } from '../config.js';
-import heroDefs from '../data/heroes.json';
+import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, SKILL_COLORS } from '../config.js';
+import allHeroDefs from '../data/heroes.json';
+import squadIds from '../data/squad.json';
 import enemyDefs from '../data/enemies.json';
 import dungeons from '../data/dungeons.json';
 import combatRules from '../data/combat.json';
@@ -14,21 +15,25 @@ import rawSkills from '../data/skills.json';
 import statusInfo from '../data/statuses.json';
 import Character from '../entities/Character.js';
 import BattleState from '../systems/BattleState.js';
-import { validateDungeon } from '../systems/validate.js';
+import { validateDungeon, validateHeroSkills, validateDamageTypes } from '../systems/validate.js';
+import { enemiesForFloor } from '../systems/dungeon.js';
+import { pickSquad, perkMods } from '../systems/party.js';
 import { loadItems } from '../systems/items.js';
 import { rollChoices } from '../systems/rewards.js';
 
 const DUNGEON_ID = 'A';
+const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
 const SLOT_Y = 720;
-const SLOT_WIDTH = GAME_WIDTH / 4;
+const heroDefs = pickSquad(allHeroDefs, squadIds);
+const SLOT_WIDTH = GAME_WIDTH / heroDefs.length;
 const ENEMY_Y = 340;
 const BAR_WIDTH = 44;
 const WALL_H = 200; // the back wall (with the door) fills the top of each floor
 const DOOR_X = GAME_WIDTH / 2;
 const T = combatRules.transition;
+const M = combatRules.attackMotion; // how heroes run up, swing, run back and shoot
 const itemDefs = loadItems(rawItems);
 const skillDefs = rawSkills;
-const BOX_TOP = 596; // the hero boxes at the bottom run from here to the screen edge
 const SKILL_Y = 772; // centre of the skill squares
 const SKILL_W = 40;
 const SKILL_H = 44;
@@ -36,7 +41,7 @@ const SKILL_H = 44;
 // Depth order: floor < slots < hero < hero bars < popups < banner/HUD
 const DEPTH = { floor: 0, slot: 1, marker: 2, hero: 5, heroBar: 6, doorFront: 7, popup: 10, hud: 20 };
 
-// The battle screen: enemies at the top, four heroes at the bottom, everyone auto-attacks.
+// The battle screen: enemies at the top, the squad (3 heroes) at the bottom, everyone auto-attacks.
 // After a win the heroes walk through the door, the floor slides down, and they walk in
 // from the bottom of the screen. The fight rules live in systems/BattleState.js; this scene
 // only draws what happens.
@@ -48,15 +53,19 @@ export default class BattleScene extends Phaser.Scene {
   create() {
     this.dungeon = dungeons[DUNGEON_ID];
     for (const problem of validateDungeon(this.dungeon, enemyDefs)) console.error('Dungeon data:', problem);
+    for (const problem of validateHeroSkills(heroDefs, skillDefs)) console.error('Hero skills:', problem);
+    for (const problem of validateDamageTypes({ heroDefs, enemyDefs, skillDefs, itemDefs }, damageTypes)) console.error('Damage types:', problem);
 
     this.floor = 1;
     this.mode = 'entering'; // 'entering' | 'fighting' | 'won' | 'lost'
     this.views = new Map(); // unit uid -> { unit, ch, bg, fill, groundY, ... }
+    this.engaged = new Map(); // enemy uid -> Map(hero uid -> spot index): melee heroes standing at that enemy
     this.state = new BattleState({
-      heroDefs: heroDefs.slice(0, 4),
+      heroDefs,
       enemyDefs,
       itemDefs,
       skillDefs,
+      statusDefs: statusInfo,
       rules: combatRules,
       damageTypes,
       leveling,
@@ -79,13 +88,13 @@ export default class BattleScene extends Phaser.Scene {
     this.enterHeroes(() => this.startFighting());
   }
 
-  // The boxes (and name labels) under the heroes are hidden while the floor changes.
+  // The name labels under the heroes are hidden while the floor changes.
   showSlots(show, duration = 250) {
     for (const h of this.state.heroes) {
       const v = this.views.get(h.uid);
-      // A fallen hero's box stays dim and has no skill squares.
-      this.tweens.add({ targets: [v.slotBox, v.label], alpha: show ? (h.alive ? 1 : 0.3) : 0, duration });
-      const buttons = v.skillButtons.flatMap((b) => [b.g, b.code, b.cost, b.cd]);
+      // A fallen hero's labels stay dim and have no skill squares.
+      this.tweens.add({ targets: [v.label, v.perkLabel], alpha: show ? (h.alive ? 1 : 0.3) : 0, duration });
+      const buttons = v.skillButtons.flatMap((b) => [b.g, b.code, b.cd]);
       this.tweens.add({ targets: buttons, alpha: show && h.alive ? 1 : 0, duration });
     }
   }
@@ -108,21 +117,24 @@ export default class BattleScene extends Phaser.Scene {
   drawHeroSlots() {
     this.state.heroes.forEach((unit, i) => {
       const cx = SLOT_WIDTH * i + SLOT_WIDTH / 2;
-      const boxH = GAME_HEIGHT - 8 - BOX_TOP;
-      const box = this.add.rectangle(cx, BOX_TOP + boxH / 2, SLOT_WIDTH - 12, boxH, 0x1d1730, 0.85).setStrokeStyle(1, 0x3a3057).setDepth(DEPTH.slot);
       const label = this.add
         .text(cx, GAME_HEIGHT - 22, '', { fontFamily: 'monospace', fontSize: '12px', color: '#9a8fc0' })
         .setOrigin(0.5)
         .setDepth(DEPTH.slot);
+      // The hero's party perk, under the name.
+      const perkLabel = this.add
+        .text(cx, GAME_HEIGHT - 8, '', { fontFamily: 'monospace', fontSize: '9px', color: '#7fd8a0' })
+        .setOrigin(0.5)
+        .setDepth(DEPTH.slot);
       const view = this.makeView(unit, cx, SLOT_Y);
       view.label = label;
-      view.slotBox = box;
+      view.perkLabel = perkLabel;
       view.slotX = cx;
       view.ch.setDepth(DEPTH.hero);
-      for (const part of [view.bg, view.fill, view.mbg, view.mfill]) part.setDepth(DEPTH.heroBar);
+      for (const part of [view.bg, view.fill]) part.setDepth(DEPTH.heroBar);
       view.chipBox.setDepth(DEPTH.heroBar);
 
-      // The two skill squares under the hero: tap to cast.
+      // The two skill squares under the hero: tap to cast. Left = attack skill (red), right = support skill (green).
       view.skillButtons = unit.skills.map((slot, j) => {
         const x = cx + (j === 0 ? -22 : 22);
         const textStyle = { fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color: '#f3eefc' };
@@ -130,9 +142,8 @@ export default class BattleScene extends Phaser.Scene {
           x: x - SKILL_W / 2,
           y: SKILL_Y - SKILL_H / 2,
           g: this.add.graphics().setDepth(3),
-          code: this.add.text(x, SKILL_Y - 6, skillDefs[slot.id].short, textStyle).setOrigin(0.5).setDepth(4),
-          cost: this.add.text(x, SKILL_Y + 12, String(skillDefs[slot.id].manaCost), { ...textStyle, fontSize: '10px' }).setOrigin(0.5).setDepth(4),
-          cd: this.add.text(x, SKILL_Y - 6, '', { ...textStyle, fontSize: '16px', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5),
+          code: this.add.text(x, SKILL_Y, skillDefs[slot.id].short, textStyle).setOrigin(0.5).setDepth(4),
+          cd: this.add.text(x, SKILL_Y, '', { ...textStyle, fontSize: '16px', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5),
         };
         this.add
           .zone(x, SKILL_Y, SKILL_W + 6, SKILL_H + 6)
@@ -151,11 +162,10 @@ export default class BattleScene extends Phaser.Scene {
     for (const e of this.state.castSkill(heroUid, index)) this.showEvent(e);
   }
 
-  // Redraws the skill squares and mana bars (ready / cooling down / not enough mana).
+  // Redraws the skill squares (ready / cooling down) and health bars.
   refreshHud() {
     for (const hero of this.state.heroes) {
       const view = this.views.get(hero.uid);
-      this.setMana(view);
       if (hero.alive) this.setBar(view); // health regeneration moves the bar
       view.skillButtons.forEach((b, j) => {
         const slot = hero.skills[j];
@@ -163,15 +173,16 @@ export default class BattleScene extends Phaser.Scene {
         const ready = this.mode === 'fighting' && this.state.canCast(hero, j);
         const g = b.g;
         g.clear();
-        g.fillStyle(ready ? 0x2a4fb8 : 0x1b2347, hero.alive ? 1 : 0.5).fillRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
+        const colors = SKILL_COLORS[slot.kind];
+        g.fillStyle(ready ? colors.ready : colors.idle, hero.alive ? 1 : 0.5).fillRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
         if (slot.cooldownLeft > 0) {
           const frac = slot.cooldownLeft / skill.cooldownMs;
           g.fillStyle(0x000000, 0.55).fillRoundedRect(b.x, b.y, SKILL_W, SKILL_H * frac, 8);
         }
-        g.lineStyle(ready ? 3 : 2, ready ? 0xf2b632 : 0x3b6fe0, ready ? 1 : 0.5).strokeRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
+        g.lineStyle(ready ? 3 : 2, ready ? 0xf2b632 : colors.ready, ready ? 1 : 0.5).strokeRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
         b.cd.setText(slot.cooldownLeft > 0 ? String(Math.ceil(slot.cooldownLeft / 1000)) : '');
-        b.cost.setColor(hero.mana >= skill.manaCost ? '#8fb0ff' : '#ff8c8c');
         b.code.setColor(ready ? '#f3eefc' : '#8a86a0');
+        b.code.setVisible(slot.cooldownLeft <= 0); // the cooldown number takes the letters' place
       });
     }
   }
@@ -190,10 +201,10 @@ export default class BattleScene extends Phaser.Scene {
     // Status tags (STUN, SLOW, PSN, BUFF) next to the bars.
     view.chipBox = this.add.container(x, barY + (unit.side === 'hero' ? 20 : -22));
     if (unit.side === 'hero') {
-      view.mbg = this.add.rectangle(x, barY + 8, BAR_WIDTH + 2, 5, 0x000000);
-      view.mfill = this.add.rectangle(x - BAR_WIDTH / 2, barY + 8, BAR_WIDTH, 3, 0x3b6fe0).setOrigin(0, 0.5);
       // Item dots above the health bar: dot colour = item type, ring = rarity.
-      view.dots = this.add.graphics().setPosition(x, barY - 12).setDepth(DEPTH.heroBar);
+      // A container so the count numbers move, fade and hide together with the dots.
+      view.dotsG = this.add.graphics();
+      view.dots = this.add.container(x, barY - 12, [view.dotsG]).setDepth(DEPTH.heroBar);
     }
     this.views.set(unit.uid, view);
 
@@ -246,8 +257,7 @@ export default class BattleScene extends Phaser.Scene {
     container.add(parts);
     front.add(inner);
 
-    const entry = [...this.dungeon.floors].reverse().find((f) => f.floor <= n) || this.dungeon.floors[0];
-    const enemies = this.state.spawnEnemies(entry.enemies, n);
+    const enemies = this.state.spawnEnemies(enemiesForFloor(this.dungeon, n), n);
     enemies.forEach((unit, i) => {
       const x = (GAME_WIDTH * (i + 1)) / (enemies.length + 1);
       this.makeView(unit, x, ENEMY_Y, container);
@@ -261,15 +271,11 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // Keeps a fighter's health bar attached to it while it moves.
-  syncBar(view, baseY = view.ch.y) {
+  syncBar(view, baseY = view.ch.y + view.ch.hopOffset) {
     const y = baseY - view.unit.def.height * view.ch.scaleX - 10;
     view.bg.setPosition(view.ch.x, y).setAlpha(view.ch.alpha);
     view.fill.setPosition(view.ch.x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
     if (view.dots) view.dots.setPosition(view.ch.x, y - 12).setAlpha(view.ch.alpha);
-    if (view.mbg) {
-      view.mbg.setPosition(view.ch.x, y + 8).setAlpha(view.ch.alpha);
-      view.mfill.setPosition(view.ch.x - BAR_WIDTH / 2, y + 8).setAlpha(view.ch.alpha);
-    }
     view.chipBox.setPosition(view.ch.x, y + (view.unit.side === 'hero' ? 20 : -22)).setAlpha(view.ch.alpha);
   }
 
@@ -278,24 +284,23 @@ export default class BattleScene extends Phaser.Scene {
     view.bg.setVisible(visible);
     view.fill.setVisible(visible);
     if (view.dots) view.dots.setVisible(visible);
-    if (view.mbg) {
-      view.mbg.setVisible(visible);
-      view.mfill.setVisible(visible);
-    }
     view.chipBox.setVisible(visible);
-  }
-
-  setMana(view) {
-    if (view.mfill) view.mfill.width = BAR_WIDTH * (view.unit.mana / view.unit.maxMana);
   }
 
   // Redraws the status tags on a fighter: one tag per kind of status it has right now.
   drawChips(view) {
     view.chipBox.removeAll(true);
     const kinds = [...new Set(view.unit.statuses.map((st) => st.type))];
+    // Stacking statuses (bleed, burn, poison, chill) show how many stacks there are: "PSN x3".
+    const tags = kinds.map((kind) => {
+      const n = this.state.stacks(view.unit, kind);
+      return (statusInfo[kind].dot || statusInfo[kind].stacking) && n > 1 ? { ...statusInfo[kind], label: `${statusInfo[kind].label} x${n}` } : statusInfo[kind];
+    });
+    // The party's morale tag (INCOMPLETE / ALL ALONE) shows on every living hero.
+    const morale = view.unit.side === 'hero' && view.unit.alive ? combatRules.morale[this.state.morale] : null;
+    if (morale) tags.unshift(morale);
     let x = 0;
-    for (const kind of kinds) {
-      const info = statusInfo[kind];
+    for (const info of tags) {
       const chip = this.add
         .text(x, 0, info.label, { fontFamily: 'monospace', fontSize: '9px', fontStyle: 'bold', color: info.textColor, backgroundColor: info.color, padding: { x: 2, y: 1 } })
         .setOrigin(0, 0.5);
@@ -306,20 +311,31 @@ export default class BattleScene extends Phaser.Scene {
     view.chipBox.iterate((chip) => (chip.x -= (x - 3) / 2));
   }
 
-  // Redraws the dots for a hero's items: one dot per item copy, up to 6 per row, rows going up.
+  // Redraws the dots for a hero's items: one dot per kind of item, with a small number beside it
+  // when the hero has several copies. Up to 5 dots per row, rows going up.
   drawDots(view) {
-    const g = view.dots;
+    const g = view.dotsG;
     g.clear();
-    const items = view.unit.items;
-    const perRow = 6;
-    items.forEach((id, i) => {
+    view.dots.list.slice(1).forEach((o) => o.destroy()); // old count labels
+    const counts = new Map();
+    for (const id of view.unit.items) counts.set(id, (counts.get(id) || 0) + 1);
+    const kinds = [...counts.entries()];
+    const perRow = 5;
+    const gap = 16;
+    kinds.forEach(([id, count], i) => {
       const def = itemDefs[id];
       const row = Math.floor(i / perRow);
-      const inRow = Math.min(perRow, items.length - row * perRow);
-      const x = ((i % perRow) - (inRow - 1) / 2) * 10;
-      const y = -row * 10;
+      const inRow = Math.min(perRow, kinds.length - row * perRow);
+      const x = ((i % perRow) - (inRow - 1) / 2) * gap;
+      const y = -row * 11;
       g.fillStyle(Number(itemTypes[def.type].color), 1).fillCircle(x, y, 3.5);
       g.lineStyle(1.5, Number(rarities[def.rarity].color), 1).strokeCircle(x, y, 4.5);
+      if (count > 1) {
+        const label = this.add
+          .text(x + 5, y + 1, String(count), { fontFamily: 'monospace', fontSize: '9px', fontStyle: 'bold', color: '#ffffff', stroke: '#000000', strokeThickness: 2 })
+          .setOrigin(0, 0.5);
+        view.dots.add(label);
+      }
     });
   }
 
@@ -463,7 +479,8 @@ export default class BattleScene extends Phaser.Scene {
     const focus = this.state.focusUnit;
     if (focus) {
       const v = this.views.get(focus.uid);
-      this.focusMarker.setPosition(v.ch.homeX, v.groundY + 6).setVisible(true);
+      // The red circle stays under the enemy wherever it is now (it may have walked down to fight).
+      this.focusMarker.setPosition(v.ch.x, v.ch.y + v.ch.hopOffset + (v.groundY - v.ch.homeY) + 6).setVisible(true);
     } else {
       this.focusMarker.setVisible(false);
     }
@@ -473,10 +490,36 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   showEvent(e) {
-    if (e.type === 'attack') {
+    if (e.type === 'attackStart') {
       const a = this.views.get(e.attacker.uid);
       const t = this.views.get(e.target.uid);
-      a.ch.lunge(t.ch.homeX, t.ch.homeY);
+      if (!a || !t) return;
+      if (e.attacker.damageType !== 'melee') this.shootArrow(a, t, e.hitInMs);
+      else if (e.approach) this.runToTarget(a, t, e.hitInMs); // walk over to the target, then swing
+      else a.ch.swing(e.hitInMs); // already standing at it: just swing
+    } else if (e.type === 'attackRetarget') {
+      // Its target died mid-attack: the runner turns to the new target, an arrow bends towards it.
+      const a = this.views.get(e.attacker.uid);
+      const t = this.views.get(e.target.uid);
+      if (!a || !t) return;
+      if (e.attacker.damageType === 'melee') this.runToTarget(a, t, e.hitInMs);
+      else if (a.arrow && a.arrow.active) this.flyArrow(a, a.arrow, t, e.hitInMs);
+    } else if (e.type === 'attackCancel') {
+      const c = this.views.get(e.unit.uid);
+      if (c) this.landArrow(c); // a cancelled shot vanishes
+      // Feared: it backs away to its own spot. Stunned/frozen or nothing left: it stops where it is.
+      // (Knocked back: the knockback status already pushed it.)
+      if (c && e.reason === 'fear') this.runHome(c);
+      else if (c && e.reason !== 'knockback') c.ch.stopMove();
+    } else if (e.type === 'attack') {
+      const a = this.views.get(e.attacker.uid);
+      const t = this.views.get(e.target.uid);
+      if (e.basic) {
+        // The walk/swing or the arrow already showed this attack. Melee fighters STAY where they are.
+        this.landArrow(a); // the arrow reaches its target exactly as the damage lands
+      } else if (!a.ch.moveTween) {
+        a.ch.lunge(t.ch.homeX, t.ch.homeY); // skills and item hits: a small jab (not while running)
+      }
       if (e.result.dodged) {
         if (e.result.blocked) this.popText(t, 'Blocked!', '#9fc4ff', true);
         else this.popText(t, 'Miss', '#aaaaaa');
@@ -486,8 +529,10 @@ export default class BattleScene extends Phaser.Scene {
       this.setBar(t);
       const { amount, crit, mult } = e.result;
       const mark = mult > 1 ? '!' : mult < 1 ? '…' : '';
-      const color = e.attacker.side === 'hero' ? damageTypes[e.attacker.damageType].color : '#ff6b6b';
+      const color = e.attacker.side === 'hero' ? damageTypes[e.damageType || e.attacker.damageType].color : '#ff6b6b';
       this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : color, crit);
+    } else if (e.type === 'projectile') {
+      this.showProjectile(this.views.get(e.from.uid), this.views.get(e.to.uid), e.kind);
     } else if (e.type === 'cast') {
       const caster = this.views.get(e.unit.uid);
       this.popText(caster, e.skill.name, '#9fc4ff');
@@ -498,6 +543,8 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'status') {
       const v = this.views.get(e.unit.uid);
       this.drawChips(v);
+      if (e.change === 'apply' && e.status.type === 'knockback') this.pushBack(v);
+      if (e.change === 'apply' && e.status.type === 'fear') this.runHome(v); // backs away to its spot
       if (e.change === 'apply' && e.status.type !== 'buff' && statusInfo[e.status.type].popup !== false) {
         this.popText(v, statusInfo[e.status.type].label + '!', statusInfo[e.status.type].color);
       }
@@ -518,6 +565,13 @@ export default class BattleScene extends Phaser.Scene {
       v.ch.flash();
       this.setBar(v);
       this.popText(v, String(e.amount), damageTypes[e.damageType].color);
+    } else if (e.type === 'morale') {
+      for (const h of this.state.heroes) {
+        const v = this.views.get(h.uid);
+        this.setBar(v);
+        this.drawChips(v);
+        if (h.alive) this.popText(v, `${combatRules.morale[e.tier].label}!`, combatRules.morale[e.tier].popupColor, true);
+      }
     } else if (e.type === 'levelup') {
       const v = this.views.get(e.unit.uid);
       this.setLabel(v);
@@ -527,21 +581,161 @@ export default class BattleScene extends Phaser.Scene {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
       if (e.unit.side === 'enemy') {
+        this.engaged.delete(e.unit.uid);
+        this.releaseSpot(e.unit.uid);
+        v.ch.stopMove(); // it fades out where it fell
         this.drawChips(v);
         this.tweens.add({ targets: [v.ch, v.bg, v.fill], alpha: 0, duration: 400, onComplete: () => this.removeView(e.unit.uid) });
       } else {
+        // A hero who falls while away at an enemy is put back in its slot.
+        v.ch.stopMove();
+        this.releaseSpot(e.unit.uid);
+        v.ch.setPosition(v.ch.homeX, v.ch.homeY).setDepth(DEPTH.hero);
+        this.syncBar(v);
         v.ch.freeze(); // stop floating
+        v.perkLabel.setText('perk lost');
         v.ch.setAlpha(0.25);
-        v.skillButtons.forEach((b) => [b.g, b.code, b.cost, b.cd].forEach((o) => o.setAlpha(0)));
+        v.skillButtons.forEach((b) => [b.g, b.code, b.cd].forEach((o) => o.setAlpha(0)));
         v.bg.setAlpha(0.4);
         v.fill.setAlpha(0.4);
         if (v.dots) v.dots.setAlpha(0.4);
-        v.mbg.setAlpha(0.4);
-        v.mfill.setAlpha(0.4);
         this.drawChips(v);
         this.drawAllBars(); // squad items from this hero stop working, so max health may change
       }
     }
+  }
+
+  // ---- hero attack motion (melee run-up, arrows) --------------------------------------------
+
+  // A melee fighter (hero or enemy) walks STRAIGHT to its target and stands next to it, arriving as
+  // the swing lands. Heroes stand just below an enemy, enemies just above a hero. Several fighters on
+  // one target stand side by side (the first one straight across, the others to the side they came
+  // from). The spot follows the target if it moves. It stays there afterwards (no walking back).
+  runToTarget(a, t, hitInMs) {
+    this.releaseSpot(a.unit.uid);
+    const spots = this.engaged.get(t.unit.uid) || new Map();
+    this.engaged.set(t.unit.uid, spots);
+    let index = 0;
+    while ([...spots.values()].includes(index)) index++;
+    spots.set(a.unit.uid, index);
+    const homeSide = a.ch.homeX >= t.ch.x ? 1 : -1;
+    const side = index === 0 ? 0 : index % 2 === 1 ? homeSide : -homeSide;
+    const offsetX = side * Math.ceil(index / 2) * M.spacingPx;
+    const offsetY = a.unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY;
+    const hover = (v) => v.groundY - v.ch.homeY; // flying units float above their ground line
+    const getSpot = () => ({
+      x: Phaser.Math.Clamp(t.ch.x + offsetX, 28, GAME_WIDTH - 28),
+      y: t.ch.y + t.ch.hopOffset + hover(t) + offsetY - hover(a),
+    });
+    const swingMs = combatRules.attackTiming[a.unit.side].swingMs;
+    a.ch.chase(getSpot, Math.max(60, hitInMs - swingMs), {
+      hop: { height: M.hopHeight, length: M.hopLengthPx },
+      onUpdate: () => this.syncBar(a),
+      onDone: () => a.ch.swing(swingMs),
+    });
+    if (a.unit.side === 'hero') a.ch.setDepth(DEPTH.hero + 1); // in front of the other heroes while it is out there
+  }
+
+  // A fighter goes back to its spot (after a hit, a cancelled attack, a win...).
+  runHome(v, duration = M.returnMs) {
+    if (!v) return;
+    this.releaseSpot(v.unit.uid);
+    if (v.ch.x === v.ch.homeX && v.ch.y === v.ch.homeY) return;
+    v.ch.moveTo(v.ch.homeX, v.ch.homeY, duration, {
+      hop: { height: M.hopHeight, length: M.hopLengthPx },
+      onUpdate: () => this.syncBar(v),
+      onDone: () => {
+        if (v.unit.side === 'hero') v.ch.setDepth(DEPTH.hero);
+        this.syncBar(v);
+      },
+    });
+  }
+
+  // Knocked back: pushed a little towards its own side (away from the enemy line).
+  pushBack(v) {
+    this.releaseSpot(v.unit.uid);
+    const dir = v.unit.side === 'hero' ? 1 : -1; // heroes are pushed down, enemies up
+    const y = Phaser.Math.Clamp(v.ch.y + dir * M.knockbackPx, Math.min(v.ch.y, v.ch.homeY), Math.max(v.ch.y, v.ch.homeY));
+    v.ch.moveTo(v.ch.x, y, M.knockbackMs, { ease: 'Quad.easeOut', onUpdate: () => this.syncBar(v) });
+  }
+
+  // Frees the spot a melee fighter had next to its target.
+  releaseSpot(uid) {
+    for (const spots of this.engaged.values()) spots.delete(uid);
+  }
+
+  // A ranged fighter's basic attack: an arrow that flies to the target and arrives as the hit lands.
+  // The middle of a fighter's body right now (where shots aim): above its feet, wherever it stands.
+  center(v) {
+    return { x: v.ch.x, y: v.ch.y + v.ch.hopOffset - (v.unit.def.height * v.ch.scaleY) / 2 };
+  }
+
+  shootArrow(a, t, hitInMs) {
+    const from = this.center(a);
+    // Placeholder arrow: a shaft with a small head (real art later).
+    const arrow = this.add.container(from.x, from.y, [
+      this.add.rectangle(-4, 0, 22, 3, Number(M.arrowColor)),
+      this.add.triangle(9, 0, 0, -4, 0, 4, 7, 0, 0xffffff),
+    ]).setDepth(DEPTH.popup - 1);
+    a.arrow = arrow;
+    this.flyArrow(a, arrow, t, hitInMs);
+    a.ch.lunge(t.ch.x, t.ch.y); // a small recoil-like jab as it shoots
+  }
+
+  // Flies an arrow from where it is now to a target (which may move), arriving after `ms`.
+  // Called again with a new target if the old one dies while the arrow is in the air.
+  flyArrow(a, arrow, t, ms) {
+    if (arrow.flight) arrow.flight.stop();
+    const fromX = arrow.x;
+    const fromY = arrow.y;
+    arrow.flight = this.tweens.addCounter({
+      from: 0,
+      to: 1,
+      duration: Math.max(1, ms),
+      onUpdate: (tween) => {
+        const p = tween.getValue();
+        const to = this.center(t); // aims at where the target is NOW, so it always hits
+        arrow.setPosition(fromX + (to.x - fromX) * p, fromY + (to.y - fromY) * p);
+        arrow.rotation = Math.atan2(to.y - fromY, to.x - fromX);
+      },
+      onComplete: () => this.landArrow(a),
+    });
+  }
+
+  // The arrow is used up (it hit, or it was cancelled).
+  landArrow(a) {
+    if (!a.arrow) return;
+    if (a.arrow.flight) a.arrow.flight.stop();
+    a.arrow.destroy();
+    a.arrow = null;
+  }
+
+  // Placeholder projectiles: a fire bomb flies to its target (and follows it), lightning is a zig-zag
+  // line between the two fighters (drawn where they stand now) that fades.
+  showProjectile(from, to, kind) {
+    if (!from || !to) return;
+    const start = this.center(from);
+    const end = this.center(to);
+    if (kind === 'lightning') {
+      const g = this.add.graphics().setDepth(DEPTH.popup);
+      g.lineStyle(3, 0xffe94d, 1).beginPath().moveTo(start.x, start.y);
+      for (let i = 1; i < 5; i++) g.lineTo(start.x + ((end.x - start.x) * i) / 5 + Phaser.Math.Between(-10, 10), start.y + ((end.y - start.y) * i) / 5 + Phaser.Math.Between(-10, 10));
+      g.lineTo(end.x, end.y).strokePath();
+      this.tweens.add({ targets: g, alpha: 0, duration: 350, onComplete: () => g.destroy() });
+      return;
+    }
+    const b = this.add.circle(start.x, start.y, 5, 0xff7a3d).setStrokeStyle(2, 0xffd24d).setDepth(DEPTH.popup);
+    this.tweens.addCounter({
+      from: 0,
+      to: 1,
+      duration: 280,
+      onUpdate: (tween) => {
+        const p = tween.getValue();
+        const now = this.center(to); // follows the target, so the bomb always lands on it
+        b.setPosition(start.x + (now.x - start.x) * p, start.y + (now.y - start.y) * p - Math.sin(p * Math.PI) * 24);
+      },
+      onComplete: () => b.destroy(),
+    });
   }
 
   drawAllBars() {
@@ -550,6 +744,10 @@ export default class BattleScene extends Phaser.Scene {
 
   setLabel(view) {
     view.label.setText(`${view.unit.name} Lv${view.unit.level}`);
+    // e.g. "Team +10% HP" (the hero's perk; it grows with the hero's level)
+    const unit = view.unit;
+    const bits = perkMods(unit).map((m) => `${m.percent !== undefined ? `+${Math.round(m.percent * 10) / 10}%` : `+${Math.round(m.flat * 10) / 10}`} ${STAT_SHORT[m.stat]}`);
+    view.perkLabel.setText(unit.def.perk ? `Team ${bits.join(' ')}` : '');
   }
 
   setBar(view) {
@@ -563,10 +761,6 @@ export default class BattleScene extends Phaser.Scene {
     v.bg.destroy();
     v.fill.destroy();
     if (v.dots) v.dots.destroy();
-    if (v.mbg) {
-      v.mbg.destroy();
-      v.mfill.destroy();
-    }
     v.chipBox.destroy();
     this.views.delete(uid);
   }
@@ -575,9 +769,10 @@ export default class BattleScene extends Phaser.Scene {
   popText(view, text, color, big = false) {
     // Pop-ups that appear together stack upwards instead of overlapping.
     view.popSlot = ((view.popSlot ?? -1) + 1) % 4;
-    const y = view.ch.homeY - view.unit.def.height * CHAR_SCALE - 22 - view.popSlot * 15;
+    // Above where the fighter is right now (a hero may be away at an enemy).
+    const y = view.ch.y + view.ch.hopOffset - view.unit.def.height * CHAR_SCALE - 22 - view.popSlot * 15;
     const t = this.add
-      .text(view.ch.homeX, y, text, {
+      .text(view.ch.x, y, text, {
         fontFamily: 'monospace',
         fontSize: big ? '20px' : '14px',
         fontStyle: 'bold',
@@ -597,10 +792,13 @@ export default class BattleScene extends Phaser.Scene {
     this.banner.setText(`Floor ${this.floor} cleared!`);
     this.layer.setDoorOpen(true);
 
-    this.state.restoreMana(combatRules.winManaPercent);
     this.state.clearStatuses();
-    for (const h of this.state.heroes) this.drawChips(this.views.get(h.uid));
-    for (const { unit, amount } of this.state.healHeroes(combatRules.winHealPercent)) {
+    for (const h of this.state.heroes) {
+      const v = this.views.get(h.uid);
+      if (h.alive) this.runHome(v, 200); // anyone still out at an enemy comes back before the walk
+      this.drawChips(v);
+    }
+    for (const { unit, amount } of this.state.winHeal(combatRules.winHealPercent)) {
       const v = this.views.get(unit.uid);
       this.setBar(v);
       if (amount > 0) this.popText(v, `+${amount}`, '#6dff8f');
@@ -620,7 +818,7 @@ export default class BattleScene extends Phaser.Scene {
 
   // Shows the reward screen. When it is done, the hero gets the item and `next` runs.
   showReward(next) {
-    const choices = rollChoices({ itemDefs, rarities, count: rewardRules.choices, heroes: this.state.heroes, potionChance: rewardRules.potionChance });
+    const choices = rollChoices({ itemDefs, rules: rewardRules, floor: this.floor, count: rewardRules.choices, heroes: this.state.heroes, potionChance: rewardRules.potionChance });
     if (!choices.length) return next();
     this.scene.launch('Reward', {
       state: this.state,

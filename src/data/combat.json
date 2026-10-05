@@ -4,19 +4,37 @@
   "weakMultiplier": 1.5,
   "resistMultiplier": 0.5,
   "caps": {
-    "defense": 75,
-    "resist": 75,
-    "evasion": 60
+    "evasion": 70,
+    "crit": 100
+  },
+  "armorCurve": {
+    "linearUpTo": 50
   },
   "winHealPercent": 25,
   "floorScaling": {
-    "hpPerStep": 0.4,
-    "hpStepFloors": 4,
-    "attackPerStep": 0.45,
+    "hpPerStep": 0.35,
+    "hpStepFloors": 3,
+    "attackPerStep": 0.525,
     "attackStepFloors": 3
   },
   "restartDelayMs": 3000,
   "meleeVsFlyingMissPercent": 40,
+  "attackTiming": {
+    "hero": { "meleeHitMs": 600, "swingMs": 220, "rangedHitMs": 260 },
+    "enemy": { "meleeHitMs": 600, "swingMs": 220, "rangedHitMs": 260 },
+    "retargetMinMs": 200
+  },
+  "attackMotion": {
+    "returnMs": 280,
+    "hopHeight": 7,
+    "hopLengthPx": 38,
+    "standOffY": 76,
+    "enemyStandOffY": 64,
+    "spacingPx": 52,
+    "arrowColor": "0xe6e6b8",
+    "knockbackPx": 40,
+    "knockbackMs": 160
+  },
   "transition": {
     "clearPauseMs": 600,
     "walkSpeedPxPerSec": 420,
@@ -26,5 +44,62 @@
     "slideMs": 1000
   },
   "manaRegenPerSec": 2,
-  "winManaPercent": 20
+  "winManaPercent": 20,
+  "enemyAttackSpeedMultiplier": 0.65,
+  "bigFightEase": {
+    "minEnemies": 4,
+    "fromFloor": 32,
+    "startScale": 0.87,
+    "rampFloors": 8
+  },
+  "morale": {
+    "incomplete": {
+      "label": "INCOMPLETE",
+      "color": "#8a4fd0",
+      "textColor": "#ffffff",
+      "mods": [
+        {
+          "stat": "attack",
+          "percent": -10
+        },
+        {
+          "stat": "attackEfficiency",
+          "percent": -10
+        },
+        {
+          "stat": "defense",
+          "flat": -3
+        },
+        {
+          "stat": "resist",
+          "flat": -3
+        }
+      ],
+      "popupColor": "#c58bff"
+    },
+    "alone": {
+      "label": "ALL ALONE",
+      "color": "#b03030",
+      "textColor": "#ffffff",
+      "mods": [
+        {
+          "stat": "attack",
+          "percent": -25
+        },
+        {
+          "stat": "attackEfficiency",
+          "percent": -25
+        },
+        {
+          "stat": "defense",
+          "flat": -8
+        },
+        {
+          "stat": "resist",
+          "flat": -8
+        }
+      ],
+      "popupColor": "#ff6b6b"
+    }
+  }
 }

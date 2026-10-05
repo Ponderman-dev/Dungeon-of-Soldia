@@ -210,9 +210,56 @@ Greater spawners: Gargoyle Idol (rare, slow tanky, draws attacks), Spirit Knight
 ## Part 4: Tests and one tuning pass
 - Update tests for the new content, then balance once at the end.
 
-## Suggested build order inside Part 1 (one step at a time, commit each)
-1. Skill slots (attack/support) in data and UI. Small, no animation yet.
-2. New debuffs in `statuses.json` + `BattleState`, with tests.
-3. Run-up melee and projectile ranged, hit moment, retargeting (the big one), for heroes and enemies.
-4. Skill timing and cast visuals.
-5. Morale overlay.
+## BUILD ORDER (approved plan, one step at a time)
+Rules for every step: keep the game working, run `npm test`, commit with a clear message, push.
+Republish the preview page once per PHASE (not every step) unless the user asks, to save credits.
+Update CLAUDE.md / HANDOFF.md when a rule in them changes. Data stays in JSON. Placeholder art only.
+
+### Phase A: Foundations (rules and data, little to see)
+- A1. Remove mana: mana bar, regen, win top-up and skill mana costs go; skills run on cooldown only.
+- A2. Skill slots: `skills: { attack, support }` in heroes.json; the two squares show which is which. Existing heroes keep their current skills for now.
+- A3. Stat rules: defense and resist use the diminishing curve (no 75% cap), evasion cap 70%, crit cap 100%. Update tests and CLAUDE.md.
+- A4. New drop roll: rarity first (floor bands), then item `dropWeight`, `needs` soft gating x0.25. Tests.
+- A5. Damage types made real: fire, ice, electric, dark (+ physical). Damage-type bonuses also boost DoTs of that type. Enemy weak/resist works for all.
+- A6. Debuff engine: Bleed/Burn/Poison with unlimited stacks (own timers), Chill (5 = Freeze), Shock, Armor Break, Curse, Weaken, Blind, Mark, Fear, Knockback, Taunt, Silence (data only). Boss rule: control halved, DoTs full. Status tags show stack counts. Tests for each.
+
+### Phase B: Movement (the big visible change)
+- B1. Split an attack into "start" and "hit lands" in BattleState (no visual change yet). Tests.
+- B2. Hero melee run-up (hit, run back, offsets when several melee share a target) and ranged projectiles.
+- B3. Enemies run up / shoot the same way.
+- B4. Edge cases: target dies mid-run (retarget), stunned/frozen mid-run (go back), flying targets.
+
+### Phase C: Feel
+- C1. Skill wind-up (`castMs`), longer than a normal attack; stun/freeze during wind-up cancels the cast (to confirm).
+- C2. Skill cast visuals: colour flash, ring burst, name banner, bigger coloured numbers, screen shake / hit-stop.
+- C3. Morale overlay instead of text.
+
+### Phase D: Shared systems the heroes need
+- D1. Shields (absorb, broken vs expired) and Invulnerable.
+- D2. Taunt behaviour on enemies (and the Knight's armor buff).
+- D3. "Every 4th attack" counters (Spellweaver, Cleric heal, Bard Rhythm beat) with visible cues.
+- D4. Minion system: weak and greater minions, caps, upkeep, floor transitions (greater minions walk through the door), 2-floor revival wait, minions vanish when the holder dies.
+
+### Phase E: Heroes (one per step: stats, growth, passive, attack skill, support skill, placeholder look)
+- E1 Knight, E2 Rogue, E3 Archer (the start squad first), E4 Berserker, E5 Samurai, E6 Mage, E7 Cleric, E8 Necromancer, E9 Bard, E10 Alchemist.
+- Until squad select exists, the test squad can be switched in squad.json.
+
+### Phase F: Squad select and unlocks
+- F1. Squad select screen: pick 3 of the unlocked heroes.
+- F2. Unlocks saved in localStorage (which floors unlock which hero: to decide with the user).
+
+### Phase G: Items (in groups, each with its tests)
+- G1. Update the 19 built items to the new rules (renames, rarities, weights, Chill Band, Static Crystal, Gambler's Dice, Bulwark Plate/Feather Boots stacks, Siege Cannon legendary).
+- G2. Simple commons: Sucker Punch Glove, Bandage Roll, Second Wind Flask, Full Vigor, Brawler's Streak, Tough Skin, Kindling, Frost Charm, Storm Charm, Shadow Charm, Mage Cloak, Hourglass.
+- G3. Debuff appliers: Ember Charm, Venom Fang, Serrated Edge, Rusty Nails, Hex Doll, Dread Bell, Gag Rune, Fire Arrows.
+- G4. Debuff payoffs: Magma Core, Shatter Hammer, Blood Chalice, Plague Flask, Exploiter's Lens, Executioner's Axe, Hunter's Sigil, Thousand Cuts, Frozen Thunderbolt.
+- G5. Shield / heal / taunt items: Warding Charm, Overheal Ring, Spiked Aegis, Provoker's Horn, Spite Mail, Martyr's Shield, Fire Heart, Lost Cleric's Grimoire.
+- G6. Skill items: Conductor's Baton, Echo Rune, Metronome.
+- G7. Minion items: Rat Cage, Wisp Lantern, Fire Imp Brazier, Mimic Chest, Gargoyle Idol, Spirit Knight Banner, Phoenix Hatchling, Bone Charm, Overseer's Whistle, Grave Dust, Necro Crown.
+- G8. Last legendaries: Excalibur (tornadoes), Jolly Banner.
+
+### Phase H: Tests and ONE tuning pass
+- H1. Update the sim bot (skills, all heroes, all items) and the difficulty report.
+- H2. Tune: hero numbers, item numbers, drop odds, enemy growth. Then decide what is next (bosses, skill books, enemy skills).
+
+Total: about 40 steps. The user sees something new on the preview page after each phase.

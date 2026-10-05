@@ -91,11 +91,11 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 - DECIDED: the 4th-attack Spellweaver spell triggers ALL of the Mage's elemental on-hit item effects at once (every fire, ice/chill and lightning item he holds applies its debuff or proc on that hit, guaranteed). So the more elemental items he holds, the better the 4th attack. Not tied to the rotation.
 
 ### Cleric (ranged, battle cleric) DECIDED
-- Passive (two parts): (1) improves REGEN for the party members while she is alive (squad-wide, boosts the regen the heroes have, e.g. Heart Charm regen); (2) every 4th attack, instead of hitting an enemy, she HEALS the lowest-health ally. Feeds regen/heal items.
+- Passive (two parts): (1) while she is alive, every hero's regen/healing from items scales up a bit (a % multiplier on regen like Heart Charm, and on other healing items, so it keeps helping late game; NOT a flat extra regen); (2) every 4th attack, instead of hitting an enemy, she HEALS the lowest-health ally. Feeds regen/heal items.
 - Attack "Smite": holy hit on one enemy; bonus damage to debuffed/cursed enemies; heals the lowest-health ally for a share of the damage.
 - Support "Divine Shield": the lowest-health ally becomes invulnerable for 2s, and heals when it ends. New status: `invulnerable`.
 - Style: battle cleric (heals by fighting, steady damage).
-- Open: "improve regen": (a) heroes get a small base regen from her (works even with no regen items), or (b) only multiplies regen that already exists (items)? Suggest (a) with a small number so she is useful with no items, and her regen items stack on top. Does the 4th-attack heal also count as a basic attack for on-hit items? (suggest: no, no on-hit procs on heal turns).
+- DECIDED: the regen part is a multiplier on regen/heal the heroes already get from items (not an added base regen), small per item so it grows with stacking. Exact % tuned later. The 4th-attack heal does not trigger on-hit items (not a hit on an enemy).
 
 ### Still to do: Necromancer, Bard, Alchemist (user may replace these concepts)
 - Final roster of 9 (3 per run), role, stats, growth, perk, one attack + one support skill, melee or ranged.

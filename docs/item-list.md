@@ -72,13 +72,13 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Hunter's Sigil | special | NEW | first hit on each enemy Marks it; marked enemies take +10% damage from the whole squad | Mark is unique (one mark per enemy). Squad damage bonus adds up per copy (+10% each) AND each extra copy makes the mark last longer |
 | Spiked Aegis | special | NEW | when the holder's shield breaks it explodes, damaging all enemies | Explosion damage adds up per copy |
 | Spite Mail | special | NEW | while the holder is taunting: +30 defense and reflect damage | Both add up per copy (+30 defense and reflect %); total defense is still capped at 75% damage cut |
-| Echo Rune | skill | NEW | 15% chance a skill casts twice | (suggest) Chance adds up per copy, capped at 60% |
-| Metronome | skill | NEW | empowered 4th-beat hits (Rhythm, Spellweaver, Cleric heal) deal +50% | (suggest) Bonus adds up per copy (+50% each) |
+| Echo Rune | skill | NEW | 15% chance a skill casts twice | Chance adds up (+15% per copy), capped at 60% total. The echo cast deals only 60% of the original; each extra copy raises that toward 100% |
+| Metronome | skill | NEW | empowered 4th-beat hits (Rhythm, Spellweaver, Cleric heal) deal +50% | Bonus adds up per copy (+50% each) |
 | Knife Fan (working name) | on-hit | NEW | melee seldom applies Bleed, up to 3 stacking bleeds; an enemy dying while bleeding bursts knives into nearby enemies | Max 3 stacking bleeds on one enemy (fixed, extra copies do not raise it). Extra copies raise bleed chance and the knife burst damage |
 | Martyr's Shield | special | NEW | fixed 8% chance to take an ally's hit; extra copies shorten the block cooldown and reduce the health cost | Chance fixed at 8%, does not stack. Each extra copy shortens the block cooldown and lowers the health cost |
-| Grave Dust | minion | NEW | weak minions explode when they die | (suggest) Explosion damage adds up per copy |
+| Grave Dust | minion | NEW | weak minions explode when they die | Explosion damage adds up per copy |
 | Fire Imp Brazier | minion | NEW | every 10s an Imp (weak minion, ranged fire, applies Burn) | Spawn in bursts: each extra copy adds one more Imp to every spawn. One shared timer. Weak minion cap is shared |
-| Mimic Chest | minion | NEW | when the holder is hit, 10% chance a Mimic (weak minion) pops out and explodes when it dies | (suggest) Chance adds up per copy, capped at 40% |
+| Mimic Chest | minion | NEW | when the holder is hit, 10% chance a Mimic (weak minion) pops out and explodes when it dies | Chance stays 10% (does not stack). Each extra copy makes the Mimic stronger and its explosion bigger |
 | Spirit Knight Banner | minion | NEW | greater minion: a Spirit Knight, balanced melee fighter that grows each floor it survives | Greater minion: 1 Spirit Knight however many copies. Extra copies only stack its stats |
 
 ## LEGENDARY (10)

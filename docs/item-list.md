@@ -26,11 +26,11 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Bandage Roll | special | NEW | holder heals 3% max health on each kill | Heal adds up per copy (3% each), no cap |
 | Second Wind Flask | special | NEW | CONSUMABLE: when the holder drops below 40% health, one flask is used up and heals 30% max health (raised from 15%) | Each copy is one use, like potions in an inventory: a trigger deletes one copy, the remaining copies wait for the next trigger. Stacking = more uses, not a bigger heal |
 | Full Vigor | special | NEW | +15% damage while the holder is at full health | Bonus adds up per copy (+15% each) |
-| Brawler's Streak | on-hit | NEW | each consecutive hit on the same target adds +2% damage (max +10%), resets on a new target | (suggest) Per-hit bonus and max both add up per copy |
-| Tough Skin | special | NEW | the first hit the holder takes each floor deals 50% less damage | (suggest) Each copy protects one more hit per floor (first N hits deal 50% less) |
-| Kindling | stat | NEW | +15% fire damage | Additive, no cap |
-| Frost Charm | stat | NEW | +15% ice damage | Additive, no cap |
-| Rat Cage | minion | NEW | every 12s a Rat (weak minion) bites a random enemy | (suggest) Each copy runs its own spawn timer. Weak minion cap is shared with other weak sources of the same holder |
+| Brawler's Streak | on-hit | NEW | each consecutive hit on the same target adds +2% damage (max +10%), resets on a new target | Per-hit bonus stays +2%. Each extra copy raises the MAX (+10%, +20%, +30%...), so the streak takes longer to build but gets bigger |
+| Tough Skin | special | NEW | the first hit the holder takes each floor deals 50% less damage | One protected hit per floor. Each extra copy makes the cut bigger (50%, 65%, 75%... capped at 90%) |
+| Kindling | stat | NEW | +15% fire damage | Additive (+15% each), no cap |
+| Frost Charm | stat | NEW | +15% ice damage | Additive (+15% each), no cap |
+| Rat Cage | minion | NEW | every 12s a Rat (weak minion) bites a random enemy | Spawn in bursts: each extra copy adds one more minion to every spawn (1 rat, then 2 rats at once...). One shared timer. Weak minion cap is shared |
 
 ## RARE (21)
 | Item | Type | Status | Effect | Stacking |
@@ -54,7 +54,7 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Conductor's Baton | skill | NEW | support skill effects 25% stronger and 25% longer | (suggest) Strength and length add up; diminishing after 3 copies |
 | Bone Charm | minion | NEW | all minions (weak and greater) +30% health and attack | (suggest) Stats add up per copy, no cap |
 | Overseer's Whistle | minion | NEW | weak minion cap +1, weak minions attack 15% faster | (suggest) +1 weak minion cap per copy. Attack speed adds up |
-| Wisp Lantern | minion | NEW | every 15s a flying Wisp (weak minion, ranged magic) | (suggest) Each copy runs its own spawn timer, shares the weak minion cap |
+| Wisp Lantern | minion | NEW | every 15s a flying Wisp (weak minion, ranged magic) | Spawn in bursts: each extra copy adds one more Wisp to every spawn. One shared timer. Weak minion cap is shared |
 | Gargoyle Idol | minion | NEW | greater minion: a slow, tanky Gargoyle that draws enemy attacks | Greater minion: 1 Gargoyle however many copies. Extra copies only stack its stats |
 
 ## EPIC (20)
@@ -77,7 +77,7 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Knife Fan (working name) | on-hit | NEW | melee seldom applies Bleed, up to 3 stacking bleeds; an enemy dying while bleeding bursts knives into nearby enemies | Max 3 stacking bleeds on one enemy (fixed, extra copies do not raise it). Extra copies raise bleed chance and the knife burst damage |
 | Martyr's Shield | special | NEW | fixed 8% chance to take an ally's hit; extra copies shorten the block cooldown and reduce the health cost | Chance fixed at 8%, does not stack. Each extra copy shortens the block cooldown and lowers the health cost |
 | Grave Dust | minion | NEW | weak minions explode when they die | (suggest) Explosion damage adds up per copy |
-| Fire Imp Brazier | minion | NEW | every 10s an Imp (weak minion, ranged fire, applies Burn) | (suggest) Each copy runs its own spawn timer, shares the weak minion cap |
+| Fire Imp Brazier | minion | NEW | every 10s an Imp (weak minion, ranged fire, applies Burn) | Spawn in bursts: each extra copy adds one more Imp to every spawn. One shared timer. Weak minion cap is shared |
 | Mimic Chest | minion | NEW | when the holder is hit, 10% chance a Mimic (weak minion) pops out and explodes when it dies | (suggest) Chance adds up per copy, capped at 40% |
 | Spirit Knight Banner | minion | NEW | greater minion: a Spirit Knight, balanced melee fighter that grows each floor it survives | Greater minion: 1 Spirit Knight however many copies. Extra copies only stack its stats |
 

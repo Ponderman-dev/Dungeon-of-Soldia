@@ -301,8 +301,10 @@ export default class BattleState {
     if (spec.status === 'poison') {
       status.tickMs = spec.tickMs;
       status.tickTimer = status.tickTimer || 0;
-      status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier));
       status.damageType = spec.damageType || 'dark';
+      // Damage-type items boost damage over time of that type too (e.g. +15% dark boosts poison).
+      const bonus = ((source.damageBonus && source.damageBonus[status.damageType]) || 0) / 100;
+      status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus)));
     }
     if (spec.status === 'buff') this.refreshStats();
     events.push({ type: 'status', unit: target, change: 'apply', status });

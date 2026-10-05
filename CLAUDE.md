@@ -24,7 +24,8 @@ All numbers below go in JSON/config so they are easy to tune.
 - **Damage types:** physical (melee, ranged) and magical (fire, ice, electric, dark). Every attack and skill has one type.
 - **Defense:** % cut of PHYSICAL damage. No hard cap: a curve (`armorPercent()` in combat.js, `armorCurve.linearUpTo` 50 in combat.json): up to 50 points 1 point = 1% (10 defense = 10% less), above that each point is worth less and the cut never reaches 100% (75 def = about 70%, 100 = about 82%).
 - **Resist:** same curve as defense, for MAGICAL damage. Heroes have 7 stats in use (mana is off).
-- **Weak/resist per enemy:** each enemy lists `weak` and `resists` damage types in JSON (weak = +50% damage, resists = -50%).
+- **Weak/resist per enemy:** each enemy lists `weak` and `resists` damage types in JSON (weak = +50% damage, resists = -50%). A list can also name a whole category ("physical", "magical").
+- **Damage-type bonuses** (e.g. +15% dark) also boost damage over time of that type (the bonus is baked into the DoT when it is applied). `validateDamageTypes()` checks every damage type named in the JSON (run at start, and in `damage-types.test.mjs`).
 - **Melee vs ranged:** melee attacks CAN hit flying enemies but miss 40% of the time (`meleeVsFlyingMissPercent` in combat.json). Ranged has no penalty. No formation rules yet.
 - **Evasion:** % chance to fully dodge a hit of any type, capped at 70% (`caps.evasion`).
 - **Crit:** % chance to deal 2x damage, capped at 100% (`caps.crit`).

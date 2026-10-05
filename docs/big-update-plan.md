@@ -220,7 +220,7 @@ Update CLAUDE.md / HANDOFF.md when a rule in them changes. Data stays in JSON. P
 - A2. DONE. Skill slots: `skills: { attack, support }` in heroes.json; the two squares show which is which. Existing heroes keep their current skills for now.
 - A3. DONE. Stat rules: defense and resist use the diminishing curve (no 75% cap), evasion cap 70%, crit cap 100%. Update tests and CLAUDE.md.
 - A4. DONE. New drop roll: rarity first (floor bands), then item `dropWeight`, `needs` soft gating x0.25. Tests.
-- A5. Damage types made real: fire, ice, electric, dark (+ physical). Damage-type bonuses also boost DoTs of that type. Enemy weak/resist works for all.
+- A5. DONE. Damage types made real: fire, ice, electric, dark (+ physical). Damage-type bonuses also boost DoTs of that type. Enemy weak/resist works for all.
 - A6. Debuff engine: Bleed/Burn/Poison with unlimited stacks (own timers), Chill (5 = Freeze), Shock, Armor Break, Curse, Weaken, Blind, Mark, Fear, Knockback, Taunt, Silence (data only). Boss rule: control halved, DoTs full. Status tags show stack counts. Tests for each.
 
 ### Phase B: Movement (the big visible change)

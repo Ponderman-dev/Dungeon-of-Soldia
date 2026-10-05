@@ -15,7 +15,7 @@ import rawSkills from '../data/skills.json';
 import statusInfo from '../data/statuses.json';
 import Character from '../entities/Character.js';
 import BattleState from '../systems/BattleState.js';
-import { validateDungeon, validateHeroSkills } from '../systems/validate.js';
+import { validateDungeon, validateHeroSkills, validateDamageTypes } from '../systems/validate.js';
 import { enemiesForFloor } from '../systems/dungeon.js';
 import { pickSquad, perkMods } from '../systems/party.js';
 import { loadItems } from '../systems/items.js';
@@ -53,6 +53,7 @@ export default class BattleScene extends Phaser.Scene {
     this.dungeon = dungeons[DUNGEON_ID];
     for (const problem of validateDungeon(this.dungeon, enemyDefs)) console.error('Dungeon data:', problem);
     for (const problem of validateHeroSkills(heroDefs, skillDefs)) console.error('Hero skills:', problem);
+    for (const problem of validateDamageTypes({ heroDefs, enemyDefs, skillDefs, itemDefs }, damageTypes)) console.error('Damage types:', problem);
 
     this.floor = 1;
     this.mode = 'entering'; // 'entering' | 'fighting' | 'won' | 'lost'

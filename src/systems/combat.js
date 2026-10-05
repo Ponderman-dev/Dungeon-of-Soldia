@@ -1,8 +1,12 @@
 // Pure fight maths (no Phaser here), so it can be tested without a screen.
 
-function weakResistMultiplier(defender, type, rules) {
-  if (defender.weak.includes(type)) return rules.weakMultiplier;
-  if (defender.resists.includes(type)) return rules.resistMultiplier;
+// An enemy's `weak` / `resists` lists can name a damage type ("fire") or a whole category
+// ("magical", "physical").
+function weakResistMultiplier(defender, type, rules, damageTypes) {
+  const category = damageTypes[type].category;
+  const has = (list) => list.includes(type) || list.includes(category);
+  if (has(defender.weak)) return rules.weakMultiplier;
+  if (has(defender.resists)) return rules.resistMultiplier;
   return 1;
 }
 
@@ -45,7 +49,7 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
   const critMultiplier = rules.critMultiplier + ((attacker.specials && attacker.specials.critDamage) || 0) / 100;
   let amount = attacker.stats.attack * (opts.multiplier || 1) * (crit ? critMultiplier : 1);
 
-  const mult = weakResistMultiplier(defender, type, rules);
+  const mult = weakResistMultiplier(defender, type, rules, damageTypes);
   amount *= mult;
   amount *= 1 + ((attacker.damageBonus && attacker.damageBonus[type]) || 0) / 100;
   amount *= 1 - armourCut(defender, type, rules, damageTypes) / 100;
@@ -53,8 +57,9 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
   return { dodged: false, crit, amount: Math.max(1, Math.round(amount)), mult };
 }
 
-// Damage over time (poison): can't be dodged or crit, but weakness, resist and armour still apply.
+// Damage over time (poison...): can't be dodged or crit, but weakness, resist and armour still apply.
+// (The caster's damage bonus for this type is already inside `amount`, see BattleState.applyStatus.)
 export function computeDotDamage(defender, amount, type, rules, damageTypes) {
-  const mult = weakResistMultiplier(defender, type, rules);
+  const mult = weakResistMultiplier(defender, type, rules, damageTypes);
   return Math.max(1, Math.round(amount * mult * (1 - armourCut(defender, type, rules, damageTypes) / 100)));
 }

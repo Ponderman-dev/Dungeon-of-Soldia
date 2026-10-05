@@ -38,7 +38,7 @@ keep replies short, republish the preview page once per batch or when asked, not
 
 ## BIG UPDATE (current work)
 All planning is done and approved: `docs/big-update-plan.md` (mechanics, 10 heroes, debuffs, minions, BUILD ORDER) and `docs/item-list.md` (72 items, stacking, drop weights, rules). `docs/item-review.md` = the approved item review.
-Progress: A1 (remove mana) DONE. Next: A2 (attack/support skill slots). Ask the user before each step; republish the preview once per phase.
+Progress: A1 (remove mana), A2 (attack/support skill slots) DONE. Next: A3 (defense/resist curve, evasion cap 70%, crit cap 100%). Ask the user before each step; republish the preview once per phase.
 
 ## Older next-steps list (superseded by the build order)
 0. **IN PROGRESS: redo the skills (step d of the squad plan).** Open questions for the user: (1) 2 tappable skills per hero, or 1 tappable skill + the passive perk? (2) should skills be mostly attack, or mostly team support (heals, shields, rally)? Ask these first. Done already in this plan: 3-hero squad, hero perks, morale debuffs (INCOMPLETE / ALL ALONE), random default targeting, Chill Band rework (stackable ice hit + non-stacking 50% freeze). An 8-items-per-hero slot limit was tried and reverted (user did not want it); Knight-only item stacking is now already worse than spreading because of perks and morale.

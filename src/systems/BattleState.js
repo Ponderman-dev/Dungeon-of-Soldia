@@ -3,6 +3,9 @@ import { xpForNextLevel, statsAtLevel } from './leveling.js';
 import { computeHeroStats } from './items.js';
 import { moraleTier } from './party.js';
 
+// Every hero has one attack skill and one support skill, in this order (index 0 and 1).
+export const SKILL_SLOTS = ['attack', 'support'];
+
 // The fight itself: who is alive, who attacks whom and when, skills and statuses.
 // No Phaser in here. update() and castSkill() return a list of events and the scene draws them.
 //
@@ -58,7 +61,8 @@ export default class BattleState {
       level: 1,
       xp: 0,
       items: [],
-      skills: (def.skills || []).map((id) => ({ id, cooldownLeft: 0 })),
+      // Slot 0 = attack skill, slot 1 = support skill (heroes.json `skills: { attack, support }`).
+      skills: SKILL_SLOTS.filter((kind) => def.skills && def.skills[kind]).map((kind) => ({ id: def.skills[kind], kind, cooldownLeft: 0 })),
       statuses: [],
       damageBonus: {},
       specials: {},

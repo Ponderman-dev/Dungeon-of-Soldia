@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, SKILL_COLORS } from '../config.js';
 import allHeroDefs from '../data/heroes.json';
 import squadIds from '../data/squad.json';
 import enemyDefs from '../data/enemies.json';
@@ -15,7 +15,7 @@ import rawSkills from '../data/skills.json';
 import statusInfo from '../data/statuses.json';
 import Character from '../entities/Character.js';
 import BattleState from '../systems/BattleState.js';
-import { validateDungeon } from '../systems/validate.js';
+import { validateDungeon, validateHeroSkills } from '../systems/validate.js';
 import { enemiesForFloor } from '../systems/dungeon.js';
 import { pickSquad, perkMods } from '../systems/party.js';
 import { loadItems } from '../systems/items.js';
@@ -52,6 +52,7 @@ export default class BattleScene extends Phaser.Scene {
   create() {
     this.dungeon = dungeons[DUNGEON_ID];
     for (const problem of validateDungeon(this.dungeon, enemyDefs)) console.error('Dungeon data:', problem);
+    for (const problem of validateHeroSkills(heroDefs, skillDefs)) console.error('Hero skills:', problem);
 
     this.floor = 1;
     this.mode = 'entering'; // 'entering' | 'fighting' | 'won' | 'lost'
@@ -129,7 +130,7 @@ export default class BattleScene extends Phaser.Scene {
       for (const part of [view.bg, view.fill]) part.setDepth(DEPTH.heroBar);
       view.chipBox.setDepth(DEPTH.heroBar);
 
-      // The two skill squares under the hero: tap to cast.
+      // The two skill squares under the hero: tap to cast. Left = attack skill (red), right = support skill (green).
       view.skillButtons = unit.skills.map((slot, j) => {
         const x = cx + (j === 0 ? -22 : 22);
         const textStyle = { fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color: '#f3eefc' };
@@ -168,12 +169,13 @@ export default class BattleScene extends Phaser.Scene {
         const ready = this.mode === 'fighting' && this.state.canCast(hero, j);
         const g = b.g;
         g.clear();
-        g.fillStyle(ready ? 0x2a4fb8 : 0x1b2347, hero.alive ? 1 : 0.5).fillRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
+        const colors = SKILL_COLORS[slot.kind];
+        g.fillStyle(ready ? colors.ready : colors.idle, hero.alive ? 1 : 0.5).fillRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
         if (slot.cooldownLeft > 0) {
           const frac = slot.cooldownLeft / skill.cooldownMs;
           g.fillStyle(0x000000, 0.55).fillRoundedRect(b.x, b.y, SKILL_W, SKILL_H * frac, 8);
         }
-        g.lineStyle(ready ? 3 : 2, ready ? 0xf2b632 : 0x3b6fe0, ready ? 1 : 0.5).strokeRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
+        g.lineStyle(ready ? 3 : 2, ready ? 0xf2b632 : colors.ready, ready ? 1 : 0.5).strokeRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
         b.cd.setText(slot.cooldownLeft > 0 ? String(Math.ceil(slot.cooldownLeft / 1000)) : '');
         b.code.setColor(ready ? '#f3eefc' : '#8a86a0');
       });

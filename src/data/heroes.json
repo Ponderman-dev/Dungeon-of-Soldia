@@ -60,10 +60,10 @@
       "defense": 0.6,
       "resist": 0.3
     },
-    "skills": [
-      "shield_bash",
-      "guard"
-    ],
+    "skills": {
+      "attack": "shield_bash",
+      "support": "guard"
+    },
     "perk": {
       "name": "Stalwart",
       "mods": [
@@ -135,10 +135,10 @@
     "growthFlat": {
       "crit": 0.3
     },
-    "skills": [
-      "cleave",
-      "rage"
-    ],
+    "skills": {
+      "attack": "cleave",
+      "support": "rage"
+    },
     "perk": {
       "name": "Battle Fury",
       "mods": [
@@ -212,10 +212,10 @@
       "crit": 0.4,
       "attackEfficiency": 0.5
     },
-    "skills": [
-      "venom_strike",
-      "smoke"
-    ],
+    "skills": {
+      "attack": "venom_strike",
+      "support": "smoke"
+    },
     "perk": {
       "name": "Keen Eyes",
       "mods": [
@@ -288,10 +288,10 @@
       "resist": 0.2,
       "evasion": 0.4
     },
-    "skills": [
-      "power_shot",
-      "ensnare_shot"
-    ],
+    "skills": {
+      "attack": "power_shot",
+      "support": "eagle_focus"
+    },
     "perk": {
       "name": "Marksman",
       "mods": [

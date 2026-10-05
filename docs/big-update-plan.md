@@ -97,7 +97,15 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 - Style: battle cleric (heals by fighting, steady damage).
 - DECIDED: the regen part has TWO layers: a small base regen for every hero from the start (works with no items), and a multiplier on regen/heal the heroes get from items (grows with stacking so it stays useful late). Exact numbers tuned later. The 4th-attack heal does not trigger on-hit items.
 
-### Still to do: Necromancer, Bard, Alchemist (user may replace these concepts)
+### Necromancer (ranged, summoner) DECIDED
+- Passive "Skeleton Summoner": spawns a weak skeleton minion every 8-10 seconds during a fight. Needs a clear animation cue (rises from the ground with a dark puff). Minions fight on the hero side (attack a random enemy, can be hit/taunt-pulled). Minion cap and lifetime: open.
+- Attack "Death Coil": dark bolt on one enemy; extra damage to cursed/poisoned/debuffed enemies. When the bolt KILLS an enemy, a new skeleton rises (on top of the timed ones).
+- Support "Bone Ward": squad gets a bone shield that absorbs damage; when it breaks, bone shards damage enemies. (Same shield system as Mage's Arcane Ward and Knight ideas.)
+- Style: summoner (minions fight alongside the squad; ally/minion items can help).
+- New systems needed: minions as units on the hero side (not part of the squad of 3: no XP, no perks, no morale, don't count as living heroes), minion stats in JSON, minion spawn animation.
+- Open: minion cap (suggest 4, oldest removed), do they die at the end of a floor (suggest yes), can they carry items/benefit from squad buffs (suggest: squad-wide buffs like War Cry and Rally Cry also hit them).
+
+### Still to do: Bard, Alchemist (user may replace these concepts)
 - Final roster of 9 (3 per run), role, stats, growth, perk, one attack + one support skill, melee or ranged.
 - Redo the existing four, add the rest.
 

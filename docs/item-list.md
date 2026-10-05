@@ -64,10 +64,10 @@ Totals: 66 items. Common 15, Rare 21, Epic 20, Legendary 10.
 | Bulwark Plate | special | BUILT | +30 defense, reflects 25% of melee damage taken (not reviewed yet) | Defense and thorns % both add up |
 | Siege Cannon | special | BUILT | +40% attack, skills +30% damage, 5% skill splash | Attack, skill damage and splash chance all add up |
 | Static Crystal | on-hit | BUILT | 10% per attack: chain lightning, 300% electric, jumps to 2 more enemies | Each copy rolls its own 10% separately |
-| Magma Core | special | NEW | burning enemies take +25% damage from the holder, burn ticks 30% faster | (suggest) Damage bonus and burn speed add up with diminishing (0.8x per extra copy) |
-| Shatter Hammer | special | NEW | hits on a frozen enemy deal +60% damage and break the freeze | (suggest) Damage bonus adds up per copy. Freeze-break happens once per hit |
-| Blood Chalice | special | NEW | bleeding enemies take +20% damage from the holder, killing one heals the holder 3% | (suggest) Damage bonus and kill heal add up per copy |
-| Plague Flask | special | NEW | when a poisoned enemy dies, its poison spreads to another enemy | (suggest) Spread is unique; each extra copy adds +1 enemy it spreads to |
+| Magma Core | special | NEW | burning enemies take +25% damage from the holder, burn ticks 30% faster | Damage bonus adds up (+25% each). Burn speed bonus adds up but is capped (suggest +100% total) |
+| Shatter Hammer | special | NEW | hits on a frozen enemy deal +60% damage and break the freeze | Damage bonus adds up per copy (+60% each). The freeze breaks once per hit |
+| Blood Chalice | special | NEW | bleeding enemies take +20% damage from the holder, killing one heals the holder 3% | Both add up per copy (+20% damage, +3% heal) |
+| Plague Flask | special | NEW | when a poisoned enemy dies, its poison spreads to another enemy | +1 enemy it spreads to per copy. If there are no fresh enemies left, extra spread goes to enemies already poisoned and adds a poison STACK on them (an exception to the refresh rule) |
 | Exploiter's Lens | special | NEW | +20% damage to enemies with 2 or more different debuffs | (suggest) Diminishing: each extra copy adds 0.8x the last |
 | Hunter's Sigil | special | NEW | first hit on each enemy Marks it; marked enemies take +10% damage from the whole squad | (suggest) Mark is unique (no stack). Squad damage bonus adds per copy, diminishing |
 | Spiked Aegis | special | NEW | when the holder's shield breaks it explodes, damaging all enemies | (suggest) Explosion damage adds up per copy |

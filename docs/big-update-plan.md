@@ -72,7 +72,7 @@ Each hero: 1 passive (reacts to states/events), 1 attack skill, 1 support skill.
 - Attack "Fan of Knives": throws knives at ALL enemies from his slot (no run-up). It counts as a RANGED attack, so ranged-attack-boost items feed it. Each knife can crit separately; (idea) a crit applies bleed.
 - Support "Smoke Bomb": squad gets +evasion for 4s, enemies get Blind (miss more attacks).
 - Style: debuff enabler; low health, high crit potential.
-- Open: "easier to apply debuffs" is not fixed yet. Options: only his own chances +25%, or the whole squad's chance-based debuffs +10% while he lives. Also: his normal attacks are melee, only the skill is ranged.
+- DECIDED: "easier to apply debuffs" = ONLY his own chance-based debuffs get a bonus (e.g. +25%, tuned later). Not squad-wide. His normal attacks are melee, only Fan of Knives is ranged.
 
 ### Archer (ranged, crowd shooter) DECIDED
 - Passive "Steady Aim": while he has not been hit for 3s he gains attack speed and crit; being hit resets it. Self only. Pairs with the Knight's taunt (enemies hit the Knight instead).
@@ -134,7 +134,7 @@ The roster is now 10 heroes: 4 melee (Knight, Berserker, Rogue, Samurai) + 6 ran
 - Support "Focus Stance": 4s of stance: he blocks/parries hits against him and his next attack is a guaranteed crit.
 - Style: crit executioner (big crit hits, strongest vs single high-health enemies; bleed from his hits).
 - Stats (starting idea): melee, 100 health / 30 attack / 5 def / 3 resist / 5 evasion / 12 crit / 70 attack speed (slow, hits hard). Growth: attack +5%, health +3%, crit +0.4.
-- Open: "easier to apply debuffs" for him and for the Rogue: only their own chance-based debuffs (suggest, as the Rogue's earlier question is still open). Bleed is physical (ignores defense). Samurai + Berserker's Savage Leap (double damage on bleeding) now has a real bleed source.
+- DECIDED: "easier to apply debuffs" = only his own chance-based debuffs (same rule as the Rogue). Bleed is physical (ignores defense). Samurai + Berserker's Savage Leap (double damage on bleeding) now has a real bleed source.
 
 ## Roster status: all 9 heroes designed: Knight, Berserker, Rogue, Archer, Mage, Cleric, Necromancer, Bard, Alchemist.
 ## Still open for Part 2: base stats and growth per hero (melee/ranged, health, attack, defense, resist, evasion, crit, attack speed), squad select/unlock order, which 3 start unlocked, passives' exact numbers (tuned last).

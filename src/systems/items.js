@@ -34,7 +34,7 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
       // One entry per copy, so every copy rolls its own chance. Only the holder's own attacks roll.
       // `unique` effects only count once however many copies the hero has (e.g. a freeze chance that doesn't stack).
       // `falloffRatio` on a proc shrinks its chance for extra copies (Serrated Edge: 10%, 8%, 6.4%...).
-      if (holder === hero && !(e.unique && procs.some((p) => p.unique && p.itemId === e.itemId))) procs.push({ ...e, chance: e.chance * factor, itemId: e.itemId });
+      if (holder === hero && !(e.unique && procs.some((p) => p.unique && p.itemId === e.itemId))) procs.push({ ...e, chance: e.chance * factor, itemId: e.itemId, copies: holder.items.filter((i) => i === e.itemId).length });
     } else if (e.special) {
       // `unique`: the value does NOT grow with more copies (e.g. the Second Wind heal); `cap`: the total stops here.
       if (e.unique) specials[e.special] = e.percent;

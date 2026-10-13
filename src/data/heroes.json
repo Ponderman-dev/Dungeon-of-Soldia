@@ -103,7 +103,10 @@
           ]
         }
       ]
-    }
+    },
+    "provides": [
+      "taunt"
+    ]
   },
   {
     "id": "berserker",
@@ -271,7 +274,10 @@
         "critFlat": 10,
         "debuffChancePercent": 25
       }
-    }
+    },
+    "provides": [
+      "bleed"
+    ]
   },
   {
     "id": "archer",
@@ -463,7 +469,10 @@
           "delay": 110
         }
       }
-    }
+    },
+    "provides": [
+      "bleed"
+    ]
   },
   {
     "id": "mage",
@@ -577,7 +586,12 @@
     "provides": [
       "fire",
       "ice",
-      "electric"
+      "electric",
+      "burn",
+      "freeze",
+      "cc",
+      "beat",
+      "shield"
     ]
   },
   {
@@ -683,7 +697,12 @@
           "duration": 600
         }
       }
-    }
+    },
+    "provides": [
+      "heal",
+      "shield",
+      "beat"
+    ]
   },
   {
     "id": "necromancer",
@@ -779,7 +798,12 @@
           "delay": 110
         }
       }
-    }
+    },
+    "provides": [
+      "shield",
+      "minion",
+      "poison"
+    ]
   },
   {
     "id": "bard",
@@ -880,7 +904,11 @@
           "duration": 500
         }
       }
-    }
+    },
+    "provides": [
+      "heal",
+      "beat"
+    ]
   },
   {
     "id": "alchemist",
@@ -977,7 +1005,13 @@
     "provides": [
       "fire",
       "ice",
-      "dark"
+      "dark",
+      "burn",
+      "poison",
+      "freeze",
+      "cc",
+      "heal",
+      "shield"
     ]
   }
 ]

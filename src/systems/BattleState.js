@@ -679,6 +679,12 @@ export default class BattleState {
       if (target.alive && !hit.dodged) for (const spec of c.apply || []) this.applyStatus(target, spec, unit, `counter_${f.holder.uid}`, events);
     }
     this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, force: empower.some((f) => f.counter.forceProcs) });
+    // Fire Arrows: ranged attacks have a 50% chance (it does not stack) for an extra fire hit; more copies hit harder.
+    const fa = unit.specials && unit.specials.fireArrows;
+    if (fa && unit.damageType !== 'melee' && target.alive && this.rng() < 0.5) {
+      events.push({ type: 'proc', unit, label: 'Fire Arrow!' });
+      this.strike(unit, target, events, { multiplier: fa / 100, damageType: 'fire', projectile: 'bomb', item: true });
+    }
   }
 
   // ---- passives that change over time or need a living hero --------------------------------------
@@ -934,7 +940,9 @@ export default class BattleState {
       // the enemy hit AND gives the holder a defense buff.
       const receivers = (to) => (to === 'squad' ? this.squadUnits() : to === 'target' ? (enemy && landed ? [enemy] : []) : to === 'self' ? [hero] : targets);
       for (const spec of proc.apply || []) {
-        for (const target of receivers(spec.to)) this.applyStatus(target, spec, hero, `proc_${proc.itemId}`, events);
+        // scalesWithCopies: the status gets stronger with every copy of the item held (Ember Charm's burn).
+        const real = spec.scalesWithCopies ? { ...spec, damageMultiplier: spec.damageMultiplier * (proc.copies || 1) } : spec;
+        for (const target of receivers(spec.to)) this.applyStatus(target, real, hero, `proc_${proc.itemId}`, events);
       }
     }
   }
@@ -1172,6 +1180,11 @@ export default class BattleState {
     if (spec.status === 'buff') this.refreshStats();
     events.push({ type: 'status', unit: target, change: 'apply', status });
     if (spec.status === 'taunt') this.redirectToTaunter(target, events);
+    // Gag Rune: a stun or freeze the holder causes also Silences the enemy (2s, +1s per extra copy).
+    const gag = source && source.specials && source.specials.gagRune;
+    if (gag && target.side === 'enemy' && source.side === 'hero' && (spec.status === 'stun' || spec.status === 'freeze')) {
+      this.applyStatus(target, { status: 'silence', durationMs: (1 + gag) * 1000 }, source, 'gag_rune', events);
+    }
 
     // Enough chill: the unit freezes and the chill is used up.
     if (spec.status === 'chill' && info.freezeAt && this.stacks(target, 'chill') >= info.freezeAt) {

@@ -265,6 +265,9 @@
           }
         ]
       }
+    ],
+    "provides": [
+      "cc"
     ]
   },
   "fire_bombs": {
@@ -323,7 +326,9 @@
       }
     ],
     "provides": [
-      "ice"
+      "ice",
+      "freeze",
+      "cc"
     ]
   },
   "static_crystal": {
@@ -541,6 +546,183 @@
         "percent": 5,
         "cap": 50
       }
+    ]
+  },
+  "ember_charm": {
+    "name": "Ember Charm",
+    "rarity": "common",
+    "type": "onhit",
+    "scope": "self",
+    "description": "6% chance per attack to Burn the target for 3s. Chance and burn damage grow with each copy.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 6,
+        "label": "Burn!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "burn",
+            "durationMs": 3000,
+            "damageMultiplier": 0.2,
+            "damageType": "fire",
+            "scalesWithCopies": true
+          }
+        ]
+      }
+    ],
+    "provides": [
+      "burn"
+    ]
+  },
+  "venom_fang": {
+    "name": "Venom Fang",
+    "rarity": "common",
+    "type": "onhit",
+    "scope": "self",
+    "description": "8% chance per attack to Poison the target (each proc adds a Poison stack).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Poison!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "poison",
+            "durationMs": 5000,
+            "damageMultiplier": 0.3,
+            "damageType": "dark"
+          }
+        ]
+      }
+    ],
+    "provides": [
+      "poison"
+    ]
+  },
+  "rusty_nails": {
+    "name": "Rusty Nails",
+    "rarity": "common",
+    "type": "onhit",
+    "scope": "self",
+    "description": "8% chance per attack to Armor Break the target (-defense).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Armor Break!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "armorBreak",
+            "durationMs": 5000
+          }
+        ]
+      }
+    ],
+    "dropWeight": 90
+  },
+  "serrated_edge": {
+    "name": "Serrated Edge",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "10% chance per attack to make the target Bleed. Extra copies add less each (10%, 8%, 6.4%...).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 10,
+        "falloffRatio": 0.8,
+        "label": "Bleed!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "bleed",
+            "durationMs": 4000,
+            "damageMultiplier": 0.3
+          }
+        ]
+      }
+    ],
+    "provides": [
+      "bleed"
+    ]
+  },
+  "hex_doll": {
+    "name": "Hex Doll",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "8% chance per attack to Curse the target (-resist).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Curse!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "curse",
+            "durationMs": 6000
+          }
+        ]
+      }
+    ]
+  },
+  "dread_bell": {
+    "name": "Dread Bell",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "5% chance per attack to Fear the target (it skips its next attack and backs away).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 5,
+        "label": "Fear!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "fear",
+            "durationMs": 1500
+          }
+        ]
+      }
+    ],
+    "dropWeight": 90
+  },
+  "gag_rune": {
+    "name": "Gag Rune",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "A stun or freeze the holder causes also Silences the enemy for 2s (+1s per extra copy).",
+    "effects": [
+      {
+        "special": "gagRune",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "cc"
+  },
+  "fire_arrows": {
+    "name": "Fire Arrows",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "Ranged attacks: 50% chance for an extra fire hit. The chance does not stack; extra copies make the fire hit stronger.",
+    "effects": [
+      {
+        "special": "fireArrows",
+        "percent": 50
+      }
+    ],
+    "needs": "ranged",
+    "provides": [
+      "fire",
+      "burn"
     ]
   }
 }

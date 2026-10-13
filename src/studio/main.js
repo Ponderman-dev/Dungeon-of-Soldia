@@ -381,6 +381,7 @@ const board = new Board($('board'), {
   dim: () => $('dim').checked,
   mirror: () => mirrorOn,
   trace: () => trace,
+  copyMove: () => $('sel-copy').checked,
   begin: () => beginEdit(),
   end: () => endEdit(),
   changed: () => changed({ keepEditor: true }),
@@ -445,6 +446,7 @@ function toggleMirrorDraw() {
 }
 
 function setTool(name) {
+  if (name !== tool) board.sel = null;
   tool = name;
   document.querySelectorAll('[data-tool]').forEach((b) => b.classList.toggle('on', b.dataset.tool === name));
   renderBoardHint();
@@ -466,6 +468,7 @@ function renderBoardHint() {
     picker: 'Pick: tap any pixel to take its colour.',
     anchor: 'Anchor: tap the pixel the part should turn around.',
     move: 'Move: tap a part to pick it, drag to move it.',
+    select: 'Select: drag a box, then drag inside it to move those pixels. Delete clears them, Esc lets go.',
   };
   $('board-hint').textContent = selected ? hints[tool] : 'Tap a part to pick it, then draw.';
 }
@@ -966,6 +969,12 @@ document.addEventListener('click', (e) => {
     }
     case 'trace-off':
       return setTrace(null);
+    case 'sel-clear':
+      return board.clearSelection();
+    case 'board-in':
+    case 'board-out':
+    case 'board-fit':
+      return setBoardZoom(t.id === 'board-fit' ? 1 : boardZoom * (t.id === 'board-in' ? 1.5 : 1 / 1.5));
     case 'clear-part':
       if (!p) return;
       return act(() => {
@@ -1016,6 +1025,17 @@ function setMode(m) {
     document.querySelectorAll('[data-anim]').forEach((b) => b.classList.toggle('on', b.dataset.anim === 'idle'));
     redraw();
   }
+}
+
+// ---- Board zoom (buttons, or pinch with two fingers on the iPad) -------------------------------------
+
+let boardZoom = 1;
+function setBoardZoom(z) {
+  boardZoom = Math.max(1, Math.min(4, z));
+  const cv = $('board');
+  cv.style.width = boardZoom * 100 + '%';
+  cv.style.maxWidth = boardZoom > 1 ? 'none' : '';
+  $('board-fit').textContent = Math.round(boardZoom * 100) + '%';
 }
 
 // ---- Tracing picture (behind the drawing board) ------------------------------------------------------
@@ -1125,7 +1145,7 @@ function stopDrags() {
 document.addEventListener(
   'touchstart',
   (e) => {
-    if (!gesture) gesture = { start: performance.now(), max: 0, moved: false, from: new Map() };
+    if (!gesture) gesture = { start: performance.now(), max: 0, moved: false, from: new Map(), onBoard: !!e.target.closest('.boardwrap') };
     for (const t of e.changedTouches) gesture.from.set(t.identifier, [t.clientX, t.clientY]);
     gesture.max = Math.max(gesture.max, e.touches.length);
     if (e.touches.length >= 2) stopDrags();
@@ -1139,6 +1159,12 @@ document.addEventListener(
     for (const t of e.changedTouches) {
       const f = gesture.from.get(t.identifier);
       if (f && Math.hypot(t.clientX - f[0], t.clientY - f[1]) > 14) gesture.moved = true;
+    }
+    // Two fingers spreading / pinching on the drawing board zoom it.
+    if (gesture.onBoard && e.touches.length === 2 && gesture.moved) {
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      if (!gesture.pinch) gesture.pinch = { d, z: boardZoom };
+      else setBoardZoom((gesture.pinch.z * d) / gesture.pinch.d);
     }
   },
   { passive: true },
@@ -1174,7 +1200,15 @@ document.addEventListener('keydown', (e) => {
     return undoRedo('redo', 'undo');
   }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
-  const keys = { b: 'pencil', e: 'eraser', l: 'line', r: 'rect', g: 'fill', i: 'picker', a: 'anchor', m: 'move' };
+  if ((k === 'delete' || k === 'backspace') && tool === 'select' && board.sel) {
+    e.preventDefault();
+    return board.clearSelection();
+  }
+  if (k === 'escape' && board.sel) {
+    board.sel = null;
+    return board.render();
+  }
+  const keys = { b: 'pencil', e: 'eraser', l: 'line', r: 'rect', g: 'fill', i: 'picker', a: 'anchor', m: 'move', v: 'select' };
   if (k === 's') return toggleMirrorDraw();
   if (keys[k]) setTool(keys[k]);
 });

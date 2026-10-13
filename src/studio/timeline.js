@@ -37,7 +37,7 @@ export default class Timeline {
     document.addEventListener('pointermove', (e) => this.move(e));
     document.addEventListener('pointerup', () => this.up());
     document.addEventListener('keydown', (e) => {
-      if (e.target.matches('input, select, button')) return;
+      if (e.target.matches('input, select, button') || !this.root.offsetParent) return; // typing, or the timeline is hidden
       if ((e.key === 'Delete' || e.key === 'Backspace') && this.selKey) {
         e.preventDefault();
         this.deleteKey();

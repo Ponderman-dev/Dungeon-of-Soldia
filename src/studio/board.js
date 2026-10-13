@@ -134,6 +134,10 @@ export function lineCells(x0, y0, x1, y1) {
   return out;
 }
 
+function box(a, b) {
+  return { x0: Math.min(a[0], b[0]), x1: Math.max(a[0], b[0]), y0: Math.min(a[1], b[1]), y1: Math.max(a[1], b[1]) };
+}
+
 function rectCells(x0, y0, x1, y1, filled) {
   const out = [];
   const [ax, bx] = [Math.min(x0, x1), Math.max(x0, x1)];
@@ -148,7 +152,8 @@ export default class Board {
   // filled(), dim(), begin() (before an edit: for undo), end() (edit finished), changed(),
   // cancel() (throw away the edit in progress), holdPick(number) (touch and hold picked a colour),
   // mirror() (true = mirror drawing is on: everything drawn is copied to the other side),
-  // trace() ({ img, alpha } a tracing picture shown faintly behind the grid, or null)
+  // trace() ({ img, alpha } a tracing picture shown faintly behind the grid, or null),
+  // copyMove() (true = moving a selection leaves a copy behind)
   constructor(canvas, hooks) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
@@ -195,6 +200,7 @@ export default class Board {
     const cell = this.cellAt(ev);
     const tool = this.h.tool();
     this.canvas.setPointerCapture(ev.pointerId);
+    if (tool === 'select') return this.selectDown(cell, ev);
     if (tool === 'picker') {
       const hit = this.pixelAt(...cell);
       if (hit) this.h.pickColor(hit.color);
@@ -234,7 +240,10 @@ export default class Board {
     const cell = this.cellAt(ev);
     this.hover = cell;
     const d = this.drag;
-    if (d) {
+    if (d && d.tool === 'select') {
+      if (d.mode === 'box') this.sel = box(d.start, cell);
+      d.last = cell;
+    } else if (d) {
       if (d.tool === 'pencil' || d.tool === 'eraser') {
         this.paint(lineCells(d.last[0], d.last[1], cell[0], cell[1]));
       } else if (d.tool === 'anchor') {
@@ -251,6 +260,64 @@ export default class Board {
     this.render();
   }
 
+  // ---- select tool: drag a box around pixels of the selected part, then drag inside it to move them
+  // (with "copy" on, the pixels stay where they were too); Delete clears them, Esc lets go.
+
+  selectDown(cell) {
+    if (!this.part()) {
+      const hit = this.pixelAt(...cell);
+      if (hit) this.h.select(hit.name);
+      return;
+    }
+    const s = this.sel;
+    if (s && cell[0] >= s.x0 && cell[0] <= s.x1 && cell[1] >= s.y0 && cell[1] <= s.y1) {
+      // Lift the pixels inside the box; they float with the finger until let go.
+      this.h.begin();
+      const float = [];
+      editPart(this.part(), (set, get) => {
+        for (let y = s.y0; y <= s.y1; y++)
+          for (let x = s.x0; x <= s.x1; x++) {
+            const c = get(x, y);
+            if (c === null) continue;
+            float.push([x, y, c]);
+            if (!this.h.copyMove()) set(x, y, null);
+          }
+      });
+      this.drag = { tool: 'select', mode: 'move', start: cell, last: cell, float };
+    } else {
+      this.sel = box(cell, cell);
+      this.drag = { tool: 'select', mode: 'box', start: cell, last: cell };
+    }
+    this.render();
+  }
+
+  selectUp(d) {
+    this.drag = null;
+    if (d.mode === 'move') {
+      const dx = d.last[0] - d.start[0];
+      const dy = d.last[1] - d.start[1];
+      editPart(this.part(), (set) => {
+        for (const [x, y, c] of d.float) set(x + dx, y + dy, c);
+      });
+      this.sel = { x0: this.sel.x0 + dx, x1: this.sel.x1 + dx, y0: this.sel.y0 + dy, y1: this.sel.y1 + dy };
+      this.h.end();
+      this.h.changed();
+    }
+    this.render();
+  }
+
+  // Clears the pixels inside the selection box (Delete key / button).
+  clearSelection() {
+    const s = this.sel;
+    if (!s || !this.part()) return;
+    this.h.begin();
+    editPart(this.part(), (set) => {
+      for (let y = s.y0; y <= s.y1; y++) for (let x = s.x0; x <= s.x1; x++) set(x, y, null);
+    });
+    this.h.end();
+    this.h.changed();
+  }
+
   // Stops the stroke in progress without finishing it (the caller throws its changes away).
   cancel() {
     clearTimeout(this.hold);
@@ -262,6 +329,7 @@ export default class Board {
     if (ev && !ev.isPrimary) return;
     clearTimeout(this.hold);
     const d = this.drag;
+    if (d && d.tool === 'select') return this.selectUp(d);
     if (!d) return;
     if (d.tool === 'line') this.paint(lineCells(d.start[0], d.start[1], d.last[0], d.last[1]));
     if (d.tool === 'rect') this.paint(rectCells(d.start[0], d.start[1], d.last[0], d.last[1], this.h.filled()));
@@ -408,6 +476,25 @@ export default class Board {
       ctx.moveTo(ax, ay - cell);
       ctx.lineTo(ax, ay + cell);
       ctx.stroke();
+    }
+
+    // Selection box (dashed cyan) and the pixels being moved.
+    if (d && d.tool === 'select' && d.mode === 'move') {
+      const dx = d.last[0] - d.start[0];
+      const dy = d.last[1] - d.start[1];
+      for (const [x, y, c] of d.float) {
+        ctx.fillStyle = hex(c);
+        ctx.fillRect(X(x + dx), Y(y + dy), cell, cell);
+      }
+    }
+    if (this.sel && this.h.tool() === 'select') {
+      const s = this.sel;
+      const off = d && d.tool === 'select' && d.mode === 'move' ? [d.last[0] - d.start[0], d.last[1] - d.start[1]] : [0, 0];
+      ctx.strokeStyle = '#4fd8e8';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 4]);
+      ctx.strokeRect(X(s.x0 + off[0]), Y(s.y0 + off[1]), (s.x1 - s.x0 + 1) * cell, (s.y1 - s.y0 + 1) * cell);
+      ctx.setLineDash([]);
     }
 
     // The square under the finger/mouse.

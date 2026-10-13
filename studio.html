@@ -68,6 +68,7 @@
       .card h2 { font: 700 15px var(--font-display); letter-spacing: 0.03em; margin: 0; }
       .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
       .head .hint { margin-left: auto; }
+      #board-hint { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; } /* one line, so the board never jumps */
       .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
       .label { font: 11px var(--font-data); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-right: 4px; }
       .hint { color: var(--muted); font-size: 12.5px; margin: 0; max-width: 62ch; }
@@ -149,6 +150,7 @@
       .tl-playhead-wrap { position: absolute; inset: 0 10px; pointer-events: none; }
       .tl-playhead { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #d65b5b; }
       .tl-playhead::before { content: ''; position: absolute; top: 0; left: -5px; border: 6px solid transparent; border-top-color: #d65b5b; }
+      .boardwrap { max-width: 100%; max-height: 640px; overflow: auto; border-radius: 6px; touch-action: none; }
       .lineup { width: 100%; image-rendering: pixelated; border-radius: 6px; }
       .swapto { width: 22px; height: 22px; border-radius: 4px; outline: 1px solid var(--line); display: inline-block; }
       .tl-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
@@ -223,13 +225,22 @@
             <button class="btn tool" data-tool="picker" title="Pick a colour (I)" aria-label="Pick a colour"><svg viewBox="0 0 18 18"><path d="M3 15l7-7 M10 5l3-3 3 3-3 3z"/></svg></button>
             <button class="btn tool" data-tool="anchor" title="Anchor: the turning point (A)" aria-label="Anchor"><svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="3"/><path d="M9 1v4 M9 13v4 M1 9h4 M13 9h4"/></svg></button>
             <button class="btn tool" data-tool="move" title="Move / pick a part (M)" aria-label="Move"><svg viewBox="0 0 18 18"><path d="M9 1v16 M1 9h16 M6 4l3-3 3 3 M6 14l3 3 3-3 M4 6L1 9l3 3 M14 6l3 3-3 3"/></svg></button>
+            <button class="btn tool" data-tool="select" title="Select pixels and move them (V)" aria-label="Select"><svg viewBox="0 0 18 18"><path d="M2 2h14v14H2z" stroke-dasharray="3 2"/></svg></button>
             <span style="width:8px"></span>
             <button id="mirror-draw" class="btn tool" title="Mirror drawing: draw one side, the other side copies it (S)" aria-label="Mirror drawing" aria-pressed="false"><svg viewBox="0 0 18 18"><path d="M9 1v16" stroke-dasharray="2 2"/><path d="M7 4L2 13h5z M11 4l5 9h-5z"/></svg></button>
             <span style="width:8px"></span>
             <button id="undo" class="btn tool" title="Undo (Ctrl+Z)" aria-label="Undo" disabled><svg viewBox="0 0 18 18"><path d="M6 3L2 7l4 4 M2 7h9a4 4 0 010 8H8"/></svg></button>
             <button id="redo" class="btn tool" title="Redo (Ctrl+Y)" aria-label="Redo" disabled><svg viewBox="0 0 18 18"><path d="M12 3l4 4-4 4 M16 7H7a4 4 0 000 8h3"/></svg></button>
           </div>
-          <canvas id="board" width="480" height="528"></canvas>
+          <div class="boardwrap"><canvas id="board" width="480" height="528"></canvas></div>
+          <div class="row">
+            <span class="label">Board</span>
+            <button id="board-out" class="btn" aria-label="Zoom out">−</button>
+            <button id="board-fit" class="btn" title="Back to fit">100%</button>
+            <button id="board-in" class="btn" aria-label="Zoom in">+</button>
+            <label class="check"><input type="checkbox" id="sel-copy" /> Copy when moving a selection</label>
+            <button id="sel-clear" class="btn">Clear selection</button>
+          </div>
           <div class="swatches" id="swatches"></div>
           <div class="row">
             <input type="color" id="color" value="#3b6fd4" aria-label="Colour" />
@@ -242,7 +253,7 @@
               <button id="trace-off" class="btn">Remove</button>
             </span>
           </div>
-          <p class="hint">Each square is one pixel. Drawing outside the part makes it bigger; erasing its edges shrinks it. The <b>anchor</b> (crosshair) is the point the part turns around: put a sword's anchor on its handle. Keys: <kbd>B</kbd> pencil, <kbd>E</kbd> eraser, <kbd>L</kbd> line, <kbd>R</kbd> rectangle, <kbd>G</kbd> fill, <kbd>I</kbd> pick colour, <kbd>A</kbd> anchor, <kbd>M</kbd> move, <kbd>S</kbd> mirror drawing (the dashed blue middle line). On iPad: <b>two-finger tap</b> = undo, <b>three-finger tap</b> = redo, <b>touch and hold</b> with a finger = pick that colour.</p>
+          <p class="hint">Each square is one pixel. Drawing outside the part makes it bigger; erasing its edges shrinks it. The <b>anchor</b> (crosshair) is the point the part turns around: put a sword's anchor on its handle. Keys: <kbd>B</kbd> pencil, <kbd>E</kbd> eraser, <kbd>L</kbd> line, <kbd>R</kbd> rectangle, <kbd>G</kbd> fill, <kbd>I</kbd> pick colour, <kbd>A</kbd> anchor, <kbd>M</kbd> move, <kbd>V</kbd> select (then <kbd>Delete</kbd> / <kbd>Esc</kbd>), <kbd>S</kbd> mirror drawing (the dashed blue middle line). On iPad: <b>two-finger tap</b> = undo, <b>three-finger tap</b> = redo, <b>touch and hold</b> with a finger = pick that colour.</p>
         </div>
         </section>
         <section class="col">

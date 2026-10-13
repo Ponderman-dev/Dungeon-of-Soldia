@@ -59,8 +59,7 @@ export default class BattleScene extends Phaser.Scene {
     this.floor = 1;
     this.mode = 'entering'; // 'entering' | 'fighting' | 'won' | 'lost'
     this.views = new Map(); // unit uid -> { unit, ch, bg, fill, groundY, ... }
-    this.engaged = new Map(); // target uid -> Map(fighter uid -> slot index): melee fighters standing at that target
-    this.dest = new Map(); // fighter uid -> { x, y } where a melee fighter is heading / standing (so others keep clear)
+    this.engaged = new Map(); // enemy uid -> Map(hero uid -> spot index): melee heroes standing at that enemy
     this.state = new BattleState({
       heroDefs,
       enemyDefs,
@@ -71,15 +70,6 @@ export default class BattleScene extends Phaser.Scene {
       damageTypes,
       leveling,
     });
-
-    // How far a melee fighter has to walk to reach its target (so the walk takes a fair time).
-    this.state.walkDistance = (unit, target) => {
-      const a = this.views.get(unit.uid);
-      const t = this.views.get(target.uid);
-      if (!a || !t) return null;
-      const p = this.planWalk(a, t);
-      return Math.hypot(p.mine.x - a.ch.x, p.mine.y - a.ch.y);
-    };
 
     this.drawHeroSlots();
     this.floorText = this.add
@@ -617,93 +607,29 @@ export default class BattleScene extends Phaser.Scene {
 
   // ---- hero attack motion (melee run-up, arrows) --------------------------------------------
 
-  // Where a melee fighter (a) ends up when it attacks t. If t is just standing around (not busy), BOTH
-  // walk towards each other and meet half way, face to face (hero below, enemy above). Otherwise a
-  // walks to a free slot around t: in front, to its left, to its right, behind (first free one).
-  planWalk(a, t) {
-    const idle =
-      t.unit.alive && t.unit.damageType === 'melee' && !t.ch.moveTween && !t.unit.pending && !t.unit.engagedUid &&
-      !this.dest.has(t.unit.uid) && !(this.engaged.get(t.unit.uid) && this.engaged.get(t.unit.uid).size);
-    const clampX = (x) => Phaser.Math.Clamp(x, 28, GAME_WIDTH - 28);
-    if (idle) {
-      const mx = (a.ch.x + t.ch.x) / 2;
-      const my = (a.ch.y + t.ch.y) / 2;
-      const sign = a.unit.side === 'hero' ? 1 : -1; // heroes end up below
-      return {
-        meet: true,
-        mine: { x: clampX(mx), y: my + (sign * M.meetGapPx) / 2 },
-        theirs: { x: clampX(mx), y: my - (sign * M.meetGapPx) / 2 },
-        index: 0,
-      };
-    }
-    const face = a.unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY;
-    const homeSide = a.ch.homeX >= t.ch.x ? 1 : -1;
-    const slots = [
-      { x: 0, y: face },
-      { x: homeSide * M.sideGapPx, y: 0 },
-      { x: -homeSide * M.sideGapPx, y: 0 },
-      { x: 0, y: -face },
-    ];
-    const others = [];
-    for (const v of this.views.values()) {
-      if (v === a || v === t || !v.unit.alive) continue;
-      others.push(this.dest.get(v.unit.uid) || { x: v.ch.x, y: v.ch.y });
-    }
-    let best = null;
-    slots.forEach((o, index) => {
-      const x = clampX(t.ch.x + o.x);
-      const y = t.ch.y + o.y;
-      const crowded = others.filter((q) => Math.abs(q.x - x) < M.crowdXPx && Math.abs(q.y - y) < M.crowdYPx).length;
-      if (!best || crowded < best.crowded) best = { crowded, mine: { x, y }, theirs: null, index, meet: false };
-    });
-    return best;
-  }
-
-  // Pushes a walker sideways around other fighters in its way, so it walks AROUND them instead of
-  // sliding through. (It fades out as the walker arrives.)
-  avoidOthers(a, t) {
-    return (x, y) => {
-      let dx = 0;
-      for (const v of this.views.values()) {
-        if (v === a || v === t || !v.unit.alive) continue;
-        const ox = v.ch.x - x;
-        const oy = v.ch.y - y;
-        if (Math.abs(oy) < M.crowdYPx * 1.5 && Math.abs(ox) < M.crowdXPx) dx -= Math.sign(ox || 1) * (M.crowdXPx - Math.abs(ox));
-      }
-      return { dx: Phaser.Math.Clamp(dx, -M.crowdXPx, M.crowdXPx), dy: 0 };
-    };
-  }
-
-  // A melee fighter (hero or enemy) walks at a steady speed to its target and stays next to it,
-  // swinging as the hit lands. If the target is idle it walks to meet it half way. The spot follows
-  // a target that is itself moving (when it was busy). No walking back.
+  // A melee fighter (hero or enemy) walks STRAIGHT to its target and stands next to it, arriving as
+  // the swing lands. Heroes stand just below an enemy, enemies just above a hero. Several fighters on
+  // one target stand side by side (the first one straight across, the others to the side they came
+  // from). The spot follows the target if it moves. It stays there afterwards (no walking back).
   runToTarget(a, t, hitInMs) {
     this.releaseSpot(a.unit.uid);
-    const plan = this.planWalk(a, t);
     const spots = this.engaged.get(t.unit.uid) || new Map();
     this.engaged.set(t.unit.uid, spots);
-    spots.set(a.unit.uid, plan.index);
-    const walkMs = (from, to) => (Math.hypot(to.x - from.x, to.y - from.y) / M.walkSpeedPxPerSec) * 1000;
+    let index = 0;
+    while ([...spots.values()].includes(index)) index++;
+    spots.set(a.unit.uid, index);
+    const homeSide = a.ch.homeX >= t.ch.x ? 1 : -1;
+    const side = index === 0 ? 0 : index % 2 === 1 ? homeSide : -homeSide;
+    const offsetX = side * Math.ceil(index / 2) * M.spacingPx;
+    const offsetY = a.unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY;
+    const hover = (v) => v.groundY - v.ch.homeY; // flying units float above their ground line
+    const getSpot = () => ({
+      x: Phaser.Math.Clamp(t.ch.x + offsetX, 28, GAME_WIDTH - 28),
+      y: t.ch.y + t.ch.hopOffset + hover(t) + offsetY - hover(a),
+    });
     const swingMs = combatRules.attackTiming[a.unit.side].swingMs;
-    const hop = { height: M.hopHeight, length: M.hopLengthPx };
-    let getSpot;
-    if (plan.meet) {
-      this.dest.set(a.unit.uid, plan.mine);
-      this.dest.set(t.unit.uid, plan.theirs);
-      getSpot = () => plan.mine;
-      t.ch.chase(() => plan.theirs, Math.max(60, walkMs(t.ch, plan.theirs)), {
-        hop,
-        onUpdate: () => this.syncBar(t),
-        onDone: () => this.syncBar(t),
-      });
-    } else {
-      const offset = { x: plan.mine.x - t.ch.x, y: plan.mine.y - t.ch.y };
-      this.dest.set(a.unit.uid, plan.mine);
-      getSpot = () => ({ x: Phaser.Math.Clamp(t.ch.x + offset.x, 28, GAME_WIDTH - 28), y: t.ch.y + offset.y });
-    }
     a.ch.chase(getSpot, Math.max(60, hitInMs - swingMs), {
-      hop,
-      avoid: this.avoidOthers(a, t),
+      hop: { height: M.hopHeight, length: M.hopLengthPx },
       onUpdate: () => this.syncBar(a),
       onDone: () => a.ch.swing(swingMs),
     });
@@ -736,7 +662,6 @@ export default class BattleScene extends Phaser.Scene {
   // Frees the spot a melee fighter had next to its target.
   releaseSpot(uid) {
     for (const spots of this.engaged.values()) spots.delete(uid);
-    this.dest.delete(uid);
   }
 
   // A ranged fighter's basic attack: an arrow that flies to the target and arrives as the hit lands.

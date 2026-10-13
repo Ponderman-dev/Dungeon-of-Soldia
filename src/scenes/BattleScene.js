@@ -709,6 +709,8 @@ export default class BattleScene extends Phaser.Scene {
       }
       if (e.status.type === 'buff') this.drawAllBars();
       if (e.status.type === 'shield') this.setBar(v);
+    } else if (e.type === 'itemUsed') {
+      this.drawDots(this.views.get(e.unit.uid)); // a consumable was used up: one dot less
     } else if (e.type === 'wave') {
       // One wave of a channel (Rain of Arrows, Crescendo): a ring on the caster that grows with the wave.
       const v = this.views.get(e.unit.uid);

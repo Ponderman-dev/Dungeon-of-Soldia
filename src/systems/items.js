@@ -33,9 +33,13 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
     } else if (e.proc) {
       // One entry per copy, so every copy rolls its own chance. Only the holder's own attacks roll.
       // `unique` effects only count once however many copies the hero has (e.g. a freeze chance that doesn't stack).
-      if (holder === hero && !(e.unique && procs.some((p) => p.unique && p.itemId === e.itemId))) procs.push({ ...e, itemId: e.itemId });
+      // `falloffRatio` on a proc shrinks its chance for extra copies (Serrated Edge: 10%, 8%, 6.4%...).
+      if (holder === hero && !(e.unique && procs.some((p) => p.unique && p.itemId === e.itemId))) procs.push({ ...e, chance: e.chance * factor, itemId: e.itemId });
     } else if (e.special) {
-      specials[e.special] = (specials[e.special] || 0) + e.percent * factor;
+      // `unique`: the value does NOT grow with more copies (e.g. the Second Wind heal); `cap`: the total stops here.
+      if (e.unique) specials[e.special] = e.percent;
+      else specials[e.special] = Math.min(e.cap ?? Infinity, (specials[e.special] || 0) + e.percent * factor);
+      if (e.below !== undefined) specials[e.special + 'Below'] = e.below;
       if (e.cooldownMs) specials[e.special + 'CooldownMs'] = e.cooldownMs; // e.g. blockCooldownMs
       if (e.debuffs) specials[e.special + 'List'] = e.debuffs; // e.g. critDebuffList
     } else if (e.damageBonus) {

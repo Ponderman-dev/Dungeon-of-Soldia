@@ -99,6 +99,9 @@ export default class BattleState {
       casting: null, // a skill winding up: { index, remaining, total }
       sinceHit: 0, // ms since the unit last lost health (Archer's Steady Aim)
       steady: false, // Steady Aim is active
+      floor: {}, // flags that reset every floor
+      firstHits: new Set(),
+      streak: { uid: null, count: 0 },
       spawnTimer: 0, // minion spawner (def.spawner): ms until the next minion
       minion: false, // true for minions (hero side, not in this.heroes)
       holderUid: null, // minions: the hero whose passive/item made it
@@ -142,6 +145,9 @@ export default class BattleState {
   spawnEnemies(ids, floor) {
     this.focusUid = null;
     for (const h of this.heroes) {
+      h.floor = {}; // per-floor flags (Tough Skin used, Second Wind used...)
+      h.firstHits = new Set(); // enemies this hero has already hit with a basic attack (Sucker Punch)
+      h.streak = { uid: null, count: 0 }; // Brawler's Streak
       h.pending = null; // attacks aimed at the last floor's enemies are gone
       h.foe = null;
       h.casting = null;
@@ -357,7 +363,7 @@ export default class BattleState {
   }
 
   // Marks a unit dead. Enemies give XP; a dead hero's items stop working.
-  killUnit(target, events) {
+  killUnit(target, events, killer = null) {
     const was = this.morale;
     target.alive = false;
     target.statuses = [];
@@ -373,7 +379,10 @@ export default class BattleState {
       this.minionDied(target); // no XP, no morale
       return;
     }
-    if (target.side === 'enemy') this.awardXp(target, events);
+    if (target.side === 'enemy') {
+      this.awardXp(target, events);
+      this.onKill(killer, target, events);
+    }
     else {
       this.removeMinionsOf(target, 'holderDied', events); // minions vanish when their holder dies
       this.refreshStats();
@@ -833,12 +842,22 @@ export default class BattleState {
         events.push({ type: 'status', unit: attacker, change: 'expire', status: sure });
       }
     }
+    // Item damage bonuses of the attacker (Sucker Punch, Full Vigor, Brawler's Streak...).
+    const bonus = this.itemDamageBonus(attacker, target, opts);
+    if (bonus) opts = { ...opts, damagePercent: (opts.damagePercent || 0) + bonus };
     const op = this.opportunist(attacker);
     if (op && this.isDebuffed(target)) opts = { ...opts, damagePercent: (opts.damagePercent || 0) + op.damagePercent, critBonus: (opts.critBonus || 0) + op.critFlat };
     const result = computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, opts);
+    // Tough Skin: the first hit the holder takes each floor deals much less.
+    if (!result.dodged && target.side === 'hero' && target.specials.toughSkin && !target.floor.toughUsed) {
+      target.floor.toughUsed = true;
+      const cut = Math.min(0.9, 1 - 0.4 * Math.pow(0.75, target.specials.toughSkin - 1));
+      result.amount = Math.max(1, Math.round(result.amount * (1 - cut)));
+      events.push({ type: 'proc', unit: target, label: 'Tough Skin!' });
+    }
     let dealt = null;
     if (!result.dodged) {
-      dealt = this.dealDamage(target, result.amount);
+      dealt = this.dealDamage(target, result.amount, events);
       if (dealt.immune) {
         // Invulnerable: the hit does nothing at all (like a block: no lifesteal, thorns, debuffs).
         result.dodged = true;
@@ -858,9 +877,29 @@ export default class BattleState {
       this.applyStatus(target, spec, target, 'totem', events);
     }
     // Lifesteal, thorns and crit debuffs work on the damage that really got through (nothing if a shield took it all).
-    if (!result.dodged && !result.fullyAbsorbed) this.afterHit(attacker, target, result.amount - (result.absorbed || 0), events, result);
-    if (target.hp <= 0 && target.alive) this.killUnit(target, events);
+    if (!result.dodged && !result.fullyAbsorbed && !opts.item) this.afterHit(attacker, target, result.amount - (result.absorbed || 0), events, result);
+    if (target.hp <= 0 && target.alive) this.killUnit(target, events, attacker);
     return result;
+  }
+
+  // Extra damage % from the ATTACKER's item specials for this hit.
+  //  - suckerPunch: the first BASIC attack on each enemy.   - fullVigor: while the attacker is at full health.
+  //  - brawlerMax: +2% per consecutive basic hit on the same target, up to the item's max (basic attacks only).
+  itemDamageBonus(attacker, target, opts) {
+    const sp = attacker.specials;
+    if (!sp || attacker.side !== 'hero' || attacker.minion) return 0;
+    let bonus = 0;
+    if (opts.basic) {
+      if (sp.suckerPunch && !attacker.firstHits.has(target.uid)) bonus += sp.suckerPunch;
+      attacker.firstHits.add(target.uid);
+      if (sp.brawlerMax) {
+        const st = attacker.streak;
+        bonus += Math.min(sp.brawlerMax, st.uid === target.uid ? st.count * 2 : 0);
+        attacker.streak = { uid: target.uid, count: st.uid === target.uid ? st.count + 1 : 1 };
+      }
+    }
+    if (sp.fullVigor && attacker.hp >= attacker.maxHp) bonus += sp.fullVigor;
+    return bonus;
   }
 
   // Items with a chance effect (e.g. War Banner): each copy rolls separately every time the
@@ -885,6 +924,7 @@ export default class BattleState {
           multiplier: proc.strike.damageMultiplier,
           damageType: proc.strike.damageType,
           projectile: proc.strike.projectile,
+          item: true, // damage made BY an item never triggers lifesteal, thorns or other item effects
         });
         landed = !hit.dodged;
       }
@@ -911,7 +951,8 @@ export default class BattleState {
     let from = hero;
     let target = first;
     for (let jump = 0; target; jump++) {
-      this.strike(hero, target, events, { multiplier: chain.damageMultiplier, damageType: chain.damageType, projectile: 'lightning', from });
+      const res = this.strike(hero, target, events, { multiplier: chain.damageMultiplier, damageType: chain.damageType, projectile: 'lightning', from, item: true });
+      if (!res.dodged && target.alive) for (const spec of chain.apply || []) this.applyStatus(target, spec, hero, 'chain', events); // Static Crystal: Shock on every enemy hit
       if (jump >= chain.jumps) break;
       from = target;
       const here = this.enemies.indexOf(from);
@@ -954,7 +995,7 @@ export default class BattleState {
     const thorns = (target.specials && target.specials.thorns) || 0;
     if (thorns > 0 && target.alive && target.hp > 0 && attacker.damageType === 'melee' && attacker.alive) {
       const back = Math.max(1, Math.round((amount * thorns) / 100));
-      const d = this.dealDamage(attacker, back);
+      const d = this.dealDamage(attacker, back, events);
       if (!d.immune) events.push({ type: 'thorns', unit: attacker, amount: back - d.absorbed });
       this.breakEffects(attacker, d.broken, events);
       if (attacker.hp <= 0 && attacker.alive) this.killUnit(attacker, events);
@@ -968,7 +1009,7 @@ export default class BattleState {
   //  - Shields soak damage first, oldest first. A shield with nothing left is BROKEN (collected in
   //    `broken`, callers pass it to breakEffects() once the hit has been reported).
   // Returns { lost (health lost), absorbed (taken by shields), immune, broken }.
-  dealDamage(target, amount) {
+  dealDamage(target, amount, events = null) {
     if (this.has(target, 'invulnerable')) return { lost: 0, absorbed: 0, immune: true, broken: [] };
     let left = amount;
     let absorbed = 0;
@@ -992,7 +1033,40 @@ export default class BattleState {
         this.refreshStats();
       }
     }
+    this.afterDamage(target, events);
     return { lost: left, absorbed, immune: false, broken };
+  }
+
+  // Things that react to a unit having lost health (called from dealDamage when it has an events list).
+  afterDamage(target, events) {
+    if (!events || target.side !== 'hero' || target.minion || target.hp <= 0) return;
+    // Second Wind Flask: below its threshold ONE flask is used up and heals (once per floor per holder).
+    const below = target.specials.secondWindBelow;
+    if (target.specials.secondWind && !target.floor.flaskUsed && target.hp < (target.maxHp * below) / 100) {
+      const id = this.consumeItem(target, 'secondWind');
+      if (id) {
+        target.floor.flaskUsed = true;
+        events.push({ type: 'proc', unit: target, label: 'Second Wind!' });
+        events.push({ type: 'itemUsed', unit: target, itemId: id });
+        this.healUnit(target, (target.maxHp * target.specials.secondWind) / 100 / this.regenAura().factor, events);
+      }
+    }
+  }
+
+  // Uses up one copy of an item that has the special `name` (a consumable). Returns its id, or null.
+  consumeItem(hero, name) {
+    const i = hero.items.findIndex((id) => (this.itemDefs[id].effects || []).some((e) => e.special === name));
+    if (i < 0) return null;
+    const [id] = hero.items.splice(i, 1);
+    this.refreshStats();
+    return id;
+  }
+
+  // Item reactions to a kill (killer = the unit that dealt the last blow, if known).
+  onKill(killer, victim, events) {
+    if (!killer || killer.side !== 'hero' || killer.minion || !killer.alive) return;
+    const heal = killer.specials.killHeal || 0; // Bandage Roll
+    if (heal > 0) this.healUnit(killer, (killer.maxHp * heal) / 100 / this.regenAura().factor, events);
   }
 
   // A shield was broken: tell the scene, and run its `onBreak` effect if it has one
@@ -1154,7 +1228,7 @@ export default class BattleState {
         const total = stacks.reduce((sum, s) => sum + s.damage, 0);
         const { damageType, ignoresArmor } = stacks[0];
         const amount = computeDotDamage(unit, total, damageType, this.rules, this.damageTypes, { ignoresArmor });
-        const d = this.dealDamage(unit, amount);
+        const d = this.dealDamage(unit, amount, events);
         events.push({ type: 'dot', unit, amount: d.immune ? 0 : amount - d.absorbed, absorbed: d.absorbed, immune: d.immune, damageType, status: type, stacks: stacks.length });
         this.breakEffects(unit, d.broken, events);
         if (unit.hp <= 0 && unit.alive) this.killUnit(unit, events);
@@ -1205,7 +1279,7 @@ export default class BattleState {
     if (!hero || !this.canCast(hero, index)) return events;
     const slot = hero.skills[index];
     const skill = this.currentSpell(hero, index);
-    slot.cooldownLeft = skill.cooldownMs;
+    slot.cooldownLeft = skill.cooldownMs * (1 - Math.min(50, hero.specials.cooldown || 0) / 100); // Hourglass
     const castMs = this.castTime(skill);
     if (castMs <= 0) {
       this.releaseSkill(hero, index, events);

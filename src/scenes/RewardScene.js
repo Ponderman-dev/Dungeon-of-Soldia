@@ -153,7 +153,7 @@ export default class RewardScene extends Phaser.Scene {
         const before = hero.specials[e.special] || 0;
         const now = after.specials[e.special] || 0;
         const round = (v) => Math.round(v * 10) / 10;
-        lines.push({ text: `${SPECIAL_LABEL[e.special]} ${round(before)}>${round(now)}%`, up: true });
+        lines.push({ text: `${SPECIAL_LABEL[e.special] || e.special.replace(/([A-Z])/g, ' $1').toUpperCase()} ${round(before)}>${round(now)}%`, up: true });
       } else if (e.damageBonus) {
         const before = hero.damageBonus[e.damageBonus] || 0;
         const now = after.damageBonus[e.damageBonus] || 0;

@@ -21,21 +21,20 @@ const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker 
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'fire_bombs'); const [e] = dummy(s); s.rng = () => 0.001; k.stats.crit = 0; const ev = []; s.rollProcs(k, 'onAttack', ev, { target: e });
   const a = attacks(ev, k)[0]; ok('bomb is fire, 250% of attack', a && a.damageType === 'fire' && a.result.amount === Math.round(k.stats.attack * 2.5), JSON.stringify(a && a.result));
   ok('bomb draws a projectile', ev.some((x) => x.type === 'projectile' && x.kind === 'bomb')); }
-// Chill Band: every attack adds a 10% ice hit per band (stacks); 50% freeze that does not stack
+// Chill Band: every attack adds a 10% ice hit per band (stacks) AND 1 Chill stack (does not grow with more bands); 5 Chill = Freeze
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'chill_band'); const [e] = dummy(s); s.rng = () => 0.001; k.stats.crit = 0;
   let ev = []; s.rollProcs(k, 'onAttack', ev, { target: e, hit: true });
   const ice = (x) => attacks(x, k).filter((a) => a.damageType === 'ice');
   ok('one band: one ice hit of 10% attack', ice(ev).length === 1 && ice(ev)[0].result.amount === Math.max(1, Math.round(k.stats.attack * 0.1)));
-  ok('freeze stops the enemy acting', s.isStunned(e) && e.statuses.some((x) => x.type === 'freeze'));
-  ok('ice hit makes no popup, freeze does', ev.filter((x) => x.type === 'proc').length === 1);
+  ok('...and 1 Chill stack on the target', s.stacks(e, 'chill') === 1);
+  ok('ice hit and chill make no popup', ev.filter((x) => x.type === 'proc').length === 0);
   s.giveItem(k.uid, 'chill_band'); e.statuses = []; ev = []; s.rollProcs(k, 'onAttack', ev, { target: e, hit: true });
   ok('two bands: two ice hits (stacks)', ice(ev).length === 2);
-  ok('two bands: still one freeze roll', k.procs.filter((p) => p.unique).length === 1 && e.statuses.filter((x) => x.type === 'freeze').length === 1);
-  s.rng = Math.random; let f = 0; const N = 20000; for (let i = 0; i < N; i++) { e.statuses = []; s.rollProcs(k, 'onAttack', [], { target: e, hit: true }); if (e.statuses.some((x) => x.type === 'freeze')) f++; }
-  ok('freeze chance ~50% even with 2 bands', Math.abs(f / N - 0.5) < 0.02, `${(100 * f / N).toFixed(1)}%`);
-  e.statuses = []; s.rng = () => 0.001; s.rollProcs(k, 'onAttack', [], { target: e, hit: false });
-  ok('no freeze if the attack missed', !e.statuses.some((x) => x.type === 'freeze'));
-  ok('frozen enemy lasts 0.7s then recovers', (() => { s.rollProcs(k, 'onAttack', [], { target: e, hit: true }); s.heroes.forEach((h) => h.statuses.push({ key: 'wait', type: 'stun', remaining: 1e12, total: 1e12 })); for (let t = 0; t < 750; t += 50) s.update(50); return !s.isStunned(e); })()); }
+  ok('two bands: still ONE chill stack per attack', k.procs.filter((p) => p.unique).length === 1 && s.stacks(e, 'chill') === 1);
+  e.statuses = []; for (let i = 0; i < 5; i++) s.rollProcs(k, 'onAttack', [], { target: e, hit: true });
+  ok('5 attacks = 5 Chill = Freeze (chill used up)', s.isStunned(e) && e.statuses.some((x) => x.type === 'freeze') && s.stacks(e, 'chill') === 0);
+  e.statuses = []; s.rollProcs(k, 'onAttack', [], { target: e, hit: false });
+  ok('no chill if the attack missed', s.stacks(e, 'chill') === 0); }
 // Static Crystal: hits 3 different enemies for 300% electric
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'static_crystal'); const es = dummy(s, ['goblin', 'goblin', 'goblin', 'bat']); s.rng = () => 0.001; k.stats.crit = 0;
   const ev = []; s.rollProcs(k, 'onAttack', ev, { target: es[1] }); const a = attacks(ev, k);

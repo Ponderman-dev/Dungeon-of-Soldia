@@ -573,7 +573,12 @@
           "delay": 110
         }
       }
-    }
+    },
+    "provides": [
+      "fire",
+      "ice",
+      "electric"
+    ]
   },
   {
     "id": "cleric",
@@ -968,6 +973,11 @@
           "delay": 110
         }
       }
-    }
+    },
+    "provides": [
+      "fire",
+      "ice",
+      "dark"
+    ]
   }
 ]

@@ -1,8 +1,30 @@
 {
-  "stat":    { "label": "STAT",    "color": "0xe0524d" },
-  "squad":   { "label": "SQUAD",   "color": "0xf2d03a" },
-  "special": { "label": "SPECIAL", "color": "0xf06ab4" },
-  "potion":  { "label": "POTION",  "color": "0x4cd16a" },
-  "onhit":   { "label": "ON-HIT",  "color": "0xa45be6" },
-  "skill":   { "label": "SKILL",   "color": "0x33c4d6" }
+  "stat": {
+    "label": "STAT",
+    "color": "0xe0524d"
+  },
+  "squad": {
+    "label": "SQUAD",
+    "color": "0xf2d03a"
+  },
+  "special": {
+    "label": "SPECIAL",
+    "color": "0xf06ab4"
+  },
+  "potion": {
+    "label": "POTION",
+    "color": "0x4cd16a"
+  },
+  "onhit": {
+    "label": "ON-HIT",
+    "color": "0xa45be6"
+  },
+  "skill": {
+    "label": "SKILL",
+    "color": "0x33c4d6"
+  },
+  "minion": {
+    "label": "MINION",
+    "color": "0x8a6a4a"
+  }
 }

@@ -1,45 +1,668 @@
 {
   "shield_bash": {
-    "name": "Shield Bash", "short": "SB", "target": "enemy", "manaCost": 12, "cooldownMs": 8000,
+    "name": "Shield Bash",
+    "short": "SB",
+    "kind": "attack",
+    "target": "enemy",
+    "manaCost": 12,
+    "cooldownMs": 8000,
     "damageMultiplier": 1.5,
-    "apply": [ { "status": "stun", "durationMs": 1500 } ],
+    "apply": [
+      {
+        "status": "stun",
+        "durationMs": 1500
+      }
+    ],
     "description": "Hit one enemy for 150% damage and stun it for 1.5s."
   },
   "guard": {
-    "name": "Guard", "short": "GD", "target": "self", "manaCost": 10, "cooldownMs": 12000,
-    "apply": [ { "status": "buff", "durationMs": 6000, "mods": [ { "stat": "defense", "flat": 25 } ] } ],
+    "name": "Guard",
+    "short": "GD",
+    "kind": "support",
+    "target": "self",
+    "manaCost": 10,
+    "cooldownMs": 12000,
+    "apply": [
+      {
+        "status": "buff",
+        "durationMs": 6000,
+        "mods": [
+          {
+            "stat": "defense",
+            "flat": 25
+          }
+        ]
+      }
+    ],
     "description": "+25 defense for 6s."
   },
   "cleave": {
-    "name": "Cleave", "short": "CL", "target": "allEnemies", "manaCost": 20, "cooldownMs": 8000,
+    "name": "Cleave",
+    "short": "CL",
+    "kind": "attack",
+    "target": "allEnemies",
+    "manaCost": 20,
+    "cooldownMs": 8000,
     "damageMultiplier": 0.9,
     "description": "Hit all enemies for 90% damage."
   },
   "rage": {
-    "name": "Rage", "short": "RG", "target": "self", "manaCost": 15, "cooldownMs": 14000,
-    "apply": [ { "status": "buff", "durationMs": 6000, "mods": [ { "stat": "attackEfficiency", "percent": 50 } ] } ],
+    "name": "Rage",
+    "short": "RG",
+    "kind": "support",
+    "target": "self",
+    "manaCost": 15,
+    "cooldownMs": 14000,
+    "apply": [
+      {
+        "status": "buff",
+        "durationMs": 6000,
+        "mods": [
+          {
+            "stat": "attackEfficiency",
+            "percent": 50
+          }
+        ]
+      }
+    ],
     "description": "+50% attack speed for 6s."
   },
   "venom_strike": {
-    "name": "Venom Strike", "short": "VS", "target": "enemy", "manaCost": 15, "cooldownMs": 8000,
+    "name": "Venom Strike",
+    "short": "VS",
+    "kind": "attack",
+    "target": "enemy",
+    "manaCost": 15,
+    "cooldownMs": 8000,
     "damageMultiplier": 0.8,
-    "apply": [ { "status": "poison", "durationMs": 6000, "tickMs": 1000, "damageMultiplier": 0.35, "damageType": "dark" } ],
+    "apply": [
+      {
+        "status": "poison",
+        "durationMs": 6000,
+        "damageMultiplier": 0.35,
+        "damageType": "dark"
+      }
+    ],
     "description": "Hit one enemy for 80% damage and poison it (dark damage every second for 6s)."
   },
   "smoke": {
-    "name": "Smoke", "short": "SM", "target": "self", "manaCost": 15, "cooldownMs": 12000,
-    "apply": [ { "status": "buff", "durationMs": 5000, "mods": [ { "stat": "evasion", "flat": 30 } ] } ],
+    "name": "Smoke",
+    "short": "SM",
+    "kind": "support",
+    "target": "self",
+    "manaCost": 15,
+    "cooldownMs": 12000,
+    "apply": [
+      {
+        "status": "buff",
+        "durationMs": 5000,
+        "mods": [
+          {
+            "stat": "evasion",
+            "flat": 30
+          }
+        ]
+      }
+    ],
     "description": "+30 evasion for 5s."
   },
   "power_shot": {
-    "name": "Power Shot", "short": "PS", "target": "enemy", "manaCost": 15, "cooldownMs": 7000,
+    "name": "Power Shot",
+    "short": "PS",
+    "kind": "attack",
+    "target": "enemy",
+    "manaCost": 15,
+    "cooldownMs": 7000,
     "damageMultiplier": 2.2,
     "description": "A ranged shot for 220% damage."
   },
   "ensnare_shot": {
-    "name": "Ensnare Shot", "short": "ES", "target": "enemy", "manaCost": 18, "cooldownMs": 9000,
+    "name": "Ensnare Shot",
+    "short": "ES",
+    "kind": "attack",
+    "target": "enemy",
+    "manaCost": 18,
+    "cooldownMs": 9000,
     "damageMultiplier": 0.7,
-    "apply": [ { "status": "slow", "durationMs": 5000, "attackSpeedPercent": -40 } ],
-    "description": "Hit one enemy for 70% damage and slow its attack speed by 40% for 5s."
+    "apply": [
+      {
+        "status": "chill",
+        "durationMs": 5000,
+        "stacks": 2
+      }
+    ],
+    "description": "Hit one enemy for 70% damage and add 2 Chill (slower attacks; 5 Chill = Freeze)."
+  },
+  "eagle_focus": {
+    "name": "Eagle Focus",
+    "short": "EF",
+    "kind": "support",
+    "target": "self",
+    "cooldownMs": 12000,
+    "apply": [
+      {
+        "status": "buff",
+        "durationMs": 5000,
+        "mods": [
+          {
+            "stat": "attackEfficiency",
+            "percent": 40
+          },
+          {
+            "stat": "crit",
+            "flat": 15
+          }
+        ]
+      }
+    ],
+    "description": "PLACEHOLDER until the Archer is redone (Hunter's Mark): +40% attack speed and +15 crit for 5s."
+  },
+  "ground_pound": {
+    "name": "Ground Pound",
+    "short": "GP",
+    "kind": "attack",
+    "target": "allEnemies",
+    "cooldownMs": 10000,
+    "castMs": 900,
+    "damageMultiplier": 0.9,
+    "apply": [
+      {
+        "status": "knockback",
+        "durationMs": 0
+      }
+    ],
+    "description": "Slam the ground: hit ALL enemies for 90% damage and knock them back (their attack timers start over)."
+  },
+  "rally_cry": {
+    "name": "Rally Cry",
+    "short": "RC",
+    "kind": "support",
+    "target": "squad",
+    "cooldownMs": 14000,
+    "castMs": 600,
+    "apply": [
+      {
+        "status": "buff",
+        "durationMs": 6000,
+        "mods": [
+          {
+            "stat": "defense",
+            "flat": 15
+          }
+        ]
+      }
+    ],
+    "cleanse": 1,
+    "description": "The whole squad gets +15 defense for 6s and every hero loses one debuff."
+  },
+  "fan_of_knives": {
+    "name": "Fan of Knives",
+    "short": "FK",
+    "kind": "attack",
+    "target": "allEnemies",
+    "damageType": "ranged",
+    "cooldownMs": 9000,
+    "castMs": 700,
+    "damageMultiplier": 0.7,
+    "projectile": "knife",
+    "onCrit": [
+      {
+        "status": "bleed",
+        "durationMs": 4000,
+        "damageMultiplier": 0.3
+      }
+    ],
+    "description": "Throw knives at ALL enemies (ranged damage, from his slot, 70% damage each). Every knife crits on its own, and a crit makes the enemy bleed."
+  },
+  "smoke_bomb": {
+    "name": "Smoke Bomb",
+    "short": "SM",
+    "kind": "support",
+    "target": "squad",
+    "cooldownMs": 13000,
+    "castMs": 600,
+    "apply": [
+      {
+        "status": "buff",
+        "durationMs": 4000,
+        "mods": [
+          {
+            "stat": "evasion",
+            "flat": 30
+          }
+        ]
+      }
+    ],
+    "applyEnemies": [
+      {
+        "status": "blind",
+        "durationMs": 4000
+      }
+    ],
+    "description": "The whole squad gets +30 evasion for 4s and all enemies are Blinded (they miss 25% of their attacks)."
+  },
+  "rain_of_arrows": {
+    "name": "Rain of Arrows",
+    "short": "RA",
+    "kind": "attack",
+    "target": "allEnemies",
+    "damageType": "ranged",
+    "cooldownMs": 12000,
+    "castMs": 500,
+    "channel": {
+      "intervalMs": 400,
+      "waves": [
+        0.35,
+        0.35,
+        0.35,
+        0.35,
+        0.35
+      ]
+    },
+    "waveApply": [
+      {
+        "status": "armorBreak",
+        "durationMs": 4000,
+        "chance": 25
+      }
+    ],
+    "projectile": "rain",
+    "description": "A shower of arrows on ALL enemies for about 2s (5 waves of 35% damage, each hit has a 25% chance to Armor Break). He is busy while it rains."
+  },
+  "hunters_mark": {
+    "name": "Hunter's Mark",
+    "short": "HM",
+    "kind": "support",
+    "target": "enemy",
+    "cooldownMs": 12000,
+    "castMs": 400,
+    "apply": [
+      {
+        "status": "mark",
+        "durationMs": 6000,
+        "damageTakenPercent": 25
+      }
+    ],
+    "description": "Mark an enemy: it takes +25% damage from everyone for 6s."
+  },
+  "savage_leap": {
+    "name": "Savage Leap",
+    "short": "SL",
+    "kind": "attack",
+    "target": "enemy",
+    "cooldownMs": 9000,
+    "castMs": 600,
+    "damageMultiplier": 2.0,
+    "leap": true,
+    "doubleIf": [
+      "bleed",
+      "below50"
+    ],
+    "description": "Leap at one enemy for 200% damage; DOUBLE damage if it is bleeding or below half health."
+  },
+  "war_cry": {
+    "name": "War Cry",
+    "short": "WC",
+    "kind": "support",
+    "target": "squad",
+    "cooldownMs": 14000,
+    "castMs": 500,
+    "apply": [
+      {
+        "status": "buff",
+        "durationMs": 5000,
+        "mods": [
+          {
+            "stat": "attack",
+            "percent": 25
+          }
+        ]
+      }
+    ],
+    "applyEnemies": [
+      {
+        "status": "weaken",
+        "durationMs": 5000
+      }
+    ],
+    "description": "The squad gets +25% attack for 5s and every enemy is Weakened (-attack) for 5s."
+  },
+  "wind_cutter": {
+    "name": "Wind Cutter",
+    "short": "WI",
+    "kind": "attack",
+    "target": "allEnemies",
+    "damageType": "ranged",
+    "cooldownMs": 9000,
+    "castMs": 700,
+    "damageMultiplier": 1.0,
+    "projectile": "crescent",
+    "apply": [
+      {
+        "status": "armorBreak",
+        "durationMs": 5000
+      }
+    ],
+    "description": "A crescent slash across the field: ranged-type damage to ALL enemies and Armor Break. He stays in his slot."
+  },
+  "focus_stance": {
+    "name": "Focus Stance",
+    "short": "FS",
+    "kind": "support",
+    "target": "self",
+    "cooldownMs": 13000,
+    "castMs": 400,
+    "apply": [
+      {
+        "status": "parry",
+        "durationMs": 4000
+      },
+      {
+        "status": "guaranteedCrit",
+        "durationMs": 4000
+      }
+    ],
+    "description": "4s stance: hits against him are parried (no damage) and his next attack is a guaranteed crit."
+  },
+  "elemental_rotation": {
+    "name": "Elemental Rotation",
+    "short": "EL",
+    "kind": "attack",
+    "cooldownMs": 8000,
+    "castMs": 750,
+    "rotation": [
+      {
+        "name": "Fireball",
+        "short": "FB",
+        "target": "enemy",
+        "damageType": "fire",
+        "damageMultiplier": 2.2,
+        "castMs": 800,
+        "projectile": "fireball",
+        "splash": {
+          "damageMultiplier": 0.8
+        },
+        "apply": [
+          {
+            "status": "burn",
+            "durationMs": 4000,
+            "damageMultiplier": 0.35
+          }
+        ],
+        "description": "Fireball: a big fire hit on one enemy, splash on its neighbours, sets Burn."
+      },
+      {
+        "name": "Frost Nova",
+        "short": "FN",
+        "target": "allEnemies",
+        "damageType": "ice",
+        "damageMultiplier": 0.8,
+        "castMs": 700,
+        "apply": [
+          {
+            "status": "chill",
+            "durationMs": 6000,
+            "stacks": 2
+          }
+        ],
+        "description": "Frost Nova: an ice burst on ALL enemies, 2 Chill stacks each."
+      },
+      {
+        "name": "Chain Lightning",
+        "short": "CL",
+        "target": "enemy",
+        "damageType": "electric",
+        "damageMultiplier": 1.2,
+        "castMs": 700,
+        "chain": true,
+        "apply": [
+          {
+            "status": "shock",
+            "durationMs": 4000
+          }
+        ],
+        "bonusVs": [
+          {
+            "status": "burn",
+            "multiplier": 1.5
+          },
+          {
+            "status": "freeze",
+            "multiplier": 1.5
+          }
+        ],
+        "description": "Chain Lightning: a bolt jumps through ALL enemies, Shock, +50% against burning or frozen ones."
+      }
+    ],
+    "description": "Each cast is the next spell: Fireball > Frost Nova > Chain Lightning > Fireball..."
+  },
+  "arcane_ward": {
+    "name": "Arcane Ward",
+    "short": "AW",
+    "kind": "support",
+    "target": "squad",
+    "cooldownMs": 14000,
+    "castMs": 600,
+    "apply": [
+      {
+        "status": "shield",
+        "attackMultiplier": 2.5,
+        "durationMs": 4000
+      },
+      {
+        "status": "buff",
+        "durationMs": 4000,
+        "mods": [
+          {
+            "stat": "resist",
+            "flat": 10
+          }
+        ]
+      }
+    ],
+    "description": "The whole squad gets a magic shield (2.5x the Mage's attack) and +10 resist for 4s."
+  },
+  "smite": {
+    "name": "Smite",
+    "short": "SM",
+    "kind": "attack",
+    "target": "enemy",
+    "damageType": "holy",
+    "cooldownMs": 8000,
+    "castMs": 700,
+    "damageMultiplier": 1.6,
+    "debuffedMultiplier": 1.4,
+    "healShare": 40,
+    "projectile": "holybolt",
+    "description": "A holy hit on one enemy (+40% against debuffed enemies). The most hurt ally heals for 40% of the damage."
+  },
+  "divine_shield": {
+    "name": "Divine Shield",
+    "short": "DS",
+    "kind": "support",
+    "target": "lowestAlly",
+    "cooldownMs": 14000,
+    "castMs": 500,
+    "apply": [
+      {
+        "status": "invulnerable",
+        "durationMs": 2000,
+        "healPercentOnEnd": 20
+      }
+    ],
+    "description": "The most hurt ally is invulnerable for 2s and heals 20% of max health when it ends."
+  },
+  "death_coil": {
+    "name": "Death Coil",
+    "short": "DC",
+    "kind": "attack",
+    "target": "enemy",
+    "damageType": "dark",
+    "cooldownMs": 8000,
+    "castMs": 700,
+    "damageMultiplier": 1.5,
+    "debuffedMultiplier": 1.5,
+    "onKill": {
+      "raise": "skeleton"
+    },
+    "projectile": "darkbolt",
+    "description": "A dark bolt (+50% against debuffed enemies). If it kills, a skeleton rises."
+  },
+  "bone_ward": {
+    "name": "Bone Ward",
+    "short": "BW",
+    "kind": "support",
+    "target": "squad",
+    "cooldownMs": 14000,
+    "castMs": 600,
+    "apply": [
+      {
+        "status": "shield",
+        "attackMultiplier": 2.0,
+        "durationMs": 5000,
+        "onBreak": {
+          "damageMultiplier": 1.0,
+          "damageType": "dark"
+        }
+      }
+    ],
+    "description": "The squad (skeletons too) gets a bone shield; when it breaks, bone shards hurt the enemies."
+  },
+  "crescendo": {
+    "name": "Crescendo",
+    "short": "CR",
+    "kind": "attack",
+    "target": "allEnemies",
+    "damageType": "ranged",
+    "cooldownMs": 14000,
+    "castMs": 400,
+    "channel": {
+      "intervalMs": 800,
+      "waves": [
+        0.3,
+        0.5,
+        0.7,
+        1.8
+      ]
+    },
+    "projectile": "note",
+    "description": "A song that builds: damage to ALL enemies grows each beat (30%, 50%, 70%), then a final big 180% hit."
+  },
+  "ballad_of_rest": {
+    "name": "Ballad of Rest",
+    "short": "BR",
+    "kind": "support",
+    "target": "squad",
+    "cooldownMs": 14000,
+    "castMs": 500,
+    "apply": [
+      {
+        "status": "regenBoost",
+        "durationMs": 4000,
+        "percentMaxHpPerSec": 5
+      }
+    ],
+    "description": "A big regen for the squad: 5% of max health per second for 4s."
+  },
+  "flask_barrage": {
+    "name": "Flask Barrage",
+    "short": "FB",
+    "kind": "attack",
+    "cooldownMs": 10000,
+    "castMs": 700,
+    "random": {
+      "count": 3,
+      "target": "enemy",
+      "pool": [
+        {
+          "name": "Fire Flask",
+          "color": "0xff7a3d",
+          "damageType": "fire",
+          "damageMultiplier": 0.9,
+          "apply": [
+            {
+              "status": "burn",
+              "durationMs": 4000,
+              "damageMultiplier": 0.35
+            }
+          ]
+        },
+        {
+          "name": "Ice Flask",
+          "color": "0x7fd8ff",
+          "damageType": "ice",
+          "damageMultiplier": 0.9,
+          "apply": [
+            {
+              "status": "chill",
+              "durationMs": 6000,
+              "stacks": 2
+            }
+          ]
+        },
+        {
+          "name": "Poison Cloud",
+          "color": "0x6bd16a",
+          "damageType": "dark",
+          "damageMultiplier": 0.6,
+          "apply": [
+            {
+              "status": "poison",
+              "durationMs": 6000,
+              "damageMultiplier": 0.4
+            }
+          ]
+        }
+      ]
+    },
+    "description": "Throws 3 random flasks (fire, ice or poison) at random enemies; each applies its debuff."
+  },
+  "mystery_brew": {
+    "name": "Mystery Brew",
+    "short": "MB",
+    "kind": "support",
+    "cooldownMs": 12000,
+    "castMs": 600,
+    "random": {
+      "count": 2,
+      "target": "ally",
+      "pool": [
+        {
+          "name": "Healing Flask",
+          "color": "0x6dff8f",
+          "heal": {
+            "percentMaxHp": 22
+          }
+        },
+        {
+          "name": "Speed Flask",
+          "color": "0xffe94d",
+          "apply": [
+            {
+              "status": "buff",
+              "durationMs": 5000,
+              "mods": [
+                {
+                  "stat": "attackEfficiency",
+                  "percent": 40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Shield Flask",
+          "color": "0x6fd0ff",
+          "apply": [
+            {
+              "status": "shield",
+              "percentMaxHp": 25,
+              "durationMs": 5000
+            }
+          ]
+        }
+      ]
+    },
+    "description": "Throws 2 random flasks at random teammates: heal, speed boost or shield."
   }
 }

@@ -4,19 +4,82 @@
   "weakMultiplier": 1.5,
   "resistMultiplier": 0.5,
   "caps": {
-    "defense": 75,
-    "resist": 75,
-    "evasion": 60
+    "evasion": 70,
+    "crit": 100
+  },
+  "armorCurve": {
+    "linearUpTo": 50
   },
   "winHealPercent": 25,
   "floorScaling": {
-    "hpPerStep": 0.4,
-    "hpStepFloors": 4,
-    "attackPerStep": 0.45,
+    "hpPerStep": 0.35,
+    "hpStepFloors": 3,
+    "attackPerStep": 0.525,
     "attackStepFloors": 3
   },
   "restartDelayMs": 3000,
   "meleeVsFlyingMissPercent": 40,
+  "attackTiming": {
+    "hero": {
+      "swingMs": 220,
+      "rangedHitMs": 260
+    },
+    "enemy": {
+      "swingMs": 220,
+      "rangedHitMs": 260
+    },
+    "retargetMinMs": 200
+  },
+  "minions": {
+    "_about": "Minion rules (D4b). upkeep: while a hero's MINION ITEMS have live minions the holder pays this per minion item (percent of the level stat, like item effects; hero passives like the Necromancer's skeletons cost nothing). revivalFloors: a dead greater minion comes back after this many floors are cleared. copyStatBonus: each extra copy of a greater-minion item adds this share of its health and attack (no second minion). itemWeakCap: the shared cap of weak minions from a hero's items. upkeepWeakScale: weak spawner items cost this much of the full upkeep (greater = full). Boosters (Bone Charm, Overseer's Whistle, Grave Dust, Necro Crown) cost nothing and reach every minion.",
+    "upkeepAttackSpeedPercent": -12,
+    "upkeepDefensePercent": -12,
+    "revivalFloors": 2,
+    "copyStatBonus": 0.5,
+    "itemWeakCap": 4,
+    "upkeepWeakScale": 0.5
+  },
+  "skillWindUp": {
+    "_about": "Skills wind up before they go off (castMs per skill in skills.json, else defaultCastMs). The skill goes on cooldown when tapped; stunned, frozen or silenced during the wind-up = the skill is lost (still on cooldown). No basic attacks and no walking while winding up.",
+    "defaultCastMs": 700
+  },
+  "skillFx": {
+    "_about": "How a skill looks when it goes off (C2), so it is clearly different from a normal hit: the caster flashes in the skill colour, a ring bursts (at the target for attack skills, at the caster for support), a name banner, bigger coloured damage numbers, and attack skills shake the screen with a tiny hit-stop.",
+    "attackColor": "#ff7a3d",
+    "supportColor": "#5dff96",
+    "flashMs": 140,
+    "ringRadius": 48,
+    "ringMs": 380,
+    "bannerY": 250,
+    "bannerMs": 1000,
+    "numberSizePx": 26,
+    "shakeMs": 140,
+    "shakeIntensity": 0.006,
+    "hitStopMs": 70
+  },
+  "movement": {
+    "_about": "Real movement in fights (BattleState.move). Melee walk to their target at walkSpeedPxPerSec until it is inside the reach oval (reachX sideways, reachY up/down), then swing. Fighters closer than the separate oval push apart. layout = where the lines stand (also used by tests/bot).",
+    "walkSpeedPxPerSec": 170,
+    "reachX": 64,
+    "reachY": 94,
+    "separateX": 54,
+    "separateY": 82,
+    "separatePushPerSec": 140,
+    "knockbackPx": 40,
+    "knockbackMs": 160,
+    "layout": {
+      "width": 390,
+      "heroY": 720,
+      "enemyY": 340,
+      "marginX": 22,
+      "topMarginY": -40
+    }
+  },
+  "attackMotion": {
+    "hopHeight": 7,
+    "hopLengthPx": 38,
+    "arrowColor": "0xe6e6b8"
+  },
   "transition": {
     "clearPauseMs": 600,
     "walkSpeedPxPerSec": 420,
@@ -26,5 +89,58 @@
     "slideMs": 1000
   },
   "manaRegenPerSec": 2,
-  "winManaPercent": 20
+  "winManaPercent": 20,
+  "enemyAttackSpeedMultiplier": 0.65,
+  "bigFightEase": {
+    "minEnemies": 4,
+    "fromFloor": 32,
+    "startScale": 0.87,
+    "rampFloors": 8
+  },
+  "morale": {
+    "incomplete": {
+      "tint": "#8a3fe0",
+      "tintAmount": 0.38,
+      "mods": [
+        {
+          "stat": "attack",
+          "percent": -10
+        },
+        {
+          "stat": "attackEfficiency",
+          "percent": -10
+        },
+        {
+          "stat": "defense",
+          "flat": -3
+        },
+        {
+          "stat": "resist",
+          "flat": -3
+        }
+      ]
+    },
+    "alone": {
+      "tint": "#5a0a9a",
+      "tintAmount": 0.62,
+      "mods": [
+        {
+          "stat": "attack",
+          "percent": -25
+        },
+        {
+          "stat": "attackEfficiency",
+          "percent": -25
+        },
+        {
+          "stat": "defense",
+          "flat": -8
+        },
+        {
+          "stat": "resist",
+          "flat": -8
+        }
+      ]
+    }
+  }
 }

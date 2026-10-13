@@ -1,0 +1,25 @@
+{
+  "_about": "How heroes unlock (Phase F). Knight, Rogue and Archer start unlocked. Each other hero has its OWN requirement: type bestFloor (reach floor N in any run), totalKills (enemies killed over all runs), totalFloors (floors cleared over all runs), runs (runs played). Progress is saved in the browser (src/systems/progress.js). A toggle on the squad screen unlocks everyone (for testing).",
+  "start": ["knight", "rogue", "archer"],
+  "requirements": {
+    "berserker": { "type": "bestFloor", "value": 5 },
+    "mage": { "type": "totalKills", "value": 100 },
+    "cleric": { "type": "bestFloor", "value": 15 },
+    "samurai": { "type": "totalFloors", "value": 60 },
+    "bard": { "type": "runs", "value": 10 },
+    "alchemist": { "type": "bestFloor", "value": 30 },
+    "necromancer": { "type": "totalKills", "value": 1000 }
+  },
+  "labels": {
+    "bestFloor": "Reach floor {value}",
+    "totalKills": "Defeat {value} enemies",
+    "totalFloors": "Clear {value} floors in total",
+    "runs": "Play {value} runs"
+  },
+  "statNames": {
+    "bestFloor": "best floor",
+    "totalKills": "enemies",
+    "totalFloors": "floors",
+    "runs": "runs"
+  }
+}

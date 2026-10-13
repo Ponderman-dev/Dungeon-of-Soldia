@@ -1,22 +1,18 @@
 {
   "common": {
     "label": "COMMON",
-    "color": "0x8f8aa3",
-    "weight": 60
+    "color": "0x8f8aa3"
   },
   "rare": {
     "label": "RARE",
-    "color": "0x3b8ee0",
-    "weight": 30
+    "color": "0x3b8ee0"
   },
   "epic": {
     "label": "EPIC",
-    "color": "0xa45be6",
-    "weight": 9
+    "color": "0xa45be6"
   },
   "legendary": {
     "label": "LEGENDARY",
-    "color": "0xf2b632",
-    "weight": 3
+    "color": "0xf2b632"
   }
 }

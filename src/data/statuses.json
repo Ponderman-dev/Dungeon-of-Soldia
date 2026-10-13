@@ -1,18 +1,141 @@
 {
-  "stun": {
-    "label": "STUN",
-    "color": "#d9a400",
-    "textColor": "#000000"
+  "_about": "Status tags and rules. dot: damage over time, every application adds a STACK (no limit, each stack has its own timer, all stacks of one kind tick together every tickMs). control: bosses take it for half as long (statusDurationScale). Numbers here are defaults a skill/item spec can override. stacking: like dot it stacks (each stack own timer) but deals no damage (chill). instant: no lasting status (knockback). Stat debuffs (weaken, armorBreak, curse, blind, mark) refresh per source; different sources add up. shield: absorbs damage (amount / percentMaxHp / attackMultiplier), lasts durationMs or until broken, optional onBreak {damageMultiplier, damageType}; invulnerable: takes no damage at all, optional healPercentOnEnd. debuff: true marks harmful statuses (Rally Cry's cleanse removes one kind of them). parry: hits against the holder are stopped completely (Samurai's Focus Stance). guaranteedCrit: the holder's next basic attack is a sure crit, then it is used up. regenBoost: heals percentMaxHpPerSec of max health every second for its duration (Bard's Ballad of Rest).",
+  "bleed": {
+    "label": "BLEED",
+    "color": "#c0303a",
+    "textColor": "#ffffff",
+    "dot": true,
+    "tickMs": 1000,
+    "damageType": "melee",
+    "ignoresArmor": true,
+    "debuff": true
   },
-  "slow": {
-    "label": "SLOW",
-    "color": "#3b8ee0",
-    "textColor": "#ffffff"
+  "burn": {
+    "label": "BURN",
+    "color": "#ff7a3d",
+    "textColor": "#000000",
+    "dot": true,
+    "tickMs": 500,
+    "damageType": "fire",
+    "debuff": true
   },
   "poison": {
     "label": "PSN",
     "color": "#3fae6a",
+    "textColor": "#000000",
+    "dot": true,
+    "tickMs": 1000,
+    "damageType": "dark",
+    "debuff": true
+  },
+  "chill": {
+    "label": "CHILL",
+    "color": "#7fd8ff",
+    "textColor": "#000000",
+    "stacking": true,
+    "control": true,
+    "slowPerStackPercent": 10,
+    "freezeAt": 5,
+    "freezeMs": 1500,
+    "debuff": true
+  },
+  "freeze": {
+    "label": "FREEZE",
+    "color": "#9fe8ff",
+    "textColor": "#000000",
+    "control": true,
+    "debuff": true
+  },
+  "shock": {
+    "label": "SHOCK",
+    "color": "#ffe94d",
+    "textColor": "#000000",
+    "control": true,
+    "attackSpeedPercent": -20,
+    "fumbleChance": 10,
+    "fumbleStunMs": 300,
+    "debuff": true
+  },
+  "stun": {
+    "label": "STUN",
+    "color": "#d9a400",
+    "textColor": "#000000",
+    "control": true,
+    "debuff": true
+  },
+  "fear": {
+    "label": "FEAR",
+    "color": "#6a3fa0",
+    "textColor": "#ffffff",
+    "control": true,
+    "debuff": true
+  },
+  "knockback": {
+    "label": "KNOCKBACK",
+    "color": "#c9b18a",
+    "textColor": "#000000",
+    "control": true,
+    "instant": true
+  },
+  "taunt": {
+    "label": "TAUNT",
+    "color": "#e05a2a",
+    "textColor": "#ffffff",
+    "control": true,
+    "debuff": true
+  },
+  "shield": {
+    "label": "SHIELD",
+    "color": "#5fb8ff",
+    "textColor": "#000000",
+    "popup": false
+  },
+  "invulnerable": {
+    "label": "INVULNERABLE",
+    "color": "#ffe08a",
     "textColor": "#000000"
+  },
+  "silence": {
+    "label": "SILENCE",
+    "color": "#8a86a0",
+    "textColor": "#ffffff",
+    "control": true,
+    "debuff": true
+  },
+  "weaken": {
+    "label": "WEAK",
+    "color": "#9a6b3a",
+    "textColor": "#ffffff",
+    "attackPercent": -20,
+    "debuff": true
+  },
+  "armorBreak": {
+    "label": "ARMOR-",
+    "color": "#b0b0b0",
+    "textColor": "#000000",
+    "defenseFlat": -15,
+    "debuff": true
+  },
+  "curse": {
+    "label": "CURSE",
+    "color": "#5a2a7a",
+    "textColor": "#ffffff",
+    "resistFlat": -15,
+    "debuff": true
+  },
+  "blind": {
+    "label": "BLIND",
+    "color": "#333333",
+    "textColor": "#ffffff",
+    "missPercent": 25,
+    "debuff": true
+  },
+  "mark": {
+    "label": "MARK",
+    "color": "#ff3d6e",
+    "textColor": "#ffffff",
+    "damageTakenPercent": 15,
+    "debuff": true
   },
   "buff": {
     "label": "BUFF",
@@ -24,5 +147,21 @@
     "color": "#6b6b80",
     "textColor": "#ffffff",
     "popup": false
+  },
+  "parry": {
+    "label": "STANCE",
+    "color": "#ffd27a",
+    "textColor": "#000000"
+  },
+  "guaranteedCrit": {
+    "label": "CRIT READY",
+    "color": "#ff9b3d",
+    "textColor": "#000000",
+    "popup": false
+  },
+  "regenBoost": {
+    "label": "REGEN",
+    "color": "#6dff8f",
+    "textColor": "#000000"
   }
 }

@@ -34,12 +34,18 @@
         ]
       },
       {
-        "floor": 21,
+        "floor": 32,
         "enemies": [
           "goblin",
           "goblin",
           "slime",
           "bat"
+        ],
+        "every": 5,
+        "otherwise": [
+          "goblin",
+          "goblin",
+          "slime"
         ]
       }
     ],

@@ -5,14 +5,15 @@ Genre: Top-down auto-battler roguelike, portrait mobile
 Engine: Phaser 3 + plain JS, wrapped for Android with Capacitor later. Fully vibe coded with Claude Code.
 
 ## Battle
-- Enemies at the top, 4 heroes at the bottom. Everyone auto-attacks about once per second.
+- Enemies at the top, 3 heroes at the bottom. Everyone auto-attacks about once per second.
 - Each fight has 2-4 enemies, sometimes 1 if it is tougher. Bosses appear at set floors.
 - Heroes auto-target by default. The player can tap an enemy to focus it.
 - Each hero has 2 active skills (blue squares) that the player taps to cast. Skills cost mana and have a cooldown. Skills can stun, slow or poison enemies, or buff the caster.
 - Items show as dots above each hero's head.
 
 ## Heroes
-- 9 heroes in total; the player brings 4 per run.
+- 9 heroes in total; the player brings 3 per run.
+- Every hero gives the whole party a perk while alive (e.g. Knight +10% health). A fallen hero's perk is lost and the party suffers a morale debuff: INCOMPLETE (one down), ALL ALONE (one left).
 - Stats: health, mana, attack, defense (physical), resist (magical), evasion, crit, attack efficiency.
 - Damage types: physical (melee, ranged) and magical (fire, ice, electric, dark). Enemies can be weak or resistant to types. Melee attacks can hit flying enemies but miss 40% of the time; ranged has no penalty.
 - Levelling is automatic and only raises stats. Heroes gain XP from kills; each hero has its own growth per level; dead heroes stop gaining XP. Levels reset every run.

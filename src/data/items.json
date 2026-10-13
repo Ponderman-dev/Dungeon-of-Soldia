@@ -1,35 +1,1378 @@
 {
-  "whetstone":      { "name": "Whetstone",      "rarity": "common", "type": "stat",  "scope": "self",  "description": "+12% attack",
-                      "effects": [ { "stat": "attack", "percent": 12 } ] },
-  "padded_vest":    { "name": "Padded Vest",    "rarity": "common", "type": "stat",  "scope": "self",  "description": "+12 defense",
-                      "effects": [ { "stat": "defense", "flat": 12 } ] },
-  "lucky_coin":     { "name": "Lucky Coin",     "rarity": "common", "type": "stat",  "scope": "self",  "description": "+10 crit chance. Extra coins add a bit less each (10 coins = +75).", "maxStacks": 10,
-                      "effects": [ { "stat": "crit", "flat": 10, "falloffRatio": 0.934099 } ] },
-  "sharp_edge":     { "name": "Sharp Edge",     "rarity": "common", "type": "stat",  "scope": "self",  "description": "+15% melee damage",
-                      "effects": [ { "damageBonus": "melee", "percent": 15 } ] },
-  "eagle_eye":      { "name": "Eagle Eye",      "rarity": "common", "type": "stat",  "scope": "self",  "description": "+15% ranged damage",
-                      "effects": [ { "damageBonus": "ranged", "percent": 15 } ] },
-  "feather_boots":  { "name": "Feather Boots",  "rarity": "rare",   "type": "stat",  "scope": "self",  "description": "+8 evasion", "maxStacks": 7,
-                      "effects": [ { "stat": "evasion", "flat": 8 } ] },
-  "heart_charm":    { "name": "Heart Charm",    "rarity": "rare",   "type": "stat",  "scope": "self",  "description": "+22% max health. Regenerates 0.5% of max health per second in fights.",
-                      "effects": [ { "stat": "health", "percent": 22 }, { "special": "regen", "percent": 0.5 } ] },
-  "war_banner":     { "name": "War Banner",     "rarity": "rare",   "type": "squad", "scope": "self",  "description": "8% chance per attack: Battle Cry! Whole squad +25% attack speed for 2s.",
-                      "effects": [ { "proc": "onAttack", "chance": 8, "label": "Battle Cry!", "targets": "squad",
-                                     "apply": [ { "status": "buff", "durationMs": 2000, "mods": [ { "stat": "attackEfficiency", "percent": 25 } ] } ] } ] },
-  "shield_totem":   { "name": "Shield Totem",   "rarity": "rare",   "type": "special", "scope": "self", "description": "10% chance to block a hit. Recharges for 2.5s after a block. Max 6.", "maxStacks": 6,
-                      "effects": [ { "special": "block", "percent": 10, "cooldownMs": 2500 } ] },
-  "quick_gloves":   { "name": "Quick Gloves",   "rarity": "epic",   "type": "stat",  "scope": "self",  "description": "+22% attack speed",
-                      "effects": [ { "stat": "attackEfficiency", "percent": 22 } ] },
-
-  "bulwark_plate":  { "name": "Bulwark Plate",  "rarity": "epic",      "type": "special", "scope": "self", "description": "+30 defense. Reflects 25% of melee damage taken back at the attacker.", "maxStacks": 3,
-                      "effects": [ { "stat": "defense", "flat": 30 }, { "special": "thorns", "percent": 25 } ] },
-  "siege_cannon":   { "name": "Siege Cannon",   "rarity": "epic",      "type": "special", "scope": "self", "description": "+40% attack. Skills deal 30% more damage.",
-                      "effects": [ { "stat": "attack", "percent": 40 }, { "special": "skillDamage", "percent": 30 } ] },
-  "bloodlust_mask": { "name": "Bloodlust Mask", "rarity": "legendary", "type": "special", "scope": "self", "description": "+30% attack speed. Heal 5% of the damage you deal.",
-                      "effects": [ { "stat": "attackEfficiency", "percent": 30 }, { "special": "lifesteal", "percent": 5 } ] },
-  "gamblers_dice":  { "name": "Gambler's Dice", "rarity": "legendary", "type": "special", "scope": "self", "description": "+20 crit chance. Crits deal 50% extra damage.", "maxStacks": 3,
-                      "effects": [ { "stat": "crit", "flat": 20 }, { "special": "critDamage", "percent": 50 } ] },
-
-  "shared_potion":  { "name": "Shared Potion",  "rarity": "legendary", "type": "potion", "kind": "potion", "healPercent": 25,
-                      "description": "Every living hero recovers 25% of max health. No hero to choose." }
+  "whetstone": {
+    "name": "Whetstone",
+    "rarity": "common",
+    "type": "stat",
+    "scope": "self",
+    "description": "+12% attack and +3 attack",
+    "effects": [
+      {
+        "stat": "attack",
+        "percent": 12
+      },
+      {
+        "stat": "attack",
+        "flat": 3
+      }
+    ]
+  },
+  "padded_vest": {
+    "name": "Padded Vest",
+    "rarity": "common",
+    "type": "stat",
+    "scope": "self",
+    "description": "+12 defense",
+    "effects": [
+      {
+        "stat": "defense",
+        "flat": 12
+      }
+    ]
+  },
+  "lucky_coin": {
+    "name": "Lucky Coin",
+    "rarity": "common",
+    "type": "stat",
+    "scope": "self",
+    "description": "+10 crit chance.",
+    "maxStacks": 10,
+    "effects": [
+      {
+        "stat": "crit",
+        "flat": 10,
+        "falloffRatio": 0.934099
+      }
+    ]
+  },
+  "sharp_edge": {
+    "needs": "melee",
+    "name": "Sharp Edge",
+    "rarity": "common",
+    "type": "stat",
+    "scope": "self",
+    "description": "+15% melee damage",
+    "effects": [
+      {
+        "damageBonus": "melee",
+        "percent": 15
+      }
+    ]
+  },
+  "eagle_eye": {
+    "needs": "ranged",
+    "name": "Eagle Eye",
+    "rarity": "common",
+    "type": "stat",
+    "scope": "self",
+    "description": "+15% ranged damage",
+    "effects": [
+      {
+        "damageBonus": "ranged",
+        "percent": 15
+      }
+    ]
+  },
+  "feather_boots": {
+    "name": "Feather Boots",
+    "rarity": "rare",
+    "type": "stat",
+    "scope": "self",
+    "description": "+8 evasion",
+    "maxStacks": 8,
+    "effects": [
+      {
+        "stat": "evasion",
+        "flat": 8
+      }
+    ]
+  },
+  "heart_charm": {
+    "name": "Heart Charm",
+    "rarity": "rare",
+    "type": "stat",
+    "scope": "self",
+    "description": "+22% max health. Regenerates 0.5% of max health per second in fights.",
+    "effects": [
+      {
+        "stat": "health",
+        "percent": 22
+      },
+      {
+        "special": "regen",
+        "percent": 0.5
+      }
+    ]
+  },
+  "war_banner": {
+    "name": "War Banner",
+    "rarity": "rare",
+    "type": "squad",
+    "scope": "self",
+    "description": "8% chance per attack: Battle Cry! Whole squad +25% attack speed for 2s.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Battle Cry!",
+        "targets": "squad",
+        "apply": [
+          {
+            "status": "buff",
+            "durationMs": 2000,
+            "mods": [
+              {
+                "stat": "attackEfficiency",
+                "percent": 25
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "shield_totem": {
+    "dropWeight": 90,
+    "name": "Shield Totem",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "10% chance to block a hit. Recharges for 2.5s after a block. Max 6.",
+    "maxStacks": 6,
+    "effects": [
+      {
+        "special": "block",
+        "percent": 10,
+        "cooldownMs": 2500
+      }
+    ]
+  },
+  "quick_gloves": {
+    "name": "Quick Gloves",
+    "rarity": "epic",
+    "type": "stat",
+    "scope": "self",
+    "description": "+18% attack speed. 5% chance per attack to hit twice.",
+    "effects": [
+      {
+        "stat": "attackEfficiency",
+        "percent": 18
+      },
+      {
+        "proc": "onAttack",
+        "chance": 5,
+        "label": "Double Hit!",
+        "doubleHit": true
+      }
+    ]
+  },
+  "bulwark_plate": {
+    "name": "Bulwark Plate",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "+30 defense. Reflects 25% of melee damage taken back at the attacker.",
+    "effects": [
+      {
+        "stat": "defense",
+        "flat": 30
+      },
+      {
+        "special": "thorns",
+        "percent": 25
+      }
+    ]
+  },
+  "siege_cannon": {
+    "name": "Siege Cannon",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "+40% attack. Skills deal 30% more damage. 5% chance a skill also hits nearby enemies.",
+    "effects": [
+      {
+        "stat": "attack",
+        "percent": 40
+      },
+      {
+        "special": "skillDamage",
+        "percent": 30
+      },
+      {
+        "special": "skillSplash",
+        "percent": 5
+      }
+    ]
+  },
+  "bloodlust_mask": {
+    "name": "Bloodlust Mask",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "+30% attack speed. Heal 5% of damage dealt. 10% chance to share the heal with the squad.",
+    "effects": [
+      {
+        "stat": "attackEfficiency",
+        "percent": 30
+      },
+      {
+        "special": "lifesteal",
+        "percent": 5
+      },
+      {
+        "special": "lifestealShare",
+        "percent": 10,
+        "cooldownMs": 3000
+      }
+    ]
+  },
+  "gamblers_dice": {
+    "name": "Gambler's Dice",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "+20 crit chance. Crits deal 50% more and add a random debuff to the enemy.",
+    "maxStacks": 3,
+    "effects": [
+      {
+        "stat": "crit",
+        "flat": 20
+      },
+      {
+        "special": "critDamage",
+        "percent": 50
+      },
+      {
+        "special": "critDebuff",
+        "percent": 100,
+        "debuffs": [
+          {
+            "status": "chill",
+            "durationMs": 3000
+          },
+          {
+            "status": "poison",
+            "durationMs": 4000,
+            "damageMultiplier": 0.3,
+            "damageType": "dark"
+          },
+          {
+            "status": "stun",
+            "durationMs": 800
+          },
+          {
+            "status": "shock",
+            "durationMs": 3000
+          }
+        ]
+      }
+    ],
+    "provides": [
+      "cc"
+    ]
+  },
+  "fire_bombs": {
+    "name": "Fire Bombs",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "5% chance per attack to throw a bomb: 250% fire damage (ranged).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 5,
+        "label": "Bomb!",
+        "strike": {
+          "damageMultiplier": 2.5,
+          "damageType": "fire",
+          "projectile": "bomb"
+        }
+      }
+    ],
+    "provides": [
+      "fire"
+    ]
+  },
+  "chill_band": {
+    "dropWeight": 80,
+    "name": "Chill Band",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "Every attack adds a small ice hit and 1 Chill stack (5 Chill = Freeze).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 100,
+        "label": "Ice hit",
+        "silent": true,
+        "strike": {
+          "damageMultiplier": 0.1,
+          "damageType": "ice"
+        }
+      },
+      {
+        "proc": "onAttack",
+        "chance": 100,
+        "label": "Chill",
+        "silent": true,
+        "unique": true,
+        "targets": "target",
+        "apply": [
+          {
+            "status": "chill",
+            "durationMs": 5000
+          }
+        ]
+      }
+    ],
+    "provides": [
+      "ice",
+      "freeze",
+      "cc"
+    ]
+  },
+  "static_crystal": {
+    "name": "Static Crystal",
+    "rarity": "epic",
+    "type": "onhit",
+    "scope": "self",
+    "description": "10% per attack: chain lightning that jumps to 2 more enemies and Shocks them.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 10,
+        "label": "Lightning!",
+        "chain": {
+          "jumps": 2,
+          "damageMultiplier": 3,
+          "damageType": "electric",
+          "apply": [
+            {
+              "status": "shock",
+              "durationMs": 3000
+            }
+          ]
+        }
+      }
+    ],
+    "provides": [
+      "electric"
+    ]
+  },
+  "aid_kit": {
+    "name": "Aid Kit",
+    "rarity": "common",
+    "type": "special",
+    "scope": "self",
+    "description": "Heals 5% max health when a floor is cleared.",
+    "effects": [
+      {
+        "special": "clearHeal",
+        "percent": 5,
+        "falloffRatio": 0.85
+      }
+    ]
+  },
+  "shared_potion": {
+    "name": "Shared Potion",
+    "rarity": "legendary",
+    "type": "potion",
+    "kind": "potion",
+    "healPercent": 25,
+    "description": "Every living hero recovers 25% of max health. No hero to choose."
+  },
+  "sucker_punch_glove": {
+    "name": "Sucker Punch Glove",
+    "rarity": "common",
+    "type": "onhit",
+    "scope": "self",
+    "description": "The first BASIC attack on each enemy deals +50% damage.",
+    "effects": [
+      {
+        "special": "suckerPunch",
+        "percent": 50
+      }
+    ]
+  },
+  "bandage_roll": {
+    "name": "Bandage Roll",
+    "rarity": "common",
+    "type": "special",
+    "scope": "self",
+    "description": "Heals 3% max health on each kill the holder makes.",
+    "effects": [
+      {
+        "special": "killHeal",
+        "percent": 3
+      }
+    ]
+  },
+  "second_wind_flask": {
+    "name": "Second Wind Flask",
+    "rarity": "common",
+    "type": "special",
+    "scope": "self",
+    "description": "Used up when the holder drops below 40% health: heals 30% (once per floor).",
+    "effects": [
+      {
+        "special": "secondWind",
+        "percent": 30,
+        "unique": true,
+        "below": 40
+      }
+    ],
+    "dropWeight": 110
+  },
+  "full_vigor": {
+    "name": "Full Vigor",
+    "rarity": "common",
+    "type": "special",
+    "scope": "self",
+    "description": "+15% damage while the holder is at full health.",
+    "effects": [
+      {
+        "special": "fullVigor",
+        "percent": 15
+      }
+    ],
+    "dropWeight": 90
+  },
+  "brawlers_streak": {
+    "name": "Brawler's Streak",
+    "rarity": "common",
+    "type": "onhit",
+    "scope": "self",
+    "description": "Each consecutive hit on the same target adds +2% damage (max +10%).",
+    "effects": [
+      {
+        "special": "brawlerMax",
+        "percent": 10
+      }
+    ],
+    "dropWeight": 80
+  },
+  "tough_skin": {
+    "name": "Tough Skin",
+    "rarity": "common",
+    "type": "special",
+    "scope": "self",
+    "description": "The first hit the holder takes each floor deals 60% less damage.",
+    "effects": [
+      {
+        "special": "toughSkin",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 80
+  },
+  "kindling": {
+    "name": "Kindling",
+    "rarity": "common",
+    "type": "stat",
+    "scope": "self",
+    "description": "+15% fire damage (also boosts Burn).",
+    "effects": [
+      {
+        "damageBonus": "fire",
+        "percent": 15
+      }
+    ],
+    "needs": "fire"
+  },
+  "frost_charm": {
+    "name": "Frost Charm",
+    "rarity": "common",
+    "type": "stat",
+    "scope": "self",
+    "description": "+15% ice damage (also boosts Chill Band hits).",
+    "effects": [
+      {
+        "damageBonus": "ice",
+        "percent": 15
+      }
+    ],
+    "needs": "ice"
+  },
+  "storm_charm": {
+    "name": "Storm Charm",
+    "rarity": "common",
+    "type": "stat",
+    "scope": "self",
+    "description": "+15% electric damage.",
+    "effects": [
+      {
+        "damageBonus": "electric",
+        "percent": 15
+      }
+    ],
+    "needs": "electric"
+  },
+  "shadow_charm": {
+    "name": "Shadow Charm",
+    "rarity": "common",
+    "type": "stat",
+    "scope": "self",
+    "description": "+15% dark damage (poison and Death Coil are dark).",
+    "effects": [
+      {
+        "damageBonus": "dark",
+        "percent": 15
+      }
+    ],
+    "needs": "dark"
+  },
+  "mage_cloak": {
+    "name": "Mage Cloak",
+    "rarity": "common",
+    "type": "stat",
+    "scope": "self",
+    "description": "+10 resist.",
+    "effects": [
+      {
+        "stat": "resist",
+        "flat": 10
+      }
+    ]
+  },
+  "hourglass": {
+    "name": "Hourglass",
+    "rarity": "common",
+    "type": "skill",
+    "scope": "self",
+    "description": "Skill cooldowns 5% shorter per copy (up to 50%).",
+    "effects": [
+      {
+        "special": "cooldown",
+        "percent": 5,
+        "cap": 50
+      }
+    ]
+  },
+  "ember_charm": {
+    "name": "Ember Charm",
+    "rarity": "common",
+    "type": "onhit",
+    "scope": "self",
+    "description": "6% chance per attack to Burn the target for 3s. Chance and burn damage grow with each copy.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 6,
+        "label": "Burn!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "burn",
+            "durationMs": 3000,
+            "damageMultiplier": 0.2,
+            "damageType": "fire",
+            "scalesWithCopies": true
+          }
+        ]
+      }
+    ],
+    "provides": [
+      "burn"
+    ]
+  },
+  "venom_fang": {
+    "name": "Venom Fang",
+    "rarity": "common",
+    "type": "onhit",
+    "scope": "self",
+    "description": "8% chance per attack to Poison the target (each proc adds a Poison stack).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Poison!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "poison",
+            "durationMs": 5000,
+            "damageMultiplier": 0.3,
+            "damageType": "dark"
+          }
+        ]
+      }
+    ],
+    "provides": [
+      "poison"
+    ]
+  },
+  "rusty_nails": {
+    "name": "Rusty Nails",
+    "rarity": "common",
+    "type": "onhit",
+    "scope": "self",
+    "description": "8% chance per attack to Armor Break the target (-defense).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Armor Break!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "armorBreak",
+            "durationMs": 5000
+          }
+        ]
+      }
+    ],
+    "dropWeight": 90
+  },
+  "serrated_edge": {
+    "name": "Serrated Edge",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "10% chance per attack to make the target Bleed.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 10,
+        "falloffRatio": 0.8,
+        "label": "Bleed!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "bleed",
+            "durationMs": 4000,
+            "damageMultiplier": 0.3
+          }
+        ]
+      }
+    ],
+    "provides": [
+      "bleed"
+    ]
+  },
+  "hex_doll": {
+    "name": "Hex Doll",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "8% chance per attack to Curse the target (-resist).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Curse!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "curse",
+            "durationMs": 6000
+          }
+        ]
+      }
+    ]
+  },
+  "dread_bell": {
+    "name": "Dread Bell",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "5% chance per attack to Fear the target (it skips its next attack and backs away).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 5,
+        "label": "Fear!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "fear",
+            "durationMs": 1500
+          }
+        ]
+      }
+    ],
+    "dropWeight": 90
+  },
+  "gag_rune": {
+    "name": "Gag Rune",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "A stun or freeze the holder causes also Silences the enemy for 2s.",
+    "effects": [
+      {
+        "special": "gagRune",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "cc"
+  },
+  "fire_arrows": {
+    "name": "Fire Arrows",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "Ranged attacks: 50% chance for an extra fire hit.",
+    "effects": [
+      {
+        "special": "fireArrows",
+        "percent": 50
+      }
+    ],
+    "needs": "ranged",
+    "provides": [
+      "fire",
+      "burn"
+    ]
+  },
+  "executioners_axe": {
+    "name": "Executioner's Axe",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "+30% damage to enemies under 25% health.",
+    "effects": [
+      {
+        "special": "executioner",
+        "percent": 30,
+        "falloffRatio": 0.95
+      }
+    ]
+  },
+  "magma_core": {
+    "name": "Magma Core",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "Burning enemies take +25% damage from the holder, and burn ticks 30% faster (up to +100%).",
+    "effects": [
+      {
+        "special": "magmaCore",
+        "percent": 25
+      },
+      {
+        "special": "burnSpeed",
+        "percent": 30,
+        "cap": 100
+      }
+    ],
+    "dropWeight": 90,
+    "needs": "burn"
+  },
+  "shatter_hammer": {
+    "name": "Shatter Hammer",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "Hits on a frozen enemy deal +60% damage and break the freeze.",
+    "effects": [
+      {
+        "special": "shatterHammer",
+        "percent": 60
+      }
+    ],
+    "dropWeight": 90,
+    "needs": "freeze"
+  },
+  "blood_chalice": {
+    "name": "Blood Chalice",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "+20% damage to Bleeding enemies. Killing a Bleeding enemy heals 3%.",
+    "effects": [
+      {
+        "special": "bloodChalice",
+        "percent": 20
+      },
+      {
+        "special": "chaliceHeal",
+        "percent": 3
+      }
+    ],
+    "dropWeight": 90,
+    "needs": "bleed"
+  },
+  "plague_flask": {
+    "name": "Plague Flask",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "When a Poisoned enemy dies, half its Poison spreads to another enemy.",
+    "effects": [
+      {
+        "special": "plagueFlask",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "poison"
+  },
+  "exploiters_lens": {
+    "name": "Exploiter's Lens",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "+30% damage to enemies with 3 or more different debuffs.",
+    "effects": [
+      {
+        "special": "exploiter",
+        "percent": 30
+      }
+    ],
+    "dropWeight": 80
+  },
+  "hunters_sigil": {
+    "name": "Hunter's Sigil",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "The first hit on each enemy Marks it: +10% damage from the whole squad.",
+    "effects": [
+      {
+        "special": "hunterSigil",
+        "percent": 10
+      }
+    ]
+  },
+  "thousand_cuts": {
+    "name": "Thousand Cuts",
+    "rarity": "epic",
+    "type": "onhit",
+    "scope": "self",
+    "description": "Melee hits can make enemies Bleed; each Bleed adds an extra stack. Bleeding enemies burst into knives when they die.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Bleed!",
+        "meleeOnly": true,
+        "targets": "target",
+        "apply": [
+          {
+            "status": "bleed",
+            "durationMs": 4000,
+            "damageMultiplier": 0.3
+          }
+        ]
+      },
+      {
+        "special": "thousandCuts",
+        "percent": 1
+      },
+      {
+        "special": "knifeBurst",
+        "percent": 60
+      }
+    ],
+    "provides": [
+      "bleed"
+    ]
+  },
+  "frozen_thunderbolt": {
+    "name": "Frozen Thunderbolt",
+    "rarity": "legendary",
+    "type": "onhit",
+    "scope": "self",
+    "description": "Every electric hit causes an ice burst on nearby enemies: ice damage and 2 Chill.",
+    "effects": [
+      {
+        "special": "frozenThunderbolt",
+        "percent": 50
+      }
+    ],
+    "dropWeight": 70,
+    "needs": "electric",
+    "provides": [
+      "freeze",
+      "ice",
+      "cc"
+    ]
+  },
+  "warding_charm": {
+    "name": "Warding Charm",
+    "rarity": "rare",
+    "type": "stat",
+    "scope": "self",
+    "description": "Shields the holder receives are 30% bigger.",
+    "effects": [
+      {
+        "special": "shieldBonus",
+        "percent": 30
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "shield"
+  },
+  "overheal_ring": {
+    "name": "Overheal Ring",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "Healing above full health becomes a shield.",
+    "effects": [
+      {
+        "special": "overhealRing",
+        "percent": 40,
+        "cap": 100
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "heal",
+    "provides": [
+      "shield"
+    ]
+  },
+  "spiked_aegis": {
+    "name": "Spiked Aegis",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "When the holder's shield is broken it explodes and hurts all enemies.",
+    "effects": [
+      {
+        "special": "spikedAegis",
+        "percent": 80
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "shield"
+  },
+  "provokers_horn": {
+    "name": "Provoker's Horn",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "10% chance per attack to Taunt the target for 3s. Taunted enemies take +15% damage.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 10,
+        "label": "Taunt!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "taunt",
+            "durationMs": 3000
+          }
+        ]
+      },
+      {
+        "special": "hornDamage",
+        "percent": 15
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "taunt"
+    ]
+  },
+  "spite_mail": {
+    "name": "Spite Mail",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "While the holder is taunting an enemy: +30 defense and 25% of melee damage reflected.",
+    "effects": [
+      {
+        "special": "spiteMail",
+        "percent": 30
+      },
+      {
+        "special": "spiteReflect",
+        "percent": 25
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "taunt"
+  },
+  "martyrs_shield": {
+    "name": "Martyr's Shield",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "8% chance when an enemy hits another hero to take the hit instead.",
+    "effects": [
+      {
+        "special": "martyr",
+        "percent": 8,
+        "unique": true
+      },
+      {
+        "special": "martyrCopies",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 90
+  },
+  "fire_heart": {
+    "name": "Fire Heart",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "Each floor starts with a fire shield that slowly regenerates and burns whoever hits it.",
+    "effects": [
+      {
+        "special": "fireHeart",
+        "percent": 20
+      }
+    ],
+    "provides": [
+      "shield",
+      "burn"
+    ]
+  },
+  "lost_clerics_grimoire": {
+    "name": "Lost Cleric's Grimoire",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "10% chance each time the holder is healed to launch a green fireball at a random enemy.",
+    "effects": [
+      {
+        "special": "grimoireChance",
+        "percent": 10,
+        "cap": 50
+      },
+      {
+        "special": "grimoireDamage",
+        "percent": 150
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "heal",
+    "provides": [
+      "fire"
+    ]
+  },
+  "conductors_baton": {
+    "name": "Conductor's Baton",
+    "rarity": "rare",
+    "type": "skill",
+    "scope": "self",
+    "description": "The holder's support skills are 25% stronger and last 25% longer.",
+    "effects": [
+      {
+        "special": "baton",
+        "percent": 25,
+        "falloffRatio": 0.85
+      }
+    ]
+  },
+  "echo_rune": {
+    "name": "Echo Rune",
+    "rarity": "epic",
+    "type": "skill",
+    "scope": "self",
+    "description": "15% chance a skill casts twice. The echo is weaker and cannot echo again.",
+    "effects": [
+      {
+        "special": "echo",
+        "percent": 15,
+        "cap": 60
+      },
+      {
+        "special": "echoCopies",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 90
+  },
+  "metronome": {
+    "name": "Metronome",
+    "rarity": "rare",
+    "type": "skill",
+    "scope": "self",
+    "description": "Empowered 4th-attack hits caused by the holder deal +50% damage.",
+    "effects": [
+      {
+        "special": "metronome",
+        "percent": 50
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "beat"
+  },
+  "rat_cage": {
+    "name": "Rat Cage",
+    "rarity": "common",
+    "type": "minion",
+    "scope": "self",
+    "description": "Every 12s a Rat joins the fight.",
+    "effects": [
+      {
+        "minionSpawner": {
+          "minion": "rat",
+          "minMs": 12000,
+          "maxMs": 12000
+        }
+      }
+    ],
+    "dropWeight": 80,
+    "provides": [
+      "minion"
+    ]
+  },
+  "wisp_lantern": {
+    "name": "Wisp Lantern",
+    "rarity": "rare",
+    "type": "minion",
+    "scope": "self",
+    "description": "Every 15s a flying Wisp (ranged shock) joins the fight.",
+    "effects": [
+      {
+        "minionSpawner": {
+          "minion": "wisp",
+          "minMs": 15000,
+          "maxMs": 15000
+        }
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "minion"
+    ]
+  },
+  "fire_imp_brazier": {
+    "name": "Fire Imp Brazier",
+    "rarity": "epic",
+    "type": "minion",
+    "scope": "self",
+    "description": "Every 10s a fire Imp (its hits Burn) joins the fight.",
+    "effects": [
+      {
+        "minionSpawner": {
+          "minion": "imp",
+          "minMs": 10000,
+          "maxMs": 10000
+        }
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "minion",
+      "burn",
+      "fire"
+    ]
+  },
+  "mimic_chest": {
+    "name": "Mimic Chest",
+    "rarity": "rare",
+    "type": "minion",
+    "scope": "self",
+    "description": "10% chance when the holder is hit: a Mimic pops out and explodes when it dies.",
+    "effects": [
+      {
+        "special": "mimic",
+        "percent": 10,
+        "unique": true
+      },
+      {
+        "special": "mimicCopies",
+        "percent": 1
+      },
+      {
+        "minionOnHit": {
+          "minion": "mimic"
+        }
+      }
+    ],
+    "dropWeight": 80,
+    "provides": [
+      "minion"
+    ]
+  },
+  "gargoyle_idol": {
+    "name": "Gargoyle Idol",
+    "rarity": "rare",
+    "type": "minion",
+    "scope": "self",
+    "description": "Summons a slow, tanky Gargoyle whose hits Taunt enemies.",
+    "effects": [
+      {
+        "greaterMinion": "gargoyle"
+      }
+    ],
+    "dropWeight": 80,
+    "provides": [
+      "minion",
+      "taunt"
+    ]
+  },
+  "spirit_knight_banner": {
+    "name": "Spirit Knight Banner",
+    "rarity": "epic",
+    "type": "minion",
+    "scope": "self",
+    "description": "Summons a Spirit Knight that grows stronger each floor it survives.",
+    "effects": [
+      {
+        "greaterMinion": "spirit_knight"
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "minion"
+    ]
+  },
+  "phoenix_hatchling": {
+    "name": "Phoenix Hatchling",
+    "rarity": "legendary",
+    "type": "minion",
+    "scope": "self",
+    "description": "Summons a flying Phoenix that heals the squad a little when it is hit.",
+    "effects": [
+      {
+        "greaterMinion": "phoenix"
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "minion",
+      "fire",
+      "heal"
+    ]
+  },
+  "bone_charm": {
+    "name": "Bone Charm",
+    "rarity": "rare",
+    "type": "minion",
+    "scope": "self",
+    "description": "All minions (weak and greater, from anyone) get +20% health and attack.",
+    "effects": [
+      {
+        "special": "boneCharm",
+        "percent": 20
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "minion"
+  },
+  "overseers_whistle": {
+    "name": "Overseer's Whistle",
+    "rarity": "rare",
+    "type": "minion",
+    "scope": "self",
+    "description": "Weak minion cap +1 and weak minions attack 15% faster (up to +4 cap).",
+    "effects": [
+      {
+        "special": "whistleCap",
+        "percent": 1,
+        "cap": 4
+      },
+      {
+        "special": "whistleSpeed",
+        "percent": 15
+      }
+    ],
+    "dropWeight": 70,
+    "needs": "minion"
+  },
+  "grave_dust": {
+    "name": "Grave Dust",
+    "rarity": "rare",
+    "type": "minion",
+    "scope": "self",
+    "description": "Weak minions explode when they die. Damage adds up per copy.",
+    "effects": [
+      {
+        "special": "graveDust",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 70,
+    "needs": "minion"
+  },
+  "necro_crown": {
+    "name": "Necro Crown",
+    "rarity": "legendary",
+    "type": "minion",
+    "scope": "self",
+    "description": "Weak minion cap +2 (up to +6) and every enemy kill by anyone raises a skeleton.",
+    "effects": [
+      {
+        "special": "necroCrownCap",
+        "percent": 2,
+        "cap": 6
+      },
+      {
+        "special": "necroCrownKill",
+        "percent": 1,
+        "unique": true
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "minion",
+    "provides": [
+      "minion"
+    ]
+  },
+  "jolly_banner": {
+    "name": "Jolly Banner",
+    "rarity": "epic",
+    "type": "squad",
+    "scope": "self",
+    "description": "5% chance per attack: the holder and a random ally get regeneration, sure crits and +40% attack speed for 2s.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 5,
+        "unique": true,
+        "label": "Jolly!",
+        "targets": "self",
+        "apply": [
+          {
+            "status": "buff",
+            "to": "selfAndAlly",
+            "durationMs": 2000,
+            "durationPerCopyMs": 500,
+            "mods": [
+              {
+                "stat": "attackEfficiency",
+                "percent": 40
+              },
+              {
+                "stat": "crit",
+                "flat": 100
+              }
+            ]
+          },
+          {
+            "status": "regenBoost",
+            "to": "selfAndAlly",
+            "durationMs": 2000,
+            "durationPerCopyMs": 500,
+            "percentMaxHpPerSec": 4
+          }
+        ]
+      }
+    ],
+    "dropWeight": 100
+  },
+  "excalibur": {
+    "name": "Excalibur",
+    "rarity": "legendary",
+    "type": "onhit",
+    "scope": "self",
+    "description": "8% chance on a melee attack to spawn a tornado that drifts between enemies for 5s. Max 3.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "falloffRatio": 0.85,
+        "meleeOnly": true,
+        "label": "Tornado!",
+        "targets": "self",
+        "tornado": {
+          "durationMs": 5000,
+          "tickMs": 500,
+          "damageMultiplier": 0.6,
+          "max": 3,
+          "hopEvery": 2
+        }
+      }
+    ],
+    "dropWeight": 100,
+    "needs": "melee"
+  }
 }

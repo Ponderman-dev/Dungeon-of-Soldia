@@ -60,9 +60,57 @@
       "defense": 0.6,
       "resist": 0.3
     },
-    "skills": [
-      "shield_bash",
-      "guard"
+    "skills": {
+      "attack": "ground_pound",
+      "support": "rally_cry"
+    },
+    "perk": {
+      "name": "Stalwart",
+      "mods": [
+        {
+          "stat": "defense",
+          "flat": 8,
+          "growth": 0.3
+        },
+        {
+          "stat": "health",
+          "percent": 5,
+          "growth": 0.2
+        }
+      ]
+    },
+    "passive": {
+      "name": "Taunt Wall",
+      "description": "10% chance on each attack to taunt the enemy he hit for 3s (it must attack the Knight) and give himself +20 defense for 3s.",
+      "procs": [
+        {
+          "proc": "onAttack",
+          "chance": 10,
+          "label": "Taunt Wall!",
+          "targets": "self",
+          "apply": [
+            {
+              "status": "taunt",
+              "durationMs": 3000,
+              "to": "target"
+            },
+            {
+              "status": "buff",
+              "durationMs": 3000,
+              "mods": [
+                {
+                  "stat": "defense",
+                  "flat": 20
+                }
+              ],
+              "to": "self"
+            }
+          ]
+        }
+      ]
+    },
+    "provides": [
+      "taunt"
     ]
   },
   {
@@ -125,10 +173,27 @@
     "growthFlat": {
       "crit": 0.3
     },
-    "skills": [
-      "cleave",
-      "rage"
-    ]
+    "skills": {
+      "attack": "savage_leap",
+      "support": "war_cry"
+    },
+    "perk": {
+      "name": "Battle Fury",
+      "mods": [
+        {
+          "stat": "attack",
+          "percent": 10,
+          "growth": 0.4
+        }
+      ]
+    },
+    "passive": {
+      "name": "Bloodrage",
+      "description": "+0.6% attack speed for every 1% of health he is missing (at half health: +30%).",
+      "bloodrage": {
+        "attackSpeedPercentPerMissing": 0.6
+      }
+    }
   },
   {
     "id": "rogue",
@@ -136,12 +201,12 @@
     "damageType": "melee",
     "height": 26,
     "stats": {
-      "health": 85,
+      "health": 100,
       "mana": 60,
       "attack": 19,
-      "defense": 3,
+      "defense": 6,
       "resist": 3,
-      "evasion": 15,
+      "evasion": 25,
       "crit": 20,
       "attackEfficiency": 140
     },
@@ -188,13 +253,35 @@
       "mana": 2
     },
     "growthFlat": {
-      "evasion": 0.4,
+      "evasion": 0.6,
       "crit": 0.4,
       "attackEfficiency": 0.5
     },
-    "skills": [
-      "venom_strike",
-      "smoke"
+    "skills": {
+      "attack": "fan_of_knives",
+      "support": "smoke_bomb"
+    },
+    "perk": {
+      "name": "Shadow Step",
+      "mods": [
+        {
+          "stat": "evasion",
+          "flat": 10,
+          "growth": 0.25
+        }
+      ]
+    },
+    "passive": {
+      "name": "Opportunist",
+      "description": "+15% damage and +10 crit against any enemy that has a debuff. His own chance-based debuffs (item procs, crit debuffs) are 25% more likely.",
+      "opportunist": {
+        "damagePercent": 15,
+        "critFlat": 10,
+        "debuffChancePercent": 25
+      }
+    },
+    "provides": [
+      "bleed"
     ]
   },
   {
@@ -203,12 +290,12 @@
     "damageType": "ranged",
     "height": 28,
     "stats": {
-      "health": 80,
+      "health": 95,
       "mana": 60,
       "attack": 17,
-      "defense": 3,
+      "defense": 6,
       "resist": 4,
-      "evasion": 5,
+      "evasion": 15,
       "crit": 12,
       "attackEfficiency": 100
     },
@@ -255,11 +342,715 @@
     },
     "growthFlat": {
       "crit": 0.3,
-      "resist": 0.2
+      "resist": 0.2,
+      "evasion": 0.4
     },
-    "skills": [
-      "power_shot",
-      "ensnare_shot"
+    "skills": {
+      "attack": "rain_of_arrows",
+      "support": "hunters_mark"
+    },
+    "perk": {
+      "name": "Marksman",
+      "mods": [
+        {
+          "stat": "attackEfficiency",
+          "percent": 8,
+          "growth": 0.3
+        }
+      ]
+    },
+    "passive": {
+      "name": "Steady Aim",
+      "description": "While he has not been hit for 3s he gets +25% attack speed and +15 crit. Being hit resets it.",
+      "steadyAim": {
+        "afterMs": 3000,
+        "attackSpeedPercent": 25,
+        "critFlat": 15
+      }
+    }
+  },
+  {
+    "id": "samurai",
+    "name": "Samurai",
+    "damageType": "melee",
+    "height": 30,
+    "stats": {
+      "health": 100,
+      "attack": 30,
+      "defense": 5,
+      "resist": 3,
+      "evasion": 5,
+      "crit": 12,
+      "attackEfficiency": 70
+    },
+    "growthPercent": {
+      "health": 3,
+      "attack": 5
+    },
+    "growthFlat": {
+      "crit": 0.4
+    },
+    "skills": {
+      "attack": "wind_cutter",
+      "support": "focus_stance"
+    },
+    "perk": {
+      "name": "Bushido",
+      "mods": [
+        {
+          "stat": "crit",
+          "flat": 8,
+          "growth": 0.2
+        }
+      ]
+    },
+    "passive": {
+      "name": "Focused Strike",
+      "description": "Slow but heavy attacks, 35% chance on each hit to make the enemy bleed, and his own chance-based debuffs are 25% likelier.",
+      "focusedStrike": {
+        "debuffChancePercent": 25
+      },
+      "procs": [
+        {
+          "proc": "onAttack",
+          "chance": 35,
+          "label": "Bleed!",
+          "targets": "target",
+          "apply": [
+            {
+              "status": "bleed",
+              "durationMs": 5000,
+              "damageMultiplier": 0.4
+            }
+          ]
+        }
+      ]
+    },
+    "parts": {
+      "body": {
+        "w": 12,
+        "h": 15,
+        "x": 0,
+        "y": -7.5,
+        "color": "0xb8322e",
+        "idle": {
+          "dy": -1,
+          "duration": 480
+        }
+      },
+      "head": {
+        "w": 10,
+        "h": 10,
+        "x": 0,
+        "y": -20,
+        "color": "0xf2c9a0",
+        "idle": {
+          "dy": -1.5,
+          "duration": 480,
+          "delay": 110
+        }
+      },
+      "weapon": {
+        "w": 3,
+        "h": 22,
+        "x": 9,
+        "y": -6,
+        "color": "0xdfe6ee",
+        "pivotY": 1,
+        "idle": {
+          "angle": 5,
+          "duration": 700
+        }
+      },
+      "hair": {
+        "w": 10,
+        "h": 4,
+        "x": 0,
+        "y": -26,
+        "color": "0x20242c",
+        "idle": {
+          "dy": -1.5,
+          "duration": 480,
+          "delay": 110
+        }
+      }
+    },
+    "provides": [
+      "bleed"
+    ]
+  },
+  {
+    "id": "mage",
+    "name": "Mage",
+    "damageType": "fire",
+    "height": 30,
+    "stats": {
+      "health": 80,
+      "attack": 22,
+      "defense": 2,
+      "resist": 10,
+      "evasion": 5,
+      "crit": 8,
+      "attackEfficiency": 90
+    },
+    "growthPercent": {
+      "health": 3,
+      "attack": 5
+    },
+    "growthFlat": {
+      "resist": 0.5
+    },
+    "skills": {
+      "attack": "elemental_rotation",
+      "support": "arcane_ward"
+    },
+    "perk": {
+      "name": "Arcane Haste",
+      "mods": [
+        {
+          "special": "skillDamage",
+          "percent": 10,
+          "growth": 0.3
+        }
+      ]
+    },
+    "passive": {
+      "name": "Spellweaver",
+      "description": "Every 4th basic attack is a free empowered spell that cycles Fire (Burn), Ice (2 Chill) and Electric (Shock), and all his on-hit items go off.",
+      "counter": {
+        "id": "spellweave",
+        "label": "SPELL",
+        "color": "#ff9a4d",
+        "every": 4,
+        "scope": "self",
+        "effect": "empower",
+        "firedLabel": "Spellweave!",
+        "strike": {
+          "damageMultiplier": 1.2,
+          "damageType": "fire"
+        },
+        "apply": [
+          {
+            "status": "burn",
+            "durationMs": 4000,
+            "damageMultiplier": 0.3
+          }
+        ],
+        "forceProcs": true,
+        "rotation": [
+          {
+            "damageType": "fire",
+            "color": "#ff9a4d",
+            "apply": [
+              {
+                "status": "burn",
+                "durationMs": 4000,
+                "damageMultiplier": 0.3
+              }
+            ]
+          },
+          {
+            "damageType": "ice",
+            "color": "#7fd8ff",
+            "apply": [
+              {
+                "status": "chill",
+                "durationMs": 6000,
+                "stacks": 2
+              }
+            ]
+          },
+          {
+            "damageType": "electric",
+            "color": "#ffe94d",
+            "apply": [
+              {
+                "status": "shock",
+                "durationMs": 4000
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "parts": {
+      "body": {
+        "w": 12,
+        "h": 15,
+        "x": 0,
+        "y": -7.5,
+        "color": "0x5a3fa0",
+        "idle": {
+          "dy": -1,
+          "duration": 480
+        }
+      },
+      "head": {
+        "w": 10,
+        "h": 10,
+        "x": 0,
+        "y": -20,
+        "color": "0xf2c9a0",
+        "idle": {
+          "dy": -1.5,
+          "duration": 480,
+          "delay": 110
+        }
+      },
+      "weapon": {
+        "w": 3,
+        "h": 22,
+        "x": 9,
+        "y": -6,
+        "color": "0x6fd0ff",
+        "pivotY": 1,
+        "idle": {
+          "angle": 5,
+          "duration": 700
+        }
+      },
+      "hat": {
+        "w": 12,
+        "h": 6,
+        "x": 0,
+        "y": -27,
+        "color": "0x3a2870",
+        "idle": {
+          "dy": -1.5,
+          "duration": 480,
+          "delay": 110
+        }
+      }
+    },
+    "provides": [
+      "fire",
+      "ice",
+      "electric",
+      "burn",
+      "freeze",
+      "cc",
+      "beat",
+      "shield"
+    ]
+  },
+  {
+    "id": "cleric",
+    "name": "Cleric",
+    "damageType": "holy",
+    "height": 30,
+    "stats": {
+      "health": 100,
+      "attack": 14,
+      "defense": 5,
+      "resist": 12,
+      "evasion": 4,
+      "crit": 5,
+      "attackEfficiency": 95
+    },
+    "growthPercent": {
+      "health": 4,
+      "attack": 3
+    },
+    "growthFlat": {
+      "resist": 0.5
+    },
+    "skills": {
+      "attack": "smite",
+      "support": "divine_shield"
+    },
+    "perk": {
+      "name": "Blessing",
+      "mods": [
+        {
+          "special": "regen",
+          "percent": 0.4,
+          "growth": 0.01
+        }
+      ]
+    },
+    "passive": {
+      "name": "Mending",
+      "description": "While she lives every hero regenerates a little (and regen/heals from items are 25% stronger). Every 4th attack heals the most hurt ally instead of hitting.",
+      "regenAura": {
+        "baseRegenPercentPerSec": 0.3,
+        "healMultiplierPercent": 25
+      },
+      "counter": {
+        "id": "mend",
+        "label": "MEND",
+        "color": "#9fe8a8",
+        "every": 4,
+        "scope": "self",
+        "effect": "heal",
+        "firedLabel": "Heal!",
+        "heal": {
+          "percentMaxHp": 10,
+          "attackMultiplier": 1.0
+        }
+      }
+    },
+    "parts": {
+      "body": {
+        "w": 12,
+        "h": 15,
+        "x": 0,
+        "y": -7.5,
+        "color": "0xe8e4f0",
+        "idle": {
+          "dy": -1,
+          "duration": 480
+        }
+      },
+      "head": {
+        "w": 10,
+        "h": 10,
+        "x": 0,
+        "y": -20,
+        "color": "0xf2c9a0",
+        "idle": {
+          "dy": -1.5,
+          "duration": 480,
+          "delay": 110
+        }
+      },
+      "weapon": {
+        "w": 3,
+        "h": 20,
+        "x": 9,
+        "y": -6,
+        "color": "0xf2d66b",
+        "pivotY": 1,
+        "idle": {
+          "angle": 5,
+          "duration": 700
+        }
+      },
+      "halo": {
+        "w": 10,
+        "h": 3,
+        "x": 0,
+        "y": -27,
+        "color": "0xf2d66b",
+        "idle": {
+          "dy": -1.5,
+          "duration": 600
+        }
+      }
+    },
+    "provides": [
+      "heal",
+      "shield",
+      "beat"
+    ]
+  },
+  {
+    "id": "necromancer",
+    "name": "Necromancer",
+    "damageType": "dark",
+    "height": 30,
+    "stats": {
+      "health": 85,
+      "attack": 15,
+      "defense": 3,
+      "resist": 10,
+      "evasion": 5,
+      "crit": 6,
+      "attackEfficiency": 90
+    },
+    "growthPercent": {
+      "health": 3,
+      "attack": 4
+    },
+    "growthFlat": {
+      "resist": 0.4
+    },
+    "skills": {
+      "attack": "death_coil",
+      "support": "bone_ward"
+    },
+    "perk": {
+      "name": "Grim Resolve",
+      "mods": [
+        {
+          "stat": "resist",
+          "flat": 8,
+          "growth": 0.2
+        }
+      ]
+    },
+    "passive": {
+      "name": "Skeleton Summoner",
+      "description": "Raises a skeleton every 8-10s (up to 4); one rises at the start of every floor. They vanish when the floor ends.",
+      "spawner": {
+        "minion": "skeleton",
+        "minMs": 8000,
+        "maxMs": 10000,
+        "cap": 4,
+        "atFloorStart": 1
+      }
+    },
+    "parts": {
+      "body": {
+        "w": 12,
+        "h": 15,
+        "x": 0,
+        "y": -7.5,
+        "color": "0x2e2a3d",
+        "idle": {
+          "dy": -1,
+          "duration": 480
+        }
+      },
+      "head": {
+        "w": 10,
+        "h": 10,
+        "x": 0,
+        "y": -20,
+        "color": "0xc8d0c0",
+        "idle": {
+          "dy": -1.5,
+          "duration": 480,
+          "delay": 110
+        }
+      },
+      "weapon": {
+        "w": 3,
+        "h": 24,
+        "x": 9,
+        "y": -6,
+        "color": "0x7a4fd0",
+        "pivotY": 1,
+        "idle": {
+          "angle": 5,
+          "duration": 700
+        }
+      },
+      "hood": {
+        "w": 12,
+        "h": 5,
+        "x": 0,
+        "y": -26,
+        "color": "0x1a1626",
+        "idle": {
+          "dy": -1.5,
+          "duration": 480,
+          "delay": 110
+        }
+      }
+    },
+    "provides": [
+      "shield",
+      "minion",
+      "poison"
+    ]
+  },
+  {
+    "id": "bard",
+    "name": "Bard",
+    "damageType": "ranged",
+    "height": 28,
+    "stats": {
+      "health": 90,
+      "attack": 13,
+      "defense": 4,
+      "resist": 8,
+      "evasion": 10,
+      "crit": 8,
+      "attackEfficiency": 100
+    },
+    "growthPercent": {
+      "health": 3,
+      "attack": 3
+    },
+    "growthFlat": {
+      "attackEfficiency": 0.3
+    },
+    "skills": {
+      "attack": "crescendo",
+      "support": "ballad_of_rest"
+    },
+    "perk": {
+      "name": "Inspiration",
+      "mods": [
+        {
+          "stat": "evasion",
+          "flat": 6,
+          "growth": 0.2
+        }
+      ]
+    },
+    "passive": {
+      "name": "Rhythm",
+      "description": "Every 4th basic attack of ANY hero is empowered with a bonus hit (a shared beat for the whole squad).",
+      "counter": {
+        "id": "rhythm",
+        "label": "RHYTHM",
+        "color": "#ffb84d",
+        "every": 4,
+        "scope": "squad",
+        "effect": "empower",
+        "firedLabel": "Beat!",
+        "strike": {
+          "damageMultiplier": 0.8,
+          "damageType": "ranged"
+        }
+      }
+    },
+    "parts": {
+      "body": {
+        "w": 12,
+        "h": 15,
+        "x": 0,
+        "y": -7.5,
+        "color": "0xc0602a",
+        "idle": {
+          "dy": -1,
+          "duration": 480
+        }
+      },
+      "head": {
+        "w": 10,
+        "h": 10,
+        "x": 0,
+        "y": -20,
+        "color": "0xf2c9a0",
+        "idle": {
+          "dy": -1.5,
+          "duration": 480,
+          "delay": 110
+        }
+      },
+      "weapon": {
+        "w": 6,
+        "h": 14,
+        "x": 9,
+        "y": -6,
+        "color": "0xe0b040",
+        "pivotY": 1,
+        "idle": {
+          "angle": 5,
+          "duration": 700
+        }
+      },
+      "feather": {
+        "w": 4,
+        "h": 8,
+        "x": 3,
+        "y": -27,
+        "color": "0xe8503a",
+        "idle": {
+          "angle": 8,
+          "duration": 500
+        }
+      }
+    },
+    "provides": [
+      "heal",
+      "beat"
+    ]
+  },
+  {
+    "id": "alchemist",
+    "name": "Alchemist",
+    "damageType": "ranged",
+    "height": 28,
+    "stats": {
+      "health": 90,
+      "attack": 15,
+      "defense": 4,
+      "resist": 8,
+      "evasion": 8,
+      "crit": 6,
+      "attackEfficiency": 95
+    },
+    "growthPercent": {
+      "health": 3,
+      "attack": 4
+    },
+    "growthFlat": {
+      "crit": 0.2
+    },
+    "skills": {
+      "attack": "flask_barrage",
+      "support": "mystery_brew"
+    },
+    "perk": {
+      "name": "Volatile Mix",
+      "mods": [
+        {
+          "special": "dotDamage",
+          "percent": 10,
+          "growth": 0.3
+        }
+      ]
+    },
+    "passive": {
+      "name": "Catalyst",
+      "description": "While he lives, debuffs on enemies last 30% longer and damage over time hits 30% harder.",
+      "catalyst": {
+        "durationPercent": 30,
+        "dotPercent": 30
+      }
+    },
+    "parts": {
+      "body": {
+        "w": 12,
+        "h": 15,
+        "x": 0,
+        "y": -7.5,
+        "color": "0x3f8f6a",
+        "idle": {
+          "dy": -1,
+          "duration": 480
+        }
+      },
+      "head": {
+        "w": 10,
+        "h": 10,
+        "x": 0,
+        "y": -20,
+        "color": "0xf2c9a0",
+        "idle": {
+          "dy": -1.5,
+          "duration": 480,
+          "delay": 110
+        }
+      },
+      "weapon": {
+        "w": 7,
+        "h": 10,
+        "x": 9,
+        "y": -6,
+        "color": "0xb06ad0",
+        "pivotY": 1,
+        "idle": {
+          "angle": 5,
+          "duration": 700
+        }
+      },
+      "goggles": {
+        "w": 10,
+        "h": 3,
+        "x": 0,
+        "y": -22,
+        "color": "0xf2d66b",
+        "idle": {
+          "dy": -1.5,
+          "duration": 480,
+          "delay": 110
+        }
+      }
+    },
+    "provides": [
+      "fire",
+      "ice",
+      "dark",
+      "burn",
+      "poison",
+      "freeze",
+      "cc",
+      "heal",
+      "shield"
     ]
   }
 ]

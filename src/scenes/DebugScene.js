@@ -24,6 +24,21 @@ export default class DebugScene extends Phaser.Scene {
       .setInteractive()
       .on('pointerdown', () => this.registry.set('autoRewards', !this.registry.get('autoRewards')));
 
+    // TEST: a button that gives up the run and goes back to the squad select screen (nothing is saved).
+    const y2 = y + h + 4;
+    this.add.rectangle(x + w / 2, y2 + h / 2, w, h, 0x000000, 0.7).setStrokeStyle(2, 0xffe08a, 0.9);
+    this.add
+      .text(x + w / 2, y2 + h / 2, 'TEST: restart run', { fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color: '#ffe08a' })
+      .setOrigin(0.5);
+    this.add
+      .zone(x + w / 2, y2 + h / 2, w, h)
+      .setInteractive()
+      .on('pointerdown', () => {
+        this.scene.stop('Reward');
+        this.scene.stop('Battle');
+        this.scene.run('Squad'); // run, not start: start would also stop this debug scene
+      });
+
     this.refresh();
     this.registry.events.on('changedata-autoRewards', this.refresh, this);
     this.events.once('shutdown', () => this.registry.events.off('changedata-autoRewards', this.refresh, this));

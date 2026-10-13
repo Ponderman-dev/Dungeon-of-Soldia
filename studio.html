@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Soldia Character Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+    <style>
+      /* Layout: a workbench. Drawing board on the left (top on phones); live preview, parts and sliders on the right. */
+      /* One deliberate look: the dungeon at night (dark only, like the game itself). */
+      :root {
+        --bg: #14101f;        /* the game's background */
+        --panel: #1d1830;
+        --line: #342c4d;
+        --fg: #ece6f7;
+        --muted: #9a90b3;
+        --accent: #f2b33d;    /* torch light: selection, primary button */
+        --good: #57c26a;
+        --warn: #e0773f;
+        --font-display: 'Pixelify Sans', ui-monospace, monospace;
+        --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+        --font-data: 'IBM Plex Mono', ui-monospace, monospace;
+        color-scheme: dark;
+      }
+      * { box-sizing: border-box; }
+      [hidden] { display: none !important; }
+      /* iPad: no double-tap zoom, no long-press menus or text selection on the drawing areas. */
+      body { touch-action: manipulation; }
+      #board, #stage, .tl-grid, .tools, .tl-controls { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+      .toast { position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%); background: var(--fg); color: var(--bg); font: 700 15px var(--font-display); letter-spacing: 0.03em; padding: 8px 18px; border-radius: 999px; pointer-events: none; z-index: 10; }
+      .toast.show { animation: toast 0.9s ease-out forwards; }
+      @keyframes toast { 0% { opacity: 0; transform: translate(-50%, 6px); } 15%, 70% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+      @media (prefers-reduced-motion: reduce) { .toast.show { animation: none; } }
+      html, body { background: var(--bg); color: var(--fg); }
+      body { margin: 0; font: 14px/1.45 var(--font-body); padding-inline: 16px; padding-block: 12px 32px; }
+      button, input, select { font: inherit; color: inherit; }
+      button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+      .top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; max-width: 1640px; margin-inline: auto; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+      .top h1 { font: 700 22px/1 var(--font-display); letter-spacing: 0.02em; margin: 0; margin-right: auto; }
+      .top h1 span { color: var(--accent); }
+      select { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; min-width: 0; }
+      .status { font: 12px var(--font-data); color: var(--muted); }
+      .status.dirty { color: var(--warn); }
+      .status.saved { color: var(--good); }
+      .btn { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+      .btn:hover { border-color: var(--muted); }
+      .btn:disabled { opacity: 0.4; cursor: default; }
+      .btn.primary { background: var(--accent); border-color: var(--accent); color: #241a05; font-weight: 600; }
+      .btn.danger:hover { border-color: var(--warn); color: var(--warn); }
+      .btn.on { border-color: var(--accent); color: var(--accent); }
+
+      /* Widescreen workbench: the live preview is pinned on the left; Draw or Animate fills the rest. */
+      body { min-width: 1180px; }
+      .bench { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 20px; max-width: 1640px; margin: 16px auto 0; align-items: start; }
+      .stagecol { position: sticky; top: 12px; }
+      .drawgrid { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); gap: 20px; align-items: start; }
+      .modes { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; padding: 3px; gap: 3px; background: var(--panel); }
+      .mode { background: none; border: 0; border-radius: 6px; padding: 6px 18px; cursor: pointer; color: var(--muted); font: 700 14px var(--font-display); letter-spacing: 0.03em; }
+      .mode.on { background: var(--accent); color: #241a05; }
+      .tl-banner { margin: 0; font-size: 13px; padding: 7px 10px; border-radius: 6px; }
+      .tl-banner.draft { background: #1b2a3a; color: #9fc4ff; }
+      .tl-banner.own { background: #1c3324; color: #8fe0a0; }
+      .col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+      .card h2 { font: 700 15px var(--font-display); letter-spacing: 0.03em; margin: 0; }
+      .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+      .head .hint { margin-left: auto; }
+      #board-hint { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; } /* one line, so the board never jumps */
+      .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+      .label { font: 11px var(--font-data); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-right: 4px; }
+      .hint { color: var(--muted); font-size: 12.5px; margin: 0; max-width: 62ch; }
+
+      /* Drawing board */
+      .tools { display: flex; flex-wrap: wrap; gap: 4px; }
+      .tool { width: 40px; height: 36px; padding: 0; display: grid; place-items: center; }
+      .tool svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: square; }
+      #board { display: block; width: 100%; max-width: 560px; height: auto; image-rendering: pixelated; border: 1px solid var(--line); border-radius: 6px; touch-action: none; cursor: crosshair; background: #0e0b17; }
+      .swatches { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+      .sw { width: 24px; height: 24px; border-radius: 4px; border: 2px solid transparent; outline: 1px solid var(--line); cursor: pointer; padding: 0; }
+      .sw.sel { border-color: var(--fg); outline-color: var(--accent); }
+      .swatches .label { width: 100%; }
+      #color { width: 44px; height: 32px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); padding: 2px; }
+      .check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; }
+      .check input { accent-color: var(--accent); }
+
+      /* Preview */
+      #stage { width: 100%; max-width: 372px; aspect-ratio: 1; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #0e0b17; touch-action: none; }
+      #stage canvas { display: block; image-rendering: pixelated; }
+
+      .parts { display: flex; flex-wrap: wrap; gap: 6px; }
+      .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; font: 13px var(--font-data); }
+      .chip i { width: 10px; height: 10px; border-radius: 2px; border: 1px solid #1a1020; display: inline-block; }
+      .chip.sel { border-color: var(--accent); color: var(--accent); }
+
+      .field { display: grid; grid-template-columns: 92px minmax(0, 1fr) 64px; gap: 8px; align-items: center; }
+      .field label { font-size: 13px; color: var(--muted); }
+      .field input[type=range] { width: 100%; accent-color: var(--accent); }
+      .field input[type=number], .field input[type=text] { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 4px 6px; font: 13px var(--font-data); font-variant-numeric: tabular-nums; }
+      .field input[type=color] { width: 100%; height: 30px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); padding: 2px; }
+      .field.wide { grid-template-columns: 92px minmax(0, 1fr); }
+      .sub { font: 11px var(--font-data); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+      .note { font-size: 12px; color: var(--warn); margin: 0; }
+      /* Timeline */
+      .timeline { min-width: 0; }
+      .tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+      .tab { background: none; border: 1px solid transparent; border-radius: 6px; padding: 5px 10px; cursor: pointer; color: var(--muted); }
+      .tab.has { color: var(--fg); }
+      .tab.has::after { content: ' \25CF'; color: var(--good); font-size: 10px; }
+      .tab.on { border-color: var(--accent); color: var(--accent); }
+      .tl-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-block: 8px; }
+      .tl-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+      .tl-controls .tool { width: 44px; font: 12px var(--font-data); }
+      .tl-time { font: 12px var(--font-data); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 96px; }
+      .tl-len { font-size: 13px; color: var(--muted); margin-left: auto; display: inline-flex; gap: 6px; align-items: center; }
+      .tl-len input, .tl-keyinfo input, .tl-keyinfo select { width: 74px; background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 3px 6px; font: 12px var(--font-data); }
+      .tl-keyinfo select { width: auto; }
+      .tl-grid { display: grid; grid-template-columns: minmax(150px, 230px) minmax(0, 1fr); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--bg); }
+      .tl-left { border-right: 1px solid var(--line); min-width: 0; }
+      .tl-right { position: relative; min-width: 0; }
+      .tl-row { height: 28px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #221c33; padding-inline: 6px; }
+      .tl-right .tl-row { padding-inline: 10px; }
+      .tl-row.layer { background: #191428; }
+      .tl-row.layer.sel { background: #2a2140; }
+      .tl-left .tl-row.prop { padding-left: 22px; font-size: 12px; }
+      .caret { background: none; border: 0; color: var(--muted); cursor: pointer; width: 14px; padding: 0; }
+      .lname { background: none; border: 0; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; font: 13px var(--font-data); padding: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .lname i { width: 10px; height: 10px; border-radius: 2px; border: 1px solid #1a1020; flex: none; }
+      .tl-row.layer.sel .lname { color: var(--accent); }
+      .keybtn { background: none; border: 0; cursor: pointer; color: #4a4066; font-size: 11px; padding: 0 2px; }
+      .keybtn.on { color: var(--accent); }
+      .scrub { cursor: ew-resize; color: var(--muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none; touch-action: none; }
+      .scrub:hover { color: #4fd8e8; }
+      .val { width: 56px; background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 2px 4px; font: 12px var(--font-data); color: #4fd8e8; font-variant-numeric: tabular-nums; }
+      .val:hover, .val:focus { border-color: var(--line); background: var(--panel); }
+      .tl-lane { position: relative; width: 100%; height: 100%; }
+      .tl-ruler { cursor: col-resize; background: #191428; touch-action: none; }
+      .tick { position: absolute; bottom: 0; width: 1px; height: 6px; background: #4a4066; }
+      .tick.major { height: 10px; background: #6f6890; }
+      .tick span { position: absolute; bottom: 11px; left: 3px; font: 10px var(--font-data); color: var(--muted); white-space: nowrap; }
+      .tick span.end { left: auto; right: 3px; }
+      .ruler-left { background: #191428; }
+      .tl-key { position: absolute; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; background: #c8ccd6; border: 1px solid #1a1020; transform: rotate(45deg); cursor: grab; touch-action: none; }
+      .tl-key.linear { background: #9fc4ff; }
+      .tl-key.hold { background: #e0773f; }
+      .tl-key.on { background: var(--accent); outline: 2px solid var(--fg); }
+      .tl-key.sum { width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; background: #6f6890; cursor: default; }
+      .tl-playhead-wrap { position: absolute; inset: 0 10px; pointer-events: none; }
+      .tl-playhead { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #d65b5b; }
+      .tl-playhead::before { content: ''; position: absolute; top: 0; left: -5px; border: 6px solid transparent; border-top-color: #d65b5b; }
+      .boardwrap { max-width: 100%; max-height: 640px; overflow: auto; border-radius: 6px; touch-action: none; }
+      .lineup { width: 100%; image-rendering: pixelated; border-radius: 6px; }
+      .swapto { width: 22px; height: 22px; border-radius: 4px; outline: 1px solid var(--line); display: inline-block; }
+      .tl-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
+      .tl-tools select { padding: 6px 8px; }
+      .tl-sep { width: 1px; height: 24px; background: var(--line); margin-inline: 4px; }
+      .tl-hit { position: absolute; top: 0; transform: translateX(-50%); background: #d65b5b; color: #fff; font: 700 9px var(--font-data); letter-spacing: 0.05em; padding: 1px 4px; border-radius: 3px; cursor: ew-resize; z-index: 2; touch-action: none; }
+      .tl-key.back { background: #c8a0ff; }
+      .tl-key.bounce { background: #57c26a; }
+      .tl-keyinfo { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 13px; }
+      .tl-keyinfo label { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
+      kbd { font: 11px var(--font-data); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <h1>Soldia <span>Character Studio</span></h1>
+      <select id="pick" aria-label="Character"></select>
+      <div class="modes" role="tablist" aria-label="Mode">
+        <button class="mode on" data-mode="draw" role="tab">Draw</button>
+        <button class="mode" data-mode="anim" role="tab">Animate</button>
+        <button class="mode" data-mode="lineup" role="tab">Line-up</button>
+      </div>
+      <span id="status" class="status">Game version</span>
+      <button id="save" class="btn primary" disabled>Save design</button>
+    </header>
+
+    <main class="bench">
+      <aside class="col stagecol">
+        <div class="card">
+          <div class="head"><h2>Live preview</h2><span class="hint">moves exactly like the game</span></div>
+          <div id="stage"></div>
+          <div class="row" id="play-row">
+            <span class="label">Play</span>
+            <button class="btn on" data-anim="idle">Idle</button>
+            <button class="btn" data-anim="swing">Swing</button>
+            <button class="btn" data-anim="walk">Walk</button>
+            <button class="btn" data-anim="skill">Skill</button>
+            <button class="btn" data-anim="hurt">Hurt</button>
+            <button class="btn" data-anim="death">Death</button>
+            <button class="btn" data-anim="stunned">Stunned</button>
+            <button class="btn" data-anim="victory">Victory</button>
+            <button class="btn" data-anim="flash">Hit flash</button>
+            <button class="btn" data-anim="arena" title="A little fight at game size: walk, hits, skill, hurt and death">Arena</button>
+          </div>
+          <div class="row">
+            <span class="label">Zoom</span>
+            <button class="btn" data-zoom="3">3x (game size)</button>
+            <button class="btn" data-zoom="6">6x</button>
+            <button class="btn on" data-zoom="9">9x</button>
+            <button id="mirror" class="btn">Mirror</button>
+          </div>
+          <div class="row">
+            <span class="label">Speed</span>
+            <button class="btn on" data-speed="1">1×</button>
+            <button class="btn" data-speed="0.5">½×</button>
+            <button class="btn" data-speed="0.25">¼×</button>
+          </div>
+        </div>
+        <p class="hint" id="stage-hint">Tap a part in the preview to pick it.</p>
+      </aside>
+
+      <div id="mode-draw" class="drawgrid">
+        <section class="col">
+        <div class="card">
+          <div class="head"><h2>Drawing board</h2><p class="hint" id="board-hint">Pick a part, then draw.</p></div>
+          <div class="tools" role="toolbar" aria-label="Drawing tools">
+            <button class="btn tool on" data-tool="pencil" title="Pencil (B)" aria-label="Pencil"><svg viewBox="0 0 18 18"><path d="M3 15l2-5 8-8 3 3-8 8z"/></svg></button>
+            <button class="btn tool" data-tool="eraser" title="Eraser (E)" aria-label="Eraser"><svg viewBox="0 0 18 18"><path d="M2 12l7-7 6 6-4 4H6z M9 15h7"/></svg></button>
+            <button class="btn tool" data-tool="line" title="Line (L)" aria-label="Line"><svg viewBox="0 0 18 18"><path d="M3 15L15 3"/></svg></button>
+            <button class="btn tool" data-tool="rect" title="Rectangle (R)" aria-label="Rectangle"><svg viewBox="0 0 18 18"><path d="M3 4h12v10H3z"/></svg></button>
+            <button class="btn tool" data-tool="fill" title="Fill bucket (G)" aria-label="Fill bucket"><svg viewBox="0 0 18 18"><path d="M8 2l7 7-6 6-7-7z M16 12v4"/></svg></button>
+            <button class="btn tool" data-tool="picker" title="Pick a colour (I)" aria-label="Pick a colour"><svg viewBox="0 0 18 18"><path d="M3 15l7-7 M10 5l3-3 3 3-3 3z"/></svg></button>
+            <button class="btn tool" data-tool="anchor" title="Anchor: the turning point (A)" aria-label="Anchor"><svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="3"/><path d="M9 1v4 M9 13v4 M1 9h4 M13 9h4"/></svg></button>
+            <button class="btn tool" data-tool="move" title="Move / pick a part (M)" aria-label="Move"><svg viewBox="0 0 18 18"><path d="M9 1v16 M1 9h16 M6 4l3-3 3 3 M6 14l3 3 3-3 M4 6L1 9l3 3 M14 6l3 3-3 3"/></svg></button>
+            <button class="btn tool" data-tool="select" title="Select pixels and move them (V)" aria-label="Select"><svg viewBox="0 0 18 18"><path d="M2 2h14v14H2z" stroke-dasharray="3 2"/></svg></button>
+            <span style="width:8px"></span>
+            <button id="mirror-draw" class="btn tool" title="Mirror drawing: draw one side, the other side copies it (S)" aria-label="Mirror drawing" aria-pressed="false"><svg viewBox="0 0 18 18"><path d="M9 1v16" stroke-dasharray="2 2"/><path d="M7 4L2 13h5z M11 4l5 9h-5z"/></svg></button>
+            <span style="width:8px"></span>
+            <button id="undo" class="btn tool" title="Undo (Ctrl+Z)" aria-label="Undo" disabled><svg viewBox="0 0 18 18"><path d="M6 3L2 7l4 4 M2 7h9a4 4 0 010 8H8"/></svg></button>
+            <button id="redo" class="btn tool" title="Redo (Ctrl+Y)" aria-label="Redo" disabled><svg viewBox="0 0 18 18"><path d="M12 3l4 4-4 4 M16 7H7a4 4 0 000 8h3"/></svg></button>
+          </div>
+          <div class="boardwrap"><canvas id="board" width="480" height="528"></canvas></div>
+          <div class="row">
+            <span class="label">Board</span>
+            <button id="board-out" class="btn" aria-label="Zoom out">−</button>
+            <button id="board-fit" class="btn" title="Back to fit">100%</button>
+            <button id="board-in" class="btn" aria-label="Zoom in">+</button>
+            <label class="check"><input type="checkbox" id="sel-copy" /> Copy when moving a selection</label>
+            <button id="sel-clear" class="btn">Clear selection</button>
+          </div>
+          <div class="swatches" id="swatches"></div>
+          <div class="row">
+            <input type="color" id="color" value="#3b6fd4" aria-label="Colour" />
+            <label class="check"><input type="checkbox" id="filled" /> Filled rectangle</label>
+            <label class="check"><input type="checkbox" id="dim" checked /> Dim other parts</label>
+            <label class="btn" for="trace-file" title="Put a picture behind the grid to trace over">Tracing image…</label>
+            <input type="file" id="trace-file" accept="image/*" hidden />
+            <span id="trace-controls" class="row" hidden>
+              <input type="range" id="trace-alpha" min="0.05" max="0.8" step="0.05" value="0.3" aria-label="Tracing image strength" />
+              <button id="trace-off" class="btn">Remove</button>
+            </span>
+          </div>
+          <p class="hint">Each square is one pixel. Drawing outside the part makes it bigger; erasing its edges shrinks it. The <b>anchor</b> (crosshair) is the point the part turns around: put a sword's anchor on its handle. Keys: <kbd>B</kbd> pencil, <kbd>E</kbd> eraser, <kbd>L</kbd> line, <kbd>R</kbd> rectangle, <kbd>G</kbd> fill, <kbd>I</kbd> pick colour, <kbd>A</kbd> anchor, <kbd>M</kbd> move, <kbd>V</kbd> select (then <kbd>Delete</kbd> / <kbd>Esc</kbd>), <kbd>S</kbd> mirror drawing (the dashed blue middle line). On iPad: <b>two-finger tap</b> = undo, <b>three-finger tap</b> = redo, <b>touch and hold</b> with a finger = pick that colour.</p>
+        </div>
+        </section>
+        <section class="col">
+        <div class="card">
+          <h2>Parts</h2>
+          <div id="parts" class="parts"></div>
+          <div class="row">
+            <button id="add" class="btn">+ New part</button>
+            <button id="dupe" class="btn">Copy part</button>
+            <button id="up" class="btn" title="Draw earlier (behind)">Send back</button>
+            <button id="down" class="btn" title="Draw later (in front)">Bring forward</button>
+            <button id="remove" class="btn danger">Delete part</button>
+          </div>
+          <p class="hint">Parts drawn later sit in front. A part named <b>weapon</b> is the one that swings and glows; the side it is on is the way the character looks.</p>
+        </div>
+
+        <div class="card" id="editor"></div>
+
+        <div class="card">
+          <h2>Whole character</h2>
+          <div id="whole"></div>
+          <div class="row">
+            <button id="revert" class="btn">Undo unsaved changes</button>
+            <button id="reset" class="btn danger">Back to game version</button>
+          </div>
+          <p id="dbnote" class="note" hidden></p>
+        </div>
+        </section>
+      </div>
+
+      <div id="mode-lineup" class="col" hidden>
+        <section class="card">
+          <div class="head"><h2>Line-up</h2><span class="hint">every character at game size on the dungeon floor, with your unsaved changes (standing pose)</span></div>
+          <canvas id="lineup" class="lineup"></canvas>
+        </section>
+      </div>
+
+      <div id="mode-anim" class="col" hidden>
+        <section class="card timeline" id="timeline" aria-label="Timeline"></section>
+      </div>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <script type="module" src="/src/studio/main.js"></script>
+  </body>
+</html>

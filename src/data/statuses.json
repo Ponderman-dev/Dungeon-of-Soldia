@@ -1,5 +1,5 @@
 {
-  "_about": "Status tags and rules. dot: damage over time, every application adds a STACK (no limit, each stack has its own timer, all stacks of one kind tick together every tickMs). control: bosses take it for half as long (statusDurationScale). Numbers here are defaults a skill/item spec can override. stacking: like dot it stacks (each stack own timer) but deals no damage (chill). instant: no lasting status (knockback). Stat debuffs (weaken, armorBreak, curse, blind, mark) refresh per source; different sources add up. shield: absorbs damage (amount / percentMaxHp / attackMultiplier), lasts durationMs or until broken, optional onBreak {damageMultiplier, damageType}; invulnerable: takes no damage at all, optional healPercentOnEnd.",
+  "_about": "Status tags and rules. dot: damage over time, every application adds a STACK (no limit, each stack has its own timer, all stacks of one kind tick together every tickMs). control: bosses take it for half as long (statusDurationScale). Numbers here are defaults a skill/item spec can override. stacking: like dot it stacks (each stack own timer) but deals no damage (chill). instant: no lasting status (knockback). Stat debuffs (weaken, armorBreak, curse, blind, mark) refresh per source; different sources add up. shield: absorbs damage (amount / percentMaxHp / attackMultiplier), lasts durationMs or until broken, optional onBreak {damageMultiplier, damageType}; invulnerable: takes no damage at all, optional healPercentOnEnd. debuff: true marks harmful statuses (Rally Cry's cleanse removes one kind of them).",
   "bleed": {
     "label": "BLEED",
     "color": "#c0303a",
@@ -7,7 +7,8 @@
     "dot": true,
     "tickMs": 1000,
     "damageType": "melee",
-    "ignoresArmor": true
+    "ignoresArmor": true,
+    "debuff": true
   },
   "burn": {
     "label": "BURN",
@@ -15,7 +16,8 @@
     "textColor": "#000000",
     "dot": true,
     "tickMs": 500,
-    "damageType": "fire"
+    "damageType": "fire",
+    "debuff": true
   },
   "poison": {
     "label": "PSN",
@@ -23,7 +25,8 @@
     "textColor": "#000000",
     "dot": true,
     "tickMs": 1000,
-    "damageType": "dark"
+    "damageType": "dark",
+    "debuff": true
   },
   "chill": {
     "label": "CHILL",
@@ -33,13 +36,15 @@
     "control": true,
     "slowPerStackPercent": 10,
     "freezeAt": 5,
-    "freezeMs": 1500
+    "freezeMs": 1500,
+    "debuff": true
   },
   "freeze": {
     "label": "FREEZE",
     "color": "#9fe8ff",
     "textColor": "#000000",
-    "control": true
+    "control": true,
+    "debuff": true
   },
   "shock": {
     "label": "SHOCK",
@@ -48,19 +53,22 @@
     "control": true,
     "attackSpeedPercent": -20,
     "fumbleChance": 10,
-    "fumbleStunMs": 300
+    "fumbleStunMs": 300,
+    "debuff": true
   },
   "stun": {
     "label": "STUN",
     "color": "#d9a400",
     "textColor": "#000000",
-    "control": true
+    "control": true,
+    "debuff": true
   },
   "fear": {
     "label": "FEAR",
     "color": "#6a3fa0",
     "textColor": "#ffffff",
-    "control": true
+    "control": true,
+    "debuff": true
   },
   "knockback": {
     "label": "KNOCKBACK",
@@ -73,7 +81,8 @@
     "label": "TAUNT",
     "color": "#e05a2a",
     "textColor": "#ffffff",
-    "control": true
+    "control": true,
+    "debuff": true
   },
   "shield": {
     "label": "SHIELD",
@@ -90,37 +99,43 @@
     "label": "SILENCE",
     "color": "#8a86a0",
     "textColor": "#ffffff",
-    "control": true
+    "control": true,
+    "debuff": true
   },
   "weaken": {
     "label": "WEAK",
     "color": "#9a6b3a",
     "textColor": "#ffffff",
-    "attackPercent": -20
+    "attackPercent": -20,
+    "debuff": true
   },
   "armorBreak": {
     "label": "ARMOR-",
     "color": "#b0b0b0",
     "textColor": "#000000",
-    "defenseFlat": -15
+    "defenseFlat": -15,
+    "debuff": true
   },
   "curse": {
     "label": "CURSE",
     "color": "#5a2a7a",
     "textColor": "#ffffff",
-    "resistFlat": -15
+    "resistFlat": -15,
+    "debuff": true
   },
   "blind": {
     "label": "BLIND",
     "color": "#333333",
     "textColor": "#ffffff",
-    "missPercent": 25
+    "missPercent": 25,
+    "debuff": true
   },
   "mark": {
     "label": "MARK",
     "color": "#ff3d6e",
     "textColor": "#ffffff",
-    "damageTakenPercent": 15
+    "damageTakenPercent": 15,
+    "debuff": true
   },
   "buff": {
     "label": "BUFF",

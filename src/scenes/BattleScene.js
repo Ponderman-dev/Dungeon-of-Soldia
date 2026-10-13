@@ -687,7 +687,7 @@ export default class BattleScene extends Phaser.Scene {
       const caster = this.views.get(e.unit.uid);
       this.skillBurst(caster, e);
       caster.ch.castRelease(e.skill.kind); // the skill's own animation (not the normal swing)
-      if (e.skill.target !== 'self' && e.targets[0]) {
+      if ((e.skill.target === 'enemy' || e.skill.target === 'allEnemies') && e.targets[0]) {
         const t = this.views.get(e.targets[0].uid);
         caster.ch.lunge(t.ch.x, t.ch.y);
       }
@@ -911,7 +911,7 @@ export default class BattleScene extends Phaser.Scene {
     const colorText = attack ? FX.attackColor : FX.supportColor;
     const color = Phaser.Display.Color.HexStringToColor(colorText).color;
     caster.ch.flash(color, FX.flashMs);
-    const spots = attack ? e.targets.map((t) => this.views.get(t.uid)).filter(Boolean) : [caster];
+    const spots = attack || e.skill.target === 'squad' ? e.targets.map((t) => this.views.get(t.uid)).filter(Boolean) : [caster];
     for (const v of spots) {
       const c = this.center(v);
       const ring = this.add.circle(c.x, c.y, 10).setStrokeStyle(4, color).setDepth(DEPTH.popup - 1);

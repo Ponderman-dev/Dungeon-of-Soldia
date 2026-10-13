@@ -11,7 +11,7 @@ const problems = validateHeroSkills(heroDefs, skillDefs);
 ok('every hero has a valid attack + support skill', problems.length === 0, problems.join('; '));
 ok('every skill has a kind', Object.values(skillDefs).every((s) => s.kind === 'attack' || s.kind === 'support'));
 
-const s = new BattleState({ heroDefs: noPerks(heroDefs), enemyDefs: r('enemies.json'), itemDefs: {}, skillDefs, rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+const s = new BattleState({ heroDefs, enemyDefs: r('enemies.json'), itemDefs: {}, skillDefs, rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
 ok('slot order is attack, support', SKILL_SLOTS.join() === 'attack,support');
 ok('each hero gets 2 slots in that order', s.heroes.every((h) => h.skills.length === 2 && h.skills[0].kind === 'attack' && h.skills[1].kind === 'support'));
 ok('slot ids come from heroes.json', s.heroes.every((h, i) => h.skills[0].id === heroDefs[i].skills.attack && h.skills[1].id === heroDefs[i].skills.support));

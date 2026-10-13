@@ -709,6 +709,20 @@ export default class BattleState {
     return [...this.heroes.filter((h) => h.alive), ...this.minions.filter((m) => m.alive)];
   }
 
+  // Removes `count` debuffs from a unit: each one is a whole KIND (all stacks of poison, say), the oldest
+  // first. Which statuses are debuffs: statuses.json `debuff: true`.
+  cleanse(unit, count, events) {
+    for (let i = 0; i < count; i++) {
+      const bad = unit.statuses.find((st) => this.statusDefs[st.type] && this.statusDefs[st.type].debuff);
+      if (!bad) return;
+      const gone = unit.statuses.filter((st) => st.type === bad.type);
+      unit.statuses = unit.statuses.filter((st) => st.type !== bad.type);
+      if (this.statusDefs[bad.type].dot) delete unit.dotClocks[bad.type];
+      for (const st of gone) events.push({ type: 'status', unit, change: 'expire', status: st });
+      events.push({ type: 'proc', unit, label: 'Cleansed!' });
+    }
+  }
+
   // The living hero with the lowest health % that is actually hurt, or null.
   lowestHealthAlly() {
     let best = null;
@@ -1061,7 +1075,7 @@ export default class BattleState {
     if (!slot || !hero.alive || hero.casting || this.isStunned(hero) || this.has(hero, 'silence')) return false;
     const skill = this.skillDefs[slot.id];
     if (slot.cooldownLeft > 0) return false;
-    if (skill.target === 'self') return true;
+    if (skill.target === 'self' || skill.target === 'squad') return true;
     return this.enemies.some((e) => e.alive);
   }
 
@@ -1114,13 +1128,14 @@ export default class BattleState {
   releaseSkill(hero, index, events) {
     const slot = hero.skills[index];
     const skill = this.skillDefs[slot.id];
-    if (skill.target !== 'self' && !this.enemies.some((e) => e.alive)) {
+    if (skill.target !== 'self' && skill.target !== 'squad' && !this.enemies.some((e) => e.alive)) {
       events.push({ type: 'castCancel', unit: hero, skill, reason: 'noTarget' });
       return;
     }
 
     let targets;
     if (skill.target === 'self') targets = [hero];
+    else if (skill.target === 'squad') targets = this.squadUnits(); // every living hero and minion
     else if (skill.target === 'allEnemies') targets = this.enemies.filter((e) => e.alive);
     else targets = [this.pickTarget(hero)];
     const splash = (hero.specials && hero.specials.skillSplash) || 0; // Siege Cannon: % chance to hit the neighbours too
@@ -1133,6 +1148,8 @@ export default class BattleState {
     }
 
     events.push({ type: 'cast', unit: hero, skill, targets });
+    // `cleanse: N`: every target loses N debuffs (a whole kind each, the oldest first).
+    if (skill.cleanse) for (const t of targets) this.cleanse(t, skill.cleanse, events);
 
     for (const target of targets) {
       if (skill.damageMultiplier) {
@@ -1188,7 +1205,8 @@ export default class BattleState {
       hero.stats = stats;
       hero.damageBonus = damageBonus;
       hero.specials = specials;
-      hero.procs = procs;
+      // The hero's own passive can have procs too (Knight's Taunt Wall); they roll like item procs.
+      hero.procs = [...procs, ...(((hero.def.passive && hero.def.passive.procs) || []).map((p) => ({ ...p, itemId: `passive_${hero.def.id}` })))];
       hero.maxHp = stats.health;
       hero.hp = Math.max(1, hpDelta > 0 ? hero.hp + hpDelta : Math.min(hero.hp, hero.maxHp));
     }

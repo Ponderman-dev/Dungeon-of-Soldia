@@ -61,8 +61,8 @@
       "resist": 0.3
     },
     "skills": {
-      "attack": "shield_bash",
-      "support": "guard"
+      "attack": "ground_pound",
+      "support": "rally_cry"
     },
     "perk": {
       "name": "Stalwart",
@@ -71,6 +71,36 @@
           "stat": "health",
           "percent": 10,
           "growth": 0.4
+        }
+      ]
+    },
+    "passive": {
+      "name": "Taunt Wall",
+      "description": "10% chance on each attack to taunt the enemy he hit for 3s (it must attack the Knight) and give himself +20 defense for 3s.",
+      "procs": [
+        {
+          "proc": "onAttack",
+          "chance": 10,
+          "label": "Taunt Wall!",
+          "targets": "self",
+          "apply": [
+            {
+              "status": "taunt",
+              "durationMs": 3000,
+              "to": "target"
+            },
+            {
+              "status": "buff",
+              "durationMs": 3000,
+              "mods": [
+                {
+                  "stat": "defense",
+                  "flat": 20
+                }
+              ],
+              "to": "self"
+            }
+          ]
         }
       ]
     }

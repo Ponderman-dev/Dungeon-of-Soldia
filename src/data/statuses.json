@@ -1,5 +1,5 @@
 {
-  "_about": "Status tags and rules. dot: damage over time, every application adds a STACK (no limit, each stack has its own timer, all stacks of one kind tick together every tickMs). control: bosses take it for half as long (statusDurationScale). Numbers here are defaults a skill/item spec can override. stacking: like dot it stacks (each stack own timer) but deals no damage (chill). instant: no lasting status (knockback). Stat debuffs (weaken, armorBreak, curse, blind, mark) refresh per source; different sources add up.",
+  "_about": "Status tags and rules. dot: damage over time, every application adds a STACK (no limit, each stack has its own timer, all stacks of one kind tick together every tickMs). control: bosses take it for half as long (statusDurationScale). Numbers here are defaults a skill/item spec can override. stacking: like dot it stacks (each stack own timer) but deals no damage (chill). instant: no lasting status (knockback). Stat debuffs (weaken, armorBreak, curse, blind, mark) refresh per source; different sources add up. shield: absorbs damage (amount / percentMaxHp / attackMultiplier), lasts durationMs or until broken, optional onBreak {damageMultiplier, damageType}; invulnerable: takes no damage at all, optional healPercentOnEnd.",
   "bleed": {
     "label": "BLEED",
     "color": "#c0303a",
@@ -74,6 +74,17 @@
     "color": "#e05a2a",
     "textColor": "#ffffff",
     "control": true
+  },
+  "shield": {
+    "label": "SHIELD",
+    "color": "#5fb8ff",
+    "textColor": "#000000",
+    "popup": false
+  },
+  "invulnerable": {
+    "label": "INVULNERABLE",
+    "color": "#ffe08a",
+    "textColor": "#000000"
   },
   "silence": {
     "label": "SILENCE",

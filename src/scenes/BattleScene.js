@@ -115,7 +115,7 @@ export default class BattleScene extends Phaser.Scene {
     // fighter, like the heroes' bars, so a character never covers a bar.
     for (const v of this.views.values()) {
       if (v.unit.side !== 'enemy') continue;
-      for (const part of [v.bg, v.fill, v.chipBox]) {
+      for (const part of [v.bg, v.fill, v.shieldFill, v.chipBox]) {
         const parent = part.parentContainer;
         if (!parent) continue;
         parent.remove(part);
@@ -261,7 +261,9 @@ export default class BattleScene extends Phaser.Scene {
     const fill = this.add
       .rectangle(x - BAR_WIDTH / 2, barY, BAR_WIDTH, 5, unit.side === 'hero' ? 0x4cd16a : 0xe04b4b)
       .setOrigin(0, 0.5);
-    const view = { unit, ch, bg, fill, groundY };
+    // A thin light-blue bar above the health bar: how much shield is left (full width = max health).
+    const shieldFill = this.add.rectangle(x - BAR_WIDTH / 2, barY - 5, 0, 3, 0x6fd0ff).setOrigin(0, 0.5).setStrokeStyle(1, 0x103050);
+    const view = { unit, ch, bg, fill, groundY, shieldFill };
     // Status tags (STUN, SLOW, PSN, BUFF) next to the bars.
     view.chipBox = this.add.container(x, barY + (unit.side === 'hero' ? 20 : -22));
     if (unit.side === 'hero') {
@@ -278,7 +280,7 @@ export default class BattleScene extends Phaser.Scene {
       ch.setInteractive(new Phaser.Geom.Rectangle(-16, -h - 2, 32, h + 4), Phaser.Geom.Rectangle.Contains);
       ch.on('pointerdown', () => this.state.setFocus(unit.uid));
     }
-    if (parent) parent.add([ch, bg, fill, view.chipBox]);
+    if (parent) parent.add([ch, bg, fill, shieldFill, view.chipBox]);
     return view;
   }
 
@@ -339,6 +341,7 @@ export default class BattleScene extends Phaser.Scene {
     const y = baseY - view.unit.def.height * Math.abs(view.ch.scaleY) - 10;
     view.bg.setPosition(view.ch.x, y).setAlpha(view.ch.alpha);
     view.fill.setPosition(view.ch.x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
+    view.shieldFill.setPosition(view.ch.x - BAR_WIDTH / 2, y - 5).setAlpha(view.ch.alpha);
     if (view.dots) view.dots.setPosition(view.ch.x, y - 12).setAlpha(view.ch.alpha);
     view.chipBox.setPosition(view.ch.x, y + (view.unit.side === 'hero' ? 20 : -22)).setAlpha(view.ch.alpha);
   }
@@ -347,6 +350,7 @@ export default class BattleScene extends Phaser.Scene {
   setBarsVisible(view, visible) {
     view.bg.setVisible(visible);
     view.fill.setVisible(visible);
+    view.shieldFill.setVisible(visible);
     if (view.dots) view.dots.setVisible(visible);
     view.chipBox.setVisible(visible);
   }
@@ -358,6 +362,7 @@ export default class BattleScene extends Phaser.Scene {
     // Stacking statuses (bleed, burn, poison, chill) show how many stacks there are: "PSN x3".
     const tags = kinds.map((kind) => {
       const n = this.state.stacks(view.unit, kind);
+      if (kind === 'shield') return { ...statusInfo.shield, label: `SHIELD ${Math.round(this.state.shieldAmount(view.unit))}` };
       return (statusInfo[kind].dot || statusInfo[kind].stacking) && n > 1 ? { ...statusInfo[kind], label: `${statusInfo[kind].label} x${n}` } : statusInfo[kind];
     });
     let x = 0;
@@ -583,12 +588,22 @@ export default class BattleScene extends Phaser.Scene {
       } else if (!a.ch.moveTween) {
         a.ch.lunge(t.ch.x, t.ch.y); // skills and item hits: a small jab (only from its own spot)
       }
+      if (e.result.invulnerable) {
+        this.popText(t, 'Immune!', '#ffe08a', true);
+        return;
+      }
       if (e.result.dodged) {
         if (e.result.blocked) this.popText(t, 'Blocked!', '#9fc4ff', true);
         else this.popText(t, 'Miss', '#aaaaaa');
         return;
       }
       this.setBar(t);
+      this.drawChips(t); // the shield tag shows what is left
+      if (e.result.absorbed > 0) {
+        this.popText(t, `Shield -${e.result.absorbed}`, '#6fd0ff');
+        if (e.result.fullyAbsorbed) return;
+        e.result = { ...e.result, amount: e.result.amount - e.result.absorbed };
+      }
       const { amount, crit, mult } = e.result;
       const mark = mult > 1 ? '!' : mult < 1 ? '…' : '';
       if (e.skill) {
@@ -625,6 +640,13 @@ export default class BattleScene extends Phaser.Scene {
         this.popText(v, statusInfo[e.status.type].label + '!', statusInfo[e.status.type].color);
       }
       if (e.status.type === 'buff') this.drawAllBars();
+      if (e.status.type === 'shield') this.setBar(v);
+    } else if (e.type === 'shieldBreak') {
+      const v = this.views.get(e.unit.uid);
+      this.drawChips(v);
+      this.setBar(v);
+      this.popText(v, 'Shield broken!', '#6fd0ff', true);
+      this.cameras.main.shake(90, 0.003);
     } else if (e.type === 'proc') {
       this.popText(this.views.get(e.unit.uid), e.label, '#ffd24d', true);
     } else if (e.type === 'heal') {
@@ -638,9 +660,17 @@ export default class BattleScene extends Phaser.Scene {
       this.popText(v, `${e.amount} thorns`, '#e8a0ff');
     } else if (e.type === 'dot') {
       const v = this.views.get(e.unit.uid);
-      v.ch.flash();
       this.setBar(v);
-      this.popText(v, String(e.amount), damageTypes[e.damageType].color);
+      this.drawChips(v);
+      if (e.immune) {
+        this.popText(v, 'Immune!', '#ffe08a');
+        return;
+      }
+      if (e.absorbed > 0) this.popText(v, `Shield -${e.absorbed}`, '#6fd0ff');
+      if (e.amount > 0) {
+        v.ch.flash();
+        this.popText(v, String(e.amount), damageTypes[e.damageType].color);
+      }
     } else if (e.type === 'morale') {
       this.drawMoraleWash();
       for (const h of this.state.heroes) this.setBar(this.views.get(h.uid));
@@ -782,6 +812,7 @@ export default class BattleScene extends Phaser.Scene {
 
   setBar(view) {
     view.fill.width = BAR_WIDTH * (view.unit.hp / view.unit.maxHp);
+    view.shieldFill.width = Math.min(BAR_WIDTH, BAR_WIDTH * (this.state.shieldAmount(view.unit) / view.unit.maxHp));
   }
 
   removeView(uid) {
@@ -790,6 +821,7 @@ export default class BattleScene extends Phaser.Scene {
     v.ch.destroy();
     v.bg.destroy();
     v.fill.destroy();
+    v.shieldFill.destroy();
     if (v.dots) v.dots.destroy();
     v.chipBox.destroy();
     this.views.delete(uid);

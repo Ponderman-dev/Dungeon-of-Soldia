@@ -17,6 +17,8 @@ export const SKILL_SLOTS = ['attack', 'support'];
 //         attackCancel (an attack in progress was stopped: the attacker got stunned, frozen, feared,
 //                       knocked back, or nothing is left to hit),
 //         attackRetarget (a ranged attack in progress lost its target, it now goes for { target, hitInMs })
+//         shieldBreak (a shield was used up by damage: { unit, status }; a shield that just runs out of time
+//                      is only a normal 'status' expire event)
 //         castStart (a hero starts winding up a skill: { unit, skill, index, castMs }; 'cast' comes when it goes off)
 //         castCancel (a wind-up was interrupted by stun / freeze / silence, or nothing is left to hit;
 //                     the skill is lost and stays on cooldown)
@@ -437,15 +439,29 @@ export default class BattleState {
   // projectile ('bomb', 'lightning': the scene draws it flying from the attacker).
   strike(attacker, target, events, opts = {}) {
     const result = computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, opts);
-    if (!result.dodged) target.hp = Math.max(0, target.hp - result.amount);
+    let dealt = null;
+    if (!result.dodged) {
+      dealt = this.dealDamage(target, result.amount);
+      if (dealt.immune) {
+        // Invulnerable: the hit does nothing at all (like a block: no lifesteal, thorns, debuffs).
+        result.dodged = true;
+        result.invulnerable = true;
+        result.amount = 0;
+      } else {
+        result.absorbed = dealt.absorbed; // taken by shields
+        if (dealt.lost === 0) result.fullyAbsorbed = true;
+      }
+    }
     if (opts.projectile) events.push({ type: 'projectile', from: opts.from || attacker, to: target, kind: opts.projectile });
     events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic });
+    if (dealt) this.breakEffects(target, dealt.broken, events);
     if (result.blocked) {
       // A successful block sends the holder's Shield Totems on cooldown.
       const spec = { status: 'blockCooldown', durationMs: target.specials.blockCooldownMs || 2500 };
       this.applyStatus(target, spec, target, 'totem', events);
     }
-    if (!result.dodged) this.afterHit(attacker, target, result.amount, events, result);
+    // Lifesteal, thorns and crit debuffs work on the damage that really got through (nothing if a shield took it all).
+    if (!result.dodged && !result.fullyAbsorbed) this.afterHit(attacker, target, result.amount - (result.absorbed || 0), events, result);
     if (target.hp <= 0 && target.alive) this.killUnit(target, events);
     return result;
   }
@@ -536,10 +552,56 @@ export default class BattleState {
     const thorns = (target.specials && target.specials.thorns) || 0;
     if (thorns > 0 && target.alive && target.hp > 0 && attacker.damageType === 'melee' && attacker.alive) {
       const back = Math.max(1, Math.round((amount * thorns) / 100));
-      attacker.hp = Math.max(0, attacker.hp - back);
-      events.push({ type: 'thorns', unit: attacker, amount: back });
-      if (attacker.hp <= 0) this.killUnit(attacker, events);
+      const d = this.dealDamage(attacker, back);
+      if (!d.immune) events.push({ type: 'thorns', unit: attacker, amount: back - d.absorbed });
+      this.breakEffects(attacker, d.broken, events);
+      if (attacker.hp <= 0 && attacker.alive) this.killUnit(attacker, events);
     }
+  }
+
+  // ---- shields and invulnerability ------------------------------------------------------------
+
+  // The ONE place health is taken away by a hit, a damage-over-time tick or thorns.
+  //  - Invulnerable: nothing happens (`immune`).
+  //  - Shields soak damage first, oldest first. A shield with nothing left is BROKEN (collected in
+  //    `broken`, callers pass it to breakEffects() once the hit has been reported).
+  // Returns { lost (health lost), absorbed (taken by shields), immune, broken }.
+  dealDamage(target, amount) {
+    if (this.has(target, 'invulnerable')) return { lost: 0, absorbed: 0, immune: true, broken: [] };
+    let left = amount;
+    let absorbed = 0;
+    const broken = [];
+    for (const shield of [...target.statuses]) {
+      if (shield.type !== 'shield' || left <= 0) continue;
+      const take = Math.min(shield.amount, left);
+      shield.amount -= take;
+      left -= take;
+      absorbed += take;
+      if (shield.amount <= 0) {
+        target.statuses.splice(target.statuses.indexOf(shield), 1);
+        broken.push(shield);
+      }
+    }
+    target.hp = Math.max(0, target.hp - left);
+    return { lost: left, absorbed, immune: false, broken };
+  }
+
+  // A shield was broken: tell the scene, and run its `onBreak` effect if it has one
+  // (Bone Ward: bone shards hit every enemy of the holder for damageMultiplier x the caster's attack).
+  breakEffects(unit, broken, events) {
+    for (const shield of broken) {
+      events.push({ type: 'shieldBreak', unit, status: shield });
+      if (!shield.onBreak) continue;
+      const caster = [...this.heroes, ...this.enemies].find((u) => u.uid === shield.sourceUid && u.alive) || unit;
+      const foes = (unit.side === 'hero' ? this.enemies : this.heroes).filter((u) => u.alive);
+      events.push({ type: 'proc', unit, label: 'Shards!' });
+      for (const foe of foes) this.strike(caster, foe, events, { multiplier: shield.onBreak.damageMultiplier, damageType: shield.onBreak.damageType });
+    }
+  }
+
+  // How much shield a unit has left (all its shields together).
+  shieldAmount(unit) {
+    return unit.statuses.reduce((sum, st) => (st.type === 'shield' ? sum + st.amount : sum), 0);
   }
 
   // ---- statuses (statuses.json) ----------------------------------------------------------
@@ -556,7 +618,8 @@ export default class BattleState {
   applyStatus(target, spec, source, skillId, events) {
     const info = this.statusDefs[spec.status] || {};
     const scale = info.control ? target.def.statusDurationScale ?? 1 : 1;
-    const duration = spec.durationMs * scale;
+    // A shield with no durationMs lasts until it is broken.
+    const duration = (spec.durationMs ?? (spec.status === 'shield' ? Infinity : 0)) * scale;
     const key = `${spec.status}:${skillId}`;
 
     if (info.instant) {
@@ -592,6 +655,15 @@ export default class BattleState {
       status.total = duration;
       if (spec.status === 'buff') status.mods = spec.mods;
       if (spec.status === 'taunt') status.sourceUid = source.uid;
+      if (spec.status === 'shield') {
+        // Size: a flat `amount`, plus `percentMaxHp` of the holder's health, plus `attackMultiplier` x the
+        // caster's attack. The same shield (same source + skill) is refilled instead of stacking.
+        status.amount = Math.max(1, Math.round((spec.amount || 0) + ((spec.percentMaxHp || 0) * target.maxHp) / 100 + (spec.attackMultiplier || 0) * source.stats.attack));
+        status.maxAmount = status.amount;
+        status.sourceUid = source.uid;
+        status.onBreak = spec.onBreak || null;
+      }
+      if (spec.status === 'invulnerable') status.healPercentOnEnd = spec.healPercentOnEnd || 0;
       // Stat debuffs: the number comes from the skill/item, or the default in statuses.json.
       for (const field of ['attackPercent', 'defenseFlat', 'resistFlat', 'missPercent', 'damageTakenPercent']) {
         if (spec[field] !== undefined || info[field] !== undefined) status[field] = spec[field] ?? info[field];
@@ -639,6 +711,14 @@ export default class BattleState {
         unit.statuses.splice(unit.statuses.indexOf(status), 1);
         if (status.type === 'buff') buffEnded = true;
         events.push({ type: 'status', unit, change: 'expire', status });
+        if (status.type === 'invulnerable' && status.healPercentOnEnd > 0) {
+          // Divine Shield: it heals when the invulnerability ends.
+          const heal = Math.min(unit.maxHp - unit.hp, Math.round((unit.maxHp * status.healPercentOnEnd) / 100));
+          if (heal > 0) {
+            unit.hp += heal;
+            events.push({ type: 'heal', unit, amount: heal });
+          }
+        }
       }
     }
     if (buffEnded) this.refreshStats();
@@ -660,9 +740,10 @@ export default class BattleState {
         const total = stacks.reduce((sum, s) => sum + s.damage, 0);
         const { damageType, ignoresArmor } = stacks[0];
         const amount = computeDotDamage(unit, total, damageType, this.rules, this.damageTypes, { ignoresArmor });
-        unit.hp = Math.max(0, unit.hp - amount);
-        events.push({ type: 'dot', unit, amount, damageType, status: type, stacks: stacks.length });
-        if (unit.hp <= 0) this.killUnit(unit, events);
+        const d = this.dealDamage(unit, amount);
+        events.push({ type: 'dot', unit, amount: d.immune ? 0 : amount - d.absorbed, absorbed: d.absorbed, immune: d.immune, damageType, status: type, stacks: stacks.length });
+        this.breakEffects(unit, d.broken, events);
+        if (unit.hp <= 0 && unit.alive) this.killUnit(unit, events);
       }
     }
   }

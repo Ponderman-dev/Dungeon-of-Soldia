@@ -9,6 +9,7 @@ import { loadItems } from '../../src/systems/items.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const rules = { ...r('combat.json'), skillWindUp: { defaultCastMs: 0 } };
+const bonus = () => r('minions.json').gargoyle.copyStatBonus;
 const itemDefs = loadItems({
   idol: { name: 'Gargoyle Idol', rarity: 'rare', type: 'special', scope: 'self', effects: [{ greaterMinion: 'gargoyle' }] },
   banner: { name: 'Banner', rarity: 'rare', type: 'special', scope: 'self', effects: [{ greaterMinion: 'gargoyle' }] },
@@ -33,7 +34,7 @@ const greaters = (s) => s.minions.filter((m) => m.greater);
 
 { const { s, k } = mk(); s.giveItem(k.uid, 'idol'); s.giveItem(k.uid, 'idol'); s.giveItem(k.uid, 'idol'); s.startFloor();
   ok('extra copies of the item make NO second minion', greaters(s).length === 1);
-  const g = greaters(s)[0]; const b = rules.minions.copyStatBonus;
+  const g = greaters(s)[0]; const b = r('minions.json').gargoyle.copyStatBonus;
   ok('...they only make it stronger (health and attack)', g.maxHp === Math.round(140 * (1 + b * 2)) && g.stats.attack === Math.round(7 * (1 + b * 2)), `${g.maxHp}`);
   const hp = g.hp; s.giveItem(k.uid, 'idol');
   ok('a copy picked up later grows the minion that is already there', g.maxHp === Math.round(140 * (1 + b * 3)) && g.hp > hp); }
@@ -75,16 +76,18 @@ const greaters = (s) => s.minions.filter((m) => m.greater);
 
 { const { s, k } = mk(); const a0 = k.stats.attackEfficiency;
   s.giveItem(k.uid, 'idol'); s.giveItem(k.uid, 'cage'); s.startFloor();
-  ok('two minion items with live minions = upkeep twice', Math.abs(k.stats.attackEfficiency - (a0 + 2 * rules.minions.upkeepAttackSpeedPercent)) < 0.001, `${k.stats.attackEfficiency}`);
+  ok('two minion items with live minions: greater costs full upkeep, a weak spawner item half', Math.abs(k.stats.attackEfficiency - (a0 + 1.5 * rules.minions.upkeepAttackSpeedPercent)) < 0.001, `${k.stats.attackEfficiency}`);
   s.endFloor();
   ok('after the floor only the greater minion is left: upkeep once', Math.abs(k.stats.attackEfficiency - (a0 + rules.minions.upkeepAttackSpeedPercent)) < 0.001); }
 
 { const { s, k } = mk(); const a0 = k.stats.attackEfficiency;
   s.giveItem(k.uid, 'cage'); s.giveItem(k.uid, 'cage'); s.startFloor();
-  ok('each copy of a weak spawner item is its own source (2 minions at the start)', s.minions.filter((m) => !m.greater).length === 2);
+  ok('two copies of a weak spawner item: ONE source that spawns 2 minions at a time (2 at the start)', k.minionSources.filter((x) => x.kind === 'weak').length === 1 && s.minions.filter((m) => !m.greater).length === 2);
   run(s, 1050);
-  ok('...each with its own timer and cap of 2 (so up to 4)', s.minions.length === 4);
-  ok('...and two copies pay upkeep twice', Math.abs(k.stats.attackEfficiency - (a0 + 2 * rules.minions.upkeepAttackSpeedPercent)) < 0.001); }
+  ok('...one shared timer and a shared cap of 4: after the next spawn 4', s.minions.length === 4);
+  run(s, 1050);
+  ok('...the cap holds (still 4, the oldest are pushed out)', s.minions.length === 4);
+  ok('...each copy of a weak spawner pays half an upkeep (2 copies = one full upkeep)', Math.abs(k.stats.attackEfficiency - (a0 + 1 * rules.minions.upkeepAttackSpeedPercent)) < 0.001, `${k.stats.attackEfficiency}`); }
 
 { const { s, h } = mk({ minion: 'skeleton', minMs: 1000, maxMs: 1000, cap: 4, atFloorStart: 1 }); const a0 = h[2].stats.attackEfficiency;
   s.startFloor();

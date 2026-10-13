@@ -1092,5 +1092,219 @@
     ],
     "dropWeight": 80,
     "needs": "beat"
+  },
+  "rat_cage": {
+    "name": "Rat Cage",
+    "rarity": "common",
+    "type": "minion",
+    "scope": "self",
+    "description": "Every 12s a Rat (weak minion) joins the fight. Each extra copy adds one more Rat to every spawn.",
+    "effects": [
+      {
+        "minionSpawner": {
+          "minion": "rat",
+          "minMs": 12000,
+          "maxMs": 12000
+        }
+      }
+    ],
+    "dropWeight": 80,
+    "provides": [
+      "minion"
+    ]
+  },
+  "wisp_lantern": {
+    "name": "Wisp Lantern",
+    "rarity": "rare",
+    "type": "minion",
+    "scope": "self",
+    "description": "Every 15s a flying Wisp (weak minion, ranged shock) joins the fight. Each extra copy adds one more Wisp to every spawn.",
+    "effects": [
+      {
+        "minionSpawner": {
+          "minion": "wisp",
+          "minMs": 15000,
+          "maxMs": 15000
+        }
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "minion"
+    ]
+  },
+  "fire_imp_brazier": {
+    "name": "Fire Imp Brazier",
+    "rarity": "epic",
+    "type": "minion",
+    "scope": "self",
+    "description": "Every 10s an Imp (weak minion, ranged fire, its hits Burn) joins the fight. Each extra copy adds one more Imp to every spawn.",
+    "effects": [
+      {
+        "minionSpawner": {
+          "minion": "imp",
+          "minMs": 10000,
+          "maxMs": 10000
+        }
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "minion",
+      "burn",
+      "fire"
+    ]
+  },
+  "mimic_chest": {
+    "name": "Mimic Chest",
+    "rarity": "rare",
+    "type": "minion",
+    "scope": "self",
+    "description": "10% chance when the holder is hit: a Mimic (weak minion) pops out and explodes when it dies. Extra copies make the Mimic stronger and its explosion bigger.",
+    "effects": [
+      {
+        "special": "mimic",
+        "percent": 10,
+        "unique": true
+      },
+      {
+        "special": "mimicCopies",
+        "percent": 1
+      },
+      {
+        "minionOnHit": {
+          "minion": "mimic"
+        }
+      }
+    ],
+    "dropWeight": 80,
+    "provides": [
+      "minion"
+    ]
+  },
+  "gargoyle_idol": {
+    "name": "Gargoyle Idol",
+    "rarity": "rare",
+    "type": "minion",
+    "scope": "self",
+    "description": "Greater minion: a slow, tanky Gargoyle whose hits TAUNT enemies. Extra copies make it 25% stronger each.",
+    "effects": [
+      {
+        "greaterMinion": "gargoyle"
+      }
+    ],
+    "dropWeight": 80,
+    "provides": [
+      "minion",
+      "taunt"
+    ]
+  },
+  "spirit_knight_banner": {
+    "name": "Spirit Knight Banner",
+    "rarity": "epic",
+    "type": "minion",
+    "scope": "self",
+    "description": "Greater minion: a Spirit Knight that grows +5% each floor it survives (up to +100%). Extra copies make it 25% stronger each.",
+    "effects": [
+      {
+        "greaterMinion": "spirit_knight"
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "minion"
+    ]
+  },
+  "phoenix_hatchling": {
+    "name": "Phoenix Hatchling",
+    "rarity": "legendary",
+    "type": "minion",
+    "scope": "self",
+    "description": "Greater minion: a flying fire Phoenix that heals the squad a little when it is hit. Extra copies make it and the heal 25% stronger each.",
+    "effects": [
+      {
+        "greaterMinion": "phoenix"
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "minion",
+      "fire",
+      "heal"
+    ]
+  },
+  "bone_charm": {
+    "name": "Bone Charm",
+    "rarity": "rare",
+    "type": "minion",
+    "scope": "self",
+    "description": "All minions (weak and greater, from anyone) get +20% health and attack.",
+    "effects": [
+      {
+        "special": "boneCharm",
+        "percent": 20
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "minion"
+  },
+  "overseers_whistle": {
+    "name": "Overseer's Whistle",
+    "rarity": "rare",
+    "type": "minion",
+    "scope": "self",
+    "description": "Weak minion cap +1 and weak minions attack 15% faster (up to +4 cap).",
+    "effects": [
+      {
+        "special": "whistleCap",
+        "percent": 1,
+        "cap": 4
+      },
+      {
+        "special": "whistleSpeed",
+        "percent": 15
+      }
+    ],
+    "dropWeight": 70,
+    "needs": "minion"
+  },
+  "grave_dust": {
+    "name": "Grave Dust",
+    "rarity": "rare",
+    "type": "minion",
+    "scope": "self",
+    "description": "Weak minions explode when they die. Damage adds up per copy.",
+    "effects": [
+      {
+        "special": "graveDust",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 70,
+    "needs": "minion"
+  },
+  "necro_crown": {
+    "name": "Necro Crown",
+    "rarity": "legendary",
+    "type": "minion",
+    "scope": "self",
+    "description": "Weak minion cap +2 (up to +6) and every enemy kill by anyone raises a skeleton.",
+    "effects": [
+      {
+        "special": "necroCrownCap",
+        "percent": 2,
+        "cap": 6
+      },
+      {
+        "special": "necroCrownKill",
+        "percent": 1,
+        "unique": true
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "minion",
+    "provides": [
+      "minion"
+    ]
   }
 }

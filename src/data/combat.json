@@ -31,11 +31,13 @@
     "retargetMinMs": 200
   },
   "minions": {
-    "_about": "Minion rules (D4b). upkeep: while a hero's MINION ITEMS have live minions the holder pays this per minion item (percent of the level stat, like item effects; hero passives like the Necromancer's skeletons cost nothing). revivalFloors: a dead greater minion comes back after this many floors are cleared. copyStatBonus: each extra copy of a greater-minion item adds this share of its health and attack (no second minion).",
+    "_about": "Minion rules (D4b). upkeep: while a hero's MINION ITEMS have live minions the holder pays this per minion item (percent of the level stat, like item effects; hero passives like the Necromancer's skeletons cost nothing). revivalFloors: a dead greater minion comes back after this many floors are cleared. copyStatBonus: each extra copy of a greater-minion item adds this share of its health and attack (no second minion). itemWeakCap: the shared cap of weak minions from a hero's items. upkeepWeakScale: weak spawner items cost this much of the full upkeep (greater = full). Boosters (Bone Charm, Overseer's Whistle, Grave Dust, Necro Crown) cost nothing and reach every minion.",
     "upkeepAttackSpeedPercent": -12,
     "upkeepDefensePercent": -12,
     "revivalFloors": 2,
-    "copyStatBonus": 0.5
+    "copyStatBonus": 0.5,
+    "itemWeakCap": 4,
+    "upkeepWeakScale": 0.5
   },
   "skillWindUp": {
     "_about": "Skills wind up before they go off (castMs per skill in skills.json, else defaultCastMs). The skill goes on cooldown when tapped; stunned, frozen or silenced during the wind-up = the skill is lost (still on cooldown). No basic attacks and no walking while winding up.",

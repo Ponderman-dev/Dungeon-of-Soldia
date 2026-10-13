@@ -382,7 +382,7 @@ export default class BattleState {
     if (this.focusUid === target.uid) this.focusUid = null;
     events.push({ type: 'death', unit: target });
     if (target.minion) {
-      this.minionDied(target); // no XP, no morale
+      this.minionDied(target, events); // no XP, no morale
       return;
     }
     if (target.side === 'enemy') {
@@ -416,19 +416,37 @@ export default class BattleState {
   // The hero's minion sources, from its own passive and its minion items. Kept in hero.minionSources.
   buildSources(hero, itemSources = []) {
     const list = [];
-    if (hero.def.spawner) list.push({ key: 'hero', kind: 'weak', spec: hero.def.spawner, upkeep: false });
-    const greater = {};
-    const weakCopies = {};
+    // The hero's own passive (Necromancer): weak, its own cap, no upkeep.
+    if (hero.def.spawner) list.push({ key: 'hero', kind: 'weak', capGroup: 'hero', spec: hero.def.spawner, upkeep: false });
+    const byItem = {};
     for (const src of itemSources) {
-      if (src.kind === 'weak') {
-        const n = (weakCopies[src.itemId] = (weakCopies[src.itemId] || 0) + 1);
-        list.push({ key: `${src.itemId}#${n}`, kind: 'weak', spec: src.spec, upkeep: true });
-      } else {
-        greater[src.itemId] = greater[src.itemId] || { key: src.itemId, kind: 'greater', minion: src.minion, copies: 0, upkeep: true };
-        greater[src.itemId].copies++;
-      }
+      const g = (byItem[src.itemId] = byItem[src.itemId] || { key: src.itemId, kind: src.kind, minion: src.minion, spec: src.spec, onHit: !!src.onHit, copies: 0, upkeep: true });
+      g.copies++;
     }
-    return [...list, ...Object.values(greater)];
+    // One source per item: a weak spawner has ONE shared timer and spawns `burst` (= copies) minions each time, all
+    // weak item minions of a holder share one cap; a greater minion is ONE minion however many copies.
+    for (const g of Object.values(byItem)) {
+      if (g.kind === 'weak') list.push({ ...g, capGroup: 'items', burst: g.copies, upkeepScale: this.rules.minions.upkeepWeakScale ?? 0.5 });
+      else list.push({ ...g, upkeepScale: 1 });
+    }
+    return list;
+  }
+
+  // Squad-wide minion boosters (Bone Charm, Overseer's Whistle, Grave Dust, Necro Crown): they reach EVERY minion
+  // whoever holds them, and cost no upkeep. Caps: Whistle +4 weak cap in total, Necro Crown +6.
+  minionBoost() {
+    const sum = { bone: 0, whistle: 0, speed: 0, dust: 0, crown: 0, crownKill: false };
+    for (const h of this.heroes) {
+      if (!h.alive) continue;
+      const sp = h.specials;
+      sum.bone += sp.boneCharm || 0;
+      sum.whistle += sp.whistleCap || 0;
+      sum.speed += sp.whistleSpeed || 0;
+      sum.dust += sp.graveDust || 0;
+      sum.crown += sp.necroCrownCap || 0;
+      sum.crownKill = sum.crownKill || !!sp.necroCrownKill;
+    }
+    return { bone: sum.bone, weakCap: Math.min(4, sum.whistle) + Math.min(6, sum.crown), weakSpeed: sum.speed, dust: sum.dust, crownKill: sum.crownKill };
   }
 
   sourceState(hero, key) {
@@ -451,10 +469,10 @@ export default class BattleState {
       }
       for (const src of hero.minionSources || []) {
         const st = this.sourceState(hero, src.key);
-        if (src.kind === 'weak') {
+        if (src.kind === 'weak' && !src.onHit) {
           st.timer = this.spawnDelay(src.spec);
-          for (let i = 0; i < (src.spec.atFloorStart || 0); i++) this.spawnMinion(hero, src, events);
-        } else if (st.wait <= 0 && !this.minions.some((m) => m.holderUid === hero.uid && m.sourceKey === src.key)) {
+          for (let i = 0; i < (src.spec.atFloorStart || 0) * (src.burst || 1); i++) this.spawnMinion(hero, src, events);
+        } else if (src.kind === 'greater' && st.wait <= 0 && !this.minions.some((m) => m.holderUid === hero.uid && m.sourceKey === src.key)) {
           this.spawnMinion(hero, src, events);
         }
       }
@@ -464,7 +482,10 @@ export default class BattleState {
 
   // The floor is won: weak minions vanish; greater ones stay, and a dead one is one floor closer to coming back.
   endFloor(events = []) {
-    for (const m of [...this.minions]) if (!m.greater) this.vanishMinion(m, 'floorEnd', events);
+    for (const m of [...this.minions]) {
+      if (!m.greater) this.vanishMinion(m, 'floorEnd', events);
+      else m.floors++; // a greater minion that survived the floor (Spirit Knight grows)
+    }
     for (const hero of this.heroes) {
       for (const src of hero.minionSources || []) {
         const st = this.sourceState(hero, src.key);
@@ -481,12 +502,12 @@ export default class BattleState {
   tickSpawner(hero, dt, events) {
     if (!this.enemies.some((e) => e.alive)) return; // only while there is a fight
     for (const src of hero.minionSources || []) {
-      if (src.kind !== 'weak') continue;
+      if (src.kind !== 'weak' || src.onHit) continue;
       const st = this.sourceState(hero, src.key);
       st.timer -= dt;
       if (st.timer > 0) continue;
       st.timer += this.spawnDelay(src.spec);
-      this.spawnMinion(hero, src, events);
+      for (let i = 0; i < (src.burst || 1); i++) this.spawnMinion(hero, src, events); // one more minion per copy of the item
     }
   }
 
@@ -496,23 +517,22 @@ export default class BattleState {
     const def = this.minionDefs[id];
     if (!def) return null;
     if (src.kind === 'weak') {
-      const mine = this.minions.filter((m) => m.holderUid === holder.uid && m.sourceKey === src.key);
-      if (src.spec.cap && mine.length >= src.spec.cap) this.vanishMinion(mine[0], 'pushedOut', events);
+      // Over the cap: the oldest weak minion of the same cap group (the hero's own, or all item minions) goes.
+      const mine = this.minions.filter((m) => m.holderUid === holder.uid && m.capGroup === src.capGroup);
+      const cap = (src.capGroup === 'hero' ? src.spec.cap || 4 : this.rules.minions.itemWeakCap) + this.minionBoost().weakCap;
+      if (mine.length >= cap) this.vanishMinion(mine[0], 'pushedOut', events);
     }
-    const scaled = { id, ...def, stats: { ...def.stats } };
-    const copies = src.copies || 1;
-    if (src.kind === 'greater' && copies > 1) {
-      const k = 1 + (this.rules.minions.copyStatBonus || 0) * (copies - 1);
-      scaled.stats.health = Math.round(scaled.stats.health * k);
-      scaled.stats.attack = Math.round(scaled.stats.attack * k);
-    }
-    const m = this.makeUnit(scaled, 'hero', 1);
+    const m = this.makeUnit({ id, ...def, stats: { ...def.stats } }, 'hero', 1);
     m.minion = true;
     m.greater = src.kind === 'greater';
     m.holderUid = holder.uid;
     m.sourceKey = src.key;
+    m.capGroup = src.capGroup;
     m.upkeep = src.upkeep;
-    m.copies = copies;
+    m.upkeepScale = (src.upkeepScale ?? 1) * (src.kind === 'weak' ? src.copies || 1 : 1); // every copy of a weak spawner item costs upkeep; a greater item once
+    m.rawStats = { ...def.stats }; // the stats before copies, boosters and growth (refreshMinionStats scales them)
+    m.copies = src.copies || (src.key === 'mimic_chest' ? holder.specials.mimicCopies || 1 : 1);
+    m.floors = 0;
     m.timer = 0;
     if (this.hasPositions(holder)) {
       const M = this.rules.movement;
@@ -520,7 +540,8 @@ export default class BattleState {
       m.x = Math.min(M.layout.width - M.layout.marginX, Math.max(M.layout.marginX, m.x));
     }
     this.minions.push(m);
-    this.refreshStats(); // squad buffs already running apply to it at once; the holder's upkeep starts
+    this.refreshStats(); // scaling, squad buffs and the holder's upkeep
+    m.hp = m.maxHp; // a new minion always starts at full health
     events.push({ type: 'minionSpawn', unit: m, holder });
     return m;
   }
@@ -543,20 +564,53 @@ export default class BattleState {
   }
 
   // A minion was killed: a greater one starts its revival wait.
-  minionDied(m) {
+  minionDied(m, events = []) {
     this.minions = this.minions.filter((x) => x !== m);
+    this.explodeMinion(m, events); // Mimic, Grave Dust
     const holder = this.heroes.find((h) => h.uid === m.holderUid);
     if (m.greater && holder) this.sourceState(holder, m.sourceKey).wait = this.rules.minions.revivalFloors;
     this.refreshStats();
   }
 
-  // How many of a hero's minion ITEMS currently have a live minion (each one costs upkeep).
+  // The upkeep a hero pays: every minion ITEM of his that has a live minion costs its full upkeep (greater minion)
+  // or half (weak spawner items, `minions.upkeepWeakScale`). Returns the total in "full upkeeps".
   upkeepCount(hero) {
-    return new Set(this.minions.filter((m) => m.holderUid === hero.uid && m.upkeep).map((m) => m.sourceKey)).size;
+    const seen = new Map();
+    for (const m of this.minions) if (m.holderUid === hero.uid && m.upkeep) seen.set(m.sourceKey, m.upkeepScale);
+    let total = 0;
+    for (const v of seen.values()) total += v;
+    return total;
   }
 
-  // Minions have fixed stats, plus any buff the squad gave them (attack speed, attack, defense...).
+  // A dying weak minion explodes when it has an explosion of its own (Mimic) and/or Grave Dust is out there: damage
+  // to the enemies near it (item damage, nothing else triggers).
+  explodeMinion(m, events) {
+    const own = m.def.explode ? m.def.explode.damageMultiplier * (m.copies || 1) : 0;
+    const dust = m.greater ? 0 : this.minionBoost().dust * 2; // Grave Dust: 200% attack per copy, weak minions only
+    const total = own + dust;
+    if (total <= 0) return;
+    const radius = (m.def.explode && m.def.explode.radius) || 120;
+    events.push({ type: 'minionExplode', unit: m, radius });
+    for (const e of this.enemies.filter((x) => x.alive)) {
+      if (this.hasPositions(m) && this.hasPositions(e) && Math.hypot(e.x - m.x, e.y - m.y) > radius * 1.6) continue;
+      this.strike(m, e, events, { multiplier: total, damageType: 'fire', item: true });
+    }
+  }
+
+  // A minion's stats: its minions.json stats scaled by copies of its item (copyStatBonus per extra copy), growth per
+  // survived floor (Spirit Knight) and the squad's Bone Charms (health and attack); weak minions also attack faster with
+  // Overseer's Whistles; plus any buff the squad gave it. Its health keeps the same % when the scale changes.
   refreshMinionStats(m) {
+    const raw = m.rawStats || m.baseStats;
+    const boost = this.minionBoost();
+    const bonus = m.def.copyStatBonus ?? this.rules.minions.copyStatBonus ?? 0;
+    const growth = m.def.growthPerFloor ? 1 + Math.min(m.def.growthMax ?? 1, m.def.growthPerFloor * (m.floors || 0)) : 1;
+    const scale = (1 + bonus * ((m.copies || 1) - 1)) * growth * (1 + boost.bone / 100);
+    const ratio = m.maxHp > 0 ? m.hp / m.maxHp : 1;
+    m.maxHp = Math.max(1, Math.round(raw.health * scale));
+    m.hp = Math.min(m.maxHp, Math.round(m.maxHp * ratio));
+    m.baseStats = { ...raw, health: m.maxHp, attack: Math.round(raw.attack * scale) };
+    if (!m.greater) m.baseStats.attackEfficiency = raw.attackEfficiency * (1 + boost.weakSpeed / 100);
     const stats = { ...m.baseStats };
     for (const st of m.statuses) {
       if (st.type !== 'buff') continue;
@@ -577,6 +631,7 @@ export default class BattleState {
     const events = [];
     this.tickStatuses(dt, events);
     this.move(dt);
+    for (const m of this.minions) if (m.healCd > 0) m.healCd -= dt; // Phoenix heal cooldown
 
     // Health regenerates (Heart Charm) and skill cooldowns run down.
     for (const hero of this.heroes) {
@@ -696,6 +751,10 @@ export default class BattleState {
     }
     const empower = fired.filter((f) => f.counter.effect === 'empower');
     const hit = this.strike(unit, target, events, { basic: true });
+    // Minion hits that put a status on the target (Imp burns, Gargoyle taunts).
+    if (unit.minion && unit.def.onAttackApply && target.alive && !hit.dodged) {
+      for (const spec of unit.def.onAttackApply) this.applyStatus(target, spec, unit, `minion_${unit.def.id}`, events);
+    }
     // An empowered beat (Mage Spellweaver, Bard Rhythm): a free extra hit and debuffs on the target.
     for (const f of empower) {
       const c = f.counter;
@@ -941,6 +1000,7 @@ export default class BattleState {
     events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic });
     if (dealt) this.breakEffects(target, dealt.broken, events);
     if (!result.dodged) this.afterItemHit(attacker, target, opts, events);
+    if (!result.dodged && attacker.side === 'enemy' && target.side === 'hero') this.onHeroHit(target, events);
     if (result.blocked) {
       // A successful block sends the holder's Shield Totems on cooldown.
       const spec = { status: 'blockCooldown', durationMs: target.specials.blockCooldownMs || 2500 };
@@ -1168,7 +1228,27 @@ export default class BattleState {
   }
 
   // Item reactions to a kill (killer = the unit that dealt the last blow, if known).
+  // A friendly was hit by an enemy: Mimic Chest (10% a Mimic pops out of the holder) and Phoenix (heals the squad a little).
+  onHeroHit(target, events) {
+    if (!target.minion && target.alive && target.specials.mimic && this.rng() * 100 < target.specials.mimic) {
+      const src = { key: 'mimic_chest', kind: 'weak', capGroup: 'items', upkeep: true, upkeepScale: this.rules.minions.upkeepWeakScale ?? 0.5, spec: { minion: 'mimic' }, copies: target.specials.mimicCopies || 1 };
+      events.push({ type: 'proc', unit: target, label: 'Mimic!' });
+      this.spawnMinion(target, src, events);
+    }
+    const ph = target.minion && target.alive && target.def.onHitHeal;
+    if (ph && !(target.healCd > 0)) {
+      target.healCd = ph.cooldownMs;
+      const pct = ph.percentMaxHp * (1 + 0.25 * ((target.copies || 1) - 1));
+      for (const h of this.heroes) if (h.alive) this.healUnit(h, (h.maxHp * pct) / 100 / this.regenAura().factor, events);
+    }
+  }
+
   onKill(killer, victim, events, lastStatuses = []) {
+    // Necro Crown: every enemy kill raises a skeleton (for the first living holder).
+    if (this.minionBoost().crownKill) {
+      const holder = this.heroes.find((h) => h.alive && h.specials.necroCrownKill);
+      if (holder) this.spawnMinion(holder, { key: 'necro_crown', kind: 'weak', capGroup: 'items', upkeep: false, spec: { minion: 'skeleton' } }, events);
+    }
     if (killer && killer.side === 'hero' && !killer.minion && killer.alive) {
       const heal = killer.specials.killHeal || 0; // Bandage Roll
       if (heal > 0) this.healUnit(killer, (killer.maxHp * heal) / 100 / this.regenAura().factor, events);
@@ -1723,7 +1803,7 @@ export default class BattleState {
       const upkeep = [];
       const paying = this.upkeepCount(hero);
       const mr = this.rules.minions || {};
-      for (let i = 0; i < paying; i++) upkeep.push({ stat: 'attackEfficiency', percent: mr.upkeepAttackSpeedPercent || 0 }, { stat: 'defense', percent: mr.upkeepDefensePercent || 0 });
+      if (paying > 0) upkeep.push({ stat: 'attackEfficiency', percent: (mr.upkeepAttackSpeedPercent || 0) * paying }, { stat: 'defense', percent: (mr.upkeepDefensePercent || 0) * paying });
       if (hero.taunting && hero.specials && hero.specials.spiteMail) upkeep.push({ stat: 'defense', flat: hero.specials.spiteMail }); // Spite Mail
       const sa = hero.def.passive && hero.def.passive.steadyAim;
       if (sa && hero.steady) upkeep.push({ stat: 'attackEfficiency', percent: sa.attackSpeedPercent }, { stat: 'crit', flat: sa.critFlat });
@@ -1739,17 +1819,10 @@ export default class BattleState {
       hero.hp = Math.max(1, hpDelta > 0 ? hero.hp + hpDelta : Math.min(hero.hp, hero.maxHp));
     }
     for (const m of this.minions) {
-      // A greater minion's item got another copy: it grows (health and attack) by copyStatBonus per copy.
+      // A greater minion's item got another copy: it grows (see refreshMinionStats).
       const holder = m.greater && this.heroes.find((h) => h.uid === m.holderUid);
       const src = holder && (holder.minionSources || []).find((x) => x.key === m.sourceKey);
-      if (src && src.copies !== m.copies) {
-        const b = this.rules.minions.copyStatBonus || 0;
-        const k = (1 + b * (src.copies - 1)) / (1 + b * (m.copies - 1));
-        m.maxHp = Math.round(m.maxHp * k);
-        m.hp = Math.round(m.hp * k);
-        m.baseStats = { ...m.baseStats, health: m.maxHp, attack: Math.round(m.baseStats.attack * k) };
-        m.copies = src.copies;
-      }
+      if (src) m.copies = src.copies;
       this.refreshMinionStats(m);
     }
   }

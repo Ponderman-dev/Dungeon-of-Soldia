@@ -27,9 +27,14 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
   const minionSources = []; // minion items the hero holds: one entry per copy { itemId, kind: 'weak' | 'greater', spec / minion }
   // `factor` shrinks an effect for extra copies of an item that has `falloffRatio`.
   const apply = (e, factor = 1, holder = null) => {
-    if (e.minionSpawner || e.greaterMinion) {
-      // A minion item (only its holder gets the minions): weak spawner or greater minion, one entry per copy.
-      if (holder === hero) minionSources.push(e.minionSpawner ? { itemId: e.itemId, kind: 'weak', spec: e.minionSpawner } : { itemId: e.itemId, kind: 'greater', minion: e.greaterMinion });
+    if (e.minionSpawner || e.greaterMinion || e.minionOnHit) {
+      // A minion item (only its holder gets the minions): weak spawner, minion that pops out when the holder is hit,
+      // or greater minion, one entry per copy.
+      if (holder === hero) {
+        if (e.greaterMinion) minionSources.push({ itemId: e.itemId, kind: 'greater', minion: e.greaterMinion });
+        else if (e.minionOnHit) minionSources.push({ itemId: e.itemId, kind: 'weak', onHit: true, spec: e.minionOnHit });
+        else minionSources.push({ itemId: e.itemId, kind: 'weak', spec: e.minionSpawner });
+      }
     } else if (e.proc) {
       // One entry per copy, so every copy rolls its own chance. Only the holder's own attacks roll.
       // `unique` effects only count once however many copies the hero has (e.g. a freeze chance that doesn't stack).

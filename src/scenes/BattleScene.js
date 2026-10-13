@@ -723,6 +723,13 @@ export default class BattleScene extends Phaser.Scene {
       this.showFlask(this.views.get(e.unit.uid), this.views.get(e.target.uid), Number(e.flask.color));
     } else if (e.type === 'minionSpawn') {
       this.showMinion(e.unit);
+    } else if (e.type === 'minionExplode') {
+      const v = this.views.get(e.unit.uid);
+      if (v) {
+        this.puff(v.ch.x, v.ch.y - 8, 0xff8a3d, 8);
+        const ring = this.add.circle(v.ch.x, v.ch.y - 8, 10).setStrokeStyle(3, 0xffb84d).setDepth(DEPTH.popup - 1);
+        this.tweens.add({ targets: ring, radius: e.radius * 0.6, alpha: 0, duration: 350, onComplete: () => ring.destroy() });
+      }
     } else if (e.type === 'minionVanish') {
       const v = this.views.get(e.unit.uid);
       if (!v) return;

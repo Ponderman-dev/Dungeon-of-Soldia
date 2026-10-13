@@ -104,6 +104,340 @@
           "duration": 800
         }
       }
+    },
+    "copyStatBonus": 0.25,
+    "onAttackApply": [
+      {
+        "status": "taunt",
+        "durationMs": 3000
+      }
+    ]
+  },
+  "rat": {
+    "name": "Rat",
+    "kind": "weak",
+    "damageType": "melee",
+    "flying": false,
+    "height": 12,
+    "weak": [],
+    "resists": [],
+    "stats": {
+      "health": 18,
+      "attack": 4,
+      "defense": 0,
+      "attackEfficiency": 130
+    },
+    "parts": {
+      "body": {
+        "w": 12,
+        "h": 6,
+        "x": 0,
+        "y": -3,
+        "color": "0x8a7a6a",
+        "idle": {
+          "dy": -1,
+          "duration": 300
+        }
+      },
+      "head": {
+        "w": 6,
+        "h": 5,
+        "x": 6,
+        "y": -6,
+        "color": "0xa89a88",
+        "idle": {
+          "dy": -1,
+          "duration": 300
+        }
+      },
+      "weapon": {
+        "w": 5,
+        "h": 2,
+        "x": -8,
+        "y": -3,
+        "color": "0xd8b0b0",
+        "pivotY": 0.5
+      }
+    }
+  },
+  "wisp": {
+    "name": "Wisp",
+    "kind": "weak",
+    "damageType": "electric",
+    "flying": true,
+    "hover": 30,
+    "height": 10,
+    "weak": [],
+    "resists": [],
+    "stats": {
+      "health": 16,
+      "attack": 6,
+      "defense": 0,
+      "attackEfficiency": 100
+    },
+    "parts": {
+      "body": {
+        "w": 9,
+        "h": 9,
+        "x": 0,
+        "y": -5,
+        "color": "0x9fe8ff",
+        "idle": {
+          "dy": -3,
+          "duration": 420
+        }
+      },
+      "head": {
+        "w": 5,
+        "h": 5,
+        "x": 0,
+        "y": -5,
+        "color": "0xffffff",
+        "idle": {
+          "dy": -3,
+          "duration": 420
+        }
+      },
+      "weapon": {
+        "w": 2,
+        "h": 2,
+        "x": 6,
+        "y": -5,
+        "color": "0xffffff"
+      }
+    }
+  },
+  "imp": {
+    "name": "Imp",
+    "kind": "weak",
+    "damageType": "fire",
+    "flying": false,
+    "height": 16,
+    "weak": [],
+    "resists": [
+      "fire"
+    ],
+    "stats": {
+      "health": 22,
+      "attack": 7,
+      "defense": 0,
+      "attackEfficiency": 100
+    },
+    "onAttackApply": [
+      {
+        "status": "burn",
+        "durationMs": 3000,
+        "damageMultiplier": 0.2,
+        "damageType": "fire"
+      }
+    ],
+    "parts": {
+      "body": {
+        "w": 9,
+        "h": 10,
+        "x": 0,
+        "y": -5,
+        "color": "0xd9482e",
+        "idle": {
+          "dy": -1,
+          "duration": 450
+        }
+      },
+      "head": {
+        "w": 8,
+        "h": 7,
+        "x": 0,
+        "y": -13,
+        "color": "0xff7a3d",
+        "idle": {
+          "dy": -1.5,
+          "duration": 450,
+          "delay": 100
+        }
+      },
+      "weapon": {
+        "w": 3,
+        "h": 9,
+        "x": 7,
+        "y": -5,
+        "color": "0xffb84d",
+        "pivotY": 1,
+        "idle": {
+          "angle": 8,
+          "duration": 600
+        }
+      }
+    }
+  },
+  "mimic": {
+    "name": "Mimic",
+    "kind": "weak",
+    "damageType": "melee",
+    "flying": false,
+    "height": 14,
+    "weak": [],
+    "resists": [],
+    "stats": {
+      "health": 30,
+      "attack": 6,
+      "defense": 2,
+      "attackEfficiency": 90
+    },
+    "copyStatBonus": 0.5,
+    "explode": {
+      "damageMultiplier": 3.0,
+      "radius": 120
+    },
+    "parts": {
+      "body": {
+        "w": 16,
+        "h": 10,
+        "x": 0,
+        "y": -5,
+        "color": "0x8a5a2b",
+        "idle": {
+          "dy": -1,
+          "duration": 380
+        }
+      },
+      "head": {
+        "w": 16,
+        "h": 5,
+        "x": 0,
+        "y": -12,
+        "color": "0xb07a3b",
+        "idle": {
+          "dy": -2,
+          "duration": 380
+        }
+      },
+      "weapon": {
+        "w": 4,
+        "h": 4,
+        "x": 6,
+        "y": -9,
+        "color": "0xf2d66b"
+      }
+    }
+  },
+  "spirit_knight": {
+    "name": "Spirit Knight",
+    "kind": "greater",
+    "damageType": "melee",
+    "flying": false,
+    "height": 26,
+    "weak": [],
+    "resists": [],
+    "stats": {
+      "health": 110,
+      "attack": 12,
+      "defense": 5,
+      "attackEfficiency": 100
+    },
+    "copyStatBonus": 0.25,
+    "growthPerFloor": 0.05,
+    "growthMax": 1.0,
+    "parts": {
+      "body": {
+        "w": 12,
+        "h": 14,
+        "x": 0,
+        "y": -7,
+        "color": "0x7fc8ff",
+        "idle": {
+          "dy": -1,
+          "duration": 450
+        }
+      },
+      "head": {
+        "w": 10,
+        "h": 9,
+        "x": 0,
+        "y": -18,
+        "color": "0xcfeaff",
+        "idle": {
+          "dy": -1.5,
+          "duration": 450,
+          "delay": 100
+        }
+      },
+      "weapon": {
+        "w": 3,
+        "h": 9,
+        "x": 7,
+        "y": -5,
+        "color": "0xe8f4ff",
+        "pivotY": 1,
+        "idle": {
+          "angle": 8,
+          "duration": 600
+        }
+      }
+    }
+  },
+  "phoenix": {
+    "name": "Phoenix",
+    "kind": "greater",
+    "damageType": "fire",
+    "flying": true,
+    "hover": 34,
+    "height": 16,
+    "weak": [],
+    "resists": [
+      "fire"
+    ],
+    "stats": {
+      "health": 70,
+      "attack": 10,
+      "defense": 0,
+      "attackEfficiency": 110
+    },
+    "copyStatBonus": 0.25,
+    "onHitHeal": {
+      "percentMaxHp": 1.5,
+      "cooldownMs": 1000
+    },
+    "parts": {
+      "body": {
+        "w": 12,
+        "h": 9,
+        "x": 0,
+        "y": -5,
+        "color": "0xff7a3d",
+        "idle": {
+          "dy": -2,
+          "duration": 350
+        }
+      },
+      "head": {
+        "w": 6,
+        "h": 6,
+        "x": 6,
+        "y": -9,
+        "color": "0xffd24d",
+        "idle": {
+          "dy": -2,
+          "duration": 350
+        }
+      },
+      "wingL": {
+        "w": 9,
+        "h": 4,
+        "x": -8,
+        "y": -8,
+        "color": "0xffb84d",
+        "idle": {
+          "dy": -3,
+          "duration": 200
+        }
+      },
+      "weapon": {
+        "w": 3,
+        "h": 3,
+        "x": 9,
+        "y": -6,
+        "color": "0xffffff"
+      }
     }
   }
 }

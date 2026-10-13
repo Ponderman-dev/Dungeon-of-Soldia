@@ -128,6 +128,9 @@ export default class BattleScene extends Phaser.Scene {
       const hover = u.flying ? u.def.hover || 0 : 0;
       v.ch.hopOffset = u.moving ? Math.abs(Math.sin((u.walked / M.hopLengthPx) * Math.PI)) * M.hopHeight : 0;
       v.ch.setPosition(u.x, u.y - hover - v.ch.hopOffset);
+      // Look at whoever it is fighting (so the weapon swings towards it).
+      const foe = (u.pending && u.pending.target) || (this.views.get(u.foe) || {}).unit || v.lookAt;
+      if (foe && foe.alive && foe.x !== undefined && Math.abs(foe.x - u.x) > 6) v.ch.face(foe.x < u.x ? -1 : 1);
       if (u.side === 'hero') v.ch.setDepth(DEPTH.hero + u.y / 10000);
       this.syncBar(v);
     }
@@ -291,7 +294,7 @@ export default class BattleScene extends Phaser.Scene {
 
   // Keeps a fighter's health bar attached to it while it moves.
   syncBar(view, baseY = view.ch.y + view.ch.hopOffset) {
-    const y = baseY - view.unit.def.height * view.ch.scaleX - 10;
+    const y = baseY - view.unit.def.height * Math.abs(view.ch.scaleY) - 10;
     view.bg.setPosition(view.ch.x, y).setAlpha(view.ch.alpha);
     view.fill.setPosition(view.ch.x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
     if (view.dots) view.dots.setPosition(view.ch.x, y - 12).setAlpha(view.ch.alpha);
@@ -514,6 +517,7 @@ export default class BattleScene extends Phaser.Scene {
       const a = this.views.get(e.attacker.uid);
       const t = this.views.get(e.target.uid);
       if (!a || !t) return;
+      a.lookAt = e.target; // it turns to face what it attacks
       // Melee: it already walked up (the fight rules move it), now it swings. Ranged: an arrow.
       if (e.attacker.damageType !== 'melee') this.shootArrow(a, t, e.hitInMs);
       else a.ch.swing(e.hitInMs);
@@ -764,6 +768,8 @@ export default class BattleScene extends Phaser.Scene {
     this.state.clearStatuses();
     for (const h of this.state.heroes) {
       const v = this.views.get(h.uid);
+      v.lookAt = null;
+      if (h.alive) v.ch.face(1); // look the normal way again
       if (h.alive) this.runHome(v); // anyone still out at an enemy walks back before the door walk
       this.drawChips(v);
     }

@@ -53,6 +53,15 @@ export default class Character extends Phaser.GameObjects.Container {
     }
   }
 
+  // Turns the character to look left (-1) or right (1) by mirroring it. The art itself looks the way
+  // its weapon points (weapon part on the right = looks right). Keeps the current size.
+  face(dir) {
+    const weapon = this.def.parts.weapon;
+    const artDir = weapon && weapon.x < 0 ? -1 : 1;
+    const size = Math.abs(this.scaleY);
+    this.setScale(size * dir * artDir, size);
+  }
+
   // Stops the idle animation (the character holds its current pose). Used when a hero dies.
   freeze() {
     for (const t of this.idleTweens) t.stop();

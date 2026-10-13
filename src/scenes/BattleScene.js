@@ -159,7 +159,7 @@ export default class BattleScene extends Phaser.Scene {
       if (!u.alive || u.x === undefined || v.ch.lunging) continue;
       const hover = u.flying ? u.def.hover || 0 : 0;
       v.ch.hopOffset = u.moving ? Math.abs(Math.sin((u.walked / M.hopLengthPx) * Math.PI)) * M.hopHeight : 0;
-      v.ch.setPosition(u.x, u.y - hover - v.ch.hopOffset);
+      v.ch.setPosition(u.x, u.y - hover - v.ch.hopOffset - v.ch.castLift);
       // Look at whoever it is fighting (so the weapon swings towards it).
       const foe = (u.pending && u.pending.target) || (this.views.get(u.foe) || {}).unit || v.lookAt;
       if (foe && foe.alive && foe.x !== undefined && Math.abs(foe.x - u.x) > 6) v.ch.face(foe.x < u.x ? -1 : 1);
@@ -598,11 +598,15 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'castStart') {
       // The hero winds up: its name pops up and a charge bar fills (see drawCastBars).
       this.popText(this.views.get(e.unit.uid), e.skill.name, '#9fc4ff');
+      this.views.get(e.unit.uid).ch.castWindUp(e.castMs); // crouch and raise the weapon
     } else if (e.type === 'castCancel') {
+      const cv = this.views.get(e.unit.uid);
+      if (cv) cv.ch.castCancel();
       if (e.reason === 'interrupted') this.popText(this.views.get(e.unit.uid), 'Interrupted!', '#ff8a5c', true);
     } else if (e.type === 'cast') {
       const caster = this.views.get(e.unit.uid);
       this.skillBurst(caster, e);
+      caster.ch.castRelease(e.skill.kind); // the skill's own animation (not the normal swing)
       if (e.skill.target !== 'self' && e.targets[0]) {
         const t = this.views.get(e.targets[0].uid);
         caster.ch.lunge(t.ch.x, t.ch.y);
@@ -647,6 +651,7 @@ export default class BattleScene extends Phaser.Scene {
       this.setBar(v);
       if (e.unit.side === 'enemy') {
         v.ch.stopMove(); // it fades out where it fell
+        v.ch.castCancel();
         this.drawChips(v);
         this.tweens.add({ targets: [v.ch, v.bg, v.fill], alpha: 0, duration: 400, onComplete: () => this.removeView(e.unit.uid) });
       } else {

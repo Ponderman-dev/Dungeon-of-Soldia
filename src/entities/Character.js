@@ -13,6 +13,7 @@ export default class Character extends Phaser.GameObjects.Container {
     this.homeY = y;
     this.lunging = false;
     this.hopOffset = 0; // how far up the current walking hop has lifted it (so things can follow its feet)
+    this.castLift = 0; // skill animation: how far it is lifted (+) or crouched (-), in pixels (the scene adds it)
     this.idleTweens = [];
 
     for (const [name, p] of Object.entries(def.parts)) {
@@ -24,6 +25,7 @@ export default class Character extends Phaser.GameObjects.Container {
         block.setOrigin(0.5, p.pivotY);
         block.y = p.y + (p.pivotY - 0.5) * p.h;
       }
+      block.restAngle = block.angle; // where it rests (the skill animation returns here)
       this.parts[name] = block;
       this.add(block);
     }
@@ -60,6 +62,48 @@ export default class Character extends Phaser.GameObjects.Container {
     const artDir = weapon && weapon.x < 0 ? -1 : 1;
     const size = Math.abs(this.scaleY);
     this.setScale(size * dir * artDir, size);
+  }
+
+  // ---- skill animation (different from a normal attack) ---------------------------------------
+  // Wind-up: the hero crouches and raises its weapon high over `ms`.
+  castWindUp(ms) {
+    this.castReset();
+    const w = this.parts.weapon;
+    this.castTweens = [this.scene.tweens.add({ targets: this, castLift: -4, duration: ms, ease: 'Quad.easeOut' })];
+    if (w) this.castTweens.push(this.scene.tweens.add({ targets: w, angle: w.restAngle - 55, duration: ms, ease: 'Quad.easeOut' })); // cocked back
+  }
+
+  // The skill goes off. Attack skill: a big overhead slash with a leap forward. Support skill: it
+  // jumps up with the weapon held high, then settles.
+  castRelease(kind) {
+    this.castReset(true);
+    const w = this.parts.weapon;
+    const tw = this.scene.tweens;
+    if (kind === 'attack') {
+      this.castTweens = [
+        tw.add({ targets: this, castLift: 8, duration: 90, yoyo: true, ease: 'Quad.easeOut' }),
+      ];
+      if (w) this.castTweens.push(tw.add({ targets: w, angle: w.restAngle + 105, duration: 110, ease: 'Quad.easeIn', yoyo: true, hold: 140, onComplete: () => (w.angle = w.restAngle) }));
+    } else {
+      this.castTweens = [
+        tw.add({ targets: this, castLift: 18, duration: 160, yoyo: true, ease: 'Quad.easeOut' }),
+      ];
+      if (w) this.castTweens.push(tw.add({ targets: w, angle: w.restAngle, delay: 300, duration: 200, ease: 'Quad.easeInOut', onStart: () => (w.angle = w.restAngle - 25) })); // held up a little, then back
+    }
+  }
+
+  // Wind-up interrupted (stun...) or over: back to the normal pose.
+  castCancel() {
+    this.castReset(true);
+    const w = this.parts.weapon;
+    if (w) this.scene.tweens.add({ targets: w, angle: w.restAngle, duration: 150 });
+    this.scene.tweens.add({ targets: this, castLift: 0, duration: 150 });
+  }
+
+  castReset(keepWeapon = false) {
+    for (const t of this.castTweens || []) t.stop();
+    this.castTweens = [];
+    if (!keepWeapon && this.swingTween) this.swingTween.stop();
   }
 
   // Stops the idle animation (the character holds its current pose). Used when a hero dies.

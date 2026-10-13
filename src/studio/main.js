@@ -6,6 +6,7 @@
 import Phaser from 'phaser';
 import Character from '../entities/Character.js';
 import Board, { partBox } from './board.js';
+import Timeline, { mainColor } from './timeline.js';
 import { partArt, artPixels } from '../systems/pixelArt.js';
 import heroes from '../data/heroes.json';
 import enemies from '../data/enemies.json';
@@ -39,6 +40,7 @@ const byKey = Object.fromEntries(characters.map((c) => [c.key, c]));
 function lookOf(def) {
   const look = { height: def.height, parts: clone(def.parts) };
   if (def.flying) look.hover = def.hover || 0;
+  if (def.anims) look.anims = clone(def.anims);
   return look;
 }
 
@@ -64,6 +66,7 @@ for (const c of characters) working[c.key] = clone(gameLook[c.key]);
 
 let zoom = 9;
 let anim = 'idle';
+let tlShow = null; // { clip, t }: the timeline is showing this clip in the preview (null = play like the game)
 let mirror = false; // looking the other way (the game mirrors fighters to face their target)
 
 class StudioScene extends Phaser.Scene {
@@ -77,12 +80,30 @@ class StudioScene extends Phaser.Scene {
     this.sel = this.add.graphics().setDepth(10);
     this.ch = null;
     this.play(anim);
-    // Tapping the preview picks the front-most part there.
+    // Tapping the preview picks the front-most part there. With a timeline clip showing, dragging the
+    // part moves it at the playhead (adds X / Y keyframes).
     this.input.on('pointerdown', (p) => {
       const cx = Math.floor(((p.x - STAGE / 2) / zoom) * (mirror ? -1 : 1));
       const cy = Math.floor((p.y - this.feetY()) / zoom);
       const hit = board.pixelAt(cx, cy);
-      if (hit) select(hit.name);
+      if (!hit) return;
+      select(hit.name);
+      if (tlShow && tlShow.clip) {
+        beginEdit();
+        this.drag = { name: hit.name, sx: p.x, sy: p.y, x: timeline.value(hit.name, 'x'), y: timeline.value(hit.name, 'y') };
+      }
+    });
+    this.input.on('pointermove', (p) => {
+      const d = this.drag;
+      if (!d || !p.isDown) return;
+      const nx = Math.round(((p.x - d.sx) / zoom) * (mirror ? -1 : 1) * 2) / 2 + d.x;
+      const ny = Math.round(((p.y - d.sy) / zoom) * 2) / 2 + d.y;
+      if (nx !== timeline.value(d.name, 'x')) timeline.setValue(d.name, 'x', nx);
+      if (ny !== timeline.value(d.name, 'y')) timeline.setValue(d.name, 'y', ny);
+    });
+    this.input.on('pointerup', () => {
+      if (this.drag) endEdit();
+      this.drag = null;
     });
   }
 
@@ -96,9 +117,10 @@ class StudioScene extends Phaser.Scene {
     this.tweens.killAll();
     if (this.loop) this.loop.remove();
     this.loop = null;
-    this.ch = new Character(this, STAGE / 2, this.feetY(), { parts: look().parts });
+    this.ch = new Character(this, STAGE / 2, this.feetY(), { parts: look().parts, anims: look().anims });
     this.ch.setScale(mirror ? -zoom : zoom, zoom);
-    if (anim !== 'idle') this.ch.freeze();
+    if (anim !== 'idle' || tlShow) this.ch.freeze();
+    if (tlShow) this.ch.showClip(tlShow.clip, tlShow.t);
     this.drawGrid();
   }
 
@@ -140,6 +162,7 @@ class StudioScene extends Phaser.Scene {
     anim = name;
     this.rebuild();
     const ch = this.ch;
+    if (tlShow) return; // the timeline decides what is shown
     if (name === 'swing') {
       const go = () => ch.active && anim === 'swing' && ch.swing(combat.attackTiming.hero.swingMs);
       go();
@@ -164,6 +187,14 @@ class StudioScene extends Phaser.Scene {
       };
       go();
       this.loop = this.time.addEvent({ delay: 1500, loop: true, callback: go });
+    } else if (name === 'hurt') {
+      const go = () => ch.active && anim === 'hurt' && (ch.hurt(), ch.flash());
+      go();
+      this.loop = this.time.addEvent({ delay: 800, loop: true, callback: go });
+    } else if (name === 'death') {
+      // Falls, stays down a moment, gets up (rebuilt) and falls again.
+      ch.die();
+      this.loop = this.time.addEvent({ delay: 1800, callback: () => anim === 'death' && redraw() });
     } else if (name === 'flash') {
       const go = () => ch.active && anim === 'flash' && ch.flash();
       go();
@@ -223,6 +254,25 @@ const board = new Board($('board'), {
   begin: () => beginEdit(),
   end: () => endEdit(),
   changed: () => changed({ keepEditor: true }),
+});
+
+const timeline = new Timeline($('timeline'), {
+  look,
+  selected: () => selected,
+  select: (name) => select(name),
+  begin: () => beginEdit(),
+  end: () => endEdit(),
+  changed: () => changed({ keepEditor: true, fromTimeline: true }),
+  partColor: mainColor,
+  show: (clip, t) => {
+    // The timeline takes over the preview; the Play buttons give it back.
+    tlShow = { clip, t };
+    document.querySelectorAll('[data-anim]').forEach((b) => b.classList.remove('on'));
+    if (scene && scene.ch && scene.ch.active) {
+      if (!scene.ch.override) scene.play(anim);
+      scene.ch.showClip(clip, t);
+    }
+  },
 });
 
 function setTool(name) {
@@ -298,6 +348,7 @@ function undoRedo(from, to) {
   h[to].push(JSON.stringify(look()));
   working[current] = JSON.parse(h[from].pop());
   if (selected && !look().parts[selected]) selected = null;
+  timeline.selKey = null;
   renderAll();
   redraw();
   persistDraft();
@@ -331,20 +382,12 @@ function renderStatus() {
   $('save').disabled = !dirty || !store;
 }
 
-function partColor(p) {
-  const counts = new Map();
-  for (const row of artPixels(partArt(p))) for (const c of row) if (c !== null && c !== 0x1a1020) counts.set(c, (counts.get(c) || 0) + 1);
-  let best = 0x1a1020;
-  let n = 0;
-  for (const [c, k] of counts) if (k > n) [best, n] = [c, k];
-  return hex(best);
-}
 
 function renderParts() {
   $('parts').innerHTML = Object.entries(look().parts)
     .map(
       ([n, p]) =>
-        `<button class="chip${n === selected ? ' sel' : ''}" data-part="${n}"><i style="background:${partColor(p)}"></i>${n}</button>`,
+        `<button class="chip${n === selected ? ' sel' : ''}" data-part="${n}"><i style="background:${mainColor(p)}"></i>${n}</button>`,
     )
     .join('');
 }
@@ -376,7 +419,7 @@ function renderEditor() {
     ${field('f-x', 'Left / right', p.x, { min: -20, max: 20, step: 0.5 })}
     ${field('f-y', 'Up / down', p.y, { min: -38, max: 6, step: 0.5 })}
     <div class="row"><button id="anchor-mid" class="btn">Anchor to middle</button><button id="anchor-bottom" class="btn">Anchor to bottom</button><button id="clear-part" class="btn danger">Clear pixels</button></div>
-    <div class="sub">Idle wiggle</div>
+    <div class="sub">Idle wiggle${look().anims && look().anims.idle ? ' (not used: this character has an Idle clip)' : ''}</div>
     ${field('f-dy', 'Bob up/down', idle.dy || 0, { min: -6, max: 6, step: 0.5 })}
     ${field('f-angle', 'Tilt (deg)', idle.angle || 0, { min: -45, max: 45 })}
     ${field('f-dur', 'Speed (ms)', idle.duration || 500, { min: 100, max: 2000, step: 10 })}
@@ -401,6 +444,7 @@ function renderAll() {
   renderUndo();
   renderBoardHint();
   board.render();
+  timeline.render();
 }
 
 function select(name) {
@@ -409,12 +453,14 @@ function select(name) {
   renderEditor();
   renderBoardHint();
   board.render();
+  timeline.render();
 }
 
 // Something in the data changed: redraw the preview, the board and the labels.
-function changed({ keepEditor = false } = {}) {
+function changed({ keepEditor = false, fromTimeline = false } = {}) {
   redraw();
   board.render();
+  if (!fromTimeline) timeline.render();
   fillPicker();
   renderStatus();
   renderParts();
@@ -492,6 +538,7 @@ document.addEventListener('change', (e) => {
     endEdit();
     current = t.value;
     selected = null;
+    timeline.selKey = null;
     renderAll();
     redraw();
   } else if (t.id === 'f-name' && selected) {
@@ -507,6 +554,14 @@ document.addEventListener('change', (e) => {
     const next = {};
     for (const [n, p] of Object.entries(look().parts)) next[n === selected ? name : n] = p;
     look().parts = next;
+    // Its keyframes follow it.
+    for (const clip of Object.values(look().anims || {})) {
+      if (clip.tracks[selected]) {
+        clip.tracks[name] = clip.tracks[selected];
+        delete clip.tracks[selected];
+      }
+    }
+    timeline.collapsed.delete(selected);
     selected = name;
     endEdit();
     changed();
@@ -549,6 +604,8 @@ document.addEventListener('click', (e) => {
   if (t.dataset.color) return setColor(Number(t.dataset.color));
   if (t.dataset.anim) {
     anim = t.dataset.anim;
+    tlShow = null; // back to playing like the game
+    if (timeline.playing) timeline.togglePlay();
     document.querySelectorAll('[data-anim]').forEach((b) => b.classList.toggle('on', b === t));
     return redraw();
   }
@@ -585,6 +642,8 @@ document.addEventListener('click', (e) => {
       if (!p || Object.keys(look().parts).length <= 1) return;
       return act(() => {
         delete look().parts[selected];
+        for (const clip of Object.values(look().anims || {})) delete clip.tracks[selected];
+        timeline.selKey = null;
         selected = null;
       });
     case 'up':
@@ -692,6 +751,7 @@ function useSaved(docs) {
     if (!byKey[key]) continue;
     const l = { height: d.height, parts: d.parts };
     if (d.hover !== undefined) l.hover = d.hover;
+    if (d.anims) l.anims = d.anims;
     // An untouched character follows the saved design.
     if (same(working[key], baseline(key))) working[key] = clone(l);
     savedLook[key] = l;

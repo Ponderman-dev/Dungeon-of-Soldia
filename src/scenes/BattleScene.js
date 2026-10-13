@@ -240,6 +240,7 @@ export default class BattleScene extends Phaser.Scene {
       // Look at whoever it is fighting (so the weapon swings towards it).
       const foe = (u.pending && u.pending.target) || (this.views.get(u.foe) || {}).unit || v.lookAt;
       if (foe && foe.alive && foe.x !== undefined && Math.abs(foe.x - u.x) > 6) v.ch.face(foe.x < u.x ? -1 : 1);
+      v.ch.setWalking(!!u.moving || !!v.ch.moveTween); // walk clip (if it has one)
       if (u.side === 'hero') v.ch.setDepth(DEPTH.hero + u.y / 10000);
       this.syncBar(v);
     }
@@ -693,10 +694,12 @@ export default class BattleScene extends Phaser.Scene {
       if (e.skill) {
         // A skill hit: flashes in the skill colour and shows a big coloured number that pops.
         t.ch.flash(Phaser.Display.Color.HexStringToColor(FX.attackColor).color, FX.flashMs);
+        t.ch.hurt();
         this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : FX.attackColor, true, FX.numberSizePx);
         return;
       }
       t.ch.flash();
+      t.ch.hurt();
       const color = e.attacker.side === 'hero' ? damageTypes[e.damageType || e.attacker.damageType].color : '#ff6b6b';
       this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : color, crit);
     } else if (e.type === 'projectile') {
@@ -835,6 +838,7 @@ export default class BattleScene extends Phaser.Scene {
       if (e.unit.side === 'enemy' || e.unit.minion) {
         v.ch.stopMove(); // it fades out where it fell
         v.ch.castCancel();
+        v.ch.die(); // death clip (if it has one) while it fades
         this.drawChips(v);
         this.tweens.add({ targets: [v.ch, v.bg, v.fill, v.shieldFill], alpha: 0, duration: 400, onComplete: () => this.removeView(e.unit.uid) });
       } else {
@@ -842,7 +846,7 @@ export default class BattleScene extends Phaser.Scene {
         v.ch.stopMove();
         v.ch.setPosition(v.ch.homeX, v.ch.homeY).setDepth(DEPTH.hero);
         this.syncBar(v);
-        v.ch.freeze(); // stop floating
+        v.ch.die(); // death clip if it has one, then it stops moving
         v.perkLabel.setText('perk lost');
         v.ch.setAlpha(0.25);
         v.skillButtons.forEach((b) => [b.g, b.code, b.cd].forEach((o) => o.setAlpha(0)));

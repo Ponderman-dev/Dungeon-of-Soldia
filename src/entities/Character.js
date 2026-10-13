@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { CHAR_SCALE } from '../config.js';
 import { partArt, artSize, partAnchor, artPixels, mixColor, artKey } from '../systems/pixelArt.js';
+import { samplePose } from '../systems/animClips.js';
 
 // A character built from separate parts (body, head, weapon...), described by JSON data.
 // Each part is a small pixel picture (`art`, drawn in the Character Studio) or, until it is drawn,
@@ -8,6 +9,11 @@ import { partArt, artSize, partAnchor, artPixels, mixColor, artKey } from '../sy
 //
 // `this.parts[name]` is a light "pose" object (x, y, angle) that the tweens move; the part's image
 // copies it every frame just before drawing (smooth animation; the pixels themselves stay crisp).
+//
+// KEYFRAME CLIPS (`def.anims`, made on the studio timeline) are added on top of that pose. Each action
+// uses its clip when the character has one, else the built-in motion: idle, attack (swing), windup /
+// skillAttack / skillSupport (skills), walk (while moving), hurt (when hit), death. Only the most
+// important clip running plays: death > hurt > action (attack, skill) > walk > idle.
 export default class Character extends Phaser.GameObjects.Container {
   constructor(scene, x, y, def) {
     super(scene, x, y);
@@ -19,6 +25,14 @@ export default class Character extends Phaser.GameObjects.Container {
     this.hopOffset = 0; // how far up the current walking hop has lifted it (so things can follow its feet)
     this.castLift = 0; // skill animation: how far it is lifted (+) or crouched (-), in pixels (the scene adds it)
     this.idleTweens = [];
+    this.anims = def.anims || {};
+    this.action = null; // { id, start, dur, hold } an attack or skill clip running
+    this.hurtAt = null;
+    this.deathAt = null;
+    this.walking = false;
+    this.idleStart = 0;
+    this.idleFrozenAt = null;
+    this.override = null; // studio: { clip, t } shows one clip at one time
 
     for (const [name, p] of Object.entries(def.parts)) {
       const art = partArt(p);
@@ -57,10 +71,74 @@ export default class Character extends Phaser.GameObjects.Container {
         part.image.setOrigin(part.originX, part.originY); // turns around the anchor
         part.shown = key;
       }
-      part.image.x = part.x;
-      part.image.y = part.y;
-      part.image.angle = part.angle;
     }
+    const pose = this.clipPose();
+    for (const part of Object.values(this.parts)) {
+      const o = pose[part.name];
+      part.image.x = part.x + (o ? o.x : 0);
+      part.image.y = part.y + (o ? o.y : 0);
+      part.image.angle = part.angle + (o ? o.angle : 0);
+    }
+  }
+
+  // ---- keyframe clips ---------------------------------------------------------------------------
+
+  // The offsets of the clip that is playing right now (see the top of this file).
+  clipPose() {
+    if (this.override) return samplePose(this.override.clip, this.override.t);
+    const now = this.scene.time.now;
+    const A = this.anims;
+    // A one-shot clip `dur` ms long: time inside the clip, or null when it is over.
+    const shot = (id, start, dur, hold) => {
+      const clip = A[id];
+      if (!clip || start === null) return null;
+      const p = (now - start) / Math.max(1, dur);
+      if (p >= 1 && !hold) return null;
+      return samplePose(clip, Math.min(1, p) * clip.length);
+    };
+    if (this.deathAt !== null && A.death) return shot('death', this.deathAt, A.death.length, true);
+    const hurt = A.hurt && shot('hurt', this.hurtAt, A.hurt.length, false);
+    if (hurt) return hurt;
+    if (this.action) {
+      const pose = shot(this.action.id, this.action.start, this.action.dur, this.action.hold);
+      if (pose) return pose;
+      this.action = null;
+    }
+    const loop = (clip, start) => samplePose(clip, (((now - start) % clip.length) + clip.length) % clip.length);
+    if (this.walking && A.walk) return loop(A.walk, 0);
+    if (A.idle) return samplePose(A.idle, ((this.idleFrozenAt ?? now) - this.idleStart) % A.idle.length);
+    return {};
+  }
+
+  // Starts an action clip (if the character has it). dur = how long it should take (ms), stretched.
+  playClip(id, dur, hold = false) {
+    const clip = this.anims[id];
+    if (!clip) return false;
+    this.action = { id, start: this.scene.time.now, dur: dur ?? clip.length, hold };
+    return true;
+  }
+
+  // Studio: show `clip` frozen at time t (null = back to normal).
+  showClip(clip, t) {
+    this.override = clip ? { clip, t } : null;
+    this.syncParts();
+  }
+
+  // Took a hit: a short flinch (only with a hurt clip).
+  hurt() {
+    if (this.anims.hurt && this.deathAt === null) this.hurtAt = this.scene.time.now;
+  }
+
+  // Fell: plays the death clip and keeps its last pose (without one: just stops moving).
+  die() {
+    this.freeze();
+    this.action = null;
+    if (this.anims.death) this.deathAt = this.scene.time.now;
+  }
+
+  // Walking (the battle tells it each frame): plays the walk clip on top of the hop.
+  setWalking(on) {
+    this.walking = on;
   }
 
   // The texture of a part's picture (washed in a colour if needed), made once and shared.
@@ -86,6 +164,9 @@ export default class Character extends Phaser.GameObjects.Container {
 
   // Gentle idle motion for each part, as described in the part's "idle" data.
   playIdle() {
+    this.idleStart = this.scene.time.now;
+    this.idleFrozenAt = null;
+    if (this.anims.idle) return; // the idle clip does it
     for (const [name, p] of Object.entries(this.def.parts)) {
       const idle = p.idle;
       if (!idle) continue;
@@ -117,6 +198,7 @@ export default class Character extends Phaser.GameObjects.Container {
   // Wind-up: the hero crouches and raises its weapon high over `ms`.
   castWindUp(ms) {
     this.castReset();
+    if (this.playClip('windup', ms, true)) return; // held at its end until the release
     const w = this.parts.weapon;
     this.castTweens = [this.scene.tweens.add({ targets: this, castLift: -4, duration: ms, ease: 'Quad.easeOut' })];
     if (w) this.castTweens.push(this.scene.tweens.add({ targets: w, angle: w.restAngle - 55, duration: ms, ease: 'Quad.easeOut' })); // cocked back
@@ -126,6 +208,8 @@ export default class Character extends Phaser.GameObjects.Container {
   // jumps up with the weapon held high, then settles.
   castRelease(kind) {
     this.castReset(true);
+    if (this.playClip(kind === 'attack' ? 'skillAttack' : 'skillSupport')) return;
+    if (this.action && this.action.id === 'windup') this.action = null;
     const w = this.parts.weapon;
     const tw = this.scene.tweens;
     if (kind === 'attack') {
@@ -144,6 +228,7 @@ export default class Character extends Phaser.GameObjects.Container {
   // Wind-up interrupted (stun...) or over: back to the normal pose.
   castCancel() {
     this.castReset(true);
+    if (this.action && this.action.id === 'windup') this.action = null;
     const w = this.parts.weapon;
     if (w) this.scene.tweens.add({ targets: w, angle: w.restAngle, duration: 150 });
     this.scene.tweens.add({ targets: this, castLift: 0, duration: 150 });
@@ -187,6 +272,7 @@ export default class Character extends Phaser.GameObjects.Container {
 
   // Stops the idle animation (the character holds its current pose). Used when a hero dies.
   freeze() {
+    if (this.idleFrozenAt === null) this.idleFrozenAt = this.scene.time.now; // the idle clip holds too
     for (const t of this.idleTweens) t.stop();
     this.idleTweens = [];
   }
@@ -236,6 +322,7 @@ export default class Character extends Phaser.GameObjects.Container {
     const fromY = this.y;
     const first = getSpot();
     const steps = hop ? Math.hypot(first.x - fromX, first.y - fromY) / hop.length : 0;
+    this.walking = true;
     this.moveTween = this.scene.tweens.addCounter({
       from: 0,
       to: 1,
@@ -256,6 +343,7 @@ export default class Character extends Phaser.GameObjects.Container {
         this.y = spot.y;
         this.hopOffset = 0;
         this.moveTween = null;
+        this.walking = false;
         if (onDone) onDone();
       },
     });
@@ -268,12 +356,14 @@ export default class Character extends Phaser.GameObjects.Container {
     if (this.lungeTween) this.lungeTween.stop();
     this.lungeTween = null;
     this.lunging = false;
+    this.walking = false;
     this.y += this.hopOffset; // stopped mid-hop: land
     this.hopOffset = 0;
   }
 
   // Swings the weapon part (if there is one) down and back up again.
   swing(duration) {
+    if (this.playClip('attack', duration)) return;
     const weapon = this.parts.weapon;
     if (!weapon) return;
     if (this.swingTween) this.swingTween.stop();

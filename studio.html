@@ -85,6 +85,55 @@
       .field.wide { grid-template-columns: 92px minmax(0, 1fr); }
       .sub { font: 11px var(--font-data); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
       .note { font-size: 12px; color: var(--warn); margin: 0; }
+      /* Timeline */
+      .timeline { max-width: 1180px; margin: 16px auto 0; }
+      .tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+      .tab { background: none; border: 1px solid transparent; border-radius: 6px; padding: 5px 10px; cursor: pointer; color: var(--muted); }
+      .tab.has { color: var(--fg); }
+      .tab.has::after { content: ' \25CF'; color: var(--good); font-size: 10px; }
+      .tab.on { border-color: var(--accent); color: var(--accent); }
+      .tl-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-block: 8px; }
+      .tl-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+      .tl-controls .tool { width: 44px; font: 12px var(--font-data); }
+      .tl-time { font: 12px var(--font-data); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 96px; }
+      .tl-len { font-size: 13px; color: var(--muted); margin-left: auto; display: inline-flex; gap: 6px; align-items: center; }
+      .tl-len input, .tl-keyinfo input, .tl-keyinfo select { width: 74px; background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 3px 6px; font: 12px var(--font-data); }
+      .tl-keyinfo select { width: auto; }
+      .tl-grid { display: grid; grid-template-columns: minmax(150px, 230px) minmax(0, 1fr); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--bg); }
+      .tl-left { border-right: 1px solid var(--line); min-width: 0; }
+      .tl-right { position: relative; min-width: 0; }
+      .tl-row { height: 28px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #221c33; padding-inline: 6px; }
+      .tl-right .tl-row { padding-inline: 10px; }
+      .tl-row.layer { background: #191428; }
+      .tl-row.layer.sel { background: #2a2140; }
+      .tl-left .tl-row.prop { padding-left: 22px; font-size: 12px; }
+      .caret { background: none; border: 0; color: var(--muted); cursor: pointer; width: 14px; padding: 0; }
+      .lname { background: none; border: 0; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; font: 13px var(--font-data); padding: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .lname i { width: 10px; height: 10px; border-radius: 2px; border: 1px solid #1a1020; flex: none; }
+      .tl-row.layer.sel .lname { color: var(--accent); }
+      .keybtn { background: none; border: 0; cursor: pointer; color: #4a4066; font-size: 11px; padding: 0 2px; }
+      .keybtn.on { color: var(--accent); }
+      .scrub { cursor: ew-resize; color: var(--muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none; touch-action: none; }
+      .scrub:hover { color: #4fd8e8; }
+      .val { width: 56px; background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 2px 4px; font: 12px var(--font-data); color: #4fd8e8; font-variant-numeric: tabular-nums; }
+      .val:hover, .val:focus { border-color: var(--line); background: var(--panel); }
+      .tl-lane { position: relative; width: 100%; height: 100%; }
+      .tl-ruler { cursor: col-resize; background: #191428; touch-action: none; }
+      .tick { position: absolute; bottom: 0; width: 1px; height: 6px; background: #4a4066; }
+      .tick.major { height: 10px; background: #6f6890; }
+      .tick span { position: absolute; bottom: 11px; left: 3px; font: 10px var(--font-data); color: var(--muted); white-space: nowrap; }
+      .tick span.end { left: auto; right: 3px; }
+      .ruler-left { background: #191428; }
+      .tl-key { position: absolute; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; background: #c8ccd6; border: 1px solid #1a1020; transform: rotate(45deg); cursor: grab; touch-action: none; }
+      .tl-key.linear { background: #9fc4ff; }
+      .tl-key.hold { background: #e0773f; }
+      .tl-key.on { background: var(--accent); outline: 2px solid var(--fg); }
+      .tl-key.sum { width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; background: #6f6890; cursor: default; }
+      .tl-playhead-wrap { position: absolute; inset: 0 10px; pointer-events: none; }
+      .tl-playhead { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #d65b5b; }
+      .tl-playhead::before { content: ''; position: absolute; top: 0; left: -5px; border: 6px solid transparent; border-top-color: #d65b5b; }
+      .tl-keyinfo { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 13px; }
+      .tl-keyinfo label { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
       kbd { font: 11px var(--font-data); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; color: var(--muted); }
     </style>
   </head>
@@ -134,6 +183,8 @@
             <button class="btn" data-anim="swing">Swing</button>
             <button class="btn" data-anim="walk">Walk</button>
             <button class="btn" data-anim="skill">Skill</button>
+            <button class="btn" data-anim="hurt">Hurt</button>
+            <button class="btn" data-anim="death">Death</button>
             <button class="btn" data-anim="flash">Hit flash</button>
             <button id="mirror" class="btn">Mirror</button>
           </div>
@@ -171,6 +222,8 @@
         </div>
       </section>
     </main>
+
+    <section class="card timeline" id="timeline" aria-label="Timeline"></section>
     <script type="module" src="/src/studio/main.js"></script>
   </body>
 </html>

@@ -1,7 +1,7 @@
 // Copies designs saved in the Character Studio into heroes.json / enemies.json / minions.json.
 // Usage: node scripts/apply-designs.mjs <designs.json>
 // <designs.json> is a list of saved designs: { kind: "hero"|"enemy"|"minion", id, height, hover?, parts }.
-// Only the look changes (parts, height, hover); stats and everything else stay as they are.
+// Only the look changes (parts, height, hover, anims); stats and everything else stay as they are.
 import fs from 'node:fs';
 
 const file = process.argv[2];
@@ -22,6 +22,9 @@ for (const d of designs) {
   def.parts = d.parts;
   def.height = d.height;
   if (def.flying && d.hover !== undefined) def.hover = d.hover;
+  // Timeline clips (anims) come with the design; a design without any removes old ones.
+  if (d.anims && Object.keys(d.anims).length) def.anims = d.anims;
+  else delete def.anims;
   console.log(`applied ${d.kind} ${d.id} (${Object.keys(d.parts).length} parts)`);
 }
 

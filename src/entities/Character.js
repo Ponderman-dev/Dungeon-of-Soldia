@@ -25,6 +25,7 @@ export default class Character extends Phaser.GameObjects.Container {
         block.setOrigin(0.5, p.pivotY);
         block.y = p.y + (p.pivotY - 0.5) * p.h;
       }
+      block.origColor = Number(p.color);
       block.restAngle = block.angle; // where it rests (the skill animation returns here)
       this.parts[name] = block;
       this.add(block);
@@ -104,6 +105,18 @@ export default class Character extends Phaser.GameObjects.Container {
     for (const t of this.castTweens || []) t.stop();
     this.castTweens = [];
     if (!keepWeapon && this.swingTween) this.swingTween.stop();
+  }
+
+  // A faint colour wash over the whole character (morale): every part is mixed `amount` (0 to 1)
+  // of the way towards `color`. amount 0 = the normal colours.
+  setWash(color, amount) {
+    const c = Phaser.Display.Color.IntegerToColor(color);
+    for (const block of Object.values(this.parts)) {
+      const o = Phaser.Display.Color.IntegerToColor(block.origColor);
+      const mix = Phaser.Display.Color.Interpolate.ColorWithColor(o, c, 100, Math.round(amount * 100));
+      block.baseColor = Phaser.Display.Color.GetColor(mix.r, mix.g, mix.b);
+      block.setFillStyle(block.baseColor);
+    }
   }
 
   // Stops the idle animation (the character holds its current pose). Used when a hero dies.

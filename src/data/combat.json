@@ -20,8 +20,14 @@
   "restartDelayMs": 3000,
   "meleeVsFlyingMissPercent": 40,
   "attackTiming": {
-    "hero": { "swingMs": 220, "rangedHitMs": 260 },
-    "enemy": { "swingMs": 220, "rangedHitMs": 260 },
+    "hero": {
+      "swingMs": 220,
+      "rangedHitMs": 260
+    },
+    "enemy": {
+      "swingMs": 220,
+      "rangedHitMs": 260
+    },
     "retargetMinMs": 200
   },
   "skillWindUp": {
@@ -52,7 +58,13 @@
     "separatePushPerSec": 140,
     "knockbackPx": 40,
     "knockbackMs": 160,
-    "layout": { "width": 390, "heroY": 720, "enemyY": 340, "marginX": 22, "topMarginY": -40 }
+    "layout": {
+      "width": 390,
+      "heroY": 720,
+      "enemyY": 340,
+      "marginX": 22,
+      "topMarginY": -40
+    }
   },
   "attackMotion": {
     "hopHeight": 7,
@@ -78,9 +90,8 @@
   },
   "morale": {
     "incomplete": {
-      "label": "INCOMPLETE",
-      "color": "#8a4fd0",
-      "textColor": "#ffffff",
+      "tint": "#7a3fc0",
+      "tintAmount": 0.16,
       "mods": [
         {
           "stat": "attack",
@@ -98,13 +109,11 @@
           "stat": "resist",
           "flat": -3
         }
-      ],
-      "popupColor": "#c58bff"
+      ]
     },
     "alone": {
-      "label": "ALL ALONE",
-      "color": "#b03030",
-      "textColor": "#ffffff",
+      "tint": "#4a1080",
+      "tintAmount": 0.4,
       "mods": [
         {
           "stat": "attack",
@@ -122,8 +131,7 @@
           "stat": "resist",
           "flat": -8
         }
-      ],
-      "popupColor": "#ff6b6b"
+      ]
     }
   }
 }

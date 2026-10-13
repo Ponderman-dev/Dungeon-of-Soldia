@@ -151,6 +151,16 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  // Morale: a faint wash over every living hero (light = INCOMPLETE, darker = ALL ALONE). No text.
+  drawMoraleWash() {
+    const m = combatRules.morale[this.state.morale];
+    const color = m ? Phaser.Display.Color.HexStringToColor(m.tint).color : 0;
+    for (const h of this.state.heroes) {
+      const v = this.views.get(h.uid);
+      if (v) v.ch.setWash(color, h.alive && m ? m.tintAmount : 0);
+    }
+  }
+
   // Draws every living fighter where the fight rules say it stands, hopping while it walks.
   // Lower on the screen = drawn in front.
   followPositions() {
@@ -350,9 +360,6 @@ export default class BattleScene extends Phaser.Scene {
       const n = this.state.stacks(view.unit, kind);
       return (statusInfo[kind].dot || statusInfo[kind].stacking) && n > 1 ? { ...statusInfo[kind], label: `${statusInfo[kind].label} x${n}` } : statusInfo[kind];
     });
-    // The party's morale tag (INCOMPLETE / ALL ALONE) shows on every living hero.
-    const morale = view.unit.side === 'hero' && view.unit.alive ? combatRules.morale[this.state.morale] : null;
-    if (morale) tags.unshift(morale);
     let x = 0;
     for (const info of tags) {
       const chip = this.add
@@ -635,12 +642,8 @@ export default class BattleScene extends Phaser.Scene {
       this.setBar(v);
       this.popText(v, String(e.amount), damageTypes[e.damageType].color);
     } else if (e.type === 'morale') {
-      for (const h of this.state.heroes) {
-        const v = this.views.get(h.uid);
-        this.setBar(v);
-        this.drawChips(v);
-        if (h.alive) this.popText(v, `${combatRules.morale[e.tier].label}!`, combatRules.morale[e.tier].popupColor, true);
-      }
+      this.drawMoraleWash();
+      for (const h of this.state.heroes) this.setBar(this.views.get(h.uid));
     } else if (e.type === 'levelup') {
       const v = this.views.get(e.unit.uid);
       this.setLabel(v);

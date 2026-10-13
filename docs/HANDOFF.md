@@ -16,7 +16,7 @@ DONE: all of Phase A (A1 no mana, A2 attack/support skill slots, A3 defense/resi
 MOVEMENT REBUILD done (see below). NEXT: **Phase C (feel)**:
 - DONE: C1 skill wind-up (`castMs`, longer than a normal attack). DECIDED by the user: stunned/frozen during a wind-up = the skill is LOST and GOES ON COOLDOWN.
 - DONE: C2 skill cast visuals (colour flash, ring burst, name banner, bigger coloured numbers, screen shake / hit-stop; skills must look clearly different from normal hits).
-- C3 morale overlay instead of text (very faint tint on living heroes: light = INCOMPLETE, darker = ALL ALONE; remove the tag/popup).
+- DONE: C3 morale wash (Phase C is finished; NEXT is Phase D) instead of text (very faint tint on living heroes: light = INCOMPLETE, darker = ALL ALONE; remove the tag/popup).
 Then Phase D (shields, taunt on enemies, "every 4th attack" counters, minion system), E (10 heroes one by one), F (squad select + unlock saving), G (72 items in groups), H (update test bot + ONE tuning pass).
 
 ## How the fight works now (so you do not break it)

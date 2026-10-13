@@ -13,15 +13,15 @@ Work branch: `claude/quick-gloves-item-changes-ofzyqe` (PR https://github.com/Po
 
 ## WHERE WE ARE: the BIG UPDATE (docs/big-update-plan.md "BUILD ORDER")
 DONE: all of Phase A (A1 no mana, A2 attack/support skill slots, A3 defense/resist curve + caps, A4 new drop roll, A5 damage types, A6 debuff engine) and all of Phase B (B1 attack start/hit split, B2-B4 heroes/enemies walk + arrows, B5 melee movement rework).
-NEXT: **Phase C (feel)**:
-- C1 skill wind-up (`castMs`, longer than a normal attack). OPEN QUESTION the user has not answered yet: if a hero is stunned/frozen during a skill's wind-up, is the skill (a) lost + goes on cooldown, (b) lost + cooldown refunded (my suggestion), or (c) always cast?
+MOVEMENT REBUILD done (see below). NEXT: **Phase C (feel)**:
+- C1 skill wind-up (`castMs`, longer than a normal attack). DECIDED by the user: stunned/frozen during a wind-up = the skill is LOST and GOES ON COOLDOWN.
 - C2 skill cast visuals (colour flash, ring burst, name banner, bigger coloured numbers, screen shake / hit-stop; skills must look clearly different from normal hits).
 - C3 morale overlay instead of text (very faint tint on living heroes: light = INCOMPLETE, darker = ALL ALONE; remove the tag/popup).
 Then Phase D (shields, taunt on enemies, "every 4th attack" counters, minion system), E (10 heroes one by one), F (squad select + unlock saving), G (72 items in groups), H (update test bot + ONE tuning pass).
 
 ## How the fight works now (so you do not break it)
 - BattleState (no Phaser) is the rules; BattleScene draws events. Events: attackStart (attacker, target, hitInMs, approach), attackRetarget, attackCancel (reason), attack (result, basic flag), status, dot, proc, heal, death...
-- A basic attack has a start and a hit (`hitDelay`, combat.json `attackTiming` per side: melee walk-over 600ms, swing 220ms, arrows 260ms). Melee fighters walk STRAIGHT to their target and STAY next to it (`engagedUid`, `foe`); enemies pick the NEAREST hero (`nearest()`, by lane) and keep it; ranged heroes pick random targets. Movement is constant speed with a hop per step (Character.chase). Projectiles aim at `center(view)` (where the target is NOW). The red focus circle follows the enemy. See CLAUDE.md "MELEE MOVEMENT".
+- MOVEMENT was rebuilt (after the user drew how it should look): positions live in BattleState (`place()`, `move()`, combat.json `movement`). Melee fighters walk at a steady speed to their target and swing once in reach; both sides meet in the middle face to face; ranged stay put; fighters push apart. The scene only draws positions (`followPositions()`). A basic attack: start, then hit after `swingMs` (melee) or `rangedHitMs` (arrow). See CLAUDE.md "MOVEMENT". The user disliked earlier tries (stand-beside spots, scene-side tweens): do not go back to faking walks in the scene.
 - Statuses live in `statuses.json` (+ `statusDefs` passed to BattleState). Bleed/burn/poison stack with no limit (each stack its own timer); chill stacks, 5 = freeze; shock, fear, knockback, taunt, silence, weaken, armor break, curse, blind, mark all work (tests in dots / control / stat-debuffs). Only the Rogue's poison and Gambler's Dice use them in the game yet; heroes/items come in phases E/G.
 - Skills: `skills: { attack, support }` per hero, skills.json has `kind`. The Archer's support is a PLACEHOLDER (Eagle Focus) until his redo. Hero stats still have a dormant `mana` field (nothing reads it).
 

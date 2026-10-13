@@ -31,7 +31,7 @@ const BAR_WIDTH = 44;
 const WALL_H = 200; // the back wall (with the door) fills the top of each floor
 const DOOR_X = GAME_WIDTH / 2;
 const T = combatRules.transition;
-const M = combatRules.attackMotion; // how heroes run up, swing, run back and shoot
+const M = combatRules.attackMotion; // how walking looks (hop) and arrows
 const itemDefs = loadItems(rawItems);
 const skillDefs = rawSkills;
 const SKILL_Y = 772; // centre of the skill squares
@@ -59,7 +59,6 @@ export default class BattleScene extends Phaser.Scene {
     this.floor = 1;
     this.mode = 'entering'; // 'entering' | 'fighting' | 'won' | 'lost'
     this.views = new Map(); // unit uid -> { unit, ch, bg, fill, groundY, ... }
-    this.engaged = new Map(); // enemy uid -> Map(hero uid -> spot index): melee heroes standing at that enemy
     this.state = new BattleState({
       heroDefs,
       enemyDefs,
@@ -111,7 +110,27 @@ export default class BattleScene extends Phaser.Scene {
 
   startFighting() {
     this.showSlots(true);
+    // From now on the fight rules move everyone: tell them where each fighter stands (its feet).
+    for (const v of this.views.values()) {
+      if (!v.unit.alive) continue;
+      v.ch.stopMove();
+      this.state.place(v.unit, v.ch.x, v.unit.side === 'hero' ? v.ch.y : v.groundY);
+    }
     this.mode = 'fighting';
+  }
+
+  // Draws every living fighter where the fight rules say it stands, hopping while it walks.
+  // Lower on the screen = drawn in front.
+  followPositions() {
+    for (const v of this.views.values()) {
+      const u = v.unit;
+      if (!u.alive || u.x === undefined || v.ch.lunging) continue;
+      const hover = u.flying ? u.def.hover || 0 : 0;
+      v.ch.hopOffset = u.moving ? Math.abs(Math.sin((u.walked / M.hopLengthPx) * Math.PI)) * M.hopHeight : 0;
+      v.ch.setPosition(u.x, u.y - hover - v.ch.hopOffset);
+      if (u.side === 'hero') v.ch.setDepth(DEPTH.hero + u.y / 10000);
+      this.syncBar(v);
+    }
   }
 
   drawHeroSlots() {
@@ -475,6 +494,7 @@ export default class BattleScene extends Phaser.Scene {
     // Cap the step so switching browser tabs doesn't cause a huge jump.
     const events = this.state.update(Math.min(delta, 100));
     for (const e of events) this.showEvent(e);
+    this.followPositions();
 
     const focus = this.state.focusUnit;
     if (focus) {
@@ -494,23 +514,17 @@ export default class BattleScene extends Phaser.Scene {
       const a = this.views.get(e.attacker.uid);
       const t = this.views.get(e.target.uid);
       if (!a || !t) return;
+      // Melee: it already walked up (the fight rules move it), now it swings. Ranged: an arrow.
       if (e.attacker.damageType !== 'melee') this.shootArrow(a, t, e.hitInMs);
-      else if (e.approach) this.runToTarget(a, t, e.hitInMs); // walk over to the target, then swing
-      else a.ch.swing(e.hitInMs); // already standing at it: just swing
+      else a.ch.swing(e.hitInMs);
     } else if (e.type === 'attackRetarget') {
-      // Its target died mid-attack: the runner turns to the new target, an arrow bends towards it.
+      // Its target died while the arrow was flying: the arrow bends towards the new target.
       const a = this.views.get(e.attacker.uid);
       const t = this.views.get(e.target.uid);
-      if (!a || !t) return;
-      if (e.attacker.damageType === 'melee') this.runToTarget(a, t, e.hitInMs);
-      else if (a.arrow && a.arrow.active) this.flyArrow(a, a.arrow, t, e.hitInMs);
+      if (a && t && a.arrow && a.arrow.active) this.flyArrow(a, a.arrow, t, e.hitInMs);
     } else if (e.type === 'attackCancel') {
       const c = this.views.get(e.unit.uid);
       if (c) this.landArrow(c); // a cancelled shot vanishes
-      // Feared: it backs away to its own spot. Stunned/frozen or nothing left: it stops where it is.
-      // (Knocked back: the knockback status already pushed it.)
-      if (c && e.reason === 'fear') this.runHome(c);
-      else if (c && e.reason !== 'knockback') c.ch.stopMove();
     } else if (e.type === 'attack') {
       const a = this.views.get(e.attacker.uid);
       const t = this.views.get(e.target.uid);
@@ -518,7 +532,7 @@ export default class BattleScene extends Phaser.Scene {
         // The walk/swing or the arrow already showed this attack. Melee fighters STAY where they are.
         this.landArrow(a); // the arrow reaches its target exactly as the damage lands
       } else if (!a.ch.moveTween) {
-        a.ch.lunge(t.ch.homeX, t.ch.homeY); // skills and item hits: a small jab (not while running)
+        a.ch.lunge(t.ch.x, t.ch.y); // skills and item hits: a small jab (only from its own spot)
       }
       if (e.result.dodged) {
         if (e.result.blocked) this.popText(t, 'Blocked!', '#9fc4ff', true);
@@ -538,13 +552,11 @@ export default class BattleScene extends Phaser.Scene {
       this.popText(caster, e.skill.name, '#9fc4ff');
       if (e.skill.target !== 'self' && e.targets[0]) {
         const t = this.views.get(e.targets[0].uid);
-        caster.ch.lunge(t.ch.homeX, t.ch.homeY);
+        caster.ch.lunge(t.ch.x, t.ch.y);
       }
     } else if (e.type === 'status') {
       const v = this.views.get(e.unit.uid);
       this.drawChips(v);
-      if (e.change === 'apply' && e.status.type === 'knockback') this.pushBack(v);
-      if (e.change === 'apply' && e.status.type === 'fear') this.runHome(v); // backs away to its spot
       if (e.change === 'apply' && e.status.type !== 'buff' && statusInfo[e.status.type].popup !== false) {
         this.popText(v, statusInfo[e.status.type].label + '!', statusInfo[e.status.type].color);
       }
@@ -581,15 +593,12 @@ export default class BattleScene extends Phaser.Scene {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
       if (e.unit.side === 'enemy') {
-        this.engaged.delete(e.unit.uid);
-        this.releaseSpot(e.unit.uid);
         v.ch.stopMove(); // it fades out where it fell
         this.drawChips(v);
         this.tweens.add({ targets: [v.ch, v.bg, v.fill], alpha: 0, duration: 400, onComplete: () => this.removeView(e.unit.uid) });
       } else {
         // A hero who falls while away at an enemy is put back in its slot.
         v.ch.stopMove();
-        this.releaseSpot(e.unit.uid);
         v.ch.setPosition(v.ch.homeX, v.ch.homeY).setDepth(DEPTH.hero);
         this.syncBar(v);
         v.ch.freeze(); // stop floating
@@ -607,41 +616,14 @@ export default class BattleScene extends Phaser.Scene {
 
   // ---- hero attack motion (melee run-up, arrows) --------------------------------------------
 
-  // A melee fighter (hero or enemy) walks STRAIGHT to its target and stands next to it, arriving as
-  // the swing lands. Heroes stand just below an enemy, enemies just above a hero. Several fighters on
-  // one target stand side by side (the first one straight across, the others to the side they came
-  // from). The spot follows the target if it moves. It stays there afterwards (no walking back).
-  runToTarget(a, t, hitInMs) {
-    this.releaseSpot(a.unit.uid);
-    const spots = this.engaged.get(t.unit.uid) || new Map();
-    this.engaged.set(t.unit.uid, spots);
-    let index = 0;
-    while ([...spots.values()].includes(index)) index++;
-    spots.set(a.unit.uid, index);
-    const homeSide = a.ch.homeX >= t.ch.x ? 1 : -1;
-    const side = index === 0 ? 0 : index % 2 === 1 ? homeSide : -homeSide;
-    const offsetX = side * Math.ceil(index / 2) * M.spacingPx;
-    const offsetY = a.unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY;
-    const hover = (v) => v.groundY - v.ch.homeY; // flying units float above their ground line
-    const getSpot = () => ({
-      x: Phaser.Math.Clamp(t.ch.x + offsetX, 28, GAME_WIDTH - 28),
-      y: t.ch.y + t.ch.hopOffset + hover(t) + offsetY - hover(a),
-    });
-    const swingMs = combatRules.attackTiming[a.unit.side].swingMs;
-    a.ch.chase(getSpot, Math.max(60, hitInMs - swingMs), {
-      hop: { height: M.hopHeight, length: M.hopLengthPx },
-      onUpdate: () => this.syncBar(a),
-      onDone: () => a.ch.swing(swingMs),
-    });
-    if (a.unit.side === 'hero') a.ch.setDepth(DEPTH.hero + 1); // in front of the other heroes while it is out there
-  }
-
-  // A fighter goes back to its spot (after a hit, a cancelled attack, a win...).
-  runHome(v, duration = M.returnMs) {
+  // A hero walks back to its slot after a win, at the normal walking speed.
+  runHome(v) {
     if (!v) return;
-    this.releaseSpot(v.unit.uid);
-    if (v.ch.x === v.ch.homeX && v.ch.y === v.ch.homeY) return;
-    v.ch.moveTo(v.ch.homeX, v.ch.homeY, duration, {
+    v.ch.y += v.ch.hopOffset; // land first if it was mid-hop
+    v.ch.hopOffset = 0;
+    const dist = Math.hypot(v.ch.homeX - v.ch.x, v.ch.homeY - v.ch.y);
+    if (dist < 1) return;
+    v.ch.moveTo(v.ch.homeX, v.ch.homeY, (dist / combatRules.movement.walkSpeedPxPerSec) * 1000, {
       hop: { height: M.hopHeight, length: M.hopLengthPx },
       onUpdate: () => this.syncBar(v),
       onDone: () => {
@@ -649,19 +631,6 @@ export default class BattleScene extends Phaser.Scene {
         this.syncBar(v);
       },
     });
-  }
-
-  // Knocked back: pushed a little towards its own side (away from the enemy line).
-  pushBack(v) {
-    this.releaseSpot(v.unit.uid);
-    const dir = v.unit.side === 'hero' ? 1 : -1; // heroes are pushed down, enemies up
-    const y = Phaser.Math.Clamp(v.ch.y + dir * M.knockbackPx, Math.min(v.ch.y, v.ch.homeY), Math.max(v.ch.y, v.ch.homeY));
-    v.ch.moveTo(v.ch.x, y, M.knockbackMs, { ease: 'Quad.easeOut', onUpdate: () => this.syncBar(v) });
-  }
-
-  // Frees the spot a melee fighter had next to its target.
-  releaseSpot(uid) {
-    for (const spots of this.engaged.values()) spots.delete(uid);
   }
 
   // A ranged fighter's basic attack: an arrow that flies to the target and arrives as the hit lands.
@@ -795,7 +764,7 @@ export default class BattleScene extends Phaser.Scene {
     this.state.clearStatuses();
     for (const h of this.state.heroes) {
       const v = this.views.get(h.uid);
-      if (h.alive) this.runHome(v, 200); // anyone still out at an enemy comes back before the walk
+      if (h.alive) this.runHome(v); // anyone still out at an enemy walks back before the door walk
       this.drawChips(v);
     }
     for (const { unit, amount } of this.state.winHeal(combatRules.winHealPercent)) {

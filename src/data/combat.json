@@ -20,20 +20,26 @@
   "restartDelayMs": 3000,
   "meleeVsFlyingMissPercent": 40,
   "attackTiming": {
-    "hero": { "meleeHitMs": 600, "swingMs": 220, "rangedHitMs": 260 },
-    "enemy": { "meleeHitMs": 600, "swingMs": 220, "rangedHitMs": 260 },
+    "hero": { "swingMs": 220, "rangedHitMs": 260 },
+    "enemy": { "swingMs": 220, "rangedHitMs": 260 },
     "retargetMinMs": 200
   },
+  "movement": {
+    "_about": "Real movement in fights (BattleState.move). Melee walk to their target at walkSpeedPxPerSec until it is inside the reach oval (reachX sideways, reachY up/down), then swing. Fighters closer than the separate oval push apart. layout = where the lines stand (also used by tests/bot).",
+    "walkSpeedPxPerSec": 170,
+    "reachX": 64,
+    "reachY": 94,
+    "separateX": 54,
+    "separateY": 82,
+    "separatePushPerSec": 140,
+    "knockbackPx": 40,
+    "knockbackMs": 160,
+    "layout": { "width": 390, "heroY": 720, "enemyY": 340, "marginX": 22, "topMarginY": -40 }
+  },
   "attackMotion": {
-    "returnMs": 280,
     "hopHeight": 7,
     "hopLengthPx": 38,
-    "standOffY": 76,
-    "enemyStandOffY": 64,
-    "spacingPx": 52,
-    "arrowColor": "0xe6e6b8",
-    "knockbackPx": 40,
-    "knockbackMs": 160
+    "arrowColor": "0xe6e6b8"
   },
   "transition": {
     "clearPauseMs": 600,

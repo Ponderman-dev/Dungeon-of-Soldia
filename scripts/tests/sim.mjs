@@ -15,6 +15,7 @@ for (let run = 0; run < N; run++) {
   let floor = 1;
   while (floor < 120) {
     s.spawnEnemies(enemiesForFloor(dungeon, floor), floor);
+    s.placeLines(); // fighters start in their rows and walk (like the battle screen)
     let t = 0;
     while (!s.allEnemiesDead() && !s.allHeroesDead() && t < 900000) {
       s.update(50); t += 50;

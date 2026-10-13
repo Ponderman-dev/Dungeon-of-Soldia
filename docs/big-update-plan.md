@@ -240,7 +240,7 @@ Decided with the user:
 - DONE (B5a + B5b). Build: B5a rules in BattleState (sticky targets, engagement, approach vs swing timing) + tests; B5b the scene (advance to the front, stay, no bouncing).
 
 ### Phase C: Feel
-- C1. Skill wind-up (`castMs`), longer than a normal attack; stun/freeze during wind-up cancels the cast (to confirm).
+- C1. Skill wind-up (`castMs`), longer than a normal attack; stun/freeze during wind-up cancels the cast and the skill still goes on cooldown (user decided).
 - C2. Skill cast visuals: colour flash, ring burst, name banner, bigger coloured numbers, screen shake / hit-stop.
 - C3. Morale overlay instead of text.
 

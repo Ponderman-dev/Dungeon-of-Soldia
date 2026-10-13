@@ -9,6 +9,7 @@ function run(rules) {
   let floor = 1;
   while (floor < 80) {
     s.spawnEnemies(enemiesForFloor(dungeon, floor), floor);
+    s.placeLines(); // fighters start in their rows and walk (like the battle screen)
     let t = 0;
     while (!s.allEnemiesDead() && !s.allHeroesDead() && t < 600000) { s.update(50); t += 50; }
     if (s.allHeroesDead()) break;

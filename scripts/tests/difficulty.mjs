@@ -21,6 +21,7 @@ for (let run = 0; run < N; run++) {
   let floor = 1;
   while (floor <= MAX) {
     s.spawnEnemies(enemiesForFloor(dungeon, floor), floor);
+    s.placeLines(); // fighters start in their rows and walk (like the battle screen)
     reached[floor]++;
     const before = s.heroes.filter((h) => h.alive).reduce((a, h) => a + h.hp / h.maxHp, 0) / Math.max(1, s.heroes.filter((h) => h.alive).length);
     let t = 0;

@@ -16,7 +16,13 @@ export const SKILL_SLOTS = ['attack', 'support'];
 //         attackStart (a basic attack begins: { attacker, target, hitInMs }; its 'attack' event comes when it lands),
 //         attackCancel (an attack in progress was stopped: the attacker got stunned, frozen, feared,
 //                       knocked back, or nothing is left to hit),
-//         attackRetarget (an attack in progress lost its target, it now goes for { target, hitInMs })
+//         attackRetarget (a ranged attack in progress lost its target, it now goes for { target, hitInMs })
+//
+// MOVEMENT: every fighter has a real position (x, y = its feet on the ground, in screen pixels) once
+// place() / placeLines() was called. Melee fighters WALK to their target at a steady speed
+// (combat.json `movement`) and only start an attack when they are close enough (`reach`); ranged
+// fighters stay where they are. Fighters gently push apart so they don't stand on top of each other.
+// Without positions (some rule tests) nobody moves and melee can always hit.
 export default class BattleState {
   constructor({ heroDefs, enemyDefs, itemDefs = {}, skillDefs = {}, statusDefs = {}, rules, damageTypes, leveling, rng = Math.random }) {
     this.rules = rules;
@@ -72,7 +78,13 @@ export default class BattleState {
       dotClocks: {}, // damage over time: ms since the last tick, per kind (bleed, burn, poison)
       pending: null, // a basic attack that has started but not landed yet: { target, remaining }
       foe: null, // melee: the uid of the opponent it keeps fighting (see pickTarget)
-      engagedUid: null, // melee: the uid of the unit it is standing next to (then it only needs to swing)
+      x: undefined, // where it stands (feet), set by place(); undefined = no movement (tests)
+      y: undefined,
+      homeX: undefined, // its own spot (where fear sends it back to)
+      homeY: undefined,
+      moving: false, // walked this update (the scene makes it hop)
+      walked: 0, // total distance walked (the scene uses it for the hop rhythm)
+      knock: null, // being knocked back: { vx, vy, remaining }
       damageBonus: {},
       specials: {},
       procs: [],
@@ -111,7 +123,6 @@ export default class BattleState {
     for (const h of this.heroes) {
       h.pending = null; // attacks aimed at the last floor's enemies are gone
       h.foe = null;
-      h.engagedUid = null;
     }
     this.enemies = ids.map((id) => this.makeUnit(this.enemyDefs[id], 'enemy', floor, ids.length));
     return this.enemies;
@@ -134,18 +145,45 @@ export default class BattleState {
     return this.heroes.every((h) => !h.alive);
   }
 
+  // Puts a fighter at a spot (its feet). This is also its home spot (fear sends it back there).
+  place(unit, x, y) {
+    unit.x = unit.homeX = x;
+    unit.y = unit.homeY = y;
+    unit.moving = false;
+    unit.knock = null;
+  }
+
+  // Places both lines like the battle screen does (combat.json `movement.layout`): heroes in a row at
+  // the bottom, enemies in a row at the top, spread evenly. Used by tests and the balance bot.
+  placeLines() {
+    const L = this.rules.movement.layout;
+    for (const [line, y] of [[this.heroes, L.heroY], [this.enemies, L.enemyY]]) {
+      line.forEach((u, i) => this.place(u, (L.width * (i + 0.5)) / line.length, y));
+    }
+  }
+
+  hasPositions(unit) {
+    return unit.x !== undefined;
+  }
+
   // Where a unit stands across the screen, 0 (left) to 1 (right), from its slot in its line.
   lane(unit) {
     const line = unit.side === 'hero' ? this.heroes : this.enemies;
     return (line.indexOf(unit) + 0.5) / line.length;
   }
 
-  // The unit in `list` standing closest across the screen (ties broken at random).
+  // How far apart two units are (real distance if they have positions, else by lane).
+  distance(a, b) {
+    if (this.hasPositions(a) && this.hasPositions(b)) return Math.hypot(a.x - b.x, a.y - b.y);
+    return Math.abs(this.lane(a) - this.lane(b));
+  }
+
+  // The unit in `list` standing closest (ties broken at random).
   nearest(unit, list) {
     let best = null;
     let bestDist = Infinity;
     for (const other of list) {
-      const dist = Math.abs(this.lane(other) - this.lane(unit)) + this.rng() * 0.001;
+      const dist = this.distance(unit, other) + this.rng() * 0.001;
       if (dist < bestDist) {
         best = other;
         bestDist = dist;
@@ -158,8 +196,8 @@ export default class BattleState {
   //  - Taunted: whoever taunted it.
   //  - Heroes: the tapped enemy if there is one. Melee heroes keep their opponent (`foe`) until it
   //    dies, then take the NEAREST enemy. Ranged heroes pick any enemy at random.
-  //  - Melee enemies keep their opponent too, and a new one is always the NEAREST hero (closest
-  //    across the screen, whether melee or ranged). Ranged enemies pick at random.
+  //  - Melee enemies keep their opponent too, and a new one is always the NEAREST hero (melee or
+  //    ranged). Ranged enemies pick at random.
   pickTarget(unit) {
     const taunt = unit.statuses.find((s) => s.type === 'taunt');
     if (taunt) {
@@ -183,17 +221,84 @@ export default class BattleState {
     return foe;
   }
 
-  // Two units stand next to each other if either one walked over to the other.
-  standingTogether(a, b) {
-    return a.engagedUid === b.uid || b.engagedUid === a.uid;
+  // A melee unit is close enough to hit: inside an oval around the target (`reachX` sideways, `reachY`
+  // up/down, a little more up/down because the fighters are tall). Without positions: always.
+  inReach(unit, target) {
+    if (!this.hasPositions(unit) || !this.hasPositions(target)) return true;
+    const M = this.rules.movement;
+    const dx = (target.x - unit.x) / M.reachX;
+    const dy = (target.y - unit.y) / M.reachY;
+    return dx * dx + dy * dy <= 1;
   }
 
-  // A melee unit leaves where it stood (it walks to someone else, or is knocked back): it is no
-  // longer standing next to anyone, and anyone who was standing next to it has to walk in again
-  // (except `goingTo`, the unit it is walking over to).
-  breakEngagement(unit, goingTo = null) {
-    unit.engagedUid = null;
-    for (const other of [...this.heroes, ...this.enemies]) if (other.engagedUid === unit.uid && other !== goingTo) other.engagedUid = null;
+  // Everyone who can walks this update: melee fighters towards their target (until in reach), feared
+  // ones back to their own spot, knocked-back ones get pushed. Then fighters that stand too close push
+  // apart a little (`separateX/Y`), so a crowd spreads around a target instead of piling up.
+  move(dt) {
+    const M = this.rules.movement;
+    if (!M) return;
+    const units = [...this.heroes, ...this.enemies].filter((u) => u.alive && this.hasPositions(u));
+    const before = new Map(units.map((u) => [u, { x: u.x, y: u.y }]));
+    const step = (M.walkSpeedPxPerSec * dt) / 1000;
+    for (const u of units) {
+      if (u.knock) {
+        const t = Math.min(dt, u.knock.remaining);
+        u.x += u.knock.vx * t;
+        u.y += u.knock.vy * t;
+        u.knock.remaining -= dt;
+        if (u.knock.remaining <= 0) u.knock = null;
+        continue;
+      }
+      if (this.isStunned(u) || u.pending) continue; // frozen in place, or busy swinging
+      let goal = null;
+      if (this.has(u, 'fear')) goal = { x: u.homeX, y: u.homeY, stop: 0 };
+      else if (u.damageType === 'melee') {
+        const target = this.pickTarget(u);
+        if (target && !this.inReach(u, target)) goal = { x: target.x, y: target.y };
+      }
+      if (!goal) continue;
+      const dx = goal.x - u.x;
+      const dy = goal.y - u.y;
+      const len = Math.hypot(dx, dy);
+      if (len < 0.5) continue;
+      const d = Math.min(step, len);
+      u.x += (dx / len) * d;
+      u.y += (dy / len) * d;
+    }
+    // Push apart. Ranged fighters hold their ground (only the other one moves).
+    const push = (M.separatePushPerSec * dt) / 1000;
+    for (let i = 0; i < units.length; i++) {
+      for (let j = i + 1; j < units.length; j++) {
+        const a = units[i];
+        const b = units[j];
+        const d = Math.hypot((b.x - a.x) / M.separateX, (b.y - a.y) / M.separateY); // < 1 = too close
+        if (d >= 1) continue;
+        let nx = b.x - a.x;
+        let ny = b.y - a.y;
+        let len = Math.hypot(nx, ny);
+        if (len < 0.01) {
+          nx = a.uid < b.uid ? 1 : -1; // exactly on top of each other: split sideways
+          ny = 0;
+          len = 1;
+        }
+        const amount = Math.min(push, (1 - d) * M.separateX);
+        const wa = a.damageType === 'melee' || b.damageType !== 'melee' ? 1 : 0;
+        const wb = b.damageType === 'melee' || a.damageType !== 'melee' ? 1 : 0;
+        a.x -= (nx / len) * amount * (wa / (wa + wb));
+        a.y -= (ny / len) * amount * (wa / (wa + wb));
+        b.x += (nx / len) * amount * (wb / (wa + wb));
+        b.y += (ny / len) * amount * (wb / (wa + wb));
+      }
+    }
+    const L = M.layout;
+    for (const u of units) {
+      u.x = Math.min(L.width - L.marginX, Math.max(L.marginX, u.x));
+      u.y = Math.min(L.heroY, Math.max(L.enemyY + L.topMarginY, u.y));
+      const b = before.get(u);
+      const moved = Math.hypot(u.x - b.x, u.y - b.y);
+      u.moving = moved > 0.05;
+      u.walked += moved;
+    }
   }
 
   // Marks a unit dead. Enemies give XP; a dead hero's items stop working.
@@ -203,7 +308,7 @@ export default class BattleState {
     target.statuses = [];
     target.dotClocks = {};
     target.pending = null; // an attack it had started never lands
-    this.breakEngagement(target);
+    target.moving = false;
     for (const u of [...this.heroes, ...this.enemies]) if (u.foe === target.uid) u.foe = null;
     this.retargetAttacksOn(target, events);
     if (this.focusUid === target.uid) this.focusUid = null;
@@ -219,6 +324,7 @@ export default class BattleState {
   update(dt) {
     const events = [];
     this.tickStatuses(dt, events);
+    this.move(dt);
 
     // Health regenerates (Heart Charm) and skill cooldowns run down.
     for (const hero of this.heroes) {
@@ -265,32 +371,33 @@ export default class BattleState {
       }
 
       const target = this.pickTarget(unit);
-      if (!target) {
-        unit.timer = interval; // nothing to hit yet: stay ready
+      // Nothing to hit yet, or a melee fighter still walking over: stay ready, attack on arrival.
+      if (!target || (unit.damageType === 'melee' && !this.inReach(unit, target))) {
+        unit.timer = interval;
         continue;
       }
       unit.timer -= interval;
 
-      // The attack starts now and lands after `hitDelay` (melee: the run-up and swing, ranged: the
-      // shot's flight). With a delay of 0 it lands at once.
+      // The attack starts now and lands after `hitDelay` (melee: the swing, ranged: the shot's
+      // flight). With a delay of 0 it lands at once.
       const hitInMs = this.hitDelay(unit, target);
-      const approach = unit.damageType === 'melee' && !this.standingTogether(unit, target);
-      if (approach) this.breakEngagement(unit, target); // it walks over to its target: it leaves where it stood
-      events.push({ type: 'attackStart', attacker: unit, target, hitInMs, approach });
+      events.push({ type: 'attackStart', attacker: unit, target, hitInMs });
       if (hitInMs > 0) unit.pending = { target, remaining: hitInMs };
       else this.landAttack(unit, target, events);
     }
     return events;
   }
 
-  // Attacks that were on their way to a unit that just died go for someone else (or are cancelled
-  // if nobody is left). They get at least `retargetMinMs` to reach the new target.
+  // Attacks that were on their way to a unit that just died: an arrow goes for someone else (it gets
+  // at least `retargetMinMs`); a melee swing is lost (the fighter stays ready and walks to its next
+  // target, attacking when it gets there). Nobody left: cancelled.
   retargetAttacksOn(dead, events) {
     for (const unit of [...this.heroes, ...this.enemies]) {
       if (!unit.alive || !unit.pending || unit.pending.target !== dead) continue;
       const next = this.pickTarget(unit);
-      if (!next) {
+      if (!next || (unit.damageType === 'melee' && !this.inReach(unit, next))) {
         unit.pending = null;
+        unit.timer = this.interval(unit); // ready again as soon as it reaches someone
         events.push({ type: 'attackCancel', unit, reason: 'noTarget' });
         continue;
       }
@@ -301,20 +408,17 @@ export default class BattleState {
   }
 
   // How long a basic attack takes from start to hit (combat.json `attackTiming`, per side:
-  // hero / enemy). Melee: a swing if it already stands next to its target (`swingMs`), else the walk
-  // over plus the swing (`meleeHitMs`). Ranged: the shot's flight (`rangedHitMs`).
-  hitDelay(unit, target = null) {
+  // hero / enemy). Melee: the swing (`swingMs`; the walk over happens before, see move()).
+  // Ranged: the shot's flight (`rangedHitMs`).
+  hitDelay(unit) {
     const timing = (this.rules.attackTiming && this.rules.attackTiming[unit.side]) || {};
-    if (unit.damageType !== 'melee') return timing.rangedHitMs || 0;
-    if (target && this.standingTogether(unit, target)) return timing.swingMs ?? timing.meleeHitMs ?? 0;
-    return timing.meleeHitMs || 0;
+    return (unit.damageType === 'melee' ? timing.swingMs : timing.rangedHitMs) || 0;
   }
 
   // A basic attack hits. If its target died in the meantime it goes to a new target instead.
   landAttack(unit, target, events) {
     if (!target.alive) target = this.pickTarget(unit);
     if (!target) return;
-    if (unit.damageType === 'melee') unit.engagedUid = target.uid; // it now stands next to its target
     const hit = this.strike(unit, target, events, { basic: true });
     this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged });
   }
@@ -452,7 +556,12 @@ export default class BattleState {
       // already on its way is stopped.
       if (spec.status === 'knockback') {
         target.timer *= 1 - scale;
-        this.breakEngagement(target); // pushed away: it has to walk in again
+        // Pushed back `knockbackPx` towards its own side over `knockbackMs` (heroes down, enemies up).
+        const M = this.rules.movement;
+        if (M && this.hasPositions(target)) {
+          const dir = target.side === 'hero' ? 1 : -1;
+          target.knock = { vx: 0, vy: (dir * M.knockbackPx) / M.knockbackMs, remaining: M.knockbackMs };
+        }
         if (target.pending) {
           target.pending = null;
           events.push({ type: 'attackCancel', unit: target, reason: 'knockback' });

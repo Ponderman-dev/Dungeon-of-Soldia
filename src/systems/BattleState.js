@@ -295,10 +295,7 @@ export default class BattleState {
         continue;
       }
       unit.pending.target = next;
-      const minMs = (this.rules.attackTiming && this.rules.attackTiming.retargetMinMs) || 0;
-      // A melee fighter has to walk to the new target at its normal speed (no teleporting).
-      const walkMs = unit.damageType === 'melee' ? this.hitDelay(unit, next) : 0;
-      unit.pending.remaining = Math.max(minMs, walkMs, unit.damageType === 'melee' ? 0 : unit.pending.remaining);
+      unit.pending.remaining = Math.max(unit.pending.remaining, (this.rules.attackTiming && this.rules.attackTiming.retargetMinMs) || 0);
       events.push({ type: 'attackRetarget', attacker: unit, target: next, hitInMs: unit.pending.remaining });
     }
   }

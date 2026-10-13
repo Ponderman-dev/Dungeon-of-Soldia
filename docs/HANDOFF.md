@@ -11,6 +11,9 @@ Preview page: https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr (private; publis
 ## Branch
 Work branch: `claude/quick-gloves-item-changes-ofzyqe` (PR https://github.com/Ponderman-dev/Dungeon-of-Soldia/pull/1 exists; pushing updates it). Commit + push after every step. Do not open new PRs unless asked. Commit messages end with the attribution lines the session gives you.
 
+## Character Studio (side tool)
+A design page for the colored-block characters: https://claude.ai/artifact/1azV1LBUimRkeavNpQBgc7 . See CLAUDE.md "Character Studio" for building it and applying saved designs.
+
 ## WHERE WE ARE: the BIG UPDATE (docs/big-update-plan.md "BUILD ORDER")
 DONE: all of Phase A (A1 no mana, A2 attack/support skill slots, A3 defense/resist curve + caps, A4 new drop roll, A5 damage types, A6 debuff engine) and all of Phase B (B1 attack start/hit split, B2-B4 heroes/enemies walk + arrows, B5 melee movement rework).
 MOVEMENT REBUILD done (see below). NEXT: **Phase D (D1 shields/invulnerable DONE, D2 taunt DONE, D3 counters DONE, D4 minions DONE) = PHASE D FINISHED. PHASE E (heroes): E1 Knight DONE, E2 Rogue DONE, E3-E10 ALL DONE (see CLAUDE.md), Phase F DONE (squad select, RANDOM, saved unlocks), PHASE G DONE (all 72 items, see CLAUDE.md), NEXT = Phase H (update test bot, ONE tuning pass)**. (Phase C below is done):

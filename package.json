@@ -9,7 +9,8 @@
     "preview": "vite preview --host",
     "build:page": "vite build && node scripts/make-page.mjs dist-page.html",
     "test": "node scripts/tests/run-all.mjs",
-    "sim": "node scripts/tests/sim.mjs skills rewards"
+    "sim": "node scripts/tests/sim.mjs skills rewards",
+    "build:studio": "vite build --config vite.studio.config.js && node scripts/make-page.mjs studio-page.html dist-studio/studio.html"
   },
   "dependencies": {
     "phaser": "^4.2.1",

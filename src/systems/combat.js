@@ -64,7 +64,7 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
     return { dodged: true, crit: false, amount: 0, mult: 1 };
   }
 
-  const crit = rng() * 100 < Math.min(attacker.stats.crit, rules.caps.crit);
+  const crit = rng() * 100 < Math.min(attacker.stats.crit + (opts.critBonus || 0), rules.caps.crit);
   const critMultiplier = rules.critMultiplier + ((attacker.specials && attacker.specials.critDamage) || 0) / 100;
   // Weaken: the attacker hits softer.
   const attack = attacker.stats.attack * Math.max(0, 1 + statusSum(attacker, 'weaken', 'attackPercent') / 100);
@@ -75,6 +75,7 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
   amount *= 1 + ((attacker.damageBonus && attacker.damageBonus[type]) || 0) / 100;
   amount *= 1 - armourCut(defender, type, rules, damageTypes) / 100;
   amount *= markMultiplier(defender);
+  amount *= 1 + (opts.damagePercent || 0) / 100; // e.g. the Rogue's Opportunist vs debuffed enemies
 
   return { dodged: false, crit, amount: Math.max(1, Math.round(amount)), mult };
 }

@@ -243,8 +243,8 @@
       "attackEfficiency": 0.5
     },
     "skills": {
-      "attack": "venom_strike",
-      "support": "smoke"
+      "attack": "fan_of_knives",
+      "support": "smoke_bomb"
     },
     "perk": {
       "name": "Keen Eyes",
@@ -255,6 +255,15 @@
           "growth": 0.15
         }
       ]
+    },
+    "passive": {
+      "name": "Opportunist",
+      "description": "+15% damage and +10 crit against any enemy that has a debuff. His own chance-based debuffs (item procs, crit debuffs) are 25% more likely.",
+      "opportunist": {
+        "damagePercent": 15,
+        "critFlat": 10,
+        "debuffChancePercent": 25
+      }
     }
   },
   {

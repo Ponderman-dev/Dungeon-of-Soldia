@@ -662,6 +662,22 @@ export default class BattleState {
     this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, force: empower.some((f) => f.counter.forceProcs) });
   }
 
+  // ---- Opportunist (the Rogue's passive: def.passive.opportunist) ---------------------------------
+  opportunist(unit) {
+    return (unit.def.passive && unit.def.passive.opportunist) || null;
+  }
+
+  // Has the unit any harmful status (statuses.json `debuff: true`)?
+  isDebuffed(unit) {
+    return unit.statuses.some((st) => this.statusDefs[st.type] && this.statusDefs[st.type].debuff);
+  }
+
+  // The chance (in %) that one of the unit's own CHANCE-based debuffs goes off: the Rogue gets a bonus.
+  debuffChance(unit, chance) {
+    const op = this.opportunist(unit);
+    return op ? chance * (1 + op.debuffChancePercent / 100) : chance;
+  }
+
   // ---- "every Nth attack" counters (a hero def can have `counter`) ----------------------------------
   // counter: { id, label, color, every (4), scope: 'self' | 'squad', effect: 'empower' | 'heal',
   //   firedLabel, strike {damageMultiplier, damageType}, apply [status specs], forceProcs,
@@ -752,6 +768,9 @@ export default class BattleState {
   // basic (a hero's/enemy's normal attack, not a skill or item hit),
   // projectile ('bomb', 'lightning': the scene draws it flying from the attacker).
   strike(attacker, target, events, opts = {}) {
+    // Opportunist (Rogue): more damage and crit against enemies that have any debuff.
+    const op = this.opportunist(attacker);
+    if (op && this.isDebuffed(target)) opts = { ...opts, damagePercent: (opts.damagePercent || 0) + op.damagePercent, critBonus: (opts.critBonus || 0) + op.critFlat };
     const result = computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, opts);
     let dealt = null;
     if (!result.dodged) {
@@ -790,7 +809,9 @@ export default class BattleState {
   rollProcs(hero, trigger, events, ctx = {}) {
     if (hero.side !== 'hero' || !hero.alive) return;
     for (const proc of [...hero.procs]) {
-      if (proc.proc !== trigger || (!ctx.force && this.rng() * 100 >= proc.chance)) continue; // ctx.force: every proc goes off
+      const debuffs = (proc.apply || []).some((sp) => (sp.to === 'target' || (!sp.to && proc.targets === 'target')) && this.statusDefs[sp.status] && this.statusDefs[sp.status].debuff);
+      const chance = debuffs ? this.debuffChance(hero, proc.chance) : proc.chance; // Opportunist: his debuffs are likelier
+      if (proc.proc !== trigger || (!ctx.force && this.rng() * 100 >= chance)) continue; // ctx.force: every proc goes off
       if (!proc.silent) events.push({ type: 'proc', unit: hero, label: proc.label });
       const enemy = ctx.target && ctx.target.alive ? ctx.target : null;
       let landed = ctx.hit !== false; // statuses on the target need the attack to have connected
@@ -862,7 +883,7 @@ export default class BattleState {
     }
     // Gambler's Dice: a crit also gives the enemy a random debuff.
     const dice = attacker.specials && attacker.specials.critDebuffList;
-    if (result.crit && dice && dice.length && target.alive && target.hp > 0 && this.rng() * 100 < attacker.specials.critDebuff) {
+    if (result.crit && dice && dice.length && target.alive && target.hp > 0 && this.rng() * 100 < this.debuffChance(attacker, attacker.specials.critDebuff)) {
       const spec = dice[Math.floor(this.rng() * dice.length)];
       this.applyStatus(target, spec, attacker, `dice_${attacker.uid}`, events);
     }
@@ -1150,6 +1171,8 @@ export default class BattleState {
     events.push({ type: 'cast', unit: hero, skill, targets });
     // `cleanse: N`: every target loses N debuffs (a whole kind each, the oldest first).
     if (skill.cleanse) for (const t of targets) this.cleanse(t, skill.cleanse, events);
+    // `applyEnemies`: statuses every living enemy gets (Smoke Bomb: blind).
+    for (const spec of skill.applyEnemies || []) for (const e of this.enemies.filter((x) => x.alive)) this.applyStatus(e, spec, hero, slot.id, events);
 
     for (const target of targets) {
       if (skill.damageMultiplier) {
@@ -1157,8 +1180,11 @@ export default class BattleState {
           multiplier: skill.damageMultiplier * (1 + ((hero.specials && hero.specials.skillDamage) || 0) / 100),
           damageType: skill.damageType,
           skill,
+          projectile: skill.projectile,
         });
         if (result.dodged || !target.alive) continue;
+        // `onCrit`: statuses that only a crit puts on the target (Fan of Knives: bleed).
+        if (result.crit) for (const spec of skill.onCrit || []) this.applyStatus(target, spec, hero, `${slot.id}_crit`, events);
       }
       for (const spec of skill.apply || []) this.applyStatus(target, spec, hero, slot.id, events);
     }

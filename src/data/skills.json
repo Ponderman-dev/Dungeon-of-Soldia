@@ -194,5 +194,51 @@
     ],
     "cleanse": 1,
     "description": "The whole squad gets +15 defense for 6s and every hero loses one debuff."
+  },
+  "fan_of_knives": {
+    "name": "Fan of Knives",
+    "short": "FK",
+    "kind": "attack",
+    "target": "allEnemies",
+    "damageType": "ranged",
+    "cooldownMs": 9000,
+    "castMs": 700,
+    "damageMultiplier": 0.7,
+    "projectile": "knife",
+    "onCrit": [
+      {
+        "status": "bleed",
+        "durationMs": 4000,
+        "damageMultiplier": 0.3
+      }
+    ],
+    "description": "Throw knives at ALL enemies (ranged damage, from his slot, 70% damage each). Every knife crits on its own, and a crit makes the enemy bleed."
+  },
+  "smoke_bomb": {
+    "name": "Smoke Bomb",
+    "short": "SM",
+    "kind": "support",
+    "target": "squad",
+    "cooldownMs": 13000,
+    "castMs": 600,
+    "apply": [
+      {
+        "status": "buff",
+        "durationMs": 4000,
+        "mods": [
+          {
+            "stat": "evasion",
+            "flat": 30
+          }
+        ]
+      }
+    ],
+    "applyEnemies": [
+      {
+        "status": "blind",
+        "durationMs": 4000
+      }
+    ],
+    "description": "The whole squad gets +30 evasion for 4s and all enemies are Blinded (they miss 25% of their attacks)."
   }
 }

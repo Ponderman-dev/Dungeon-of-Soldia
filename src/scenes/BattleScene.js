@@ -859,6 +859,23 @@ export default class BattleScene extends Phaser.Scene {
       this.tweens.add({ targets: g, alpha: 0, duration: 350, onComplete: () => g.destroy() });
       return;
     }
+    if (kind === 'knife') {
+      // A small throwing knife that spins as it flies straight to its target.
+      const k = this.add.rectangle(start.x, start.y, 11, 3, 0xdfe6ee).setStrokeStyle(1, 0x20242c).setDepth(DEPTH.popup);
+      this.tweens.addCounter({
+        from: 0,
+        to: 1,
+        duration: 200,
+        onUpdate: (tween) => {
+          const p = tween.getValue();
+          const now = this.center(to);
+          k.setPosition(start.x + (now.x - start.x) * p, start.y + (now.y - start.y) * p);
+          k.rotation = p * 14;
+        },
+        onComplete: () => k.destroy(),
+      });
+      return;
+    }
     const b = this.add.circle(start.x, start.y, 5, 0xff7a3d).setStrokeStyle(2, 0xffd24d).setDepth(DEPTH.popup);
     this.tweens.addCounter({
       from: 0,
@@ -924,6 +941,8 @@ export default class BattleScene extends Phaser.Scene {
       .setScale(0.5);
     this.tweens.add({ targets: banner, scale: 1, duration: 160, ease: 'Back.easeOut' });
     this.tweens.add({ targets: banner, alpha: 0, y: FX.bannerY - 16, delay: FX.bannerMs * 0.6, duration: FX.bannerMs * 0.4, onComplete: () => banner.destroy() });
+    // A skill that puts statuses on every enemy (Smoke Bomb) also shows a grey cloud on each of them.
+    if (e.skill.applyEnemies) for (const en of this.state.enemies) if (en.alive && this.views.get(en.uid)) this.puff(this.views.get(en.uid).ch.x, this.views.get(en.uid).ch.y, 0x9a9aa8, 6);
     if (attack) {
       this.cameras.main.shake(FX.shakeMs, FX.shakeIntensity);
       this.hitStop = FX.hitStopMs;

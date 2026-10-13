@@ -251,7 +251,7 @@ Decided with the user:
 - D4. DONE (D4a weak minions; D4b greater minions, upkeep, door walk, 2-floor revival). Minion system: weak and greater minions, caps, upkeep, floor transitions (greater minions walk through the door), 2-floor revival wait, minions vanish when the holder dies.
 
 ### Phase E: Heroes (one per step: stats, growth, passive, attack skill, support skill, placeholder look)
-- E1 Knight (DONE), E2 Rogue, E3 Archer (the start squad first), E4 Berserker, E5 Samurai, E6 Mage, E7 Cleric, E8 Necromancer, E9 Bard, E10 Alchemist.
+- E1 Knight (DONE), E2 Rogue (DONE), E3 Archer (the start squad first), E4 Berserker, E5 Samurai, E6 Mage, E7 Cleric, E8 Necromancer, E9 Bard, E10 Alchemist.
 - Until squad select exists, the test squad can be switched in squad.json.
 
 ### Phase F: Squad select and unlocks

@@ -15,7 +15,7 @@ Work branch: `claude/quick-gloves-item-changes-ofzyqe` (PR https://github.com/Po
 DONE: all of Phase A (A1 no mana, A2 attack/support skill slots, A3 defense/resist curve + caps, A4 new drop roll, A5 damage types, A6 debuff engine) and all of Phase B (B1 attack start/hit split, B2-B4 heroes/enemies walk + arrows, B5 melee movement rework).
 MOVEMENT REBUILD done (see below). NEXT: **Phase C (feel)**:
 - DONE: C1 skill wind-up (`castMs`, longer than a normal attack). DECIDED by the user: stunned/frozen during a wind-up = the skill is LOST and GOES ON COOLDOWN.
-- C2 skill cast visuals (colour flash, ring burst, name banner, bigger coloured numbers, screen shake / hit-stop; skills must look clearly different from normal hits).
+- DONE: C2 skill cast visuals (colour flash, ring burst, name banner, bigger coloured numbers, screen shake / hit-stop; skills must look clearly different from normal hits).
 - C3 morale overlay instead of text (very faint tint on living heroes: light = INCOMPLETE, darker = ALL ALONE; remove the tag/popup).
 Then Phase D (shields, taunt on enemies, "every 4th attack" counters, minion system), E (10 heroes one by one), F (squad select + unlock saving), G (72 items in groups), H (update test bot + ONE tuning pass).
 

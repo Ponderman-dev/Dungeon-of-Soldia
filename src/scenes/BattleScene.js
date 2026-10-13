@@ -32,6 +32,7 @@ const WALL_H = 200; // the back wall (with the door) fills the top of each floor
 const DOOR_X = GAME_WIDTH / 2;
 const T = combatRules.transition;
 const M = combatRules.attackMotion; // how walking looks (hop) and arrows
+const FX = combatRules.skillFx; // how skills look when they go off
 const itemDefs = loadItems(rawItems);
 const skillDefs = rawSkills;
 const SKILL_Y = 772; // centre of the skill squares
@@ -525,6 +526,11 @@ export default class BattleScene extends Phaser.Scene {
     this.refreshHud();
     if (this.mode !== 'fighting') return;
 
+    // Hit-stop: a big skill hit freezes the fight for a split second (the drawing keeps going).
+    if (this.hitStop > 0) {
+      this.hitStop -= delta;
+      return;
+    }
     // Cap the step so switching browser tabs doesn't cause a huge jump.
     const events = this.state.update(Math.min(delta, 100));
     for (const e of events) this.showEvent(e);
@@ -575,10 +581,16 @@ export default class BattleScene extends Phaser.Scene {
         else this.popText(t, 'Miss', '#aaaaaa');
         return;
       }
-      t.ch.flash();
       this.setBar(t);
       const { amount, crit, mult } = e.result;
       const mark = mult > 1 ? '!' : mult < 1 ? '…' : '';
+      if (e.skill) {
+        // A skill hit: flashes in the skill colour and shows a big coloured number that pops.
+        t.ch.flash(Phaser.Display.Color.HexStringToColor(FX.attackColor).color, FX.flashMs);
+        this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : FX.attackColor, true, FX.numberSizePx);
+        return;
+      }
+      t.ch.flash();
       const color = e.attacker.side === 'hero' ? damageTypes[e.damageType || e.attacker.damageType].color : '#ff6b6b';
       this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : color, crit);
     } else if (e.type === 'projectile') {
@@ -590,6 +602,7 @@ export default class BattleScene extends Phaser.Scene {
       if (e.reason === 'interrupted') this.popText(this.views.get(e.unit.uid), 'Interrupted!', '#ff8a5c', true);
     } else if (e.type === 'cast') {
       const caster = this.views.get(e.unit.uid);
+      this.skillBurst(caster, e);
       if (e.skill.target !== 'self' && e.targets[0]) {
         const t = this.views.get(e.targets[0].uid);
         caster.ch.lunge(t.ch.x, t.ch.y);
@@ -775,7 +788,34 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // Floating number above a fighter.
-  popText(view, text, color, big = false) {
+  // A skill goes off: the caster flashes in the skill colour, a ring bursts (on each target for an
+  // attack skill, around the caster for a support skill) and the skill's name shows as a banner.
+  // Attack skills also shake the screen and freeze the fight for a split second (hit-stop).
+  skillBurst(caster, e) {
+    const attack = e.skill.kind === 'attack';
+    const colorText = attack ? FX.attackColor : FX.supportColor;
+    const color = Phaser.Display.Color.HexStringToColor(colorText).color;
+    caster.ch.flash(color, FX.flashMs);
+    const spots = attack ? e.targets.map((t) => this.views.get(t.uid)).filter(Boolean) : [caster];
+    for (const v of spots) {
+      const c = this.center(v);
+      const ring = this.add.circle(c.x, c.y, 10).setStrokeStyle(4, color).setDepth(DEPTH.popup - 1);
+      this.tweens.add({ targets: ring, radius: FX.ringRadius, alpha: 0, duration: FX.ringMs, ease: 'Quad.easeOut', onComplete: () => ring.destroy() });
+    }
+    const banner = this.add
+      .text(GAME_WIDTH / 2, FX.bannerY, e.skill.name, { fontFamily: 'monospace', fontSize: '24px', fontStyle: 'bold', color: colorText, stroke: '#000000', strokeThickness: 5 })
+      .setOrigin(0.5)
+      .setDepth(DEPTH.popup + 1)
+      .setScale(0.5);
+    this.tweens.add({ targets: banner, scale: 1, duration: 160, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: banner, alpha: 0, y: FX.bannerY - 16, delay: FX.bannerMs * 0.6, duration: FX.bannerMs * 0.4, onComplete: () => banner.destroy() });
+    if (attack) {
+      this.cameras.main.shake(FX.shakeMs, FX.shakeIntensity);
+      this.hitStop = FX.hitStopMs;
+    }
+  }
+
+  popText(view, text, color, big = false, sizePx = null) {
     // Pop-ups that appear together stack upwards instead of overlapping.
     view.popSlot = ((view.popSlot ?? -1) + 1) % 4;
     // Above where the fighter is right now (a hero may be away at an enemy).
@@ -783,7 +823,7 @@ export default class BattleScene extends Phaser.Scene {
     const t = this.add
       .text(view.ch.x, y, text, {
         fontFamily: 'monospace',
-        fontSize: big ? '20px' : '14px',
+        fontSize: sizePx ? `${sizePx}px` : big ? '20px' : '14px',
         fontStyle: 'bold',
         color,
         stroke: '#000000',
@@ -792,7 +832,11 @@ export default class BattleScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(DEPTH.popup);
     t.x = Phaser.Math.Clamp(t.x, t.width / 2 + 4, GAME_WIDTH - t.width / 2 - 4); // keep it on screen
-    this.tweens.add({ targets: t, y: y - 30, alpha: 0, duration: 800, onComplete: () => t.destroy() });
+    if (sizePx) {
+      t.setScale(1.5); // skill numbers pop in big, then settle
+      this.tweens.add({ targets: t, scale: 1, duration: 150, ease: 'Back.easeOut' });
+    }
+    this.tweens.add({ targets: t, y: y - 30, alpha: 0, duration: sizePx ? 1000 : 800, onComplete: () => t.destroy() });
   }
 
   onWin() {

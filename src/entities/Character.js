@@ -167,9 +167,10 @@ export default class Character extends Phaser.GameObjects.Container {
   }
 
   // Turn every part white for a moment (hit feedback).
-  flash() {
-    for (const block of Object.values(this.parts)) block.setFillStyle(0xffffff);
-    this.scene.time.delayedCall(80, () => {
+  // Lights up all parts in one colour for a moment (white = a normal hit).
+  flash(color = 0xffffff, ms = 80) {
+    for (const block of Object.values(this.parts)) block.setFillStyle(color);
+    this.scene.time.delayedCall(ms, () => {
       if (!this.active) return;
       for (const block of Object.values(this.parts)) block.setFillStyle(block.baseColor);
     });

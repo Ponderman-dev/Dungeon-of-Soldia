@@ -101,6 +101,7 @@ export default class BattleState {
       steady: false, // Steady Aim is active
       floor: {}, // flags that reset every floor
       firstHits: new Set(),
+      sigilHits: new Set(),
       streak: { uid: null, count: 0 },
       spawnTimer: 0, // minion spawner (def.spawner): ms until the next minion
       minion: false, // true for minions (hero side, not in this.heroes)
@@ -147,6 +148,7 @@ export default class BattleState {
     for (const h of this.heroes) {
       h.floor = {}; // per-floor flags (Tough Skin used, Second Wind used...)
       h.firstHits = new Set(); // enemies this hero has already hit with a basic attack (Sucker Punch)
+      h.sigilHits = new Set(); // enemies this hero has already marked (Hunter's Sigil)
       h.streak = { uid: null, count: 0 }; // Brawler's Streak
       h.pending = null; // attacks aimed at the last floor's enemies are gone
       h.foe = null;
@@ -365,6 +367,7 @@ export default class BattleState {
   // Marks a unit dead. Enemies give XP; a dead hero's items stop working.
   killUnit(target, events, killer = null) {
     const was = this.morale;
+    const lastStatuses = target.statuses.slice(); // what it was suffering from when it died (item reactions below)
     target.alive = false;
     target.statuses = [];
     target.dotClocks = {};
@@ -381,7 +384,7 @@ export default class BattleState {
     }
     if (target.side === 'enemy') {
       this.awardXp(target, events);
-      this.onKill(killer, target, events);
+      this.onKill(killer, target, events, lastStatuses);
     }
     else {
       this.removeMinionsOf(target, 'holderDied', events); // minions vanish when their holder dies
@@ -877,6 +880,7 @@ export default class BattleState {
     if (opts.projectile) events.push({ type: 'projectile', from: opts.from || attacker, to: target, kind: opts.projectile });
     events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic });
     if (dealt) this.breakEffects(target, dealt.broken, events);
+    if (!result.dodged) this.afterItemHit(attacker, target, opts, events);
     if (result.blocked) {
       // A successful block sends the holder's Shield Totems on cooldown.
       const spec = { status: 'blockCooldown', durationMs: target.specials.blockCooldownMs || 2500 };
@@ -886,6 +890,33 @@ export default class BattleState {
     if (!result.dodged && !result.fullyAbsorbed && !opts.item) this.afterHit(attacker, target, result.amount - (result.absorbed || 0), events, result);
     if (target.hp <= 0 && target.alive) this.killUnit(target, events, attacker);
     return result;
+  }
+
+  // Item effects that react to a hit that connected (the attacker's items).
+  //  - Shatter Hammer: the hit breaks a freeze.   - Hunter's Sigil: the first hit on each enemy Marks it.
+  //  - Frozen Thunderbolt: an electric hit bursts into ice on the enemies next to the target (a burst triggers nothing).
+  afterItemHit(attacker, target, opts, events) {
+    const sp = attacker.specials;
+    if (!sp || attacker.side !== 'hero' || attacker.minion || !target.alive) return;
+    if (sp.shatterHammer) {
+      const freeze = target.statuses.find((st) => st.type === 'freeze');
+      if (freeze) {
+        target.statuses.splice(target.statuses.indexOf(freeze), 1);
+        events.push({ type: 'status', unit: target, change: 'expire', status: freeze });
+        events.push({ type: 'proc', unit: attacker, label: 'Shatter!' });
+      }
+    }
+    if (sp.hunterSigil && !attacker.sigilHits.has(target.uid) && target.side === 'enemy') {
+      attacker.sigilHits.add(target.uid);
+      const copies = sp.hunterSigil / 10;
+      this.applyStatus(target, { status: 'mark', durationMs: 5000 + 2500 * (copies - 1), damageTakenPercent: sp.hunterSigil }, attacker, `sigil_${attacker.uid}`, events);
+    }
+    if (sp.frozenThunderbolt && (opts.damageType || attacker.damageType) === 'electric' && !opts.burst) {
+      for (const e of this.neighbours(target)) {
+        this.strike(attacker, e, events, { multiplier: sp.frozenThunderbolt / 100, damageType: 'ice', item: true, burst: true });
+        if (e.alive) this.applyStatus(e, { status: 'chill', durationMs: 5000, stacks: 2 }, attacker, 'thunderbolt', events);
+      }
+    }
   }
 
   // Extra damage % from the ATTACKER's item specials for this hit.
@@ -905,6 +936,13 @@ export default class BattleState {
       }
     }
     if (sp.fullVigor && attacker.hp >= attacker.maxHp) bonus += sp.fullVigor;
+    // Bonuses against what the target is suffering from or how hurt it is.
+    const kinds = new Set(target.statuses.filter((st) => this.statusDefs[st.type] && this.statusDefs[st.type].debuff).map((st) => st.type));
+    if (sp.magmaCore && kinds.has('burn')) bonus += sp.magmaCore; // Magma Core
+    if (sp.bloodChalice && kinds.has('bleed')) bonus += sp.bloodChalice; // Blood Chalice
+    if (sp.shatterHammer && kinds.has('freeze')) bonus += sp.shatterHammer; // Shatter Hammer (the freeze is broken after the hit)
+    if (sp.exploiter && kinds.size >= 3) bonus += sp.exploiter; // Exploiter's Lens
+    if (sp.executioner && target.hp < target.maxHp * 0.25) bonus += sp.executioner; // Executioner's Axe
     return bonus;
   }
 
@@ -920,6 +958,7 @@ export default class BattleState {
     for (const proc of [...hero.procs]) {
       const debuffs = (proc.apply || []).some((sp) => (sp.to === 'target' || (!sp.to && proc.targets === 'target')) && this.statusDefs[sp.status] && this.statusDefs[sp.status].debuff);
       const chance = debuffs ? this.debuffChance(hero, proc.chance) : proc.chance; // Opportunist: his debuffs are likelier
+      if (proc.meleeOnly && hero.damageType !== 'melee') continue; // Thousand Cuts: melee hits only
       if (proc.proc !== trigger || (!ctx.force && this.rng() * 100 >= chance)) continue; // ctx.force: every proc goes off
       if (!proc.silent) events.push({ type: 'proc', unit: hero, label: proc.label });
       const enemy = ctx.target && ctx.target.alive ? ctx.target : null;
@@ -1071,10 +1110,40 @@ export default class BattleState {
   }
 
   // Item reactions to a kill (killer = the unit that dealt the last blow, if known).
-  onKill(killer, victim, events) {
-    if (!killer || killer.side !== 'hero' || killer.minion || !killer.alive) return;
-    const heal = killer.specials.killHeal || 0; // Bandage Roll
-    if (heal > 0) this.healUnit(killer, (killer.maxHp * heal) / 100 / this.regenAura().factor, events);
+  onKill(killer, victim, events, lastStatuses = []) {
+    if (killer && killer.side === 'hero' && !killer.minion && killer.alive) {
+      const heal = killer.specials.killHeal || 0; // Bandage Roll
+      if (heal > 0) this.healUnit(killer, (killer.maxHp * heal) / 100 / this.regenAura().factor, events);
+      // Blood Chalice: killing a BLEEDING enemy heals the killer.
+      const chalice = killer.specials.chaliceHeal || 0;
+      if (chalice > 0 && lastStatuses.some((st) => st.type === 'bleed')) this.healUnit(killer, (killer.maxHp * chalice) / 100 / this.regenAura().factor, events);
+    }
+    // Items of any living hero whose effect depends on the enemy's stacks when it dies:
+    for (const hero of this.heroes) {
+      if (!hero.alive) continue;
+      const mine = (type) => lastStatuses.filter((st) => st.type === type && st.sourceUid === hero.uid);
+      // Plague Flask: HALF of the holder's poison stacks on the dead enemy spread to other enemies (+1 enemy per copy).
+      const plague = hero.specials.plagueFlask || 0;
+      const poison = mine('poison');
+      if (plague > 0 && poison.length) {
+        const half = poison.slice(0, Math.ceil(poison.length / 2));
+        const others = this.enemies.filter((e) => e.alive && e !== victim).sort((a, b) => this.distance(victim, a) - this.distance(victim, b)).slice(0, plague);
+        if (others.length) events.push({ type: 'proc', unit: hero, label: 'Plague!' });
+        for (const e of others) for (const st of half) this.addDotStack(e, st);
+      }
+      // Thousand Cuts: an enemy dying while bleeding bursts knives into the enemies next to it.
+      const burst = hero.specials.knifeBurst || 0;
+      if (burst > 0 && mine('bleed').length) {
+        events.push({ type: 'proc', unit: hero, label: 'Knife burst!' });
+        for (const e of this.neighbours(victim)) this.strike(hero, e, events, { multiplier: burst / 100, damageType: 'melee', item: true });
+      }
+    }
+  }
+
+  // Puts a copy of a damage-over-time stack on a unit (Plague Flask).
+  addDotStack(unit, stack) {
+    unit.statuses.push({ ...stack, key: `${stack.key}#${unit.uid}` });
+    if (!(stack.type in unit.dotClocks)) unit.dotClocks[stack.type] = 0;
   }
 
   // A shield was broken: tell the scene, and run its `onBreak` effect if it has one
@@ -1169,6 +1238,7 @@ export default class BattleState {
       }
       if (info.dot) {
         status.stack = true;
+        status.sourceUid = source.uid; // who applied this stack (kill credit, Plague Flask, Thousand Cuts, Magma Core)
         status.damageType = spec.damageType || info.damageType || 'dark';
         status.ignoresArmor = spec.ignoresArmor ?? !!info.ignoresArmor;
         // Damage-type items boost damage over time of that type too (e.g. +15% dark boosts poison).
@@ -1180,6 +1250,10 @@ export default class BattleState {
     if (spec.status === 'buff') this.refreshStats();
     events.push({ type: 'status', unit: target, change: 'apply', status });
     if (spec.status === 'taunt') this.redirectToTaunter(target, events);
+    // Thousand Cuts: whenever the holder applies Bleed it adds 1 EXTRA Bleed stack.
+    if (spec.status === 'bleed' && source && source.specials && source.specials.thousandCuts && !spec.extra && source.side === 'hero') {
+      this.applyStatus(target, { ...spec, extra: true }, source, `${skillId}_extra`, events);
+    }
     // Gag Rune: a stun or freeze the holder causes also Silences the enemy (2s, +1s per extra copy).
     const gag = source && source.specials && source.specials.gagRune;
     if (gag && target.side === 'enemy' && source.side === 'hero' && (spec.status === 'stun' || spec.status === 'freeze')) {
@@ -1235,7 +1309,9 @@ export default class BattleState {
         continue;
       }
       const tickMs = (this.statusDefs[type] && this.statusDefs[type].tickMs) || 1000;
-      unit.dotClocks[type] += dt;
+      // Magma Core: burn ticks faster when the holder who set it burning has the core (burnSpeed, up to +100%).
+      const src = type === 'burn' ? this.heroes.find((h) => h.uid === stacks[0].sourceUid) : null;
+      unit.dotClocks[type] += dt * (1 + ((src && src.specials.burnSpeed) || 0) / 100);
       while (unit.dotClocks[type] >= tickMs && unit.alive) {
         unit.dotClocks[type] -= tickMs;
         const total = stacks.reduce((sum, s) => sum + s.damage, 0);

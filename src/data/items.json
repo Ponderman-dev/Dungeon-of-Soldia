@@ -724,5 +724,169 @@
       "fire",
       "burn"
     ]
+  },
+  "executioners_axe": {
+    "name": "Executioner's Axe",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "+30% damage to enemies under 25% health (extra copies add a little less each).",
+    "effects": [
+      {
+        "special": "executioner",
+        "percent": 30,
+        "falloffRatio": 0.95
+      }
+    ]
+  },
+  "magma_core": {
+    "name": "Magma Core",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "Burning enemies take +25% damage from the holder, and burn ticks 30% faster (up to +100%).",
+    "effects": [
+      {
+        "special": "magmaCore",
+        "percent": 25
+      },
+      {
+        "special": "burnSpeed",
+        "percent": 30,
+        "cap": 100
+      }
+    ],
+    "dropWeight": 90,
+    "needs": "burn"
+  },
+  "shatter_hammer": {
+    "name": "Shatter Hammer",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "Hits on a frozen enemy deal +60% damage and break the freeze.",
+    "effects": [
+      {
+        "special": "shatterHammer",
+        "percent": 60
+      }
+    ],
+    "dropWeight": 90,
+    "needs": "freeze"
+  },
+  "blood_chalice": {
+    "name": "Blood Chalice",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "Bleeding enemies take +20% damage from the holder; killing a bleeding enemy heals the holder 3%.",
+    "effects": [
+      {
+        "special": "bloodChalice",
+        "percent": 20
+      },
+      {
+        "special": "chaliceHeal",
+        "percent": 3
+      }
+    ],
+    "dropWeight": 90,
+    "needs": "bleed"
+  },
+  "plague_flask": {
+    "name": "Plague Flask",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "When a poisoned enemy dies, HALF of the holder's poison stacks on it spread to another enemy (+1 enemy per copy).",
+    "effects": [
+      {
+        "special": "plagueFlask",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "poison"
+  },
+  "exploiters_lens": {
+    "name": "Exploiter's Lens",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "+30% damage to enemies with 3 or more different debuffs.",
+    "effects": [
+      {
+        "special": "exploiter",
+        "percent": 30
+      }
+    ],
+    "dropWeight": 80
+  },
+  "hunters_sigil": {
+    "name": "Hunter's Sigil",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "The first hit on each enemy Marks it: marked enemies take +10% damage from the whole squad (per copy); more copies make the mark last longer.",
+    "effects": [
+      {
+        "special": "hunterSigil",
+        "percent": 10
+      }
+    ]
+  },
+  "thousand_cuts": {
+    "name": "Thousand Cuts",
+    "rarity": "epic",
+    "type": "onhit",
+    "scope": "self",
+    "description": "Melee hits seldom make the enemy Bleed; every Bleed the holder applies adds 1 EXTRA stack; an enemy that dies while bleeding bursts knives into the enemies next to it.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Bleed!",
+        "meleeOnly": true,
+        "targets": "target",
+        "apply": [
+          {
+            "status": "bleed",
+            "durationMs": 4000,
+            "damageMultiplier": 0.3
+          }
+        ]
+      },
+      {
+        "special": "thousandCuts",
+        "percent": 1
+      },
+      {
+        "special": "knifeBurst",
+        "percent": 60
+      }
+    ],
+    "provides": [
+      "bleed"
+    ]
+  },
+  "frozen_thunderbolt": {
+    "name": "Frozen Thunderbolt",
+    "rarity": "legendary",
+    "type": "onhit",
+    "scope": "self",
+    "description": "Every electric hit causes an ice burst on the enemies next to the one hit: ice damage and 2 Chill stacks.",
+    "effects": [
+      {
+        "special": "frozenThunderbolt",
+        "percent": 50
+      }
+    ],
+    "dropWeight": 70,
+    "needs": "electric",
+    "provides": [
+      "freeze",
+      "ice",
+      "cc"
+    ]
   }
 }

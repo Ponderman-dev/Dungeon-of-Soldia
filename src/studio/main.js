@@ -228,6 +228,12 @@ class StudioScene extends Phaser.Scene {
       const go = () => ch.active && anim === 'hurt' && (ch.hurt(), ch.flash());
       go();
       this.loop = this.time.addEvent({ delay: 800, loop: true, callback: go });
+    } else if (name === 'stunned') {
+      ch.setStunned(true);
+    } else if (name === 'victory') {
+      const go = () => ch.active && anim === 'victory' && ch.cheer();
+      go();
+      this.loop = this.time.addEvent({ delay: 1600, loop: true, callback: go });
     } else if (name === 'death') {
       // Falls, stays down a moment, gets up (rebuilt) and falls again.
       ch.die();
@@ -624,8 +630,26 @@ function renderEditor() {
     <p id="name-err" class="note" hidden></p>`;
 }
 
+// Saved versions of each character (newest first), loaded when the character is opened.
+const versions = {};
+async function loadVersions(key) {
+  if (!store || versions[key]) return;
+  try {
+    versions[key] = await store.versions(key);
+  } catch {
+    versions[key] = [];
+  }
+  if (key === current) renderWhole();
+}
+
+// Characters whose saved design is not in the game yet (Claude copies them in).
+function waitingForGame() {
+  return characters.filter((c) => savedLook[c.key] && !same(savedLook[c.key], gameLook[c.key])).map((c) => c.name);
+}
+
 function renderWhole() {
   const l = look();
+  loadVersions(current);
   let html = field('w-height', 'Health bar at', l.height, { min: 4, max: 44 });
   if (l.hover !== undefined) html += field('w-hover', 'Flies at', l.hover, { min: 0, max: 80 });
   // Colour swap: every pixel of one colour, in every part, becomes the current colour.
@@ -637,6 +661,16 @@ function renderWhole() {
       <span class="hint">→ the current colour</span>
       <i class="swapto" style="background:${hex(color)}"></i>
       <button id="swap-colour" class="btn">Swap everywhere</button></div>`;
+  const vs = versions[current] || [];
+  html += `<div class="sub">Saved versions</div>
+    <div class="row"><select id="version-pick" aria-label="Load a saved version"${vs.length ? '' : ' disabled'}><option value="">${
+      vs.length ? `Load a saved version (${vs.length})…` : 'No saved versions yet'
+    }</option>${vs
+      .map((v, i) => `<option value="${i}">${new Date(v.savedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</option>`)
+      .join('')}</select><span class="hint">Loads it as unsaved changes; Undo brings back what you had.</span></div>`;
+  const waiting = waitingForGame();
+  if (waiting.length)
+    html += `<p class="tl-banner own">Saved, not in the game yet: <b>${waiting.join(', ')}</b>. Tell Claude “apply the studio designs”.</p>`;
   $('whole').innerHTML = html;
 }
 
@@ -753,6 +787,21 @@ document.addEventListener('change', (e) => {
     timeline.selKey = null;
     renderAll();
     redraw();
+  } else if (t.id === 'version-pick' && t.value !== '') {
+    const v = (versions[current] || [])[Number(t.value)];
+    if (!v) return;
+    beginEdit();
+    const l = { height: v.height, parts: clone(v.parts) };
+    if (v.hover !== undefined) l.hover = v.hover;
+    if (v.anims) l.anims = clone(v.anims);
+    working[current] = l;
+    endEdit();
+    selected = null;
+    timeline.selKey = null;
+    renderAll();
+    redraw();
+    persistDraft();
+    toast('Saved version loaded');
   } else if (t.id === 'copy-part-to' && t.value && selected) {
     // The other character gets this part (a part with the same name there is replaced).
     const other = working[t.value];
@@ -1141,6 +1190,9 @@ async function save() {
   try {
     await store.save(current, doc);
     savedLook[current] = clone(look());
+    // Every save is also kept as an older version (the newest 15 per character).
+    store.keep(current, doc).catch(() => {});
+    versions[current] = [doc, ...(versions[current] || [])].slice(0, 15);
     btn.textContent = 'Save design';
     renderAll();
   } catch (err) {
@@ -1193,7 +1245,20 @@ async function connect() {
     } catch {
       /* empty or not reachable yet: start from the game versions */
     }
-    store = { save: (key, doc) => col.doc(key).set(doc) };
+    const hist = db.collection('history');
+    store = {
+      save: (key, doc) => col.doc(key).set(doc),
+      keep: async (key, doc) => {
+        await hist.doc(`${key}--${Date.parse(doc.savedAt)}`).set({ key, ...doc });
+        const old = (await hist.where('key', '==', key).get()).docs
+          .map((d) => d.data())
+          .sort((a, b) => (a.savedAt < b.savedAt ? 1 : -1))
+          .slice(15);
+        for (const o of old) await hist.doc(`${key}--${Date.parse(o.savedAt)}`).delete();
+      },
+      versions: async (key) =>
+        (await hist.where('key', '==', key).get()).docs.map((d) => d.data()).sort((a, b) => (a.savedAt < b.savedAt ? 1 : -1)),
+    };
   } else {
     // No online store (running locally): keep saves in this browser.
     let local = {};
@@ -1203,11 +1268,24 @@ async function connect() {
       /* nothing */
     }
     useSaved(Object.values(local));
+    const readHist = () => {
+      try {
+        return JSON.parse(localStorage.getItem(LOCAL_KEY + '-history') || '{}');
+      } catch {
+        return {};
+      }
+    };
     store = {
       save: async (key, doc) => {
         local[key] = doc;
         localStorage.setItem(LOCAL_KEY, JSON.stringify(local));
       },
+      keep: async (key, doc) => {
+        const h = readHist();
+        h[key] = [doc, ...(h[key] || [])].slice(0, 15);
+        localStorage.setItem(LOCAL_KEY + '-history', JSON.stringify(h));
+      },
+      versions: async (key) => readHist()[key] || [],
     };
     const note = $('dbnote');
     note.hidden = false;

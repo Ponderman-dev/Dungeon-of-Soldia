@@ -13,7 +13,7 @@ import { samplePose } from '../systems/animClips.js';
 // KEYFRAME CLIPS (`def.anims`, made on the studio timeline) are added on top of that pose. Each action
 // uses its clip when the character has one, else the built-in motion: idle, attack (swing), windup /
 // skillAttack / skillSupport (skills), walk (while moving), hurt (when hit), death. Only the most
-// important clip running plays: death > hurt > action (attack, skill) > walk > idle.
+// important clip running plays: death > hurt > action (attack, skill, victory) > stunned > walk > idle.
 export default class Character extends Phaser.GameObjects.Container {
   constructor(scene, x, y, def) {
     super(scene, x, y);
@@ -105,6 +105,7 @@ export default class Character extends Phaser.GameObjects.Container {
       this.action = null;
     }
     const loop = (clip, start) => samplePose(clip, (((now - start) % clip.length) + clip.length) % clip.length);
+    if (this.stunned && A.stunned) return loop(A.stunned, 0);
     if (this.walking && A.walk) return loop(A.walk, 0);
     if (A.idle) return samplePose(A.idle, ((this.idleFrozenAt ?? now) - this.idleStart) % A.idle.length);
     return {};
@@ -144,6 +145,16 @@ export default class Character extends Phaser.GameObjects.Container {
   // Walking (the battle tells it each frame): plays the walk clip on top of the hop.
   setWalking(on) {
     this.walking = on;
+  }
+
+  // Stunned or frozen (the battle tells it each frame): plays the stunned clip (dizzy loop).
+  setStunned(on) {
+    this.stunned = on;
+  }
+
+  // A floor was won: the victory clip (if it has one).
+  cheer() {
+    this.playClip('victory');
   }
 
   // The texture of a part's picture (washed in a colour if needed), made once and shared.

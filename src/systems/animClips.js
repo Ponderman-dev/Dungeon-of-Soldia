@@ -16,6 +16,8 @@ export const CLIPS = [
   { id: 'walk', label: 'Walk', length: 600, loop: true },
   { id: 'hurt', label: 'Hurt', length: 250 },
   { id: 'death', label: 'Death', length: 700 },
+  { id: 'stunned', label: 'Stunned', length: 800, loop: true },
+  { id: 'victory', label: 'Victory', length: 900 },
 ];
 export const CLIP_INFO = Object.fromEntries(CLIPS.map((c) => [c.id, c]));
 export const PROPS = ['x', 'y', 'angle'];
@@ -92,7 +94,7 @@ export function tidyClip(clip) {
 // instead of from nothing). Mirrors Character.js: idle = each part's `idle` wiggle (yoyo, Sine),
 // attack = weapon swings +75° and back, windup = crouch (castLift -4 screen px = 4/3 pixel) and the
 // weapon cocked back -55°, skill releases = the hop / jump and the slash or raised weapon.
-// Walk, hurt and death have no part motion built in (only the hop, a flash, a freeze): empty clips.
+// Walk, hurt, death, stunned and victory have no part motion built in: empty clips.
 export function defaultClip(id, parts) {
   const info = CLIP_INFO[id];
   const names = Object.keys(parts);

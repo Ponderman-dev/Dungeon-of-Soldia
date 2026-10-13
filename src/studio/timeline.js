@@ -423,6 +423,8 @@ export default class Timeline {
       skillAttack: 'Plays when an attack skill goes off.',
       skillSupport: 'Plays when a support skill goes off.',
       walk: 'Loops while walking (the hop is added on top).',
+      stunned: 'Loops while stunned or frozen (dizzy, wobbling).',
+      victory: 'Plays once when a floor is won.',
       hurt: 'A short flinch when hit.',
       death: 'Plays when it falls, then holds the last frame.',
     };
@@ -505,7 +507,7 @@ export default class Timeline {
             ? `● This is ${esc(this.h.name())}'s own <b>${info.label}</b> animation. The game plays it.`
             : Object.keys(clip.tracks).length
               ? `This is the game's built-in <b>${info.label}</b> motion, shown as keyframes. Change anything and it becomes this character's own animation.`
-              : `The game has no part motion for <b>${info.label}</b> (${this.clipId === 'walk' ? 'only the hop' : this.clipId === 'hurt' ? 'only a white flash' : 'it just stops moving'}). Add keyframes to give it some.`
+              : `The game has no part motion for <b>${info.label}</b> (${{ walk: 'only the hop', hurt: 'only a white flash', death: 'it just stops moving', stunned: 'it just stands still', victory: 'nothing happens' }[this.clipId] || 'none'}). Add keyframes to give it some.`
         }</p>
         <div class="tl-grid">
           <div class="tl-left"><div class="tl-row ruler-left"><span class="label">Layers</span></div>${left.join('')}</div>

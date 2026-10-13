@@ -241,6 +241,7 @@ export default class BattleScene extends Phaser.Scene {
       const foe = (u.pending && u.pending.target) || (this.views.get(u.foe) || {}).unit || v.lookAt;
       if (foe && foe.alive && foe.x !== undefined && Math.abs(foe.x - u.x) > 6) v.ch.face(foe.x < u.x ? -1 : 1);
       v.ch.setWalking(!!u.moving || !!v.ch.moveTween); // walk clip (if it has one)
+      v.ch.setStunned(this.state.isStunned(u)); // stunned clip (if it has one)
       if (u.side === 'hero') v.ch.setDepth(DEPTH.hero + u.y / 10000);
       this.syncBar(v);
     }
@@ -1128,6 +1129,10 @@ export default class BattleScene extends Phaser.Scene {
       const v = this.views.get(h.uid);
       v.lookAt = null;
       if (h.alive) v.ch.face(1); // look the normal way again
+      if (h.alive) {
+        v.ch.setStunned(false);
+        v.ch.cheer(); // victory clip (if it has one)
+      }
       if (h.alive) this.runHome(v); // anyone still out at an enemy walks back before the door walk
       this.drawChips(v);
     }

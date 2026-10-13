@@ -70,40 +70,6 @@ export function pixelsToArt(grid) {
   return { palette: palette.map((c) => '0x' + c.toString(16).padStart(6, '0')), rows };
 }
 
-// Turns a picture by `angle` degrees (clockwise on screen) around the anchor, keeping square pixels on
-// the same grid (each new pixel takes the colour of the old pixel under its middle).
-// Returns { grid, w, h, ox, oy }: the new picture and where the anchor is inside it.
-export function rotatePixels(grid, anchor, angle) {
-  const h = grid.length;
-  const w = grid[0].length;
-  const [ax, ay] = anchor;
-  const a = (((angle % 360) + 360) % 360) * (Math.PI / 180);
-  if (a === 0) return { grid, w, h, ox: ax, oy: ay };
-  const cos = Math.cos(a);
-  const sin = Math.sin(a);
-  const turn = (x, y) => [ax + (x - ax) * cos - (y - ay) * sin, ay + (x - ax) * sin + (y - ay) * cos];
-  const corners = [turn(0, 0), turn(w, 0), turn(0, h), turn(w, h)];
-  const eps = 1e-6;
-  const minX = Math.floor(Math.min(...corners.map((c) => c[0])) + eps);
-  const maxX = Math.ceil(Math.max(...corners.map((c) => c[0])) - eps);
-  const minY = Math.floor(Math.min(...corners.map((c) => c[1])) + eps);
-  const maxY = Math.ceil(Math.max(...corners.map((c) => c[1])) - eps);
-  const out = [];
-  for (let y = minY; y < maxY; y++) {
-    const row = [];
-    for (let x = minX; x < maxX; x++) {
-      // Turn the new pixel's middle back to find the old pixel under it.
-      const cx = x + 0.5 - ax;
-      const cy = y + 0.5 - ay;
-      const sx = Math.floor(ax + cx * cos + cy * sin + eps);
-      const sy = Math.floor(ay - cx * sin + cy * cos + eps);
-      row.push(sx >= 0 && sy >= 0 && sx < w && sy < h ? grid[sy][sx] : null);
-    }
-    out.push(row);
-  }
-  return { grid: out, w: maxX - minX, h: maxY - minY, ox: ax - minX, oy: ay - minY };
-}
-
 // Mixes colour a towards colour b by t (0..1).
 export function mixColor(a, b, t) {
   const ch = (c, s) => (c >> s) & 255;

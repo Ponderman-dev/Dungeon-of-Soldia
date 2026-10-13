@@ -127,7 +127,7 @@ class StudioScene extends Phaser.Scene {
 
   update() {
     // Skill animation: the scene lifts/crouches the figure by castLift (game pixels, like the battle).
-    if (this.ch && anim === 'skill') this.ch.y = this.feetY() - Math.round(this.ch.castLift / 3) * zoom;
+    if (this.ch && anim === 'skill') this.ch.y = this.feetY() - (this.ch.castLift * zoom) / 3;
     const g = this.sel.clear();
     const part = selected && this.ch && this.ch.parts[selected];
     if (!part) return;
@@ -376,9 +376,9 @@ function renderEditor() {
     ${field('f-x', 'Left / right', p.x, { min: -20, max: 20, step: 0.5 })}
     ${field('f-y', 'Up / down', p.y, { min: -38, max: 6, step: 0.5 })}
     <div class="row"><button id="anchor-mid" class="btn">Anchor to middle</button><button id="anchor-bottom" class="btn">Anchor to bottom</button><button id="clear-part" class="btn danger">Clear pixels</button></div>
-    <div class="sub">Idle wiggle (moves in whole pixels)</div>
-    ${field('f-dy', 'Bob up/down', idle.dy || 0, { min: -6, max: 6, step: 1 })}
-    ${field('f-angle', 'Tilt (deg)', idle.angle || 0, { min: -45, max: 45, step: 5 })}
+    <div class="sub">Idle wiggle</div>
+    ${field('f-dy', 'Bob up/down', idle.dy || 0, { min: -6, max: 6, step: 0.5 })}
+    ${field('f-angle', 'Tilt (deg)', idle.angle || 0, { min: -45, max: 45 })}
     ${field('f-dur', 'Speed (ms)', idle.duration || 500, { min: 100, max: 2000, step: 10 })}
     ${field('f-delay', 'Delay (ms)', idle.delay || 0, { min: 0, max: 1000, step: 10 })}
     <p id="name-err" class="note" hidden></p>`;

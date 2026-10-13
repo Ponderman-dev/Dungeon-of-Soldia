@@ -110,6 +110,19 @@ export default class BattleScene extends Phaser.Scene {
 
   startFighting() {
     this.showSlots(true);
+    // Enemy health bars and tags leave their floor (they slid in with it) and go on top of every
+    // fighter, like the heroes' bars, so a character never covers a bar.
+    for (const v of this.views.values()) {
+      if (v.unit.side !== 'enemy') continue;
+      for (const part of [v.bg, v.fill, v.chipBox]) {
+        const parent = part.parentContainer;
+        if (!parent) continue;
+        parent.remove(part);
+        part.setPosition(part.x + parent.x, part.y + parent.y);
+        this.add.existing(part);
+        part.setDepth(DEPTH.heroBar);
+      }
+    }
     // From now on the fight rules move everyone: tell them where each fighter stands (its feet).
     for (const v of this.views.values()) {
       if (!v.unit.alive) continue;

@@ -1044,5 +1044,53 @@
     "provides": [
       "fire"
     ]
+  },
+  "conductors_baton": {
+    "name": "Conductor's Baton",
+    "rarity": "rare",
+    "type": "skill",
+    "scope": "self",
+    "description": "The holder's support skills are 25% stronger and last 25% longer (extra copies add less each).",
+    "effects": [
+      {
+        "special": "baton",
+        "percent": 25,
+        "falloffRatio": 0.85
+      }
+    ]
+  },
+  "echo_rune": {
+    "name": "Echo Rune",
+    "rarity": "epic",
+    "type": "skill",
+    "scope": "self",
+    "description": "15% chance a skill casts twice. The echo deals 60% of the damage (more copies: closer to 100%) and cannot echo again.",
+    "effects": [
+      {
+        "special": "echo",
+        "percent": 15,
+        "cap": 60
+      },
+      {
+        "special": "echoCopies",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 90
+  },
+  "metronome": {
+    "name": "Metronome",
+    "rarity": "rare",
+    "type": "skill",
+    "scope": "self",
+    "description": "Empowered 4th-beat hits caused by the holder deal +50% damage (on the Bard: every squad Rhythm beat).",
+    "effects": [
+      {
+        "special": "metronome",
+        "percent": 50
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "beat"
   }
 }

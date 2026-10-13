@@ -700,7 +700,8 @@ export default class BattleState {
     for (const f of empower) {
       const c = f.counter;
       events.push({ type: 'proc', unit, label: c.firedLabel || 'Empowered!' });
-      if (c.strike && target.alive) this.strike(unit, target, events, { multiplier: c.strike.damageMultiplier, damageType: c.strike.damageType });
+      // Metronome (on the counter's holder): the empowered beat hits harder.
+      if (c.strike && target.alive) this.strike(unit, target, events, { multiplier: c.strike.damageMultiplier * (1 + ((f.holder.specials.metronome || 0) / 100)), damageType: c.strike.damageType });
       if (target.alive && !hit.dodged) for (const spec of c.apply || []) this.applyStatus(target, spec, unit, `counter_${f.holder.uid}`, events);
     }
     this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, force: empower.some((f) => f.counter.forceProcs) });
@@ -1474,14 +1475,16 @@ export default class BattleState {
 
   // The skill goes off. One-target skills hit the focused enemy, else the hero's usual target
   // (picked now, at the end of the wind-up).
-  releaseSkill(hero, index, events) {
+  releaseSkill(hero, index, events, echo = null) {
     const slot = hero.skills[index];
-    const skill = this.currentSpell(hero, index);
+    let skill = echo ? echo.spell : this.currentSpell(hero, index);
+    // Conductor's Baton: the holder's SUPPORT skills are stronger and last longer.
+    if (skill.kind === 'support' && hero.specials.baton) skill = this.scaleSupport(skill, 1 + hero.specials.baton / 100);
     if (!this.targetsAllies(skill) && !this.enemies.some((e) => e.alive)) {
       events.push({ type: 'castCancel', unit: hero, skill, reason: 'noTarget' });
       return;
     }
-    if (this.skillDefs[slot.id].rotation) slot.rotation = ((slot.rotation || 0) + 1) % this.skillDefs[slot.id].rotation.length; // next spell next time
+    if (!echo && this.skillDefs[slot.id].rotation) slot.rotation = ((slot.rotation || 0) + 1) % this.skillDefs[slot.id].rotation.length; // next spell next time
 
     let targets;
     if (skill.random) targets = [];
@@ -1518,13 +1521,39 @@ export default class BattleState {
     }
     let first = true;
     for (const target of targets) {
-      this.skillHit(hero, skill, slot.id, target, events, { jumpFrom: skill.chain && !first ? targets[targets.indexOf(target) - 1] : null });
+      this.skillHit(hero, skill, slot.id, target, events, { jumpFrom: skill.chain && !first ? targets[targets.indexOf(target) - 1] : null, scale: echo ? echo.power : 1 });
       first = false;
       // Fireball: the neighbours of its target are hit too, for a share of the damage, with the same debuffs.
       if (skill.splash && target === targets[0] && skill.target === 'enemy') {
-        for (const n of this.neighbours(target)) this.skillHit(hero, skill, slot.id, n, events, { multiplier: skill.splash.damageMultiplier });
+        for (const n of this.neighbours(target)) this.skillHit(hero, skill, slot.id, n, events, { multiplier: skill.splash.damageMultiplier, scale: echo ? echo.power : 1 });
       }
     }
+    // Echo Rune: a skill sometimes casts a second time (the echo cannot echo, the Mage's rotation does not move again).
+    // Channels (Rain of Arrows, Crescendo) do not echo.
+    const chance = hero.specials.echo || 0;
+    if (!echo && chance > 0 && !skill.channel && this.rng() * 100 < chance) {
+      events.push({ type: 'proc', unit: hero, label: 'Echo!' });
+      const copies = hero.specials.echoCopies || 1;
+      this.releaseSkill(hero, index, events, { spell: skill, power: Math.min(1, 0.6 + 0.1 * (copies - 1)) });
+    }
+  }
+
+  // A support skill made stronger and longer by `k` (1.25 = 25%): every status it applies lasts longer, its
+  // numbers (buff mods, shields, heals, regen, marks) are bigger.
+  scaleSupport(skill, k) {
+    const scaleSpec = (spec) => {
+      const out = { ...spec };
+      if (out.durationMs) out.durationMs *= k;
+      if (out.mods) out.mods = out.mods.map((m) => ({ ...m, ...(m.percent !== undefined ? { percent: m.percent * k } : {}), ...(m.flat !== undefined ? { flat: m.flat * k } : {}) }));
+      for (const f of ['amount', 'percentMaxHp', 'attackMultiplier', 'healPercentOnEnd', 'percentMaxHpPerSec', 'damageTakenPercent']) if (out[f] !== undefined) out[f] *= k;
+      return out;
+    };
+    const out = { ...skill };
+    if (skill.apply) out.apply = skill.apply.map(scaleSpec);
+    if (skill.applyEnemies) out.applyEnemies = skill.applyEnemies.map(scaleSpec);
+    if (skill.heal) out.heal = { ...skill.heal, percentMaxHp: (skill.heal.percentMaxHp || 0) * k };
+    if (skill.random) out.random = { ...skill.random, pool: skill.random.pool.map((f) => ({ ...f, ...(f.apply ? { apply: f.apply.map(scaleSpec) } : {}), ...(f.heal ? { heal: { ...f.heal, percentMaxHp: f.heal.percentMaxHp * k } } : {}) })) };
+    return out;
   }
 
   // One hit of a skill on one target (damage, bonuses, statuses, healing). opts.multiplier overrides the
@@ -1533,7 +1562,7 @@ export default class BattleState {
     let result = null;
     const base = opts.multiplier ?? skill.damageMultiplier;
     if (base) {
-      let mult = base * (1 + ((hero.specials && hero.specials.skillDamage) || 0) / 100);
+      let mult = base * (1 + ((hero.specials && hero.specials.skillDamage) || 0) / 100) * (opts.scale ?? 1);
       // Bonus damage against certain enemies: `debuffedMultiplier` (any debuff: Smite, Death Coil), `bonusVs`
       // (a list of { status, multiplier }: Chain Lightning vs burning/frozen), `doubleIf` (x2 if the target
       // is bleeding / below half health: Savage Leap).

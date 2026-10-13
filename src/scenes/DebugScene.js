@@ -24,6 +24,32 @@ export default class DebugScene extends Phaser.Scene {
       .setInteractive()
       .on('pointerdown', () => this.registry.set('autoRewards', !this.registry.get('autoRewards')));
 
+    // TEST: a second button that switches the squad (restarts the run) until squad select exists.
+    const presets = [
+      ['knight', 'rogue', 'archer'],
+      ['berserker', 'samurai', 'mage'],
+      ['cleric', 'necromancer', 'bard'],
+      ['alchemist', 'knight', 'mage'],
+    ];
+    const y2 = y + h + 4;
+    this.squadLabel = this.add
+      .text(x + w / 2, y2 + h / 2, '', { fontFamily: 'monospace', fontSize: '10px', fontStyle: 'bold', color: '#ffe08a' })
+      .setOrigin(0.5);
+    this.add.rectangle(x + w / 2, y2 + h / 2, w, h, 0x000000, 0.7).setStrokeStyle(2, 0xffe08a, 0.8).setDepth(-1);
+    const showSquad = () => this.squadLabel.setText(`TEST squad: ${(this.registry.get('squadIds') || presets[0]).map((i) => i.slice(0, 3)).join(' ')}`);
+    showSquad();
+    this.add
+      .zone(x + w / 2, y2 + h / 2, w, h)
+      .setInteractive()
+      .on('pointerdown', () => {
+        const now = (this.registry.get('squadIds') || presets[0]).join();
+        const next = presets[(presets.findIndex((p) => p.join() === now) + 1) % presets.length];
+        this.registry.set('squadIds', next);
+        showSquad();
+        this.scene.stop('Reward');
+        this.scene.get('Battle').scene.restart();
+      });
+
     this.refresh();
     this.registry.events.on('changedata-autoRewards', this.refresh, this);
     this.events.once('shutdown', () => this.registry.events.off('changedata-autoRewards', this.refresh, this));

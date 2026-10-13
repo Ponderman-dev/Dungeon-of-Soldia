@@ -13,7 +13,7 @@ Work branch: `claude/quick-gloves-item-changes-ofzyqe` (PR https://github.com/Po
 
 ## WHERE WE ARE: the BIG UPDATE (docs/big-update-plan.md "BUILD ORDER")
 DONE: all of Phase A (A1 no mana, A2 attack/support skill slots, A3 defense/resist curve + caps, A4 new drop roll, A5 damage types, A6 debuff engine) and all of Phase B (B1 attack start/hit split, B2-B4 heroes/enemies walk + arrows, B5 melee movement rework).
-MOVEMENT REBUILD done (see below). NEXT: **Phase D (D1 shields/invulnerable DONE, D2 taunt DONE, D3 counters DONE, D4 minions DONE) = PHASE D FINISHED. PHASE E (heroes): E1 Knight DONE, E2 Rogue DONE, NEXT E3 Archer**. (Phase C below is done):
+MOVEMENT REBUILD done (see below). NEXT: **Phase D (D1 shields/invulnerable DONE, D2 taunt DONE, D3 counters DONE, D4 minions DONE) = PHASE D FINISHED. PHASE E (heroes): E1 Knight DONE, E2 Rogue DONE, E3-E10 ALL DONE (see CLAUDE.md), NEXT = Phase F (squad select + unlock saving)**. (Phase C below is done):
 - DONE: C1 skill wind-up (`castMs`, longer than a normal attack). DECIDED by the user: stunned/frozen during a wind-up = the skill is LOST and GOES ON COOLDOWN.
 - DONE: C2 skill cast visuals (colour flash, ring burst, name banner, bigger coloured numbers, screen shake / hit-stop; skills must look clearly different from normal hits).
 - DONE: C3 morale wash (Phase C is finished; NEXT is Phase D) instead of text (very faint tint on living heroes: light = INCOMPLETE, darker = ALL ALONE; remove the tag/popup).

@@ -43,7 +43,8 @@ export default class BattleState {
     this.rng = rng;
     this.nextUid = 1;
     this.focusUid = null;
-    this.heroes = heroDefs.map((d) => this.makeUnit(d, 'hero', 1));
+    // A passive can hold the hero's `counter` (every Nth attack) and `spawner` (minions): they are also read from the def itself.
+    this.heroes = heroDefs.map((d) => this.makeUnit({ ...d, counter: d.counter ?? (d.passive && d.passive.counter), spawner: d.spawner ?? (d.passive && d.passive.spawner) }, 'hero', 1));
     this.enemies = [];
     this.minions = []; // extra fighters on the hero side (minions.json); never part of the squad
     this.minionDefs = minionDefs;
@@ -96,6 +97,8 @@ export default class BattleState {
       walked: 0, // total distance walked (the scene uses it for the hop rhythm)
       knock: null, // being knocked back: { vx, vy, remaining }
       casting: null, // a skill winding up: { index, remaining, total }
+      sinceHit: 0, // ms since the unit last lost health (Archer's Steady Aim)
+      steady: false, // Steady Aim is active
       spawnTimer: 0, // minion spawner (def.spawner): ms until the next minion
       minion: false, // true for minions (hero side, not in this.heroes)
       holderUid: null, // minions: the hero whose passive/item made it
@@ -120,6 +123,9 @@ export default class BattleState {
     const chill = this.statusDefs.chill || {};
     let change = -this.stacks(unit, 'chill') * (chill.slowPerStackPercent || 0);
     for (const s of unit.statuses) if (s.type === 'shock') change += s.attackSpeedPercent;
+    // Bloodrage (Berserker): faster the more health he is missing.
+    const rage = unit.def.passive && unit.def.passive.bloodrage;
+    if (rage) change += rage.attackSpeedPercentPerMissing * (100 - (100 * unit.hp) / unit.maxHp);
     const speed = (unit.stats.attackEfficiency / 100) * Math.max(0.2, 1 + change / 100);
     return this.rules.baseAttackIntervalMs / speed;
   }
@@ -420,6 +426,7 @@ export default class BattleState {
   startFloor(events = []) {
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
+      hero.sinceHit = 0; // Steady Aim starts counting again with every fight
       for (const src of hero.minionSources || []) {
         const st = this.sourceState(hero, src.key);
         if (src.kind === 'weak') {
@@ -552,8 +559,11 @@ export default class BattleState {
     // Health regenerates (Heart Charm) and skill cooldowns run down.
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
-      const regen = (hero.specials && hero.specials.regen) || 0; // % of max health per second
+      // Regen (Heart Charm) and the Cleric's aura: every hero regenerates a little, and regen/heals from items are stronger.
+      const aura = this.regenAura();
+      const regen = ((hero.specials && hero.specials.regen) || 0) * aura.factor + aura.base; // % of max health per second
       if (regen > 0) hero.hp = Math.min(hero.maxHp, hero.hp + (hero.maxHp * regen * dt) / 100000);
+      this.tickSteadyAim(hero, dt);
       hero.shareCd = Math.max(0, hero.shareCd - dt);
       this.tickSpawner(hero, dt, events);
       for (const slot of hero.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - dt);
@@ -662,9 +672,55 @@ export default class BattleState {
     this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, force: empower.some((f) => f.counter.forceProcs) });
   }
 
+  // ---- passives that change over time or need a living hero --------------------------------------
+  // Cleric: while she lives, every hero regenerates `baseRegenPercentPerSec` and regen/heals from items
+  // are `healMultiplierPercent` stronger. Returns { base, factor }.
+  regenAura() {
+    let base = 0;
+    let mult = 0;
+    for (const h of this.heroes) {
+      const a = h.alive && h.def.passive && h.def.passive.regenAura;
+      if (!a) continue;
+      base += a.baseRegenPercentPerSec;
+      mult += a.healMultiplierPercent;
+    }
+    return { base, factor: 1 + mult / 100 };
+  }
+
+  // Alchemist: while he lives, debuffs on enemies last longer and damage over time hits harder.
+  catalyst() {
+    let dur = 0;
+    let dot = 0;
+    for (const h of this.heroes) {
+      const c = h.alive && h.def.passive && h.def.passive.catalyst;
+      if (!c) continue;
+      dur += c.durationPercent;
+      dot += c.dotPercent;
+    }
+    return { dur: 1 + dur / 100, dot: 1 + dot / 100 };
+  }
+
+  // Archer: after `afterMs` without being hit he gets attack speed and crit (hero.steady) until hit again.
+  tickSteadyAim(hero, dt) {
+    const sa = hero.def.passive && hero.def.passive.steadyAim;
+    if (!sa) return;
+    hero.sinceHit += dt;
+    const steady = hero.sinceHit >= sa.afterMs;
+    if (steady !== hero.steady) {
+      hero.steady = steady;
+      this.refreshStats();
+    }
+  }
+
   // ---- Opportunist (the Rogue's passive: def.passive.opportunist) ---------------------------------
   opportunist(unit) {
     return (unit.def.passive && unit.def.passive.opportunist) || null;
+  }
+
+  // Passives that make the unit's own chance-based debuffs likelier (Rogue's Opportunist, Samurai's Focused Strike).
+  debuffBoost(unit) {
+    const p = unit.def.passive;
+    return (p && ((p.opportunist && p.opportunist.debuffChancePercent) || (p.focusedStrike && p.focusedStrike.debuffChancePercent))) || 0;
   }
 
   // Has the unit any harmful status (statuses.json `debuff: true`)?
@@ -674,8 +730,7 @@ export default class BattleState {
 
   // The chance (in %) that one of the unit's own CHANCE-based debuffs goes off: the Rogue gets a bonus.
   debuffChance(unit, chance) {
-    const op = this.opportunist(unit);
-    return op ? chance * (1 + op.debuffChancePercent / 100) : chance;
+    return chance * (1 + this.debuffBoost(unit) / 100);
   }
 
   // ---- "every Nth attack" counters (a hero def can have `counter`) ----------------------------------
@@ -769,6 +824,15 @@ export default class BattleState {
   // projectile ('bomb', 'lightning': the scene draws it flying from the attacker).
   strike(attacker, target, events, opts = {}) {
     // Opportunist (Rogue): more damage and crit against enemies that have any debuff.
+    // Focus Stance (Samurai): his next BASIC attack is a sure crit, then the status is used up.
+    if (opts.basic) {
+      const sure = attacker.statuses.find((st) => st.type === 'guaranteedCrit');
+      if (sure) {
+        opts = { ...opts, critBonus: (opts.critBonus || 0) + 100 };
+        attacker.statuses.splice(attacker.statuses.indexOf(sure), 1);
+        events.push({ type: 'status', unit: attacker, change: 'expire', status: sure });
+      }
+    }
     const op = this.opportunist(attacker);
     if (op && this.isDebuffed(target)) opts = { ...opts, damagePercent: (opts.damagePercent || 0) + op.damagePercent, critBonus: (opts.critBonus || 0) + op.critFlat };
     const result = computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, opts);
@@ -862,7 +926,7 @@ export default class BattleState {
   afterHit(attacker, target, amount, events, result = {}) {
     const lifesteal = (attacker.specials && attacker.specials.lifesteal) || 0;
     if (lifesteal > 0 && attacker.alive) {
-      const base = Math.max(1, Math.round((amount * lifesteal) / 100));
+      const base = Math.max(1, Math.round(((amount * lifesteal) / 100) * this.regenAura().factor)); // the Cleric's aura makes item heals stronger
       const heal = Math.min(attacker.maxHp - attacker.hp, base);
       if (heal > 0) {
         attacker.hp += heal;
@@ -921,6 +985,13 @@ export default class BattleState {
       }
     }
     target.hp = Math.max(0, target.hp - left);
+    if (left > 0 || absorbed > 0) {
+      target.sinceHit = 0; // being hit resets Steady Aim
+      if (target.steady) {
+        target.steady = false;
+        this.refreshStats();
+      }
+    }
     return { lost: left, absorbed, immune: false, broken };
   }
 
@@ -957,7 +1028,9 @@ export default class BattleState {
     const info = this.statusDefs[spec.status] || {};
     const scale = info.control ? target.def.statusDurationScale ?? 1 : 1;
     // A shield with no durationMs lasts until it is broken.
-    const duration = (spec.durationMs ?? (spec.status === 'shield' ? Infinity : 0)) * scale;
+    // Catalyst (Alchemist): debuffs on ENEMIES last longer.
+    const cat = target.side === 'enemy' && this.statusDefs[spec.status] && this.statusDefs[spec.status].debuff ? this.catalyst() : { dur: 1, dot: 1 };
+    const duration = (spec.durationMs ?? (spec.status === 'shield' ? Infinity : 0)) * scale * cat.dur;
     const key = `${spec.status}:${skillId}`;
 
     if (info.instant) {
@@ -1002,6 +1075,7 @@ export default class BattleState {
         status.onBreak = spec.onBreak || null;
       }
       if (spec.status === 'invulnerable') status.healPercentOnEnd = spec.healPercentOnEnd || 0;
+      if (spec.status === 'regenBoost') status.percentMaxHpPerSec = spec.percentMaxHpPerSec || 0;
       // Stat debuffs: the number comes from the skill/item, or the default in statuses.json.
       for (const field of ['attackPercent', 'defenseFlat', 'resistFlat', 'missPercent', 'damageTakenPercent']) {
         if (spec[field] !== undefined || info[field] !== undefined) status[field] = spec[field] ?? info[field];
@@ -1017,7 +1091,7 @@ export default class BattleState {
         status.ignoresArmor = spec.ignoresArmor ?? !!info.ignoresArmor;
         // Damage-type items boost damage over time of that type too (e.g. +15% dark boosts poison).
         const bonus = ((source.damageBonus && source.damageBonus[status.damageType]) || 0) / 100;
-        status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus)));
+        status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus) * cat.dot));
         if (!(spec.status in target.dotClocks)) target.dotClocks[spec.status] = 0; // first stack: start the tick clock
       }
     }
@@ -1043,6 +1117,7 @@ export default class BattleState {
     for (const unit of this.allUnits()) {
       if (!unit.alive) continue;
       for (const status of unit.statuses) status.remaining -= dt;
+      for (const st of unit.statuses) if (st.type === 'regenBoost' && unit.hp < unit.maxHp) unit.hp = Math.min(unit.maxHp, unit.hp + (unit.maxHp * st.percentMaxHpPerSec * this.regenAura().factor * dt) / 100000); // Ballad of Rest (Cleric aura makes it stronger)
       this.tickDots(unit, dt, events);
       if (!unit.alive) continue;
       for (const status of [...unit.statuses]) {
@@ -1089,15 +1164,30 @@ export default class BattleState {
 
   // ---- skills -------------------------------------------------------------------------
 
+  // The skill a slot would cast NOW. A skill with a `rotation` (the Mage's Elemental Rotation) is a list of
+  // spells; the slot's `rotation` counter says which one is next (it advances when the spell goes off).
+  // The spell's fields (name, short, target, damage...) override the skill's.
+  currentSpell(hero, index) {
+    const slot = hero.skills[index];
+    const base = this.skillDefs[slot.id];
+    if (!base.rotation) return base;
+    return { ...base, ...base.rotation[(slot.rotation || 0) % base.rotation.length] };
+  }
+
   // Can this hero cast this skill right now? Returns false if not (dead, stunned, cooling down,
   // or nothing to aim at). Skills cost no mana: only the cooldown limits them.
   canCast(hero, index) {
     const slot = hero.skills[index];
     if (!slot || !hero.alive || hero.casting || this.isStunned(hero) || this.has(hero, 'silence')) return false;
-    const skill = this.skillDefs[slot.id];
+    const skill = this.currentSpell(hero, index);
     if (slot.cooldownLeft > 0) return false;
-    if (skill.target === 'self' || skill.target === 'squad') return true;
+    if (this.targetsAllies(skill)) return true;
     return this.enemies.some((e) => e.alive);
+  }
+
+  // Skills that only touch the hero's side (no enemy needed to cast them).
+  targetsAllies(skill) {
+    return skill.target === 'self' || skill.target === 'squad' || skill.target === 'lowestAlly' || (skill.random && skill.random.target === 'ally');
   }
 
   // How long a skill winds up before it goes off: the skill's `castMs`, else combat.json
@@ -1114,7 +1204,7 @@ export default class BattleState {
     const hero = this.heroes.find((h) => h.uid === heroUid);
     if (!hero || !this.canCast(hero, index)) return events;
     const slot = hero.skills[index];
-    const skill = this.skillDefs[slot.id];
+    const skill = this.currentSpell(hero, index);
     slot.cooldownLeft = skill.cooldownMs;
     const castMs = this.castTime(skill);
     if (castMs <= 0) {
@@ -1126,20 +1216,30 @@ export default class BattleState {
     return events;
   }
 
-  // A wind-up runs down. Stunned, frozen or silenced meanwhile: the skill is LOST (it stays on
-  // cooldown, the user's choice).
+  // A wind-up (or a channel, see startChannel) runs down. Stunned, frozen or silenced meanwhile: the
+  // skill is LOST (it stays on cooldown, the user's choice); a channel stops where it is.
   tickCasting(hero, dt, events) {
     if (!hero.casting) return;
-    const slot = hero.skills[hero.casting.index];
-    const skill = this.skillDefs[slot.id];
+    const c = hero.casting;
+    const skill = c.channel ? c.channel.skill : this.currentSpell(hero, c.index);
     if (this.isStunned(hero) || this.has(hero, 'silence')) {
       hero.casting = null;
       events.push({ type: 'castCancel', unit: hero, skill, reason: 'interrupted' });
       return;
     }
-    hero.casting.remaining -= dt;
-    if (hero.casting.remaining > 0) return;
-    const { index } = hero.casting;
+    c.remaining -= dt;
+    if (c.channel) {
+      // The channel fires its waves one after another (Rain of Arrows, Crescendo).
+      c.channel.timer -= dt;
+      while (c.channel.timer <= 0 && c.channel.wave < c.channel.waves.length) {
+        this.fireWave(hero, c.channel, events);
+        c.channel.timer += c.channel.intervalMs;
+      }
+      if (c.channel.wave >= c.channel.waves.length) hero.casting = null;
+      return;
+    }
+    if (c.remaining > 0) return;
+    const { index } = c;
     hero.casting = null;
     this.releaseSkill(hero, index, events);
   }
@@ -1148,17 +1248,21 @@ export default class BattleState {
   // (picked now, at the end of the wind-up).
   releaseSkill(hero, index, events) {
     const slot = hero.skills[index];
-    const skill = this.skillDefs[slot.id];
-    if (skill.target !== 'self' && skill.target !== 'squad' && !this.enemies.some((e) => e.alive)) {
+    const skill = this.currentSpell(hero, index);
+    if (!this.targetsAllies(skill) && !this.enemies.some((e) => e.alive)) {
       events.push({ type: 'castCancel', unit: hero, skill, reason: 'noTarget' });
       return;
     }
+    if (this.skillDefs[slot.id].rotation) slot.rotation = ((slot.rotation || 0) + 1) % this.skillDefs[slot.id].rotation.length; // next spell next time
 
     let targets;
-    if (skill.target === 'self') targets = [hero];
+    if (skill.random) targets = [];
+    else if (skill.target === 'self') targets = [hero];
     else if (skill.target === 'squad') targets = this.squadUnits(); // every living hero and minion
+    else if (skill.target === 'lowestAlly') targets = [this.lowestHealthPercent()];
     else if (skill.target === 'allEnemies') targets = this.enemies.filter((e) => e.alive);
     else targets = [this.pickTarget(hero)];
+    if (skill.chain && targets[0]) targets = this.chainOrder(targets[0]); // Chain Lightning: through ALL enemies, nearest next
     const splash = (hero.specials && hero.specials.skillSplash) || 0; // Siege Cannon: % chance to hit the neighbours too
     if (skill.target === 'enemy' && skill.damageMultiplier && splash > 0 && this.rng() * 100 < splash) {
       const near = this.neighbours(targets[0]);
@@ -1174,20 +1278,122 @@ export default class BattleState {
     // `applyEnemies`: statuses every living enemy gets (Smoke Bomb: blind).
     for (const spec of skill.applyEnemies || []) for (const e of this.enemies.filter((x) => x.alive)) this.applyStatus(e, spec, hero, slot.id, events);
 
-    for (const target of targets) {
-      if (skill.damageMultiplier) {
-        const result = this.strike(hero, target, events, {
-          multiplier: skill.damageMultiplier * (1 + ((hero.specials && hero.specials.skillDamage) || 0) / 100),
-          damageType: skill.damageType,
-          skill,
-          projectile: skill.projectile,
-        });
-        if (result.dodged || !target.alive) continue;
-        // `onCrit`: statuses that only a crit puts on the target (Fan of Knives: bleed).
-        if (result.crit) for (const spec of skill.onCrit || []) this.applyStatus(target, spec, hero, `${slot.id}_crit`, events);
-      }
-      for (const spec of skill.apply || []) this.applyStatus(target, spec, hero, slot.id, events);
+    if (skill.channel) {
+      // A channel: after the cast it keeps firing waves; the hero is busy until the last one.
+      const ch = skill.channel;
+      hero.casting = { index, remaining: ch.waves.length * ch.intervalMs, total: ch.waves.length * ch.intervalMs, channel: { skill, slotId: slot.id, waves: ch.waves, intervalMs: ch.intervalMs, timer: 0, wave: 0 } };
+      return;
     }
+    if (skill.random) {
+      this.throwFlasks(hero, skill, slot.id, events);
+      return;
+    }
+    let first = true;
+    for (const target of targets) {
+      this.skillHit(hero, skill, slot.id, target, events, { jumpFrom: skill.chain && !first ? targets[targets.indexOf(target) - 1] : null });
+      first = false;
+      // Fireball: the neighbours of its target are hit too, for a share of the damage, with the same debuffs.
+      if (skill.splash && target === targets[0] && skill.target === 'enemy') {
+        for (const n of this.neighbours(target)) this.skillHit(hero, skill, slot.id, n, events, { multiplier: skill.splash.damageMultiplier });
+      }
+    }
+  }
+
+  // One hit of a skill on one target (damage, bonuses, statuses, healing). opts.multiplier overrides the
+  // skill's damageMultiplier (waves, splash). Returns the strike result or null (no damage in this skill).
+  skillHit(hero, skill, slotId, target, events, opts = {}) {
+    let result = null;
+    const base = opts.multiplier ?? skill.damageMultiplier;
+    if (base) {
+      let mult = base * (1 + ((hero.specials && hero.specials.skillDamage) || 0) / 100);
+      // Bonus damage against certain enemies: `debuffedMultiplier` (any debuff: Smite, Death Coil), `bonusVs`
+      // (a list of { status, multiplier }: Chain Lightning vs burning/frozen), `doubleIf` (x2 if the target
+      // is bleeding / below half health: Savage Leap).
+      if (skill.debuffedMultiplier && this.isDebuffed(target)) mult *= skill.debuffedMultiplier;
+      for (const b of skill.bonusVs || []) if (target.statuses.some((st) => st.type === b.status)) mult *= b.multiplier;
+      if (skill.doubleIf && skill.doubleIf.some((c) => (c === 'bleed' ? this.has(target, 'bleed') : c === 'below50' ? target.hp < target.maxHp / 2 : false))) mult *= 2;
+      result = this.strike(hero, target, events, {
+        multiplier: mult,
+        damageType: skill.damageType,
+        skill,
+        projectile: skill.chain ? 'lightning' : skill.projectile,
+        from: opts.jumpFrom || undefined,
+      });
+      // Smite: the most hurt ally heals for a share of the damage that got through.
+      if (skill.healShare && !result.dodged) {
+        const ally = this.lowestHealthAlly();
+        const amount = Math.round(((result.amount - (result.absorbed || 0)) * skill.healShare) / 100);
+        if (ally && amount > 0) this.healUnit(ally, amount, events);
+      }
+      // Death Coil: a kill raises a skeleton.
+      if (!target.alive && skill.onKill && skill.onKill.raise) {
+        this.spawnMinion(hero, { kind: 'weak', key: 'hero', spec: { minion: skill.onKill.raise, cap: (hero.def.spawner && hero.def.spawner.cap) || 4 } }, events);
+      }
+      if (result.dodged || !target.alive) return result;
+      // `onCrit`: statuses that only a crit puts on the target (Fan of Knives: bleed).
+      if (result.crit) for (const spec of skill.onCrit || []) this.applyStatus(target, spec, hero, `${slotId}_crit`, events);
+    }
+    for (const spec of skill.apply || []) this.applyStatus(target, spec, hero, slotId, events);
+    if (skill.heal) this.healUnit(target, this.healAmount(hero, target, skill.heal), events);
+    return result;
+  }
+
+  // One wave of a channel: every living enemy takes a hit (growing in Crescendo), `waveApply` statuses with a chance each.
+  fireWave(hero, ch, events) {
+    const mult = ch.waves[ch.wave];
+    const targets = this.enemies.filter((e) => e.alive);
+    events.push({ type: 'wave', unit: hero, skill: ch.skill, wave: ch.wave, waves: ch.waves.length, targets });
+    for (const t of targets) {
+      const res = this.skillHit(hero, { ...ch.skill, apply: null, onCrit: ch.skill.onCrit }, ch.slotId, t, events, { multiplier: mult });
+      if (res && !res.dodged && t.alive) for (const spec of ch.skill.waveApply || []) if (this.rng() * 100 < (spec.chance ?? 100)) this.applyStatus(t, spec, hero, ch.slotId, events);
+    }
+    ch.wave++;
+  }
+
+  // Alchemist flasks: `random: { count, target: 'enemy' | 'ally', pool: [ { name, color, damageType,
+  // damageMultiplier, apply, heal } ] }`. Each flask picks a random living target and a random flask from the pool.
+  throwFlasks(hero, skill, slotId, events) {
+    const r = skill.random;
+    for (let i = 0; i < r.count; i++) {
+      const side = r.target === 'enemy' ? this.enemies.filter((e) => e.alive) : this.heroes.filter((h) => h.alive);
+      if (!side.length) return;
+      const target = side[Math.floor(this.rng() * side.length)];
+      const flask = r.pool[Math.floor(this.rng() * r.pool.length)];
+      events.push({ type: 'flask', unit: hero, target, flask });
+      this.skillHit(hero, { damageType: flask.damageType, damageMultiplier: flask.damageMultiplier, apply: flask.apply, heal: flask.heal }, `${slotId}_${flask.name}`, target, events);
+    }
+  }
+
+  // How much a heal of `spec` { percentMaxHp, attackMultiplier } gives `target` from `healer`.
+  healAmount(healer, target, spec) {
+    return Math.max(1, Math.round(((spec.percentMaxHp || 0) * target.maxHp) / 100 + (spec.attackMultiplier || 0) * healer.stats.attack));
+  }
+
+  // Heals a unit (never above its max health; the Cleric's aura makes heals stronger). Sends a heal event.
+  healUnit(unit, amount, events) {
+    const got = Math.min(unit.maxHp - unit.hp, Math.round(amount * this.regenAura().factor));
+    if (got <= 0) return 0;
+    unit.hp += got;
+    events.push({ type: 'heal', unit, amount: got });
+    return got;
+  }
+
+  // All enemies in a chain order: from `first`, always to the nearest one not yet hit.
+  chainOrder(first) {
+    const left = this.enemies.filter((e) => e.alive && e !== first);
+    const order = [first];
+    let at = first;
+    while (left.length) {
+      left.sort((a, b) => this.distance(at, a) - this.distance(at, b));
+      at = left.shift();
+      order.push(at);
+    }
+    return order;
+  }
+
+  // The living hero with the lowest health % (full health counts), for Divine Shield.
+  lowestHealthPercent() {
+    return this.heroes.filter((h) => h.alive).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
   }
 
   // ---- XP, levels, items --------------------------------------------------------------
@@ -1225,6 +1431,8 @@ export default class BattleState {
       const paying = this.upkeepCount(hero);
       const mr = this.rules.minions || {};
       for (let i = 0; i < paying; i++) upkeep.push({ stat: 'attackEfficiency', percent: mr.upkeepAttackSpeedPercent || 0 }, { stat: 'defense', percent: mr.upkeepDefensePercent || 0 });
+      const sa = hero.def.passive && hero.def.passive.steadyAim;
+      if (sa && hero.steady) upkeep.push({ stat: 'attackEfficiency', percent: sa.attackSpeedPercent }, { stat: 'crit', flat: sa.critFlat });
       const { stats, damageBonus, specials, procs, minionSources } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale, upkeep);
       hero.minionSources = this.buildSources(hero, minionSources);
       const hpDelta = stats.health - hero.maxHp;

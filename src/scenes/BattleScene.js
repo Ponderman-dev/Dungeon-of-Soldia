@@ -25,8 +25,6 @@ import { rollChoices } from '../systems/rewards.js';
 const DUNGEON_ID = 'A';
 const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
 const SLOT_Y = 720;
-const heroDefs = pickSquad(allHeroDefs, squadIds);
-const SLOT_WIDTH = GAME_WIDTH / heroDefs.length;
 const ENEMY_Y = 340;
 const BAR_WIDTH = 44;
 const WALL_H = 200; // the back wall (with the door) fills the top of each floor
@@ -53,6 +51,9 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   create() {
+    // The squad: from squad.json, or the one the TEST squad button picked (registry `squadIds`).
+    const heroDefs = pickSquad(allHeroDefs, this.registry.get('squadIds') || squadIds);
+    this.slotWidth = GAME_WIDTH / heroDefs.length;
     this.dungeon = dungeons[DUNGEON_ID];
     for (const problem of validateDungeon(this.dungeon, enemyDefs)) console.error('Dungeon data:', problem);
     for (const problem of validateHeroSkills(heroDefs, skillDefs)) console.error('Hero skills:', problem);
@@ -220,7 +221,7 @@ export default class BattleScene extends Phaser.Scene {
       if (!u.alive || u.x === undefined || v.ch.lunging) continue;
       const hover = u.flying ? u.def.hover || 0 : 0;
       v.ch.hopOffset = u.moving ? Math.abs(Math.sin((u.walked / M.hopLengthPx) * Math.PI)) * M.hopHeight : 0;
-      v.ch.setPosition(u.x, u.y - hover - v.ch.hopOffset - v.ch.castLift);
+      v.ch.setPosition(u.x + (v.leapX || 0), u.y + (v.leapY || 0) - hover - v.ch.hopOffset - v.ch.castLift - (v.leapLift || 0));
       // Look at whoever it is fighting (so the weapon swings towards it).
       const foe = (u.pending && u.pending.target) || (this.views.get(u.foe) || {}).unit || v.lookAt;
       if (foe && foe.alive && foe.x !== undefined && Math.abs(foe.x - u.x) > 6) v.ch.face(foe.x < u.x ? -1 : 1);
@@ -231,7 +232,7 @@ export default class BattleScene extends Phaser.Scene {
 
   drawHeroSlots() {
     this.state.heroes.forEach((unit, i) => {
-      const cx = SLOT_WIDTH * i + SLOT_WIDTH / 2;
+      const cx = this.slotWidth * i + this.slotWidth / 2;
       const label = this.add
         .text(cx, GAME_HEIGHT - 22, '', { fontFamily: 'monospace', fontSize: '12px', color: '#9a8fc0' })
         .setOrigin(0.5)
@@ -282,9 +283,14 @@ export default class BattleScene extends Phaser.Scene {
     for (const hero of this.state.heroes) {
       const view = this.views.get(hero.uid);
       if (hero.alive) this.setBar(view); // health regeneration moves the bar
+      if (view.steadyShown !== hero.steady) {
+        view.steadyShown = hero.steady; // Steady Aim switched on or off: redraw the tags
+        this.drawChips(view);
+      }
       view.skillButtons.forEach((b, j) => {
         const slot = hero.skills[j];
         const skill = skillDefs[slot.id];
+        b.code.setText(this.state.currentSpell(hero, j).short); // a rotation skill shows its NEXT spell
         const ready = this.mode === 'fighting' && this.state.canCast(hero, j);
         const g = b.g;
         g.clear();
@@ -418,6 +424,7 @@ export default class BattleScene extends Phaser.Scene {
     });
     // An "every Nth attack" passive shows its count: "RHYTHM 2/4".
     const counter = view.unit.side === 'hero' && view.unit.alive ? view.unit.def.counter : null;
+    if (view.unit.steady) tags.unshift({ label: 'STEADY', color: '#9fe0ff', textColor: '#000000' });
     if (counter) tags.unshift({ label: `${counter.label} ${Math.min(view.unit.counterCount, counter.every)}/${counter.every}`, color: counter.color || '#c8a0ff', textColor: '#000000' });
     let x = 0;
     for (const info of tags) {
@@ -686,8 +693,9 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'cast') {
       const caster = this.views.get(e.unit.uid);
       this.skillBurst(caster, e);
+      if (e.skill.leap && e.targets[0]) this.leapAt(caster, this.views.get(e.targets[0].uid)); // Savage Leap
       caster.ch.castRelease(e.skill.kind); // the skill's own animation (not the normal swing)
-      if ((e.skill.target === 'enemy' || e.skill.target === 'allEnemies') && e.targets[0]) {
+      if ((e.skill.target === 'enemy' || e.skill.target === 'allEnemies') && e.targets[0] && !e.skill.leap) {
         const t = this.views.get(e.targets[0].uid);
         caster.ch.lunge(t.ch.x, t.ch.y);
       }
@@ -699,6 +707,16 @@ export default class BattleScene extends Phaser.Scene {
       }
       if (e.status.type === 'buff') this.drawAllBars();
       if (e.status.type === 'shield') this.setBar(v);
+    } else if (e.type === 'wave') {
+      // One wave of a channel (Rain of Arrows, Crescendo): a ring on the caster that grows with the wave.
+      const v = this.views.get(e.unit.uid);
+      if (v) {
+        const c = this.center(v);
+        const ring = this.add.circle(c.x, c.y, 10).setStrokeStyle(2 + e.wave, 0xffd84d).setDepth(DEPTH.popup - 1);
+        this.tweens.add({ targets: ring, radius: 24 + e.wave * 10, alpha: 0, duration: 400, onComplete: () => ring.destroy() });
+      }
+    } else if (e.type === 'flask') {
+      this.showFlask(this.views.get(e.unit.uid), this.views.get(e.target.uid), Number(e.flask.color));
     } else if (e.type === 'minionSpawn') {
       this.showMinion(e.unit);
     } else if (e.type === 'minionVanish') {
@@ -727,7 +745,7 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'heal') {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
-      this.popText(v, `+${e.amount}`, '#6dff8f');
+      this.popText(v, `+${Math.round(e.amount)}`, '#6dff8f');
     } else if (e.type === 'thorns') {
       const v = this.views.get(e.unit.uid);
       v.ch.flash();
@@ -809,7 +827,7 @@ export default class BattleScene extends Phaser.Scene {
     const from = this.center(a);
     // Placeholder arrow: a shaft with a small head (real art later).
     const arrow = this.add.container(from.x, from.y, [
-      this.add.rectangle(-4, 0, 22, 3, Number(M.arrowColor)),
+      this.add.rectangle(-4, 0, 22, 3, Number(a.unit.damageType !== 'ranged' && damageTypes[a.unit.damageType] ? Phaser.Display.Color.HexStringToColor(damageTypes[a.unit.damageType].color).color : M.arrowColor)),
       this.add.triangle(9, 0, 0, -4, 0, 4, 7, 0, 0xffffff),
     ]).setDepth(DEPTH.popup - 1);
     a.arrow = arrow;
@@ -847,10 +865,58 @@ export default class BattleScene extends Phaser.Scene {
 
   // Placeholder projectiles: a fire bomb flies to its target (and follows it), lightning is a zig-zag
   // line between the two fighters (drawn where they stand now) that fades.
+  // A flask lobbed in an arc from the thrower to the target, in the flask's colour.
+  showFlask(from, to, color) {
+    if (!from || !to) return;
+    const start = this.center(from);
+    const f = this.add.circle(start.x, start.y, 5, color).setStrokeStyle(2, 0x20242c).setDepth(DEPTH.popup);
+    this.tweens.addCounter({
+      from: 0,
+      to: 1,
+      duration: 360,
+      onUpdate: (tween) => {
+        const p = tween.getValue();
+        const now = this.center(to);
+        f.setPosition(start.x + (now.x - start.x) * p, start.y + (now.y - start.y) * p - Math.sin(p * Math.PI) * 40);
+      },
+      onComplete: () => {
+        const at = this.center(to);
+        f.destroy();
+        const splash = this.add.circle(at.x, at.y, 6, color, 0.7).setDepth(DEPTH.popup - 1);
+        this.tweens.add({ targets: splash, radius: 26, alpha: 0, duration: 420, onComplete: () => splash.destroy() });
+      },
+    });
+  }
+
   showProjectile(from, to, kind) {
     if (!from || !to) return;
     const start = this.center(from);
     const end = this.center(to);
+    if (kind === 'rain') {
+      // Rain of Arrows: an arrow drops from above onto the target.
+      const a = this.add.container(end.x + Phaser.Math.Between(-8, 8), end.y - 130, [this.add.rectangle(0, -4, 3, 20, Number(M.arrowColor)), this.add.triangle(0, 8, -4, 0, 4, 0, 0, 8, 0xffffff)]).setDepth(DEPTH.popup);
+      this.tweens.add({ targets: a, y: end.y, duration: 230, ease: 'Quad.easeIn', onComplete: () => a.destroy() });
+      return;
+    }
+    if (kind === 'note') {
+      // Crescendo: a music note floats up from the bard to the target.
+      const n = this.add.text(start.x, start.y, '♪', { fontFamily: 'monospace', fontSize: '22px', fontStyle: 'bold', color: '#ffd84d', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(DEPTH.popup);
+      this.tweens.add({ targets: n, x: end.x, y: end.y, duration: 320, ease: 'Sine.easeOut', onComplete: () => n.destroy() });
+      return;
+    }
+    if (kind === 'crescent') {
+      // Wind Cutter: a pale crescent wave sweeping to the target.
+      const c = this.add.arc(start.x, start.y, 16, 120, 240, false, 0xe8f4ff, 0.9).setStrokeStyle(2, 0xffffff).setDepth(DEPTH.popup);
+      c.rotation = Math.atan2(end.y - start.y, end.x - start.x) + Math.PI;
+      this.tweens.add({ targets: c, x: end.x, y: end.y, scale: 1.8, alpha: 0.2, duration: 300, onComplete: () => c.destroy() });
+      return;
+    }
+    if (kind === 'fireball' || kind === 'darkbolt' || kind === 'holybolt') {
+      const color = { fireball: 0xff7a3d, darkbolt: 0x9b5fe0, holybolt: 0xfff2a0 }[kind];
+      const b = this.add.circle(start.x, start.y, kind === 'fireball' ? 9 : 7, color).setStrokeStyle(2, 0xffffff, 0.8).setDepth(DEPTH.popup);
+      this.tweens.add({ targets: b, x: end.x, y: end.y, duration: 320, ease: 'Quad.easeIn', onComplete: () => { const boom = this.add.circle(end.x, end.y, 8, color, 0.8).setDepth(DEPTH.popup - 1); this.tweens.add({ targets: boom, radius: 28, alpha: 0, duration: 300, onComplete: () => boom.destroy() }); b.destroy(); } });
+      return;
+    }
     if (kind === 'lightning') {
       const g = this.add.graphics().setDepth(DEPTH.popup);
       g.lineStyle(3, 0xffe94d, 1).beginPath().moveTo(start.x, start.y);
@@ -920,6 +986,20 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // Floating number above a fighter.
+  // Savage Leap: the hero jumps at the target in an arc and lands back in his spot.
+  leapAt(caster, target) {
+    if (!target) return;
+    const dx = (target.ch.x - caster.ch.x) * 0.8;
+    const dy = (target.ch.y - caster.ch.y) * 0.8;
+    const jump = { p: 0 };
+    const set = () => {
+      caster.leapX = dx * jump.p;
+      caster.leapY = dy * jump.p;
+      caster.leapLift = Math.sin(jump.p * Math.PI) * 26;
+    };
+    this.tweens.add({ targets: jump, p: 1, duration: 230, ease: 'Quad.easeOut', onUpdate: set, onComplete: () => this.tweens.add({ targets: jump, p: 0, duration: 300, delay: 120, ease: 'Quad.easeInOut', onUpdate: set, onComplete: () => { caster.leapX = caster.leapY = caster.leapLift = 0; } }) });
+  }
+
   // A skill goes off: the caster flashes in the skill colour, a ring bursts (on each target for an
   // attack skill, around the caster for a support skill) and the skill's name shows as a banner.
   // Attack skills also shake the screen and freeze the fight for a split second (hit-stop).
@@ -928,7 +1008,7 @@ export default class BattleScene extends Phaser.Scene {
     const colorText = attack ? FX.attackColor : FX.supportColor;
     const color = Phaser.Display.Color.HexStringToColor(colorText).color;
     caster.ch.flash(color, FX.flashMs);
-    const spots = attack || e.skill.target === 'squad' ? e.targets.map((t) => this.views.get(t.uid)).filter(Boolean) : [caster];
+    const spots = attack || e.skill.target === 'squad' || e.skill.target === 'enemy' || e.skill.target === 'lowestAlly' ? e.targets.map((t) => this.views.get(t.uid)).filter(Boolean) : [caster];
     for (const v of spots) {
       const c = this.center(v);
       const ring = this.add.circle(c.x, c.y, 10).setStrokeStyle(4, color).setDepth(DEPTH.popup - 1);

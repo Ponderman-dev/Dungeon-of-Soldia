@@ -49,6 +49,9 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
   const evasion = Math.min(defender.stats.evasion, rules.caps.evasion);
   if (rng() * 100 < evasion) return { dodged: true, crit: false, amount: 0, mult: 1 };
 
+  // Parry (Samurai's Focus Stance): every hit is stopped completely.
+  if (defender.statuses && defender.statuses.some((st) => st.type === 'parry')) return { dodged: true, blocked: true, parried: true, crit: false, amount: 0, mult: 1 };
+
   // Block (Shield Totem): a hit is stopped completely.
   // While the totems recharge (a 'blockCooldown' status) nothing is blocked.
   const block = (defender.specials && defender.specials.block) || 0;

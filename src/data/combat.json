@@ -90,8 +90,8 @@
   },
   "morale": {
     "incomplete": {
-      "tint": "#7a3fc0",
-      "tintAmount": 0.16,
+      "tint": "#8a3fe0",
+      "tintAmount": 0.38,
       "mods": [
         {
           "stat": "attack",
@@ -112,8 +112,8 @@
       ]
     },
     "alone": {
-      "tint": "#4a1080",
-      "tintAmount": 0.4,
+      "tint": "#5a0a9a",
+      "tintAmount": 0.62,
       "mods": [
         {
           "stat": "attack",

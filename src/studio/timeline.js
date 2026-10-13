@@ -2,7 +2,7 @@
 // keyframe rows for X, Y and Rotation, like After Effects. Drag the playhead, add keys with the
 // diamond buttons, drag a value label to scrub it, drag diamonds to move keys in time.
 // Clip data shape: see src/systems/animClips.js. Plain DOM, no Phaser.
-import { CLIPS, CLIP_INFO, PROPS, EASES, sampleTrack, setKey, tidyClip } from '../systems/animClips.js';
+import { CLIPS, CLIP_INFO, PROPS, EASES, sampleTrack, setKey, tidyClip, defaultClip } from '../systems/animClips.js';
 import { partArt, artPixels } from '../systems/pixelArt.js';
 
 const SNAP = 10; // keys and the playhead snap to 10 ms
@@ -14,7 +14,7 @@ const round = (v, step) => Math.round(v / step) * step;
 const fmt = (v) => String(Math.round(v * 100) / 100);
 
 export default class Timeline {
-  // hooks: look(), selected(), select(name), begin(), end(), soft(), changed() (data changed),
+  // hooks: look(), name() (the character's name), selected(), select(name), begin(), end(), changed() (data changed),
   // show(clip | null, t) (preview this clip at time t), partColor(part)
   constructor(root, hooks) {
     this.root = root;
@@ -24,6 +24,7 @@ export default class Timeline {
     this.playing = false;
     this.collapsed = new Set();
     this.selKey = null; // { part, prop, key } (key = the keyframe object)
+    this.drafts = new WeakMap();
     this.drag = null;
     root.addEventListener('click', (e) => this.click(e));
     root.addEventListener('change', (e) => this.change(e));
@@ -42,9 +43,34 @@ export default class Timeline {
     });
   }
 
+  // The clip on screen: the character's own, or (until it is changed) the game's built-in motion
+  // written as keyframes (a draft, kept per look so selected keys stay valid).
   clip() {
+    const look = this.h.look();
+    if (this.isOwn()) return look.anims[this.clipId];
+    let drafts = this.drafts.get(look);
+    if (!drafts) this.drafts.set(look, (drafts = {}));
+    return (drafts[this.clipId] = drafts[this.clipId] || defaultClip(this.clipId, look.parts));
+  }
+
+  isOwn() {
     const a = this.h.look().anims;
-    return a ? a[this.clipId] : null;
+    return !!(a && a[this.clipId]);
+  }
+
+  // Before any change: an undo step, and the draft becomes the character's own clip.
+  begin() {
+    this.h.begin();
+    if (this.isOwn()) return;
+    const look = this.h.look();
+    const draft = this.clip();
+    look.anims = look.anims || {};
+    look.anims[this.clipId] = draft;
+  }
+
+  // The parts changed (e.g. idle wiggle sliders): rebuild the drafts.
+  resetDrafts() {
+    this.drafts = new WeakMap();
   }
 
   length() {
@@ -66,7 +92,7 @@ export default class Timeline {
 
   // Sets a part's value at the playhead (adds or changes a key there). Used by the preview drag too.
   setValue(part, prop, v) {
-    if (!this.clip()) return;
+    if (!this.isOwn()) this.begin(); // first change turns the built-in motion into its own clip
     setKey(this.keys(part, prop, true), this.t, v);
     this.h.changed();
     this.render();
@@ -138,7 +164,7 @@ export default class Timeline {
       const [part, prop] = b.dataset.keybtn.split('|');
       const keys = this.keys(part, prop, true);
       const i = keys.findIndex((k) => k.t === this.t);
-      this.h.begin();
+      this.begin();
       if (i >= 0) keys.splice(i, 1);
       else setKey(keys, this.t, round(sampleTrack(keys, this.t), 0.5));
       tidyClip(this.clip());
@@ -148,21 +174,12 @@ export default class Timeline {
       return this.render();
     }
     switch (b.id) {
-      case 'tl-create': {
-        this.h.begin();
-        const look = this.h.look();
-        look.anims = look.anims || {};
-        look.anims[this.clipId] = { length: CLIP_INFO[this.clipId].length, tracks: {} };
-        this.h.end();
-        this.h.changed();
-        this.show();
-        return this.render();
-      }
       case 'tl-delete': {
         const look = this.h.look();
-        this.h.begin();
+        this.begin();
         delete look.anims[this.clipId];
         if (!Object.keys(look.anims).length) delete look.anims;
+        this.resetDrafts();
         this.h.end();
         this.selKey = null;
         this.playing = false;
@@ -194,7 +211,7 @@ export default class Timeline {
     const t = e.target;
     if (t.id === 'tl-length') {
       const v = Math.max(50, Math.min(5000, round(Number(t.value) || 0, SNAP)));
-      this.h.begin();
+      this.begin();
       this.clip().length = v;
       this.h.end();
       this.t = Math.min(this.t, v);
@@ -205,14 +222,14 @@ export default class Timeline {
       const [part, prop] = t.dataset.val.split('|');
       const v = Number(t.value);
       if (Number.isNaN(v)) return;
-      this.h.begin();
+      this.begin();
       this.setValue(part, prop, v);
       this.h.end();
       return;
     }
     if (this.selKey && (t.id === 'tl-key-ease' || t.id === 'tl-key-value' || t.id === 'tl-key-time')) {
       const k = this.selKey.key;
-      this.h.begin();
+      this.begin();
       if (t.id === 'tl-key-ease') k.ease = t.value;
       if (t.id === 'tl-key-value') k.v = Number(t.value) || 0;
       if (t.id === 'tl-key-time') {
@@ -245,7 +262,7 @@ export default class Timeline {
       e.preventDefault();
       this.selKey = { part, prop, key };
       this.h.select(part);
-      this.h.begin();
+      this.begin();
       this.drag = { kind: 'key', part, prop, key, moved: false };
       this.render();
       return;
@@ -255,7 +272,7 @@ export default class Timeline {
     if (lab && this.clip()) {
       e.preventDefault();
       const [part, prop] = lab.dataset.scrub.split('|');
-      this.h.begin();
+      this.begin();
       this.drag = { kind: 'scrub', part, prop, x: e.clientX, v: this.value(part, prop) };
       return;
     }
@@ -303,7 +320,7 @@ export default class Timeline {
     const keys = this.keys(s.part, s.prop);
     const i = keys.indexOf(s.key);
     if (i < 0) return;
-    this.h.begin();
+    this.begin();
     keys.splice(i, 1);
     tidyClip(this.clip());
     this.h.end();
@@ -353,11 +370,9 @@ export default class Timeline {
       hurt: 'A short flinch when hit.',
       death: 'Plays when it falls, then holds the last frame.',
     };
+    const own = this.isOwn();
     let body;
-    if (!clip) {
-      body = `<div class="tl-empty"><p class="hint">No <b>${info.label}</b> clip yet. The game uses its built-in motion for it.</p>
-        <button id="tl-create" class="btn primary">Create ${info.label} clip</button></div>`;
-    } else {
+    {
       const parts = Object.keys(look.parts).reverse(); // front-most layer on top, like After Effects
       const sel = this.h.selected();
       const left = [];
@@ -408,8 +423,15 @@ export default class Timeline {
           <button id="tl-next" class="btn tool" title="Next keyframe" aria-label="Next keyframe">◆▸</button>
           <span id="tl-time" class="tl-time">${Math.round(this.t)} / ${len} ms</span>
           <label class="tl-len">Length <input type="number" id="tl-length" min="50" max="5000" step="10" value="${len}"> ms</label>
-          <button id="tl-delete" class="btn danger">Delete clip</button>
+          ${own ? '<button id="tl-delete" class="btn danger" title="Throw this clip away and use the game\'s built-in motion again">Reset to built-in</button>' : ''}
         </div>
+        <p class="tl-banner ${own ? 'own' : 'draft'}">${
+          own
+            ? `● This is ${esc(this.h.name())}'s own <b>${info.label}</b> animation. The game plays it.`
+            : Object.keys(clip.tracks).length
+              ? `This is the game's built-in <b>${info.label}</b> motion, shown as keyframes. Change anything and it becomes this character's own animation.`
+              : `The game has no part motion for <b>${info.label}</b> (${this.clipId === 'walk' ? 'only the hop' : this.clipId === 'hurt' ? 'only a white flash' : 'it just stops moving'}). Add keyframes to give it some.`
+        }</p>
         <div class="tl-grid">
           <div class="tl-left"><div class="tl-row ruler-left"><span class="label">Layers</span></div>${left.join('')}</div>
           <div class="tl-right"><div class="tl-row tl-ruler"><div class="tl-lane">${ticks.join('')}</div></div>${right.join('')}

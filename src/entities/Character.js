@@ -208,7 +208,12 @@ export default class Character extends Phaser.GameObjects.Container {
   // jumps up with the weapon held high, then settles.
   castRelease(kind) {
     this.castReset(true);
-    if (this.playClip(kind === 'attack' ? 'skillAttack' : 'skillSupport')) return;
+    if (this.playClip(kind === 'attack' ? 'skillAttack' : 'skillSupport')) {
+      // The clip starts from its own crouch / cocked pose: drop the built-in wind-up pose.
+      if (this.parts.weapon) this.parts.weapon.angle = this.parts.weapon.restAngle;
+      this.castLift = 0;
+      return;
+    }
     if (this.action && this.action.id === 'windup') this.action = null;
     const w = this.parts.weapon;
     const tw = this.scene.tweens;

@@ -258,6 +258,7 @@ const board = new Board($('board'), {
 
 const timeline = new Timeline($('timeline'), {
   look,
+  name: () => byKey[current].name,
   selected: () => selected,
   select: (name) => select(name),
   begin: () => beginEdit(),
@@ -460,7 +461,10 @@ function select(name) {
 function changed({ keepEditor = false, fromTimeline = false } = {}) {
   redraw();
   board.render();
-  if (!fromTimeline) timeline.render();
+  if (!fromTimeline) {
+    timeline.resetDrafts(); // the built-in motion follows the parts (e.g. idle wiggle sliders)
+    timeline.render();
+  }
   fillPicker();
   renderStatus();
   renderParts();
@@ -600,6 +604,7 @@ document.addEventListener('click', (e) => {
   const t = e.target.closest('button');
   if (!t) return;
   if (t.dataset.part) return select(t.dataset.part);
+  if (t.dataset.mode) return setMode(t.dataset.mode);
   if (t.dataset.tool) return setTool(t.dataset.tool);
   if (t.dataset.color) return setColor(Number(t.dataset.color));
   if (t.dataset.anim) {
@@ -687,6 +692,27 @@ document.addEventListener('click', (e) => {
       return save();
   }
 });
+
+// Draw mode: drawing board + part settings. Animate mode: the timeline, and the preview shows the clip
+// being edited. The preview stays pinned on the left in both.
+function setMode(m) {
+  document.querySelectorAll('[data-mode]').forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
+  $('mode-draw').hidden = m !== 'draw';
+  $('mode-anim').hidden = m !== 'anim';
+  $('play-row').hidden = m === 'anim';
+  if (m === 'anim') {
+    $('stage-hint').textContent = 'Drag a part in the preview to move it at the playhead (adds X / Y keyframes).';
+    timeline.render();
+    timeline.show();
+  } else {
+    $('stage-hint').textContent = 'Tap a part in the preview to pick it.';
+    if (timeline.playing) timeline.togglePlay();
+    tlShow = null;
+    anim = 'idle';
+    document.querySelectorAll('[data-anim]').forEach((b) => b.classList.toggle('on', b.dataset.anim === 'idle'));
+    redraw();
+  }
+}
 
 // Keyboard shortcuts (not while typing in a box).
 document.addEventListener('keydown', (e) => {

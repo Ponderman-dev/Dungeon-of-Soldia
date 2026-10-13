@@ -72,3 +72,47 @@ export function tidyClip(clip) {
   }
   return clip;
 }
+
+// The game's BUILT-IN motion for a clip, written as keyframes (so the studio timeline starts from it
+// instead of from nothing). Mirrors Character.js: idle = each part's `idle` wiggle (yoyo, Sine),
+// attack = weapon swings +75° and back, windup = crouch (castLift -4 screen px = 4/3 pixel) and the
+// weapon cocked back -55°, skill releases = the hop / jump and the slash or raised weapon.
+// Walk, hurt and death have no part motion built in (only the hop, a flash, a freeze): empty clips.
+export function defaultClip(id, parts) {
+  const info = CLIP_INFO[id];
+  const names = Object.keys(parts);
+  const weapon = parts.weapon ? 'weapon' : null;
+  const tracks = {};
+  const put = (part, prop, keys) => {
+    tracks[part] = tracks[part] || {};
+    tracks[part][prop] = keys.map(([t, v, ease = 'ease']) => ({ t, v, ease }));
+  };
+  const allY = (keys) => names.forEach((n) => put(n, 'y', keys));
+  let length = info.length;
+  if (id === 'idle') {
+    const moving = names.filter((n) => parts[n].idle && (parts[n].idle.dy || parts[n].idle.angle));
+    const longest = Math.max(0, ...moving.map((n) => parts[n].idle.duration || 500));
+    if (longest) length = Math.max(400, Math.round((longest * 2) / 10) * 10);
+    for (const n of moving) {
+      const { dy = 0, angle = 0, duration = 500, delay = 0 } = parts[n].idle;
+      for (const [prop, to] of [['y', dy], ['angle', angle]]) {
+        if (!to) continue;
+        const keys = delay ? [[0, 0, 'hold']] : [];
+        for (let t = delay, i = 0; t <= length; t += duration, i++) keys.push([Math.round(t), i % 2 ? to : 0]);
+        put(n, prop, keys);
+      }
+    }
+  } else if (id === 'attack') {
+    if (weapon) put(weapon, 'angle', [[0, 0], [200, 75], [400, 0]]);
+  } else if (id === 'windup') {
+    allY([[0, 0], [500, 1.5]]);
+    if (weapon) put(weapon, 'angle', [[0, 0], [500, -55]]);
+  } else if (id === 'skillAttack') {
+    allY([[0, 1.5], [90, -2.5], [180, 0]]);
+    if (weapon) put(weapon, 'angle', [[0, -55], [110, 105], [250, 105], [360, 0]]);
+  } else if (id === 'skillSupport') {
+    allY([[0, 1.5], [160, -6], [320, 0]]);
+    if (weapon) put(weapon, 'angle', [[0, -55, 'hold'], [300, -25], [500, 0]]);
+  }
+  return { length, tracks };
+}

@@ -76,8 +76,12 @@ export default class BattleScene extends Phaser.Scene {
       const a = this.views.get(unit.uid);
       const t = this.views.get(target.uid);
       if (!a || !t) return null;
-      const dy = unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY;
-      return Math.hypot(t.ch.x - a.ch.x, t.ch.y + dy - a.ch.y);
+      const spots = this.engaged.get(target.uid);
+      const taken = spots ? [...spots].filter(([uid]) => uid !== unit.uid).map(([, i]) => i) : [];
+      let index = 0;
+      while (taken.includes(index)) index++;
+      const o = this.standOffset(a, t, index);
+      return Math.hypot(t.ch.x + o.x - a.ch.x, t.ch.y + o.y - a.ch.y);
     };
 
     this.drawHeroSlots();
@@ -616,6 +620,17 @@ export default class BattleScene extends Phaser.Scene {
 
   // ---- hero attack motion (melee run-up, arrows) --------------------------------------------
 
+  // Where a melee fighter stands next to its target, relative to the target: BESIDE it (the first one on
+  // the side it came from, the second on the other side, more further out), a little in front.
+  standOffset(a, t, index) {
+    const homeSide = a.ch.homeX >= t.ch.x ? 1 : -1;
+    const side = index % 2 === 0 ? homeSide : -homeSide;
+    return {
+      x: side * (M.sideGapPx + Math.floor(index / 2) * M.spacingPx),
+      y: a.unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY,
+    };
+  }
+
   // A melee fighter (hero or enemy) walks STRAIGHT to its target and stands next to it, arriving as
   // the swing lands. Heroes stand just below an enemy, enemies just above a hero. Several fighters on
   // one target stand side by side (the first one straight across, the others to the side they came
@@ -627,10 +642,7 @@ export default class BattleScene extends Phaser.Scene {
     let index = 0;
     while ([...spots.values()].includes(index)) index++;
     spots.set(a.unit.uid, index);
-    const homeSide = a.ch.homeX >= t.ch.x ? 1 : -1;
-    const side = index === 0 ? 0 : index % 2 === 1 ? homeSide : -homeSide;
-    const offsetX = side * Math.ceil(index / 2) * M.spacingPx;
-    const offsetY = a.unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY;
+    const { x: offsetX, y: offsetY } = this.standOffset(a, t, index);
     const hover = (v) => v.groundY - v.ch.homeY; // flying units float above their ground line
     const getSpot = () => ({
       x: Phaser.Math.Clamp(t.ch.x + offsetX, 28, GAME_WIDTH - 28),

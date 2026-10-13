@@ -3,6 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT, BG_COLOR } from './config.js';
 import BootScene from './scenes/BootScene.js';
 import BattleScene from './scenes/BattleScene.js';
 import RewardScene from './scenes/RewardScene.js';
+import SquadScene from './scenes/SquadScene.js';
 import DebugScene from './scenes/DebugScene.js';
 
 new Phaser.Game({
@@ -17,5 +18,5 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT, // scale the 390x844 screen to fit any phone/window
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, BattleScene, RewardScene, DebugScene],
+  scene: [BootScene, SquadScene, BattleScene, RewardScene, DebugScene],
 });

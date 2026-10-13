@@ -17,6 +17,9 @@ export const SKILL_SLOTS = ['attack', 'support'];
 //         attackCancel (an attack in progress was stopped: the attacker got stunned, frozen, feared,
 //                       knocked back, or nothing is left to hit),
 //         attackRetarget (a ranged attack in progress lost its target, it now goes for { target, hitInMs })
+//         castStart (a hero starts winding up a skill: { unit, skill, index, castMs }; 'cast' comes when it goes off)
+//         castCancel (a wind-up was interrupted by stun / freeze / silence, or nothing is left to hit;
+//                     the skill is lost and stays on cooldown)
 //
 // MOVEMENT: every fighter has a real position (x, y = its feet on the ground, in screen pixels) once
 // place() / placeLines() was called. Melee fighters WALK to their target at a steady speed
@@ -85,6 +88,7 @@ export default class BattleState {
       moving: false, // walked this update (the scene makes it hop)
       walked: 0, // total distance walked (the scene uses it for the hop rhythm)
       knock: null, // being knocked back: { vx, vy, remaining }
+      casting: null, // a skill winding up: { index, remaining, total }
       damageBonus: {},
       specials: {},
       procs: [],
@@ -123,6 +127,7 @@ export default class BattleState {
     for (const h of this.heroes) {
       h.pending = null; // attacks aimed at the last floor's enemies are gone
       h.foe = null;
+      h.casting = null;
     }
     this.enemies = ids.map((id) => this.makeUnit(this.enemyDefs[id], 'enemy', floor, ids.length));
     return this.enemies;
@@ -249,7 +254,7 @@ export default class BattleState {
         if (u.knock.remaining <= 0) u.knock = null;
         continue;
       }
-      if (this.isStunned(u) || u.pending) continue; // frozen in place, or busy swinging
+      if (this.isStunned(u) || u.pending || u.casting) continue; // frozen in place, or busy swinging / casting
       let goal = null;
       if (this.has(u, 'fear')) goal = { x: u.homeX, y: u.homeY, stop: 0 };
       else if (u.damageType === 'melee') {
@@ -308,6 +313,7 @@ export default class BattleState {
     target.statuses = [];
     target.dotClocks = {};
     target.pending = null; // an attack it had started never lands
+    target.casting = null;
     target.moving = false;
     for (const u of [...this.heroes, ...this.enemies]) if (u.foe === target.uid) u.foe = null;
     this.retargetAttacksOn(target, events);
@@ -333,6 +339,7 @@ export default class BattleState {
       if (regen > 0) hero.hp = Math.min(hero.maxHp, hero.hp + (hero.maxHp * regen * dt) / 100000);
       hero.shareCd = Math.max(0, hero.shareCd - dt);
       for (const slot of hero.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - dt);
+      this.tickCasting(hero, dt, events);
     }
 
     for (const unit of [...this.heroes, ...this.enemies]) {
@@ -353,6 +360,7 @@ export default class BattleState {
         }
       }
       if (!unit.alive || busy) continue;
+      if (unit.casting) continue; // winding up a skill: no basic attacks meanwhile
       unit.timer += dt;
       const interval = this.interval(unit);
       if (unit.timer < interval) continue;
@@ -665,14 +673,21 @@ export default class BattleState {
   // or nothing to aim at). Skills cost no mana: only the cooldown limits them.
   canCast(hero, index) {
     const slot = hero.skills[index];
-    if (!slot || !hero.alive || this.isStunned(hero) || this.has(hero, 'silence')) return false;
+    if (!slot || !hero.alive || hero.casting || this.isStunned(hero) || this.has(hero, 'silence')) return false;
     const skill = this.skillDefs[slot.id];
     if (slot.cooldownLeft > 0) return false;
     if (skill.target === 'self') return true;
     return this.enemies.some((e) => e.alive);
   }
 
-  // Casts a hero's skill. One-target skills hit the focused enemy, else the hero's usual target.
+  // How long a skill winds up before it goes off: the skill's `castMs`, else combat.json
+  // `skillWindUp.defaultCastMs` (0 = instant). Longer than a normal attack, so you can see it coming.
+  castTime(skill) {
+    return skill.castMs ?? (this.rules.skillWindUp && this.rules.skillWindUp.defaultCastMs) ?? 0;
+  }
+
+  // Taps a hero's skill: it goes on cooldown at once and starts winding up (castStart); it goes off
+  // when the wind-up is done (see tickCasting). Instant if the wind-up time is 0.
   // Returns events (empty if the skill could not be cast).
   castSkill(heroUid, index) {
     const events = [];
@@ -680,6 +695,44 @@ export default class BattleState {
     if (!hero || !this.canCast(hero, index)) return events;
     const slot = hero.skills[index];
     const skill = this.skillDefs[slot.id];
+    slot.cooldownLeft = skill.cooldownMs;
+    const castMs = this.castTime(skill);
+    if (castMs <= 0) {
+      this.releaseSkill(hero, index, events);
+      return events;
+    }
+    hero.casting = { index, remaining: castMs, total: castMs };
+    events.push({ type: 'castStart', unit: hero, skill, index, castMs });
+    return events;
+  }
+
+  // A wind-up runs down. Stunned, frozen or silenced meanwhile: the skill is LOST (it stays on
+  // cooldown, the user's choice).
+  tickCasting(hero, dt, events) {
+    if (!hero.casting) return;
+    const slot = hero.skills[hero.casting.index];
+    const skill = this.skillDefs[slot.id];
+    if (this.isStunned(hero) || this.has(hero, 'silence')) {
+      hero.casting = null;
+      events.push({ type: 'castCancel', unit: hero, skill, reason: 'interrupted' });
+      return;
+    }
+    hero.casting.remaining -= dt;
+    if (hero.casting.remaining > 0) return;
+    const { index } = hero.casting;
+    hero.casting = null;
+    this.releaseSkill(hero, index, events);
+  }
+
+  // The skill goes off. One-target skills hit the focused enemy, else the hero's usual target
+  // (picked now, at the end of the wind-up).
+  releaseSkill(hero, index, events) {
+    const slot = hero.skills[index];
+    const skill = this.skillDefs[slot.id];
+    if (skill.target !== 'self' && !this.enemies.some((e) => e.alive)) {
+      events.push({ type: 'castCancel', unit: hero, skill, reason: 'noTarget' });
+      return;
+    }
 
     let targets;
     if (skill.target === 'self') targets = [hero];
@@ -694,7 +747,6 @@ export default class BattleState {
       }
     }
 
-    slot.cooldownLeft = skill.cooldownMs;
     events.push({ type: 'cast', unit: hero, skill, targets });
 
     for (const target of targets) {
@@ -708,7 +760,6 @@ export default class BattleState {
       }
       for (const spec of skill.apply || []) this.applyStatus(target, spec, hero, slot.id, events);
     }
-    return events;
   }
 
   // ---- XP, levels, items --------------------------------------------------------------
@@ -800,6 +851,7 @@ export default class BattleState {
     for (const h of this.heroes) {
       h.statuses = [];
       h.dotClocks = {};
+      h.casting = null;
     }
     this.refreshStats();
   }

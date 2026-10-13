@@ -24,6 +24,10 @@
     "enemy": { "swingMs": 220, "rangedHitMs": 260 },
     "retargetMinMs": 200
   },
+  "skillWindUp": {
+    "_about": "Skills wind up before they go off (castMs per skill in skills.json, else defaultCastMs). The skill goes on cooldown when tapped; stunned, frozen or silenced during the wind-up = the skill is lost (still on cooldown). No basic attacks and no walking while winding up.",
+    "defaultCastMs": 700
+  },
   "movement": {
     "_about": "Real movement in fights (BattleState.move). Melee walk to their target at walkSpeedPxPerSec until it is inside the reach oval (reachX sideways, reachY up/down), then swing. Fighters closer than the separate oval push apart. layout = where the lines stand (also used by tests/bot).",
     "walkSpeedPxPerSec": 170,

@@ -132,6 +132,24 @@ export default class BattleScene extends Phaser.Scene {
     this.mode = 'fighting';
   }
 
+  // A charge bar just under a hero's health bar while it winds up a skill, in the skill's colour
+  // (attack red, support green). It fills up until the skill goes off.
+  drawCastBars() {
+    if (!this.castBars) this.castBars = this.add.graphics().setDepth(DEPTH.heroBar);
+    const g = this.castBars;
+    g.clear();
+    for (const h of this.state.heroes) {
+      if (!h.alive || !h.casting) continue;
+      const v = this.views.get(h.uid);
+      const kind = h.skills[h.casting.index].kind;
+      const x = v.bg.x - BAR_WIDTH / 2;
+      const y = v.bg.y + 6;
+      const p = 1 - h.casting.remaining / h.casting.total;
+      g.fillStyle(0x000000, 1).fillRect(x - 1, y - 1, BAR_WIDTH + 2, 5);
+      g.fillStyle(SKILL_COLORS[kind].ready, 1).fillRect(x, y, BAR_WIDTH * Math.max(0, Math.min(1, p)), 3);
+    }
+  }
+
   // Draws every living fighter where the fight rules say it stands, hopping while it walks.
   // Lower on the screen = drawn in front.
   followPositions() {
@@ -511,6 +529,7 @@ export default class BattleScene extends Phaser.Scene {
     const events = this.state.update(Math.min(delta, 100));
     for (const e of events) this.showEvent(e);
     this.followPositions();
+    this.drawCastBars();
 
     const focus = this.state.focusUnit;
     if (focus) {
@@ -564,9 +583,13 @@ export default class BattleScene extends Phaser.Scene {
       this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : color, crit);
     } else if (e.type === 'projectile') {
       this.showProjectile(this.views.get(e.from.uid), this.views.get(e.to.uid), e.kind);
+    } else if (e.type === 'castStart') {
+      // The hero winds up: its name pops up and a charge bar fills (see drawCastBars).
+      this.popText(this.views.get(e.unit.uid), e.skill.name, '#9fc4ff');
+    } else if (e.type === 'castCancel') {
+      if (e.reason === 'interrupted') this.popText(this.views.get(e.unit.uid), 'Interrupted!', '#ff8a5c', true);
     } else if (e.type === 'cast') {
       const caster = this.views.get(e.unit.uid);
-      this.popText(caster, e.skill.name, '#9fc4ff');
       if (e.skill.target !== 'self' && e.targets[0]) {
         const t = this.views.get(e.targets[0].uid);
         caster.ch.lunge(t.ch.x, t.ch.y);
@@ -774,6 +797,7 @@ export default class BattleScene extends Phaser.Scene {
 
   onWin() {
     this.mode = 'won';
+    if (this.castBars) this.castBars.clear(); // a wind-up still going is dropped
     this.focusMarker.setVisible(false);
     this.banner.setText(`Floor ${this.floor} cleared!`);
     this.layer.setDoorOpen(true);

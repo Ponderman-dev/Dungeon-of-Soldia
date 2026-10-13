@@ -32,6 +32,23 @@ export function ensureArt(p) {
   delete p.pivotY;
 }
 
+// Changes a whole part's picture at once (flip, turn, outline...): fn(grid, anchor) -> { grid, anchor }.
+// The part keeps its middle where it was, lined up on whole pixels.
+export function transformPart(p, fn) {
+  ensureArt(p);
+  const { grid, anchor } = fn(artPixels(p.art), [...partAnchor(p)]);
+  const w = grid[0].length;
+  const h = grid.length;
+  const left = Math.round(p.x - w / 2);
+  const top = Math.round(p.y - h / 2);
+  p.art = pixelsToArt(grid);
+  p.w = w;
+  p.h = h;
+  p.x = left + w / 2;
+  p.y = top + h / 2;
+  p.anchor = anchor;
+}
+
 // Changes a part's pixels. fn(set) calls set(cx, cy, colour | null) with character pixels; the picture
 // grows to fit anything drawn outside it and shrinks when its edges are erased.
 export function editPart(p, fn) {
@@ -130,7 +147,8 @@ export default class Board {
   // hooks: look(), selected(), select(name), color() (number), pickColor(number), tool(), setTool(name),
   // filled(), dim(), begin() (before an edit: for undo), end() (edit finished), changed(),
   // cancel() (throw away the edit in progress), holdPick(number) (touch and hold picked a colour),
-  // mirror() (true = mirror drawing is on: everything drawn is copied to the other side)
+  // mirror() (true = mirror drawing is on: everything drawn is copied to the other side),
+  // trace() ({ img, alpha } a tracing picture shown faintly behind the grid, or null)
   constructor(canvas, hooks) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
@@ -315,6 +333,15 @@ export default class Board {
     const Y = (cy) => (cy - minY) * cell;
     ctx.fillStyle = '#0e0b17';
     ctx.fillRect(0, 0, W, H);
+    // Tracing picture: fitted inside the board, faint, behind everything.
+    const tr = this.h.trace();
+    if (tr && tr.img.width) {
+      const s = Math.min(W / tr.img.width, H / tr.img.height);
+      ctx.globalAlpha = tr.alpha;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(tr.img, (W - tr.img.width * s) / 2, (H - tr.img.height * s) / 2, tr.img.width * s, tr.img.height * s);
+      ctx.globalAlpha = 1;
+    }
     // Grid: faint lines, a stronger line every 8 pixels.
     for (let i = 0; i <= cols; i++) {
       ctx.fillStyle = (i + minX) % 8 === 0 ? '#2c2444' : '#1b1629';

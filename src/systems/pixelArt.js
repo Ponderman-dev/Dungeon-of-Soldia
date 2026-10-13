@@ -84,3 +84,55 @@ export function artKey(art) {
   for (let i = 0; i < s.length; i++) hash = ((hash << 5) + hash + s.charCodeAt(i)) | 0;
   return (hash >>> 0).toString(36);
 }
+
+// ---- Studio tools on a picture (grid[y][x] of colours, null = empty) -----------------------------
+// Each returns { grid, anchor } (the anchor moves with the pixels).
+
+export function flipGridH(grid, [ax, ay]) {
+  const w = grid[0].length;
+  return { grid: grid.map((row) => [...row].reverse()), anchor: [w - ax, ay] };
+}
+
+export function flipGridV(grid, [ax, ay]) {
+  const h = grid.length;
+  return { grid: [...grid].reverse().map((row) => [...row]), anchor: [ax, h - ay] };
+}
+
+// Turns a quarter turn clockwise.
+export function rotateGrid90(grid, [ax, ay]) {
+  const h = grid.length;
+  const w = grid[0].length;
+  const out = [];
+  for (let y = 0; y < w; y++) {
+    const row = [];
+    for (let x = 0; x < h; x++) row.push(grid[h - 1 - x][y]);
+    out.push(row);
+  }
+  return { grid: out, anchor: [h - ay, ax] };
+}
+
+// Adds a 1-pixel outline in `color` around every drawn pixel (the picture grows by 1 on each side).
+export function outlineGrid(grid, [ax, ay], color) {
+  const h = grid.length;
+  const w = grid[0].length;
+  const at = (x, y) => (x >= 0 && y >= 0 && x < w && y < h ? grid[y][x] : null);
+  const out = [];
+  for (let y = -1; y <= h; y++) {
+    const row = [];
+    for (let x = -1; x <= w; x++) {
+      const c = at(x, y);
+      if (c !== null) row.push(c);
+      else {
+        let near = false;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (at(x + dx, y + dy) !== null) near = true;
+        row.push(near ? color : null);
+      }
+    }
+    out.push(row);
+  }
+  return { grid: out, anchor: [ax + 1, ay + 1] };
+}
+
+export function replaceColorGrid(grid, from, to) {
+  return grid.map((row) => row.map((c) => (c === from ? to : c)));
+}

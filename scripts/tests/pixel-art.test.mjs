@@ -16,3 +16,17 @@ const back = pixelsToArt(grid);
 ok('pixels -> art round trip', back.rows.join('|') === '0.|.1' && back.palette.join() === '0xff0000,0x00ff00');
 
 ok('mixing colours', mixColor(0x000000, 0xffffff, 0.5) === 0x808080);
+
+// Studio tools: flip, turn, outline, colour swap.
+import { flipGridH, flipGridV, rotateGrid90, outlineGrid, replaceColorGrid } from '../../src/systems/pixelArt.js';
+const g = [[1, 2, null], [3, null, null]]; // 3 wide, 2 tall
+const fh = flipGridH(g, [0.5, 0.5]);
+ok('flip left/right mirrors rows and the anchor', fh.grid[0].join() === ',2,1' && fh.anchor.join() === '2.5,0.5');
+const fv = flipGridV(g, [0.5, 0.5]);
+ok('flip up/down swaps rows and the anchor', fv.grid[0][0] === 3 && fv.anchor.join() === '0.5,1.5');
+const r = rotateGrid90(g, [0.5, 0.5]);
+ok('quarter turn: 3x2 becomes 2x3, top-left goes top-right', r.grid.length === 3 && r.grid[0].length === 2 && r.grid[0][1] === 1 && r.grid[0][0] === 3);
+ok('quarter turn moves the anchor with its pixel', r.anchor.join() === '1.5,0.5');
+const o = outlineGrid([[5]], [0.5, 0.5], 9);
+ok('outline grows by 1 on each side, only next to pixels', o.grid.length === 3 && o.grid[1][0] === 9 && o.grid[0][0] === null && o.grid[1][1] === 5 && o.anchor.join() === '1.5,1.5');
+ok('colour swap', replaceColorGrid([[1, 2], [1, null]], 1, 7).flat().join() === '7,2,7,');

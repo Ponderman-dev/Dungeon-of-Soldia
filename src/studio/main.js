@@ -5,9 +5,9 @@
 // (local dev) they are kept in this browser only.
 import Phaser from 'phaser';
 import Character from '../entities/Character.js';
-import Board, { partBox } from './board.js';
+import Board, { partBox, transformPart } from './board.js';
 import Timeline, { mainColor } from './timeline.js';
-import { partArt, artPixels } from '../systems/pixelArt.js';
+import { partArt, artPixels, flipGridH, flipGridV, rotateGrid90, outlineGrid, replaceColorGrid, pixelsToArt, OUTLINE } from '../systems/pixelArt.js';
 import heroes from '../data/heroes.json';
 import enemies from '../data/enemies.json';
 import minions from '../data/minions.json';
@@ -374,6 +374,7 @@ const board = new Board($('board'), {
   filled: () => $('filled').checked,
   dim: () => $('dim').checked,
   mirror: () => mirrorOn,
+  trace: () => trace,
   begin: () => beginEdit(),
   end: () => endEdit(),
   changed: () => changed({ keepEditor: true }),
@@ -463,12 +464,19 @@ function renderBoardHint() {
   $('board-hint').textContent = selected ? hints[tool] : 'Tap a part to pick it, then draw.';
 }
 
-// Colours used in this character first, then the starter colours.
-function renderSwatches() {
+function usedColors() {
   const used = [];
   for (const p of Object.values(look().parts)) {
     for (const row of artPixels(partArt(p))) for (const c of row) if (c !== null && !used.includes(c)) used.push(c);
   }
+  return used;
+}
+
+// Colours used in this character first, then the starter colours.
+function renderSwatches() {
+  const used = usedColors();
+  const st = document.querySelector('.swapto');
+  if (st) st.style.background = hex(color);
   const sw = (c) =>
     `<button class="sw${c === color ? ' sel' : ''}" data-color="${c}" style="background:${hex(c)}" aria-label="Colour ${hex(c)}"></button>`;
   $('swatches').innerHTML =
@@ -598,6 +606,16 @@ function renderEditor() {
     ${field('f-x', 'Left / right', p.x, { min: -20, max: 20, step: 0.5 })}
     ${field('f-y', 'Up / down', p.y, { min: -38, max: 6, step: 0.5 })}
     <div class="row"><button id="anchor-mid" class="btn">Anchor to middle</button><button id="anchor-bottom" class="btn">Anchor to bottom</button><button id="clear-part" class="btn danger">Clear pixels</button></div>
+    <div class="row">
+      <button id="flip-h" class="btn" title="Flip left/right">Flip ↔</button>
+      <button id="flip-v" class="btn" title="Flip upside down">Flip ↕</button>
+      <button id="turn-90" class="btn" title="Turn a quarter turn clockwise">Turn 90°</button>
+      <button id="outline" class="btn" title="Add a 1-pixel dark outline around the drawing">Add outline</button>
+      <select id="copy-part-to" aria-label="Copy this part to another character"><option value="">Copy part to…</option>${characters
+        .filter((c) => c.key !== current)
+        .map((c) => `<option value="${c.key}">${c.name}</option>`)
+        .join('')}</select>
+    </div>
     <div class="sub">Idle wiggle${look().anims && look().anims.idle ? ' (not used: this character has an Idle clip)' : ''}</div>
     ${field('f-dy', 'Bob up/down', idle.dy || 0, { min: -6, max: 6, step: 0.5 })}
     ${field('f-angle', 'Tilt (deg)', idle.angle || 0, { min: -45, max: 45 })}
@@ -610,6 +628,15 @@ function renderWhole() {
   const l = look();
   let html = field('w-height', 'Health bar at', l.height, { min: 4, max: 44 });
   if (l.hover !== undefined) html += field('w-hover', 'Flies at', l.hover, { min: 0, max: 80 });
+  // Colour swap: every pixel of one colour, in every part, becomes the current colour.
+  const used = usedColors();
+  html += `<div class="sub">Swap a colour</div>
+    <div class="row"><select id="swap-from" aria-label="Colour to replace">${used
+      .map((c) => `<option value="${c}" style="background:${hex(c)}">${hex(c)}</option>`)
+      .join('')}</select>
+      <span class="hint">→ the current colour</span>
+      <i class="swapto" style="background:${hex(color)}"></i>
+      <button id="swap-colour" class="btn">Swap everywhere</button></div>`;
   $('whole').innerHTML = html;
 }
 
@@ -709,6 +736,9 @@ document.addEventListener('input', (e) => {
   } else if (t.id === 'color') {
     color = parseInt(t.value.slice(1), 16);
     renderSwatches();
+  } else if (t.id === 'trace-alpha') {
+    if (trace) trace.alpha = Number(t.value);
+    board.render();
   } else if (t.id === 'dim') {
     board.render();
   }
@@ -723,6 +753,19 @@ document.addEventListener('change', (e) => {
     timeline.selKey = null;
     renderAll();
     redraw();
+  } else if (t.id === 'copy-part-to' && t.value && selected) {
+    // The other character gets this part (a part with the same name there is replaced).
+    const other = working[t.value];
+    other.parts[selected] = clone(look().parts[selected]);
+    persistDraft();
+    fillPicker();
+    toast(`${selected} copied to ${byKey[t.value].name}`);
+    t.value = '';
+  } else if (t.id === 'trace-file' && t.files && t.files[0]) {
+    const reader = new FileReader();
+    reader.onload = () => setTrace(reader.result);
+    reader.readAsDataURL(t.files[0]);
+    t.value = '';
   } else if (t.id === 'f-name' && selected) {
     const name = t.value.trim();
     const err = $('name-err');
@@ -852,6 +895,28 @@ document.addEventListener('click', (e) => {
         else p.pivotY = t.id === 'anchor-mid' ? 0.5 : 1;
         if (!p.art && t.id === 'anchor-mid') delete p.pivotY;
       });
+    case 'flip-h':
+    case 'flip-v':
+    case 'turn-90':
+    case 'outline':
+      if (!p) return;
+      return act(() => {
+        const fn = { 'flip-h': flipGridH, 'flip-v': flipGridV, 'turn-90': rotateGrid90 }[t.id];
+        transformPart(p, fn || ((g, a) => outlineGrid(g, a, Number(OUTLINE))));
+      });
+    case 'swap-colour': {
+      const from = Number($('swap-from').value);
+      if (!from && from !== 0) return;
+      return act(() => {
+        for (const part of Object.values(look().parts)) {
+          if (part.art) part.art = pixelsToArt(replaceColorGrid(artPixels(part.art), from, color));
+          else if (Number(part.color) === from) part.color = '0x' + color.toString(16).padStart(6, '0');
+        }
+        toast('Colour swapped');
+      });
+    }
+    case 'trace-off':
+      return setTrace(null);
     case 'clear-part':
       if (!p) return;
       return act(() => {
@@ -887,6 +952,8 @@ function setMode(m) {
   document.querySelectorAll('[data-mode]').forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
   $('mode-draw').hidden = m !== 'draw';
   $('mode-anim').hidden = m !== 'anim';
+  $('mode-lineup').hidden = m !== 'lineup';
+  if (m === 'lineup') drawLineup();
   $('play-row').hidden = m === 'anim';
   if (m === 'anim') {
     $('stage-hint').textContent = 'Drag a part in the preview to move it at the playhead (adds X / Y keyframes).';
@@ -899,6 +966,86 @@ function setMode(m) {
     anim = 'idle';
     document.querySelectorAll('[data-anim]').forEach((b) => b.classList.toggle('on', b.dataset.anim === 'idle'));
     redraw();
+  }
+}
+
+// ---- Tracing picture (behind the drawing board) ------------------------------------------------------
+
+let trace = null; // { img, alpha }
+function setTrace(url) {
+  try {
+    if (url) localStorage.setItem('soldia-studio-trace', url);
+    else localStorage.removeItem('soldia-studio-trace');
+  } catch {
+    /* too big or blocked: it still works until a reload */
+  }
+  if (!url) {
+    trace = null;
+    $('trace-controls').hidden = true;
+    return board.render();
+  }
+  const img = new Image();
+  img.onload = () => board.render();
+  img.src = url;
+  trace = { img, alpha: Number($('trace-alpha').value) };
+  $('trace-controls').hidden = false;
+  board.render();
+}
+
+// ---- Line-up: every character side by side at game size, on the dungeon floor -----------------------
+
+function drawLineup() {
+  const cv = $('lineup');
+  const ctx = cv.getContext('2d');
+  const S = 3; // game size
+  const groups = [
+    ['Heroes', characters.filter((c) => c.kind === 'hero')],
+    ['Enemies', characters.filter((c) => c.kind === 'enemy')],
+    ['Minions', characters.filter((c) => c.kind === 'minion')],
+  ];
+  const slot = 104;
+  const perRow = Math.max(1, Math.floor((cv.clientWidth || 1000) / slot));
+  const rows = groups.reduce((n, [, list]) => n + Math.ceil(list.length / perRow), 0);
+  const rowH = 150;
+  cv.width = perRow * slot;
+  cv.height = rows * rowH + groups.length * 28;
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = '#14101f';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  let y = 0;
+  for (const [label, list] of groups) {
+    ctx.fillStyle = '#9a90b3';
+    ctx.font = '12px "IBM Plex Mono", monospace';
+    ctx.fillText(label.toUpperCase(), 8, y + 18);
+    y += 28;
+    for (let i = 0; i < list.length; i += perRow) {
+      const floorY = y + 110;
+      ctx.fillStyle = '#1d1830';
+      ctx.fillRect(0, floorY, cv.width, rowH - 110);
+      ctx.fillStyle = '#342c4d';
+      ctx.fillRect(0, floorY, cv.width, 2);
+      list.slice(i, i + perRow).forEach((c, j) => {
+        const l = working[c.key];
+        const fx = j * slot + slot / 2;
+        const fy = floorY - (l.hover || 0);
+        for (const p of Object.values(l.parts)) {
+          const b = partBox(p);
+          b.grid.forEach((row, gy) =>
+            row.forEach((col, gx) => {
+              if (col === null) return;
+              ctx.fillStyle = hex(col);
+              ctx.fillRect(Math.round(fx + (b.left + gx) * S), Math.round(fy + (b.top + gy) * S), S, S);
+            }),
+          );
+        }
+        ctx.fillStyle = c.key === current ? '#f2b33d' : '#ece6f7';
+        ctx.font = '12px "IBM Plex Sans", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(c.name, fx, floorY + 24);
+        ctx.textAlign = 'left';
+      });
+      y += rowH;
+    }
   }
 }
 
@@ -1073,5 +1220,11 @@ async function connect() {
 $('mirror-draw').classList.toggle('on', mirrorOn);
 $('mirror-draw').setAttribute('aria-pressed', String(mirrorOn));
 loadDraft();
+try {
+  const savedTrace = localStorage.getItem('soldia-studio-trace');
+  if (savedTrace) setTrace(savedTrace);
+} catch {
+  /* none */
+}
 renderAll();
 connect();

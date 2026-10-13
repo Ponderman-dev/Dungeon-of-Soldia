@@ -149,6 +149,8 @@
       .tl-playhead-wrap { position: absolute; inset: 0 10px; pointer-events: none; }
       .tl-playhead { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #d65b5b; }
       .tl-playhead::before { content: ''; position: absolute; top: 0; left: -5px; border: 6px solid transparent; border-top-color: #d65b5b; }
+      .lineup { width: 100%; image-rendering: pixelated; border-radius: 6px; }
+      .swapto { width: 22px; height: 22px; border-radius: 4px; outline: 1px solid var(--line); display: inline-block; }
       .tl-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
       .tl-tools select { padding: 6px 8px; }
       .tl-sep { width: 1px; height: 24px; background: var(--line); margin-inline: 4px; }
@@ -167,6 +169,7 @@
       <div class="modes" role="tablist" aria-label="Mode">
         <button class="mode on" data-mode="draw" role="tab">Draw</button>
         <button class="mode" data-mode="anim" role="tab">Animate</button>
+        <button class="mode" data-mode="lineup" role="tab">Line-up</button>
       </div>
       <span id="status" class="status">Game version</span>
       <button id="save" class="btn primary" disabled>Save design</button>
@@ -230,6 +233,12 @@
             <input type="color" id="color" value="#3b6fd4" aria-label="Colour" />
             <label class="check"><input type="checkbox" id="filled" /> Filled rectangle</label>
             <label class="check"><input type="checkbox" id="dim" checked /> Dim other parts</label>
+            <label class="btn" for="trace-file" title="Put a picture behind the grid to trace over">Tracing image…</label>
+            <input type="file" id="trace-file" accept="image/*" hidden />
+            <span id="trace-controls" class="row" hidden>
+              <input type="range" id="trace-alpha" min="0.05" max="0.8" step="0.05" value="0.3" aria-label="Tracing image strength" />
+              <button id="trace-off" class="btn">Remove</button>
+            </span>
           </div>
           <p class="hint">Each square is one pixel. Drawing outside the part makes it bigger; erasing its edges shrinks it. The <b>anchor</b> (crosshair) is the point the part turns around: put a sword's anchor on its handle. Keys: <kbd>B</kbd> pencil, <kbd>E</kbd> eraser, <kbd>L</kbd> line, <kbd>R</kbd> rectangle, <kbd>G</kbd> fill, <kbd>I</kbd> pick colour, <kbd>A</kbd> anchor, <kbd>M</kbd> move, <kbd>S</kbd> mirror drawing (the dashed blue middle line). On iPad: <b>two-finger tap</b> = undo, <b>three-finger tap</b> = redo, <b>touch and hold</b> with a finger = pick that colour.</p>
         </div>
@@ -259,6 +268,13 @@
           </div>
           <p id="dbnote" class="note" hidden></p>
         </div>
+        </section>
+      </div>
+
+      <div id="mode-lineup" class="col" hidden>
+        <section class="card">
+          <div class="head"><h2>Line-up</h2><span class="hint">every character at game size on the dungeon floor, with your unsaved changes (standing pose)</span></div>
+          <canvas id="lineup" class="lineup"></canvas>
         </section>
       </div>
 

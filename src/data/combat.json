@@ -33,9 +33,6 @@
     "standOffY": 6,
     "enemyStandOffY": 0,
     "spacingPx": 52,
-    "rowShiftPx": 26,
-    "crowdXPx": 46,
-    "crowdYPx": 30,
     "arrowColor": "0xe6e6b8",
     "knockbackPx": 40,
     "knockbackMs": 160

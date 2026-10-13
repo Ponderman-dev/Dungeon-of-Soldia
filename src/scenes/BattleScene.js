@@ -59,7 +59,7 @@ export default class BattleScene extends Phaser.Scene {
     this.floor = 1;
     this.mode = 'entering'; // 'entering' | 'fighting' | 'won' | 'lost'
     this.views = new Map(); // unit uid -> { unit, ch, bg, fill, groundY, ... }
-    this.engaged = new Map(); // enemy uid -> Map(hero uid -> spot offset): melee heroes standing at that enemy
+    this.engaged = new Map(); // enemy uid -> Map(hero uid -> spot index): melee heroes standing at that enemy
     this.state = new BattleState({
       heroDefs,
       enemyDefs,
@@ -76,7 +76,11 @@ export default class BattleScene extends Phaser.Scene {
       const a = this.views.get(unit.uid);
       const t = this.views.get(target.uid);
       if (!a || !t) return null;
-      const o = this.standOffset(a, t);
+      const spots = this.engaged.get(target.uid);
+      const taken = spots ? [...spots].filter(([uid]) => uid !== unit.uid).map(([, i]) => i) : [];
+      let index = 0;
+      while (taken.includes(index)) index++;
+      const o = this.standOffset(a, t, index);
       return Math.hypot(t.ch.x + o.x - a.ch.x, t.ch.y + o.y - a.ch.y);
     };
 
@@ -616,37 +620,15 @@ export default class BattleScene extends Phaser.Scene {
 
   // ---- hero attack motion (melee run-up, arrows) --------------------------------------------
 
-  // Where a melee fighter stands next to its target, relative to the target: BESIDE it, a little in
-  // front. Of all the free-looking spots (both sides, a few steps out, a little up or down) it takes the
-  // closest one that does not sit on top of another fighter, so crowds spread out instead of piling up.
-  standOffset(a, t) {
-    const baseY = a.unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY;
-    const others = [];
-    for (const v of this.views.values()) {
-      if (v === a || v === t || !v.unit.alive) continue;
-      let pos = { x: v.ch.x, y: v.ch.y };
-      for (const [tid, spots] of this.engaged) {
-        const o = spots.get(v.unit.uid);
-        const tv = o && this.views.get(tid);
-        if (tv) pos = { x: tv.ch.x + o.x, y: tv.ch.y + o.y };
-      }
-      others.push(pos);
-    }
+  // Where a melee fighter stands next to its target, relative to the target: BESIDE it (the first one on
+  // the side it came from, the second on the other side, more further out), a little in front.
+  standOffset(a, t, index) {
     const homeSide = a.ch.homeX >= t.ch.x ? 1 : -1;
-    let best = null;
-    for (let col = 0; col < 3; col++) {
-      for (const side of [homeSide, -homeSide]) {
-        for (const dy of [0, M.rowShiftPx, -M.rowShiftPx]) {
-          const o = { x: side * (M.sideGapPx + col * M.spacingPx), y: baseY + dy };
-          const sx = Phaser.Math.Clamp(t.ch.x + o.x, 28, GAME_WIDTH - 28);
-          const sy = t.ch.y + o.y;
-          const crowded = others.filter((p) => Math.abs(p.x - sx) < M.crowdXPx && Math.abs(p.y - sy) < M.crowdYPx).length;
-          const score = Math.hypot(sx - a.ch.x, sy - a.ch.y) + crowded * 1000 + col * 20 + Math.abs(dy) * 0.5 + (side === homeSide ? 0 : 10);
-          if (!best || score < best.score) best = { score, x: o.x, y: o.y };
-        }
-      }
-    }
-    return best;
+    const side = index % 2 === 0 ? homeSide : -homeSide;
+    return {
+      x: side * (M.sideGapPx + Math.floor(index / 2) * M.spacingPx),
+      y: a.unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY,
+    };
   }
 
   // A melee fighter (hero or enemy) walks STRAIGHT to its target and stands next to it, arriving as
@@ -657,8 +639,10 @@ export default class BattleScene extends Phaser.Scene {
     this.releaseSpot(a.unit.uid);
     const spots = this.engaged.get(t.unit.uid) || new Map();
     this.engaged.set(t.unit.uid, spots);
-    const { x: offsetX, y: offsetY } = this.standOffset(a, t);
-    spots.set(a.unit.uid, { x: offsetX, y: offsetY });
+    let index = 0;
+    while ([...spots.values()].includes(index)) index++;
+    spots.set(a.unit.uid, index);
+    const { x: offsetX, y: offsetY } = this.standOffset(a, t, index);
     const hover = (v) => v.groundY - v.ch.homeY; // flying units float above their ground line
     const getSpot = () => ({
       x: Phaser.Math.Clamp(t.ch.x + offsetX, 28, GAME_WIDTH - 28),

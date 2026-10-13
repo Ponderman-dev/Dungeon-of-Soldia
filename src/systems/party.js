@@ -12,6 +12,7 @@ export function perkMods(hero) {
   if (!perk) return [];
   return perk.mods.map((m) => {
     const bonus = (m.growth || 0) * (hero.level - 1);
+    if (m.special) return { special: m.special, percent: m.percent + bonus }; // a special like skillDamage (Mage)
     return m.percent !== undefined ? { stat: m.stat, percent: m.percent + bonus } : { stat: m.stat, flat: m.flat + bonus };
   });
 }

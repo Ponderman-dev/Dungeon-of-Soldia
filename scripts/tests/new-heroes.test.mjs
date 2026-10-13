@@ -191,3 +191,9 @@ const T = ['knight', 'rogue'];
 { const { s, a, es } = mk(['mage', ...T], ['goblin']); const [g] = es; g.hp = g.maxHp = 1e9; g.weak = []; g.resists = [];
   const seen = []; for (let beat = 0; beat < 3; beat++) { g.statuses = []; let types = []; for (let i = 0; i < 4; i++) { const ev = []; s.landAttack(a, g, ev); if (i === 3) types = ev.filter((e) => e.type === 'attack').map((e) => e.damageType); } seen.push(types[1] + ':' + [...new Set(g.statuses.map((x) => x.type).filter((t) => ['burn', 'chill', 'shock'].includes(t)))].join('+')); }
   ok('Spellweaver cycles fire/burn, ice/chill, electric/shock', seen.join() === 'fire:burn,ice:chill,electric:shock', seen.join()); }
+
+// Perks that use specials (decided with the user): Mage skill damage, Cleric regen, Alchemist damage over time
+{ const full = (id) => ({ ...heroDefs.find((h) => h.id === id) });
+  const mkP = (ids) => new BattleState({ heroDefs: ids.map(full), enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs: {}, statusDefs: r('statuses.json'), skillDefs: skills, rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+  const s = mkP(['mage', 'cleric', 'alchemist']);
+  ok('Mage perk: +10% skill damage, Cleric perk: +1% regen/s, Alchemist perk: +10% damage over time for every hero', s.heroes.every((h) => h.specials.skillDamage === 10 && h.specials.dotDamage === 10 && h.specials.regen >= 1), JSON.stringify(s.heroes[0].specials)); }

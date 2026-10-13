@@ -68,9 +68,14 @@
       "name": "Stalwart",
       "mods": [
         {
+          "stat": "defense",
+          "flat": 8,
+          "growth": 0.3
+        },
+        {
           "stat": "health",
-          "percent": 10,
-          "growth": 0.4
+          "percent": 5,
+          "growth": 0.2
         }
       ]
     },
@@ -176,9 +181,9 @@
       "name": "Battle Fury",
       "mods": [
         {
-          "stat": "attackEfficiency",
-          "percent": 8,
-          "growth": 0.3
+          "stat": "attack",
+          "percent": 10,
+          "growth": 0.4
         }
       ]
     },
@@ -257,12 +262,12 @@
       "support": "smoke_bomb"
     },
     "perk": {
-      "name": "Keen Eyes",
+      "name": "Shadow Step",
       "mods": [
         {
-          "stat": "crit",
-          "flat": 6,
-          "growth": 0.15
+          "stat": "evasion",
+          "flat": 10,
+          "growth": 0.25
         }
       ]
     },
@@ -348,9 +353,9 @@
       "name": "Marksman",
       "mods": [
         {
-          "stat": "attack",
-          "percent": 10,
-          "growth": 0.4
+          "stat": "attackEfficiency",
+          "percent": 8,
+          "growth": 0.3
         }
       ]
     },
@@ -393,8 +398,8 @@
       "name": "Bushido",
       "mods": [
         {
-          "stat": "defense",
-          "flat": 6,
+          "stat": "crit",
+          "flat": 8,
           "growth": 0.2
         }
       ]
@@ -503,9 +508,9 @@
       "name": "Arcane Haste",
       "mods": [
         {
-          "stat": "attackEfficiency",
-          "percent": 6,
-          "growth": 0.25
+          "special": "skillDamage",
+          "percent": 10,
+          "growth": 0.3
         }
       ]
     },
@@ -657,9 +662,9 @@
       "name": "Blessing",
       "mods": [
         {
-          "stat": "health",
-          "percent": 8,
-          "growth": 0.35
+          "special": "regen",
+          "percent": 1,
+          "growth": 0.03
         }
       ]
     },
@@ -767,9 +772,9 @@
       "name": "Grim Resolve",
       "mods": [
         {
-          "stat": "attack",
-          "percent": 6,
-          "growth": 0.3
+          "stat": "resist",
+          "flat": 8,
+          "growth": 0.2
         }
       ]
     },
@@ -973,9 +978,9 @@
       "name": "Volatile Mix",
       "mods": [
         {
-          "stat": "resist",
-          "flat": 6,
-          "growth": 0.2
+          "special": "dotDamage",
+          "percent": 10,
+          "growth": 0.3
         }
       ]
     },

@@ -25,6 +25,7 @@ import { loadProgress, saveProgress, recordRun, unlockedIds } from '../systems/p
 import unlocks from '../data/unlocks.json';
 
 const DUNGEON_ID = 'A';
+const SPECIAL_SHORT = { skillDamage: 'SKILL DMG', regen: 'HP/s', dotDamage: 'DOT DMG' };
 const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
 const SLOT_Y = 720;
 const ENEMY_Y = 340;
@@ -1020,7 +1021,7 @@ export default class BattleScene extends Phaser.Scene {
     view.label.setText(`${view.unit.name} Lv${view.unit.level}`);
     // e.g. "Team +10% HP" (the hero's perk; it grows with the hero's level)
     const unit = view.unit;
-    const bits = perkMods(unit).map((m) => `${m.percent !== undefined ? `+${Math.round(m.percent * 10) / 10}%` : `+${Math.round(m.flat * 10) / 10}`} ${STAT_SHORT[m.stat]}`);
+    const bits = perkMods(unit).map((m) => `${m.percent !== undefined ? `+${Math.round(m.percent * 10) / 10}%` : `+${Math.round(m.flat * 10) / 10}`} ${STAT_SHORT[m.stat] || SPECIAL_SHORT[m.special] || m.special}`);
     view.perkLabel.setText(unit.def.perk ? `Team ${bits.join(' ')}` : '');
   }
 

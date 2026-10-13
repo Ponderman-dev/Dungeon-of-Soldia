@@ -74,7 +74,7 @@ export default class SquadScene extends Phaser.Scene {
     card.passive = text(66, 44, def.passive.name, { fontSize: '10px', fontStyle: 'bold', color: '#f2d66b' });
     card.attack = text(66, 60, skillDefs[def.skills.attack].name, { fontSize: '10px', color: '#ff9a7a' });
     card.support = text(66, 74, skillDefs[def.skills.support].name, { fontSize: '10px', color: '#8ee6a8' });
-    const perk = perkMods({ def, level: 1 }).map((m) => `${m.percent !== undefined ? `+${m.percent}%` : `+${m.flat}`} ${STAT_SHORT[m.stat]}`).join(' ');
+    const perk = perkMods({ def, level: 1 }).map((m) => `${m.percent !== undefined ? `+${m.percent}%` : `+${m.flat}`} ${STAT_SHORT[m.stat] || ({ skillDamage: 'SKILL DMG', regen: 'HP/s', dotDamage: 'DOT DMG' })[m.special] || m.special}`).join(' ');
     card.perk = text(66, 92, `Team ${perk}`, { fontSize: '9px', color: '#7fd8a0' });
     card.badge = this.add.text(x + CARD_W - 8, y + 12, '', { fontFamily: FONT, fontSize: '13px', fontStyle: 'bold', color: '#14101f', backgroundColor: '#f2b632', padding: { x: 5, y: 1 } }).setOrigin(1, 0.5);
     card.lock = this.add.rectangle(x + CARD_W / 2, y + CARD_H / 2, CARD_W, CARD_H, 0x0c0914, 0.78);

@@ -1444,7 +1444,7 @@ export default class BattleState {
         status.ignoresArmor = spec.ignoresArmor ?? !!info.ignoresArmor;
         // Damage-type items boost damage over time of that type too (e.g. +15% dark boosts poison).
         const bonus = ((source.damageBonus && source.damageBonus[status.damageType]) || 0) / 100;
-        status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus) * cat.dot));
+        status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus) * cat.dot * (1 + ((source.side === 'hero' && source.specials && source.specials.dotDamage) || 0) / 100)));
         if (!(spec.status in target.dotClocks)) target.dotClocks[spec.status] = 0; // first stack: start the tick clock
       }
     }

@@ -11,21 +11,21 @@ const kill = (s, h) => { const ev = []; s.killUnit(h, ev); return ev; };
 
 // The squad is Knight, Rogue, Archer
 { const s = mk(); ok('squad of 3: Knight, Rogue, Archer', s.heroes.map((h) => h.name).join() === 'Knight,Rogue,Archer'); }
-// Perks help everyone from the start: Knight +10% health, Rogue +6 crit, Archer +10% attack
+// Perks help everyone from the start: Knight +8 defense +5% health, Rogue +10 evasion, Archer +8% attack speed
 { const s = mk(); const [k, ro, a] = s.heroes;
-  ok('Knight perk: +10% max health for all', Math.abs(k.maxHp - base('Knight').health * 1.1) < 1 && Math.abs(ro.maxHp - base('Rogue').health * 1.1) < 1, `${k.maxHp} ${ro.maxHp}`);
-  ok('Rogue perk: +6 crit for all', Math.abs(k.stats.crit - (base('Knight').crit + 6)) < 0.01 && Math.abs(ro.stats.crit - (base('Rogue').crit + 6)) < 0.01);
-  ok('Archer perk: +10% attack for all', Math.abs(k.stats.attack - base('Knight').attack * 1.1) < 0.01 && Math.abs(a.stats.attack - base('Archer').attack * 1.1) < 0.01);
+  ok('Knight perk: +5% max health and +8 defense for all', Math.abs(k.maxHp - base('Knight').health * 1.05) < 1 && Math.abs(ro.maxHp - base('Rogue').health * 1.05) < 1 && Math.abs(ro.stats.defense - (base('Rogue').defense + 8)) < 0.01, `${k.maxHp} ${ro.maxHp}`);
+  ok('Rogue perk: +10 evasion for all', Math.abs(k.stats.evasion - (base('Knight').evasion + 10)) < 0.01 && Math.abs(a.stats.evasion - (base('Archer').evasion + 10)) < 0.01);
+  ok('Archer perk: +8% attack speed for all', Math.abs(k.stats.attackEfficiency - base('Knight').attackEfficiency * 1.08) < 0.01 && Math.abs(ro.stats.attackEfficiency - base('Rogue').attackEfficiency * 1.08) < 0.01);
   ok('new heroes start at full health', k.hp === k.maxHp && ro.hp === ro.maxHp); }
 // The perk grows with the hero's level
 { const s = mk(); const k = s.heroes[0]; const before = s.heroes[1].maxHp; k.level = 11; s.refreshStats();
-  const lvl = s.heroes[1].maxHp; ok('Knight perk grows with level (+4% at Lv11)', lvl > before, `${before} -> ${lvl}`); }
+  const lvl = s.heroes[1].maxHp; ok('Knight perk grows with level', lvl > before, `${before} -> ${lvl}`); }
 // Death: perk lost + 'incomplete' then 'all alone'
 { const s = mk(); const [k, ro, a] = s.heroes; ok('morale starts full', s.morale === 'full' && moraleTier(s.heroes) === 'full');
   const atk0 = ro.stats.attack, spd0 = ro.stats.attackEfficiency, def0 = ro.stats.defense;
   const ev = kill(s, a);
   ok('first death -> incomplete (event sent)', s.morale === 'incomplete' && ev.some((e) => e.type === 'morale' && e.tier === 'incomplete'));
-  ok('Archer perk lost and -10% attack, -10% speed, -3 defense', Math.abs(ro.stats.attack - base('Rogue').attack * 0.9) < 0.01 && Math.abs(ro.stats.attackEfficiency - spd0 * 0.9) < 0.01 && Math.abs(ro.stats.defense - Math.max(0, def0 - 3)) < 0.01, `atk ${atk0}->${ro.stats.attack}`);
+  ok('Archer perk lost and -10% attack, -10% speed, -3 defense', Math.abs(ro.stats.attack - base('Rogue').attack * 0.9) < 0.01 && Math.abs(ro.stats.attackEfficiency - base('Rogue').attackEfficiency * 0.9) < 0.01 && Math.abs(ro.stats.defense - Math.max(0, def0 - 3)) < 0.01, `atk ${atk0}->${ro.stats.attack}`);
   const ev2 = kill(s, ro);
   ok('second death -> all alone (event sent)', s.morale === 'alone' && ev2.some((e) => e.type === 'morale' && e.tier === 'alone'));
   ok('last hero: -25% attack, no more perks from the fallen', Math.abs(k.stats.attack - base('Knight').attack * 0.75) < 0.01 && k.stats.crit - base('Knight').crit < 0.01, `${k.stats.attack}`);

@@ -9,14 +9,14 @@ They review by LOOKING at the preview page, so always check the game in the brow
 Preview page: https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr (private; publish the SAME url with the Artifact tool, see CLAUDE.md "Preview page").
 
 ## Branch
-Work branch: `claude/quick-gloves-item-changes-ofzyqe` (PR https://github.com/Ponderman-dev/Dungeon-of-Soldia/pull/1 exists; pushing updates it). Commit + push after every step. Do not open new PRs unless asked. Commit messages end with the attribution lines the session gives you.
+Current work branch: `claude/phase-h-tuning` (made from `claude/quick-gloves-item-changes-ofzyqe` at commit 7b4e45b; the old branch holds all of Phases A-G and PR https://github.com/Ponderman-dev/Dungeon-of-Soldia/pull/1, which is still open and was NOT merged). Commit + push after every step (`git push -u origin <branch>`; never force push). Do not open new PRs unless asked. Commit messages end with the attribution lines the session gives you. Another session also pushes to the old branch (the Character Studio commits), so `git fetch` and fast-forward before pushing, and the preview page may have been republished by that session (the Artifact tool then asks you to publish again; that is fine when the game content is the same).
 
 ## Character Studio (side tool)
 A design page for the colored-block characters: https://claude.ai/artifact/1azV1LBUimRkeavNpQBgc7 . See CLAUDE.md "Character Studio" for building it and applying saved designs.
 
 ## WHERE WE ARE: the BIG UPDATE (docs/big-update-plan.md "BUILD ORDER")
 DONE: all of Phase A (A1 no mana, A2 attack/support skill slots, A3 defense/resist curve + caps, A4 new drop roll, A5 damage types, A6 debuff engine) and all of Phase B (B1 attack start/hit split, B2-B4 heroes/enemies walk + arrows, B5 melee movement rework).
-MOVEMENT REBUILD done (see below). NEXT: **Phase D (D1 shields/invulnerable DONE, D2 taunt DONE, D3 counters DONE, D4 minions DONE) = PHASE D FINISHED. PHASE E (heroes): E1 Knight DONE, E2 Rogue DONE, E3-E10 ALL DONE (see CLAUDE.md), Phase F DONE (squad select, RANDOM, saved unlocks), PHASE G DONE (all 72 items, see CLAUDE.md), NEXT = Phase H (update test bot, ONE tuning pass)**. (Phase C below is done):
+MOVEMENT REBUILD done (see below). NEXT: **Phase D (D1 shields/invulnerable DONE, D2 taunt DONE, D3 counters DONE, D4 minions DONE) = PHASE D FINISHED. PHASE E (heroes): E1 Knight DONE, E2 Rogue DONE, E3-E10 ALL DONE (see CLAUDE.md), Phase F DONE (squad select, RANDOM, saved unlocks), PHASE G DONE (all 72 items, see CLAUDE.md), Phase H: H1 DONE (new balance bot `scripts/tests/balance.mjs`), H2 (the ONE tuning pass) is PAUSED on purpose: the user said there is not enough data yet. Do NOT tune numbers until the user has play-tested or asks. Other options the user was offered next: bosses, skill books, enemy skills, turning the reward screen on (remove the TEST auto-reward)**. (Phase C below is done):
 - DONE: C1 skill wind-up (`castMs`, longer than a normal attack). DECIDED by the user: stunned/frozen during a wind-up = the skill is LOST and GOES ON COOLDOWN.
 - DONE: C2 skill cast visuals (colour flash, ring burst, name banner, bigger coloured numbers, screen shake / hit-stop; skills must look clearly different from normal hits).
 - DONE: C3 morale wash (Phase C is finished; NEXT is Phase D) instead of text (very faint tint on living heroes: light = INCOMPLETE, darker = ALL ALONE; remove the tag/popup).
@@ -29,8 +29,8 @@ Then Phase D (shields, taunt on enemies, "every 4th attack" counters, minion sys
 - Skills: `skills: { attack, support }` per hero, skills.json has `kind`. The Archer's support is a PLACEHOLDER (Eagle Focus) until his redo. Hero stats still have a dormant `mana` field (nothing reads it).
 
 ## Tests and tuning
-- `npm test` runs `scripts/tests/*.test.mjs` (18 files, all must pass before every commit). `node scripts/tests/sim.mjs skills rewards` = average death floor of a bot (now ~94: far too high, see below).
-- KNOWN BALANCE DRIFT (leave until phase H): the bot went from ~28 (start of the update) to ~94 because of better late rarity odds, enemies attacking whoever is nearest, and stun/freeze cancelling attacks in flight. Tune in phase H (enemy `floorScaling`, `rarityOdds`, attack timings).
+- `npm test` runs every `scripts/tests/*.test.mjs` (about 40 files, all must pass before every commit). `node scripts/tests/balance.mjs 30 all` plays whole runs with 6 squads (skills, minions, random rewards) and prints mean/median/range of the death floor (about 60-108 mean per squad, runs are VERY swingy: 10-20 up to the 150 cap; Cleric/Necromancer/Bard squads are weakest). Item-by-item results are confounded (runs that live longer collect more items), so do not tune from them. The old `sim.mjs` does not know minions or the new heroes.
+- KNOWN BALANCE DRIFT (Phase H, paused): the bot went from ~28 (start of the update) to ~94 because of better late rarity odds, enemies attacking whoever is nearest, and stun/freeze cancelling attacks in flight. Tune in phase H (enemy `floorScaling`, `rarityOdds`, attack timings).
 - `node scripts/tests/difficulty.mjs`, `tune-enemies.mjs` also exist (see CLAUDE.md "Difficulty curve").
 
 ## Browser checks (do this before every publish)
@@ -52,3 +52,9 @@ Then Phase D (shields, taunt on enemies, "every 4th attack" counters, minion sys
 - Skill books (attack book / support book), bosses every 10 floors, floor 100 super boss, enemy skills (Silence needs them), main menu / game over / pause screens: all LATER, after the big update.
 - Remove the TEST auto-reward button (DebugScene) only when rewards go live (user does not want to play the reward screen yet).
 - Later: wrap with Capacitor for Android (Solana Seeker).
+
+## Decisions made at the end of this session (all in CLAUDE.md too)
+- Counters (Mage, Cleric, Bard) show NO text: the weapon glows after the (N-1)th attack, the Nth attack flashes the attacker and bursts on the target. The Mage's 4th attack cycles fire (Burn), ice (2 Chill), electric (Shock); the glow shows the NEXT element's colour.
+- All 10 hero perks were chosen by the user one by one (see CLAUDE.md "Hero perks"); perks can now use specials (skillDamage, regen, dotDamage). Cleric regen is 0.4%/s (1% was too strong).
+- Item descriptions must NOT mention stacking or diminishing returns; keep them short (card text overflows otherwise).
+- Open small things: some long descriptions may still be tight on the reward card; Archer/others are fine. The reward screen still auto-picks (DebugScene TEST button).

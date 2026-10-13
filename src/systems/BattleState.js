@@ -17,6 +17,7 @@ export const SKILL_SLOTS = ['attack', 'support'];
 //         attackCancel (an attack in progress was stopped: the attacker got stunned, frozen, feared,
 //                       knocked back, or nothing is left to hit),
 //         attackRetarget (a ranged attack in progress lost its target, it now goes for { target, hitInMs })
+//         beat (a counter passive counted a basic attack: { unit (the attacker), holder, counter, count, fired })
 //         shieldBreak (a shield was used up by damage: { unit, status }; a shield that just runs out of time
 //                      is only a normal 'status' expire event)
 //         castStart (a hero starts winding up a skill: { unit, skill, index, castMs }; 'cast' comes when it goes off)
@@ -91,6 +92,7 @@ export default class BattleState {
       walked: 0, // total distance walked (the scene uses it for the hop rhythm)
       knock: null, // being knocked back: { vx, vy, remaining }
       casting: null, // a skill winding up: { index, remaining, total }
+      counterCount: 0, // "every Nth attack" passive (def.counter): basic attacks counted so far
       damageBonus: {},
       specials: {},
       procs: [],
@@ -452,8 +454,87 @@ export default class BattleState {
   landAttack(unit, target, events) {
     if (!target.alive) target = this.pickTarget(unit);
     if (!target) return;
+    const fired = this.countBeats(unit, events); // "every Nth attack" passives that go off on THIS attack
+    // A heal beat (Cleric): instead of hitting the enemy, the attack heals the most hurt ally.
+    for (const f of fired) {
+      if (f.counter.effect === 'heal' && this.fireHeal(f.holder, f.counter, events)) return;
+    }
+    const empower = fired.filter((f) => f.counter.effect === 'empower');
     const hit = this.strike(unit, target, events, { basic: true });
-    this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged });
+    // An empowered beat (Mage Spellweaver, Bard Rhythm): a free extra hit and debuffs on the target.
+    for (const f of empower) {
+      const c = f.counter;
+      events.push({ type: 'proc', unit, label: c.firedLabel || 'Empowered!' });
+      if (c.strike && target.alive) this.strike(unit, target, events, { multiplier: c.strike.damageMultiplier, damageType: c.strike.damageType });
+      if (target.alive && !hit.dodged) for (const spec of c.apply || []) this.applyStatus(target, spec, unit, `counter_${f.holder.uid}`, events);
+    }
+    this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, force: empower.some((f) => f.counter.forceProcs) });
+  }
+
+  // ---- "every Nth attack" counters (a hero def can have `counter`) ----------------------------------
+  // counter: { id, label, color, every (4), scope: 'self' | 'squad', effect: 'empower' | 'heal',
+  //   firedLabel, strike {damageMultiplier, damageType}, apply [status specs], forceProcs,
+  //   heal { percentMaxHp, attackMultiplier } }.
+  //  - scope 'self' counts the holder's own basic attacks, 'squad' counts the basic attacks of every
+  //    living hero of the squad (not skills, not minions). A dead holder counts nothing.
+  //  - The count is kept for the whole run (it does not reset between floors).
+  //  - 'empower': when the count reaches `every` that attack also gets a free extra hit (`strike`) and
+  //    debuffs (`apply`); `forceProcs` makes the attacker's on-hit item procs all go off.
+  //  - 'heal': that attack heals the lowest-health ally instead of hitting. If nobody is hurt it hits
+  //    normally and the counter stays charged until somebody is.
+  // Returns the counters that fired on this attack ({ holder, counter }), and sends a `beat` event for
+  // every counted attack (the scene shows the count).
+  countBeats(unit, events) {
+    const fired = [];
+    if (unit.side !== 'hero') return fired;
+    for (const holder of this.heroes) {
+      const c = holder.def.counter;
+      if (!c || !holder.alive) continue;
+      if (c.scope === 'squad' ? false : holder !== unit) continue;
+      if (holder.counterCount >= c.every) {
+        // Already charged and waiting (a heal with nobody hurt): this attack tries again, no new count.
+        if (c.effect === 'heal' && this.lowestHealthAlly()) {
+          holder.counterCount = 0;
+          fired.push({ holder, counter: c });
+          events.push({ type: 'beat', unit, holder, counter: c, count: c.every, fired: true });
+        }
+        continue;
+      }
+      holder.counterCount++;
+      const hit = holder.counterCount >= c.every;
+      if (hit && c.effect === 'heal' && !this.lowestHealthAlly()) {
+        events.push({ type: 'beat', unit, holder, counter: c, count: holder.counterCount, fired: false });
+        continue; // charged, waiting for somebody to be hurt
+      }
+      if (hit) holder.counterCount = 0;
+      if (hit) fired.push({ holder, counter: c });
+      events.push({ type: 'beat', unit, holder, counter: c, count: hit ? c.every : holder.counterCount, fired: hit });
+    }
+    return fired;
+  }
+
+  // The living hero with the lowest health % that is actually hurt, or null.
+  lowestHealthAlly() {
+    let best = null;
+    for (const h of this.heroes) {
+      if (!h.alive || h.hp >= h.maxHp) continue;
+      if (!best || h.hp / h.maxHp < best.hp / best.maxHp) best = h;
+    }
+    return best;
+  }
+
+  // The Cleric's beat: heal the most hurt ally (percentMaxHp of THEIR health + attackMultiplier x the
+  // caster's attack). Returns false if nobody is hurt.
+  fireHeal(holder, counter, events) {
+    const ally = this.lowestHealthAlly();
+    if (!ally) return false;
+    const h = counter.heal || {};
+    const amount = Math.max(1, Math.round(((h.percentMaxHp || 0) * ally.maxHp) / 100 + (h.attackMultiplier || 0) * holder.stats.attack));
+    const got = Math.min(ally.maxHp - ally.hp, amount);
+    ally.hp += got;
+    events.push({ type: 'proc', unit: holder, label: counter.firedLabel || 'Heal!' });
+    events.push({ type: 'heal', unit: ally, amount: got });
+    return true;
   }
 
   // One hit: damage, block cooldown, lifesteal/thorns/crit debuffs, death. Used by basic attacks,
@@ -499,7 +580,7 @@ export default class BattleState {
   rollProcs(hero, trigger, events, ctx = {}) {
     if (hero.side !== 'hero' || !hero.alive) return;
     for (const proc of [...hero.procs]) {
-      if (proc.proc !== trigger || this.rng() * 100 >= proc.chance) continue;
+      if (proc.proc !== trigger || (!ctx.force && this.rng() * 100 >= proc.chance)) continue; // ctx.force: every proc goes off
       if (!proc.silent) events.push({ type: 'proc', unit: hero, label: proc.label });
       const enemy = ctx.target && ctx.target.alive ? ctx.target : null;
       let landed = ctx.hit !== false; // statuses on the target need the attack to have connected

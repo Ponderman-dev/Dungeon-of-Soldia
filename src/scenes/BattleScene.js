@@ -381,6 +381,9 @@ export default class BattleScene extends Phaser.Scene {
       if (kind === 'shield') return { ...statusInfo.shield, label: `SHIELD ${Math.round(this.state.shieldAmount(view.unit))}` };
       return (statusInfo[kind].dot || statusInfo[kind].stacking) && n > 1 ? { ...statusInfo[kind], label: `${statusInfo[kind].label} x${n}` } : statusInfo[kind];
     });
+    // An "every Nth attack" passive shows its count: "RHYTHM 2/4".
+    const counter = view.unit.side === 'hero' && view.unit.alive ? view.unit.def.counter : null;
+    if (counter) tags.unshift({ label: `${counter.label} ${Math.min(view.unit.counterCount, counter.every)}/${counter.every}`, color: counter.color || '#c8a0ff', textColor: '#000000' });
     let x = 0;
     for (const info of tags) {
       const chip = this.add
@@ -658,6 +661,15 @@ export default class BattleScene extends Phaser.Scene {
       }
       if (e.status.type === 'buff') this.drawAllBars();
       if (e.status.type === 'shield') this.setBar(v);
+    } else if (e.type === 'beat') {
+      // The count goes up (tag by the holder) and a ring pulses on the hero whose attack was counted;
+      // when the beat goes off the ring is big and bright.
+      this.drawChips(this.views.get(e.holder.uid));
+      const v = this.views.get(e.unit.uid);
+      const color = Phaser.Display.Color.HexStringToColor(e.counter.color || '#c8a0ff').color;
+      const c = this.center(v);
+      const ring = this.add.circle(c.x, c.y, e.fired ? 14 : 8).setStrokeStyle(e.fired ? 4 : 2, color).setDepth(DEPTH.popup - 1);
+      this.tweens.add({ targets: ring, radius: e.fired ? 52 : 26, alpha: 0, duration: e.fired ? 420 : 260, ease: 'Quad.easeOut', onComplete: () => ring.destroy() });
     } else if (e.type === 'shieldBreak') {
       const v = this.views.get(e.unit.uid);
       this.drawChips(v);

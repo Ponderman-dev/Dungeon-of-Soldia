@@ -259,10 +259,10 @@ Decided with the user:
 - F2. DONE. Unlocks saved in localStorage; each hero has its own requirement (floors reached, enemies defeated, floors cleared, runs played) in `unlocks.json`, plus an unlock-all toggle (the user's choice).
 
 ### Phase G: Items (in groups, each with its tests)
-- G1. Update the 19 built items to the new rules (renames, rarities, weights, Chill Band, Static Crystal, Gambler's Dice, Bulwark Plate/Feather Boots stacks, Siege Cannon legendary).
-- G2. Simple commons: Sucker Punch Glove, Bandage Roll, Second Wind Flask, Full Vigor, Brawler's Streak, Tough Skin, Kindling, Frost Charm, Storm Charm, Shadow Charm, Mage Cloak, Hourglass.
-- G3. Debuff appliers: Ember Charm, Venom Fang, Serrated Edge, Rusty Nails, Hex Doll, Dread Bell, Gag Rune, Fire Arrows.
-- G4. Debuff payoffs: Magma Core, Shatter Hammer, Blood Chalice, Plague Flask, Exploiter's Lens, Executioner's Axe, Hunter's Sigil, Thousand Cuts, Frozen Thunderbolt.
+- G1. DONE. Update the 19 built items to the new rules (renames, rarities, weights, Chill Band, Static Crystal, Gambler's Dice, Bulwark Plate/Feather Boots stacks, Siege Cannon legendary).
+- G2. DONE. Simple commons: Sucker Punch Glove, Bandage Roll, Second Wind Flask, Full Vigor, Brawler's Streak, Tough Skin, Kindling, Frost Charm, Storm Charm, Shadow Charm, Mage Cloak, Hourglass.
+- G3. DONE. Debuff appliers: Ember Charm, Venom Fang, Serrated Edge, Rusty Nails, Hex Doll, Dread Bell, Gag Rune, Fire Arrows.
+- G4. DONE. Debuff payoffs: Magma Core, Shatter Hammer, Blood Chalice, Plague Flask, Exploiter's Lens, Executioner's Axe, Hunter's Sigil, Thousand Cuts, Frozen Thunderbolt.
 - G5. Shield / heal / taunt items: Warding Charm, Overheal Ring, Spiked Aegis, Provoker's Horn, Spite Mail, Martyr's Shield, Fire Heart, Lost Cleric's Grimoire.
 - G6. Skill items: Conductor's Baton, Echo Rune, Metronome.
 - G7. Minion items: Rat Cage, Wisp Lantern, Fire Imp Brazier, Mimic Chest, Gargoyle Idol, Spirit Knight Banner, Phoenix Hatchling, Bone Charm, Overseer's Whistle, Grave Dust, Necro Crown.

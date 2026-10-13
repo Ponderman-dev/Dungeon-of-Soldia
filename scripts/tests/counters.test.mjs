@@ -26,7 +26,7 @@ const BEAT = { id: 'rhythm', label: 'RHYTHM', every: 4, scope: 'squad', effect: 
   ok('the counter counts 1, 2, 3, then fires on the 4th (and repeats)', counts.join() === '1,2,3,4,1,2,3,4' && fired.join() === 'false,false,false,true,false,false,false,true');
   const ev = basic(s, mage, g); basic(s, mage, g); basic(s, mage, g); const fourth = basic(s, mage, g);
   ok('normal attacks: one hit, the 4th: a free extra hit', attacksBy(ev, mage).length === 1 && attacksBy(fourth, mage).length === 2);
-  ok('the free hit has its own damage type and label', fourth.some((e) => e.type === 'proc' && e.label === 'Spellweave!') && attacksBy(fourth, mage)[1].damageType === 'fire');
+  ok('the free hit has its own damage type and a beat event with its target', fourth.some((e) => e.type === 'beat' && e.fired && e.target === g) && attacksBy(fourth, mage)[1].damageType === 'fire');
   ok('...and puts its debuff on the target', g.statuses.some((x) => x.type === 'burn')); }
 
 { const { s, g, h } = mk({ 0: WEAVE }); const [mage, other] = h;

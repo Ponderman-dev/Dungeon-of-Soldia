@@ -747,7 +747,7 @@ export default class BattleState {
   landAttack(unit, target, events) {
     if (!target.alive) target = this.pickTarget(unit);
     if (!target) return;
-    const fired = this.countBeats(unit, events); // "every Nth attack" passives that go off on THIS attack
+    const fired = this.countBeats(unit, events, target); // "every Nth attack" passives that go off on THIS attack
     // A heal beat (Cleric): instead of hitting the enemy, the attack heals the most hurt ally.
     for (const f of fired) {
       if (f.counter.effect === 'heal' && this.fireHeal(f.holder, f.counter, events)) return;
@@ -761,7 +761,6 @@ export default class BattleState {
     // An empowered beat (Mage Spellweaver, Bard Rhythm): a free extra hit and debuffs on the target.
     for (const f of empower) {
       const c = f.counter;
-      events.push({ type: 'proc', unit, label: c.firedLabel || 'Empowered!' });
       // Metronome (on the counter's holder): the empowered beat hits harder.
       if (c.strike && target.alive) this.strike(unit, target, events, { multiplier: c.strike.damageMultiplier * (1 + ((f.holder.specials.metronome || 0) / 100)), damageType: c.strike.damageType });
       if (target.alive && !hit.dodged) for (const spec of c.apply || []) this.applyStatus(target, spec, unit, `counter_${f.holder.uid}`, events);
@@ -876,7 +875,7 @@ export default class BattleState {
   //    normally and the counter stays charged until somebody is.
   // Returns the counters that fired on this attack ({ holder, counter }), and sends a `beat` event for
   // every counted attack (the scene shows the count).
-  countBeats(unit, events) {
+  countBeats(unit, events, target = null) {
     const fired = [];
     if (unit.side !== 'hero' || unit.minion) return fired; // minions never count
     for (const holder of this.heroes) {
@@ -888,7 +887,7 @@ export default class BattleState {
         if (c.effect === 'heal' && this.lowestHealthAlly()) {
           holder.counterCount = 0;
           fired.push({ holder, counter: c });
-          events.push({ type: 'beat', unit, holder, counter: c, count: c.every, fired: true });
+          events.push({ type: 'beat', unit, holder, counter: c, count: c.every, fired: true, target });
         }
         continue;
       }
@@ -900,7 +899,7 @@ export default class BattleState {
       }
       if (hit) holder.counterCount = 0;
       if (hit) fired.push({ holder, counter: c });
-      events.push({ type: 'beat', unit, holder, counter: c, count: hit ? c.every : holder.counterCount, fired: hit });
+      events.push({ type: 'beat', unit, holder, counter: c, count: hit ? c.every : holder.counterCount, fired: hit, target });
     }
     return fired;
   }
@@ -941,7 +940,6 @@ export default class BattleState {
     if (!ally) return false;
     const h = counter.heal || {};
     const amount = Math.max(1, Math.round(((h.percentMaxHp || 0) * ally.maxHp) / 100 + (h.attackMultiplier || 0) * holder.stats.attack));
-    events.push({ type: 'proc', unit: holder, label: counter.firedLabel || 'Heal!' });
     this.healUnit(ally, amount, events, { aura: false });
     return true;
   }

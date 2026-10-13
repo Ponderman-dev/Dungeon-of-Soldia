@@ -111,7 +111,7 @@ const T = ['knight', 'rogue'];
   run(s, 4200); ok('...both last 4s', h.every((x, n) => s.shieldAmount(x) === 0 && x.stats.resist === res0[n])); }
 { const { s, a, es } = mk(['mage', ...T], ['goblin']); const [g] = es;
   a.procs = [{ proc: 'onAttack', chance: 0.001, label: 'x', itemId: 'fireitem', targets: 'self', silent: true, apply: [{ status: 'buff', durationMs: 1000, mods: [{ stat: 'defense', flat: 5 }] }] }];
-  const d0 = a.stats.defense; const fired = []; for (let i = 0; i < 4; i++) { const ev = []; s.landAttack(a, g, ev); fired.push(ev.some((e) => e.type === 'proc' && e.label === 'Spellweave!')); a.procs = a.procs; }
+  const d0 = a.stats.defense; const fired = []; for (let i = 0; i < 4; i++) { const ev = []; s.landAttack(a, g, ev); fired.push(ev.some((e) => e.type === 'beat' && e.fired)); a.procs = a.procs; }
   ok('Spellweaver: the 4th attack is empowered (free fire hit + Burn)', fired.join() === 'false,false,false,true' && g.statuses.some((x) => x.type === 'burn')); }
 
 // ================= CLERIC

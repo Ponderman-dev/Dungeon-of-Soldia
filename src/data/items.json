@@ -34,7 +34,7 @@
     "rarity": "common",
     "type": "stat",
     "scope": "self",
-    "description": "+10 crit chance. Extra coins add a bit less each (10 coins = +75).",
+    "description": "+10 crit chance.",
     "maxStacks": 10,
     "effects": [
       {
@@ -187,7 +187,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "+40% attack. Skills deal 30% more damage. 5% chance a skill also hits the enemies next to its target.",
+    "description": "+40% attack. Skills deal 30% more damage. 5% chance a skill also hits nearby enemies.",
     "effects": [
       {
         "stat": "attack",
@@ -208,7 +208,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "+30% attack speed. Heal 5% of the damage you deal. 10% chance the heal is shared with the squad (3s cooldown).",
+    "description": "+30% attack speed. Heal 5% of damage dealt. 10% chance to share the heal with the squad.",
     "effects": [
       {
         "stat": "attackEfficiency",
@@ -230,7 +230,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "+20 crit chance. Crits deal 50% extra damage and put a random debuff (Chill, Poison, Stun or Shock) on the enemy.",
+    "description": "+20 crit chance. Crits deal 50% more and add a random debuff to the enemy.",
     "maxStacks": 3,
     "effects": [
       {
@@ -298,7 +298,7 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "Every attack adds a 10% ice hit per band and 1 Chill stack (5 Chill = Freeze).",
+    "description": "Every attack adds a small ice hit and 1 Chill stack (5 Chill = Freeze).",
     "effects": [
       {
         "proc": "onAttack",
@@ -336,7 +336,7 @@
     "rarity": "epic",
     "type": "onhit",
     "scope": "self",
-    "description": "10% per attack: chain lightning (300% electric) that jumps to 2 more enemies and Shocks every enemy it hits.",
+    "description": "10% per attack: chain lightning that jumps to 2 more enemies and Shocks them.",
     "effects": [
       {
         "proc": "onAttack",
@@ -364,7 +364,7 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Heals 5% max health when a floor is cleared. Each extra kit adds less.",
+    "description": "Heals 5% max health when a floor is cleared.",
     "effects": [
       {
         "special": "clearHeal",
@@ -412,7 +412,7 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "CONSUMABLE: when the holder drops below 40% health, one flask is used up and heals 30% max health (once per floor).",
+    "description": "Used up when the holder drops below 40% health: heals 30% (once per floor).",
     "effects": [
       {
         "special": "secondWind",
@@ -442,7 +442,7 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "Each consecutive hit on the same target adds +2% damage (max +10% per copy). A new target resets it.",
+    "description": "Each consecutive hit on the same target adds +2% damage (max +10%).",
     "effects": [
       {
         "special": "brawlerMax",
@@ -456,7 +456,7 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "The first hit the holder takes each floor deals 60% less damage (more copies: 70%, 78%... up to 90%).",
+    "description": "The first hit the holder takes each floor deals 60% less damage.",
     "effects": [
       {
         "special": "toughSkin",
@@ -628,7 +628,7 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "10% chance per attack to make the target Bleed. Extra copies add less each (10%, 8%, 6.4%...).",
+    "description": "10% chance per attack to make the target Bleed.",
     "effects": [
       {
         "proc": "onAttack",
@@ -697,7 +697,7 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "A stun or freeze the holder causes also Silences the enemy for 2s (+1s per extra copy).",
+    "description": "A stun or freeze the holder causes also Silences the enemy for 2s.",
     "effects": [
       {
         "special": "gagRune",
@@ -712,7 +712,7 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "Ranged attacks: 50% chance for an extra fire hit. The chance does not stack; extra copies make the fire hit stronger.",
+    "description": "Ranged attacks: 50% chance for an extra fire hit.",
     "effects": [
       {
         "special": "fireArrows",
@@ -730,7 +730,7 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "+30% damage to enemies under 25% health (extra copies add a little less each).",
+    "description": "+30% damage to enemies under 25% health.",
     "effects": [
       {
         "special": "executioner",
@@ -779,7 +779,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "Bleeding enemies take +20% damage from the holder; killing a bleeding enemy heals the holder 3%.",
+    "description": "+20% damage to Bleeding enemies. Killing a Bleeding enemy heals 3%.",
     "effects": [
       {
         "special": "bloodChalice",
@@ -798,7 +798,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "When a poisoned enemy dies, HALF of the holder's poison stacks on it spread to another enemy (+1 enemy per copy).",
+    "description": "When a Poisoned enemy dies, half its Poison spreads to another enemy.",
     "effects": [
       {
         "special": "plagueFlask",
@@ -827,7 +827,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "The first hit on each enemy Marks it: marked enemies take +10% damage from the whole squad (per copy); more copies make the mark last longer.",
+    "description": "The first hit on each enemy Marks it: +10% damage from the whole squad.",
     "effects": [
       {
         "special": "hunterSigil",
@@ -840,7 +840,7 @@
     "rarity": "epic",
     "type": "onhit",
     "scope": "self",
-    "description": "Melee hits seldom make the enemy Bleed; every Bleed the holder applies adds 1 EXTRA stack; an enemy that dies while bleeding bursts knives into the enemies next to it.",
+    "description": "Melee hits can make enemies Bleed; each Bleed adds an extra stack. Bleeding enemies burst into knives when they die.",
     "effects": [
       {
         "proc": "onAttack",
@@ -874,7 +874,7 @@
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "Every electric hit causes an ice burst on the enemies next to the one hit: ice damage and 2 Chill stacks.",
+    "description": "Every electric hit causes an ice burst on nearby enemies: ice damage and 2 Chill.",
     "effects": [
       {
         "special": "frozenThunderbolt",
@@ -909,7 +909,7 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "40% of healing above full health becomes a shield (up to 25% of max health). More copies convert more, up to 100%.",
+    "description": "Healing above full health becomes a shield.",
     "effects": [
       {
         "special": "overhealRing",
@@ -928,7 +928,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "When the holder's shield is BROKEN by damage it explodes, hurting all enemies (shields that just run out do not).",
+    "description": "When the holder's shield is broken it explodes and hurts all enemies.",
     "effects": [
       {
         "special": "spikedAegis",
@@ -943,7 +943,7 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "10% chance per attack to Taunt the target for 3s; taunted enemies take +15% damage from the holder.",
+    "description": "10% chance per attack to Taunt the target for 3s. Taunted enemies take +15% damage.",
     "effects": [
       {
         "proc": "onAttack",
@@ -991,7 +991,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "8% chance when an enemy hits another hero to take the hit instead (at a small health cost). Extra copies shorten the cooldown and cut the cost.",
+    "description": "8% chance when an enemy hits another hero to take the hit instead.",
     "effects": [
       {
         "special": "martyr",
@@ -1010,7 +1010,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "At the start of each floor: a fire shield (20% max health per copy) that slowly regenerates until broken and burns whoever hits it.",
+    "description": "Each floor starts with a fire shield that slowly regenerates and burns whoever hits it.",
     "effects": [
       {
         "special": "fireHeart",
@@ -1027,7 +1027,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Each time the holder is healed there is a 10% chance (per copy, max 50%) to launch a green fire projectile at a random enemy. Regen counts once per second.",
+    "description": "10% chance each time the holder is healed to launch a green fireball at a random enemy.",
     "effects": [
       {
         "special": "grimoireChance",
@@ -1050,7 +1050,7 @@
     "rarity": "rare",
     "type": "skill",
     "scope": "self",
-    "description": "The holder's support skills are 25% stronger and last 25% longer (extra copies add less each).",
+    "description": "The holder's support skills are 25% stronger and last 25% longer.",
     "effects": [
       {
         "special": "baton",
@@ -1064,7 +1064,7 @@
     "rarity": "epic",
     "type": "skill",
     "scope": "self",
-    "description": "15% chance a skill casts twice. The echo deals 60% of the damage (more copies: closer to 100%) and cannot echo again.",
+    "description": "15% chance a skill casts twice. The echo is weaker and cannot echo again.",
     "effects": [
       {
         "special": "echo",
@@ -1083,7 +1083,7 @@
     "rarity": "rare",
     "type": "skill",
     "scope": "self",
-    "description": "Empowered 4th-beat hits caused by the holder deal +50% damage (on the Bard: every squad Rhythm beat).",
+    "description": "Empowered 4th-attack hits caused by the holder deal +50% damage.",
     "effects": [
       {
         "special": "metronome",
@@ -1098,7 +1098,7 @@
     "rarity": "common",
     "type": "minion",
     "scope": "self",
-    "description": "Every 12s a Rat (weak minion) joins the fight. Each extra copy adds one more Rat to every spawn.",
+    "description": "Every 12s a Rat joins the fight.",
     "effects": [
       {
         "minionSpawner": {
@@ -1118,7 +1118,7 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "Every 15s a flying Wisp (weak minion, ranged shock) joins the fight. Each extra copy adds one more Wisp to every spawn.",
+    "description": "Every 15s a flying Wisp (ranged shock) joins the fight.",
     "effects": [
       {
         "minionSpawner": {
@@ -1138,7 +1138,7 @@
     "rarity": "epic",
     "type": "minion",
     "scope": "self",
-    "description": "Every 10s an Imp (weak minion, ranged fire, its hits Burn) joins the fight. Each extra copy adds one more Imp to every spawn.",
+    "description": "Every 10s a fire Imp (its hits Burn) joins the fight.",
     "effects": [
       {
         "minionSpawner": {
@@ -1160,7 +1160,7 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "10% chance when the holder is hit: a Mimic (weak minion) pops out and explodes when it dies. Extra copies make the Mimic stronger and its explosion bigger.",
+    "description": "10% chance when the holder is hit: a Mimic pops out and explodes when it dies.",
     "effects": [
       {
         "special": "mimic",
@@ -1187,7 +1187,7 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "Greater minion: a slow, tanky Gargoyle whose hits TAUNT enemies. Extra copies make it 25% stronger each.",
+    "description": "Summons a slow, tanky Gargoyle whose hits Taunt enemies.",
     "effects": [
       {
         "greaterMinion": "gargoyle"
@@ -1204,7 +1204,7 @@
     "rarity": "epic",
     "type": "minion",
     "scope": "self",
-    "description": "Greater minion: a Spirit Knight that grows +5% each floor it survives (up to +100%). Extra copies make it 25% stronger each.",
+    "description": "Summons a Spirit Knight that grows stronger each floor it survives.",
     "effects": [
       {
         "greaterMinion": "spirit_knight"
@@ -1220,7 +1220,7 @@
     "rarity": "legendary",
     "type": "minion",
     "scope": "self",
-    "description": "Greater minion: a flying fire Phoenix that heals the squad a little when it is hit. Extra copies make it and the heal 25% stronger each.",
+    "description": "Summons a flying Phoenix that heals the squad a little when it is hit.",
     "effects": [
       {
         "greaterMinion": "phoenix"
@@ -1312,7 +1312,7 @@
     "rarity": "epic",
     "type": "squad",
     "scope": "self",
-    "description": "5% chance per attack (more copies do not raise it): the holder and one random ally get strong regeneration, sure crits and +40% attack speed for 2s. Each extra copy adds 0.5s.",
+    "description": "5% chance per attack: the holder and a random ally get regeneration, sure crits and +40% attack speed for 2s.",
     "effects": [
       {
         "proc": "onAttack",
@@ -1354,7 +1354,7 @@
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "8% chance on a melee attack to spawn a tornado: 5s, drifts between enemies and hits them. Max 3 at once. More copies roll again.",
+    "description": "8% chance on a melee attack to spawn a tornado that drifts between enemies for 5s. Max 3.",
     "effects": [
       {
         "proc": "onAttack",

@@ -439,7 +439,8 @@ export default class BattleScene extends Phaser.Scene {
     // An "every Nth attack" passive shows its count: "RHYTHM 2/4".
     const counter = view.unit.side === 'hero' && view.unit.alive ? view.unit.def.counter : null;
     if (view.unit.steady) tags.unshift({ label: 'STEADY', color: '#9fe0ff', textColor: '#000000' });
-    if (counter) tags.unshift({ label: `${counter.label} ${Math.min(view.unit.counterCount, counter.every)}/${counter.every}`, color: counter.color || '#c8a0ff', textColor: '#000000' });
+    // The count is shown on the hero itself: after the (N-1)th attack the weapon shines until the Nth goes off.
+    view.ch.setGlow(counter && view.unit.counterCount >= counter.every - 1 ? Phaser.Display.Color.HexStringToColor(counter.color || '#c8a0ff').color : null);
     let x = 0;
     for (const info of tags) {
       const chip = this.add
@@ -767,14 +768,26 @@ export default class BattleScene extends Phaser.Scene {
       this.puff(v.ch.x, v.ch.y, 0x6a5a8a, 4);
       this.tweens.add({ targets: [v.ch, v.bg, v.fill, v.shieldFill, v.chipBox], alpha: 0, duration: 300, onComplete: () => this.removeView(e.unit.uid) });
     } else if (e.type === 'beat') {
-      // The count goes up (tag by the holder) and a ring pulses on the hero whose attack was counted;
-      // when the beat goes off the ring is big and bright.
+      // The holder's weapon shines once charged (drawChips). When the Nth attack goes off: a flash on the attacker
+      // and a big burst (rings, rays, sparks) on its target (or around the attacker for a heal beat).
       this.drawChips(this.views.get(e.holder.uid));
+      if (!e.fired) return;
       const v = this.views.get(e.unit.uid);
       const color = Phaser.Display.Color.HexStringToColor(e.counter.color || '#c8a0ff').color;
-      const c = this.center(v);
-      const ring = this.add.circle(c.x, c.y, e.fired ? 14 : 8).setStrokeStyle(e.fired ? 4 : 2, color).setDepth(DEPTH.popup - 1);
-      this.tweens.add({ targets: ring, radius: e.fired ? 52 : 26, alpha: 0, duration: e.fired ? 420 : 260, ease: 'Quad.easeOut', onComplete: () => ring.destroy() });
+      v.ch.flash(color, 160);
+      const tv = e.counter.effect === 'empower' && e.target ? this.views.get(e.target.uid) : null;
+      const c = this.center(tv || v);
+      for (let i = 0; i < 2; i++) {
+        const ring = this.add.circle(c.x, c.y, 8).setStrokeStyle(4 - i, i ? 0xffffff : color).setDepth(DEPTH.popup - 1);
+        this.tweens.add({ targets: ring, radius: 60 - i * 20, alpha: 0, duration: 450, delay: i * 80, ease: 'Quad.easeOut', onComplete: () => ring.destroy() });
+      }
+      for (let i = 0; i < 8; i++) {
+        const ang = (i / 8) * Math.PI * 2;
+        const ray = this.add.rectangle(c.x, c.y, 14, 3, color).setRotation(ang).setDepth(DEPTH.popup - 1);
+        this.tweens.add({ targets: ray, x: c.x + Math.cos(ang) * 46, y: c.y + Math.sin(ang) * 46, alpha: 0, duration: 380, ease: 'Quad.easeOut', onComplete: () => ray.destroy() });
+      }
+      this.puff(c.x, c.y + 10, color, 6);
+      this.cameras.main.shake(70, 0.002);
     } else if (e.type === 'shieldBreak') {
       const v = this.views.get(e.unit.uid);
       this.drawChips(v);
@@ -1122,7 +1135,7 @@ export default class BattleScene extends Phaser.Scene {
     for (const { unit, amount } of this.state.winHeal(combatRules.winHealPercent)) {
       const v = this.views.get(unit.uid);
       this.setBar(v);
-      if (amount > 0) this.popText(v, `+${amount}`, '#6dff8f');
+      if (Math.round(amount) > 0) this.popText(v, `+${Math.round(amount)}`, '#6dff8f');
     }
 
     this.time.delayedCall(T.clearPauseMs, () => {
@@ -1162,7 +1175,7 @@ export default class BattleScene extends Phaser.Scene {
     for (const { unit, amount } of this.state.healHeroes(item.healPercent)) {
       const v = this.views.get(unit.uid);
       this.setBar(v);
-      if (amount > 0) this.popText(v, `+${amount}`, '#6dff8f', true);
+      if (Math.round(amount) > 0) this.popText(v, `+${Math.round(amount)}`, '#6dff8f', true);
     }
   }
 

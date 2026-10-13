@@ -119,6 +119,29 @@ export default class Character extends Phaser.GameObjects.Container {
     }
   }
 
+  // A shine on the weapon (an "every Nth attack" is charged): a pulsing glow in `color`, or none (null).
+  setGlow(color) {
+    if (!color) {
+      if (this.glow) { this.glowTween.stop(); this.glow.destroy(); this.glow = null; this.scene.events.off('update', this.glowFollow); }
+      this.glowColor = null;
+      return;
+    }
+    if (this.glow && this.glowColor === color) return;
+    this.setGlow(null);
+    const w = this.parts.weapon || Object.values(this.parts)[0];
+    const size = Math.max(w.width, w.height) * 0.22 + 2;
+    this.glowColor = color;
+    const mid = () => w.y + (0.5 - (w.originY ?? 0.5)) * w.height; // the weapon's middle (it can turn around a handle)
+    this.glow = this.scene.add.container(w.x, mid());
+    this.glow.add([this.scene.add.circle(0, 0, size, color, 0.6), this.scene.add.circle(0, 0, size * 0.4, 0xffffff, 0.7)]);
+    this.glow.list.forEach((c) => c.setBlendMode(Phaser.BlendModes.ADD));
+    this.add(this.glow);
+    this.glowTween = this.scene.tweens.add({ targets: this.glow, scale: { from: 0.8, to: 1.5 }, alpha: { from: 0.55, to: 1 }, duration: 240, yoyo: true, repeat: -1 });
+    // the glow follows the weapon as it swings
+    this.glowFollow = () => { if (this.glow) { this.glow.x = w.x; this.glow.y = mid(); } };
+    this.scene.events.on('update', this.glowFollow);
+  }
+
   // Stops the idle animation (the character holds its current pose). Used when a hero dies.
   freeze() {
     for (const t of this.idleTweens) t.stop();
@@ -126,6 +149,7 @@ export default class Character extends Phaser.GameObjects.Container {
   }
 
   destroy(fromScene) {
+    if (this.glowFollow) this.scene.events.off('update', this.glowFollow);
     for (const t of this.idleTweens) t.remove();
     super.destroy(fromScene);
   }

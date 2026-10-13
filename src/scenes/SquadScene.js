@@ -40,7 +40,7 @@ export default class SquadScene extends Phaser.Scene {
     this.newIds = newHeroes(heroDefs, this.progress, unlocks);
 
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.bg);
-    this.add.text(16, 58, 'Choose your squad', { fontFamily: FONT, fontSize: '22px', fontStyle: 'bold', color: INK }).setOrigin(0, 0.5);
+    this.add.text(16, 58, 'Choose your squad', { fontFamily: FONT, fontSize: '18px', fontStyle: 'bold', color: INK }).setOrigin(0, 0.5);
     this.add.text(16, 84, this.lastRun ? `Last run: floor ${this.lastRun.floor}, ${this.lastRun.kills} enemies defeated` : 'Tap 3 heroes, or press RANDOM', { fontFamily: FONT, fontSize: '12px', color: this.lastRun ? '#f2b632' : MUTE }).setOrigin(0, 0.5);
     const fresh = this.lastRun ? (this.lastRun.newly || []) : this.newIds;
     if (fresh.length) this.add.text(16, 101, `NEW heroes unlocked: ${fresh.map((id) => heroDefs.find((h) => h.id === id).name).join(', ')}`, { fontFamily: FONT, fontSize: '11px', fontStyle: 'bold', color: '#6dff8f' }).setOrigin(0, 0.5);

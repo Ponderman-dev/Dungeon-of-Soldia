@@ -19,14 +19,18 @@ export function canReceive(unit, item) {
 //   - the hero's own items (while the hero is alive)
 //   - squad items held by any LIVING hero
 // Items on a dead hero stop working. `percent` is a % of the level stat; `flat` adds points.
-export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules = {}) {
+export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules = {}, extraMods = []) {
   const stats = { ...levelStats };
   const damageBonus = {};
   const specials = {}; // thorns, lifesteal, skillDamage, critDamage, regen (all in %)
   const procs = []; // 'chance to do something when X happens' effects the hero rolls for
+  const minionSources = []; // minion items the hero holds: one entry per copy { itemId, kind: 'weak' | 'greater', spec / minion }
   // `factor` shrinks an effect for extra copies of an item that has `falloffRatio`.
   const apply = (e, factor = 1, holder = null) => {
-    if (e.proc) {
+    if (e.minionSpawner || e.greaterMinion) {
+      // A minion item (only its holder gets the minions): weak spawner or greater minion, one entry per copy.
+      if (holder === hero) minionSources.push(e.minionSpawner ? { itemId: e.itemId, kind: 'weak', spec: e.minionSpawner } : { itemId: e.itemId, kind: 'greater', minion: e.greaterMinion });
+    } else if (e.proc) {
       // One entry per copy, so every copy rolls its own chance. Only the holder's own attacks roll.
       // `unique` effects only count once however many copies the hero has (e.g. a freeze chance that doesn't stack).
       if (holder === hero && !(e.unique && procs.some((p) => p.unique && p.itemId === e.itemId))) procs.push({ ...e, itemId: e.itemId });
@@ -52,7 +56,7 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
       if (item.scope !== 'squad' && holder !== hero) continue;
       // Each extra copy of an item with a falloffRatio adds a bit less than the one before:
       // the nth copy gives (effect x ratio^(n-1)).
-      for (const e of item.effects) apply(e.proc ? { ...e, itemId: id } : e, e.falloffRatio ? Math.pow(e.falloffRatio, index) : 1, holder);
+      for (const e of item.effects) apply({ ...e, itemId: id }, e.falloffRatio ? Math.pow(e.falloffRatio, index) : 1, holder);
     }
   }
   // Hero perks: every living hero's perk helps the whole party (a fallen hero's perk is lost).
@@ -60,6 +64,8 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
   // Morale: the party is weaker once heroes have fallen.
   const tier = moraleRules[moraleTier(heroes)];
   if (tier) tier.mods.forEach((m) => apply(m));
+  // Extra mods from the game rules (minion upkeep).
+  extraMods.forEach((m) => apply(m));
   // Temporary buffs from skills.
   for (const status of hero.statuses || []) {
     if (status.type === 'buff') status.mods.forEach((m) => apply(m));
@@ -68,5 +74,5 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
   stats.attack = Math.max(1, stats.attack);
   stats.attackEfficiency = Math.max(10, stats.attackEfficiency);
   for (const key of ['defense', 'resist', 'evasion', 'crit']) stats[key] = Math.max(0, stats[key] || 0);
-  return { stats, damageBonus, specials, procs };
+  return { stats, damageBonus, specials, procs, minionSources };
 }

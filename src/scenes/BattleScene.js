@@ -139,6 +139,8 @@ export default class BattleScene extends Phaser.Scene {
   // A minion rises from the ground: a dark puff, the figure grows up out of the floor, then its bars show.
   showMinion(unit) {
     const v = this.makeView(unit, unit.x, unit.y);
+    v.slotX = unit.x; // where a greater minion waits (it walks to the door and back with the squad)
+    v.slotY = unit.y;
     v.ch.setDepth(DEPTH.hero);
     for (const part of [v.bg, v.fill, v.shieldFill, v.chipBox]) part.setDepth(DEPTH.heroBar).setAlpha(0);
     const target = v.ch.scaleY;
@@ -457,8 +459,11 @@ export default class BattleScene extends Phaser.Scene {
     });
   }
 
+  // Who walks through the door with the squad: the living heroes, then any greater minions.
   livingHeroViews() {
-    return this.state.heroes.filter((h) => h.alive).map((h) => this.views.get(h.uid));
+    const heroes = this.state.heroes.filter((h) => h.alive).map((h) => this.views.get(h.uid));
+    const greater = this.state.minions.filter((m) => m.greater && m.alive).map((m) => this.views.get(m.uid)).filter(Boolean);
+    return [...heroes, ...greater];
   }
 
   // One hero walks along a path of points at a steady pace, hopping with each step.
@@ -522,15 +527,15 @@ export default class BattleScene extends Phaser.Scene {
         v,
         [
           { x: DOOR_X, y: GAME_HEIGHT + 90 },
-          { x: DOOR_X, y: SLOT_Y + 70 },
-          { x: v.slotX, y: SLOT_Y },
+          { x: DOOR_X, y: (v.slotY ?? SLOT_Y) + 70 },
+          { x: v.slotX, y: v.slotY ?? SLOT_Y },
         ],
         {
           delay: this.lineDelay(i),
           onDone: () => {
             v.ch.setScale(CHAR_SCALE).setDepth(DEPTH.hero);
             v.ch.homeX = v.slotX;
-            v.ch.homeY = SLOT_Y;
+            v.ch.homeY = v.slotY ?? SLOT_Y;
             this.setBarsVisible(v, true);
             this.syncBar(v);
             if (--left === 0) done();
@@ -548,12 +553,12 @@ export default class BattleScene extends Phaser.Scene {
     let left = living.length;
     if (!left) return done();
     const gather = { x: DOOR_X, y: SLOT_Y - 120 };
-    const toLine = living.map((v) => Math.hypot(gather.x - v.slotX, gather.y - SLOT_Y));
+    const toLine = living.map((v) => Math.hypot(gather.x - v.slotX, gather.y - (v.slotY ?? SLOT_Y)));
     const base = Math.max(...toLine.map((len, i) => len - i * T.lineGapPx));
     living.forEach((v, i) => {
       this.walkPath(
         v,
-        [{ x: v.slotX, y: SLOT_Y }, gather, { x: DOOR_X, y: WALL_H - 10 }],
+        [{ x: v.slotX, y: v.slotY ?? SLOT_Y }, gather, { x: DOOR_X, y: WALL_H - 10 }],
         {
           delay: ((base - toLine[i] + i * T.lineGapPx) * 1000) / T.walkSpeedPxPerSec,
           onDone: () => {
@@ -965,6 +970,14 @@ export default class BattleScene extends Phaser.Scene {
       if (h.alive) v.ch.face(1); // look the normal way again
       if (h.alive) this.runHome(v); // anyone still out at an enemy walks back before the door walk
       this.drawChips(v);
+    }
+    for (const m of this.state.minions) {
+      const mv = this.views.get(m.uid);
+      if (m.greater && m.alive && mv) {
+        mv.lookAt = null;
+        mv.ch.face(1);
+        this.runHome(mv); // a greater minion walks back to its waiting spot too
+      }
     }
     for (const { unit, amount } of this.state.winHeal(combatRules.winHealPercent)) {
       const v = this.views.get(unit.uid);

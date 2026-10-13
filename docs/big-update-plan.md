@@ -248,7 +248,7 @@ Decided with the user:
 - D1. DONE. Shields (absorb, broken vs expired) and Invulnerable.
 - D2. DONE. Taunt behaviour on enemies (and the Knight's armor buff as a per-status `to` in procs).
 - D3. DONE. "Every 4th attack" counters (Spellweaver, Cleric heal, Bard Rhythm beat) with visible cues.
-- D4. (D4a DONE: weak minions, spawner, cap, vanish on floor end / holder death, enemies target them, visuals; D4b TODO: greater minions, upkeep, floor transitions, 2-floor revival) Minion system: weak and greater minions, caps, upkeep, floor transitions (greater minions walk through the door), 2-floor revival wait, minions vanish when the holder dies.
+- D4. DONE (D4a weak minions; D4b greater minions, upkeep, door walk, 2-floor revival). Minion system: weak and greater minions, caps, upkeep, floor transitions (greater minions walk through the door), 2-floor revival wait, minions vanish when the holder dies.
 
 ### Phase E: Heroes (one per step: stats, growth, passive, attack skill, support skill, placeholder look)
 - E1 Knight, E2 Rogue, E3 Archer (the start squad first), E4 Berserker, E5 Samurai, E6 Mage, E7 Cleric, E8 Necromancer, E9 Bard, E10 Alchemist.

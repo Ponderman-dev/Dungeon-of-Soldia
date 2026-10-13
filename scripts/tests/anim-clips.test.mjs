@@ -38,3 +38,6 @@ ok('attack default: weapon swings 75 degrees and back', sampleTrack(atk.tracks.w
 ok('wind-up default: crouch and weapon cocked back', sampleTrack(defaultClip('windup', parts).tracks.body.y, 500) === 1.5 && sampleTrack(defaultClip('windup', parts).tracks.weapon.angle, 500) === -55);
 ok('walk / hurt / death defaults are empty', ['walk', 'hurt', 'death'].every((id) => !Object.keys(defaultClip(id, parts).tracks).length));
 ok('no weapon: no weapon tracks', !defaultClip('attack', { body: {} }).tracks.weapon);
+
+ok('back overshoots then lands', easeValue('back', 0.8) > 1 && Math.abs(easeValue('back', 1) - 1) < 1e-9);
+ok('bounce lands on the next key', Math.abs(easeValue('bounce', 1) - 1) < 1e-9 && easeValue('bounce', 0) === 0);

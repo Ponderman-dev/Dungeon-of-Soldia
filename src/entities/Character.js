@@ -86,7 +86,7 @@ export default class Character extends Phaser.GameObjects.Container {
   // The offsets of the clip that is playing right now (see the top of this file).
   clipPose() {
     if (this.override) return samplePose(this.override.clip, this.override.t);
-    const now = this.scene.time.now;
+    const now = this.now();
     const A = this.anims;
     // A one-shot clip `dur` ms long: time inside the clip, or null when it is over.
     const shot = (id, start, dur, hold) => {
@@ -110,11 +110,16 @@ export default class Character extends Phaser.GameObjects.Container {
     return {};
   }
 
+  // The clock clips run on. A scene can give its own (the studio's slow motion: scene.clipNow()).
+  now() {
+    return this.scene.clipNow ? this.scene.clipNow() : this.scene.time.now;
+  }
+
   // Starts an action clip (if the character has it). dur = how long it should take (ms), stretched.
   playClip(id, dur, hold = false) {
     const clip = this.anims[id];
     if (!clip) return false;
-    this.action = { id, start: this.scene.time.now, dur: dur ?? clip.length, hold };
+    this.action = { id, start: this.now(), dur: dur ?? clip.length, hold };
     return true;
   }
 
@@ -126,14 +131,14 @@ export default class Character extends Phaser.GameObjects.Container {
 
   // Took a hit: a short flinch (only with a hurt clip).
   hurt() {
-    if (this.anims.hurt && this.deathAt === null) this.hurtAt = this.scene.time.now;
+    if (this.anims.hurt && this.deathAt === null) this.hurtAt = this.now();
   }
 
   // Fell: plays the death clip and keeps its last pose (without one: just stops moving).
   die() {
     this.freeze();
     this.action = null;
-    if (this.anims.death) this.deathAt = this.scene.time.now;
+    if (this.anims.death) this.deathAt = this.now();
   }
 
   // Walking (the battle tells it each frame): plays the walk clip on top of the hop.
@@ -164,7 +169,7 @@ export default class Character extends Phaser.GameObjects.Container {
 
   // Gentle idle motion for each part, as described in the part's "idle" data.
   playIdle() {
-    this.idleStart = this.scene.time.now;
+    this.idleStart = this.now();
     this.idleFrozenAt = null;
     if (this.anims.idle) return; // the idle clip does it
     for (const [name, p] of Object.entries(this.def.parts)) {
@@ -277,7 +282,7 @@ export default class Character extends Phaser.GameObjects.Container {
 
   // Stops the idle animation (the character holds its current pose). Used when a hero dies.
   freeze() {
-    if (this.idleFrozenAt === null) this.idleFrozenAt = this.scene.time.now; // the idle clip holds too
+    if (this.idleFrozenAt === null) this.idleFrozenAt = this.now(); // the idle clip holds too
     for (const t of this.idleTweens) t.stop();
     this.idleTweens = [];
   }
@@ -368,6 +373,10 @@ export default class Character extends Phaser.GameObjects.Container {
 
   // Swings the weapon part (if there is one) down and back up again.
   swing(duration) {
+    // An attack clip with a "hit" marker (`hitAt`) is stretched so the marker lands as the hit lands
+    // (the part after it plays as follow-through); without one the whole clip fits the swing time.
+    const atk = this.anims.attack;
+    if (atk && atk.hitAt) duration = (duration * atk.length) / atk.hitAt;
     if (this.playClip('attack', duration)) return;
     const weapon = this.parts.weapon;
     if (!weapon) return;

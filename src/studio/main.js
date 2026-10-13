@@ -66,7 +66,8 @@ for (const c of characters) working[c.key] = clone(gameLook[c.key]);
 
 let zoom = 9;
 let anim = 'idle';
-let tlShow = null; // { clip, t }: the timeline is showing this clip in the preview (null = play like the game)
+let tlShow = null; // { clip, t, ghosts }: the timeline is showing this clip in the preview (null = play like the game)
+let speed = 1; // preview speed (slow motion: 0.5, 0.25)
 let mirror = false; // looking the other way (the game mirrors fighters to face their target)
 
 class StudioScene extends Phaser.Scene {
@@ -75,6 +76,10 @@ class StudioScene extends Phaser.Scene {
   }
 
   create() {
+    // Clips run on this clock, so slow motion slows them too (Character.now() asks for it).
+    this.slowNow = 0;
+    this.clipNow = () => this.slowNow;
+    this.ghosts = [];
     this.grid = this.add.graphics();
     this.marks = this.add.graphics().setDepth(5);
     this.sel = this.add.graphics().setDepth(10);
@@ -83,6 +88,7 @@ class StudioScene extends Phaser.Scene {
     // Tapping the preview picks the front-most part there. With a timeline clip showing, dragging the
     // part moves it at the playhead (adds X / Y keyframes).
     this.input.on('pointerdown', (p) => {
+      if (anim === 'arena' && !tlShow) return;
       const cx = Math.floor(((p.x - STAGE / 2) / zoom) * (mirror ? -1 : 1));
       const cy = Math.floor((p.y - this.feetY()) / zoom);
       const hit = board.pixelAt(cx, cy);
@@ -114,14 +120,38 @@ class StudioScene extends Phaser.Scene {
   // Throws the old figure away and builds a new one from the current data.
   rebuild() {
     if (this.ch) this.ch.destroy();
+    for (const g of this.ghosts) g.destroy();
+    this.ghosts = [];
+    if (this.arenaFoe) this.arenaFoe.destroy();
+    this.arenaFoe = null;
     this.tweens.killAll();
-    if (this.loop) this.loop.remove();
+    this.time.removeAllEvents();
     this.loop = null;
-    this.ch = new Character(this, STAGE / 2, this.feetY(), { parts: look().parts, anims: look().anims });
+    const def = { parts: look().parts, anims: look().anims };
+    // Onion skin: faint red / green ghosts of the pose a moment before / after the playhead.
+    if (tlShow && tlShow.ghosts) {
+      tlShow.ghosts.forEach((t, i) => {
+        const g = new Character(this, STAGE / 2, this.feetY(), def);
+        g.setScale(mirror ? -zoom : zoom, zoom).setAlpha(0.35).setDepth(-1);
+        g.freeze();
+        for (const part of Object.values(g.parts)) part.image.setTint(i ? 0x57e07a : 0xff5a5a).setTintMode(Phaser.TintModes.FILL);
+        g.showClip(tlShow.clip, t);
+        this.ghosts.push(g);
+      });
+    }
+    this.ch = new Character(this, STAGE / 2, this.feetY(), def);
     this.ch.setScale(mirror ? -zoom : zoom, zoom);
     if (anim !== 'idle' || tlShow) this.ch.freeze();
     if (tlShow) this.ch.showClip(tlShow.clip, tlShow.t);
     this.drawGrid();
+  }
+
+  // Shows the timeline's clip at its playhead (and the onion-skin ghosts) without rebuilding.
+  showTimeline() {
+    const want = tlShow && tlShow.ghosts ? tlShow.ghosts.length : 0;
+    if (!this.ch || !this.ch.active || !this.ch.override || this.ghosts.length !== want) return this.play(anim);
+    this.ch.showClip(tlShow.clip, tlShow.t);
+    this.ghosts.forEach((g, i) => g.showClip(tlShow.clip, tlShow.ghosts[i]));
   }
 
   drawGrid() {
@@ -147,7 +177,13 @@ class StudioScene extends Phaser.Scene {
     for (let x = 0; x < STAGE; x += 12) m.lineBetween(x, hy, x + 6, hy);
   }
 
-  update() {
+  update(time, delta) {
+    this.slowNow += delta * speed;
+    if (anim === 'arena' && this.ch && !tlShow) {
+      // Skills lift / crouch the hero (castLift), like followPositions() in the battle.
+      if (!this.ch.moveTween) this.ch.y = this.arenaY - this.ch.castLift;
+      return this.sel.clear();
+    }
     // Skill animation: the scene lifts/crouches the figure by castLift (game pixels, like the battle).
     if (this.ch && anim === 'skill') this.ch.y = this.feetY() - (this.ch.castLift * zoom) / 3;
     const g = this.sel.clear();
@@ -163,6 +199,7 @@ class StudioScene extends Phaser.Scene {
     this.rebuild();
     const ch = this.ch;
     if (tlShow) return; // the timeline decides what is shown
+    if (name === 'arena') return this.arena();
     if (name === 'swing') {
       const go = () => ch.active && anim === 'swing' && ch.swing(combat.attackTiming.hero.swingMs);
       go();
@@ -202,6 +239,91 @@ class StudioScene extends Phaser.Scene {
     }
   }
 }
+
+// ARENA TEST: a little fight at game size with the game's own Character class and the same timings:
+// walk over (walk clip), 3 swings (attack clip, the hit lands at swingMs: flash, hurt clip, damage number),
+// the enemy hits back, a skill (wind-up + release), walk home; every 2nd round the enemy falls (death clip).
+StudioScene.prototype.arena = function () {
+  const S = 3; // game size
+  const me = this.ch;
+  const ground = 292;
+  this.arenaY = ground - (look().hover || 0);
+  me.setScale(S).setPosition(95, this.arenaY);
+  me.homeX = 95;
+  me.homeY = this.arenaY;
+  me.face(1);
+  this.grid.clear();
+  const m = this.marks.clear();
+  m.fillStyle(0x1b1629, 1).fillRect(0, ground, STAGE, STAGE - ground);
+  m.lineStyle(2, 0x3d3460, 1).lineBetween(0, ground, STAGE, ground);
+  const foeKey = byKey[current].kind === 'hero' ? 'enemy-goblin' : 'hero-knight';
+  const foeLook = working[foeKey];
+  const foeY = ground - (foeLook.hover || 0);
+  const makeFoe = () => {
+    const f = new Character(this, 285, foeY, { parts: foeLook.parts, anims: foeLook.anims });
+    f.setScale(S).face(-1);
+    return f;
+  };
+  this.arenaFoe = makeFoe();
+  const live = () => anim === 'arena' && !tlShow && me.active;
+  const swingMs = combat.attackTiming.hero.swingMs;
+  const M = combat.attackMotion;
+  const hop = { height: M.hopHeight, length: M.hopLengthPx };
+  const pop = (target, text, color, big) => {
+    const t = this.add.text(target.x, target.y - 80, text, { fontFamily: 'monospace', fontSize: big ? '22px' : '15px', color, stroke: '#14101f', strokeThickness: 3 }).setOrigin(0.5).setDepth(20);
+    this.tweens.add({ targets: t, y: t.y - 26, alpha: 0, duration: 700, onComplete: () => t.destroy() });
+  };
+  const hit = (target, n, color, big) => {
+    if (!live() || !target.active) return;
+    target.flash(color === '#ffffff' ? 0xffffff : 0xffa040, 90);
+    target.hurt();
+    pop(target, String(n), color, big);
+  };
+  const at = (ms, fn) => this.time.delayedCall(ms, () => live() && fn());
+  let round = 0;
+  const fight = () => {
+    if (!live()) return;
+    round++;
+    const foe = this.arenaFoe;
+    me.moveTo(foe.x - 62, me.homeY, 650, {
+      hop,
+      onDone: () => {
+        if (!live()) return;
+        let t = 0;
+        for (let i = 0; i < 3; i++) {
+          at(t, () => me.swing(swingMs));
+          at(t + swingMs, () => hit(foe, 8 + Math.floor(Math.random() * 6), '#ffffff'));
+          t += 650;
+        }
+        at(t, () => foe.swing(combat.attackTiming.enemy.swingMs));
+        at(t + combat.attackTiming.enemy.swingMs, () => hit(me, 3 + Math.floor(Math.random() * 3), '#ff6b6b'));
+        t += 700;
+        at(t, () => me.castWindUp(700));
+        at(t + 700, () => {
+          me.castRelease('attack');
+          hit(foe, 24 + Math.floor(Math.random() * 8), '#ffa040', true);
+          this.cameras.main.shake(90, 0.006);
+        });
+        t += 1300;
+        if (round % 2 === 0) {
+          at(t, () => {
+            foe.die();
+            this.tweens.add({ targets: foe, alpha: 0, delay: 500, duration: 400 });
+          });
+          at(t + 1100, () => {
+            foe.destroy();
+            this.arenaFoe = makeFoe();
+          });
+          t += 1100;
+        }
+        at(t, () =>
+          me.moveTo(me.homeX, me.homeY, 650, { hop, onDone: () => at(500, () => { me.face(1); fight(); }) }),
+        );
+      },
+    });
+  };
+  at(400, fight);
+};
 
 let scene = null;
 new Phaser.Game({
@@ -271,14 +393,27 @@ const timeline = new Timeline($('timeline'), {
   end: () => endEdit(),
   changed: () => changed({ keepEditor: true, fromTimeline: true }),
   partColor: mainColor,
-  show: (clip, t) => {
+  show: (clip, t, ghosts) => {
     // The timeline takes over the preview; the Play buttons give it back.
-    tlShow = { clip, t };
+    tlShow = { clip, t, ghosts };
     document.querySelectorAll('[data-anim]').forEach((b) => b.classList.remove('on'));
-    if (scene && scene.ch && scene.ch.active) {
-      if (!scene.ch.override) scene.play(anim);
-      scene.ch.showClip(clip, t);
-    }
+    if (scene && scene.grid) scene.showTimeline();
+  },
+  speed: () => speed,
+  others: () => characters.filter((c) => c.key !== current).map((c) => ({ key: c.key, name: c.name })),
+  copyClipTo: (key, id, clip) => {
+    // Only the layers whose part names the other character also has come along.
+    const other = working[key];
+    const tracks = {};
+    for (const [part, t] of Object.entries(clip.tracks)) if (other.parts[part]) tracks[part] = clone(t);
+    const n = Object.keys(tracks).length;
+    if (!n && Object.keys(clip.tracks).length) return toast(`${byKey[key].name} has none of these parts`);
+    other.anims = other.anims || {};
+    other.anims[id] = { length: clip.length, tracks };
+    if (clip.hitAt) other.anims[id].hitAt = clip.hitAt;
+    persistDraft();
+    fillPicker();
+    toast(`Copied to ${byKey[key].name}`);
   },
 });
 
@@ -662,6 +797,15 @@ document.addEventListener('click', (e) => {
     mirror = !mirror;
     t.classList.toggle('on', mirror);
     return redraw();
+  }
+  if (t.dataset.speed) {
+    speed = Number(t.dataset.speed);
+    document.querySelectorAll('[data-speed]').forEach((b) => b.classList.toggle('on', b === t));
+    if (scene && scene.grid) {
+      scene.tweens.timeScale = speed;
+      scene.time.timeScale = speed;
+    }
+    return;
   }
   if (t.dataset.zoom) {
     zoom = Number(t.dataset.zoom);

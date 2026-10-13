@@ -8,13 +8,15 @@ import { partArt, artPixels } from '../systems/pixelArt.js';
 const SNAP = 10; // keys and the playhead snap to 10 ms
 const LABELS = { x: 'Position X', y: 'Position Y', angle: 'Rotation' };
 const UNITS = { x: 'px', y: 'px', angle: '°' };
-const EASE_LABELS = { linear: 'Linear', ease: 'Ease in/out', hold: 'Hold (jump)' };
+const EASE_LABELS = { linear: 'Linear', ease: 'Ease in/out', back: 'Overshoot', bounce: 'Bounce', hold: 'Hold (jump)' };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const round = (v, step) => Math.round(v / step) * step;
 const fmt = (v) => String(Math.round(v * 100) / 100);
 
 export default class Timeline {
   // hooks: look(), name() (the character's name), selected(), select(name), begin(), end(), changed() (data changed),
+  // speed() (playback speed: 1, 0.5, 0.25), others() ([{ key, name }] other characters),
+  // copyClipTo(key, id, clip) (give another character this clip),
   // show(clip | null, t) (preview this clip at time t), partColor(part)
   constructor(root, hooks) {
     this.root = root;
@@ -25,6 +27,9 @@ export default class Timeline {
     this.collapsed = new Set();
     this.selKey = null; // { part, prop, key } (key = the keyframe object)
     this.drafts = new WeakMap();
+    this.onion = false; // onion skin: faint ghosts of the pose a moment before (red) and after (green)
+    this.onionGap = 60; // ms between the playhead and each ghost
+    this.copied = null; // a copied keyframe { prop, v, ease }
     this.drag = null;
     root.addEventListener('click', (e) => this.click(e));
     root.addEventListener('change', (e) => this.change(e));
@@ -100,7 +105,11 @@ export default class Timeline {
 
   // Tell the preview what to show.
   show() {
-    this.h.show(this.clip() || null, this.t);
+    const len = this.length();
+    const loop = CLIP_INFO[this.clipId].loop;
+    const at = (t) => (loop ? ((t % len) + len) % len : Math.max(0, Math.min(len, t)));
+    const ghosts = this.onion ? [at(this.t - this.onionGap), at(this.t + this.onionGap)] : null;
+    this.h.show(this.clip() || null, this.t, ghosts);
   }
 
   setTime(t) {
@@ -116,7 +125,7 @@ export default class Timeline {
       const step = (now) => {
         if (!this.playing) return;
         const len = this.length();
-        this.t = (this.t + (now - last)) % len;
+        this.t = (this.t + (now - last) * this.h.speed()) % len;
         last = now;
         this.show();
         this.renderPlayhead();
@@ -204,11 +213,41 @@ export default class Timeline {
       }
       case 'tl-key-delete':
         return this.deleteKey();
+      case 'tl-onion':
+        this.onion = !this.onion;
+        this.show();
+        return this.render();
+      case 'tl-key-copy': {
+        const s = this.selKey;
+        if (!s) return;
+        this.copied = { prop: s.prop, v: s.key.v, ease: s.key.ease };
+        return this.render();
+      }
+      case 'tl-key-paste': {
+        // The copied value goes on the same property of the selected layer, at the playhead.
+        const part = this.h.selected();
+        if (!this.copied || !part) return;
+        this.begin();
+        setKey(this.keys(part, this.copied.prop, true), Math.round(this.t), this.copied.v, this.copied.ease);
+        this.h.end();
+        this.h.changed();
+        this.show();
+        return this.render();
+      }
     }
   }
 
   change(e) {
     const t = e.target;
+    if (t.id === 'tl-onion-gap') {
+      this.onionGap = Number(t.value) || 60;
+      return this.show();
+    }
+    if (t.id === 'tl-copy-to' && t.value) {
+      this.h.copyClipTo(t.value, this.clipId, this.clip());
+      t.value = '';
+      return;
+    }
     if (t.id === 'tl-length') {
       const v = Math.max(50, Math.min(5000, round(Number(t.value) || 0, SNAP)));
       this.begin();
@@ -246,6 +285,14 @@ export default class Timeline {
   }
 
   down(e) {
+    // The "hit" marker (attack clip): drag it to the moment the hit should land.
+    if (e.target.closest('.tl-hit')) {
+      e.preventDefault();
+      if (this.playing) this.togglePlay();
+      this.begin();
+      this.drag = { kind: 'hit' };
+      return;
+    }
     // Playhead: drag on the ruler.
     if (e.target.closest('.tl-ruler')) {
       if (this.playing) this.togglePlay();
@@ -288,6 +335,15 @@ export default class Timeline {
     const d = this.drag;
     if (!d) return;
     if (d.kind === 'time') this.setTime(this.timeAt(e));
+    else if (d.kind === 'hit') {
+      const clip = this.clip();
+      const t = Math.max(SNAP, Math.min(clip.length, round(this.timeAt(e), SNAP)));
+      if (t === clip.length) delete clip.hitAt;
+      else clip.hitAt = t;
+      this.h.changed();
+      this.setTime(t);
+      this.render();
+    }
     else if (d.kind === 'key') {
       const keys = this.keys(d.part, d.prop);
       const t = Math.max(0, Math.min(this.length(), round(this.timeAt(e), SNAP)));
@@ -311,7 +367,7 @@ export default class Timeline {
     const d = this.drag;
     if (!d) return;
     this.drag = null;
-    if (d.kind === 'key' || d.kind === 'scrub') this.h.end();
+    if (d.kind === 'key' || d.kind === 'scrub' || d.kind === 'hit') this.h.end();
   }
 
   deleteKey() {
@@ -416,6 +472,25 @@ export default class Timeline {
             <label>then <select id="tl-key-ease">${EASES.map((x) => `<option value="${x}"${(s.key.ease || 'ease') === x ? ' selected' : ''}>${EASE_LABELS[x]}</option>`).join('')}</select></label>
             <button id="tl-key-delete" class="btn danger">Delete key</button></div>`
         : `<p class="hint">Tap a diamond to edit it. Drag diamonds to move them in time. Drag a property name left/right to change its value, or drag the part in the preview.</p>`;
+      const hitAt = clip.hitAt ?? len;
+      const hitFlag =
+        this.clipId === 'attack'
+          ? `<div class="tl-hit" style="left:${(hitAt / len) * 100}%" title="HIT: the moment the damage lands. Drag it (the part after it plays as follow-through).">HIT</div>`
+          : '';
+      const others = this.h.others();
+      const tools = `<div class="tl-tools">
+          <button id="tl-onion" class="btn${this.onion ? ' on' : ''}" title="Faint ghosts of the pose just before (red) and after (green) the playhead">Onion skin</button>
+          <label class="tl-len">gap <select id="tl-onion-gap">${[30, 60, 100, 150]
+            .map((g) => `<option value="${g}"${g === this.onionGap ? ' selected' : ''}>${g} ms</option>`)
+            .join('')}</select></label>
+          <span class="tl-sep"></span>
+          <button id="tl-key-copy" class="btn"${s ? '' : ' disabled'} title="Copy the selected keyframe's value">Copy key</button>
+          <button id="tl-key-paste" class="btn"${this.copied && sel ? '' : ' disabled'} title="Paste it on the selected layer at the playhead">Paste key${this.copied ? ` (${LABELS[this.copied.prop]} ${fmt(this.copied.v)})` : ''}</button>
+          <span class="tl-sep"></span>
+          <select id="tl-copy-to" aria-label="Copy this clip to another character"><option value="">Copy this clip to…</option>${others
+            .map((o) => `<option value="${o.key}">${esc(o.name)}</option>`)
+            .join('')}</select>
+        </div>`;
       body = `<div class="tl-controls">
           <button id="tl-start" class="btn tool" title="Go to start" aria-label="Go to start">⏮</button>
           <button id="tl-prev" class="btn tool" title="Previous keyframe" aria-label="Previous keyframe">◂◆</button>
@@ -434,10 +509,11 @@ export default class Timeline {
         }</p>
         <div class="tl-grid">
           <div class="tl-left"><div class="tl-row ruler-left"><span class="label">Layers</span></div>${left.join('')}</div>
-          <div class="tl-right"><div class="tl-row tl-ruler"><div class="tl-lane">${ticks.join('')}</div></div>${right.join('')}
+          <div class="tl-right"><div class="tl-row tl-ruler"><div class="tl-lane">${ticks.join('')}${hitFlag}</div></div>${right.join('')}
             <div class="tl-playhead-wrap"><div class="tl-playhead" style="left:${(this.t / len) * 100}%"></div></div></div>
         </div>
-        ${keyInfo}`;
+        ${keyInfo}
+        ${tools}`;
     }
     this.root.innerHTML = `<div class="head"><h2>Timeline</h2><span class="hint">${notes[this.clipId]}${info.loop ? ' Loops.' : ''}</span></div>
       <div class="tabs" role="tablist">${tabs}</div>${body}`;

@@ -3,8 +3,9 @@
 //   anims.attack = { length: 400, tracks: { weapon: { angle: [{ t: 0, v: 0, ease: "ease" }, { t: 200, v: 90 }] } } }
 // Each track moves one part's x, y (pixels, added to where the part is drawn) or angle (degrees, turns
 // around the part's anchor). `ease` is how the value travels to the NEXT keyframe:
-// "linear", "ease" (slow-fast-slow) or "hold" (stays, then jumps).
-// The game stretches attack to the swing time and wind-up to the skill's charge time.
+// "linear", "ease" (slow-fast-slow), "back" (overshoots, settles), "bounce" or "hold" (stays, then jumps).
+// The game stretches attack to the swing time (or, with `hitAt`, so that moment lands as the hit lands)
+// and wind-up to the skill's charge time.
 
 export const CLIPS = [
   { id: 'idle', label: 'Idle', length: 1000, loop: true },
@@ -18,10 +19,24 @@ export const CLIPS = [
 ];
 export const CLIP_INFO = Object.fromEntries(CLIPS.map((c) => [c.id, c]));
 export const PROPS = ['x', 'y', 'angle'];
-export const EASES = ['linear', 'ease', 'hold'];
+export const EASES = ['linear', 'ease', 'back', 'bounce', 'hold'];
 
 export function easeValue(name, p) {
   if (name === 'hold') return 0;
+  if (name === 'back') {
+    // Overshoots a little past the next key, then settles on it.
+    const c = 1.70158;
+    return 1 + (c + 1) * (p - 1) ** 3 + c * (p - 1) ** 2;
+  }
+  if (name === 'bounce') {
+    // Lands on the next key and bounces a few times, like a dropped ball.
+    const n = 7.5625;
+    const d = 2.75;
+    if (p < 1 / d) return n * p * p;
+    if (p < 2 / d) return n * (p -= 1.5 / d) * p + 0.75;
+    if (p < 2.5 / d) return n * (p -= 2.25 / d) * p + 0.9375;
+    return n * (p -= 2.625 / d) * p + 0.984375;
+  }
   if (name === 'ease') return 0.5 - Math.cos(p * Math.PI) / 2;
   return p;
 }

@@ -149,6 +149,12 @@
       .tl-playhead-wrap { position: absolute; inset: 0 10px; pointer-events: none; }
       .tl-playhead { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #d65b5b; }
       .tl-playhead::before { content: ''; position: absolute; top: 0; left: -5px; border: 6px solid transparent; border-top-color: #d65b5b; }
+      .tl-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
+      .tl-tools select { padding: 6px 8px; }
+      .tl-sep { width: 1px; height: 24px; background: var(--line); margin-inline: 4px; }
+      .tl-hit { position: absolute; top: 0; transform: translateX(-50%); background: #d65b5b; color: #fff; font: 700 9px var(--font-data); letter-spacing: 0.05em; padding: 1px 4px; border-radius: 3px; cursor: ew-resize; z-index: 2; touch-action: none; }
+      .tl-key.back { background: #c8a0ff; }
+      .tl-key.bounce { background: #57c26a; }
       .tl-keyinfo { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 13px; }
       .tl-keyinfo label { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
       kbd { font: 11px var(--font-data); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; color: var(--muted); }
@@ -180,6 +186,7 @@
             <button class="btn" data-anim="hurt">Hurt</button>
             <button class="btn" data-anim="death">Death</button>
             <button class="btn" data-anim="flash">Hit flash</button>
+            <button class="btn" data-anim="arena" title="A little fight at game size: walk, hits, skill, hurt and death">Arena</button>
           </div>
           <div class="row">
             <span class="label">Zoom</span>
@@ -187,6 +194,12 @@
             <button class="btn" data-zoom="6">6x</button>
             <button class="btn on" data-zoom="9">9x</button>
             <button id="mirror" class="btn">Mirror</button>
+          </div>
+          <div class="row">
+            <span class="label">Speed</span>
+            <button class="btn on" data-speed="1">1×</button>
+            <button class="btn" data-speed="0.5">½×</button>
+            <button class="btn" data-speed="0.25">¼×</button>
           </div>
         </div>
         <p class="hint" id="stage-hint">Tap a part in the preview to pick it.</p>

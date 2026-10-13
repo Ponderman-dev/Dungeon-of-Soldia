@@ -254,6 +254,11 @@ const board = new Board($('board'), {
   begin: () => beginEdit(),
   end: () => endEdit(),
   changed: () => changed({ keepEditor: true }),
+  cancel: () => cancelEdit(),
+  holdPick: (c) => {
+    setColor(c);
+    toast('Colour picked');
+  },
 });
 
 const timeline = new Timeline($('timeline'), {
@@ -320,6 +325,7 @@ function renderSwatches() {
 
 let editOpen = false;
 let editTimer = null;
+let redoBefore = []; // the redo list from before the edit in progress (a cancelled edit gives it back)
 
 function beginEdit() {
   clearTimeout(editTimer);
@@ -327,6 +333,7 @@ function beginEdit() {
   const h = hist();
   h.undo.push(JSON.stringify(look()));
   if (h.undo.length > 100) h.undo.shift();
+  redoBefore = h.redo;
   h.redo = [];
   editOpen = true;
   renderUndo();
@@ -340,6 +347,21 @@ function endEdit() {
 function softEdit() {
   beginEdit();
   editTimer = setTimeout(endEdit, 600);
+}
+
+// Throws away the edit in progress (e.g. the first finger of a two-finger tap had started a stroke).
+function cancelEdit() {
+  clearTimeout(editTimer);
+  if (!editOpen) return;
+  editOpen = false;
+  const h = hist();
+  working[current] = JSON.parse(h.undo.pop());
+  h.redo = redoBefore;
+  if (selected && !look().parts[selected]) selected = null;
+  timeline.selKey = null;
+  renderAll();
+  redraw();
+  persistDraft();
 }
 
 function undoRedo(from, to) {
@@ -713,6 +735,69 @@ function setMode(m) {
     redraw();
   }
 }
+
+// ---- iPad gestures (like Procreate) ---------------------------------------------------------------
+// Two-finger tap = undo, three-finger tap = redo (a quick tap without sliding). The first finger may
+// already have started a stroke or a drag: that is thrown away as soon as the second finger lands.
+
+let gesture = null;
+
+function toast(text) {
+  const t = $('toast');
+  t.textContent = text;
+  t.hidden = false;
+  t.classList.remove('show');
+  void t.offsetWidth; // restart the fade
+  t.classList.add('show');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => (t.hidden = true), 900);
+}
+
+function stopDrags() {
+  board.cancel();
+  timeline.drag = null;
+  if (scene) scene.drag = null;
+  cancelEdit();
+}
+
+document.addEventListener(
+  'touchstart',
+  (e) => {
+    if (!gesture) gesture = { start: performance.now(), max: 0, moved: false, from: new Map() };
+    for (const t of e.changedTouches) gesture.from.set(t.identifier, [t.clientX, t.clientY]);
+    gesture.max = Math.max(gesture.max, e.touches.length);
+    if (e.touches.length >= 2) stopDrags();
+  },
+  { passive: true },
+);
+document.addEventListener(
+  'touchmove',
+  (e) => {
+    if (!gesture) return;
+    for (const t of e.changedTouches) {
+      const f = gesture.from.get(t.identifier);
+      if (f && Math.hypot(t.clientX - f[0], t.clientY - f[1]) > 14) gesture.moved = true;
+    }
+  },
+  { passive: true },
+);
+const touchEnd = (e) => {
+  if (!gesture || e.touches.length) return;
+  const g = gesture;
+  gesture = null;
+  if (g.moved || performance.now() - g.start > 400 || g.max < 2) return;
+  if (g.max === 2) {
+    const can = hist().undo.length;
+    undoRedo('undo', 'redo');
+    toast(can ? 'Undo' : 'Nothing to undo');
+  } else if (g.max === 3) {
+    const can = hist().redo.length;
+    undoRedo('redo', 'undo');
+    toast(can ? 'Redo' : 'Nothing to redo');
+  }
+};
+document.addEventListener('touchend', touchEnd, { passive: true });
+document.addEventListener('touchcancel', touchEnd, { passive: true });
 
 // Keyboard shortcuts (not while typing in a box).
 document.addEventListener('keydown', (e) => {

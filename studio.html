@@ -25,6 +25,13 @@
       }
       * { box-sizing: border-box; }
       [hidden] { display: none !important; }
+      /* iPad: no double-tap zoom, no long-press menus or text selection on the drawing areas. */
+      body { touch-action: manipulation; }
+      #board, #stage, .tl-grid, .tools, .tl-controls { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+      .toast { position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%); background: var(--fg); color: var(--bg); font: 700 15px var(--font-display); letter-spacing: 0.03em; padding: 8px 18px; border-radius: 999px; pointer-events: none; z-index: 10; }
+      .toast.show { animation: toast 0.9s ease-out forwards; }
+      @keyframes toast { 0% { opacity: 0; transform: translate(-50%, 6px); } 15%, 70% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+      @media (prefers-reduced-motion: reduce) { .toast.show { animation: none; } }
       html, body { background: var(--bg); color: var(--fg); }
       body { margin: 0; font: 14px/1.45 var(--font-body); padding-inline: 16px; padding-block: 12px 32px; }
       button, input, select { font: inherit; color: inherit; }
@@ -209,7 +216,7 @@
             <label class="check"><input type="checkbox" id="filled" /> Filled rectangle</label>
             <label class="check"><input type="checkbox" id="dim" checked /> Dim other parts</label>
           </div>
-          <p class="hint">Each square is one pixel. Drawing outside the part makes it bigger; erasing its edges shrinks it. The <b>anchor</b> (crosshair) is the point the part turns around: put a sword's anchor on its handle. Keys: <kbd>B</kbd> pencil, <kbd>E</kbd> eraser, <kbd>L</kbd> line, <kbd>R</kbd> rectangle, <kbd>G</kbd> fill, <kbd>I</kbd> pick colour, <kbd>A</kbd> anchor, <kbd>M</kbd> move.</p>
+          <p class="hint">Each square is one pixel. Drawing outside the part makes it bigger; erasing its edges shrinks it. The <b>anchor</b> (crosshair) is the point the part turns around: put a sword's anchor on its handle. Keys: <kbd>B</kbd> pencil, <kbd>E</kbd> eraser, <kbd>L</kbd> line, <kbd>R</kbd> rectangle, <kbd>G</kbd> fill, <kbd>I</kbd> pick colour, <kbd>A</kbd> anchor, <kbd>M</kbd> move. On iPad: <b>two-finger tap</b> = undo, <b>three-finger tap</b> = redo, <b>touch and hold</b> with a finger = pick that colour.</p>
         </div>
         </section>
         <section class="col">
@@ -245,6 +252,7 @@
       </div>
     </main>
 
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
     <script type="module" src="/src/studio/main.js"></script>
   </body>
 </html>

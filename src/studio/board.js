@@ -125,7 +125,8 @@ function rectCells(x0, y0, x1, y1, filled) {
 
 export default class Board {
   // hooks: look(), selected(), select(name), color() (number), pickColor(number), tool(), setTool(name),
-  // filled(), dim(), begin() (before an edit: for undo), end() (edit finished), changed()
+  // filled(), dim(), begin() (before an edit: for undo), end() (edit finished), changed(),
+  // cancel() (throw away the edit in progress), holdPick(number) (touch and hold picked a colour)
   constructor(canvas, hooks) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
@@ -168,6 +169,7 @@ export default class Board {
   }
 
   down(ev) {
+    if (!ev.isPrimary) return; // a second finger is a gesture (two-finger tap = undo), not drawing
     const cell = this.cellAt(ev);
     const tool = this.h.tool();
     this.canvas.setPointerCapture(ev.pointerId);
@@ -186,6 +188,17 @@ export default class Board {
     if (!p) return;
     this.h.begin();
     this.drag = { tool, start: cell, last: cell, x: p.x, y: p.y };
+    // A finger (not the Apple Pencil) held still on one pixel picks its colour, like Procreate.
+    if (ev.pointerType === 'touch' && ['pencil', 'eraser', 'line', 'rect'].includes(tool)) {
+      this.hold = setTimeout(() => {
+        const d = this.drag;
+        if (!d || d.last[0] !== cell[0] || d.last[1] !== cell[1]) return;
+        this.cancel();
+        this.h.cancel();
+        const hit = this.pixelAt(...cell);
+        if (hit) this.h.holdPick(hit.color);
+      }, 450);
+    }
     if (tool === 'pencil' || tool === 'eraser') this.paint([cell]);
     else if (tool === 'fill') {
       this.fill(cell);
@@ -195,6 +208,7 @@ export default class Board {
   }
 
   move(ev) {
+    if (!ev.isPrimary) return;
     const cell = this.cellAt(ev);
     this.hover = cell;
     const d = this.drag;
@@ -209,12 +223,22 @@ export default class Board {
         p.y = d.y + (cell[1] - d.start[1]);
         this.h.changed();
       }
+      if (cell[0] !== d.last[0] || cell[1] !== d.last[1]) clearTimeout(this.hold);
       d.last = cell;
     }
     this.render();
   }
 
-  up() {
+  // Stops the stroke in progress without finishing it (the caller throws its changes away).
+  cancel() {
+    clearTimeout(this.hold);
+    this.drag = null;
+    this.render();
+  }
+
+  up(ev) {
+    if (ev && !ev.isPrimary) return;
+    clearTimeout(this.hold);
     const d = this.drag;
     if (!d) return;
     if (d.tool === 'line') this.paint(lineCells(d.start[0], d.start[1], d.last[0], d.last[1]));

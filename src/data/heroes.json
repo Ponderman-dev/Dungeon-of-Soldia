@@ -394,8 +394,8 @@
       "mods": [
         {
           "stat": "defense",
-          "flat": 4,
-          "growth": 0.15
+          "flat": 6,
+          "growth": 0.2
         }
       ]
     },
@@ -500,18 +500,18 @@
       "support": "arcane_ward"
     },
     "perk": {
-      "name": "Arcane Mind",
+      "name": "Arcane Haste",
       "mods": [
         {
-          "stat": "attack",
+          "stat": "attackEfficiency",
           "percent": 6,
-          "growth": 0.3
+          "growth": 0.25
         }
       ]
     },
     "passive": {
       "name": "Spellweaver",
-      "description": "Every 4th basic attack is a free empowered spell: bonus fire damage, Burn, and all his on-hit items go off.",
+      "description": "Every 4th basic attack is a free empowered spell that cycles Fire (Burn), Ice (2 Chill) and Electric (Shock), and all his on-hit items go off.",
       "counter": {
         "id": "spellweave",
         "label": "SPELL",
@@ -531,7 +531,41 @@
             "damageMultiplier": 0.3
           }
         ],
-        "forceProcs": true
+        "forceProcs": true,
+        "rotation": [
+          {
+            "damageType": "fire",
+            "color": "#ff9a4d",
+            "apply": [
+              {
+                "status": "burn",
+                "durationMs": 4000,
+                "damageMultiplier": 0.3
+              }
+            ]
+          },
+          {
+            "damageType": "ice",
+            "color": "#7fd8ff",
+            "apply": [
+              {
+                "status": "chill",
+                "durationMs": 6000,
+                "stacks": 2
+              }
+            ]
+          },
+          {
+            "damageType": "electric",
+            "color": "#ffe94d",
+            "apply": [
+              {
+                "status": "shock",
+                "durationMs": 4000
+              }
+            ]
+          }
+        ]
       }
     },
     "parts": {
@@ -623,9 +657,9 @@
       "name": "Blessing",
       "mods": [
         {
-          "stat": "resist",
-          "flat": 5,
-          "growth": 0.15
+          "stat": "health",
+          "percent": 8,
+          "growth": 0.35
         }
       ]
     },
@@ -733,7 +767,7 @@
       "name": "Grim Resolve",
       "mods": [
         {
-          "stat": "health",
+          "stat": "attack",
           "percent": 6,
           "growth": 0.3
         }
@@ -835,7 +869,7 @@
       "mods": [
         {
           "stat": "evasion",
-          "flat": 5,
+          "flat": 6,
           "growth": 0.2
         }
       ]
@@ -939,9 +973,9 @@
       "name": "Volatile Mix",
       "mods": [
         {
-          "stat": "crit",
-          "flat": 4,
-          "growth": 0.15
+          "stat": "resist",
+          "flat": 6,
+          "growth": 0.2
         }
       ]
     },

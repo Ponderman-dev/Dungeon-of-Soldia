@@ -762,8 +762,9 @@ export default class BattleState {
     for (const f of empower) {
       const c = f.counter;
       // Metronome (on the counter's holder): the empowered beat hits harder.
-      if (c.strike && target.alive) this.strike(unit, target, events, { multiplier: c.strike.damageMultiplier * (1 + ((f.holder.specials.metronome || 0) / 100)), damageType: c.strike.damageType });
-      if (target.alive && !hit.dodged) for (const spec of c.apply || []) this.applyStatus(target, spec, unit, `counter_${f.holder.uid}`, events);
+      const el = f.element; // a counter with a `rotation` (Mage) cycles its elements: damage type + debuff of this beat
+      if (c.strike && target.alive) this.strike(unit, target, events, { multiplier: c.strike.damageMultiplier * (1 + ((f.holder.specials.metronome || 0) / 100)), damageType: el ? el.damageType : c.strike.damageType });
+      if (target.alive && !hit.dodged) for (const spec of (el ? el.apply : c.apply) || []) this.applyStatus(target, spec, unit, `counter_${f.holder.uid}`, events);
     }
     this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, force: empower.some((f) => f.counter.forceProcs) });
     // Fire Arrows: ranged attacks have a 50% chance (it does not stack) for an extra fire hit; more copies hit harder.
@@ -898,8 +899,10 @@ export default class BattleState {
         continue; // charged, waiting for somebody to be hurt
       }
       if (hit) holder.counterCount = 0;
-      if (hit) fired.push({ holder, counter: c });
-      events.push({ type: 'beat', unit, holder, counter: c, count: hit ? c.every : holder.counterCount, fired: hit, target });
+      const element = hit && c.rotation ? c.rotation[(holder.beatsFired || 0) % c.rotation.length] : null;
+      if (element) holder.beatsFired = (holder.beatsFired || 0) + 1;
+      if (hit) fired.push({ holder, counter: c, element });
+      events.push({ type: 'beat', unit, holder, counter: c, count: hit ? c.every : holder.counterCount, fired: hit, target, color: element && element.color });
     }
     return fired;
   }

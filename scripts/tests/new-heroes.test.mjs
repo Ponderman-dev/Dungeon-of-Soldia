@@ -186,3 +186,8 @@ const T = ['knight', 'rogue'];
 { const { s, a, h } = mk(['alchemist', ...T], ['goblin'], () => 0); // rng 0 picks the first flask and the first hero
   h[0].hp = 1000; const ev = cast(s, a, 'support');
   ok('...the heal flask heals 22% of max health', h[0].hp > 1000 + h[0].maxHp * 0.2); }
+
+// Mage Spellweaver cycles elements: fire+burn, ice+chill, electric+shock
+{ const { s, a, es } = mk(['mage', ...T], ['goblin']); const [g] = es; g.hp = g.maxHp = 1e9; g.weak = []; g.resists = [];
+  const seen = []; for (let beat = 0; beat < 3; beat++) { g.statuses = []; let types = []; for (let i = 0; i < 4; i++) { const ev = []; s.landAttack(a, g, ev); if (i === 3) types = ev.filter((e) => e.type === 'attack').map((e) => e.damageType); } seen.push(types[1] + ':' + [...new Set(g.statuses.map((x) => x.type).filter((t) => ['burn', 'chill', 'shock'].includes(t)))].join('+')); }
+  ok('Spellweaver cycles fire/burn, ice/chill, electric/shock', seen.join() === 'fire:burn,ice:chill,electric:shock', seen.join()); }

@@ -440,7 +440,9 @@ export default class BattleScene extends Phaser.Scene {
     const counter = view.unit.side === 'hero' && view.unit.alive ? view.unit.def.counter : null;
     if (view.unit.steady) tags.unshift({ label: 'STEADY', color: '#9fe0ff', textColor: '#000000' });
     // The count is shown on the hero itself: after the (N-1)th attack the weapon shines until the Nth goes off.
-    view.ch.setGlow(counter && view.unit.counterCount >= counter.every - 1 ? Phaser.Display.Color.HexStringToColor(counter.color || '#c8a0ff').color : null);
+    // (a counter with a rotation shows the colour of the element that comes NEXT)
+    const next = counter && counter.rotation ? counter.rotation[(view.unit.beatsFired || 0) % counter.rotation.length].color : null;
+    view.ch.setGlow(counter && view.unit.counterCount >= counter.every - 1 ? Phaser.Display.Color.HexStringToColor(next || counter.color || '#c8a0ff').color : null);
     let x = 0;
     for (const info of tags) {
       const chip = this.add
@@ -773,7 +775,7 @@ export default class BattleScene extends Phaser.Scene {
       this.drawChips(this.views.get(e.holder.uid));
       if (!e.fired) return;
       const v = this.views.get(e.unit.uid);
-      const color = Phaser.Display.Color.HexStringToColor(e.counter.color || '#c8a0ff').color;
+      const color = Phaser.Display.Color.HexStringToColor(e.color || e.counter.color || '#c8a0ff').color;
       v.ch.flash(color, 160);
       const tv = e.counter.effect === 'empower' && e.target ? this.views.get(e.target.uid) : null;
       const c = this.center(tv || v);

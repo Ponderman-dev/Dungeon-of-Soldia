@@ -97,6 +97,9 @@ export default class BattleState {
       walked: 0, // total distance walked (the scene uses it for the hop rhythm)
       knock: null, // being knocked back: { vx, vy, remaining }
       casting: null, // a skill winding up: { index, remaining, total }
+      regenAcc: 0, // health gained from regen this second
+      regenClock: 0,
+      taunting: false, // Spite Mail: the holder has a taunted enemy
       sinceHit: 0, // ms since the unit last lost health (Archer's Steady Aim)
       steady: false, // Steady Aim is active
       floor: {}, // flags that reset every floor
@@ -439,6 +442,13 @@ export default class BattleState {
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
       hero.sinceHit = 0; // Steady Aim starts counting again with every fight
+      // Fire Heart: a fire shield at the start of every floor (20% max health per copy) that slowly regenerates and burns attackers.
+      if (hero.specials.fireHeart) {
+        const amount = (hero.maxHp * hero.specials.fireHeart) / 100 * (1 + (hero.specials.shieldBonus || 0) / 100);
+        hero.statuses = hero.statuses.filter((st) => st.key !== 'shield:fireheart');
+        hero.statuses.push({ key: 'shield:fireheart', type: 'shield', amount, maxAmount: amount, remaining: Infinity, total: Infinity, sourceUid: hero.uid, onBreak: null, regenPerSec: amount * 0.05, burns: true });
+        events.push({ type: 'status', unit: hero, change: 'apply', status: hero.statuses[hero.statuses.length - 1] });
+      }
       for (const src of hero.minionSources || []) {
         const st = this.sourceState(hero, src.key);
         if (src.kind === 'weak') {
@@ -574,8 +584,20 @@ export default class BattleState {
       // Regen (Heart Charm) and the Cleric's aura: every hero regenerates a little, and regen/heals from items are stronger.
       const aura = this.regenAura();
       const regen = ((hero.specials && hero.specials.regen) || 0) * aura.factor + aura.base; // % of max health per second
-      if (regen > 0) hero.hp = Math.min(hero.maxHp, hero.hp + (hero.maxHp * regen * dt) / 100000);
+      if (regen > 0) {
+        const gain = Math.min(hero.maxHp - hero.hp, (hero.maxHp * regen * dt) / 100000);
+        hero.hp += gain;
+        hero.regenAcc += gain;
+      }
+      hero.regenClock += dt;
+      if (hero.regenClock >= 1000) { // regen counts as ONE heal per second for "heal received" items
+        hero.regenClock -= 1000;
+        if (hero.regenAcc >= 1) this.onHealed(hero, hero.regenAcc, events);
+        hero.regenAcc = 0;
+      }
       this.tickSteadyAim(hero, dt);
+      this.tickTaunting(hero);
+      if (hero.floor.martyrCd > 0) hero.floor.martyrCd -= dt;
       hero.shareCd = Math.max(0, hero.shareCd - dt);
       this.tickSpawner(hero, dt, events);
       for (const slot of hero.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - dt);
@@ -718,6 +740,33 @@ export default class BattleState {
     return { dur: 1 + dur / 100, dot: 1 + dot / 100 };
   }
 
+  // Martyr's Shield: 8% (fixed) that a living hero holding it, who is not the target and is off cooldown, steps in.
+  martyrFor(target) {
+    for (const h of this.heroes) {
+      if (h === target || !h.alive || !h.specials.martyr || (h.floor.martyrCd || 0) > 0) continue;
+      if (this.rng() * 100 < h.specials.martyr) return h;
+    }
+    return null;
+  }
+
+  // Martyr's cooldown in ms: 6s, 20% shorter for every extra copy.
+  martyrCooldown(copies) {
+    return 6000 * Math.pow(0.8, copies - 1);
+  }
+
+  // Spite Mail: while the holder has a taunted enemy (it taunted one that still lives) he gets +defense and reflect.
+  tickTaunting(hero) {
+    if (!hero.specials || !hero.specials.spiteMail) {
+      if (hero.taunting) hero.taunting = false;
+      return;
+    }
+    const now = this.enemies.some((e) => e.alive && this.tauntedBy(e) === hero);
+    if (now !== hero.taunting) {
+      hero.taunting = now;
+      this.refreshStats();
+    }
+  }
+
   // Archer: after `afterMs` without being hit he gets attack speed and crit (hero.steady) until hit again.
   tickSteadyAim(hero, dt) {
     const sa = hero.def.passive && hero.def.passive.steadyAim;
@@ -829,10 +878,8 @@ export default class BattleState {
     if (!ally) return false;
     const h = counter.heal || {};
     const amount = Math.max(1, Math.round(((h.percentMaxHp || 0) * ally.maxHp) / 100 + (h.attackMultiplier || 0) * holder.stats.attack));
-    const got = Math.min(ally.maxHp - ally.hp, amount);
-    ally.hp += got;
     events.push({ type: 'proc', unit: holder, label: counter.firedLabel || 'Heal!' });
-    events.push({ type: 'heal', unit: ally, amount: got });
+    this.healUnit(ally, amount, events, { aura: false });
     return true;
   }
 
@@ -841,6 +888,18 @@ export default class BattleState {
   // basic (a hero's/enemy's normal attack, not a skill or item hit),
   // projectile ('bomb', 'lightning': the scene draws it flying from the attacker).
   strike(attacker, target, events, opts = {}) {
+    // Martyr's Shield: when an enemy hits a hero, another hero holding it may take the hit instead.
+    if (attacker.side === 'enemy' && target.side === 'hero' && !target.minion) {
+      const martyr = this.martyrFor(target);
+      if (martyr) {
+        target = martyr;
+        events.push({ type: 'proc', unit: martyr, label: 'Martyr!' });
+        const copies = martyr.specials.martyrCopies || 1;
+        martyr.floor.martyrCd = this.martyrCooldown(copies);
+        const cost = Math.max(1, Math.round(martyr.maxHp * 0.03 * Math.pow(0.8, copies - 1))); // health cost (placeholder numbers)
+        martyr.hp = Math.max(1, martyr.hp - cost);
+      }
+    }
     // Opportunist (Rogue): more damage and crit against enemies that have any debuff.
     // Focus Stance (Samurai): his next BASIC attack is a sure crit, then the status is used up.
     if (opts.basic) {
@@ -887,6 +946,8 @@ export default class BattleState {
       this.applyStatus(target, spec, target, 'totem', events);
     }
     // Lifesteal, thorns and crit debuffs work on the damage that really got through (nothing if a shield took it all).
+    // Fire Heart: an enemy that hits the fire shield catches fire.
+    if (dealt && dealt.absorbed > 0 && dealt.burnShield && attacker.alive && attacker.side === 'enemy') this.applyStatus(attacker, { status: 'burn', durationMs: 3000, damageMultiplier: 0.15, damageType: 'fire' }, target, 'fireheart', events);
     if (!result.dodged && !result.fullyAbsorbed && !opts.item) this.afterHit(attacker, target, result.amount - (result.absorbed || 0), events, result);
     if (target.hp <= 0 && target.alive) this.killUnit(target, events, attacker);
     return result;
@@ -943,6 +1004,7 @@ export default class BattleState {
     if (sp.shatterHammer && kinds.has('freeze')) bonus += sp.shatterHammer; // Shatter Hammer (the freeze is broken after the hit)
     if (sp.exploiter && kinds.size >= 3) bonus += sp.exploiter; // Exploiter's Lens
     if (sp.executioner && target.hp < target.maxHp * 0.25) bonus += sp.executioner; // Executioner's Axe
+    if (sp.hornDamage && this.has(target, 'taunt')) bonus += sp.hornDamage; // Provoker's Horn: taunted enemies take more
     return bonus;
   }
 
@@ -1015,21 +1077,14 @@ export default class BattleState {
     const lifesteal = (attacker.specials && attacker.specials.lifesteal) || 0;
     if (lifesteal > 0 && attacker.alive) {
       const base = Math.max(1, Math.round(((amount * lifesteal) / 100) * this.regenAura().factor)); // the Cleric's aura makes item heals stronger
-      const heal = Math.min(attacker.maxHp - attacker.hp, base);
-      if (heal > 0) {
-        attacker.hp += heal;
-        events.push({ type: 'heal', unit: attacker, amount: heal });
-      }
+      this.healUnit(attacker, base, events, { aura: false });
       // Bloodlust Mask: sometimes the heal is shared with the rest of the squad (then a cooldown).
       const share = attacker.specials.lifestealShare || 0;
       if (share > 0 && attacker.shareCd <= 0 && this.rng() * 100 < share) {
         attacker.shareCd = attacker.specials.lifestealShareCooldownMs || 3000;
         events.push({ type: 'proc', unit: attacker, label: 'Life Share!' });
         for (const ally of this.heroes) {
-          const got = ally === attacker || !ally.alive ? 0 : Math.min(ally.maxHp - ally.hp, base);
-          if (got <= 0) continue;
-          ally.hp += got;
-          events.push({ type: 'heal', unit: ally, amount: got });
+          if (ally !== attacker && ally.alive) this.healUnit(ally, base, events, { aura: false });
         }
       }
     }
@@ -1039,7 +1094,7 @@ export default class BattleState {
       const spec = dice[Math.floor(this.rng() * dice.length)];
       this.applyStatus(target, spec, attacker, `dice_${attacker.uid}`, events);
     }
-    const thorns = (target.specials && target.specials.thorns) || 0;
+    const thorns = ((target.specials && target.specials.thorns) || 0) + (target.taunting ? target.specials.spiteReflect || 0 : 0); // Spite Mail adds reflect while taunting
     if (thorns > 0 && target.alive && target.hp > 0 && attacker.damageType === 'melee' && attacker.alive) {
       const back = Math.max(1, Math.round((amount * thorns) / 100));
       const d = this.dealDamage(attacker, back, events);
@@ -1060,10 +1115,12 @@ export default class BattleState {
     if (this.has(target, 'invulnerable')) return { lost: 0, absorbed: 0, immune: true, broken: [] };
     let left = amount;
     let absorbed = 0;
+    let burnShield = false;
     const broken = [];
     for (const shield of [...target.statuses]) {
       if (shield.type !== 'shield' || left <= 0) continue;
       const take = Math.min(shield.amount, left);
+      if (shield.burns) burnShield = true;
       shield.amount -= take;
       left -= take;
       absorbed += take;
@@ -1081,7 +1138,7 @@ export default class BattleState {
       }
     }
     this.afterDamage(target, events);
-    return { lost: left, absorbed, immune: false, broken };
+    return { lost: left, absorbed, immune: false, broken, burnShield };
   }
 
   // Things that react to a unit having lost health (called from dealDamage when it has an events list).
@@ -1151,6 +1208,11 @@ export default class BattleState {
   breakEffects(unit, broken, events) {
     for (const shield of broken) {
       events.push({ type: 'shieldBreak', unit, status: shield });
+      // Spiked Aegis: a shield of the holder broken by damage explodes (item damage on every enemy).
+      if (unit.side === 'hero' && !unit.minion && unit.specials.spikedAegis) {
+        events.push({ type: 'proc', unit, label: 'Aegis blast!' });
+        for (const foe of this.enemies.filter((e) => e.alive)) this.strike(unit, foe, events, { multiplier: unit.specials.spikedAegis / 100, damageType: 'melee', item: true });
+      }
       if (!shield.onBreak) continue;
       const caster = this.allUnits().find((u) => u.uid === shield.sourceUid && u.alive) || unit;
       const foes = unit.side === 'hero' ? this.enemies.filter((u) => u.alive) : this.defenders();
@@ -1220,7 +1282,8 @@ export default class BattleState {
       if (spec.status === 'shield') {
         // Size: a flat `amount`, plus `percentMaxHp` of the holder's health, plus `attackMultiplier` x the
         // caster's attack. The same shield (same source + skill) is refilled instead of stacking.
-        status.amount = Math.max(1, Math.round((spec.amount || 0) + ((spec.percentMaxHp || 0) * target.maxHp) / 100 + (spec.attackMultiplier || 0) * source.stats.attack));
+        const wards = 1 + ((target.specials && target.specials.shieldBonus) || 0) / 100; // Warding Charm: shields received are bigger
+        status.amount = Math.max(1, Math.round(((spec.amount || 0) + ((spec.percentMaxHp || 0) * target.maxHp) / 100 + (spec.attackMultiplier || 0) * source.stats.attack) * wards));
         status.maxAmount = status.amount;
         status.sourceUid = source.uid;
         status.onBreak = spec.onBreak || null;
@@ -1278,7 +1341,13 @@ export default class BattleState {
     for (const unit of this.allUnits()) {
       if (!unit.alive) continue;
       for (const status of unit.statuses) status.remaining -= dt;
-      for (const st of unit.statuses) if (st.type === 'regenBoost' && unit.hp < unit.maxHp) unit.hp = Math.min(unit.maxHp, unit.hp + (unit.maxHp * st.percentMaxHpPerSec * this.regenAura().factor * dt) / 100000); // Ballad of Rest (Cleric aura makes it stronger)
+      for (const st of unit.statuses) if (st.regenPerSec && st.amount < st.maxAmount) st.amount = Math.min(st.maxAmount, st.amount + (st.regenPerSec * dt) / 1000); // Fire Heart's shield regenerates
+      for (const st of unit.statuses) {
+        if (st.type !== 'regenBoost' || unit.hp >= unit.maxHp) continue;
+        const gain = Math.min(unit.maxHp - unit.hp, (unit.maxHp * st.percentMaxHpPerSec * this.regenAura().factor * dt) / 100000); // Ballad of Rest (Cleric aura makes it stronger)
+        unit.hp += gain;
+        unit.regenAcc += gain;
+      }
       this.tickDots(unit, dt, events);
       if (!unit.alive) continue;
       for (const status of [...unit.statuses]) {
@@ -1288,11 +1357,7 @@ export default class BattleState {
         events.push({ type: 'status', unit, change: 'expire', status });
         if (status.type === 'invulnerable' && status.healPercentOnEnd > 0) {
           // Divine Shield: it heals when the invulnerability ends.
-          const heal = Math.min(unit.maxHp - unit.hp, Math.round((unit.maxHp * status.healPercentOnEnd) / 100));
-          if (heal > 0) {
-            unit.hp += heal;
-            events.push({ type: 'heal', unit, amount: heal });
-          }
+          this.healUnit(unit, (unit.maxHp * status.healPercentOnEnd) / 100, events, { aura: false });
         }
       }
     }
@@ -1532,13 +1597,48 @@ export default class BattleState {
     return Math.max(1, Math.round(((spec.percentMaxHp || 0) * target.maxHp) / 100 + (spec.attackMultiplier || 0) * healer.stats.attack));
   }
 
-  // Heals a unit (never above its max health; the Cleric's aura makes heals stronger). Sends a heal event.
-  healUnit(unit, amount, events) {
-    const got = Math.min(unit.maxHp - unit.hp, Math.round(amount * this.regenAura().factor));
+  // Heals a unit. `amount` is made stronger by the Cleric's aura (unless opts.aura is false: the caller already did it).
+  // Healing that would go above full health is "overheal" (Overheal Ring turns it into a shield). A heal
+  // that really restored health is a "heal received": the Lost Cleric's Grimoire reacts to it.
+  // Returns the health restored.
+  healUnit(unit, amount, events, opts = {}) {
+    const raw = Math.round(amount * (opts.aura === false ? 1 : this.regenAura().factor));
+    const room = unit.maxHp - unit.hp;
+    const got = Math.min(room, raw);
+    if (raw - got > 0) this.overheal(unit, raw - got, events);
     if (got <= 0) return 0;
     unit.hp += got;
     events.push({ type: 'heal', unit, amount: got });
+    this.onHealed(unit, got, events);
     return got;
+  }
+
+  // Overheal Ring: a share of the healing above full health becomes a shield, up to 25% of max health in total.
+  overheal(unit, over, events) {
+    const pct = unit.specials && unit.specials.overhealRing;
+    if (!pct || unit.minion) return;
+    const cap = unit.maxHp * 0.25;
+    const add = Math.min(cap, over * (Math.min(100, pct) / 100) * (1 + (unit.specials.shieldBonus || 0) / 100));
+    if (add < 1) return;
+    let st = unit.statuses.find((x) => x.key === 'shield:overheal');
+    if (st) st.amount = Math.min(cap, st.amount + add);
+    else {
+      st = { key: 'shield:overheal', type: 'shield', amount: Math.min(cap, add), maxAmount: cap, remaining: Infinity, total: Infinity, sourceUid: unit.uid, onBreak: null };
+      unit.statuses.push(st);
+    }
+    events.push({ type: 'status', unit, change: 'apply', status: st });
+  }
+
+  // The unit was healed for `got` health: Lost Cleric's Grimoire launches green fire at a random enemy
+  // (chance per copy, capped; its fireball is item damage: no lifesteal, no other effects).
+  onHealed(unit, got, events) {
+    const sp = unit.specials;
+    if (!sp || !sp.grimoireChance || unit.side !== 'hero' || unit.minion || !unit.alive) return;
+    const foes = this.enemies.filter((e) => e.alive);
+    if (!foes.length || this.rng() * 100 >= sp.grimoireChance) return;
+    const target = foes[Math.floor(this.rng() * foes.length)];
+    events.push({ type: 'proc', unit, label: 'Grimoire!' });
+    this.strike(unit, target, events, { multiplier: sp.grimoireDamage / 100, damageType: 'fire', projectile: 'greenfire', item: true });
   }
 
   // All enemies in a chain order: from `first`, always to the nearest one not yet hit.
@@ -1595,6 +1695,7 @@ export default class BattleState {
       const paying = this.upkeepCount(hero);
       const mr = this.rules.minions || {};
       for (let i = 0; i < paying; i++) upkeep.push({ stat: 'attackEfficiency', percent: mr.upkeepAttackSpeedPercent || 0 }, { stat: 'defense', percent: mr.upkeepDefensePercent || 0 });
+      if (hero.taunting && hero.specials && hero.specials.spiteMail) upkeep.push({ stat: 'defense', flat: hero.specials.spiteMail }); // Spite Mail
       const sa = hero.def.passive && hero.def.passive.steadyAim;
       if (sa && hero.steady) upkeep.push({ stat: 'attackEfficiency', percent: sa.attackSpeedPercent }, { stat: 'crit', flat: sa.critFlat });
       const { stats, damageBonus, specials, procs, minionSources } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale, upkeep);

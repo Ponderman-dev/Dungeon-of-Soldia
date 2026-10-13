@@ -888,5 +888,161 @@
       "ice",
       "cc"
     ]
+  },
+  "warding_charm": {
+    "name": "Warding Charm",
+    "rarity": "rare",
+    "type": "stat",
+    "scope": "self",
+    "description": "Shields the holder receives are 30% bigger.",
+    "effects": [
+      {
+        "special": "shieldBonus",
+        "percent": 30
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "shield"
+  },
+  "overheal_ring": {
+    "name": "Overheal Ring",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "40% of healing above full health becomes a shield (up to 25% of max health). More copies convert more, up to 100%.",
+    "effects": [
+      {
+        "special": "overhealRing",
+        "percent": 40,
+        "cap": 100
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "heal",
+    "provides": [
+      "shield"
+    ]
+  },
+  "spiked_aegis": {
+    "name": "Spiked Aegis",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "When the holder's shield is BROKEN by damage it explodes, hurting all enemies (shields that just run out do not).",
+    "effects": [
+      {
+        "special": "spikedAegis",
+        "percent": 80
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "shield"
+  },
+  "provokers_horn": {
+    "name": "Provoker's Horn",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "10% chance per attack to Taunt the target for 3s; taunted enemies take +15% damage from the holder.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 10,
+        "label": "Taunt!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "taunt",
+            "durationMs": 3000
+          }
+        ]
+      },
+      {
+        "special": "hornDamage",
+        "percent": 15
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "taunt"
+    ]
+  },
+  "spite_mail": {
+    "name": "Spite Mail",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "While the holder is taunting an enemy: +30 defense and 25% of melee damage reflected.",
+    "effects": [
+      {
+        "special": "spiteMail",
+        "percent": 30
+      },
+      {
+        "special": "spiteReflect",
+        "percent": 25
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "taunt"
+  },
+  "martyrs_shield": {
+    "name": "Martyr's Shield",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "8% chance when an enemy hits another hero to take the hit instead (at a small health cost). Extra copies shorten the cooldown and cut the cost.",
+    "effects": [
+      {
+        "special": "martyr",
+        "percent": 8,
+        "unique": true
+      },
+      {
+        "special": "martyrCopies",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 90
+  },
+  "fire_heart": {
+    "name": "Fire Heart",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "At the start of each floor: a fire shield (20% max health per copy) that slowly regenerates until broken and burns whoever hits it.",
+    "effects": [
+      {
+        "special": "fireHeart",
+        "percent": 20
+      }
+    ],
+    "provides": [
+      "shield",
+      "burn"
+    ]
+  },
+  "lost_clerics_grimoire": {
+    "name": "Lost Cleric's Grimoire",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "Each time the holder is healed there is a 10% chance (per copy, max 50%) to launch a green fire projectile at a random enemy. Regen counts once per second.",
+    "effects": [
+      {
+        "special": "grimoireChance",
+        "percent": 10,
+        "cap": 50
+      },
+      {
+        "special": "grimoireDamage",
+        "percent": 150
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "heal",
+    "provides": [
+      "fire"
+    ]
   }
 }

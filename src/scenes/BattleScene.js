@@ -915,8 +915,8 @@ export default class BattleScene extends Phaser.Scene {
       this.tweens.add({ targets: c, x: end.x, y: end.y, scale: 1.8, alpha: 0.2, duration: 300, onComplete: () => c.destroy() });
       return;
     }
-    if (kind === 'fireball' || kind === 'darkbolt' || kind === 'holybolt') {
-      const color = { fireball: 0xff7a3d, darkbolt: 0x9b5fe0, holybolt: 0xfff2a0 }[kind];
+    if (kind === 'fireball' || kind === 'darkbolt' || kind === 'holybolt' || kind === 'greenfire') {
+      const color = { fireball: 0xff7a3d, darkbolt: 0x9b5fe0, holybolt: 0xfff2a0, greenfire: 0x6bff7a }[kind];
       const b = this.add.circle(start.x, start.y, kind === 'fireball' ? 9 : 7, color).setStrokeStyle(2, 0xffffff, 0.8).setDepth(DEPTH.popup);
       this.tweens.add({ targets: b, x: end.x, y: end.y, duration: 320, ease: 'Quad.easeIn', onComplete: () => { const boom = this.add.circle(end.x, end.y, 8, color, 0.8).setDepth(DEPTH.popup - 1); this.tweens.add({ targets: boom, radius: 28, alpha: 0, duration: 300, onComplete: () => boom.destroy() }); b.destroy(); } });
       return;

@@ -307,10 +307,6 @@ export default class BattleState {
     const timing = (this.rules.attackTiming && this.rules.attackTiming[unit.side]) || {};
     if (unit.damageType !== 'melee') return timing.rangedHitMs || 0;
     if (target && this.standingTogether(unit, target)) return timing.swingMs ?? timing.meleeHitMs ?? 0;
-    // Walk over at a constant speed: the longer the way, the longer it takes (the scene says how far).
-    const speed = this.rules.attackMotion && this.rules.attackMotion.walkSpeedPxPerSec;
-    const px = this.walkDistance && target ? this.walkDistance(unit, target) : null;
-    if (speed && px != null) return Math.round((px / speed) * 1000) + (timing.swingMs || 0);
     return timing.meleeHitMs || 0;
   }
 

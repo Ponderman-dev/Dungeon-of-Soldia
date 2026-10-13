@@ -71,15 +71,6 @@ export default class BattleScene extends Phaser.Scene {
       leveling,
     });
 
-    // How far a melee fighter has to walk to stand next to its target (so the walk takes a fair time).
-    this.state.walkDistance = (unit, target) => {
-      const a = this.views.get(unit.uid);
-      const t = this.views.get(target.uid);
-      if (!a || !t) return null;
-      const dy = unit.side === 'hero' ? M.standOffY : -M.enemyStandOffY;
-      return Math.hypot(t.ch.x - a.ch.x, t.ch.y + dy - a.ch.y);
-    };
-
     this.drawHeroSlots();
     this.floorText = this.add
       .text(16, 24, '', { fontFamily: 'monospace', fontSize: '16px', color: '#9a8fc0' })

@@ -1,9 +1,14 @@
 import Phaser from 'phaser';
-import { CHAR_SCALE } from '../config.js';
+import { CHAR_SCALE, PIXEL_FPS, PIXEL_ANGLE_STEP } from '../config.js';
+import { partArt, artSize, partAnchor, artPixels, rotatePixels, mixColor, artKey } from '../systems/pixelArt.js';
 
-// A character built from separate colored blocks (parts), described by JSON data.
-// Each part is its own object, so real pixel-art parts can replace the blocks later.
-// Position (0, 0) is the character's feet; negative y goes up.
+// A character built from separate parts (body, head, weapon...), described by JSON data.
+// Each part is a small pixel picture (`art`, drawn in the Character Studio) or, until it is drawn,
+// a plain block. Position (0, 0) is the character's feet; negative y goes up.
+//
+// PIXEL ANIMATION: `this.parts[name]` is a light "pose" object (x, y, angle) that tweens move smoothly;
+// the image on screen only follows it PIXEL_FPS times a second, in whole pixels, turned in steps of
+// PIXEL_ANGLE_STEP degrees with the picture redrawn on the pixel grid (no smoothing, square pixels).
 export default class Character extends Phaser.GameObjects.Container {
   constructor(scene, x, y, def) {
     super(scene, x, y);
@@ -17,23 +22,76 @@ export default class Character extends Phaser.GameObjects.Container {
     this.idleTweens = [];
 
     for (const [name, p] of Object.entries(def.parts)) {
-      const block = scene.add.rectangle(p.x, p.y, p.w, p.h, Number(p.color));
-      block.setStrokeStyle(1, 0x1a1020);
-      block.baseColor = Number(p.color);
-      if (p.pivotY !== undefined) {
-        // Rotate around this point (e.g. a sword turns from its handle).
-        block.setOrigin(0.5, p.pivotY);
-        block.y = p.y + (p.pivotY - 0.5) * p.h;
-      }
-      block.origColor = Number(p.color);
-      block.restAngle = block.angle; // where it rests (the skill animation returns here)
-      this.parts[name] = block;
-      this.add(block);
+      const art = partArt(p);
+      const { w, h } = artSize(art);
+      const [ax, ay] = partAnchor(p, art);
+      // The pose: x / y = the turning point (anchor), in character pixels.
+      const x = p.x - w / 2 + ax;
+      const y = p.y - h / 2 + ay;
+      const image = scene.add.image(x, y, '__DEFAULT');
+      const part = {
+        name, x, y, angle: 0, restX: x, restY: y, restAngle: 0,
+        width: w, height: h, originX: ax / w, originY: ay / h,
+        pixels: artPixels(art), anchor: [ax, ay], key: artKey(art), image,
+        wash: null, shown: null,
+      };
+      this.parts[name] = part;
+      this.add(image);
     }
 
     this.setScale(CHAR_SCALE);
     scene.add.existing(this);
+    this.lastStep = -Infinity;
+    this.pixelStep = (time) => this.stepParts(time);
+    this.homeScene = scene; // kept so destroy() can unhook even after Phaser clears this.scene
+    scene.events.on('update', this.pixelStep);
+    this.stepParts(0, true);
     this.playIdle();
+  }
+
+  // Moves the images to their poses, at most PIXEL_FPS times a second (force = now).
+  stepParts(time, force = false) {
+    if (!this.scene) return; // destroyed
+    if (!force && time - this.lastStep < 1000 / PIXEL_FPS) return;
+    this.lastStep = time;
+    for (const part of Object.values(this.parts)) {
+      const angle = Math.round(part.angle / PIXEL_ANGLE_STEP) * PIXEL_ANGLE_STEP;
+      const tex = this.texture(part, angle);
+      if (part.shown !== tex.key) {
+        part.image.setTexture(tex.key);
+        part.image.setOrigin(tex.ox / tex.w, tex.oy / tex.h);
+        part.shown = tex.key;
+      }
+      part.image.x = part.restX + Math.round(part.x - part.restX);
+      part.image.y = part.restY + Math.round(part.y - part.restY);
+    }
+  }
+
+  // The texture of a part turned by `angle` (and washed in a colour), made once and shared.
+  texture(part, angle) {
+    const wash = part.wash ? `${part.wash.color.toString(16)}-${Math.round(part.wash.amount * 100)}` : '';
+    const key = `px-${part.key}-${part.anchor.join('_')}-${angle}-${wash}`;
+    const textures = this.scene.textures;
+    if (!textures.exists(key)) {
+      const r = rotatePixels(part.pixels, part.anchor, angle);
+      const tex = textures.createCanvas(key, Math.max(1, r.w), Math.max(1, r.h));
+      const ctx = tex.context;
+      r.grid.forEach((row, y) =>
+        row.forEach((c, x) => {
+          if (c === null) return;
+          const col = part.wash ? mixColor(c, part.wash.color, part.wash.amount) : c;
+          ctx.fillStyle = '#' + col.toString(16).padStart(6, '0');
+          ctx.fillRect(x, y, 1, 1);
+        }),
+      );
+      tex.refresh();
+      tex.ox = r.ox;
+      tex.oy = r.oy;
+      tex.pw = r.w;
+      tex.ph = r.h;
+    }
+    const t = textures.get(key);
+    return { key, ox: t.ox, oy: t.oy, w: t.pw, h: t.ph };
   }
 
   // Gentle idle motion for each part, as described in the part's "idle" data.
@@ -110,13 +168,8 @@ export default class Character extends Phaser.GameObjects.Container {
   // A faint colour wash over the whole character (morale): every part is mixed `amount` (0 to 1)
   // of the way towards `color`. amount 0 = the normal colours.
   setWash(color, amount) {
-    const c = Phaser.Display.Color.IntegerToColor(color);
-    for (const block of Object.values(this.parts)) {
-      const o = Phaser.Display.Color.IntegerToColor(block.origColor);
-      const mix = Phaser.Display.Color.Interpolate.ColorWithColor(o, c, 100, Math.round(amount * 100));
-      block.baseColor = Phaser.Display.Color.GetColor(mix.r, mix.g, mix.b);
-      block.setFillStyle(block.baseColor);
-    }
+    for (const part of Object.values(this.parts)) part.wash = amount > 0 ? { color, amount } : null;
+    this.stepParts(0, true);
   }
 
   // A shine on the weapon (an "every Nth attack" is charged): a pulsing glow in `color`, or none (null).
@@ -149,6 +202,7 @@ export default class Character extends Phaser.GameObjects.Container {
   }
 
   destroy(fromScene) {
+    this.homeScene.events.off('update', this.pixelStep);
     if (this.glowFollow) this.scene.events.off('update', this.glowFollow);
     for (const t of this.idleTweens) t.remove();
     super.destroy(fromScene);
@@ -247,13 +301,12 @@ export default class Character extends Phaser.GameObjects.Container {
     });
   }
 
-  // Turn every part white for a moment (hit feedback).
   // Lights up all parts in one colour for a moment (white = a normal hit).
   flash(color = 0xffffff, ms = 80) {
-    for (const block of Object.values(this.parts)) block.setFillStyle(color);
+    for (const part of Object.values(this.parts)) part.image.setTint(color).setTintMode(Phaser.TintModes.FILL);
     this.scene.time.delayedCall(ms, () => {
       if (!this.active) return;
-      for (const block of Object.values(this.parts)) block.setFillStyle(block.baseColor);
+      for (const part of Object.values(this.parts)) part.image.clearTint();
     });
   }
 }

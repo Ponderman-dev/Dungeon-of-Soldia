@@ -7,6 +7,7 @@ import Phaser from 'phaser';
 import Character from '../entities/Character.js';
 import heroes from '../data/heroes.json';
 import enemies from '../data/enemies.json';
+import minions from '../data/minions.json';
 import combat from '../data/combat.json';
 
 const STAGE = 360; // preview canvas size in pixels
@@ -21,6 +22,9 @@ const clone = (o) => JSON.parse(JSON.stringify(o));
 const characters = [
   ...heroes.map((h) => ({ key: `hero-${h.id}`, kind: 'hero', id: h.id, name: h.name, def: h })),
   ...Object.entries(enemies).map(([id, e]) => ({ key: `enemy-${id}`, kind: 'enemy', id, name: e.name, def: e })),
+  ...Object.entries(minions)
+    .filter(([, m]) => m && m.parts)
+    .map(([id, m]) => ({ key: `minion-${id}`, kind: 'minion', id, name: m.name, def: m })),
 ];
 const byKey = Object.fromEntries(characters.map((c) => [c.key, c]));
 
@@ -49,6 +53,7 @@ for (const c of characters) working[c.key] = clone(gameLook[c.key]);
 
 let zoom = 9;
 let anim = 'idle';
+let mirror = false; // looking the other way (the game mirrors fighters to face their target)
 
 class StudioScene extends Phaser.Scene {
   constructor() {
@@ -78,7 +83,7 @@ class StudioScene extends Phaser.Scene {
     this.input.on('pointermove', (p) => {
       if (!this.drag || !p.isDown) return;
       const q = look().parts[this.drag.name];
-      const nx = this.drag.x + Math.round((p.x - this.drag.sx) / zoom);
+      const nx = this.drag.x + Math.round((p.x - this.drag.sx) / zoom) * (mirror ? -1 : 1);
       const ny = this.drag.y + Math.round((p.y - this.drag.sy) / zoom);
       if (nx === q.x && ny === q.y) return;
       q.x = nx;
@@ -91,7 +96,7 @@ class StudioScene extends Phaser.Scene {
 
   // Canvas point -> character pixel (0,0 = feet).
   toChar(x, y) {
-    return { x: (x - STAGE / 2) / zoom, y: (y - this.feetY()) / zoom };
+    return { x: ((x - STAGE / 2) / zoom) * (mirror ? -1 : 1), y: (y - this.feetY()) / zoom };
   }
 
   feetY() {
@@ -104,7 +109,7 @@ class StudioScene extends Phaser.Scene {
     this.tweens.killAll();
     const def = { parts: look().parts };
     this.ch = new Character(this, STAGE / 2, this.feetY(), def);
-    this.ch.setScale(zoom);
+    this.ch.setScale(mirror ? -zoom : zoom, zoom);
     if (anim !== 'idle') this.ch.freeze();
     this.drawGrid();
   }
@@ -123,6 +128,11 @@ class StudioScene extends Phaser.Scene {
     const m = this.marks.clear();
     m.lineStyle(2, 0xf2b33d, 0.9);
     m.lineBetween(0, fy, STAGE, fy);
+    if (look().hover) {
+      // Flyers: the floor they hover over (faint).
+      m.lineStyle(2, 0x6b5a2a, 0.9);
+      m.lineBetween(0, FEET_Y, STAGE, FEET_Y);
+    }
     // Health bar height (dashed).
     const hy = fy - look().height * zoom;
     m.lineStyle(2, 0xd65b5b, 0.9);
@@ -130,6 +140,8 @@ class StudioScene extends Phaser.Scene {
   }
 
   update() {
+    // Skill animation: the scene lifts/crouches the figure by castLift (game pixels, like the battle).
+    if (this.ch && anim === 'skill') this.ch.y = this.feetY() - (this.ch.castLift * zoom) / 3;
     const g = this.sel.clear();
     const block = selected && this.ch && this.ch.parts[selected];
     if (!block) return;
@@ -156,6 +168,17 @@ class StudioScene extends Phaser.Scene {
         ch.moveTo(STAGE / 2 + dir * far, ch.homeY, 900, { hop, onDone: () => leg(-dir) });
       };
       leg(1);
+    } else if (name === 'skill') {
+      // Wind-up (crouch, weapon cocked back), then the release; attack and support skills alternate.
+      let kind = 'attack';
+      const go = () => {
+        if (!ch.active || anim !== 'skill') return;
+        ch.castWindUp(500);
+        this.time.delayedCall(500, () => ch.active && anim === 'skill' && ch.castRelease(kind));
+        kind = kind === 'attack' ? 'support' : 'attack';
+      };
+      go();
+      this.loop = this.time.addEvent({ delay: 1500, loop: true, callback: go });
     } else if (name === 'flash') {
       const go = () => ch.active && anim === 'flash' && ch.flash();
       go();
@@ -204,7 +227,8 @@ function fillPicker() {
   };
   pick.innerHTML =
     `<optgroup label="Heroes">${characters.filter((c) => c.kind === 'hero').map(opt).join('')}</optgroup>` +
-    `<optgroup label="Enemies">${characters.filter((c) => c.kind === 'enemy').map(opt).join('')}</optgroup>`;
+    `<optgroup label="Enemies">${characters.filter((c) => c.kind === 'enemy').map(opt).join('')}</optgroup>` +
+    `<optgroup label="Minions">${characters.filter((c) => c.kind === 'minion').map(opt).join('')}</optgroup>`;
 }
 
 function renderStatus() {
@@ -390,6 +414,11 @@ document.addEventListener('click', (e) => {
   if (t.dataset.anim) {
     anim = t.dataset.anim;
     document.querySelectorAll('[data-anim]').forEach((b) => b.classList.toggle('on', b === t));
+    return redraw();
+  }
+  if (t.id === 'mirror') {
+    mirror = !mirror;
+    t.classList.toggle('on', mirror);
     return redraw();
   }
   if (t.dataset.zoom) {

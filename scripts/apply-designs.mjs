@@ -1,6 +1,6 @@
-// Copies designs saved in the Character Studio into heroes.json / enemies.json.
+// Copies designs saved in the Character Studio into heroes.json / enemies.json / minions.json.
 // Usage: node scripts/apply-designs.mjs <designs.json>
-// <designs.json> is a list of saved designs: { kind: "hero"|"enemy", id, height, hover?, parts }.
+// <designs.json> is a list of saved designs: { kind: "hero"|"enemy"|"minion", id, height, hover?, parts }.
 // Only the look changes (parts, height, hover); stats and everything else stay as they are.
 import fs from 'node:fs';
 
@@ -8,12 +8,13 @@ const file = process.argv[2];
 if (!file) throw new Error('Usage: node scripts/apply-designs.mjs <designs.json>');
 const designs = JSON.parse(fs.readFileSync(file, 'utf8'));
 
-const paths = { hero: 'src/data/heroes.json', enemy: 'src/data/enemies.json' };
+const paths = { hero: 'src/data/heroes.json', enemy: 'src/data/enemies.json', minion: 'src/data/minions.json' };
 const heroes = JSON.parse(fs.readFileSync(paths.hero, 'utf8'));
 const enemies = JSON.parse(fs.readFileSync(paths.enemy, 'utf8'));
+const minions = JSON.parse(fs.readFileSync(paths.minion, 'utf8'));
 
 for (const d of designs) {
-  const def = d.kind === 'hero' ? heroes.find((h) => h.id === d.id) : enemies[d.id];
+  const def = d.kind === 'hero' ? heroes.find((h) => h.id === d.id) : d.kind === 'minion' ? minions[d.id] : enemies[d.id];
   if (!def) {
     console.log(`skip ${d.kind} ${d.id}: not in the game data`);
     continue;
@@ -24,5 +25,8 @@ for (const d of designs) {
   console.log(`applied ${d.kind} ${d.id} (${Object.keys(d.parts).length} parts)`);
 }
 
-fs.writeFileSync(paths.hero, JSON.stringify(heroes, null, 2) + '\n');
-fs.writeFileSync(paths.enemy, JSON.stringify(enemies, null, 2) + '\n');
+// Only rewrite the files that got a design (so the others keep their exact formatting).
+const data = { hero: heroes, enemy: enemies, minion: minions };
+for (const kind of new Set(designs.map((d) => d.kind))) {
+  if (data[kind]) fs.writeFileSync(paths[kind], JSON.stringify(data[kind], null, 2) + '\n');
+}

@@ -99,9 +99,9 @@ After each working step: `npm run build:page`, copy `dist-page.html` to the scra
 (https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr). Ignore the "download link" warning; it is a false alarm from Phaser's code.
 
 ## Character Studio
-A second page for designing how heroes/enemies look (their colored-block `parts`, `height`, `hover`): `studio.html` + `src/studio/main.js`, using the game's own `Character` class for the preview (Idle / Swing / Walk / Hit flash, zoom, tap to pick a part, drag to move it).
+A second page for designing how heroes/enemies look (heroes, enemies, minions: their colored-block `parts`, `height`, `hover`): `studio.html` + `src/studio/main.js`, using the game's own `Character` class for the preview (Idle / Swing / Walk / Skill / Hit flash, Mirror, zoom, tap to pick a part, drag to move it).
 - Build: `npm run build:studio` (makes `studio-page.html`), copy it to the scratchpad as `soldia-studio.html`, publish to the SAME url https://claude.ai/artifact/1azV1LBUimRkeavNpQBgc7 (declares the `db` capability; omit `capabilities` on republish to keep it).
-- Saving: the "Save design" button writes to the page's database, collection `designs`, doc id `hero-<id>` / `enemy-<id>` (`{kind, id, name, height, hover?, parts, savedAt}`). When the user says "apply the studio designs": read them with ArtifactData (`list`, collection `designs`), write them as a JSON list to a scratch file, run `node scripts/apply-designs.mjs <file>` (only changes parts/height/hover), run tests, check the game in the browser, commit, republish the game.
+- Saving: the "Save design" button writes to the page's database, collection `designs`, doc id `hero-<id>` / `enemy-<id>` / `minion-<id>` (`{kind, id, name, height, hover?, parts, savedAt}`). When the user says "apply the studio designs": read them with ArtifactData (`list`, collection `designs`), write them as a JSON list to a scratch file, run `node scripts/apply-designs.mjs <file>` (only changes parts/height/hover), run tests, check the game in the browser, commit, republish the game.
 
 ## Layout
 - `index.html`  page shell

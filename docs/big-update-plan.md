@@ -246,7 +246,7 @@ Decided with the user:
 
 ### Phase D: Shared systems the heroes need
 - D1. DONE. Shields (absorb, broken vs expired) and Invulnerable.
-- D2. Taunt behaviour on enemies (and the Knight's armor buff).
+- D2. DONE. Taunt behaviour on enemies (and the Knight's armor buff as a per-status `to` in procs).
 - D3. "Every 4th attack" counters (Spellweaver, Cleric heal, Bard Rhythm beat) with visible cues.
 - D4. Minion system: weak and greater minions, caps, upkeep, floor transitions (greater minions walk through the door), 2-floor revival wait, minions vanish when the holder dies.
 

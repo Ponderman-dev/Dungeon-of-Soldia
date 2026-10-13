@@ -133,6 +133,22 @@ export default class BattleScene extends Phaser.Scene {
     this.mode = 'fighting';
   }
 
+  // A thin red line from every taunted enemy to the one who taunted it, so you can see who it is forced to hit.
+  drawTauntLines() {
+    if (!this.tauntLines) this.tauntLines = this.add.graphics().setDepth(DEPTH.marker + 1);
+    const g = this.tauntLines;
+    g.clear();
+    for (const e of this.state.enemies) {
+      if (!e.alive) continue;
+      const taunter = this.state.tauntedBy(e);
+      if (!taunter) continue;
+      const a = this.center(this.views.get(e.uid));
+      const b = this.center(this.views.get(taunter.uid));
+      g.lineStyle(2, 0xe05a2a, 0.55);
+      g.lineBetween(a.x, a.y, b.x, b.y);
+    }
+  }
+
   // A charge bar just under a hero's health bar while it winds up a skill, in the skill's colour
   // (attack red, support green). It fills up until the skill goes off.
   drawCastBars() {
@@ -548,6 +564,7 @@ export default class BattleScene extends Phaser.Scene {
     for (const e of events) this.showEvent(e);
     this.followPositions();
     this.drawCastBars();
+    this.drawTauntLines();
 
     const focus = this.state.focusUnit;
     if (focus) {
@@ -882,6 +899,7 @@ export default class BattleScene extends Phaser.Scene {
   onWin() {
     this.mode = 'won';
     if (this.castBars) this.castBars.clear(); // a wind-up still going is dropped
+    if (this.tauntLines) this.tauntLines.clear();
     this.focusMarker.setVisible(false);
     this.banner.setText(`Floor ${this.floor} cleared!`);
     this.layer.setDoorOpen(true);

@@ -206,11 +206,8 @@ export default class BattleState {
   //  - Melee enemies keep their opponent too, and a new one is always the NEAREST hero (melee or
   //    ranged). Ranged enemies pick at random.
   pickTarget(unit) {
-    const taunt = unit.statuses.find((s) => s.type === 'taunt');
-    if (taunt) {
-      const taunter = [...this.heroes, ...this.enemies].find((u) => u.uid === taunt.sourceUid);
-      if (taunter && taunter.alive && taunter.side !== unit.side) return taunter;
-    }
+    const taunter = this.tauntedBy(unit);
+    if (taunter) return taunter;
     const foes = (unit.side === 'hero' ? this.enemies : this.heroes).filter((u) => u.alive);
     if (!foes.length) return null;
     if (unit.side === 'hero') {
@@ -221,6 +218,32 @@ export default class BattleState {
     const current = foes.find((u) => u.uid === unit.foe);
     if (current) return current;
     return this.setFoe(unit, this.nearest(unit, foes));
+  }
+
+  // Who a unit is taunted by: the most recent taunter that is still alive (an older taunt takes over
+  // again when the newer taunter dies). null if it is not taunted. Taunt beats everything else.
+  tauntedBy(unit) {
+    for (const st of [...unit.statuses].reverse()) {
+      if (st.type !== 'taunt') continue;
+      const taunter = [...this.heroes, ...this.enemies].find((u) => u.uid === st.sourceUid);
+      if (taunter && taunter.alive && taunter.side !== unit.side) return taunter;
+    }
+    return null;
+  }
+
+  // A unit just got taunted while an attack of its was on the way to someone else: a melee swing is
+  // dropped (it walks over to the taunter instead), an arrow bends towards the taunter.
+  redirectToTaunter(unit, events) {
+    const taunter = this.tauntedBy(unit);
+    if (!taunter || !unit.pending || unit.pending.target === taunter) return;
+    if (unit.damageType === 'melee') {
+      unit.pending = null;
+      unit.timer = this.interval(unit); // ready again as soon as it reaches the taunter
+      events.push({ type: 'attackCancel', unit, reason: 'taunted' });
+    } else {
+      unit.pending.target = taunter;
+      events.push({ type: 'attackRetarget', attacker: unit, target: taunter, hitInMs: unit.pending.remaining });
+    }
   }
 
   setFoe(unit, foe) {
@@ -491,8 +514,11 @@ export default class BattleState {
       }
       if (proc.chain && enemy) this.chainHit(hero, enemy, proc.chain, events);
       const targets = proc.targets === 'squad' ? this.heroes.filter((h) => h.alive) : proc.targets === 'target' ? (enemy && landed ? [enemy] : []) : [hero];
+      // A status spec can pick its own receivers with `to` (self / squad / target), e.g. a proc that taunts
+      // the enemy hit AND gives the holder a defense buff.
+      const receivers = (to) => (to === 'squad' ? this.heroes.filter((h) => h.alive) : to === 'target' ? (enemy && landed ? [enemy] : []) : to === 'self' ? [hero] : targets);
       for (const spec of proc.apply || []) {
-        for (const target of targets) this.applyStatus(target, spec, hero, `proc_${proc.itemId}`, events);
+        for (const target of receivers(spec.to)) this.applyStatus(target, spec, hero, `proc_${proc.itemId}`, events);
       }
     }
   }
@@ -685,6 +711,7 @@ export default class BattleState {
     }
     if (spec.status === 'buff') this.refreshStats();
     events.push({ type: 'status', unit: target, change: 'apply', status });
+    if (spec.status === 'taunt') this.redirectToTaunter(target, events);
 
     // Enough chill: the unit freezes and the chill is used up.
     if (spec.status === 'chill' && info.freezeAt && this.stacks(target, 'chill') >= info.freezeAt) {

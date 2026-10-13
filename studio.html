@@ -206,6 +206,8 @@
             <button class="btn tool" data-tool="anchor" title="Anchor: the turning point (A)" aria-label="Anchor"><svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="3"/><path d="M9 1v4 M9 13v4 M1 9h4 M13 9h4"/></svg></button>
             <button class="btn tool" data-tool="move" title="Move / pick a part (M)" aria-label="Move"><svg viewBox="0 0 18 18"><path d="M9 1v16 M1 9h16 M6 4l3-3 3 3 M6 14l3 3 3-3 M4 6L1 9l3 3 M14 6l3 3-3 3"/></svg></button>
             <span style="width:8px"></span>
+            <button id="mirror-draw" class="btn tool" title="Mirror drawing: draw one side, the other side copies it (S)" aria-label="Mirror drawing" aria-pressed="false"><svg viewBox="0 0 18 18"><path d="M9 1v16" stroke-dasharray="2 2"/><path d="M7 4L2 13h5z M11 4l5 9h-5z"/></svg></button>
+            <span style="width:8px"></span>
             <button id="undo" class="btn tool" title="Undo (Ctrl+Z)" aria-label="Undo" disabled><svg viewBox="0 0 18 18"><path d="M6 3L2 7l4 4 M2 7h9a4 4 0 010 8H8"/></svg></button>
             <button id="redo" class="btn tool" title="Redo (Ctrl+Y)" aria-label="Redo" disabled><svg viewBox="0 0 18 18"><path d="M12 3l4 4-4 4 M16 7H7a4 4 0 000 8h3"/></svg></button>
           </div>
@@ -216,7 +218,7 @@
             <label class="check"><input type="checkbox" id="filled" /> Filled rectangle</label>
             <label class="check"><input type="checkbox" id="dim" checked /> Dim other parts</label>
           </div>
-          <p class="hint">Each square is one pixel. Drawing outside the part makes it bigger; erasing its edges shrinks it. The <b>anchor</b> (crosshair) is the point the part turns around: put a sword's anchor on its handle. Keys: <kbd>B</kbd> pencil, <kbd>E</kbd> eraser, <kbd>L</kbd> line, <kbd>R</kbd> rectangle, <kbd>G</kbd> fill, <kbd>I</kbd> pick colour, <kbd>A</kbd> anchor, <kbd>M</kbd> move. On iPad: <b>two-finger tap</b> = undo, <b>three-finger tap</b> = redo, <b>touch and hold</b> with a finger = pick that colour.</p>
+          <p class="hint">Each square is one pixel. Drawing outside the part makes it bigger; erasing its edges shrinks it. The <b>anchor</b> (crosshair) is the point the part turns around: put a sword's anchor on its handle. Keys: <kbd>B</kbd> pencil, <kbd>E</kbd> eraser, <kbd>L</kbd> line, <kbd>R</kbd> rectangle, <kbd>G</kbd> fill, <kbd>I</kbd> pick colour, <kbd>A</kbd> anchor, <kbd>M</kbd> move, <kbd>S</kbd> mirror drawing (the dashed blue middle line). On iPad: <b>two-finger tap</b> = undo, <b>three-finger tap</b> = redo, <b>touch and hold</b> with a finger = pick that colour.</p>
         </div>
         </section>
         <section class="col">

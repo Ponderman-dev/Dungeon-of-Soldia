@@ -251,6 +251,7 @@ const board = new Board($('board'), {
   tool: () => tool,
   filled: () => $('filled').checked,
   dim: () => $('dim').checked,
+  mirror: () => mirrorOn,
   begin: () => beginEdit(),
   end: () => endEdit(),
   changed: () => changed({ keepEditor: true }),
@@ -280,6 +281,26 @@ const timeline = new Timeline($('timeline'), {
     }
   },
 });
+
+// Mirror drawing (symmetry): whatever is drawn on one side of the middle line is drawn on the other too.
+let mirrorOn = false;
+try {
+  mirrorOn = localStorage.getItem('soldia-studio-mirror') === '1';
+} catch {
+  /* storage blocked */
+}
+function toggleMirrorDraw() {
+  mirrorOn = !mirrorOn;
+  try {
+    localStorage.setItem('soldia-studio-mirror', mirrorOn ? '1' : '0');
+  } catch {
+    /* fine */
+  }
+  $('mirror-draw').classList.toggle('on', mirrorOn);
+  $('mirror-draw').setAttribute('aria-pressed', String(mirrorOn));
+  board.render();
+  toast(mirrorOn ? 'Mirror drawing on' : 'Mirror drawing off');
+}
 
 function setTool(name) {
   tool = name;
@@ -628,6 +649,7 @@ document.addEventListener('click', (e) => {
   if (t.dataset.part) return select(t.dataset.part);
   if (t.dataset.mode) return setMode(t.dataset.mode);
   if (t.dataset.tool) return setTool(t.dataset.tool);
+  if (t.id === 'mirror-draw') return toggleMirrorDraw();
   if (t.dataset.color) return setColor(Number(t.dataset.color));
   if (t.dataset.anim) {
     anim = t.dataset.anim;
@@ -813,6 +835,7 @@ document.addEventListener('keydown', (e) => {
   }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const keys = { b: 'pencil', e: 'eraser', l: 'line', r: 'rect', g: 'fill', i: 'picker', a: 'anchor', m: 'move' };
+  if (k === 's') return toggleMirrorDraw();
   if (keys[k]) setTool(keys[k]);
 });
 
@@ -903,6 +926,8 @@ async function connect() {
   redraw();
 }
 
+$('mirror-draw').classList.toggle('on', mirrorOn);
+$('mirror-draw').setAttribute('aria-pressed', String(mirrorOn));
 loadDraft();
 renderAll();
 connect();

@@ -90,6 +90,9 @@ function trim(e) {
   while (e.grid[0].length > 1 && empty(e.grid.map((r) => r[r.length - 1]))) for (const r of e.grid) r.pop();
 }
 
+// Mirror drawing: the middle line of the character (x = 0, between pixel columns -1 and 0).
+export const mirrorCell = ([x, y]) => [-1 - x, y];
+
 // Every cell on a straight line between two cells.
 export function lineCells(x0, y0, x1, y1) {
   const out = [];
@@ -126,7 +129,8 @@ function rectCells(x0, y0, x1, y1, filled) {
 export default class Board {
   // hooks: look(), selected(), select(name), color() (number), pickColor(number), tool(), setTool(name),
   // filled(), dim(), begin() (before an edit: for undo), end() (edit finished), changed(),
-  // cancel() (throw away the edit in progress), holdPick(number) (touch and hold picked a colour)
+  // cancel() (throw away the edit in progress), holdPick(number) (touch and hold picked a colour),
+  // mirror() (true = mirror drawing is on: everything drawn is copied to the other side)
   constructor(canvas, hooks) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
@@ -252,7 +256,13 @@ export default class Board {
     this.render();
   }
 
+  // With mirror drawing on, the same cells on the other side of the middle line are drawn too.
+  withMirror(cells) {
+    return this.h.mirror() ? [...cells, ...cells.map(mirrorCell)] : cells;
+  }
+
   paint(cells) {
+    cells = this.withMirror(cells);
     const p = this.part();
     const c = this.drag.tool === 'eraser' ? null : this.h.color();
     editPart(p, (set) => {
@@ -265,6 +275,11 @@ export default class Board {
   fill(cell) {
     const p = this.part();
     const c = this.h.color();
+    for (const at of this.withMirror([cell])) this.fillAt(p, at, c);
+    this.h.changed();
+  }
+
+  fillAt(p, cell, c) {
     editPart(p, (set, get, e) => {
       const inside = (x, y) => x >= e.left && y >= e.top && x < e.left + e.grid[0].length && y < e.top + e.grid.length;
       if (!inside(...cell)) return set(cell[0], cell[1], c);
@@ -281,7 +296,6 @@ export default class Board {
         todo.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
       }
     });
-    this.h.changed();
   }
 
   // The turning point goes to the middle of the tapped pixel.
@@ -334,11 +348,17 @@ export default class Board {
     // Line / rectangle being dragged: shown before it is drawn.
     const d = this.drag;
     if (d && (d.tool === 'line' || d.tool === 'rect')) {
-      const cells = d.tool === 'line' ? lineCells(...d.start, ...d.last) : rectCells(...d.start, ...d.last, this.h.filled());
+      const cells = this.withMirror(d.tool === 'line' ? lineCells(...d.start, ...d.last) : rectCells(...d.start, ...d.last, this.h.filled()));
       ctx.globalAlpha = 0.75;
       ctx.fillStyle = hex(this.h.color());
       for (const [x, y] of cells) ctx.fillRect(X(x), Y(y), cell, cell);
       ctx.globalAlpha = 1;
+    }
+
+    // Mirror drawing: the middle line everything is copied across.
+    if (this.h.mirror()) {
+      ctx.fillStyle = '#4fd8e8';
+      for (let y = 0; y < H; y += 10) ctx.fillRect(X(0) - 1, y, 2, 6);
     }
 
     // The selected part: dashed box and its anchor.

@@ -3,6 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, SKILL_COLORS } from '../config.js'
 import allHeroDefs from '../data/heroes.json';
 import squadIds from '../data/squad.json';
 import enemyDefs from '../data/enemies.json';
+import minionDefs from '../data/minions.json';
 import dungeons from '../data/dungeons.json';
 import combatRules from '../data/combat.json';
 import damageTypes from '../data/damageTypes.json';
@@ -63,6 +64,7 @@ export default class BattleScene extends Phaser.Scene {
     this.state = new BattleState({
       heroDefs,
       enemyDefs,
+      minionDefs,
       itemDefs,
       skillDefs,
       statusDefs: statusInfo,
@@ -131,6 +133,37 @@ export default class BattleScene extends Phaser.Scene {
       this.state.place(v.unit, v.ch.x, v.unit.side === 'hero' ? v.ch.y : v.groundY);
     }
     this.mode = 'fighting';
+    for (const e of this.state.startFloor()) this.showEvent(e); // floor-start minions rise (Necromancer)
+  }
+
+  // A minion rises from the ground: a dark puff, the figure grows up out of the floor, then its bars show.
+  showMinion(unit) {
+    const v = this.makeView(unit, unit.x, unit.y);
+    v.ch.setDepth(DEPTH.hero);
+    for (const part of [v.bg, v.fill, v.shieldFill, v.chipBox]) part.setDepth(DEPTH.heroBar).setAlpha(0);
+    const target = v.ch.scaleY;
+    v.ch.scaleY = 0.05;
+    v.ch.castLift = 0;
+    this.puff(unit.x, unit.y, 0x4a3a6a, 7);
+    this.tweens.add({
+      targets: v.ch,
+      scaleY: target,
+      duration: 420,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        for (const part of [v.bg, v.fill, v.shieldFill, v.chipBox]) part.setAlpha(1);
+        this.syncBar(v);
+      },
+    });
+  }
+
+  // A little cloud of puffs at a spot (spawn / vanish cue).
+  puff(x, y, color, count = 6) {
+    for (let i = 0; i < count; i++) {
+      const dx = (i - (count - 1) / 2) * 7;
+      const c = this.add.circle(x + dx, y - 2, 5 + (i % 3) * 2, color, 0.8).setDepth(DEPTH.popup - 2);
+      this.tweens.add({ targets: c, y: y - 22 - (i % 3) * 8, x: x + dx * 1.6, alpha: 0, scale: 1.6, duration: 520 + (i % 3) * 90, ease: 'Quad.easeOut', onComplete: () => c.destroy() });
+    }
   }
 
   // A thin red line from every taunted enemy to the one who taunted it, so you can see who it is forced to hit.
@@ -661,6 +694,14 @@ export default class BattleScene extends Phaser.Scene {
       }
       if (e.status.type === 'buff') this.drawAllBars();
       if (e.status.type === 'shield') this.setBar(v);
+    } else if (e.type === 'minionSpawn') {
+      this.showMinion(e.unit);
+    } else if (e.type === 'minionVanish') {
+      const v = this.views.get(e.unit.uid);
+      if (!v) return;
+      v.ch.stopMove();
+      this.puff(v.ch.x, v.ch.y, 0x6a5a8a, 4);
+      this.tweens.add({ targets: [v.ch, v.bg, v.fill, v.shieldFill, v.chipBox], alpha: 0, duration: 300, onComplete: () => this.removeView(e.unit.uid) });
     } else if (e.type === 'beat') {
       // The count goes up (tag by the holder) and a ring pulses on the hero whose attack was counted;
       // when the beat goes off the ring is big and bright.
@@ -711,11 +752,11 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'death') {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
-      if (e.unit.side === 'enemy') {
+      if (e.unit.side === 'enemy' || e.unit.minion) {
         v.ch.stopMove(); // it fades out where it fell
         v.ch.castCancel();
         this.drawChips(v);
-        this.tweens.add({ targets: [v.ch, v.bg, v.fill], alpha: 0, duration: 400, onComplete: () => this.removeView(e.unit.uid) });
+        this.tweens.add({ targets: [v.ch, v.bg, v.fill, v.shieldFill], alpha: 0, duration: 400, onComplete: () => this.removeView(e.unit.uid) });
       } else {
         // A hero who falls while away at an enemy is put back in its slot.
         v.ch.stopMove();
@@ -910,6 +951,7 @@ export default class BattleScene extends Phaser.Scene {
 
   onWin() {
     this.mode = 'won';
+    for (const e of this.state.endFloor()) this.showEvent(e); // weak minions vanish with the floor
     if (this.castBars) this.castBars.clear(); // a wind-up still going is dropped
     if (this.tauntLines) this.tauntLines.clear();
     this.focusMarker.setVisible(false);

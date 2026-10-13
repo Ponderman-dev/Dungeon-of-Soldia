@@ -1,0 +1,18 @@
+{
+  "_about": "Minions: extra fighters on the hero side. They are NOT heroes (no XP, perks, morale, never count as living heroes). kind 'weak': many at once (cap per source), vanish when the floor ends or their holder dies. kind 'greater' (later): one per item, persists across floors. Same shape as enemies.json (stats, parts, height, flying) plus kind.",
+  "skeleton": {
+    "name": "Skeleton",
+    "kind": "weak",
+    "damageType": "melee",
+    "flying": false,
+    "height": 22,
+    "weak": [],
+    "resists": [],
+    "stats": { "health": 25, "attack": 6, "defense": 0, "attackEfficiency": 100 },
+    "parts": {
+      "body": { "w": 9, "h": 12, "x": 0, "y": -6, "color": "0xd8d4c4", "idle": { "dy": -1, "duration": 500 } },
+      "head": { "w": 9, "h": 8, "x": 0, "y": -16, "color": "0xefece0", "idle": { "dy": -1.5, "duration": 500, "delay": 100 } },
+      "weapon": { "w": 3, "h": 12, "x": 8, "y": -6, "color": "0x8c8a7c", "pivotY": 1, "idle": { "angle": 8, "duration": 600 } }
+    }
+  }
+}

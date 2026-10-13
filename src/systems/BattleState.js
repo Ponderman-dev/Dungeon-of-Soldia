@@ -17,6 +17,8 @@ export const SKILL_SLOTS = ['attack', 'support'];
 //         attackCancel (an attack in progress was stopped: the attacker got stunned, frozen, feared,
 //                       knocked back, or nothing is left to hit),
 //         attackRetarget (a ranged attack in progress lost its target, it now goes for { target, hitInMs })
+//         minionSpawn (a minion rose: { unit, holder }), minionVanish (it left without dying: floor ended, holder died,
+//                     pushed out by a newer one: { unit, reason })
 //         beat (a counter passive counted a basic attack: { unit (the attacker), holder, counter, count, fired })
 //         shieldBreak (a shield was used up by damage: { unit, status }; a shield that just runs out of time
 //                      is only a normal 'status' expire event)
@@ -30,7 +32,7 @@ export const SKILL_SLOTS = ['attack', 'support'];
 // fighters stay where they are. Fighters gently push apart so they don't stand on top of each other.
 // Without positions (some rule tests) nobody moves and melee can always hit.
 export default class BattleState {
-  constructor({ heroDefs, enemyDefs, itemDefs = {}, skillDefs = {}, statusDefs = {}, rules, damageTypes, leveling, rng = Math.random }) {
+  constructor({ heroDefs, enemyDefs, minionDefs = {}, itemDefs = {}, skillDefs = {}, statusDefs = {}, rules, damageTypes, leveling, rng = Math.random }) {
     this.rules = rules;
     this.statusDefs = statusDefs; // statuses.json: tags plus rules (dot, control, tickMs...)
     this.itemDefs = itemDefs;
@@ -43,6 +45,8 @@ export default class BattleState {
     this.focusUid = null;
     this.heroes = heroDefs.map((d) => this.makeUnit(d, 'hero', 1));
     this.enemies = [];
+    this.minions = []; // extra fighters on the hero side (minions.json); never part of the squad
+    this.minionDefs = minionDefs;
     this.morale = 'full';
     this.refreshStats(); // perks count from the start
   }
@@ -92,6 +96,9 @@ export default class BattleState {
       walked: 0, // total distance walked (the scene uses it for the hop rhythm)
       knock: null, // being knocked back: { vx, vy, remaining }
       casting: null, // a skill winding up: { index, remaining, total }
+      spawnTimer: 0, // minion spawner (def.spawner): ms until the next minion
+      minion: false, // true for minions (hero side, not in this.heroes)
+      holderUid: null, // minions: the hero whose passive/item made it
       counterCount: 0, // "every Nth attack" passive (def.counter): basic attacks counted so far
       damageBonus: {},
       specials: {},
@@ -154,6 +161,16 @@ export default class BattleState {
     return this.heroes.every((h) => !h.alive);
   }
 
+  // Every fighter: heroes, enemies and minions.
+  allUnits() {
+    return [...this.heroes, ...this.enemies, ...this.minions];
+  }
+
+  // The hero side's fighters (squad heroes + minions) and who enemies can attack.
+  defenders() {
+    return [...this.heroes, ...this.minions].filter((u) => u.alive);
+  }
+
   // Puts a fighter at a spot (its feet). This is also its home spot (fear sends it back there).
   place(unit, x, y) {
     unit.x = unit.homeX = x;
@@ -210,9 +227,9 @@ export default class BattleState {
   pickTarget(unit) {
     const taunter = this.tauntedBy(unit);
     if (taunter) return taunter;
-    const foes = (unit.side === 'hero' ? this.enemies : this.heroes).filter((u) => u.alive);
+    const foes = (unit.side === 'hero' ? this.enemies.filter((u) => u.alive) : this.defenders());
     if (!foes.length) return null;
-    if (unit.side === 'hero') {
+    if (unit.side === 'hero' && !unit.minion) { // minions ignore tap focus
       const focus = foes.find((e) => e.uid === this.focusUid);
       if (focus) return this.setFoe(unit, focus);
     }
@@ -227,7 +244,7 @@ export default class BattleState {
   tauntedBy(unit) {
     for (const st of [...unit.statuses].reverse()) {
       if (st.type !== 'taunt') continue;
-      const taunter = [...this.heroes, ...this.enemies].find((u) => u.uid === st.sourceUid);
+      const taunter = this.allUnits().find((u) => u.uid === st.sourceUid);
       if (taunter && taunter.alive && taunter.side !== unit.side) return taunter;
     }
     return null;
@@ -269,7 +286,7 @@ export default class BattleState {
   move(dt) {
     const M = this.rules.movement;
     if (!M) return;
-    const units = [...this.heroes, ...this.enemies].filter((u) => u.alive && this.hasPositions(u));
+    const units = this.allUnits().filter((u) => u.alive && this.hasPositions(u));
     const before = new Map(units.map((u) => [u, { x: u.x, y: u.y }]));
     const step = (M.walkSpeedPxPerSec * dt) / 1000;
     for (const u of units) {
@@ -342,15 +359,112 @@ export default class BattleState {
     target.pending = null; // an attack it had started never lands
     target.casting = null;
     target.moving = false;
-    for (const u of [...this.heroes, ...this.enemies]) if (u.foe === target.uid) u.foe = null;
+    for (const u of this.allUnits()) if (u.foe === target.uid) u.foe = null;
     this.retargetAttacksOn(target, events);
     if (this.focusUid === target.uid) this.focusUid = null;
     events.push({ type: 'death', unit: target });
+    if (target.minion) {
+      this.minions = this.minions.filter((m) => m !== target); // no XP, no morale, no stats to redo
+      return;
+    }
     if (target.side === 'enemy') this.awardXp(target, events);
     else {
+      this.removeMinionsOf(target, 'holderDied', events); // minions vanish when their holder dies
       this.refreshStats();
       if (this.morale !== was) events.push({ type: 'morale', tier: this.morale });
     }
+  }
+
+  // ---- minions (minions.json) ------------------------------------------------------------------
+  // A hero def can have `spawner: { minion, minMs, maxMs, cap, atFloorStart }` (the Necromancer's
+  // Skeleton Summoner). While the hero lives and a fight runs it raises a minion every minMs..maxMs, and
+  // `atFloorStart` of them right when a floor's fight begins (startFloor). `cap` = how many of that
+  // minion from this source can exist at once: a new one pushes the OLDEST out. Weak minions vanish
+  // when the floor ends (endFloor) or when their holder dies. Minions are never in `this.heroes`: no
+  // XP, perks or morale, they don't count as living heroes, enemies can attack them (and taunt-pull).
+
+  // The fight of a new floor begins: floor-start minions rise, spawn timers start over.
+  startFloor(events = []) {
+    for (const hero of this.heroes) {
+      const sp = hero.alive && hero.def.spawner;
+      if (!sp) continue;
+      hero.spawnTimer = this.spawnDelay(sp);
+      for (let i = 0; i < (sp.atFloorStart || 0); i++) this.spawnMinion(hero, sp, events);
+    }
+    return events;
+  }
+
+  // The floor is won: weak minions vanish (greater ones, later, stay).
+  endFloor(events = []) {
+    for (const m of [...this.minions]) if ((this.minionDefs[m.def.id] || m.def).kind !== 'greater') this.vanishMinion(m, 'floorEnd', events);
+    return events;
+  }
+
+  spawnDelay(sp) {
+    return sp.minMs + this.rng() * ((sp.maxMs ?? sp.minMs) - sp.minMs);
+  }
+
+  tickSpawner(hero, dt, events) {
+    const sp = hero.def.spawner;
+    if (!sp || !this.enemies.some((e) => e.alive)) return; // only while there is a fight
+    hero.spawnTimer -= dt;
+    if (hero.spawnTimer > 0) return;
+    hero.spawnTimer += this.spawnDelay(sp);
+    this.spawnMinion(hero, sp, events);
+  }
+
+  // A minion rises next to its holder. Over the cap: the oldest one from the same source is pushed out.
+  spawnMinion(holder, sp, events) {
+    const def = this.minionDefs[sp.minion];
+    if (!def) return null;
+    const mine = this.minions.filter((m) => m.holderUid === holder.uid && m.def.id === sp.minion);
+    if (sp.cap && mine.length >= sp.cap) this.vanishMinion(mine[0], 'pushedOut', events);
+    const m = this.makeUnit({ id: sp.minion, ...def }, 'hero', 1);
+    m.minion = true;
+    m.holderUid = holder.uid;
+    m.timer = 0;
+    if (this.hasPositions(holder)) {
+      const M = this.rules.movement;
+      this.place(m, holder.x + (this.rng() - 0.5) * 80, holder.y - 36 - this.rng() * 20);
+      m.x = Math.min(M.layout.width - M.layout.marginX, Math.max(M.layout.marginX, m.x));
+    }
+    this.minions.push(m);
+    this.refreshStats(); // squad buffs already running apply to it at once
+    events.push({ type: 'minionSpawn', unit: m, holder });
+    return m;
+  }
+
+  vanishMinion(m, reason, events) {
+    if (!this.minions.includes(m)) return;
+    m.alive = false;
+    m.pending = null;
+    m.casting = null;
+    for (const u of this.allUnits()) if (u.foe === m.uid) u.foe = null;
+    this.minions = this.minions.filter((x) => x !== m);
+    this.retargetAttacksOn(m, events);
+    events.push({ type: 'minionVanish', unit: m, reason });
+  }
+
+  // All minions made by `holder` leave (the holder died).
+  removeMinionsOf(holder, reason, events) {
+    for (const m of this.minions.filter((x) => x.holderUid === holder.uid)) this.vanishMinion(m, reason, events);
+  }
+
+  // Minions have fixed stats, plus any buff the squad gave them (attack speed, attack, defense...).
+  refreshMinionStats(m) {
+    const stats = { ...m.baseStats };
+    for (const st of m.statuses) {
+      if (st.type !== 'buff') continue;
+      for (const mod of st.mods) {
+        if (mod.percent !== undefined) stats[mod.stat] += ((m.baseStats[mod.stat] || 0) * mod.percent) / 100;
+        else stats[mod.stat] = (stats[mod.stat] || 0) + mod.flat;
+      }
+    }
+    for (const key of ['defense', 'resist', 'evasion', 'crit']) stats[key] = Math.max(0, stats[key] || 0);
+    stats.attack = Math.max(1, stats.attack);
+    stats.attackEfficiency = Math.max(10, stats.attackEfficiency);
+    stats.health = m.maxHp; // buffs never change a minion's health
+    m.stats = stats;
   }
 
   // Moves the fight forward by dt milliseconds. Returns events for the scene to show.
@@ -365,11 +479,12 @@ export default class BattleState {
       const regen = (hero.specials && hero.specials.regen) || 0; // % of max health per second
       if (regen > 0) hero.hp = Math.min(hero.maxHp, hero.hp + (hero.maxHp * regen * dt) / 100000);
       hero.shareCd = Math.max(0, hero.shareCd - dt);
+      this.tickSpawner(hero, dt, events);
       for (const slot of hero.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - dt);
       this.tickCasting(hero, dt, events);
     }
 
-    for (const unit of [...this.heroes, ...this.enemies]) {
+    for (const unit of this.allUnits()) {
       if (!unit.alive) continue;
       const busy = this.isStunned(unit) || this.has(unit, 'fear'); // stunned, frozen or feared: no attacks
       // An attack in progress (started, not landed yet): it lands when its time runs out.
@@ -427,7 +542,7 @@ export default class BattleState {
   // at least `retargetMinMs`); a melee swing is lost (the fighter stays ready and walks to its next
   // target, attacking when it gets there). Nobody left: cancelled.
   retargetAttacksOn(dead, events) {
-    for (const unit of [...this.heroes, ...this.enemies]) {
+    for (const unit of this.allUnits()) {
       if (!unit.alive || !unit.pending || unit.pending.target !== dead) continue;
       const next = this.pickTarget(unit);
       if (!next || (unit.damageType === 'melee' && !this.inReach(unit, next))) {
@@ -486,7 +601,7 @@ export default class BattleState {
   // every counted attack (the scene shows the count).
   countBeats(unit, events) {
     const fired = [];
-    if (unit.side !== 'hero') return fired;
+    if (unit.side !== 'hero' || unit.minion) return fired; // minions never count
     for (const holder of this.heroes) {
       const c = holder.def.counter;
       if (!c || !holder.alive) continue;
@@ -511,6 +626,11 @@ export default class BattleState {
       events.push({ type: 'beat', unit, holder, counter: c, count: hit ? c.every : holder.counterCount, fired: hit });
     }
     return fired;
+  }
+
+  // Heroes and minions that are alive: what squad-wide buffs and effects reach.
+  squadUnits() {
+    return [...this.heroes.filter((h) => h.alive), ...this.minions.filter((m) => m.alive)];
   }
 
   // The living hero with the lowest health % that is actually hurt, or null.
@@ -594,10 +714,10 @@ export default class BattleState {
         landed = !hit.dodged;
       }
       if (proc.chain && enemy) this.chainHit(hero, enemy, proc.chain, events);
-      const targets = proc.targets === 'squad' ? this.heroes.filter((h) => h.alive) : proc.targets === 'target' ? (enemy && landed ? [enemy] : []) : [hero];
+      const targets = proc.targets === 'squad' ? this.squadUnits() : proc.targets === 'target' ? (enemy && landed ? [enemy] : []) : [hero];
       // A status spec can pick its own receivers with `to` (self / squad / target), e.g. a proc that taunts
       // the enemy hit AND gives the holder a defense buff.
-      const receivers = (to) => (to === 'squad' ? this.heroes.filter((h) => h.alive) : to === 'target' ? (enemy && landed ? [enemy] : []) : to === 'self' ? [hero] : targets);
+      const receivers = (to) => (to === 'squad' ? this.squadUnits() : to === 'target' ? (enemy && landed ? [enemy] : []) : to === 'self' ? [hero] : targets);
       for (const spec of proc.apply || []) {
         for (const target of receivers(spec.to)) this.applyStatus(target, spec, hero, `proc_${proc.itemId}`, events);
       }
@@ -699,8 +819,8 @@ export default class BattleState {
     for (const shield of broken) {
       events.push({ type: 'shieldBreak', unit, status: shield });
       if (!shield.onBreak) continue;
-      const caster = [...this.heroes, ...this.enemies].find((u) => u.uid === shield.sourceUid && u.alive) || unit;
-      const foes = (unit.side === 'hero' ? this.enemies : this.heroes).filter((u) => u.alive);
+      const caster = this.allUnits().find((u) => u.uid === shield.sourceUid && u.alive) || unit;
+      const foes = unit.side === 'hero' ? this.enemies.filter((u) => u.alive) : this.defenders();
       events.push({ type: 'proc', unit, label: 'Shards!' });
       for (const foe of foes) this.strike(caster, foe, events, { multiplier: shield.onBreak.damageMultiplier, damageType: shield.onBreak.damageType });
     }
@@ -809,7 +929,7 @@ export default class BattleState {
   // Counts statuses down, ticks damage over time, and removes finished statuses.
   tickStatuses(dt, events) {
     let buffEnded = false;
-    for (const unit of [...this.heroes, ...this.enemies]) {
+    for (const unit of this.allUnits()) {
       if (!unit.alive) continue;
       for (const status of unit.statuses) status.remaining -= dt;
       this.tickDots(unit, dt, events);
@@ -991,6 +1111,7 @@ export default class BattleState {
       hero.maxHp = stats.health;
       hero.hp = Math.max(1, hpDelta > 0 ? hero.hp + hpDelta : Math.min(hero.hp, hero.maxHp));
     }
+    for (const m of this.minions) this.refreshMinionStats(m);
   }
 
   // Gives a hero an item.

@@ -663,8 +663,8 @@
       "mods": [
         {
           "special": "regen",
-          "percent": 1,
-          "growth": 0.03
+          "percent": 0.4,
+          "growth": 0.01
         }
       ]
     },

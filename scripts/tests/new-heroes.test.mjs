@@ -196,4 +196,4 @@ const T = ['knight', 'rogue'];
 { const full = (id) => ({ ...heroDefs.find((h) => h.id === id) });
   const mkP = (ids) => new BattleState({ heroDefs: ids.map(full), enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs: {}, statusDefs: r('statuses.json'), skillDefs: skills, rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
   const s = mkP(['mage', 'cleric', 'alchemist']);
-  ok('Mage perk: +10% skill damage, Cleric perk: +1% regen/s, Alchemist perk: +10% damage over time for every hero', s.heroes.every((h) => h.specials.skillDamage === 10 && h.specials.dotDamage === 10 && h.specials.regen >= 1), JSON.stringify(s.heroes[0].specials)); }
+  ok('Mage perk: +10% skill damage, Cleric perk: +0.4% regen/s, Alchemist perk: +10% damage over time for every hero', s.heroes.every((h) => h.specials.skillDamage === 10 && h.specials.dotDamage === 10 && h.specials.regen >= 0.4), JSON.stringify(s.heroes[0].specials)); }

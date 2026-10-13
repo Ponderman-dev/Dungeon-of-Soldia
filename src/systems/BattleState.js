@@ -46,6 +46,7 @@ export default class BattleState {
     // A passive can hold the hero's `counter` (every Nth attack) and `spawner` (minions): they are also read from the def itself.
     this.heroes = heroDefs.map((d) => this.makeUnit({ ...d, counter: d.counter ?? (d.passive && d.passive.counter), spawner: d.spawner ?? (d.passive && d.passive.spawner) }, 'hero', 1));
     this.enemies = [];
+    this.tornados = []; // Excalibur tornadoes { holder, remaining, tick, hops, target, spec }
     this.minions = []; // extra fighters on the hero side (minions.json); never part of the squad
     this.minionDefs = minionDefs;
     this.morale = 'full';
@@ -148,6 +149,7 @@ export default class BattleState {
 
   spawnEnemies(ids, floor) {
     this.focusUid = null;
+    this.tornados = [];
     for (const h of this.heroes) {
       h.floor = {}; // per-floor flags (Tough Skin used, Second Wind used...)
       h.firstHits = new Set(); // enemies this hero has already hit with a basic attack (Sucker Punch)
@@ -632,6 +634,7 @@ export default class BattleState {
     this.tickStatuses(dt, events);
     this.move(dt);
     for (const m of this.minions) if (m.healCd > 0) m.healCd -= dt; // Phoenix heal cooldown
+    this.tickTornados(dt, events);
 
     // Health regenerates (Heart Charm) and skill cooldowns run down.
     for (const hero of this.heroes) {
@@ -1097,16 +1100,69 @@ export default class BattleState {
         landed = !hit.dodged;
       }
       if (proc.chain && enemy) this.chainHit(hero, enemy, proc.chain, events);
+      if (proc.tornado && enemy && landed) this.spawnTornado(hero, proc.tornado, enemy, events);
       const targets = proc.targets === 'squad' ? this.squadUnits() : proc.targets === 'target' ? (enemy && landed ? [enemy] : []) : [hero];
       // A status spec can pick its own receivers with `to` (self / squad / target), e.g. a proc that taunts
       // the enemy hit AND gives the holder a defense buff.
-      const receivers = (to) => (to === 'squad' ? this.squadUnits() : to === 'target' ? (enemy && landed ? [enemy] : []) : to === 'self' ? [hero] : targets);
+      let ally; // Jolly Banner: the holder and ONE random other living hero (picked once per proc)
+      const receivers = (to) => (to === 'selfAndAlly' ? (ally = ally || this.randomAlly(hero), ally ? [hero, ally] : [hero]) : to === 'squad' ? this.squadUnits() : to === 'target' ? (enemy && landed ? [enemy] : []) : to === 'self' ? [hero] : targets);
       for (const spec of proc.apply || []) {
         // scalesWithCopies: the status gets stronger with every copy of the item held (Ember Charm's burn).
-        const real = spec.scalesWithCopies ? { ...spec, damageMultiplier: spec.damageMultiplier * (proc.copies || 1) } : spec;
+        let real = spec.scalesWithCopies ? { ...spec, damageMultiplier: spec.damageMultiplier * (proc.copies || 1) } : spec;
+        if (spec.durationPerCopyMs) real = { ...real, durationMs: spec.durationMs + spec.durationPerCopyMs * ((proc.copies || 1) - 1) }; // Jolly Banner: longer with every extra copy
         for (const target of receivers(spec.to)) this.applyStatus(target, real, hero, `proc_${proc.itemId}`, events);
       }
     }
+  }
+
+  // Excalibur: a tornado lives `durationMs`, hits its enemy every `tickMs` (item damage) and drifts to another
+  // random living enemy every `hopEvery` ticks. At most `max` at once: a new one pushes the oldest out.
+  spawnTornado(hero, spec, enemy, events) {
+    const mine = this.tornados.filter((t) => t.holder === hero);
+    if (this.tornados.length >= spec.max) {
+      const old = this.tornados.shift();
+      events.push({ type: 'tornadoEnd', tornado: old });
+    }
+    const t = { id: this.nextUid++, holder: hero, remaining: spec.durationMs, tick: spec.tickMs, ticks: 0, target: enemy, spec };
+    this.tornados.push(t);
+    events.push({ type: 'tornadoSpawn', tornado: t, target: enemy });
+    return mine;
+  }
+
+  tickTornados(dt, events) {
+    for (const t of [...this.tornados]) {
+      t.remaining -= dt;
+      t.tick -= dt;
+      while (t.tick <= 0 && t.remaining > -t.spec.tickMs) {
+        t.tick += t.spec.tickMs;
+        if (!t.holder.alive || !t.target.alive) {
+          const alive = this.enemies.filter((e) => e.alive);
+          if (!alive.length) break;
+          t.target = alive[Math.floor(this.rng() * alive.length)];
+          events.push({ type: 'tornadoMove', tornado: t, target: t.target });
+        }
+        this.strike(t.holder, t.target, events, { multiplier: t.spec.damageMultiplier, damageType: t.spec.damageType, item: true });
+        t.ticks++;
+        if (t.spec.hopEvery && t.ticks % t.spec.hopEvery === 0) {
+          const others = this.enemies.filter((e) => e.alive && e !== t.target);
+          if (others.length) {
+            t.target = others[Math.floor(this.rng() * others.length)];
+            events.push({ type: 'tornadoMove', tornado: t, target: t.target });
+          }
+        }
+        if (t.remaining <= 0) break;
+      }
+      if (t.remaining <= 0 || !this.enemies.some((e) => e.alive)) {
+        this.tornados = this.tornados.filter((x) => x !== t);
+        events.push({ type: 'tornadoEnd', tornado: t });
+      }
+    }
+  }
+
+  // One random living hero other than `hero` (undefined if he is alone).
+  randomAlly(hero) {
+    const others = this.heroes.filter((h) => h.alive && h !== hero);
+    return others[Math.floor(this.rng() * others.length)];
   }
 
   // Slot neighbours of an enemy: the living enemies standing right next to it.

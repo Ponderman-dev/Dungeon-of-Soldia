@@ -1306,5 +1306,73 @@
     "provides": [
       "minion"
     ]
+  },
+  "jolly_banner": {
+    "name": "Jolly Banner",
+    "rarity": "epic",
+    "type": "squad",
+    "scope": "self",
+    "description": "5% chance per attack (more copies do not raise it): the holder and one random ally get strong regeneration, sure crits and +40% attack speed for 2s. Each extra copy adds 0.5s.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 5,
+        "unique": true,
+        "label": "Jolly!",
+        "targets": "self",
+        "apply": [
+          {
+            "status": "buff",
+            "to": "selfAndAlly",
+            "durationMs": 2000,
+            "durationPerCopyMs": 500,
+            "mods": [
+              {
+                "stat": "attackEfficiency",
+                "percent": 40
+              },
+              {
+                "stat": "crit",
+                "flat": 100
+              }
+            ]
+          },
+          {
+            "status": "regenBoost",
+            "to": "selfAndAlly",
+            "durationMs": 2000,
+            "durationPerCopyMs": 500,
+            "percentMaxHpPerSec": 4
+          }
+        ]
+      }
+    ],
+    "dropWeight": 100
+  },
+  "excalibur": {
+    "name": "Excalibur",
+    "rarity": "legendary",
+    "type": "onhit",
+    "scope": "self",
+    "description": "8% chance on a melee attack to spawn a tornado: 5s, drifts between enemies and hits them. Max 3 at once. More copies roll again.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "falloffRatio": 0.85,
+        "meleeOnly": true,
+        "label": "Tornado!",
+        "targets": "self",
+        "tornado": {
+          "durationMs": 5000,
+          "tickMs": 500,
+          "damageMultiplier": 0.6,
+          "max": 3,
+          "hopEvery": 2
+        }
+      }
+    ],
+    "dropWeight": 100,
+    "needs": "melee"
   }
 }

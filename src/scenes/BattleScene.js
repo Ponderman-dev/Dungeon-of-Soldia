@@ -217,6 +217,18 @@ export default class BattleScene extends Phaser.Scene {
 
   // Draws every living fighter where the fight rules say it stands, hopping while it walks.
   // Lower on the screen = drawn in front.
+  // Excalibur tornadoes glide to the enemy they are on.
+  drawTornados() {
+    if (!this.tornadoViews) return;
+    for (const [id, tv] of this.tornadoViews) {
+      if (!this.state.tornados.includes(tv.t)) { tv.g.destroy(); this.tornadoViews.delete(id); continue; }
+      const v = this.views.get(tv.t.target.uid);
+      if (!v) continue;
+      tv.g.x += (v.ch.x - tv.g.x) * 0.15;
+      tv.g.y += (v.ch.y - tv.g.y) * 0.15;
+    }
+  }
+
   followPositions() {
     for (const v of this.views.values()) {
       const u = v.unit;
@@ -613,6 +625,7 @@ export default class BattleScene extends Phaser.Scene {
     const events = this.state.update(Math.min(delta, 100));
     for (const e of events) this.showEvent(e);
     this.followPositions();
+    this.drawTornados();
     this.drawCastBars();
     this.drawTauntLines();
 
@@ -723,6 +736,23 @@ export default class BattleScene extends Phaser.Scene {
       this.showFlask(this.views.get(e.unit.uid), this.views.get(e.target.uid), Number(e.flask.color));
     } else if (e.type === 'minionSpawn') {
       this.showMinion(e.unit);
+    } else if (e.type === 'tornadoSpawn') {
+      this.tornadoViews = this.tornadoViews || new Map();
+      const g = this.add.container(0, 0).setDepth(DEPTH.popup - 2);
+      for (let i = 0; i < 4; i++) {
+        const w = 40 - i * 8;
+        const r = this.add.rectangle(0, -i * 10, w, 6, 0xcfe8ff, 0.8 - i * 0.12);
+        g.add(r);
+        this.tweens.add({ targets: r, x: { from: -6, to: 6 }, duration: 160 + i * 40, yoyo: true, repeat: -1 });
+      }
+      this.tornadoViews.set(e.tornado.id, { g, t: e.tornado });
+      this.puff(g.x, g.y, 0xcfe8ff, 4);
+    } else if (e.type === 'tornadoEnd') {
+      const tv = this.tornadoViews && this.tornadoViews.get(e.tornado.id);
+      if (tv) {
+        this.tornadoViews.delete(e.tornado.id);
+        this.tweens.add({ targets: tv.g, alpha: 0, duration: 250, onComplete: () => tv.g.destroy() });
+      }
     } else if (e.type === 'minionExplode') {
       const v = this.views.get(e.unit.uid);
       if (v) {

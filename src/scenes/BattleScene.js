@@ -21,6 +21,8 @@ import { enemiesForFloor } from '../systems/dungeon.js';
 import { pickSquad, perkMods } from '../systems/party.js';
 import { loadItems } from '../systems/items.js';
 import { rollChoices } from '../systems/rewards.js';
+import { loadProgress, saveProgress, recordRun, unlockedIds } from '../systems/progress.js';
+import unlocks from '../data/unlocks.json';
 
 const DUNGEON_ID = 'A';
 const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
@@ -1137,6 +1139,13 @@ export default class BattleScene extends Phaser.Scene {
   onLoss() {
     this.mode = 'lost';
     this.banner.setText(`Squad defeated\nReached floor ${this.floor}`);
-    this.time.delayedCall(combatRules.restartDelayMs, () => this.scene.restart());
+    // Save the run (floor reached, enemies defeated) and see which heroes it unlocked.
+    const progress = loadProgress();
+    const before = unlockedIds(allHeroDefs, progress, unlocks);
+    recordRun(progress, { floor: this.floor, kills: this.state.kills || 0 });
+    saveProgress(progress);
+    const newly = unlockedIds(allHeroDefs, progress, unlocks).filter((id) => !before.includes(id));
+    const lastRun = { floor: this.floor, kills: this.state.kills || 0, newly };
+    this.time.delayedCall(combatRules.restartDelayMs, () => this.scene.start('Squad', { lastRun }));
   }
 }

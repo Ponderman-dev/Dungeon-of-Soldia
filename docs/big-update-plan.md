@@ -255,8 +255,8 @@ Decided with the user:
 - Until squad select exists, the test squad can be switched in squad.json.
 
 ### Phase F: Squad select and unlocks
-- F1. Squad select screen: pick 3 of the unlocked heroes.
-- F2. Unlocks saved in localStorage (which floors unlock which hero: to decide with the user).
+- F1. DONE. Squad select screen: pick 3 of the unlocked heroes (+ RANDOM button, shown first and after every defeat).
+- F2. DONE. Unlocks saved in localStorage; each hero has its own requirement (floors reached, enemies defeated, floors cleared, runs played) in `unlocks.json`, plus an unlock-all toggle (the user's choice).
 
 ### Phase G: Items (in groups, each with its tests)
 - G1. Update the 19 built items to the new rules (renames, rarities, weights, Chill Band, Static Crystal, Gambler's Dice, Bulwark Plate/Feather Boots stacks, Siege Cannon legendary).

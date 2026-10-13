@@ -1400,6 +1400,7 @@ export default class BattleState {
 
   // Splits an enemy's XP between the living heroes. Dead heroes get nothing.
   awardXp(enemy, events) {
+    this.kills = (this.kills || 0) + 1; // enemies killed in this run (saved with the run's results)
     const living = this.heroes.filter((h) => h.alive);
     if (!living.length) return;
     const share = (enemy.def.xp || 0) / living.length;

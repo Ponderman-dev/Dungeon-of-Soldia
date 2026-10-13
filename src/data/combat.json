@@ -26,6 +26,11 @@
   },
   "attackMotion": {
     "returnMs": 280,
+    "walkSpeedPxPerSec": 300,
+    "meetGapPx": 80,
+    "sideGapPx": 62,
+    "crowdXPx": 46,
+    "crowdYPx": 30,
     "hopHeight": 7,
     "hopLengthPx": 38,
     "standOffY": 76,

@@ -295,7 +295,10 @@ export default class BattleState {
         continue;
       }
       unit.pending.target = next;
-      unit.pending.remaining = Math.max(unit.pending.remaining, (this.rules.attackTiming && this.rules.attackTiming.retargetMinMs) || 0);
+      const minMs = (this.rules.attackTiming && this.rules.attackTiming.retargetMinMs) || 0;
+      // A melee fighter has to walk to the new target at its normal speed (no teleporting).
+      const walkMs = unit.damageType === 'melee' ? this.hitDelay(unit, next) : 0;
+      unit.pending.remaining = Math.max(minMs, walkMs, unit.damageType === 'melee' ? 0 : unit.pending.remaining);
       events.push({ type: 'attackRetarget', attacker: unit, target: next, hitInMs: unit.pending.remaining });
     }
   }
@@ -307,6 +310,10 @@ export default class BattleState {
     const timing = (this.rules.attackTiming && this.rules.attackTiming[unit.side]) || {};
     if (unit.damageType !== 'melee') return timing.rangedHitMs || 0;
     if (target && this.standingTogether(unit, target)) return timing.swingMs ?? timing.meleeHitMs ?? 0;
+    // Walk over at a constant speed: the longer the way, the longer it takes (the scene says how far).
+    const speed = this.rules.attackMotion && this.rules.attackMotion.walkSpeedPxPerSec;
+    const px = this.walkDistance && target ? this.walkDistance(unit, target) : null;
+    if (speed && px != null) return Math.round((px / speed) * 1000) + (timing.swingMs || 0);
     return timing.meleeHitMs || 0;
   }
 

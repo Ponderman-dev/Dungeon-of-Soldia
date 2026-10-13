@@ -96,7 +96,7 @@ export default class Character extends Phaser.GameObjects.Container {
   // walking), arriving after `duration` ms, then calls onDone.
   // opts.ease: 'Linear' by default (constant speed, not floaty). opts.hop: { height, length } makes it
   // hop with every step like the door walk. opts.onUpdate runs every frame (to keep bars attached).
-  chase(getSpot, duration, { onDone, onUpdate, ease = 'Linear', hop = null } = {}) {
+  chase(getSpot, duration, { onDone, onUpdate, ease = 'Linear', hop = null, avoid = null } = {}) {
     this.stopMove();
     const fromX = this.x;
     const fromY = this.y;
@@ -110,7 +110,10 @@ export default class Character extends Phaser.GameObjects.Container {
       onUpdate: (tween) => {
         const p = tween.getValue();
         const spot = getSpot();
-        this.x = fromX + (spot.x - fromX) * p;
+        // `avoid` (optional) bends the path around other fighters; it fades out as we arrive.
+        const bend = avoid ? avoid(this.x, this.y) : { dx: 0, dy: 0 };
+        const fade = Math.min(1, (1 - p) * 3);
+        this.x = fromX + (spot.x - fromX) * p + bend.dx * fade;
         // Each step is one little hop: up and down, landing exactly at the end.
         this.hopOffset = hop ? Math.abs(Math.sin(p * steps * Math.PI)) * hop.height : 0;
         this.y = fromY + (spot.y - fromY) * p - this.hopOffset;

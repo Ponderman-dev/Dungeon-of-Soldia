@@ -21,3 +21,15 @@ ok('each damage type looks different', new Set(types2).size === HIT_TYPES.length
 ok('fire, ice and dark colour the target for a moment', ['fire', 'ice', 'dark'].every((k) => impactFx(k, 0.2, u, 0).tint) && !impactFx('melee', 0.2, u, 0).tint);
 ok('the hit lands on the side facing the attacker', impactFx('melee', 0.3, u, 0).draws.every((p) => p[0] <= u.x) && impactFx('melee', 0.3, { ...u, side: 1 }, 0).draws.every((p) => p[0] >= u.x));
 ok('crits add slashes and rays', critFx(0.3, u, 0).length > 20 && critFx(1, u, 0).length === 0);
+// The other hit moments: miss, block, shield soak, shield break, heal, death puff.
+import { MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, deathPuffFx } from '../../src/systems/hitFx.js';
+const ub = { ...u, bot: 50 };
+const mom = { dodge: (q) => dodgeFx(q, ub).draws, block: (q) => blockFx(q, ub), soak: (q) => soakFx(q, ub), shieldBreak: (q) => shieldBreakFx(q, ub), heal: (q) => healFx(q, ub, 2).draws, puff: (q) => deathPuffFx(q, 60, 50) };
+ok('every moment has a duration', Object.keys(mom).every((k) => MOMENT_MS[k] > 0));
+const bad2 = [];
+for (const [k, fn] of Object.entries(mom)) for (const q of [0, 0.05, 0.2, 0.5, 0.9, 1]) { try { if (!clean(fn(q))) bad2.push(k); } catch (e) { bad2.push(k + ': ' + e.message); } }
+ok('moments draw clean pixels', bad2.length === 0, [...new Set(bad2)].join('; '));
+ok('every moment shows something', Object.values(mom).every((fn) => [0.1, 0.3, 0.5].some((q) => fn(q).length > 0)));
+ok('a dodge steps AWAY from the attacker and comes back', dodgeFx(0.3, ub).dx > 0 && dodgeFx(0.3, { ...ub, side: 1 }).dx < 0 && dodgeFx(1, ub).dx === 0);
+ok('a heal glows green for a moment', healFx(0.35, ub).tint && healFx(0.95, ub).tint === null);
+ok('the death puff is gone at the end', deathPuffFx(1, 60, 50).length === 0);

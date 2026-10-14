@@ -128,3 +128,60 @@ export function critFx(q, u, t) {
   rays(g, fx, fy, 8, 14, C.gold, ph(q, 0.1, 1), t / 400);
   return g.out;
 }
+
+// ---- the other hit moments (miss, block, shield, heal, death) ----------------------------------
+// Each takes q = 0..1 over its own time in MOMENT_MS and the unit's body u (as impactFx, plus bot).
+export const MOMENT_MS = { dodge: 600, block: 320, soak: 460, shieldBreak: 660, heal: 900, puff: 570 };
+
+// Dodge: it side-steps away from the attacker and comes back; grey speed lines where it stood.
+// Returns { draws, dx } (dx = how far it is pushed sideways, in character pixels).
+export function dodgeFx(q, u) {
+  const g = pen();
+  const out = easeOut(ph(q, 0, 0.2)), back = ph(q, 0.6, 0.95);
+  const dx = Math.round(-u.side * 6 * out * (1 - back));
+  const a = 1 - ph(q, 0.1, 0.5);
+  if (a > 0) for (const [k, dy] of [[0, -4], [1, 0], [2, 4]]) g.line(u.x - 3 + k, u.mid + dy, u.x + 3 - k, u.mid + dy, C.grey, a * 0.8);
+  return { draws: g.out, dx };
+}
+// Block / parry: a bright shield shape flashes on the side that was hit, sparks fly back.
+export function blockFx(q, u) {
+  const g = pen();
+  const fx = u.x + u.side * (u.hw + 2);
+  if (q > 0 && q < 1) for (let y = -6; y <= 5; y++) { const w = y < 2 ? 2 : y < 4 ? 1 : 0; for (let k = 0; k <= w; k++) g.px(fx + u.side * k, u.mid + y, k === 0 ? C.white : C.shield, 1 - q); }
+  burst(g, fx + u.side, u.mid, 8, [C.shield, C.white], q, 9, 2);
+  return g.out;
+}
+// A shield soaks a hit: the bubble lights up, a white ripple where it was hit.
+export function soakFx(q, u) {
+  const g = pen();
+  const R = u.hw + 7, RY = (u.bot - u.top) / 2 + 4;
+  if (q > 0 && q < 1) { g.ring(u.x, u.mid, R, C.shield, 0.3 + 0.6 * (1 - q), RY); g.ring(u.x + u.side * R, u.mid, 1 + q * 5, C.white, 1 - q); }
+  return g.out;
+}
+// The shield breaks: the bubble cracks into blue shards that fly out and fall.
+export function shieldBreakFx(q, u) {
+  const g = pen();
+  const R = u.hw + 7, RY = (u.bot - u.top) / 2 + 4;
+  if (q > 0 && q < 1) for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2; const k = 1 + easeOut(q) * 0.7; g.px(u.x + Math.cos(a) * R * k, u.mid + Math.sin(a) * RY * k + q * q * 14, i % 2 ? C.shield : C.white, 1 - q); }
+  return g.out;
+}
+// A heal: soft green motes rise around the body (some are little plus signs), a quick green glow.
+// Returns { draws, tint }.
+export function healFx(q, u, seed = 0) {
+  const g = pen();
+  for (let i = 0; i < 8; i++) {
+    const p = ph(q, i * 0.05, 0.6 + i * 0.05);
+    if (p <= 0 || p >= 1) continue;
+    const x = u.x + (rnd(i + seed * 3) - 0.5) * (u.hw * 2 + 6), y = u.y - 2 - p * 22;
+    g.px(x, y, C.heal, 1 - p);
+    if (i % 3 === 0) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) g.px(x + a, y + b, C.heal, 1 - p);
+  }
+  const glow = q > 0 && q < 0.75 ? 0.35 * Math.sin((q / 0.75) * Math.PI) : 0;
+  return { draws: g.out, tint: glow > 0.02 ? [C.heal, Math.round(glow * 20) / 20] : null };
+}
+// The grey puff where an enemy died (x, y = its feet).
+export function deathPuffFx(q, x, y) {
+  const g = pen();
+  if (q > 0 && q < 1) for (let i = 0; i < 5; i++) g.disc(x + (i - 2) * 3, y - 3 - q * (6 + (i % 3) * 3), 2 + (i % 2), C.grey2, (1 - q) * 0.8);
+  return g.out;
+}

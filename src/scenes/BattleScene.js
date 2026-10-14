@@ -19,7 +19,7 @@ import { statusIconKey } from '../entities/statusIconTexture.js';
 import statusIcons from '../data/statusIcons.json';
 import { iconList, iconLayout, ICON_PX } from '../systems/statusIcons.js';
 import { statusLook, iceBreak, bodyBox } from '../systems/statusFx.js';
-import { projectileFx, impactFx, critFx, IMPACT_MS, CRIT_MS } from '../systems/hitFx.js';
+import { projectileFx, impactFx, critFx, IMPACT_MS, CRIT_MS, MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, deathPuffFx } from '../systems/hitFx.js';
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon, validateHeroSkills, validateDamageTypes } from '../systems/validate.js';
 import { enemiesForFloor } from '../systems/dungeon.js';
@@ -228,21 +228,38 @@ export default class BattleScene extends Phaser.Scene {
       const start = arrow.kind === 'electric' && v.ch.active ? at(v) : { x: arrow.startX / S, y: arrow.startY / S };
       draw(projectileFx(arrow.kind, start, head, now, v.unit.uid));
     }
-    // Impacts (they follow the target while they play).
-    this.impacts = (this.impacts || []).filter((h) => now - h.start < h.ms && h.view.ch.active);
+    // Impacts and other hit moments (they follow the fighter while they play). A death puff stays put.
+    this.impacts = (this.impacts || []).filter((h) => now - h.start < h.ms && (h.kind === 'puff' || h.view.ch.active));
     for (const h of this.impacts) {
+      if (h.kind === 'puff') { draw(deathPuffFx((now - h.start) / h.ms, h.x, h.y)); continue; }
       const v = h.view, ch = v.ch;
       if (!v.box) v.box = bodyBox(v.unit.def.parts, v.unit.def.height);
       const x = (ch.x + v.box.cx * ch.scaleX) / S, y = ch.y / S;
       if (h.attacker && h.attacker.ch.active) h.side = h.attacker.ch.x < ch.x ? -1 : 1;
-      const u = { x, y, top: y + v.box.top, mid: y + v.box.mid, hw: v.box.hw, side: h.side };
+      const u = { x, y, top: y + v.box.top, mid: y + v.box.mid, bot: y + v.box.bot, hw: v.box.hw, side: h.side };
       const q = (now - h.start) / h.ms;
       if (h.crit) { draw(critFx(q, u, now)); continue; }
+      if (h.kind) {
+        if (h.kind === 'dodge') { const o = dodgeFx(q, u); draw(o.draws); if (o.dx && this.mode === 'fighting') ch.x += o.dx * S; }
+        else if (h.kind === 'block') draw(blockFx(q, u));
+        else if (h.kind === 'soak') draw(soakFx(q, u));
+        else if (h.kind === 'shieldBreak') draw(shieldBreakFx(q, u));
+        else if (h.kind === 'heal') { const o = healFx(q, u, h.seed); draw(o.draws); if (o.tint && !v.hitTint) v.hitTint = o.tint; }
+        continue;
+      }
       const out = impactFx(h.type, q, u, now, h.seed, h.attacker && h.attacker.ch.active ? at(h.attacker) : null);
       draw(out.draws);
       if (out.tint && (!v.hitTint || out.tint[1] > v.hitTint[1])) v.hitTint = out.tint;
       if (out.dx && this.mode === 'fighting') ch.x += out.dx * S;
     }
+  }
+
+  // Starts one of the other hit moments on a fighter: 'dodge', 'block', 'soak', 'shieldBreak', 'heal'.
+  addMoment(kind, v, attacker = null) {
+    if (!v || !v.ch || !v.ch.active) return;
+    const side = attacker && attacker.ch && attacker.ch.x < v.ch.x ? -1 : 1;
+    const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
+    (this.impacts = this.impacts || []).push({ kind, start: this.time.now, ms: MOMENT_MS[kind], view: v, attacker, side, seed });
   }
 
   // A hit landed: start its impact effect (and the crit layer) on the target.
@@ -811,14 +828,15 @@ export default class BattleScene extends Phaser.Scene {
         return;
       }
       if (e.result.dodged) {
-        if (e.result.blocked) this.popText(t, 'Blocked!', '#9fc4ff', true);
-        else this.popText(t, 'Miss', '#aaaaaa');
+        if (e.result.blocked) { this.popText(t, 'Blocked!', '#9fc4ff', true); this.addMoment('block', t, a); }
+        else { this.popText(t, 'Miss', '#aaaaaa'); this.addMoment('dodge', t, a); }
         return;
       }
       this.setBar(t);
       this.drawChips(t); // the shield tag shows what is left
       if (e.result.absorbed > 0) {
         this.popText(t, `Shield -${e.result.absorbed}`, '#6fd0ff');
+        this.addMoment('soak', t, a);
         if (e.result.fullyAbsorbed) return;
         e.result = { ...e.result, amount: e.result.amount - e.result.absorbed };
       }
@@ -944,6 +962,7 @@ export default class BattleScene extends Phaser.Scene {
       this.drawChips(v);
       this.setBar(v);
       this.popText(v, 'Shield broken!', '#6fd0ff', true);
+      this.addMoment('shieldBreak', v);
       this.cameras.main.shake(90, 0.003);
     } else if (e.type === 'proc') {
       this.popText(this.views.get(e.unit.uid), e.label, '#ffd24d', true);
@@ -951,6 +970,7 @@ export default class BattleScene extends Phaser.Scene {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
       this.popText(v, `+${Math.round(e.amount)}`, '#6dff8f');
+      if (!v.healFxAt || this.time.now - v.healFxAt > 450) { v.healFxAt = this.time.now; this.addMoment('heal', v); } // not on every tiny heal
     } else if (e.type === 'thorns') {
       const v = this.views.get(e.unit.uid);
       v.ch.flash();
@@ -983,9 +1003,16 @@ export default class BattleScene extends Phaser.Scene {
       if (e.unit.side === 'enemy' || e.unit.minion) {
         v.ch.stopMove(); // it fades out where it fell
         v.ch.castCancel();
-        v.ch.die(); // death clip (if it has one) while it fades
+        v.ch.die(); // death clip (if it has one)
         this.drawChips(v);
-        this.tweens.add({ targets: [v.ch, v.bg, v.fill, v.shieldFill], alpha: 0, duration: 400, onComplete: () => this.removeView(e.unit.uid) });
+        // A last white flash, it squashes flat into the floor, then a grey puff of smoke and it is gone.
+        v.ch.flash(0xffffff, 120);
+        this.tweens.add({ targets: [v.bg, v.fill, v.shieldFill, v.chipBox], alpha: 0, duration: 250 });
+        this.tweens.add({ targets: v.ch, scaleY: v.ch.scaleY * 0.1, alpha: 0.6, delay: 120, duration: 300, ease: 'Quad.easeIn' });
+        this.time.delayedCall(380, () => {
+          if (v.ch.active) (this.impacts = this.impacts || []).push({ kind: 'puff', start: this.time.now, ms: MOMENT_MS.puff, x: v.ch.x / CHAR_SCALE, y: v.ch.y / CHAR_SCALE });
+          this.removeView(e.unit.uid);
+        });
       } else {
         // A hero who falls while away at an enemy is put back in its slot.
         v.ch.stopMove();

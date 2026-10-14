@@ -1,4 +1,5 @@
-// Copies designs saved in the Character Studio into heroes.json / enemies.json / minions.json.
+// Copies designs saved in the Character Studio into heroes.json / enemies.json / minions.json / itemIcons.json,
+// and saved EFFECT settings (kind "effect": { group, name, speed, colors }) into effects.json.
 // Usage: node scripts/apply-designs.mjs <designs.json>
 // <designs.json> is a list of saved designs: { kind: "hero"|"enemy"|"minion"|"item", id, height, hover?, parts }.
 // Only the look changes (parts, height, hover, anims); stats and everything else stay as they are.
@@ -8,11 +9,12 @@ const file = process.argv[2];
 if (!file) throw new Error('Usage: node scripts/apply-designs.mjs <designs.json>');
 const designs = JSON.parse(fs.readFileSync(file, 'utf8'));
 
-const paths = { hero: 'src/data/heroes.json', enemy: 'src/data/enemies.json', minion: 'src/data/minions.json', item: 'src/data/itemIcons.json' };
+const paths = { hero: 'src/data/heroes.json', enemy: 'src/data/enemies.json', minion: 'src/data/minions.json', item: 'src/data/itemIcons.json', effect: 'src/data/effects.json' };
 const heroes = JSON.parse(fs.readFileSync(paths.hero, 'utf8'));
 const enemies = JSON.parse(fs.readFileSync(paths.enemy, 'utf8'));
 const minions = JSON.parse(fs.readFileSync(paths.minion, 'utf8'));
 const itemIcons = JSON.parse(fs.readFileSync(paths.item, 'utf8'));
+const effects = JSON.parse(fs.readFileSync(paths.effect, 'utf8'));
 
 // An item icon design (kind "item") has ONE part, "icon": its picture goes back into a 16x16 grid,
 // placed where the part sits (the icon's box spans x -8..8 and y -16..0, feet at the bottom edge).
@@ -30,6 +32,15 @@ function iconArt(part) {
 }
 
 for (const d of designs) {
+  if (d.kind === 'effect') {
+    // An effect's speed and colour swaps; back to normal (speed 1, no swaps) removes the entry.
+    const g = (effects[d.group] = effects[d.group] || {});
+    const colors = d.colors || {};
+    if ((!d.speed || d.speed === 1) && !Object.keys(colors).length) delete g[d.name];
+    else g[d.name] = { speed: d.speed || 1, colors };
+    console.log(`applied effect ${d.group} ${d.name}`);
+    continue;
+  }
   if (d.kind === 'item') {
     const part = d.parts && (d.parts.icon || Object.values(d.parts)[0]);
     if (!itemIcons[d.id] || !part || !part.art) { console.log(`skip item ${d.id}`); continue; }
@@ -52,7 +63,7 @@ for (const d of designs) {
 }
 
 // Only rewrite the files that got a design (so the others keep their exact formatting).
-const data = { hero: heroes, enemy: enemies, minion: minions, item: itemIcons };
+const data = { hero: heroes, enemy: enemies, minion: minions, item: itemIcons, effect: effects };
 for (const kind of new Set(designs.map((d) => d.kind))) {
   if (data[kind]) fs.writeFileSync(paths[kind], JSON.stringify(data[kind], null, 2) + '\n');
 }

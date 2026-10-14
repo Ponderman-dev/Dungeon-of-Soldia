@@ -7,6 +7,7 @@ import Phaser from 'phaser';
 import Character from '../entities/Character.js';
 import Board, { partBox, transformPart } from './board.js';
 import Timeline, { mainColor } from './timeline.js';
+import EffectsEditor from './effects.js';
 import { partArt, artPixels, flipGridH, flipGridV, rotateGrid90, outlineGrid, replaceColorGrid, pixelsToArt, OUTLINE } from '../systems/pixelArt.js';
 import heroes from '../data/heroes.json';
 import enemies from '../data/enemies.json';
@@ -571,12 +572,16 @@ function renderUndo() {
 
 // The studio has three sections: Units (heroes, enemies, minions), Items (item icons) and Effects.
 let section = 'units';
+let effectsEditor = null; // the Effects section (built the first time it is opened)
+let effectsDb; // the page's store once connect() ran (null = none, saves stay in this browser)
 const sectionOf = (c) => (c.kind === 'item' ? 'items' : 'units');
 function setSection(s) {
   section = s;
   document.querySelectorAll('[data-sect]').forEach((b) => b.classList.toggle('on', b.dataset.sect === s));
   const fx = s === 'effects';
   $('effects-pane').hidden = !fx;
+  if (fx && !effectsEditor) effectsEditor = new EffectsEditor($('effects-pane'));
+  if (fx && effectsDb !== undefined && !effectsEditor.store) effectsEditor.connect(effectsDb, LOCAL_KEY);
   $('unit-pane').hidden = fx;
   $('pick').hidden = fx;
   $('mode-tabs').hidden = fx;
@@ -1330,6 +1335,8 @@ function useSaved(docs) {
 
 async function connect() {
   const db = window.claude && window.claude.use ? await window.claude.use('db').catch(() => null) : null;
+  effectsDb = db;
+  if (effectsEditor && !effectsEditor.store) effectsEditor.connect(db, LOCAL_KEY);
   if (db) {
     const col = db.collection('designs');
     try {

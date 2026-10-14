@@ -4,6 +4,7 @@
 // No Phaser here: `statusLook()` returns what to draw, in CHARACTER pixels around the fighter's feet
 // (x = 0 is the body's middle, y = 0 the feet, up is negative). The scene multiplies by CHAR_SCALE.
 import { partArt, artSize } from './pixelArt.js';
+import { NO_TUNE } from './fxTune.js';
 
 const C = {
   white: 0xffffff, gold: 0xf2c544, gold2: 0xfff7c0, ice: 0x9fe0ff, ice2: 0xbfefff, elec: 0xffe94d,
@@ -193,14 +194,21 @@ const TINTS = [
 //   t: a clock in ms (keeps loops running)
 // Returns { draws: [[x, y, w, h, colour, alpha]], tint: [colour, amount] | null, ice: 0..1, dx }
 //   ice = how far up the body the sprite has turned to ice (Freeze), dx = a small shake in pixels.
-export function statusLook(kinds, u, t) {
+//   tune: effect settings from the Studio (systems/fxTune.js): each status its own speed and colour swaps.
+export function statusLook(kinds, u, t, tune = NO_TUNE) {
   const g = pen();
-  for (const k of LOOPING) if (kinds[k]) LOOPS[k](g, u, t, kinds[k]);
+  let out = [];
+  for (const k of LOOPING) {
+    if (!kinds[k]) continue;
+    g.out.length = 0;
+    LOOPS[k](g, u, t * tune.speed('status', k), kinds[k]);
+    out = out.concat(tune.paint('status', k, g.out));
+  }
   let tint = null;
   for (const [k, fn] of TINTS) {
     if (!kinds[k]) continue;
-    const [c, a] = fn(t, kinds[k]);
-    tint = [c, Math.round(clamp(a) * 20) / 20];
+    const [c, a] = fn(t * tune.speed('status', k), kinds[k]);
+    tint = [tune.color('status', k, c), Math.round(clamp(a) * 20) / 20];
     break;
   }
   if (kinds.shock && Math.floor(t / 90) % 5 === 0) tint = [C.white, 0.4]; // the shock twitch flashes
@@ -209,7 +217,7 @@ export function statusLook(kinds, u, t) {
   if (kinds.shock && Math.floor(t / 90) % 5 === 0) dx = 1;
   if (kinds.fear) dx += Math.floor(t / 50) % 2;
   if (ice > 0) dx = 0;
-  return { draws: g.out, tint: ice > 0 ? null : tint, ice, dx };
+  return { draws: out, tint: ice > 0 ? null : tint, ice, dx };
 }
 
 // The ice breaking off when a Freeze ends: p = 0..1 over ~0.4s.

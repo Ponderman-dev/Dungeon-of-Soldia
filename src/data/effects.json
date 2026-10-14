@@ -1,0 +1,8 @@
+{
+  "_about": "Effect settings made in the Character Studio (Effects section). Per group (status, hit, shot, item, skill) and effect name: `speed` (1 = normal, 2 = twice as fast, 0.5 = half) and `colors` (old colour -> new colour, '0xrrggbb'). The game applies them on top of the effect recipes in src/systems/*Fx.js (src/systems/fxTune.js). Written by scripts/apply-designs.mjs from saved Studio effects.",
+  "status": {},
+  "hit": {},
+  "shot": {},
+  "item": {},
+  "skill": {}
+}

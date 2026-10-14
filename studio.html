@@ -162,6 +162,15 @@
       .tl-key.bounce { background: #57c26a; }
       .tl-keyinfo { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 13px; }
       .tl-keyinfo label { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
+      .fxlist h3 { font: 11px var(--font-data); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 6px 0 0; }
+      .fxbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+      .fxbtn { font-size: 12.5px; padding: 5px 9px; }
+      .fxbtn.changed::after { content: ' •'; color: var(--accent); }
+      .fxstage { width: 100%; max-width: 720px; image-rendering: pixelated; border-radius: 6px; }
+      .fxswatches { display: flex; flex-wrap: wrap; gap: 8px; }
+      .fxswatch { display: inline-flex; align-items: center; gap: 2px; border: 1px solid var(--line); border-radius: 6px; padding: 3px; cursor: pointer; }
+      .fxswatch input { width: 30px; height: 26px; border: 0; padding: 0; background: none; cursor: pointer; }
+      .fxwas { width: 10px; height: 26px; border-radius: 3px; }
       kbd { font: 11px var(--font-data); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; color: var(--muted); }
     </style>
   </head>
@@ -183,13 +192,7 @@
       <button id="save" class="btn primary" disabled>Save design</button>
     </header>
 
-    <main class="bench" id="effects-pane" hidden>
-      <div class="card" style="grid-column: 1 / -1; max-width: 760px">
-        <div class="head"><h2>Effects</h2></div>
-        <p>This is where hit effects, status effects, item procs and skill effects will be edited, once they are in the game.</p>
-        <p>The proposed effects (with animations) are on their own page: <a href="https://claude.ai/artifact/6N97in7zepDMZcMgbJJrYF" target="_blank" rel="noopener">Soldia hit effects</a>. Tell Claude which ones to keep or change, then they are built into the game and become editable here.</p>
-      </div>
-    </main>
+    <main class="bench" id="effects-pane" hidden></main>
 
     <main class="bench" id="unit-pane">
       <aside class="col stagecol">

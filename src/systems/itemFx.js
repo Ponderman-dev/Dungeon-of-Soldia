@@ -128,10 +128,19 @@ export function lifestealFx(q, a, b) {
   }
   return g.out;
 }
-// Excalibur tornado: a swirling grey-blue funnel standing on (x, y), t = clock.
+// Excalibur tornado: a big swirling grey-blue funnel standing on (x, y), t = clock. Wide at the top,
+// thin at the floor, with dust kicked up around its base.
 export function tornadoFx(x, y, t) {
   const g = pen();
-  for (let j = 0; j < 16; j++) { const w = 1 + j * 0.45; const a = t / 60 + j * 0.9; g.px(x + Math.cos(a) * w, y - j, j % 3 ? C.grey : C.ice, 0.85); g.px(x - Math.cos(a) * w, y - j, C.white, 0.4); }
+  for (let j = 0; j < 24; j++) {
+    const w = 1 + j * 0.55; const a = t / 60 + j * 0.7; const sway = Math.sin(t / 300 + j * 0.15) * (j / 24) * 2;
+    const cx = x + sway;
+    g.px(cx + Math.cos(a) * w, y - j, j % 3 ? C.grey : C.ice, 0.9);
+    g.px(cx + Math.cos(a + Math.PI) * w, y - j, j % 2 ? C.grey2 : C.grey, 0.75);
+    g.px(cx + Math.cos(a + Math.PI / 2) * w, y - j, C.white, 0.45);
+    if (j % 4 === 0) g.line(cx - w * 0.6, y - j, cx + w * 0.6, y - j, C.grey, 0.25);
+  }
+  for (let i = 0; i < 6; i++) { const q = (t / 500 + i / 6) % 1; const a = (i / 6) * Math.PI * 2 + t / 200; g.px(x + Math.cos(a) * (4 + q * 6), y - q * 3, 0xc9b18a, 1 - q); }
   return g.out;
 }
 

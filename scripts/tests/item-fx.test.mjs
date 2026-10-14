@@ -23,4 +23,4 @@ ok('every effect shows something while it plays', Object.entries(calls).every(([
 const nearB = (d) => d.filter((p) => Math.hypot(p[0] - b.x, p[1] - b.y) < 8).length;
 ok('the bomb flies first, then explodes on the target', nearB(fx.bombFx(0.3, a, b, 0)) === 0 && nearB(fx.bombFx(0.75, a, b, 0)) > 10);
 ok('effects are over when they end', Object.entries(calls).filter(([k]) => k !== 'lightning').every(([, fn]) => fn(1, 0).length === 0));
-ok('the tornado draws a funnel', fx.tornadoFx(50, 50, 100).length === 32 && clean(fx.tornadoFx(50, 50, 100)));
+ok('the tornado draws a big funnel', fx.tornadoFx(50, 50, 100).length > 70 && clean(fx.tornadoFx(50, 50, 100)) && Math.min(...fx.tornadoFx(50, 50, 100).map((d) => d[1])) <= 27);

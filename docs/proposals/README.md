@@ -24,8 +24,8 @@ by the game.
   colours, item procs = the item's icon pops over the holder (`iconPop()`, icons from itemIcons.json),
   minor debuffs share one look + a tag, only the top status loops, one DoT number per second.
 - `fx-icons.js`: STATUS ICONS section (Risk of Rain style): gallery + one enemy / heroes demos + two icon stress
-  tests (one row, rows of 3). Icons live in `src/data/statusIcons.json` (9x9 incl. outline, same format as
-  itemIcons.json), made by `make-status-icons.mjs` (7x7 designs + auto outline). Not used by the game yet.
+  tests (one row, rows of 3). Icons live in `src/data/statusIcons.json` (7x7 incl. outline, same format as
+  itemIcons.json), made by `make-status-icons.mjs` (5x5 designs + auto outline). Not used by the game yet.
 - `fx-stress.js`: stress test, 5 enemies x 5 debuffs: full vs simplified (colour pips) vs tap panel.
 - To publish: run the build, copy `hit-effects.html` to the scratchpad and publish it to the SAME url
   with the Artifact tool (read the live page first if the tool asks; it is this same file).

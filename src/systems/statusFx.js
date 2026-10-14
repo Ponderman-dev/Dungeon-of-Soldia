@@ -20,8 +20,8 @@ const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const ph = (t, a, b) => clamp((t - a) / (b - a));
 const easeOut = (p) => 1 - (1 - p) * (1 - p);
 
-// A pen that collects pixels: [x, y, w, h, colour, alpha].
-function pen() {
+// A pen that collects pixels: [x, y, w, h, colour, alpha]. Also used by hitFx.js.
+export function pen() {
   const out = [];
   const g = { out };
   g.px = (x, y, c, a = 1) => { if (a > 0) out.push([Math.round(x), Math.round(y), 1, 1, c, Math.min(1, a)]); };

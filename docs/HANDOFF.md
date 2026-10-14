@@ -32,7 +32,8 @@ Done this session (all in CLAUDE.md too):
 - Hits: FULL version (each damage type its own hand-made hit). Item procs: FULL hand-made effect AND the item's icon pops over the holder. Hero skills: full.
 - So the simplified ideas are NOT used (no shared minor-debuff look, no "top status only").
 - DONE: status loops in the game (every status its own effect, systems/statusFx.js).
-- NEXT build steps (one at a time): hits per damage type, then item procs + icon pop, then skill effects. Effects should become data-driven recipes the Studio's Effects section can edit (ask the user before that refactor).
+- DONE: hits per damage type + crit (systems/hitFx.js). Still to do from the proposal's Hits section: miss side-step, block flash, shield soak ripple, shield break shards, heal motes, death squash + puff.
+- NEXT build steps (one at a time): then item procs + icon pop, then skill effects. Effects should become data-driven recipes the Studio's Effects section can edit (ask the user before that refactor).
 
 ## NEXT (what the user asked right before this hand-off)
 The user showed Risk of Rain 2's debuff display as the reference: **every debuff has its OWN small icon in a row above the health bar, with a small stack number next to it** ("x8", "x1"). So:

@@ -19,6 +19,7 @@ import { statusIconKey } from '../entities/statusIconTexture.js';
 import statusIcons from '../data/statusIcons.json';
 import { iconList, iconLayout, ICON_PX } from '../systems/statusIcons.js';
 import { statusLook, iceBreak, bodyBox } from '../systems/statusFx.js';
+import { projectileFx, impactFx, critFx, IMPACT_MS, CRIT_MS } from '../systems/hitFx.js';
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon, validateHeroSkills, validateDamageTypes } from '../systems/validate.js';
 import { enemiesForFloor } from '../systems/dungeon.js';
@@ -180,6 +181,7 @@ export default class BattleScene extends Phaser.Scene {
   // flames, bubbles, drops, brackets...) all at once, and tints the sprite (Freeze turns it to ice).
   // The recipes live in systems/statusFx.js; this only draws them at the fighter's body.
   drawStatusFx() {
+    this.drawHitFx(); // hits first: a hit's colour flash wins over the status tint this frame
     if (!this.statusG) this.statusG = this.add.graphics().setDepth(DEPTH.heroBar - 0.05);
     const g = this.statusG;
     g.clear();
@@ -198,13 +200,61 @@ export default class BattleScene extends Phaser.Scene {
       let look;
       try { look = statusLook(kinds, v.box, now + (u.uid % 7) * 137); } // each fighter a little out of step
       catch (err) { console.error(err); continue; } // a broken effect must never stop the fight
-      v.ch.setStatusLook(look.tint, look.ice);
+      v.ch.setStatusLook(v.hitTint || look.tint, look.ice);
       if (look.dx && this.mode === 'fighting') v.ch.x += look.dx * Math.abs(v.ch.scaleY);
       this.paintFx(g, v, look.draws);
     }
     // Ice breaking off a fighter whose Freeze just ended.
     this.iceBreaks = (this.iceBreaks || []).filter((b) => now - b.start < 400 && b.view.ch.active);
     for (const b of this.iceBreaks) this.paintFx(g, b.view, iceBreak(b.view.box || bodyBox(b.view.unit.def.parts, b.view.unit.def.height), (now - b.start) / 400));
+  }
+
+  // HITS (systems/hitFx.js): shots in the air (arrow, fire bolt, ice shard, lightning, dark orb, holy mote)
+  // and what happens where they land, per damage type, plus the crit layer. Drawn every frame in
+  // character pixels (world / CHAR_SCALE) so everything stays on the pixel grid.
+  drawHitFx() {
+    if (!this.hitG) this.hitG = this.add.graphics().setDepth(DEPTH.popup - 1);
+    const g = this.hitG;
+    g.clear();
+    const now = this.time.now, S = CHAR_SCALE;
+    for (const v of this.views.values()) { v.hitTint = null; }
+    const draw = (draws) => { for (const [x, y, w, h, c, a] of draws) { g.fillStyle(c, a); g.fillRect(x * S - S / 2, y * S, w * S, h * S); } };
+    const at = (v) => { const c = this.center(v); return { x: c.x / S, y: c.y / S }; };
+    // Shots in the air.
+    for (const v of this.views.values()) {
+      const arrow = v.arrow;
+      if (!arrow || !arrow.active) continue;
+      const head = { x: arrow.x / S, y: arrow.y / S };
+      const start = arrow.kind === 'electric' && v.ch.active ? at(v) : { x: arrow.startX / S, y: arrow.startY / S };
+      draw(projectileFx(arrow.kind, start, head, now, v.unit.uid));
+    }
+    // Impacts (they follow the target while they play).
+    this.impacts = (this.impacts || []).filter((h) => now - h.start < h.ms && h.view.ch.active);
+    for (const h of this.impacts) {
+      const v = h.view, ch = v.ch;
+      if (!v.box) v.box = bodyBox(v.unit.def.parts, v.unit.def.height);
+      const x = (ch.x + v.box.cx * ch.scaleX) / S, y = ch.y / S;
+      if (h.attacker && h.attacker.ch.active) h.side = h.attacker.ch.x < ch.x ? -1 : 1;
+      const u = { x, y, top: y + v.box.top, mid: y + v.box.mid, hw: v.box.hw, side: h.side };
+      const q = (now - h.start) / h.ms;
+      if (h.crit) { draw(critFx(q, u, now)); continue; }
+      const out = impactFx(h.type, q, u, now, h.seed, h.attacker && h.attacker.ch.active ? at(h.attacker) : null);
+      draw(out.draws);
+      if (out.tint && (!v.hitTint || out.tint[1] > v.hitTint[1])) v.hitTint = out.tint;
+      if (out.dx && this.mode === 'fighting') ch.x += out.dx * S;
+    }
+  }
+
+  // A hit landed: start its impact effect (and the crit layer) on the target.
+  addImpact(e, a, t) {
+    const type = IMPACT_MS[e.damageType] ? e.damageType : IMPACT_MS[e.attacker.damageType] ? e.attacker.damageType : 'melee';
+    const side = a && a.ch.x < t.ch.x ? -1 : 1;
+    const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
+    (this.impacts = this.impacts || []).push({ type, start: this.time.now, ms: IMPACT_MS[type], view: t, attacker: a, side, seed });
+    if (e.result.crit) {
+      this.impacts.push({ crit: true, start: this.time.now, ms: CRIT_MS, view: t, attacker: a, side, seed });
+      this.cameras.main.shake(90, 0.003); // a tiny shake for crits
+    }
   }
 
   // Draws effect pixels (character pixels around the feet, x = 0 at the body's middle) on a fighter.
@@ -774,6 +824,7 @@ export default class BattleScene extends Phaser.Scene {
       }
       const { amount, crit, mult } = e.result;
       const mark = mult > 1 ? '!' : mult < 1 ? '…' : '';
+      if (!e.skill && t) this.addImpact(e, a, t); // the hit's own look, per damage type (systems/hitFx.js)
       if (e.skill) {
         // A skill hit: flashes in the skill colour and shows a big coloured number that pops.
         t.ch.flash(Phaser.Display.Color.HexStringToColor(FX.attackColor).color, FX.flashMs);
@@ -980,11 +1031,10 @@ export default class BattleScene extends Phaser.Scene {
 
   shootArrow(a, t, hitInMs) {
     const from = this.center(a);
-    // Placeholder arrow: a shaft with a small head (real art later).
-    const arrow = this.add.container(from.x, from.y, [
-      this.add.rectangle(-4, 0, 22, 3, Number(a.unit.damageType !== 'ranged' && damageTypes[a.unit.damageType] ? Phaser.Display.Color.HexStringToColor(damageTypes[a.unit.damageType].color).color : M.arrowColor)),
-      this.add.triangle(9, 0, 0, -4, 0, 4, 7, 0, 0xffffff),
-    ]).setDepth(DEPTH.popup - 1);
+    // The shot itself is drawn in pixels by drawHitFx() (its look per damage type: systems/hitFx.js);
+    // this empty container only carries its position along the flight.
+    const arrow = this.add.container(from.x, from.y);
+    arrow.kind = a.unit.damageType;
     a.arrow = arrow;
     this.flyArrow(a, arrow, t, hitInMs);
     a.ch.lunge(t.ch.x, t.ch.y); // a small recoil-like jab as it shoots
@@ -996,6 +1046,8 @@ export default class BattleScene extends Phaser.Scene {
     if (arrow.flight) arrow.flight.stop();
     const fromX = arrow.x;
     const fromY = arrow.y;
+    arrow.startX = fromX; // the trail points back along the flight
+    arrow.startY = fromY;
     arrow.flight = this.tweens.addCounter({
       from: 0,
       to: 1,

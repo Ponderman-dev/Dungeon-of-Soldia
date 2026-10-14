@@ -1,0 +1,131 @@
+<title>Soldia Sprite Proposal</title>
+<style>
+/* Layout: dungeon-dark sheet; heroes first (exploded 3 parts + assembled), then enemies, then a game-size line-up. */
+:root {
+  --bg: #120e1c; --panel: #1c1629; --line: #2e2542; --fg: #e9e2f5; --muted: #a297b8;
+  --accent: #f2b544; --floor: #221b33;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1100px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: flex; flex-direction: column; gap: 26px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 5vw, 40px); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 20px; margin: 0; letter-spacing: .04em; }
+h3 { font-family: var(--display); font-size: 15px; margin: 0; letter-spacing: .04em; }
+.lede { color: var(--muted); max-width: 66ch; margin: 6px 0 0; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.rule { border-left: 3px solid var(--accent); padding: 4px 12px; color: var(--muted); font-size: 14px; }
+.rule b { color: var(--fg); display: block; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.tag { font-family: var(--display); font-size: 12px; color: var(--accent); white-space: nowrap; }
+.stage { background: var(--floor); border-radius: 4px; display: flex; align-items: flex-end; justify-content: center; gap: 16px; padding: 14px 10px; min-height: 170px; flex-wrap: wrap; }
+.parts { display: flex; align-items: flex-end; justify-content: center; gap: 14px; padding: 10px; border: 1px dashed var(--line); border-radius: 4px; }
+.part { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+canvas { image-rendering: pixelated; max-width: 100%; }
+.small { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+.shape { font-size: 13px; color: var(--muted); margin: 0; }
+.lineup { background: var(--floor); border-radius: 6px; overflow-x: auto; padding: 16px; }
+.lineup canvas { display: block; max-width: none; }
+.note { color: var(--muted); font-size: 14px; max-width: 70ch; margin: 0; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+
+<div class="wrap">
+  <div>
+    <h1>Soldia sprite proposal</h1>
+    <p class="lede">Simple pixel sprites for the 10 heroes and the 12 new enemies. Heroes keep exactly 3 parts (head, body, weapon) so each part can be redrawn and animated in the Character Studio; hats, hoods and halos belong to the head.</p>
+  </div>
+  <div class="rules">
+    <div class="rule"><b>Few colours</b>Each sprite uses 3 to 5 colours and a dark outline. No tiny details that vanish at game size.</div>
+    <div class="rule"><b>Heroes read by the head</b>Same body size for all heroes; the helmet, hood or hat and the weapon tell them apart.</div>
+    <div class="rule"><b>Enemies read by shape</b>Every enemy has its own outline: long and low, wide and flat, a dome, a bell, a floating wisp.</div>
+    <div class="rule"><b>Colour tells element</b>Fire red/orange, ice pale blue, electric yellow, dark purple, holy gold.</div>
+  </div>
+
+  <h2>Heroes (3 parts each)</h2>
+  <div class="grid" id="heroes"></div>
+
+  <h2>New enemies</h2>
+  <div class="grid" id="enemies"></div>
+
+  <h2>Line-up at game size</h2>
+  <div class="lineup"><canvas id="lineup"></canvas></div>
+  <p class="note">Shown at 2x. First the old coloured-block Knight for comparison, then the 10 heroes, then the 12 enemies in the order they appear. Flying enemies float above their shadow.</p>
+</div>
+
+<script>
+/*DATA*/
+const OUT = '#120c18';
+const OLD_KNIGHT = { pal:{s:'#f2c9a0',b:'#3b6fd4',m:'#c8ccd6'}, rows: (() => { const r=[]; for(let y=0;y<30;y++){ let l=''; for(let x=0;x<23;x++){ let c='.'; if(y<10&&x>=6&&x<=15)c='s'; else if(y>=10&&y<26&&x>=4&&x<=17)c='b'; if(y>=11&&x>=19&&x<=21)c='m'; l+=c;} r.push(l);} return r; })() };
+
+function size(s){ return { w: Math.max(...s.rows.map(r=>r.length)), h: s.rows.length }; }
+function at(s,x,y){ const r=s.rows[y]; if(!r||x<0) return null; const c=r[x]; return c && c!=='.' && s.pal[c] ? s.pal[c] : null; }
+// Join head + body + weapon into one sprite (body hand -> weapon grip, head centred on top).
+function assemble(h){
+  const H=size(h.head), B=size(h.body), W=size(h.weapon);
+  const bx = 0, by = H.h;                      // body under the head
+  const hx = Math.round((B.w - H.w)/2);
+  const wx = bx + h.body.hand[0] - h.weapon.grip[0];
+  const wy = by + h.body.hand[1] - h.weapon.grip[1];
+  const minX = Math.min(0, hx, wx), minY = Math.min(0, wy);
+  const maxX = Math.max(B.w, hx+H.w, wx+W.w), maxY = Math.max(by+B.h, wy+W.h);
+  const layers = [[h.body,bx,by],[h.head,hx,0],[h.weapon,wx,wy]];
+  const pal = {}; const grid = [];
+  for(let y=0;y<maxY-minY;y++){ grid.push(Array(maxX-minX).fill('.')); }
+  let n=0; const code=()=>String.fromCharCode(0x100 + n++);
+  for(const [p,ox,oy] of layers){ const m={}; for(const k in p.pal){ const c=code(); m[k]=c; pal[c]=p.pal[k]; }
+    p.rows.forEach((row,y)=>[...row].forEach((ch,x)=>{ if(ch!=='.'&&m[ch]) grid[y+oy-minY][x+ox-minX]=m[ch]; })); }
+  return { pal, rows: grid.map(r=>r.join('')) };
+}
+function draw(ctx, s, ox, oy, z){
+  const {w,h}=size(s);
+  ctx.save(); ctx.globalAlpha = s.alpha ?? 1; ctx.fillStyle = OUT;
+  for(let y=-1;y<=h;y++) for(let x=-1;x<=w;x++){ if(at(s,x,y)) continue;
+    if(at(s,x-1,y)||at(s,x+1,y)||at(s,x,y-1)||at(s,x,y+1)) ctx.fillRect(ox+x*z, oy+y*z, z, z); }
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){ const c=at(s,x,y); if(c){ ctx.fillStyle=c; ctx.fillRect(ox+x*z, oy+y*z, z, z);} }
+  ctx.restore();
+}
+function shadow(ctx, cx, y, w, z){ ctx.fillStyle='rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(cx, y, w*z*0.45, Math.max(2,z*1.4), 0, 0, Math.PI*2); ctx.fill(); }
+function canvasFor(s, z, opts={}){
+  const {w,h}=size(s); const lift=opts.lift||0; const c=document.createElement('canvas');
+  c.width=(w+2)*z; c.height=(h+2+lift+(opts.shadow?1:0))*z;
+  const ctx=c.getContext('2d'); ctx.imageSmoothingEnabled=false;
+  if(opts.shadow) shadow(ctx, c.width/2, c.height - z*1.5, w, z);
+  draw(ctx, s, z, z, z); return c;
+}
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text) e.textContent=text; return e; }
+function gameSize(s, fl=0){
+  const z=2, a=size(s), k=size(OLD_KNIGHT); const wrap=el('div','small'); const c=document.createElement('canvas');
+  c.width=(a.w+4)*z; c.height=(Math.max(a.h+fl,k.h)+4)*z;
+  const g=c.getContext('2d'); g.imageSmoothingEnabled=false; const base=c.height-2*z;
+  shadow(g,(2+a.w/2)*z,base,a.w,z); draw(g,s,2*z,base-(a.h+fl)*z,z);
+  wrap.append(c, el('span','', 'game size')); return wrap;
+}
+
+const heroGrid=document.getElementById('heroes'); const assembled={};
+for(const h of HEROES){
+  const s=assemble(h); assembled[h.id]=s;
+  const card=el('article','card'); const hd=el('header'); hd.append(el('h3','',h.name), el('span','tag','3 parts')); card.append(hd);
+  const parts=el('div','parts');
+  for(const [k,label] of [['head','head'],['body','body'],['weapon','weapon']]){ const p=el('div','part'); p.append(canvasFor(h[k],4), el('span','',label)); parts.append(p); }
+  card.append(parts);
+  const stage=el('div','stage'); stage.append(canvasFor(s,5,{shadow:true}), gameSize(s)); card.append(stage);
+  card.append(el('p','shape',h.idea)); heroGrid.append(card);
+}
+const enemyGrid=document.getElementById('enemies');
+for(const e of ENEMIES){
+  const card=el('article','card'); const hd=el('header'); hd.append(el('h3','',e.name), el('span','tag','Floor '+e.floor)); card.append(hd);
+  const stage=el('div','stage'); const fl=FLY[e.id]?Math.round(FLY[e.id]/2):0;
+  stage.append(canvasFor(e, Math.min(6, Math.floor(120/(size(e).w+2))), {shadow:true, lift: fl?5:0}), gameSize(e, fl)); card.append(stage);
+  card.append(el('p','shape',e.shape)); enemyGrid.append(card);
+}
+const L=document.getElementById('lineup'); const z=2, gap=8;
+const all=[{...OLD_KNIGHT,id:'old'}, ...HEROES.map(h=>({...assembled[h.id], id:h.id})), ...ENEMIES];
+const W=all.reduce((t,s)=>t+size(s).w+gap,gap); const Hh=62;
+L.width=W*z; L.height=Hh*z; const lc=L.getContext('2d'); lc.imageSmoothingEnabled=false;
+let x=gap; const base=(Hh-5)*z;
+for(const s of all){ const {w,h}=size(s); const fl=FLY[s.id]||0; shadow(lc,(x+w/2)*z,base,w,z); draw(lc,s,x*z,base-(h+fl)*z,z); x+=w+gap; }
+</script>

@@ -1,0 +1,687 @@
+<title>Soldia Sprite Proposal</title>
+<style>
+/* Layout: dungeon-dark sheet; heroes first (exploded 3 parts + assembled), then enemies, then a game-size line-up. */
+:root {
+  --bg: #120e1c; --panel: #1c1629; --line: #2e2542; --fg: #e9e2f5; --muted: #a297b8;
+  --accent: #f2b544; --floor: #221b33;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1100px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: flex; flex-direction: column; gap: 26px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 5vw, 40px); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 20px; margin: 0; letter-spacing: .04em; }
+h3 { font-family: var(--display); font-size: 15px; margin: 0; letter-spacing: .04em; }
+.lede { color: var(--muted); max-width: 66ch; margin: 6px 0 0; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.rule { border-left: 3px solid var(--accent); padding: 4px 12px; color: var(--muted); font-size: 14px; }
+.rule b { color: var(--fg); display: block; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.tag { font-family: var(--display); font-size: 12px; color: var(--accent); white-space: nowrap; }
+.stage { background: var(--floor); border-radius: 4px; display: flex; align-items: flex-end; justify-content: center; gap: 16px; padding: 14px 10px; min-height: 170px; flex-wrap: wrap; }
+.parts { display: flex; align-items: flex-end; justify-content: center; gap: 14px; padding: 10px; border: 1px dashed var(--line); border-radius: 4px; }
+.part { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+canvas { image-rendering: pixelated; max-width: 100%; }
+.small { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+.shape { font-size: 13px; color: var(--muted); margin: 0; }
+.lineup { background: var(--floor); border-radius: 6px; overflow-x: auto; padding: 16px; }
+.lineup canvas { display: block; max-width: none; }
+.note { color: var(--muted); font-size: 14px; max-width: 70ch; margin: 0; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+
+<div class="wrap">
+  <div>
+    <h1>Soldia sprite proposal</h1>
+    <p class="lede">Simple pixel sprites for the 10 heroes and the 12 new enemies. Heroes keep exactly 3 parts (head, body, weapon) so each part can be redrawn and animated in the Character Studio; hats, hoods and halos belong to the head.</p>
+  </div>
+  <div class="rules">
+    <div class="rule"><b>Few colours</b>Each sprite uses 3 to 5 colours and a dark outline. No tiny details that vanish at game size.</div>
+    <div class="rule"><b>Heroes read by the head</b>Same body size for all heroes; the helmet, hood or hat and the weapon tell them apart.</div>
+    <div class="rule"><b>Enemies read by shape</b>Every enemy has its own outline: long and low, wide and flat, a dome, a bell, a floating wisp.</div>
+    <div class="rule"><b>Colour tells element</b>Fire red/orange, ice pale blue, electric yellow, dark purple, holy gold.</div>
+  </div>
+
+  <h2>Heroes (3 parts each)</h2>
+  <div class="grid" id="heroes"></div>
+
+  <h2>New enemies</h2>
+  <div class="grid" id="enemies"></div>
+
+  <h2>Line-up at game size</h2>
+  <div class="lineup"><canvas id="lineup"></canvas></div>
+  <p class="note">Shown at 2x. First the old coloured-block Knight for comparison, then the 10 heroes, then the 12 enemies in the order they appear. Flying enemies float above their shadow.</p>
+</div>
+
+<script>
+// Sprite proposal data. Palette letters -> colours; "." = empty. Everything faces right.
+const SKIN = '#f2c9a0';
+
+// HEROES: exactly 3 parts. head sits on top of the body (centred), weapon grip goes to the body's hand.
+// body.hand = [col,row] of the hand; weapon.grip = [col,row] inside the weapon.
+const HEROES = [
+{ id:'knight', name:'Knight', idea:'Closed helmet with a visor slit, blue tabard over grey plate, a straight sword.',
+  head:{ pal:{h:'#b7bcc8',H:'#7d8494',k:'#1a1020'}, rows:[
+'..hhhhhh..',
+'.hhhhhhhh.',
+'hhhhhhhhhh',
+'hHkkkkkkHh',
+'hhhhhhhhhh',
+'hhhhhhhhhh',
+'.hHhhhhHh.',
+'..hhhhhh..']},
+  body:{ pal:{m:'#b7bcc8',b:'#3b6fd4',B:'#2a4fa0',y:'#f2c544',s:SKIN,d:'#4a3a3a'}, hand:[10,5], rows:[
+'.mmbbbbmm.',
+'mmbbbbbbmm',
+'mmbbyybbmm',
+'mmbbyybbmm',
+'mmbbbbbbmm',
+'smbbbbbbms',
+'.BBBBBBBB.',
+'.bbbbbbbb.',
+'.mm....mm.',
+'.mm....mm.',
+'.dd....dd.']},
+  weapon:{ pal:{w:'#e4e8f0',g:'#f2c544',r:'#6b4a2a'}, grip:[2,10], rows:[
+'..w..',
+'.www.',
+'.www.',
+'.www.',
+'.www.',
+'.www.',
+'.www.',
+'.www.',
+'ggggg',
+'..r..',
+'..r..']}},
+
+{ id:'rogue', name:'Rogue', idea:'Deep purple hood, eyes peeking over a scarf, slim leather body, a short curved dagger.',
+  head:{ pal:{p:'#5b3f8f',P:'#3d2a63',s:SKIN,k:'#1a1020',m:'#2a2238'}, rows:[
+'...pppp...',
+'..pppppp..',
+'.pppppppp.',
+'pppPPPPppp',
+'ppPsssssPp',
+'ppPskssksP',
+'ppmmmmmmmp',
+'.pmmmmmmp.']},
+  body:{ pal:{p:'#5b3f8f',l:'#3a2a40',b:'#6b4a2a',s:SKIN,d:'#241a2a'}, hand:[9,5], rows:[
+'..pppppp..',
+'.pppppppp.',
+'.ppllllpp.',
+'.ppllllpp.',
+'.ppllllpp.',
+'.sbbbbbbs.',
+'..llllll..',
+'..ll..ll..',
+'..ll..ll..',
+'..dd..dd..']},
+  weapon:{ pal:{w:'#d6dae4',r:'#3a2a40'}, grip:[1,5], rows:[
+'...w',
+'..ww',
+'.ww.',
+'.ww.',
+'rrr.',
+'.r..']}},
+
+{ id:'archer', name:'Archer', idea:'Green hood with a long feather, green tunic with a brown strap, a tall bow.',
+  head:{ pal:{g:'#3f9a4a',G:'#2a6e34',s:SKIN,k:'#1a1020',f:'#f4f0e6',h:'#7a4a2a'}, rows:[
+'.........f',
+'...gggg.f.',
+'..gggggg..',
+'.gggggggg.',
+'.gGhhhhGg.',
+'.gGsssssg.',
+'.gGsksskg.',
+'..gsssss..']},
+  body:{ pal:{g:'#3f9a4a',G:'#2a6e34',b:'#7a4a2a',s:SKIN,d:'#4a3a2a'}, hand:[9,5], rows:[
+'..gggggg..',
+'.ggbggggg.',
+'.gggbgggg.',
+'.ggggbggg.',
+'.gggggbgg.',
+'.sgggggbs.',
+'..bbbbbb..',
+'..GG..GG..',
+'..GG..GG..',
+'..dd..dd..']},
+  weapon:{ pal:{r:'#8b5a2b',t:'#e4e4ea'}, grip:[2,8], rows:[
+'r...',
+'.r.t',
+'.rrt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'.rrt',
+'.r.t',
+'r...']}},
+
+{ id:'berserker', name:'Berserker', idea:'Wild red hair and a big beard, bare chest with a fur collar, a double-bladed axe.',
+  head:{ pal:{r:'#c8502a',R:'#8e3418',s:SKIN,k:'#1a1020'}, rows:[
+'.r.rr.r.r.',
+'rrrrrrrrrr',
+'rrsssssrrr',
+'rsssssssrr',
+'rsksssksrr',
+'rrsssssrr.',
+'.rRRRRRr..',
+'..rRRRr...']},
+  body:{ pal:{f:'#8a6a4a',s:SKIN,S:'#d9a87c',b:'#6b4a2a',d:'#3a2a20'}, hand:[10,5], rows:[
+'ffffffffff',
+'fffsssfffff',
+'sssssssssss',
+'ssSssssSsss',
+'sssssssssss',
+'ssssssssss',
+'.bbbbbbbb.',
+'.bbbbbbbb.',
+'.ss....ss.',
+'.dd....dd.']},
+  weapon:{ pal:{w:'#c9ccd6',W:'#8c909c',r:'#6b4a2a'}, grip:[3,11], rows:[
+'ww...ww',
+'wwW.Www',
+'wwwrwww',
+'wwW.Www',
+'ww.r.ww',
+'...r...',
+'...r...',
+'...r...',
+'...r...',
+'...r...',
+'...r...',
+'...r...',
+'...r...']}},
+
+{ id:'samurai', name:'Samurai', idea:'Black topknot and a white headband, red lacquered armour with wide shoulder plates, a long katana.',
+  head:{ pal:{h:'#1e1a24',w:'#f0ece4',s:SKIN,k:'#1a1020'}, rows:[
+'...hhh....',
+'...hhh....',
+'..hhhhhh..',
+'.hhhhhhhh.',
+'.wwwwwwww.',
+'.hsssssss.',
+'.hskssks..',
+'..sssss...']},
+  body:{ pal:{r:'#c23a3a',R:'#8a2424',k:'#1e1a24',s:SKIN,d:'#2a2030'}, hand:[10,5], rows:[
+'rrr....rrr',
+'rRrrrrrrRr',
+'rRrrrrrrRr',
+'.rRRRRRRr.',
+'.rrrrrrrr.',
+'.srrrrrrs.',
+'.kkkkkkkk.',
+'kkkkkkkkkk',
+'.kk....kk.',
+'.dd....dd.']},
+  weapon:{ pal:{w:'#e8ecf4',k:'#1e1a24',g:'#c9a24a'}, grip:[0,14], rows:[
+'....w',
+'...ww',
+'...w.',
+'..ww.',
+'..w..',
+'..w..',
+'.ww..',
+'.w...',
+'.w...',
+'.w...',
+'.w...',
+'.w...',
+'ggg..',
+'.k...',
+'.k...',
+'.k...']}},
+
+{ id:'mage', name:'Mage', idea:'A round floppy hat with a bent tip (no tall cone), long blue robe with no legs showing, a staff with a fire orb.',
+  head:{ pal:{p:'#4a3aa8',P:'#33287a',y:'#f2c544',s:SKIN,k:'#1a1020',w:'#e8e4f0'}, rows:[
+'.......pp.',
+'...pppppp.',
+'..pppppp..',
+'.pppppppp.',
+'.ppyyyypp.',
+'pppppppppp',
+'..ssssss..',
+'..skssks..',
+'..wwwwww..',
+'...wwww...']},
+  body:{ pal:{b:'#3b5fc4',B:'#2a4290',y:'#f2c544',s:SKIN}, hand:[10,4], rows:[
+'..bbbbbb..',
+'.bbbbbbbb.',
+'.bbbyybbb.',
+'bbbbyybbbb',
+'sbbbbbbbbs',
+'bbbbbbbbbb',
+'bbbbbbbbbb',
+'bBbbbbbbBb',
+'BBBBBBBBBB']},
+  weapon:{ pal:{o:'#ff8a2e',y:'#ffe066',r:'#7a4a2a'}, grip:[1,8], rows:[
+'.o.',
+'oyo',
+'ooo',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.']}},
+
+{ id:'cleric', name:'Cleric', idea:'White hood with a gold halo floating above, white robe with a gold stripe, a round-headed mace.',
+  head:{ pal:{y:'#f2d24a',w:'#f2eee6',W:'#c8c2b4',s:SKIN,k:'#1a1020'}, rows:[
+'..yyyyyy..',
+'.y......y.',
+'..yyyyyy..',
+'...wwww...',
+'..wwwwww..',
+'.wwssssww.',
+'.wWsksksw.',
+'.wWsssssw.',
+'..wwwwww..']},
+  body:{ pal:{w:'#f2eee6',W:'#c8c2b4',y:'#f2d24a',s:SKIN,d:'#8a7a5a'}, hand:[10,4], rows:[
+'..wwwwww..',
+'.wwwyywww.',
+'.wwwyywww.',
+'wwwwyywwww',
+'swwwyywwws',
+'.wwwyywww.',
+'.wwwyywww.',
+'.WwwyywwW.',
+'.WWWWWWWW.',
+'..dd..dd..']},
+  weapon:{ pal:{g:'#f2d24a',G:'#b8962a',r:'#7a4a2a'}, grip:[1,8], rows:[
+'.g.',
+'ggg',
+'gGg',
+'ggg',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.']}},
+
+{ id:'necromancer', name:'Necromancer', idea:'Black hood around a white bone mask with green eyes, a ragged dark robe, a staff topped with a skull.',
+  head:{ pal:{h:'#2a2236',H:'#1a1424',w:'#e8e2cf',g:'#6dff8a'}, rows:[
+'...hhhh...',
+'..hhhhhh..',
+'.hhhhhhhh.',
+'.hHwwwwHh.',
+'.hHwgwwgh.',
+'.hHwwwwwh.',
+'.hHwkwkwh.',
+'..hhhhhh..'].map(r=>r.replace(/k/g,'H'))},
+  body:{ pal:{h:'#2a2236',H:'#1a1424',g:'#3f8a4a',w:'#e8e2cf'}, hand:[10,4], rows:[
+'..hhhhhh..',
+'.hhhhhhhh.',
+'.hhggghhh.',
+'hhhhghhhhh',
+'whhhghhhhw',
+'.hhhghhhh.',
+'.hhhhhhhh.',
+'hhhhhhhhhh',
+'hHhHhhHhHh',
+'H.H.HH.H.H']},
+  weapon:{ pal:{w:'#e8e2cf',k:'#1a1020',r:'#4a3a3a',g:'#6dff8a'}, grip:[1,9], rows:[
+'www',
+'wgw',
+'www',
+'.w.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.']}},
+
+{ id:'bard', name:'Bard', idea:'A floppy red cap with a long feather, a yellow and red striped doublet, a lute.',
+  head:{ pal:{r:'#c8433a',R:'#8e2a2a',f:'#7fd6ff',h:'#7a4a2a',s:SKIN,k:'#1a1020'}, rows:[
+'.........f',
+'..rrrrr.f.',
+'.rrrrrrrf.',
+'rrrrrrrrr.',
+'.RRRRRRR..',
+'.hssssss..',
+'.hsksskh..',
+'..ssssss..']},
+  body:{ pal:{y:'#f2c544',r:'#c8433a',s:SKIN,b:'#6b4a2a',d:'#3a2a2a'}, hand:[9,5], rows:[
+'..yryryr..',
+'.yryryryr.',
+'.yryryryr.',
+'.yryryryr.',
+'.yryryryr.',
+'.syryryrs.',
+'..bbbbbb..',
+'..bb..bb..',
+'..bb..bb..',
+'..dd..dd..']},
+  weapon:{ pal:{w:'#c88a4a',W:'#8a5a2a',k:'#3a2a1a',t:'#e4e4ea'}, grip:[2,9], rows:[
+'..k..',
+'..kk.',
+'..W..',
+'..W..',
+'..W..',
+'.www.',
+'wwwww',
+'wwkww',
+'wwwww',
+'.www.']}},
+
+{ id:'alchemist', name:'Alchemist', idea:'Messy brown hair with big round goggles, a leather apron over a white shirt, a bubbling green flask.',
+  head:{ pal:{h:'#7a4a2a',g:'#c9a24a',l:'#8fe6ff',s:SKIN,k:'#1a1020'}, rows:[
+'.h.hh.h...',
+'hhhhhhhh..',
+'hhhhhhhhh.',
+'gggggggggg',
+'gllggggllg',
+'gggsssgggh',
+'.hsksskss.',
+'..sssssss.']},
+  body:{ pal:{w:'#e8e4dc',a:'#8a5a32',A:'#5e3a1a',g:'#6de07a',s:SKIN,d:'#3a2a20'}, hand:[9,5], rows:[
+'..wwwwww..',
+'.wwaaaaww.',
+'.wwaaaaww.',
+'.wwaaaaww.',
+'.wwagaaww.',
+'.saaaaaas.',
+'..AAAAAA..',
+'..aa..aa..',
+'..ww..ww..',
+'..dd..dd..']},
+  weapon:{ pal:{c:'#d8d0c0',g:'#6de07a',G:'#3aa84a',b:'#c8ffd0'}, grip:[2,2], rows:[
+'.b.b.',
+'..c..',
+'..c..',
+'.ggg.',
+'gGbgg',
+'ggggg',
+'.ggg.']}},
+];
+
+// ENEMIES, simplified: 3-4 colours each, no tiny details.
+const ENEMIES = [
+{ id:'rat', name:'Cave Rat', floor:4, shape:'Long and low, big ears, curly tail.',
+  pal:{a:'#8a7a6c',c:'#c4b6a4',p:'#d99090',k:'#1a1020'}, rows:[
+'.............pp.....',
+'............pccp....',
+'.....aaaaaaaaaaa....',
+'...aaaaaaaaaaaaaa...',
+'pp.aaaaaaaaaaaakaa..',
+'..paaaaaaaaaaaaaaap.',
+'...aacccccccccaa....',
+'....aa.......aa.....']},
+{ id:'skeletonArcher', name:'Skeleton Archer', floor:6, shape:'Thin, you can see through it, a bow taller than its body.',
+  pal:{w:'#ebe5cf',k:'#1a1020',r:'#8b5a2b',t:'#d9d9e0'}, rows:[
+'...wwww....r..',
+'..wwwwww....r.',
+'..wkwwkw....rt',
+'..wwwwww....rt',
+'...wwww.....rt',
+'....ww......rt',
+'..wwwwwwwwwwwt',
+'..w.wwww....rt',
+'..w..ww.....rt',
+'..w.wwww....rt',
+'.....ww.....rt',
+'....wwww...r..',
+'....w..w..r...',
+'....w..w......',
+'....w..w......',
+'....w..w......',
+'...ww..ww.....']},
+{ id:'spider', name:'Giant Spider', floor:8, shape:'Wide and flat, eight bent legs.',
+  pal:{a:'#3d2d52',l:'#3d2d52',e:'#ff5050'}, rows:[
+'.........aaaaaa.........',
+'..ll...aaaaaaaaaa...ll..',
+'.l..l.aaaaaaaaaaaa.l..l.',
+'l....laaaaaaaaaaaal....l',
+'l...l.aaaaaaaaaaaa.l...l',
+'...l...aaaaaaaaaa...l...',
+'..l..ll.aaaaaaaa.ll..l..',
+'.l..l..laaeaaeaal..l..l.',
+'l..l..l..aaaaaa..l..l..l',
+'..l..l............l..l..']},
+{ id:'bandit', name:'Bandit', floor:10, shape:'Hunched, hood and scarf, cloak, long knife held low.',
+  pal:{h:'#6a5440',m:'#b03a3a',s:SKIN,k:'#1a1020',c:'#4a5a3a',g:'#c9ccd6'}, rows:[
+'....hhhh......',
+'...hhhhhh.....',
+'..hhhkssk.....',
+'..hhhssss.....',
+'..hmmmmmm.....',
+'.ccccccccc....',
+'ccccccccccs...',
+'cccccccccc.g..',
+'.cccccccc...g.',
+'.ccccccc.....g',
+'..hh..hh......',
+'..hh..hh......',
+'..hh..hh......',
+'.hhh..hhh.....']},
+{ id:'fireImp', name:'Fire Imp', floor:13, shape:'Big head, tiny body, horns and a flame tail.',
+  pal:{r:'#d9452b',o:'#ff9a2e',y:'#ffe066',k:'#1a1020'}, rows:[
+'.k........k....',
+'.kk......kk....',
+'..rrrrrrrr.....',
+'.rrrrrrrrrr....',
+'.rrykrrykrr....',
+'.rrrrrrrrrr....',
+'..rrkkkkrr.....',
+'...rrrrrr....y.',
+'..rrooooorr.yoy',
+'...rooooor..yoy',
+'...rrrrrrrrrr..',
+'...rr...rr.....',
+'..rrr...rrr....']},
+{ id:'orcBrute', name:'Orc Brute', floor:16, shape:'Huge and top-heavy, tiny head, big club.',
+  pal:{g:'#6f9140',G:'#4b6a2a',t:'#f2ecd2',e:'#ffd23f',l:'#7a5230',c:'#8b5a2b'}, rows:[
+'.....................ccc.',
+'....................ccccc',
+'....................ccccc',
+'.........gggg.......ccccc',
+'........gegegg.......ccc.',
+'........ggggggg......ccc.',
+'..gggg..tggggt.gggg..ccc.',
+'.gggggggggggggggggggggcc.',
+'ggggggggggggggggggggggg..',
+'ggggggggggggggggggggggg..',
+'gggg.gggggggggggg.gggg...',
+'ggg..gggggggggggg..gg....',
+'ggg..gggggggggggg........',
+'ggg..gggggggggggg........',
+'ggg...ggggggggggg........',
+'ggg...ggggggggggg........',
+'ggg...ggggggggggg........',
+'ggg...lllllllllll........',
+'GGG...lllllllllll........',
+'......lllllllllll........',
+'......llllll.llll........',
+'......gggg...gggg........',
+'......gggg...gggg........',
+'......gggg...gggg........',
+'......gggg...gggg........',
+'.....GGGGG...GGGGG.......']},
+{ id:'frostWisp', name:'Frost Wisp', floor:19, shape:'A floating cold flame with a face, trailing a tail.',
+  pal:{w:'#f2fbff',i:'#9fe0ff',I:'#5aaee0',k:'#1a3050'}, rows:[
+'.......i.......',
+'......iii......',
+'.....iiwii.....',
+'....iiwwwii....',
+'...iiwwwwwii...',
+'...iwwkwkwwi...',
+'...iwwwwwwwi...',
+'...iiwwkwwii...',
+'....iiwwwii....',
+'.....IiiiI.....',
+'......IIII.....',
+'.......III.....',
+'........II.....',
+'.........I.....']},
+{ id:'puffshroom', name:'Puffshroom', floor:22, shape:'A big spotted dome on a short stump. Bursts into poison when it dies.',
+  pal:{r:'#c8433a',w:'#f4ecd8',s:'#e6d6b0',k:'#2a1a1a'}, rows:[
+'.......rrrrrr.......',
+'....rrrrrrrrrrrr....',
+'..rrrwwrrrrrrrwwrr..',
+'.rrrrwwrrrrrrrwwrrr.',
+'rrrrrrrrrwwrrrrrrrrr',
+'rrrrrrrrrwwrrrrrrrrr',
+'rrrrrrrrrrrrrrrrrrrr',
+'.rrrrrrrrrrrrrrrrrr.',
+'......ssssssss......',
+'.....sskssskss......',
+'.....ssssssssss.....',
+'.....sssskkssss.....',
+'....ssssssssssss....']},
+{ id:'beetle', name:'Armored Beetle', floor:25, shape:'A wide shiny shell, a horn pointing forward.',
+  pal:{a:'#3a8a9c',h:'#9fe6f0',b:'#1f3a44',m:'#e8ecf4',e:'#ffcc33'}, rows:[
+'....................mm.',
+'....aaaaaaaa.......mm..',
+'..aahhaaaaaaaa....mm...',
+'.ahhaaaaaaaaaaa..mm....',
+'.ahaaaaaaaaaaaaabbb....',
+'aaaaaaaaaaaaaaaabebb...',
+'aaaaaaaaaaaaaaaabbbb...',
+'.aaaaaaaaaaaaaaabbb....',
+'..b.b..b.b..b.b..b.....',
+'.b..b.b..b.b..b..b.....']},
+{ id:'stormSprite', name:'Storm Sprite', floor:28, shape:'A tiny glowing ball with zig-zag hair and big dragonfly wings.',
+  pal:{y:'#ffe14d',w:'#fffbe0',k:'#3a2a10',v:'#a8d8ff'}, rows:[
+'.......y..y........',
+'......y.yy.y.......',
+'.vvvv..yyyy..vvvv..',
+'vvvvvv.yyyyy.vvvvvv',
+'.vvvvvyykykyvvvvv..',
+'..vvvvyyyyyyvvvv...',
+'.vvvvv.yyyy.vvvvv..',
+'vvvvv...yy...vvvvv.',
+'.vvv.....y.....vvv.',
+'........y..........']},
+{ id:'cultist', name:'Dark Cultist', floor:31, shape:'A bell-shaped robe, a deep hood with two glowing eyes, a floating orb.',
+  pal:{p:'#4a2d6b',P:'#2e1a45',g:'#e070ff',o:'#9b4dff'}, rows:[
+'......ppp.......',
+'.....ppppp......',
+'....ppppppp.....',
+'....pPPPPPp.....',
+'....pPgPgPp.....',
+'....pPPPPPp.....',
+'....ppppppp.....',
+'...ppppppppp....',
+'...ppppppppp....',
+'..pppppppppp.ooo',
+'..ppppppppppoooo',
+'..pppppppppp.ooo',
+'..ppppppppppp...',
+'.pppppppppppp...',
+'.pppppppppppp...',
+'.ppppppppppppp..',
+'.ppppppppppppp..',
+'pppppppppppppp..',
+'pppppppppppppp..',
+'ppppppppppppppp.',
+'ppppppppppppppp.',
+'PPPPPPPPPPPPPPP.']},
+{ id:'ghost', name:'Ghost', floor:34, shape:'A floating sheet with a wavy hem, see-through.',
+  pal:{w:'#e8eef8',s:'#b4c0d8',k:'#1a1428'}, alpha:0.85, rows:[
+'.....wwwwww.....',
+'...wwwwwwwwww...',
+'..wwwwwwwwwwww..',
+'.wwwkkwwwwkkwww.',
+'.wwwkkwwwwkkwww.',
+'.wwwwwwkkwwwwwww',
+'.wwwwwwkkwwwwwww',
+'.wwwwwwwwwwwwww.',
+'swwwwwwwwwwwwwws',
+'.wwwwwwwwwwwwww.',
+'.wwwwwwwwwwwwww.',
+'.swwwwwwwwwwwws.',
+'.sswwwsswwwssws.',
+'.s..ss..ss..ss..']},
+];
+const FLY = { frostWisp: 30, stormSprite: 34, ghost: 26 };
+
+const OUT = '#120c18';
+const OLD_KNIGHT = { pal:{s:'#f2c9a0',b:'#3b6fd4',m:'#c8ccd6'}, rows: (() => { const r=[]; for(let y=0;y<30;y++){ let l=''; for(let x=0;x<23;x++){ let c='.'; if(y<10&&x>=6&&x<=15)c='s'; else if(y>=10&&y<26&&x>=4&&x<=17)c='b'; if(y>=11&&x>=19&&x<=21)c='m'; l+=c;} r.push(l);} return r; })() };
+
+function size(s){ return { w: Math.max(...s.rows.map(r=>r.length)), h: s.rows.length }; }
+function at(s,x,y){ const r=s.rows[y]; if(!r||x<0) return null; const c=r[x]; return c && c!=='.' && s.pal[c] ? s.pal[c] : null; }
+// Join head + body + weapon into one sprite (body hand -> weapon grip, head centred on top).
+function assemble(h){
+  const H=size(h.head), B=size(h.body), W=size(h.weapon);
+  const bx = 0, by = H.h;                      // body under the head
+  const hx = Math.round((B.w - H.w)/2);
+  const wx = bx + h.body.hand[0] - h.weapon.grip[0];
+  const wy = by + h.body.hand[1] - h.weapon.grip[1];
+  const minX = Math.min(0, hx, wx), minY = Math.min(0, wy);
+  const maxX = Math.max(B.w, hx+H.w, wx+W.w), maxY = Math.max(by+B.h, wy+W.h);
+  const layers = [[h.body,bx,by],[h.head,hx,0],[h.weapon,wx,wy]];
+  const pal = {}; const grid = [];
+  for(let y=0;y<maxY-minY;y++){ grid.push(Array(maxX-minX).fill('.')); }
+  let n=0; const code=()=>String.fromCharCode(0x100 + n++);
+  for(const [p,ox,oy] of layers){ const m={}; for(const k in p.pal){ const c=code(); m[k]=c; pal[c]=p.pal[k]; }
+    p.rows.forEach((row,y)=>[...row].forEach((ch,x)=>{ if(ch!=='.'&&m[ch]) grid[y+oy-minY][x+ox-minX]=m[ch]; })); }
+  return { pal, rows: grid.map(r=>r.join('')) };
+}
+function draw(ctx, s, ox, oy, z){
+  const {w,h}=size(s);
+  ctx.save(); ctx.globalAlpha = s.alpha ?? 1; ctx.fillStyle = OUT;
+  for(let y=-1;y<=h;y++) for(let x=-1;x<=w;x++){ if(at(s,x,y)) continue;
+    if(at(s,x-1,y)||at(s,x+1,y)||at(s,x,y-1)||at(s,x,y+1)) ctx.fillRect(ox+x*z, oy+y*z, z, z); }
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){ const c=at(s,x,y); if(c){ ctx.fillStyle=c; ctx.fillRect(ox+x*z, oy+y*z, z, z);} }
+  ctx.restore();
+}
+function shadow(ctx, cx, y, w, z){ ctx.fillStyle='rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(cx, y, w*z*0.45, Math.max(2,z*1.4), 0, 0, Math.PI*2); ctx.fill(); }
+function canvasFor(s, z, opts={}){
+  const {w,h}=size(s); const lift=opts.lift||0; const c=document.createElement('canvas');
+  c.width=(w+2)*z; c.height=(h+2+lift+(opts.shadow?1:0))*z;
+  const ctx=c.getContext('2d'); ctx.imageSmoothingEnabled=false;
+  if(opts.shadow) shadow(ctx, c.width/2, c.height - z*1.5, w, z);
+  draw(ctx, s, z, z, z); return c;
+}
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text) e.textContent=text; return e; }
+function gameSize(s, fl=0){
+  const z=2, a=size(s), k=size(OLD_KNIGHT); const wrap=el('div','small'); const c=document.createElement('canvas');
+  c.width=(a.w+4)*z; c.height=(Math.max(a.h+fl,k.h)+4)*z;
+  const g=c.getContext('2d'); g.imageSmoothingEnabled=false; const base=c.height-2*z;
+  shadow(g,(2+a.w/2)*z,base,a.w,z); draw(g,s,2*z,base-(a.h+fl)*z,z);
+  wrap.append(c, el('span','', 'game size')); return wrap;
+}
+
+const heroGrid=document.getElementById('heroes'); const assembled={};
+for(const h of HEROES){
+  const s=assemble(h); assembled[h.id]=s;
+  const card=el('article','card'); const hd=el('header'); hd.append(el('h3','',h.name), el('span','tag','3 parts')); card.append(hd);
+  const parts=el('div','parts');
+  for(const [k,label] of [['head','head'],['body','body'],['weapon','weapon']]){ const p=el('div','part'); p.append(canvasFor(h[k],4), el('span','',label)); parts.append(p); }
+  card.append(parts);
+  const stage=el('div','stage'); stage.append(canvasFor(s,5,{shadow:true}), gameSize(s)); card.append(stage);
+  card.append(el('p','shape',h.idea)); heroGrid.append(card);
+}
+const enemyGrid=document.getElementById('enemies');
+for(const e of ENEMIES){
+  const card=el('article','card'); const hd=el('header'); hd.append(el('h3','',e.name), el('span','tag','Floor '+e.floor)); card.append(hd);
+  const stage=el('div','stage'); const fl=FLY[e.id]?Math.round(FLY[e.id]/2):0;
+  stage.append(canvasFor(e, Math.min(6, Math.floor(120/(size(e).w+2))), {shadow:true, lift: fl?5:0}), gameSize(e, fl)); card.append(stage);
+  card.append(el('p','shape',e.shape)); enemyGrid.append(card);
+}
+const L=document.getElementById('lineup'); const z=2, gap=8;
+const all=[{...OLD_KNIGHT,id:'old'}, ...HEROES.map(h=>({...assembled[h.id], id:h.id})), ...ENEMIES];
+const W=all.reduce((t,s)=>t+size(s).w+gap,gap); const Hh=62;
+L.width=W*z; L.height=Hh*z; const lc=L.getContext('2d'); lc.imageSmoothingEnabled=false;
+let x=gap; const base=(Hh-5)*z;
+for(const s of all){ const {w,h}=size(s); const fl=FLY[s.id]||0; shadow(lc,(x+w/2)*z,base,w,z); draw(lc,s,x*z,base-(h+fl)*z,z); x+=w+gap; }
+</script>

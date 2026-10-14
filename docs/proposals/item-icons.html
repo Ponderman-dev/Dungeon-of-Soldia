@@ -1,0 +1,1015 @@
+<title>Soldia Item Icons</title>
+<style>
+/* Layout: dungeon-dark sheet. Hero = a mock reward screen using the icons; then all 72 icons grouped by item type. */
+:root {
+  --bg: #120e1c; --panel: #1c1629; --line: #2e2542; --fg: #e9e2f5; --muted: #a297b8;
+  --accent: #f2b544; --floor: #221b33;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1100px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: flex; flex-direction: column; gap: 26px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 5vw, 40px); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 18px; margin: 0; letter-spacing: .04em; display: flex; align-items: center; gap: 10px; }
+h2 .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+h2 .n { color: var(--muted); font-size: 13px; }
+.lede { color: var(--muted); max-width: 66ch; margin: 6px 0 0; }
+.top { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 760px) { .top { grid-template-columns: 1fr; } }
+.phone { background: #1b1530; border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.phone .head { font-family: var(--display); font-size: 18px; }
+.rcard { display: flex; gap: 12px; align-items: center; border: 2px solid var(--line); border-radius: 8px; padding: 10px 12px; background: #221b36; }
+.rcard .t { font-size: 10px; letter-spacing: .08em; font-weight: 600; }
+.rcard .nm { font-weight: 600; }
+.rcard .d { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.rules { display: grid; gap: 10px; }
+.rule { border-left: 3px solid var(--accent); padding: 4px 12px; color: var(--muted); font-size: 14px; }
+.rule b { color: var(--fg); display: block; }
+.frames { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+.frames .f { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); font-family: var(--display); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.icon { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px 8px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; min-width: 0; }
+.icon .nm { font-size: 13px; font-weight: 600; line-height: 1.25; }
+.icon .r { font-family: var(--display); font-size: 10px; letter-spacing: .06em; }
+canvas { image-rendering: pixelated; }
+.legendary canvas { animation: glint 2.4s ease-in-out infinite; }
+@keyframes glint { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.18) drop-shadow(0 0 6px rgba(242,182,50,.55)); } }
+@media (prefers-reduced-motion: reduce) { .legendary canvas { animation: none; } }
+.note { color: var(--muted); font-size: 14px; max-width: 70ch; margin: 0; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+
+<div class="wrap">
+  <div>
+    <h1>Soldia item icons</h1>
+    <p class="lede">A 16-pixel icon for every one of the 72 items, drawn in the same pixel style as the new characters. The frame around each icon shows its rarity, so a legendary is recognisable before you read anything.</p>
+  </div>
+
+  <div class="top">
+    <div class="phone" id="mock"><div class="head">Pick 1 reward</div></div>
+    <div class="rules">
+      <div class="rule"><b>The object, not a symbol</b>Each icon is the actual thing: a coin, a bell, a bomb with a lit fuse, a chest with teeth. No arrows or plus signs.</div>
+      <div class="rule"><b>Colour tells the element</b>Fire orange, ice pale blue, electric yellow, dark purple, poison green, blood red. The same colours the enemies and statuses use.</div>
+      <div class="rule"><b>Frames tell the rarity</b>Common: plain grey. Rare: blue. Epic: purple with corner studs. Legendary: gold with corner gems and a slow shine.</div>
+      <div class="rule"><b>Replaces the coloured dot</b>On the reward card the icon takes the place of today's type dot. Above the health bars in battle the small dots can stay, or become tiny 8-pixel versions later.</div>
+      <div class="frames" id="frames"></div>
+    </div>
+  </div>
+
+  <div id="sections"></div>
+  <p class="note">Shown at 4x (the game would show them at 2-3x). Every icon is a small grid of palette letters, so each one can be redrawn later the same way as the characters.</p>
+</div>
+
+<script>
+// Item icon proposal: one shared palette, each icon a small pixel grid (auto dark outline added).
+const PAL = {
+  k:'#1a1020', w:'#ffffff', W:'#c8ccd6', g:'#8c909c', G:'#4a4a5a', s:'#f2c9a0', l:'#c68a5e',
+  b:'#8b5a2b', B:'#5e3a1a', y:'#f2c544', Y:'#b8862a', o:'#ff9a2e', r:'#d9452b', R:'#8e2a2a',
+  p:'#f06ab4', v:'#9b4dff', V:'#5a2d8a', u:'#3b6fd4', U:'#2a3f8a', c:'#7fd8ff', C:'#2f8ab0',
+  e:'#57c26a', E:'#2f6b3a', n:'#b8f05a', m:'#ebe5cf', x:'#ffe94d', h:'#fff7c0', t:'#3aa8a0',
+};
+const ICONS = {
+whetstone:[
+'.........x....',
+'........x.x...',
+'..........x...',
+'...gggggggg...',
+'..gWWWWWWWgg..',
+'.gWggggggggG..',
+'.gggggggggGG..',
+'..GGGGGGGGG...',
+'..............',
+'..bbbbbbbbbb..',
+'.bBBBBBBBBBBb.'],
+padded_vest:[
+'...bb....bb...',
+'..blb....blb..',
+'..bllb..bllb..',
+'.bllllbbllllb.',
+'.blBlllllBllb.',
+'.bllllllllllb.',
+'.blBlllllBllb.',
+'.bllllllllllb.',
+'.blBllyllBllb.',
+'.bllllllllllb.',
+'.bBBBBBBBBBBb.'],
+lucky_coin:[
+'....yyyyyy....',
+'...yhhyyyyY...',
+'..yhyyeyeyyY..',
+'.yhyyeeeeeyyY.',
+'.yhyyyeEeyyyY.',
+'.yyyeeeEeeeyY.',
+'.yyyeeEeEeeyY.',
+'.yyyyyyEyyyyY.',
+'.yyyyyyEyyyYY.',
+'..yyyyyyyyYY..',
+'...YyyyyyYY...',
+'....YYYYYY....'],
+sharp_edge:[
+'...........WW.',
+'..........WwW.',
+'.........WwW..',
+'........WwW...',
+'.......WwW....',
+'......WwW.....',
+'.....WwW......',
+'..y.WwW.......',
+'..yyWW........',
+'...yy.........',
+'..bByy........',
+'.bB..y........',
+'.B............'],
+eagle_eye:[
+'......rr......',
+'......rr......',
+'....kkkkkk....',
+'..kkwwwwwwkk..',
+'.kwwwyyyywwwk.',
+'rkwwyyYYyywwkr',
+'rkwwyykkyywwkr',
+'.kwwwyyyywwwk.',
+'..kkwwwwwwkk..',
+'....kkkkkk....',
+'......rr......',
+'......rr......'],
+feather_boots:[
+'..w.....bbb...',
+'.ww.....blb...',
+'wwW.....blb...',
+'.wWw....blb...',
+'..wWw..bllb...',
+'...wWw.bllb...',
+'....wWbbllb...',
+'.....bllllbbb.',
+'.....bllllllb.',
+'.....bllllllbb',
+'.....BBBBBBBBB'],
+heart_charm:[
+'.....y..y...w.',
+'......yy......',
+'..rrr.yy.rrr..',
+'.rhhrr..rrrrr.',
+'.rhrrrrrrrrrR.',
+'.rrrrrrrrrrrR.',
+'.rrrrrrrrrrRR.',
+'..rrrrrrrrRR..',
+'...rrrrrrRR...',
+'....rrrrRR....',
+'.....rrRR.....',
+'......RR......'],
+war_banner:[
+'.y............',
+'.bRRRRRRRRR...',
+'.brrrrrrrrrr..',
+'.brryyyyyrrr..',
+'.brrryyyrrrr..',
+'.brrrryrrrr...',
+'.brrrrrrrrr...',
+'.brrrrrrrr....',
+'.brrr.rrrr....',
+'.brr...rrr....',
+'.b............',
+'.b............',
+'.B............'],
+shield_totem:[
+'....uuuuuu....',
+'...uUUUUUUu...',
+'...uwwUUwwu...',
+'...uUUUUUUu...',
+'...ukkkkkku...',
+'....uuuuuu....',
+'....bbbbbb....',
+'...bwkbbkwb...',
+'...bbbbbbbb...',
+'...bbkkkkbb...',
+'....bbbbbb....',
+'...BBBBBBBB...',
+'..BBBBBBBBBB..'],
+quick_gloves:[
+'.....l.l.l....',
+'....llllll....',
+'....llllll.l..',
+'w...lllllllll.',
+'.w..lllllllll.',
+'ww..lllllllll.',
+'.w..llllllll..',
+'w....lllllll..',
+'.....ryyyyr...',
+'.....rrrrrr...',
+'.....rrrrrr...'],
+bulwark_plate:[
+'.gg........gg.',
+'.gWg......gWg.',
+'.gWWggggggWWg.',
+'.gWWWWWWWWWWg.',
+'.gWWWwwWWWWWg.',
+'.gWWWwWWWWWGg.',
+'..gWWWWWWWWg..',
+'..gWWWuuWWGg..',
+'..gWWuuuuWGg..',
+'...gWWuuWGg...',
+'....gWWWGg....',
+'.....gGGg.....',
+'......gg......'],
+siege_cannon:[
+'...........xo.',
+'..........o...',
+'.GGGGGGGGGg...',
+'GkGGGGGGGGGg..',
+'GkkGGWWWWGGg..',
+'GkGGGGGGGGGg..',
+'.GGGGGGGGGg...',
+'....bbbb......',
+'...bBBBBb.....',
+'...bBkkBb.....',
+'...bBBBBb.....',
+'....bbbb......'],
+bloodlust_mask:[
+'..R........R..',
+'..rR......Rr..',
+'..rrrrrrrrrr..',
+'.rrrrrrrrrrrr.',
+'.rrkkrrrrkkrr.',
+'.rrkyrrrrkyrr.',
+'.rrrrrrrrrrrr.',
+'..rrrrRRrrrr..',
+'..rRkkkkkkRr..',
+'..rkwkwwkwkr..',
+'...rkkkkkkr...',
+'....rrrrrr....',
+'.....R..R.....',
+'.....R........'],
+gamblers_dice:[
+'............y.',
+'WWWWWWW....yhy',
+'WwwwwwW.....y.',
+'WwkwwwW.......',
+'WwwkwwW.rrrrrr',
+'WwwwkwW.rwrrrr',
+'WWWWWWW.rrrrrr',
+'........rrrrrr',
+'........rrrrwr',
+'........RRRRRR'],
+fire_bombs:[
+'..........x...',
+'.........xo...',
+'........ob....',
+'.......b......',
+'.....GGGGG....',
+'...GGGWGGGGG..',
+'..GGWWGGGGGGG.',
+'..GGWGGGGGGGG.',
+'..GGGGGGGGGGG.',
+'..GGGGGGGGGGG.',
+'..GGGGGGGGGGG.',
+'...GGGGGGGGG..',
+'.....GGGGG....'],
+chill_band:[
+'.....c.c......',
+'......w.......',
+'....ccwcc.....',
+'......w.......',
+'.....c.c......',
+'...CCCCCCC....',
+'..Cc.....cC...',
+'.Cc.......cC..',
+'.C.........C..',
+'.Cc.......cC..',
+'..Cc.....cC...',
+'...CCCCCCC....'],
+static_crystal:[
+'......x.......',
+'.....vVx......',
+'....vvVVx.....',
+'...vvwvVV.....',
+'...vwvvVV.....',
+'...vvvvVV.....',
+'..xvvvvVVx....',
+'...vvvvVV.....',
+'...vvvvVV.....',
+'....vvVV......',
+'.....vV.......',
+'......x.......'],
+aid_kit:[
+'.....GGGG.....',
+'.....G..G.....',
+'.WWWWWWWWWWWW.',
+'.Wwwwwwwwwwwg.',
+'.Wwwwwrrwwwwg.',
+'.Wwwwwrrwwwwg.',
+'.Wwwrrrrrrwwg.',
+'.Wwwrrrrrrwwg.',
+'.Wwwwwrrwwwwg.',
+'.Wwwwwrrwwwwg.',
+'.Wwwwwwwwwwwg.',
+'.gggggggggggg.'],
+shared_potion:[
+'.....bbbb.....',
+'.....BBBB.....',
+'......ww......',
+'......ww......',
+'.....wwww.....',
+'....weeeew....',
+'...weneeeew...',
+'..wenneeeeew..',
+'..weneepeeEw..',
+'..weeepppeEw..',
+'..weeeepeEEw..',
+'...wEEEEEEw...',
+'....wwwwww....'],
+sucker_punch_glove:[
+'.y.....rrrr...',
+'..y...rrrrrr..',
+'yy.y.rhrrrrrr.',
+'...y.rhrrrrrrR',
+'yy...rrrrrrrrR',
+'..y..rrrrrrrR.',
+'.y....rrrrrrR.',
+'.......wwwww..',
+'.......wWWWw..',
+'.......WWWWW..'],
+bandage_roll:[
+'....WWWWWW....',
+'...WwwwwwwW...',
+'..WwWWWWWWwW..',
+'..WwWgggWWwW..',
+'..WwWg.gWWwW..',
+'..WwWgggWWwW..',
+'..WwWWWWWWwW..',
+'...WwwwwwwWwww',
+'....WWWWWWwrww',
+'..........wrrw',
+'..........WWW.'],
+second_wind_flask:[
+'.....bb.......',
+'.....BB.......',
+'.....ww.......',
+'....wccw......',
+'...wccccw...w.',
+'..wcwcccw..w.w',
+'..wccccccw...w',
+'..wccccccw..w.',
+'..wcccCCcw....',
+'...wcCCCw.ww..',
+'....wwww...ww.'],
+full_vigor:[
+'..ss..........',
+'.ssss.........',
+'.ssls.........',
+'.sss.....sss..',
+'.sss...sssss..',
+'.ssss.sssssss.',
+'..sssssshssss.',
+'..sssssssssss.',
+'...sssssssss..',
+'....ssssssss..',
+'.....eeeeeee..',
+'.....eEEEEEe..'],
+brawlers_streak:[
+'.rr..oo..yy...',
+'..rr..oo..yy..',
+'...rr..oo..yy.',
+'....rr..oo..yy',
+'...rr..oo..yy.',
+'..rr..oo..yy..',
+'.rr..oo..yy...'],
+tough_skin:[
+'....eeeeee....',
+'...eEeeeeEe...',
+'..eEEeeeeEEe..',
+'.eeeeEEEEeeee.',
+'.eEeeEeeEeeEe.',
+'.eEEeEeeEeEEe.',
+'.eeeeEEEEeeee.',
+'..eEEeeeeEEe..',
+'...eEeeeeEe...',
+'....eeeeee....'],
+kindling:[
+'......o.......',
+'.....oyo......',
+'....oyyo......',
+'...oyhyoo.....',
+'...oyhhyo.....',
+'....oyyo......',
+'..bbbbbbbbb...',
+'.bBlllllllBb..',
+'..bbbbbbbbb...',
+'.bBlllllllBb..',
+'..bbbbbbbbb...'],
+frost_charm:[
+'......c.......',
+'....c.c.c.....',
+'.....ccc......',
+'..c...c...c...',
+'...c..c..c....',
+'....cwwwc.....',
+'cccccwhwccccc.',
+'....cwwwc.....',
+'...c..c..c....',
+'..c...c...c...',
+'.....ccc......',
+'....c.c.c.....',
+'......c.......'],
+storm_charm:[
+'.......xxxx...',
+'......xhxx....',
+'.....xhxx.....',
+'....xhxx......',
+'...xxxxxxxx...',
+'.......xhx....',
+'......xhx.....',
+'.....xxx......',
+'....xxx.......',
+'...xx.........',
+'..x...........'],
+shadow_charm:[
+'.....VVVV.....',
+'...VVvvv......',
+'..VVvv........',
+'.VVvv.........',
+'.Vvv......v...',
+'.Vvv.....vhv..',
+'.Vvv......v...',
+'.VVvv.........',
+'..VVvv........',
+'...VVvvv......',
+'.....VVVV.....'],
+mage_cloak:[
+'.....uuuu.....',
+'....uUUUUu....',
+'....uU..Uu....',
+'...uuuyyuuu...',
+'...uuuyyuuu...',
+'..uuuuuuuuuu..',
+'..uuUuuuuUuu..',
+'.uuuUuuuuUuuu.',
+'.uuuUuuuuUuuu.',
+'.uuUuuuuuuUuu.',
+'uuuUuuuuuuUuuu',
+'UUUUUUUUUUUUUU'],
+hourglass:[
+'.bbbbbbbbbbb..',
+'..WwwwwwwwW...',
+'..WyyyyyyyW...',
+'...WyyyyyW....',
+'....WyyyW.....',
+'.....WyW......',
+'.....WyW......',
+'....Ww.yW.....',
+'...Ww..y.W....',
+'..Ww..yyy.W...',
+'..WyyyyyyyW...',
+'.bbbbbbbbbbb..'],
+ember_charm:[
+'.....o........',
+'....oyo.......',
+'...rooyo......',
+'..rrooyyr.....',
+'..rRrooyrr....',
+'.rRRrrooorr...',
+'.rRRRrrrrrr...',
+'..rRRRRrrr....',
+'...RRRRRR.....'],
+venom_fang:[
+'...mmmmmmmm...',
+'...mmmmmmmmm..',
+'....mmmmmmm...',
+'....mmmmmm....',
+'.....mmmmm....',
+'.....mmmm.....',
+'......mmm.....',
+'......mm......',
+'......me......',
+'.......e......',
+'.......n......',
+'.......e......'],
+rusty_nails:[
+'.gg.......gg..',
+'.gWg.....gWg..',
+'..gb....bg....',
+'...bb..bb.....',
+'....bobb......',
+'.....bb.......',
+'....bbob......',
+'...bb..bb.....',
+'..ob....bo....',
+'.bB......Bb...'],
+serrated_edge:[
+'.....W..W.....',
+'...WWWWWWWW...',
+'..WWwwwwwwWW..',
+'.WWwwWWWWwwWW.',
+'..WwWW..WWwW..',
+'.WWwW....WwWW.',
+'..WwW....WwW..',
+'.WWwW....WwWW.',
+'..WwWW..WWwW..',
+'.WWwwWWWWwrWW.',
+'..WWwwwwwrWW..',
+'...WWWWWWrW...',
+'.....W..WrW...'],
+hex_doll:[
+'.....llll.....',
+'....llllll....',
+'....lkllkl..r.',
+'....llllll.r..',
+'....lkkkkl.y..',
+'.....llll.....',
+'..llllllllll..',
+'..l.lllvll.l..',
+'....llllll....',
+'.....l..l.....',
+'....ll..ll....'],
+dread_bell:[
+'......bb......',
+'.....GGGG.....',
+'....GGWGGG....',
+'...GGWGGGGG...',
+'.v.GGWGGGGG.v.',
+'v..GGGGGGGG..v',
+'.vGGGGGGGGGGv.',
+'.GGGGGGGGGGGG.',
+'.GGGGGGGGGGGG.',
+'......VV......',
+'.....VVVV.....'],
+gag_rune:[
+'..gggggggggg..',
+'.gWWWWWWWWWGg.',
+'.gWWWWWWWWWGg.',
+'.gWWvWWWWvWGg.',
+'.gWWWvWWvWWGg.',
+'.gWWWWvvWWWGg.',
+'.gWWWWvvWWWGg.',
+'.gWWWvWWvWWGg.',
+'.gWWvWWWWvWGg.',
+'.gWWWWWWWWWGg.',
+'..gggggggggg..'],
+fire_arrows:[
+'...........yo.',
+'..........yho.',
+'.........ohyo.',
+'........oyyo..',
+'.......Wwo....',
+'......bW......',
+'.....b........',
+'....b.........',
+'...b..........',
+'..b...........',
+'.ww...........',
+'ww............',
+'.w............'],
+executioners_axe:[
+'....WWWW......',
+'...WwwWWW.....',
+'..WwWWWWWb....',
+'..WwWWWWWbb...',
+'..WwWWWWWb.b..',
+'..rWWWWWb.....',
+'...rWWWb......',
+'....rWb.......',
+'.....b........',
+'....b.........',
+'...b..........',
+'..B...........'],
+magma_core:[
+'....RRRRRR....',
+'...RrrrrrrR...',
+'..RrooRrorrR..',
+'.RroyyoRoorrR.',
+'.RroyhyoRorrR.',
+'.RrooyyoorRrR.',
+'.RRrrooorRrrR.',
+'.RrRrrrrRrrrR.',
+'..RrrRRrrrrR..',
+'...RRrrrrRR...',
+'....RRRRRR....'],
+shatter_hammer:[
+'..cc.......c..',
+'.c..GGGGG..c..',
+'...GWWWWWG....',
+'..GWWWWWWWG...',
+'..GWGGGGGWG...',
+'...GGGGGGG.c..',
+'.c....b...c...',
+'......b.......',
+'......b.......',
+'......b.......',
+'......b.......',
+'.....BB.......'],
+blood_chalice:[
+'..yyyyyyyyyy..',
+'..yrrrrrrrry..',
+'..yRrrrrrrRy..',
+'...yRrrrrRyr..',
+'....yyyyyy.r..',
+'......yY......',
+'......yY......',
+'......yY......',
+'....yyyyyY....',
+'...yyyyyyYY...'],
+plague_flask:[
+'.....bbb......',
+'......w.......',
+'......w.......',
+'....wwwww.....',
+'...weeeeew....',
+'..weeeeeeew...',
+'..wemmmmmew...',
+'..wemkmkmew...',
+'..weemmmeew...',
+'..weemememw...',
+'...wwwwwww....'],
+exploiters_lens:[
+'...ggggg......',
+'..gcccccg.....',
+'.gcwccccCg....',
+'.gcwcrccCg....',
+'.gccrrrcCg....',
+'.gcccrcCCg....',
+'..gCCCCCg.....',
+'...ggggggb....',
+'.........bb...',
+'..........bb..',
+'...........bb.',
+'............b.'],
+hunters_sigil:[
+'....yyyyyy....',
+'...yYYYYYYy...',
+'..yYrrrrrrYy..',
+'.yYr..rr..rYy.',
+'.yYr..rr..rYy.',
+'.yYrrrrrrrrYy.',
+'.yYrrrrrrrrYy.',
+'.yYr..rr..rYy.',
+'..yYrrrrrrYy..',
+'...yYYYYYYy...',
+'....yyyyyy....'],
+thousand_cuts:[
+'W...........W.',
+'.W....W....W..',
+'..W...W...W...',
+'...W..W..W....',
+'....W.W.W.....',
+'.....WWW......',
+'WWWWWWrWWWWWW.',
+'.....WWW......',
+'....W.W.W.....',
+'...W..W..W....',
+'..W...W...W...',
+'.W....W....W..'],
+frozen_thunderbolt:[
+'..cccccccccc..',
+'.cCcccxxxccCc.',
+'.cCccxxxcccCc.',
+'.cCcxxxccccCc.',
+'.cCcxxxxxxcCc.',
+'.cCcccxxxccCc.',
+'.cCccxxxcccCc.',
+'.cCcxxcccccCc.',
+'.cCxxccccccCc.',
+'..cccccccccc..'],
+warding_charm:[
+'.....y..y.....',
+'......yy......',
+'...cccccccc...',
+'...cCCCCCCc...',
+'...cCwwwwCc...',
+'...cCwccwCc...',
+'...cCwccwCc...',
+'....cCwwCc....',
+'.....cCCc.....',
+'......cc......'],
+overheal_ring:[
+'.....e.e......',
+'....eeeee.....',
+'.....eee......',
+'......e.......',
+'....yyyyy.....',
+'...y.....y....',
+'..y.......y...',
+'..y.......y...',
+'..y.......y...',
+'...y.....y....',
+'....yyyyy.....'],
+spiked_aegis:[
+'......W.......',
+'...W.ggg.W....',
+'....gWWWg.....',
+'..ggWuuuWgg...',
+'W.gWuuyuuWg.W.',
+'..gWuyyyuWg...',
+'W.gWuuyuuWg.W.',
+'..ggWuuuWgg...',
+'....gWWWg.....',
+'...W.ggg.W....',
+'......W.......'],
+provokers_horn:[
+'...........y..',
+'..........byy.',
+'.r.......bly..',
+'r.r.....bll...',
+'.r....bbll....',
+'....bbllll....',
+'..bbllllll....',
+'.bllllllB.....',
+'.bllllBB......',
+'..bBBB........'],
+spite_mail:[
+'..gg......gg..',
+'.gWWg....gWWg.',
+'.gWgWggggWgWg.',
+'.gWgWgWgWgWWg.',
+'.gWWgWgWgWgWg.',
+'.gWgWrWWrWgWg.',
+'.gWWgWgWgWgWg.',
+'..gWgWgWgWgg..',
+'..gWWgWgWgWg..',
+'..gggggggggg..'],
+martyrs_shield:[
+'.yyyyyyyyyyy..',
+'.yWWWWyWWWWy..',
+'.yWWWWyWWWWy..',
+'.yyyyyyyyyyy..',
+'.yWWWWyWWWWy..',
+'..yWWWyWWWy...',
+'..yWWWyWWWy...',
+'...yWWyWWy....',
+'....yWyWy.....',
+'.....yyy......'],
+fire_heart:[
+'..o.......o...',
+'..oy....oyo...',
+'.oyyo..oyyyo..',
+'.oyhyooyhyyo..',
+'.oyhhyyyhyyo..',
+'.ooyyyyyyyoo..',
+'..ooyyyyyoo...',
+'...ooyyyoo....',
+'....ooyoo.....',
+'.....ooo......',
+'......o.......'],
+lost_clerics_grimoire:[
+'.......e......',
+'......ene.....',
+'......ene.....',
+'..bbbbbbbbbb..',
+'..bWwwwwwwwb..',
+'..bWwyyyywwb..',
+'..bWwwyywwwb..',
+'..bWwwyywwwb..',
+'..bWwwwwwwwb..',
+'..bBBBBBBBBb..'],
+conductors_baton:[
+'..........w...',
+'.........ww...',
+'..vv....ww....',
+'..vV...ww.....',
+'..v...ww......',
+'.vv..ww.......',
+'vvv.ww........',
+'...yy.........',
+'..yy..........'],
+echo_rune:[
+'..gggggggggg..',
+'.gWWWWWWWWWGg.',
+'.gWccccccWWGg.',
+'.gWcWWWWcWWGg.',
+'.gWcWccWcWWGg.',
+'.gWcWccWcWWGg.',
+'.gWcWWWWcWWGg.',
+'.gWccccccWWGg.',
+'.gWWWWWWWWWGg.',
+'..gggggggggg..'],
+metronome:[
+'......y.......',
+'.....bWb......',
+'.....bWb......',
+'....bbWbb.....',
+'....bbWbb.....',
+'...bbbWbbb....',
+'...bbyybbb....',
+'..bbbbbbbbb...',
+'..bBBBBBBBb...',
+'.bbbbbbbbbbb..'],
+rat_cage:[
+'.....YY.......',
+'....Y..Y......',
+'..YYYYYYYYYY..',
+'..Y..Y..Y..Y..',
+'..Y..Y..Y..Y..',
+'..YggggggY.Y..',
+'..YgkgggggYp..',
+'..Yggggggg.Y..',
+'..Y.gY.gY..Y..',
+'.bbbbbbbbbbbb.'],
+wisp_lantern:[
+'.....GG.......',
+'....G..G......',
+'...GGGGGG.....',
+'...GwccwG.....',
+'...GcwwcG.....',
+'...GcwwcG.....',
+'...GwccwG.....',
+'...GGGGGG.....',
+'....GGGG......'],
+fire_imp_brazier:[
+'...k.o..k.....',
+'...kooyok.....',
+'...oyyyyo.....',
+'..oyhhhyyo....',
+'.GGGGGGGGGG...',
+'..GgggggggG...',
+'...GGGGGG.....',
+'....G..G......',
+'...GG..GG.....'],
+mimic_chest:[
+'..bbbbbbbbbb..',
+'.bBBBBBBBBBBb.',
+'.bBByBBByBBBb.',
+'.bwkwkwkwkwkb.',
+'.bkrrrrrrrrkb.',
+'.bwkwkwkwkwkb.',
+'.bBBBByyBBBBb.',
+'.bBBBBBBBBBBb.',
+'.bbbbbbbbbbbb.'],
+gargoyle_idol:[
+'.g.........g..',
+'.gg.......gg..',
+'..gGGGGGGGg...',
+'..GWWGGGWWG...',
+'..GGrGGGrGG...',
+'..GGGGGGGGG...',
+'...GWkkkWG....',
+'...GGGGGGG....',
+'..ggggggggg...',
+'.ggggggggggg..'],
+spirit_knight_banner:[
+'.y............',
+'.bcccccccc....',
+'.bcCCCCCCc....',
+'.bcCwwwwCc....',
+'.bcCwkkwCc....',
+'.bcCwwwwCc....',
+'.bcCCCCCCc....',
+'.bcccccccc....',
+'.bccc..ccc....',
+'.bc......c....',
+'.b............',
+'.B............'],
+phoenix_hatchling:[
+'.....o........',
+'....oyo.......',
+'...rrrrr......',
+'..rrkrrrro....',
+'..rrrrrryy....',
+'..rrrrrr......',
+'.wwrrrrrww....',
+'.wWwwwwwWw....',
+'..wWwWwWw.....',
+'...wwwww......'],
+bone_charm:[
+'.mm.......mm..',
+'mmmm.....mmmm.',
+'.mmmm...mmmm..',
+'...mmm.mmm....',
+'....mmmmm.....',
+'.....mmm......',
+'....mmmmm.....',
+'...mmm.mmm....',
+'.mmmm...mmmm..',
+'mmmm.....mmmm.',
+'.mm.......mm..'],
+overseers_whistle:[
+'...........w..',
+'.........w..w.',
+'.yyyyyyyy..w..',
+'yyhhhhhyyy....',
+'yyyyyyykyyy...',
+'.yyyyyyyyyy...',
+'......yyyy....',
+'.......yy.....'],
+grave_dust:[
+'....w.w.w.....',
+'.....bbb......',
+'....bBBBb.....',
+'...bbbbbbb....',
+'..bbmmmmbbb...',
+'..bbmkmkmbb...',
+'..bbbmmmbbb...',
+'..bbbbbbbbb...',
+'...bbbbbbb....',
+'.w.w.w.w.w....'],
+necro_crown:[
+'.V....V....V..',
+'.VV..VVV..VV..',
+'.VVVVVVVVVVV..',
+'.VVeVVVeVVeV..',
+'.VVVVVVVVVVV..',
+'.mmmmmmmmmmm..',
+'.VVVVVVVVVVV..'],
+jolly_banner:[
+'.y............',
+'.byyyyyyyyy...',
+'.byyyyyyyyyy..',
+'.byykyyykyyy..',
+'.byyyyyyyyyy..',
+'.bykyyyyykyy..',
+'.byykkkkkyy...',
+'.byyyyyyyyy...',
+'.byyy.yyyy....',
+'.b............',
+'.B............'],
+excalibur:[
+'......w.....c.',
+'.....wWw...c..',
+'.....wWw..c...',
+'..c..wWw......',
+'.c...wWw......',
+'c....wWw...c..',
+'.....wWw..c...',
+'..yyyycyyyy...',
+'......B..c....',
+'......B.c.....',
+'.....yYy......'],
+};
+const ITEMS=[{"id":"whetstone","name":"Whetstone","rarity":"common","type":"stat","desc":"+12% attack and +3 attack"},{"id":"padded_vest","name":"Padded Vest","rarity":"common","type":"stat","desc":"+12 defense"},{"id":"lucky_coin","name":"Lucky Coin","rarity":"common","type":"stat","desc":"+10 crit chance."},{"id":"sharp_edge","name":"Sharp Edge","rarity":"common","type":"stat","desc":"+15% melee damage"},{"id":"eagle_eye","name":"Eagle Eye","rarity":"common","type":"stat","desc":"+15% ranged damage"},{"id":"feather_boots","name":"Feather Boots","rarity":"rare","type":"stat","desc":"+8 evasion"},{"id":"heart_charm","name":"Heart Charm","rarity":"rare","type":"stat","desc":"+22% max health. Regenerates 0.5% of max health per second in fights."},{"id":"war_banner","name":"War Banner","rarity":"rare","type":"squad","desc":"8% chance per attack: Battle Cry! Whole squad +25% attack speed for 2s."},{"id":"shield_totem","name":"Shield Totem","rarity":"rare","type":"special","desc":"10% chance to block a hit. Recharges for 2.5s after a block. Max 6."},{"id":"quick_gloves","name":"Quick Gloves","rarity":"epic","type":"stat","desc":"+18% attack speed. 5% chance per attack to hit twice."},{"id":"bulwark_plate","name":"Bulwark Plate","rarity":"epic","type":"special","desc":"+30 defense. Reflects 25% of melee damage taken back at the attacker."},{"id":"siege_cannon","name":"Siege Cannon","rarity":"legendary","type":"special","desc":"+40% attack. Skills deal 30% more damage. 5% chance a skill also hits nearby enemies."},{"id":"bloodlust_mask","name":"Bloodlust Mask","rarity":"legendary","type":"special","desc":"+30% attack speed. Heal 5% of damage dealt. 10% chance to share the heal with the squad."},{"id":"gamblers_dice","name":"Gambler's Dice","rarity":"legendary","type":"special","desc":"+20 crit chance. Crits deal 50% more and add a random debuff to the enemy."},{"id":"fire_bombs","name":"Fire Bombs","rarity":"rare","type":"onhit","desc":"5% chance per attack to throw a bomb: 250% fire damage (ranged)."},{"id":"chill_band","name":"Chill Band","rarity":"rare","type":"onhit","desc":"Every attack adds a small ice hit and 1 Chill stack (5 Chill = Freeze)."},{"id":"static_crystal","name":"Static Crystal","rarity":"epic","type":"onhit","desc":"10% per attack: chain lightning that jumps to 2 more enemies and Shocks them."},{"id":"aid_kit","name":"Aid Kit","rarity":"common","type":"special","desc":"Heals 5% max health when a floor is cleared."},{"id":"shared_potion","name":"Shared Potion","rarity":"legendary","type":"potion","desc":"Every living hero recovers 25% of max health. No hero to choose."},{"id":"sucker_punch_glove","name":"Sucker Punch Glove","rarity":"common","type":"onhit","desc":"The first BASIC attack on each enemy deals +50% damage."},{"id":"bandage_roll","name":"Bandage Roll","rarity":"common","type":"special","desc":"Heals 3% max health on each kill the holder makes."},{"id":"second_wind_flask","name":"Second Wind Flask","rarity":"common","type":"special","desc":"Used up when the holder drops below 40% health: heals 30% (once per floor)."},{"id":"full_vigor","name":"Full Vigor","rarity":"common","type":"special","desc":"+15% damage while the holder is at full health."},{"id":"brawlers_streak","name":"Brawler's Streak","rarity":"common","type":"onhit","desc":"Each consecutive hit on the same target adds +2% damage (max +10%)."},{"id":"tough_skin","name":"Tough Skin","rarity":"common","type":"special","desc":"The first hit the holder takes each floor deals 60% less damage."},{"id":"kindling","name":"Kindling","rarity":"common","type":"stat","desc":"+15% fire damage (also boosts Burn)."},{"id":"frost_charm","name":"Frost Charm","rarity":"common","type":"stat","desc":"+15% ice damage (also boosts Chill Band hits)."},{"id":"storm_charm","name":"Storm Charm","rarity":"common","type":"stat","desc":"+15% electric damage."},{"id":"shadow_charm","name":"Shadow Charm","rarity":"common","type":"stat","desc":"+15% dark damage (poison and Death Coil are dark)."},{"id":"mage_cloak","name":"Mage Cloak","rarity":"common","type":"stat","desc":"+10 resist."},{"id":"hourglass","name":"Hourglass","rarity":"common","type":"skill","desc":"Skill cooldowns 5% shorter per copy (up to 50%)."},{"id":"ember_charm","name":"Ember Charm","rarity":"common","type":"onhit","desc":"6% chance per attack to Burn the target for 3s. Chance and burn damage grow with each copy."},{"id":"venom_fang","name":"Venom Fang","rarity":"common","type":"onhit","desc":"8% chance per attack to Poison the target (each proc adds a Poison stack)."},{"id":"rusty_nails","name":"Rusty Nails","rarity":"common","type":"onhit","desc":"8% chance per attack to Armor Break the target (-defense)."},{"id":"serrated_edge","name":"Serrated Edge","rarity":"rare","type":"onhit","desc":"10% chance per attack to make the target Bleed."},{"id":"hex_doll","name":"Hex Doll","rarity":"rare","type":"onhit","desc":"8% chance per attack to Curse the target (-resist)."},{"id":"dread_bell","name":"Dread Bell","rarity":"rare","type":"onhit","desc":"5% chance per attack to Fear the target (it skips its next attack and backs away)."},{"id":"gag_rune","name":"Gag Rune","rarity":"rare","type":"special","desc":"A stun or freeze the holder causes also Silences the enemy for 2s."},{"id":"fire_arrows","name":"Fire Arrows","rarity":"rare","type":"onhit","desc":"Ranged attacks: 50% chance for an extra fire hit."},{"id":"executioners_axe","name":"Executioner's Axe","rarity":"rare","type":"special","desc":"+30% damage to enemies under 25% health."},{"id":"magma_core","name":"Magma Core","rarity":"epic","type":"special","desc":"Burning enemies take +25% damage from the holder, and burn ticks 30% faster (up to +100%)."},{"id":"shatter_hammer","name":"Shatter Hammer","rarity":"epic","type":"special","desc":"Hits on a frozen enemy deal +60% damage and break the freeze."},{"id":"blood_chalice","name":"Blood Chalice","rarity":"epic","type":"special","desc":"+20% damage to Bleeding enemies. Killing a Bleeding enemy heals 3%."},{"id":"plague_flask","name":"Plague Flask","rarity":"epic","type":"special","desc":"When a Poisoned enemy dies, half its Poison spreads to another enemy."},{"id":"exploiters_lens","name":"Exploiter's Lens","rarity":"epic","type":"special","desc":"+30% damage to enemies with 3 or more different debuffs."},{"id":"hunters_sigil","name":"Hunter's Sigil","rarity":"epic","type":"special","desc":"The first hit on each enemy Marks it: +10% damage from the whole squad."},{"id":"thousand_cuts","name":"Thousand Cuts","rarity":"epic","type":"onhit","desc":"Melee hits can make enemies Bleed; each Bleed adds an extra stack. Bleeding enemies burst into knives when they die."},{"id":"frozen_thunderbolt","name":"Frozen Thunderbolt","rarity":"legendary","type":"onhit","desc":"Every electric hit causes an ice burst on nearby enemies: ice damage and 2 Chill."},{"id":"warding_charm","name":"Warding Charm","rarity":"rare","type":"stat","desc":"Shields the holder receives are 30% bigger."},{"id":"overheal_ring","name":"Overheal Ring","rarity":"rare","type":"special","desc":"Healing above full health becomes a shield."},{"id":"spiked_aegis","name":"Spiked Aegis","rarity":"epic","type":"special","desc":"When the holder's shield is broken it explodes and hurts all enemies."},{"id":"provokers_horn","name":"Provoker's Horn","rarity":"rare","type":"special","desc":"10% chance per attack to Taunt the target for 3s. Taunted enemies take +15% damage."},{"id":"spite_mail","name":"Spite Mail","rarity":"epic","type":"special","desc":"While the holder is taunting an enemy: +30 defense and 25% of melee damage reflected."},{"id":"martyrs_shield","name":"Martyr's Shield","rarity":"epic","type":"special","desc":"8% chance when an enemy hits another hero to take the hit instead."},{"id":"fire_heart","name":"Fire Heart","rarity":"legendary","type":"special","desc":"Each floor starts with a fire shield that slowly regenerates and burns whoever hits it."},{"id":"lost_clerics_grimoire","name":"Lost Cleric's Grimoire","rarity":"legendary","type":"special","desc":"10% chance each time the holder is healed to launch a green fireball at a random enemy."},{"id":"conductors_baton","name":"Conductor's Baton","rarity":"rare","type":"skill","desc":"The holder's support skills are 25% stronger and last 25% longer."},{"id":"echo_rune","name":"Echo Rune","rarity":"epic","type":"skill","desc":"15% chance a skill casts twice. The echo is weaker and cannot echo again."},{"id":"metronome","name":"Metronome","rarity":"rare","type":"skill","desc":"Empowered 4th-attack hits caused by the holder deal +50% damage."},{"id":"rat_cage","name":"Rat Cage","rarity":"common","type":"minion","desc":"Every 12s a Rat joins the fight."},{"id":"wisp_lantern","name":"Wisp Lantern","rarity":"rare","type":"minion","desc":"Every 15s a flying Wisp (ranged shock) joins the fight."},{"id":"fire_imp_brazier","name":"Fire Imp Brazier","rarity":"epic","type":"minion","desc":"Every 10s a fire Imp (its hits Burn) joins the fight."},{"id":"mimic_chest","name":"Mimic Chest","rarity":"rare","type":"minion","desc":"10% chance when the holder is hit: a Mimic pops out and explodes when it dies."},{"id":"gargoyle_idol","name":"Gargoyle Idol","rarity":"rare","type":"minion","desc":"Summons a slow, tanky Gargoyle whose hits Taunt enemies."},{"id":"spirit_knight_banner","name":"Spirit Knight Banner","rarity":"epic","type":"minion","desc":"Summons a Spirit Knight that grows stronger each floor it survives."},{"id":"phoenix_hatchling","name":"Phoenix Hatchling","rarity":"legendary","type":"minion","desc":"Summons a flying Phoenix that heals the squad a little when it is hit."},{"id":"bone_charm","name":"Bone Charm","rarity":"rare","type":"minion","desc":"All minions (weak and greater, from anyone) get +20% health and attack."},{"id":"overseers_whistle","name":"Overseer's Whistle","rarity":"rare","type":"minion","desc":"Weak minion cap +1 and weak minions attack 15% faster (up to +4 cap)."},{"id":"grave_dust","name":"Grave Dust","rarity":"rare","type":"minion","desc":"Weak minions explode when they die. Damage adds up per copy."},{"id":"necro_crown","name":"Necro Crown","rarity":"legendary","type":"minion","desc":"Weak minion cap +2 (up to +6) and every enemy kill by anyone raises a skeleton."},{"id":"jolly_banner","name":"Jolly Banner","rarity":"epic","type":"squad","desc":"5% chance per attack: the holder and a random ally get regeneration, sure crits and +40% attack speed for 2s."},{"id":"excalibur","name":"Excalibur","rarity":"legendary","type":"onhit","desc":"8% chance on a melee attack to spawn a tornado that drifts between enemies for 5s. Max 3."}];
+const TYPES={"stat":{"label":"STAT","color":"0xe0524d"},"squad":{"label":"SQUAD","color":"0xf2d03a"},"special":{"label":"SPECIAL","color":"0xf06ab4"},"potion":{"label":"POTION","color":"0x4cd16a"},"onhit":{"label":"ON-HIT","color":"0xa45be6"},"skill":{"label":"SKILL","color":"0x33c4d6"},"minion":{"label":"MINION","color":"0x8a6a4a"}};
+const RAR={"common":{"label":"COMMON","color":"0x8f8aa3"},"rare":{"label":"RARE","color":"0x3b8ee0"},"epic":{"label":"EPIC","color":"0xa45be6"},"legendary":{"label":"LEGENDARY","color":"0xf2b632"}};
+
+const OUT = '#1a1020';
+const FR = {
+  common:    { edge: '#8f8aa3', fill: '#2a2438', hi: '#b3aec4' },
+  rare:      { edge: '#3b8ee0', fill: '#182540', hi: '#8cc4ff' },
+  epic:      { edge: '#a45be6', fill: '#2a1840', hi: '#d6a8ff', stud: '#f06ab4' },
+  legendary: { edge: '#f2b632', fill: '#3a2a12', hi: '#fff0a8', stud: '#ff5a4d' },
+};
+const hex = (n) => '#' + Number(n).toString(16).padStart(6, '0');
+// Draws one framed icon: 20x20 pixels (frame 2px + 16px icon), z screen px per pixel.
+function iconCanvas(id, rarity, z) {
+  const N = 20, c = document.createElement('canvas'); c.width = c.height = N * z;
+  const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+  const px = (x, y, col) => { g.fillStyle = col; g.fillRect(x * z, y * z, z, z); };
+  const f = FR[rarity] || FR.common;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const edge = x === 0 || y === 0 || x === N - 1 || y === N - 1;
+    const corner = (x === 0 || x === N - 1) && (y === 0 || y === N - 1);
+    if (corner) continue;
+    if (edge) px(x, y, f.edge);
+    else if (x === 1 || y === 1) px(x, y, f.hi);
+    else px(x, y, f.fill);
+  }
+  if (f.stud) for (const [x, y] of [[1, 1], [N - 2, 1], [1, N - 2], [N - 2, N - 2]]) px(x, y, f.stud);
+  const rows = ICONS[id] || [];
+  const h = rows.length, w = Math.max(0, ...rows.map((r) => r.length));
+  // Centre by the filled pixels (not the row lengths), like the game does.
+  let x0 = 99, x1 = -1, y0 = 99, y1 = -1;
+  rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch !== '.' && PAL[ch]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); } }));
+  const ox = 2 + Math.floor((16 - (x1 - x0 + 1)) / 2) - x0, oy = 2 + Math.floor((16 - (y1 - y0 + 1)) / 2) - y0;
+  const at = (x, y) => { const r = rows[y]; if (!r || x < 0) return null; const ch = r[x]; return ch && ch !== '.' && PAL[ch] ? PAL[ch] : null; };
+  for (let y = -1; y <= h; y++) for (let x = -1; x <= w; x++) {
+    if (at(x, y)) continue;
+    if (at(x - 1, y) || at(x + 1, y) || at(x, y - 1) || at(x, y + 1)) px(ox + x, oy + y, OUT);
+  }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const col = at(x, y); if (col) px(ox + x, oy + y, col); }
+  return c;
+}
+const el = (t, cls, txt) => { const e = document.createElement(t); if (cls) e.className = cls; if (txt) e.textContent = txt; return e; };
+const rarCol = (r) => hex(RAR[r].color);
+
+// Mock reward screen
+const mock = document.getElementById('mock');
+for (const id of ['executioners_axe', 'frozen_thunderbolt', 'mimic_chest']) {
+  const it = ITEMS.find((i) => i.id === id);
+  const card = el('div', 'rcard'); card.style.borderColor = rarCol(it.rarity);
+  const cv = iconCanvas(id, it.rarity, 3); card.append(cv);
+  const txt = el('div'); const t = el('div', 't', RAR[it.rarity].label + ' ITEM'); t.style.color = rarCol(it.rarity);
+  txt.append(t, el('div', 'nm', it.name), el('div', 'd', it.desc)); card.append(txt); mock.append(card);
+}
+// Frame samples
+const frames = document.getElementById('frames');
+for (const [r, id] of [['common', 'lucky_coin'], ['rare', 'shield_totem'], ['epic', 'static_crystal'], ['legendary', 'excalibur']]) {
+  const f = el('div', 'f ' + r); f.append(iconCanvas(id, r, 3), el('span', '', RAR[r].label)); frames.append(f);
+}
+// All icons by type
+const order = ['stat', 'onhit', 'special', 'skill', 'squad', 'minion', 'potion'];
+const rOrder = { common: 0, rare: 1, epic: 2, legendary: 3 };
+const secs = document.getElementById('sections');
+for (const type of order) {
+  const list = ITEMS.filter((i) => i.type === type).sort((a, b) => rOrder[a.rarity] - rOrder[b.rarity]);
+  if (!list.length) continue;
+  const sec = el('section'); sec.style.display = 'flex'; sec.style.flexDirection = 'column'; sec.style.gap = '12px';
+  const h = el('h2'); const dot = el('span', 'dot'); dot.style.background = hex(TYPES[type].color);
+  h.append(dot, document.createTextNode(TYPES[type].label + ' items'), el('span', 'n', String(list.length)));
+  sec.append(h);
+  const grid = el('div', 'grid');
+  for (const it of list) {
+    const box = el('div', 'icon ' + it.rarity); box.title = it.desc;
+    box.append(iconCanvas(it.id, it.rarity, 4), el('div', 'nm', it.name));
+    const r = el('div', 'r', RAR[it.rarity].label); r.style.color = rarCol(it.rarity); box.append(r);
+    grid.append(box);
+  }
+  sec.append(grid); secs.append(sec);
+}
+</script>

@@ -1,0 +1,140 @@
+<title>Soldia Item Icons</title>
+<style>
+/* Layout: dungeon-dark sheet. Hero = a mock reward screen using the icons; then all 72 icons grouped by item type. */
+:root {
+  --bg: #120e1c; --panel: #1c1629; --line: #2e2542; --fg: #e9e2f5; --muted: #a297b8;
+  --accent: #f2b544; --floor: #221b33;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1100px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: flex; flex-direction: column; gap: 26px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 5vw, 40px); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 18px; margin: 0; letter-spacing: .04em; display: flex; align-items: center; gap: 10px; }
+h2 .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+h2 .n { color: var(--muted); font-size: 13px; }
+.lede { color: var(--muted); max-width: 66ch; margin: 6px 0 0; }
+.top { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 760px) { .top { grid-template-columns: 1fr; } }
+.phone { background: #1b1530; border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.phone .head { font-family: var(--display); font-size: 18px; }
+.rcard { display: flex; gap: 12px; align-items: center; border: 2px solid var(--line); border-radius: 8px; padding: 10px 12px; background: #221b36; }
+.rcard .t { font-size: 10px; letter-spacing: .08em; font-weight: 600; }
+.rcard .nm { font-weight: 600; }
+.rcard .d { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.rules { display: grid; gap: 10px; }
+.rule { border-left: 3px solid var(--accent); padding: 4px 12px; color: var(--muted); font-size: 14px; }
+.rule b { color: var(--fg); display: block; }
+.frames { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+.frames .f { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); font-family: var(--display); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.icon { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px 8px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; min-width: 0; }
+.icon .nm { font-size: 13px; font-weight: 600; line-height: 1.25; }
+.icon .r { font-family: var(--display); font-size: 10px; letter-spacing: .06em; }
+canvas { image-rendering: pixelated; }
+.legendary canvas { animation: glint 2.4s ease-in-out infinite; }
+@keyframes glint { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.18) drop-shadow(0 0 6px rgba(242,182,50,.55)); } }
+@media (prefers-reduced-motion: reduce) { .legendary canvas { animation: none; } }
+.note { color: var(--muted); font-size: 14px; max-width: 70ch; margin: 0; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+
+<div class="wrap">
+  <div>
+    <h1>Soldia item icons</h1>
+    <p class="lede">A 16-pixel icon for every one of the 72 items, drawn in the same pixel style as the new characters. The frame around each icon shows its rarity, so a legendary is recognisable before you read anything.</p>
+  </div>
+
+  <div class="top">
+    <div class="phone" id="mock"><div class="head">Pick 1 reward</div></div>
+    <div class="rules">
+      <div class="rule"><b>The object, not a symbol</b>Each icon is the actual thing: a coin, a bell, a bomb with a lit fuse, a chest with teeth. No arrows or plus signs.</div>
+      <div class="rule"><b>Colour tells the element</b>Fire orange, ice pale blue, electric yellow, dark purple, poison green, blood red. The same colours the enemies and statuses use.</div>
+      <div class="rule"><b>Frames tell the rarity</b>Common: plain grey. Rare: blue. Epic: purple with corner studs. Legendary: gold with corner gems and a slow shine.</div>
+      <div class="rule"><b>Replaces the coloured dot</b>On the reward card the icon takes the place of today's type dot. Above the health bars in battle the small dots can stay, or become tiny 8-pixel versions later.</div>
+      <div class="frames" id="frames"></div>
+    </div>
+  </div>
+
+  <div id="sections"></div>
+  <p class="note">Shown at 4x (the game would show them at 2-3x). Every icon is a small grid of palette letters, so each one can be redrawn later the same way as the characters.</p>
+</div>
+
+<script>
+/*DATA*/
+const OUT = '#1a1020';
+const FR = {
+  common:    { edge: '#8f8aa3', fill: '#2a2438', hi: '#b3aec4' },
+  rare:      { edge: '#3b8ee0', fill: '#182540', hi: '#8cc4ff' },
+  epic:      { edge: '#a45be6', fill: '#2a1840', hi: '#d6a8ff', stud: '#f06ab4' },
+  legendary: { edge: '#f2b632', fill: '#3a2a12', hi: '#fff0a8', stud: '#ff5a4d' },
+};
+const hex = (n) => '#' + Number(n).toString(16).padStart(6, '0');
+// Draws one framed icon: 20x20 pixels (frame 2px + 16px icon), z screen px per pixel.
+function iconCanvas(id, rarity, z) {
+  const N = 20, c = document.createElement('canvas'); c.width = c.height = N * z;
+  const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+  const px = (x, y, col) => { g.fillStyle = col; g.fillRect(x * z, y * z, z, z); };
+  const f = FR[rarity] || FR.common;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const edge = x === 0 || y === 0 || x === N - 1 || y === N - 1;
+    const corner = (x === 0 || x === N - 1) && (y === 0 || y === N - 1);
+    if (corner) continue;
+    if (edge) px(x, y, f.edge);
+    else if (x === 1 || y === 1) px(x, y, f.hi);
+    else px(x, y, f.fill);
+  }
+  if (f.stud) for (const [x, y] of [[1, 1], [N - 2, 1], [1, N - 2], [N - 2, N - 2]]) px(x, y, f.stud);
+  const rows = ICONS[id] || [];
+  const h = rows.length, w = Math.max(0, ...rows.map((r) => r.length));
+  // Centre by the filled pixels (not the row lengths), like the game does.
+  let x0 = 99, x1 = -1, y0 = 99, y1 = -1;
+  rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch !== '.' && PAL[ch]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); } }));
+  const ox = 2 + Math.floor((16 - (x1 - x0 + 1)) / 2) - x0, oy = 2 + Math.floor((16 - (y1 - y0 + 1)) / 2) - y0;
+  const at = (x, y) => { const r = rows[y]; if (!r || x < 0) return null; const ch = r[x]; return ch && ch !== '.' && PAL[ch] ? PAL[ch] : null; };
+  for (let y = -1; y <= h; y++) for (let x = -1; x <= w; x++) {
+    if (at(x, y)) continue;
+    if (at(x - 1, y) || at(x + 1, y) || at(x, y - 1) || at(x, y + 1)) px(ox + x, oy + y, OUT);
+  }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const col = at(x, y); if (col) px(ox + x, oy + y, col); }
+  return c;
+}
+const el = (t, cls, txt) => { const e = document.createElement(t); if (cls) e.className = cls; if (txt) e.textContent = txt; return e; };
+const rarCol = (r) => hex(RAR[r].color);
+
+// Mock reward screen
+const mock = document.getElementById('mock');
+for (const id of ['executioners_axe', 'frozen_thunderbolt', 'mimic_chest']) {
+  const it = ITEMS.find((i) => i.id === id);
+  const card = el('div', 'rcard'); card.style.borderColor = rarCol(it.rarity);
+  const cv = iconCanvas(id, it.rarity, 3); card.append(cv);
+  const txt = el('div'); const t = el('div', 't', RAR[it.rarity].label + ' ITEM'); t.style.color = rarCol(it.rarity);
+  txt.append(t, el('div', 'nm', it.name), el('div', 'd', it.desc)); card.append(txt); mock.append(card);
+}
+// Frame samples
+const frames = document.getElementById('frames');
+for (const [r, id] of [['common', 'lucky_coin'], ['rare', 'shield_totem'], ['epic', 'static_crystal'], ['legendary', 'excalibur']]) {
+  const f = el('div', 'f ' + r); f.append(iconCanvas(id, r, 3), el('span', '', RAR[r].label)); frames.append(f);
+}
+// All icons by type
+const order = ['stat', 'onhit', 'special', 'skill', 'squad', 'minion', 'potion'];
+const rOrder = { common: 0, rare: 1, epic: 2, legendary: 3 };
+const secs = document.getElementById('sections');
+for (const type of order) {
+  const list = ITEMS.filter((i) => i.type === type).sort((a, b) => rOrder[a.rarity] - rOrder[b.rarity]);
+  if (!list.length) continue;
+  const sec = el('section'); sec.style.display = 'flex'; sec.style.flexDirection = 'column'; sec.style.gap = '12px';
+  const h = el('h2'); const dot = el('span', 'dot'); dot.style.background = hex(TYPES[type].color);
+  h.append(dot, document.createTextNode(TYPES[type].label + ' items'), el('span', 'n', String(list.length)));
+  sec.append(h);
+  const grid = el('div', 'grid');
+  for (const it of list) {
+    const box = el('div', 'icon ' + it.rarity); box.title = it.desc;
+    box.append(iconCanvas(it.id, it.rarity, 4), el('div', 'nm', it.name));
+    const r = el('div', 'r', RAR[it.rarity].label); r.style.color = rarCol(it.rarity); box.append(r);
+    grid.append(box);
+  }
+  sec.append(grid); secs.append(sec);
+}
+</script>

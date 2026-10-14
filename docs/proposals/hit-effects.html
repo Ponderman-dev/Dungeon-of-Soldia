@@ -1,0 +1,1189 @@
+<title>Soldia Hit Effects</title>
+<style>
+/* Layout: dungeon-dark sheet; four groups of looping pixel animations (hits, statuses, item procs, hero skills). */
+:root {
+  --bg: #120e1c; --panel: #1c1629; --line: #2e2542; --fg: #e9e2f5; --muted: #a297b8;
+  --accent: #f2b544; --floor: #221b33;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: flex; flex-direction: column; gap: 22px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 5vw, 40px); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 20px; margin: 0; letter-spacing: .04em; }
+.lede { color: var(--muted); max-width: 70ch; margin: 6px 0 0; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.rule { border-left: 3px solid var(--accent); padding: 4px 12px; color: var(--muted); font-size: 14px; }
+.rule b { color: var(--fg); display: block; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg); padding-block: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); }
+.bar a, .bar button { font-family: var(--display); font-size: 12px; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; text-decoration: none; cursor: pointer; }
+.bar button.on { border-color: var(--accent); color: var(--accent); }
+.bar .sp { margin-left: auto; display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 12px; }
+.sec { display: flex; flex-direction: column; gap: 12px; scroll-margin-top: 64px; }
+.sec > p { color: var(--muted); margin: 0; max-width: 70ch; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.card canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 3px; display: block; }
+.card h3 { font-family: var(--display); font-size: 13px; margin: 2px 0 0; letter-spacing: .03em; }
+.card p { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.45; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#stress .grid { grid-template-columns: 1fr; } #stress .card canvas { max-width: 720px; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+
+<div class="wrap">
+  <div>
+    <h1>Soldia hit effects</h1>
+    <p class="lede">Every hit, status, item proc and hero skill as a looping pixel animation, using the new sprites. Each one is drawn from small pixels and simple shapes (rings, sparks, bolts, numbers), so they stay crisp at game size and can be tuned later.</p>
+  </div>
+  <div class="rules">
+    <div class="rule"><b>Colour = damage type</b>Melee white, arrows pale yellow, fire orange, ice light blue, electric yellow, dark purple, holy gold, bleed red, poison green. Numbers use the same colour.</div>
+    <div class="rule"><b>Size = importance</b>Normal hits are small and quick. Item procs are medium. Crits get a star and a shake. Skills are the biggest: they fill the screen.</div>
+    <div class="rule"><b>Statuses loop on the unit</b>A status is a small looping effect on the character (stars, ice, flames, bubbles) plus its tag by the health bar, so you can read a fight without reading text.</div>
+    <div class="rule"><b>Everything stays pixel</b>No smooth glows or blurs: rings and sparks are drawn pixel by pixel, matching the sprites.</div>
+  </div>
+  <nav class="bar" aria-label="Sections">
+    <a href="#hits">Hits</a><a href="#status">Statuses</a><a href="#items">Item procs</a><a href="#skills">Hero skills</a><a href="#simple">Simplified (suggestion)</a><a href="#stress">Stress test</a>
+    <span class="sp">Speed <button id="sp1" class="on">1x</button><button id="sp2">1/2x</button><button id="sp4">1/4x</button></span>
+  </nav>
+  <section class="sec" id="hits"><h2>Hits</h2><p>What every single hit looks like, by damage type, plus crits, misses, blocks, shields, heals and deaths.</p><div class="grid"></div></section>
+  <section class="sec" id="status"><h2>Statuses</h2><p>Buffs and debuffs that sit on a unit. These loop for as long as the status lasts.</p><div class="grid"></div></section>
+  <section class="sec" id="items"><h2>Item procs</h2><p>The moments when an item goes off. Each item has its own shape and colour.</p><div class="grid"></div></section>
+  <section class="sec" id="skills"><h2>Hero skills</h2><p>The big moments. These come on top of the skill banner and the hero's own skill pose.</p><div class="grid"></div></section>
+  <section class="sec" id="simple"><h2>Simplified version (suggestion)</h2><p>The same game, with fewer one-off effects. Five ideas: a small kit of pieces that every effect is built from; item procs show the item's icon instead of a custom effect; minor debuffs share one look and the tag says which; only the most important status loops on a unit; one added-up damage-over-time number per second. Hero skills and a handful of special items stay exactly as in the full version above.</p><div class="grid"></div></section>
+  <section class="sec" id="stress"><h2>Stress test: 5 enemies, 5 debuffs each</h2><p>The worst case: five enemies, every one carrying five debuffs at the same time. Same fight drawn three ways, shown bigger so you can judge it at a glance.</p><div class="grid"></div></section>
+</div>
+
+<script>
+// Sprite proposal data. Palette letters -> colours; "." = empty. Everything faces right.
+const SKIN = '#f2c9a0';
+
+// HEROES: exactly 3 parts. head sits on top of the body (centred), weapon grip goes to the body's hand.
+// body.hand = [col,row] of the hand; weapon.grip = [col,row] inside the weapon.
+const HEROES = [
+{ id:'knight', name:'Knight', idea:'Closed helmet with a visor slit, blue tabard over grey plate, a straight sword.',
+  head:{ pal:{h:'#b7bcc8',H:'#7d8494',k:'#1a1020'}, rows:[
+'..hhhhhh..',
+'.hhhhhhhh.',
+'hhhhhhhhhh',
+'hHkkkkkkHh',
+'hhhhhhhhhh',
+'hhhhhhhhhh',
+'.hHhhhhHh.',
+'..hhhhhh..']},
+  body:{ pal:{m:'#b7bcc8',b:'#3b6fd4',B:'#2a4fa0',y:'#f2c544',s:SKIN,d:'#4a3a3a'}, hand:[10,5], rows:[
+'.mmbbbbmm.',
+'mmbbbbbbmm',
+'mmbbyybbmm',
+'mmbbyybbmm',
+'mmbbbbbbmm',
+'smbbbbbbms',
+'.BBBBBBBB.',
+'.bbbbbbbb.',
+'.mm....mm.',
+'.mm....mm.',
+'.dd....dd.']},
+  weapon:{ pal:{w:'#e4e8f0',g:'#f2c544',r:'#6b4a2a'}, grip:[2,10], rows:[
+'..w..',
+'.www.',
+'.www.',
+'.www.',
+'.www.',
+'.www.',
+'.www.',
+'.www.',
+'ggggg',
+'..r..',
+'..r..']}},
+
+{ id:'rogue', name:'Rogue', idea:'Deep purple hood, eyes peeking over a scarf, slim leather body, a short curved dagger.',
+  head:{ pal:{p:'#5b3f8f',P:'#3d2a63',s:SKIN,k:'#1a1020',m:'#2a2238'}, rows:[
+'...pppp...',
+'..pppppp..',
+'.pppppppp.',
+'pppPPPPppp',
+'ppPsssssPp',
+'ppPskssksP',
+'ppmmmmmmmp',
+'.pmmmmmmp.']},
+  body:{ pal:{p:'#5b3f8f',l:'#3a2a40',b:'#6b4a2a',s:SKIN,d:'#241a2a'}, hand:[9,5], rows:[
+'..pppppp..',
+'.pppppppp.',
+'.ppllllpp.',
+'.ppllllpp.',
+'.ppllllpp.',
+'.sbbbbbbs.',
+'..llllll..',
+'..ll..ll..',
+'..ll..ll..',
+'..dd..dd..']},
+  weapon:{ pal:{w:'#d6dae4',r:'#3a2a40'}, grip:[1,5], rows:[
+'...w',
+'..ww',
+'.ww.',
+'.ww.',
+'rrr.',
+'.r..']}},
+
+{ id:'archer', name:'Archer', idea:'Green hood with a long feather, green tunic with a brown strap, a tall bow.',
+  head:{ pal:{g:'#3f9a4a',G:'#2a6e34',s:SKIN,k:'#1a1020',f:'#f4f0e6',h:'#7a4a2a'}, rows:[
+'.........f',
+'...gggg.f.',
+'..gggggg..',
+'.gggggggg.',
+'.gGhhhhGg.',
+'.gGsssssg.',
+'.gGsksskg.',
+'..gsssss..']},
+  body:{ pal:{g:'#3f9a4a',G:'#2a6e34',b:'#7a4a2a',s:SKIN,d:'#4a3a2a'}, hand:[9,5], rows:[
+'..gggggg..',
+'.ggbggggg.',
+'.gggbgggg.',
+'.ggggbggg.',
+'.gggggbgg.',
+'.sgggggbs.',
+'..bbbbbb..',
+'..GG..GG..',
+'..GG..GG..',
+'..dd..dd..']},
+  weapon:{ pal:{r:'#8b5a2b',t:'#e4e4ea'}, grip:[2,8], rows:[
+'r...',
+'.r.t',
+'.rrt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'..rt',
+'.rrt',
+'.r.t',
+'r...']}},
+
+{ id:'berserker', name:'Berserker', idea:'Wild red hair and a big beard, bare chest with a fur collar, a double-bladed axe.',
+  head:{ pal:{r:'#c8502a',R:'#8e3418',s:SKIN,k:'#1a1020'}, rows:[
+'.r.rr.r.r.',
+'rrrrrrrrrr',
+'rrsssssrrr',
+'rsssssssrr',
+'rsksssksrr',
+'rrsssssrr.',
+'.rRRRRRr..',
+'..rRRRr...']},
+  body:{ pal:{f:'#8a6a4a',s:SKIN,S:'#d9a87c',b:'#6b4a2a',d:'#3a2a20'}, hand:[10,5], rows:[
+'ffffffffff',
+'fffsssfffff',
+'sssssssssss',
+'ssSssssSsss',
+'sssssssssss',
+'ssssssssss',
+'.bbbbbbbb.',
+'.bbbbbbbb.',
+'.ss....ss.',
+'.dd....dd.']},
+  weapon:{ pal:{w:'#c9ccd6',W:'#8c909c',r:'#6b4a2a'}, grip:[3,11], rows:[
+'ww...ww',
+'wwW.Www',
+'wwwrwww',
+'wwW.Www',
+'ww.r.ww',
+'...r...',
+'...r...',
+'...r...',
+'...r...',
+'...r...',
+'...r...',
+'...r...',
+'...r...']}},
+
+{ id:'samurai', name:'Samurai', idea:'Black topknot and a white headband, red lacquered armour with wide shoulder plates, a long katana.',
+  head:{ pal:{h:'#1e1a24',w:'#f0ece4',s:SKIN,k:'#1a1020'}, rows:[
+'...hhh....',
+'...hhh....',
+'..hhhhhh..',
+'.hhhhhhhh.',
+'.wwwwwwww.',
+'.hsssssss.',
+'.hskssks..',
+'..sssss...']},
+  body:{ pal:{r:'#c23a3a',R:'#8a2424',k:'#1e1a24',s:SKIN,d:'#2a2030'}, hand:[10,5], rows:[
+'rrr....rrr',
+'rRrrrrrrRr',
+'rRrrrrrrRr',
+'.rRRRRRRr.',
+'.rrrrrrrr.',
+'.srrrrrrs.',
+'.kkkkkkkk.',
+'kkkkkkkkkk',
+'.kk....kk.',
+'.dd....dd.']},
+  weapon:{ pal:{w:'#e8ecf4',k:'#1e1a24',g:'#c9a24a'}, grip:[0,14], rows:[
+'....w',
+'...ww',
+'...w.',
+'..ww.',
+'..w..',
+'..w..',
+'.ww..',
+'.w...',
+'.w...',
+'.w...',
+'.w...',
+'.w...',
+'ggg..',
+'.k...',
+'.k...',
+'.k...']}},
+
+{ id:'mage', name:'Mage', idea:'A round floppy hat with a bent tip (no tall cone), long blue robe with no legs showing, a staff with a fire orb.',
+  head:{ pal:{p:'#4a3aa8',P:'#33287a',y:'#f2c544',s:SKIN,k:'#1a1020',w:'#e8e4f0'}, rows:[
+'.......pp.',
+'...pppppp.',
+'..pppppp..',
+'.pppppppp.',
+'.ppyyyypp.',
+'pppppppppp',
+'..ssssss..',
+'..skssks..',
+'..wwwwww..',
+'...wwww...']},
+  body:{ pal:{b:'#3b5fc4',B:'#2a4290',y:'#f2c544',s:SKIN}, hand:[10,4], rows:[
+'..bbbbbb..',
+'.bbbbbbbb.',
+'.bbbyybbb.',
+'bbbbyybbbb',
+'sbbbbbbbbs',
+'bbbbbbbbbb',
+'bbbbbbbbbb',
+'bBbbbbbbBb',
+'BBBBBBBBBB']},
+  weapon:{ pal:{o:'#ff8a2e',y:'#ffe066',r:'#7a4a2a'}, grip:[1,8], rows:[
+'.o.',
+'oyo',
+'ooo',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.']}},
+
+{ id:'cleric', name:'Cleric', idea:'White hood with a gold halo floating above, white robe with a gold stripe, a round-headed mace.',
+  head:{ pal:{y:'#f2d24a',w:'#f2eee6',W:'#c8c2b4',s:SKIN,k:'#1a1020'}, rows:[
+'..yyyyyy..',
+'.y......y.',
+'..yyyyyy..',
+'...wwww...',
+'..wwwwww..',
+'.wwssssww.',
+'.wWsksksw.',
+'.wWsssssw.',
+'..wwwwww..']},
+  body:{ pal:{w:'#f2eee6',W:'#c8c2b4',y:'#f2d24a',s:SKIN,d:'#8a7a5a'}, hand:[10,4], rows:[
+'..wwwwww..',
+'.wwwyywww.',
+'.wwwyywww.',
+'wwwwyywwww',
+'swwwyywwws',
+'.wwwyywww.',
+'.wwwyywww.',
+'.WwwyywwW.',
+'.WWWWWWWW.',
+'..dd..dd..']},
+  weapon:{ pal:{g:'#f2d24a',G:'#b8962a',r:'#7a4a2a'}, grip:[1,8], rows:[
+'.g.',
+'ggg',
+'gGg',
+'ggg',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.']}},
+
+{ id:'necromancer', name:'Necromancer', idea:'Black hood around a white bone mask with green eyes, a ragged dark robe, a staff topped with a skull.',
+  head:{ pal:{h:'#2a2236',H:'#1a1424',w:'#e8e2cf',g:'#6dff8a'}, rows:[
+'...hhhh...',
+'..hhhhhh..',
+'.hhhhhhhh.',
+'.hHwwwwHh.',
+'.hHwgwwgh.',
+'.hHwwwwwh.',
+'.hHwkwkwh.',
+'..hhhhhh..'].map(r=>r.replace(/k/g,'H'))},
+  body:{ pal:{h:'#2a2236',H:'#1a1424',g:'#3f8a4a',w:'#e8e2cf'}, hand:[10,4], rows:[
+'..hhhhhh..',
+'.hhhhhhhh.',
+'.hhggghhh.',
+'hhhhghhhhh',
+'whhhghhhhw',
+'.hhhghhhh.',
+'.hhhhhhhh.',
+'hhhhhhhhhh',
+'hHhHhhHhHh',
+'H.H.HH.H.H']},
+  weapon:{ pal:{w:'#e8e2cf',k:'#1a1020',r:'#4a3a3a',g:'#6dff8a'}, grip:[1,9], rows:[
+'www',
+'wgw',
+'www',
+'.w.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.',
+'.r.']}},
+
+{ id:'bard', name:'Bard', idea:'A floppy red cap with a long feather, a yellow and red striped doublet, a lute.',
+  head:{ pal:{r:'#c8433a',R:'#8e2a2a',f:'#7fd6ff',h:'#7a4a2a',s:SKIN,k:'#1a1020'}, rows:[
+'.........f',
+'..rrrrr.f.',
+'.rrrrrrrf.',
+'rrrrrrrrr.',
+'.RRRRRRR..',
+'.hssssss..',
+'.hsksskh..',
+'..ssssss..']},
+  body:{ pal:{y:'#f2c544',r:'#c8433a',s:SKIN,b:'#6b4a2a',d:'#3a2a2a'}, hand:[9,5], rows:[
+'..yryryr..',
+'.yryryryr.',
+'.yryryryr.',
+'.yryryryr.',
+'.yryryryr.',
+'.syryryrs.',
+'..bbbbbb..',
+'..bb..bb..',
+'..bb..bb..',
+'..dd..dd..']},
+  weapon:{ pal:{w:'#c88a4a',W:'#8a5a2a',k:'#3a2a1a',t:'#e4e4ea'}, grip:[2,9], rows:[
+'..k..',
+'..kk.',
+'..W..',
+'..W..',
+'..W..',
+'.www.',
+'wwwww',
+'wwkww',
+'wwwww',
+'.www.']}},
+
+{ id:'alchemist', name:'Alchemist', idea:'Messy brown hair with big round goggles, a leather apron over a white shirt, a bubbling green flask.',
+  head:{ pal:{h:'#7a4a2a',g:'#c9a24a',l:'#8fe6ff',s:SKIN,k:'#1a1020'}, rows:[
+'.h.hh.h...',
+'hhhhhhhh..',
+'hhhhhhhhh.',
+'gggggggggg',
+'gllggggllg',
+'gggsssgggh',
+'.hsksskss.',
+'..sssssss.']},
+  body:{ pal:{w:'#e8e4dc',a:'#8a5a32',A:'#5e3a1a',g:'#6de07a',s:SKIN,d:'#3a2a20'}, hand:[9,5], rows:[
+'..wwwwww..',
+'.wwaaaaww.',
+'.wwaaaaww.',
+'.wwaaaaww.',
+'.wwagaaww.',
+'.saaaaaas.',
+'..AAAAAA..',
+'..aa..aa..',
+'..ww..ww..',
+'..dd..dd..']},
+  weapon:{ pal:{c:'#d8d0c0',g:'#6de07a',G:'#3aa84a',b:'#c8ffd0'}, grip:[2,2], rows:[
+'.b.b.',
+'..c..',
+'..c..',
+'.ggg.',
+'gGbgg',
+'ggggg',
+'.ggg.']}},
+];
+
+// ENEMIES, simplified: 3-4 colours each, no tiny details.
+const ENEMIES = [
+{ id:'rat', name:'Cave Rat', floor:4, shape:'Long and low, big ears, curly tail.',
+  pal:{a:'#8a7a6c',c:'#c4b6a4',p:'#d99090',k:'#1a1020'}, rows:[
+'.............pp.....',
+'............pccp....',
+'.....aaaaaaaaaaa....',
+'...aaaaaaaaaaaaaa...',
+'pp.aaaaaaaaaaaakaa..',
+'..paaaaaaaaaaaaaaap.',
+'...aacccccccccaa....',
+'....aa.......aa.....']},
+{ id:'skeletonArcher', name:'Skeleton Archer', floor:6, shape:'Thin, you can see through it, a bow taller than its body.',
+  pal:{w:'#ebe5cf',k:'#1a1020',r:'#8b5a2b',t:'#d9d9e0'}, rows:[
+'...wwww....r..',
+'..wwwwww....r.',
+'..wkwwkw....rt',
+'..wwwwww....rt',
+'...wwww.....rt',
+'....ww......rt',
+'..wwwwwwwwwwwt',
+'..w.wwww....rt',
+'..w..ww.....rt',
+'..w.wwww....rt',
+'.....ww.....rt',
+'....wwww...r..',
+'....w..w..r...',
+'....w..w......',
+'....w..w......',
+'....w..w......',
+'...ww..ww.....']},
+{ id:'spider', name:'Giant Spider', floor:8, shape:'Wide and flat, eight bent legs.',
+  pal:{a:'#3d2d52',l:'#3d2d52',e:'#ff5050'}, rows:[
+'.........aaaaaa.........',
+'..ll...aaaaaaaaaa...ll..',
+'.l..l.aaaaaaaaaaaa.l..l.',
+'l....laaaaaaaaaaaal....l',
+'l...l.aaaaaaaaaaaa.l...l',
+'...l...aaaaaaaaaa...l...',
+'..l..ll.aaaaaaaa.ll..l..',
+'.l..l..laaeaaeaal..l..l.',
+'l..l..l..aaaaaa..l..l..l',
+'..l..l............l..l..']},
+{ id:'bandit', name:'Bandit', floor:10, shape:'Hunched, hood and scarf, cloak, long knife held low.',
+  pal:{h:'#6a5440',m:'#b03a3a',s:SKIN,k:'#1a1020',c:'#4a5a3a',g:'#c9ccd6'}, rows:[
+'....hhhh......',
+'...hhhhhh.....',
+'..hhhkssk.....',
+'..hhhssss.....',
+'..hmmmmmm.....',
+'.ccccccccc....',
+'ccccccccccs...',
+'cccccccccc.g..',
+'.cccccccc...g.',
+'.ccccccc.....g',
+'..hh..hh......',
+'..hh..hh......',
+'..hh..hh......',
+'.hhh..hhh.....']},
+{ id:'fireImp', name:'Fire Imp', floor:13, shape:'Big head, tiny body, horns and a flame tail.',
+  pal:{r:'#d9452b',o:'#ff9a2e',y:'#ffe066',k:'#1a1020'}, rows:[
+'.k........k....',
+'.kk......kk....',
+'..rrrrrrrr.....',
+'.rrrrrrrrrr....',
+'.rrykrrykrr....',
+'.rrrrrrrrrr....',
+'..rrkkkkrr.....',
+'...rrrrrr....y.',
+'..rrooooorr.yoy',
+'...rooooor..yoy',
+'...rrrrrrrrrr..',
+'...rr...rr.....',
+'..rrr...rrr....']},
+{ id:'orcBrute', name:'Orc Brute', floor:16, shape:'Huge and top-heavy, tiny head, big club.',
+  pal:{g:'#6f9140',G:'#4b6a2a',t:'#f2ecd2',e:'#ffd23f',l:'#7a5230',c:'#8b5a2b'}, rows:[
+'.....................ccc.',
+'....................ccccc',
+'....................ccccc',
+'.........gggg.......ccccc',
+'........gegegg.......ccc.',
+'........ggggggg......ccc.',
+'..gggg..tggggt.gggg..ccc.',
+'.gggggggggggggggggggggcc.',
+'ggggggggggggggggggggggg..',
+'ggggggggggggggggggggggg..',
+'gggg.gggggggggggg.gggg...',
+'ggg..gggggggggggg..gg....',
+'ggg..gggggggggggg........',
+'ggg..gggggggggggg........',
+'ggg...ggggggggggg........',
+'ggg...ggggggggggg........',
+'ggg...ggggggggggg........',
+'ggg...lllllllllll........',
+'GGG...lllllllllll........',
+'......lllllllllll........',
+'......llllll.llll........',
+'......gggg...gggg........',
+'......gggg...gggg........',
+'......gggg...gggg........',
+'......gggg...gggg........',
+'.....GGGGG...GGGGG.......']},
+{ id:'frostWisp', name:'Frost Wisp', floor:19, shape:'A floating cold flame with a face, trailing a tail.',
+  pal:{w:'#f2fbff',i:'#9fe0ff',I:'#5aaee0',k:'#1a3050'}, rows:[
+'.......i.......',
+'......iii......',
+'.....iiwii.....',
+'....iiwwwii....',
+'...iiwwwwwii...',
+'...iwwkwkwwi...',
+'...iwwwwwwwi...',
+'...iiwwkwwii...',
+'....iiwwwii....',
+'.....IiiiI.....',
+'......IIII.....',
+'.......III.....',
+'........II.....',
+'.........I.....']},
+{ id:'puffshroom', name:'Puffshroom', floor:22, shape:'A big spotted dome on a short stump. Bursts into poison when it dies.',
+  pal:{r:'#c8433a',w:'#f4ecd8',s:'#e6d6b0',k:'#2a1a1a'}, rows:[
+'.......rrrrrr.......',
+'....rrrrrrrrrrrr....',
+'..rrrwwrrrrrrrwwrr..',
+'.rrrrwwrrrrrrrwwrrr.',
+'rrrrrrrrrwwrrrrrrrrr',
+'rrrrrrrrrwwrrrrrrrrr',
+'rrrrrrrrrrrrrrrrrrrr',
+'.rrrrrrrrrrrrrrrrrr.',
+'......ssssssss......',
+'.....sskssskss......',
+'.....ssssssssss.....',
+'.....sssskkssss.....',
+'....ssssssssssss....']},
+{ id:'beetle', name:'Armored Beetle', floor:25, shape:'A wide shiny shell, a horn pointing forward.',
+  pal:{a:'#3a8a9c',h:'#9fe6f0',b:'#1f3a44',m:'#e8ecf4',e:'#ffcc33'}, rows:[
+'....................mm.',
+'....aaaaaaaa.......mm..',
+'..aahhaaaaaaaa....mm...',
+'.ahhaaaaaaaaaaa..mm....',
+'.ahaaaaaaaaaaaaabbb....',
+'aaaaaaaaaaaaaaaabebb...',
+'aaaaaaaaaaaaaaaabbbb...',
+'.aaaaaaaaaaaaaaabbb....',
+'..b.b..b.b..b.b..b.....',
+'.b..b.b..b.b..b..b.....']},
+{ id:'stormSprite', name:'Storm Sprite', floor:28, shape:'A tiny glowing ball with zig-zag hair and big dragonfly wings.',
+  pal:{y:'#ffe14d',w:'#fffbe0',k:'#3a2a10',v:'#a8d8ff'}, rows:[
+'.......y..y........',
+'......y.yy.y.......',
+'.vvvv..yyyy..vvvv..',
+'vvvvvv.yyyyy.vvvvvv',
+'.vvvvvyykykyvvvvv..',
+'..vvvvyyyyyyvvvv...',
+'.vvvvv.yyyy.vvvvv..',
+'vvvvv...yy...vvvvv.',
+'.vvv.....y.....vvv.',
+'........y..........']},
+{ id:'cultist', name:'Dark Cultist', floor:31, shape:'A bell-shaped robe, a deep hood with two glowing eyes, a floating orb.',
+  pal:{p:'#4a2d6b',P:'#2e1a45',g:'#e070ff',o:'#9b4dff'}, rows:[
+'......ppp.......',
+'.....ppppp......',
+'....ppppppp.....',
+'....pPPPPPp.....',
+'....pPgPgPp.....',
+'....pPPPPPp.....',
+'....ppppppp.....',
+'...ppppppppp....',
+'...ppppppppp....',
+'..pppppppppp.ooo',
+'..ppppppppppoooo',
+'..pppppppppp.ooo',
+'..ppppppppppp...',
+'.pppppppppppp...',
+'.pppppppppppp...',
+'.ppppppppppppp..',
+'.ppppppppppppp..',
+'pppppppppppppp..',
+'pppppppppppppp..',
+'ppppppppppppppp.',
+'ppppppppppppppp.',
+'PPPPPPPPPPPPPPP.']},
+{ id:'ghost', name:'Ghost', floor:34, shape:'A floating sheet with a wavy hem, see-through.',
+  pal:{w:'#e8eef8',s:'#b4c0d8',k:'#1a1428'}, alpha:0.85, rows:[
+'.....wwwwww.....',
+'...wwwwwwwwww...',
+'..wwwwwwwwwwww..',
+'.wwwkkwwwwkkwww.',
+'.wwwkkwwwwkkwww.',
+'.wwwwwwkkwwwwwww',
+'.wwwwwwkkwwwwwww',
+'.wwwwwwwwwwwwww.',
+'swwwwwwwwwwwwwws',
+'.wwwwwwwwwwwwww.',
+'.wwwwwwwwwwwwww.',
+'.swwwwwwwwwwwws.',
+'.sswwwsswwwssws.',
+'.s..ss..ss..ss..']},
+];
+const FLY = { frostWisp: 30, stormSprite: 34, ghost: 26 };
+const OLD_ENEMIES = [
+{ id:'slime', pal:{g:'#57c26a',G:'#3a8a4a',h:'#b8f0c0',k:'#1a1020'}, rows:[
+'.....gggggg.....',
+'...gggggggggg...',
+'..gghggggggggg..',
+'.gghhgggggggggg.',
+'.gggggkggggkggg.',
+'gggggggkggkggggg',
+'gggggggggggggggg',
+'gggggggggggggggg',
+'.GGGGGGGGGGGGGG.']},
+{ id:'goblin', weapon:'c', grip:'bottom', pal:{g:'#7fae3a',G:'#55782a',l:'#7a5230',k:'#1a1020',c:'#8b5a2b'}, rows:[
+'.............cc.',
+'............cccc',
+'gg.gggggg.gg.cc.',
+'.ggggggggggg.c..',
+'..gkggggkgg..c..',
+'..ggggggggg..c..',
+'...gGGGGgg...c..',
+'....gggg.....c..',
+'...lllllll..gc..',
+'..lllllllllgg...',
+'..gllllllll.....',
+'...lllllll......',
+'...ll...ll......',
+'...gg...gg......',
+'..ggg...ggg.....']},
+{ id:'bat', pal:{b:'#5b3f8f',v:'#8a6ac8',k:'#ff4a4a',w:'#f4f0e6'}, rows:[
+'.v.............v.',
+'vv...b.....b...vv',
+'vvv..bbbbbbb..vvv',
+'vvvvvbkbbbkbvvvvv',
+'.vvvvbbbbbbbvvvv.',
+'..vvv.bbwbb.vvv..',
+'...v...bbb...v...']},
+];
+function size(s){ return { w: Math.max(...s.rows.map(r=>r.length)), h: s.rows.length }; }
+function assemble(h){
+  const H=size(h.head), B=size(h.body), W=size(h.weapon);
+  const bx = 0, by = H.h;                      // body under the head
+  const hx = Math.round((B.w - H.w)/2);
+  const wx = bx + h.body.hand[0] - h.weapon.grip[0];
+  const wy = by + h.body.hand[1] - h.weapon.grip[1];
+  const minX = Math.min(0, hx, wx), minY = Math.min(0, wy);
+  const maxX = Math.max(B.w, hx+H.w, wx+W.w), maxY = Math.max(by+B.h, wy+W.h);
+  const layers = [[h.body,bx,by],[h.head,hx,0],[h.weapon,wx,wy]];
+  const pal = {}; const grid = [];
+  for(let y=0;y<maxY-minY;y++){ grid.push(Array(maxX-minX).fill('.')); }
+  let n=0; const code=()=>String.fromCharCode(0x100 + n++);
+  for(const [p,ox,oy] of layers){ const m={}; for(const k in p.pal){ const c=code(); m[k]=c; pal[c]=p.pal[k]; }
+    p.rows.forEach((row,y)=>[...row].forEach((ch,x)=>{ if(ch!=='.'&&m[ch]) grid[y+oy-minY][x+ox-minX]=m[ch]; })); }
+  return { pal, rows: grid.map(r=>r.join('')) };
+}
+// Tiny pixel-effects engine for the proposal page. Logical stage W x H pixels, drawn at Z x.
+const W = 120, H = 64, Z = 3;
+const OUTL = '#1a1020';
+const rnd = (n) => { const s = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return s - Math.floor(s); };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ease = { out: (p) => 1 - (1 - p) * (1 - p), in: (p) => p * p, inOut: (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2), back: (p) => { const c = 1.7; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); } };
+// Phase helper: 0..1 progress of t inside [a, b] (ms).
+const ph = (t, a, b) => clamp((t - a) / (b - a));
+const hexRgb = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const mix = (a, b, t) => { const A = hexRgb(a), B = hexRgb(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+
+// 3x5 font
+const FONT = {
+  '0': '111101101101111', '1': '010110010010111', '2': '111001111100111', '3': '111001111001111', '4': '101101111001001',
+  '5': '111100111001111', '6': '111100111101111', '7': '111001010010010', '8': '111101111101111', '9': '111101111001111',
+  '+': '000010111010000', '-': '000000111000000', '!': '010010010000010', A: '010101111101101', B: '110101110101110',
+  C: '011100100100011', D: '110101101101110', E: '111100110100111', I: '111010010010111', K: '101101110101101',
+  L: '100100100100111', M: '101111111101101', N: '110101101101101', O: '010101101101010', P: '110101110100100',
+  R: '110101110101101', S: '011100010001110', T: '111010010010010', U: '101101101101111', W: '101101111111101',
+  Y: '101101010010010', X: '101101010101101', H: '101101111101101', G: '011100101101011', F: '111100110100100', V: '101101101101010',
+};
+
+// Sprites: grid -> list of pixels with an outline. `isCore(letter)` marks the BODY pixels (not the
+// weapon): the sprite is placed so its body centre sits on the unit's x, and effects aim at the body.
+function prepSprite(pal, rows, flip = false, isCore = () => true) {
+  const h = rows.length, w = Math.max(...rows.map((r) => r.length));
+  const ch = (x, y) => { const r = rows[y]; if (!r || x < 0) return null; const c = r[x]; return c && c !== '.' && pal[c] ? c : null; };
+  const px = [];
+  let x0 = 99, x1 = -99, y0 = 99, y1 = -99;
+  for (let y = -1; y <= h; y++) for (let x = -1; x <= w; x++) {
+    const c = ch(x, y);
+    const fx = flip ? w - 1 - x : x;
+    if (c) { const core = isCore(c); px.push([fx, y, pal[c], false, core]); if (core) { x0 = Math.min(x0, fx); x1 = Math.max(x1, fx); y0 = Math.min(y0, y); y1 = Math.max(y1, y); } }
+    else if (ch(x - 1, y) || ch(x + 1, y) || ch(x, y - 1) || ch(x, y + 1)) px.push([fx, y, OUTL, true, false]);
+  }
+  return { w, h, px, cx: (x0 + x1 + 1) / 2, cTop: y0, cBot: y1 + 1, hw: (x1 - x0 + 1) / 2 };
+}
+// Where a unit's body is on the stage: x = body centre, y = feet. mid = body middle, top = top of
+// the body (above the head = top - 2), hw = half the body width (front = x -/+ hw).
+function U(sp, x, y, o = {}) {
+  const X = x + (o.dx || 0), Y = y + (o.dy || 0);
+  return { sp, x: X, y: Y, top: Y - sp.h + sp.cTop, mid: Y - sp.h + (sp.cTop + sp.cBot) / 2, hw: sp.hw, bot: Y - sp.h + sp.cBot };
+}
+
+function makeG(ctx) {
+  const g = {};
+  g.clear = () => {
+    ctx.fillStyle = '#1b1629'; ctx.fillRect(0, 0, W * Z, H * Z);
+    ctx.fillStyle = '#221b33'; ctx.fillRect(0, 36 * Z, W * Z, (H - 36) * Z);
+    ctx.fillStyle = '#2e2542'; for (let x = 0; x < W; x += 20) ctx.fillRect(x * Z, 36 * Z, Z, (H - 36) * Z);
+    ctx.fillRect(0, 36 * Z, W * Z, Z);
+  };
+  g.px = (x, y, c, a = 1) => { x = Math.round(x); y = Math.round(y); if (x < 0 || y < 0 || x >= W || y >= H || a <= 0) return; ctx.globalAlpha = Math.min(1, a); ctx.fillStyle = c; ctx.fillRect(x * Z, y * Z, Z, Z); ctx.globalAlpha = 1; };
+  g.rect = (x, y, w, h, c, a = 1) => { for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) g.px(x + i, y + j, c, a); };
+  g.disc = (cx, cy, r, c, a = 1, ry = r) => { for (let y = -Math.ceil(ry); y <= ry; y++) for (let x = -Math.ceil(r); x <= r; x++) if ((x * x) / (r * r + 0.6) + (y * y) / (ry * ry + 0.6) <= 1) g.px(cx + x, cy + y, c, a); };
+  g.ring = (cx, cy, r, c, a = 1, ry = r) => { if (r < 0.5) return g.px(cx, cy, c, a); const n = Math.max(8, Math.round(r * 7)); const seen = {}; for (let i = 0; i < n; i++) { const t = (i / n) * Math.PI * 2; const x = Math.round(cx + Math.cos(t) * r), y = Math.round(cy + Math.sin(t) * ry); if (!seen[x + ',' + y]) { seen[x + ',' + y] = 1; g.px(x, y, c, a); } } };
+  g.line = (x0, y0, x1, y1, c, a = 1) => { x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1); const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let e = dx + dy; for (let i = 0; i < 300; i++) { g.px(x0, y0, c, a); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } } };
+  g.bolt = (x0, y0, x1, y1, c, seed, segs = 6, jag = 4, core = '#ffffff') => { let px = x0, py = y0; for (let i = 1; i <= segs; i++) { const p = i / segs; const nx = x0 + (x1 - x0) * p + (i < segs ? (rnd(seed + i) - 0.5) * jag * 2 : 0); const ny = y0 + (y1 - y0) * p + (i < segs ? (rnd(seed + i * 7) - 0.5) * jag * 2 : 0); g.line(px, py + 1, nx, ny + 1, c); g.line(px, py, nx, ny, core); px = nx; py = ny; } };
+  g.text = (str, cx, y, c, s = 1, a = 1, outline = true) => { const w = str.length * 4 * s - s; let x = Math.round(cx - w / 2); if (outline) for (const ch of str) { const f = FONT[ch]; if (f) { for (let i = 0; i < 15; i++) if (f[i] === '1') { const fx = x + (i % 3) * s, fy = y + Math.floor(i / 3) * s; for (let a1 = -1; a1 <= s; a1++) for (let b1 = -1; b1 <= s; b1++) g.px(fx + a1, fy + b1, OUTL, a); } } x += 4 * s; } x = Math.round(cx - w / 2); for (const ch of str) { const f = FONT[ch]; if (f) for (let i = 0; i < 15; i++) if (f[i] === '1') g.rect(x + (i % 3) * s, y + Math.floor(i / 3) * s, s, s, c, a); x += 4 * s; } };
+  // A number that pops up and floats away (p = 0..1 of its life).
+  g.pop = (str, cx, cy, c, p, s = 1) => { if (p <= 0 || p >= 1) return; const k = p < 0.15 ? ease.back(p / 0.15) : 1; g.text(str, cx, cy - 4 - p * 10, c, Math.max(1, Math.round(s * k)), p > 0.7 ? 1 - (p - 0.7) / 0.3 : 1); };
+  // Draws a sprite with its body centre on x and its feet on y. o: dx, dy, flash (0..1), tint [colour, amount],
+  // alpha, squash (0..1 = flattened into the floor), recolor(c, px, py, isOutline) -> colour or null (hide).
+  g.sprite = (sp, x, y, o = {}) => {
+    const left = Math.round(x + (o.dx || 0) - sp.cx), top = Math.round(y + (o.dy || 0) - sp.h);
+    const sq = o.squash || 0;
+    for (const [px, py, c, out] of sp.px) {
+      let col = c;
+      if (!out && o.tint) col = mix(c, o.tint[0], o.tint[1]);
+      if (!out && o.flash) col = mix(col, '#ffffff', o.flash);
+      if (o.recolor) { col = o.recolor(col, px, py, out); if (!col) continue; }
+      const yy = sq ? sp.h - (sp.h - py) * (1 - sq) : py;
+      g.px(left + px, top + yy, col, o.alpha ?? 1);
+    }
+  };
+  g.shadow = (x, y, w) => { for (let i = -Math.round(w / 2); i <= Math.round(w / 2); i++) g.px(x + i, y, '#000000', 0.3); };
+  // A burst of particles from (x,y): n bits flying outwards, p = 0..1.
+  g.burst = (x, y, n, cols, p, dist = 12, seed = 1, grav = 0) => { if (p <= 0 || p >= 1) return; for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + rnd(seed + i) * 0.6; const d = dist * ease.out(p) * (0.5 + rnd(seed + i * 3) * 0.6); g.px(x + Math.cos(a) * d, y + Math.sin(a) * d + grav * p * p * 10, cols[i % cols.length], 1 - p); } };
+  g.rays = (x, y, n, len, c, p, rot = 0) => { if (p <= 0 || p >= 1) return; for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + rot; const r0 = len * ease.out(p) * 0.4, r1 = len * ease.out(p); g.line(x + Math.cos(a) * r0, y + Math.sin(a) * r0, x + Math.cos(a) * r1, y + Math.sin(a) * r1, c, 1 - p); } };
+  g.slash = (x, y, r, c, p, dir = 1) => { if (p <= 0 || p >= 1) return; const a0 = -2.2, a1 = 0.6; const end = a0 + (a1 - a0) * ease.out(Math.min(1, p * 1.6)); for (let a = a0; a <= end; a += 0.08) { const fade = 1 - p; g.px(x + Math.cos(a) * r * dir, y + Math.sin(a) * r, c, fade); g.px(x + Math.cos(a) * (r - 1) * dir, y + Math.sin(a) * (r - 1), '#ffffff', fade * 0.8); } };
+  // A projectile from a to b at progress p with an optional arc height; returns [x,y].
+  g.fly = (ax, ay, bx, by, p, arc = 0) => [ax + (bx - ax) * p, ay + (by - ay) * p - Math.sin(p * Math.PI) * arc];
+  return g;
+}
+// The proposed effects. Each: { id, name, group, dur (ms loop), note, draw(g, t) }.
+// Every effect aims at ANCHORS (see U() in the engine): a unit's body centre (x, mid), the top of its
+// body (top), its feet (y) and its front (x -/+ hw). No hand-picked pixel nudges.
+const SP = {};
+const WEAPON_LETTERS = { goblin: 'c', skeletonArcher: 'rt', bandit: 'g', orcBrute: 'c' };
+function heroSprite(id) {
+  // Same as assemble(), but remembers which letters belong to the weapon (not part of the body).
+  const h = HEROES.find((x) => x.id === id);
+  const s = assemble(h);
+  const n = Object.keys(h.body.pal).length + Object.keys(h.head.pal).length; // codes are given body, head, weapon in order
+  const codes = Object.keys(s.pal);
+  const weapon = new Set(codes.slice(n));
+  return prepSprite(s.pal, s.rows, false, (c) => !weapon.has(c));
+}
+function enemySprite(list, id) {
+  const e = list.find((x) => x.id === id);
+  const wl = WEAPON_LETTERS[id] || '';
+  return prepSprite(e.pal, e.rows, true, (c) => !wl.includes(c));
+}
+function buildSprites() {
+  SP.knight = heroSprite('knight'); SP.rogue = heroSprite('rogue'); SP.archer = heroSprite('archer');
+  SP.goblin = enemySprite(OLD_ENEMIES, 'goblin'); const sk = ENEMIES.find((x) => x.id === 'skeletonArcher'); SP.skeleton = prepSprite(sk.pal, sk.rows.map((r) => r.replace(/[rt]/g, '.')), true); SP.slime = enemySprite(OLD_ENEMIES, 'slime'); SP.rat = enemySprite(ENEMIES, 'rat');
+}
+
+// ---- stages ----------------------------------------------------------------------------------------
+const HX = 32, HY = 54, EX = 88, EY = 54;
+// One hero (Knight) against one enemy (Goblin). Returns their anchors (with the offsets applied).
+function solo(g, ho = {}, eo = {}) {
+  const h = U(SP.knight, HX, HY, ho), e = U(SP.goblin, EX, EY, eo);
+  g.shadow(HX, HY, 12); g.shadow(EX, EY, 12);
+  if (!eo.hide) g.sprite(SP.goblin, EX, EY, eo);
+  if (!ho.hide) g.sprite(SP.knight, HX, HY, ho);
+  return { h, e };
+}
+const HEROS = [['archer', 16, 40], ['rogue', 36, 48], ['knight', 20, 58]];
+const FOES = [['goblin', 86, 42], ['slime', 104, 50], ['rat', 84, 58]];
+function squad(g, ho = [], eo = []) {
+  const hs = HEROS.map(([n, x, y], i) => U(SP[n], x, y, ho[i] || {}));
+  const es = FOES.map(([n, x, y], i) => U(SP[n], x, y, eo[i] || {}));
+  for (const [, x, y] of [...HEROS, ...FOES]) g.shadow(x, y, 10);
+  FOES.forEach(([n, x, y], i) => { const o = eo[i] || {}; if (!o.hide) g.sprite(SP[n], x, y, o); });
+  HEROS.forEach(([n, x, y], i) => { const o = ho[i] || {}; if (!o.hide) g.sprite(SP[n], x, y, o); });
+  return { hs, es };
+}
+// Static anchors (no offsets), for paths computed before drawing.
+const H0 = () => U(SP.knight, HX, HY), E0 = () => U(SP.goblin, EX, EY);
+const HS = (i) => U(SP[HEROS[i][0]], HEROS[i][1], HEROS[i][2]);
+const FS = (i) => U(SP[FOES[i][0]], FOES[i][1], FOES[i][2]);
+// Points on a unit: where a hit lands (its front, facing the attacker), where a shot leaves (hero's weapon side).
+const front = (u, side = -1) => [u.x + side * u.hw, u.mid];
+const muzzle = (u) => [u.x + u.hw + 2, u.mid - 1];
+// Reactions
+const hitReact = (t, at) => { const p = ph(t, at, at + 160); return p > 0 && p < 1 ? { flash: 1 - p, dx: Math.round(2 * (1 - p)) } : {}; };
+const lunge = (t, at, dist = 6) => { const p = ph(t, at - 120, at + 140); return { dx: p > 0 && p < 1 ? Math.round(Math.sin(p * Math.PI) * dist) : 0 }; };
+const shake = (t, a, b) => { const p = ph(t, a, b); return p > 0 && p < 1 ? (Math.floor(t / 30) % 2 ? 1 : -1) : 0; };
+const num = (g, u, str, col, p, s = 1) => g.pop(str, u.x, u.top - 2, col, p, s);
+
+const C = { fire: '#ff9a2e', fire2: '#ffe066', ice: '#9fe0ff', ice2: '#dff6ff', elec: '#ffe94d', dark: '#b07cff', dark2: '#5a2d8a', holy: '#fff2a0', holy2: '#f2c544', blood: '#d9452b', poison: '#6de07a', heal: '#6dff8f', shield: '#6fd0ff', grey: '#c8ccd6', gold: '#f2c544' };
+
+// ---- freeze: ice that grows over the sprite's own shape ----------------------------------------------
+// level 0..1 = how far up the body the ice has climbed; crack 0..1 = breaking apart.
+function iceRecolor(sp, level) {
+  const cut = sp.h - level * (sp.h + 2);
+  return (c, px, py, out) => {
+    if (py < cut) return c;
+    if (out) return '#e8fbff'; // the outline becomes a bright rim of ice
+    const [r, g, b] = hexRgb(c); const lum = (r * 0.3 + g * 0.59 + b * 0.11) / 255;
+    return lum > 0.6 ? '#dff6ff' : lum > 0.35 ? '#9fe0ff' : '#5aaee0';
+  };
+}
+// Crystals grow out of the outline at fixed spots (top, upper sides), pointing away from the body.
+function crystals(g, sp, u, grow, alpha = 1) {
+  const left = Math.round(u.x - sp.cx), top = Math.round(u.y - sp.h);
+  const outs = sp.px.filter((p) => p[3]);
+  const pick = (fn) => outs.reduce((a, b) => (fn(b) < fn(a) ? b : a));
+  const spots = [pick((p) => p[1]), pick((p) => p[0] + p[1] * 0.6), pick((p) => -p[0] + p[1] * 0.6), pick((p) => p[0] + p[1] * 0.15), pick((p) => -p[0] + p[1] * 0.15)];
+  spots.forEach(([px, py], i) => {
+    const dx = px + 0.5 - sp.cx, dy = py - (sp.cTop + sp.cBot) / 2; const d = Math.hypot(dx, dy) || 1;
+    const len = Math.round((i === 0 ? 4 : 3) * grow);
+    for (let k = 1; k <= len; k++) { g.px(left + px + (dx / d) * k, top + py + (dy / d) * k, k === len ? '#ffffff' : '#bfefff', alpha); }
+  });
+}
+
+// Four L-shaped corner brackets around a unit's body, pulled in/out by `pad`.
+function brackets(g, u, pad, col, a = 1) {
+  const x0 = Math.round(u.x - u.hw - pad), x1 = Math.round(u.x + u.hw + pad), y0 = Math.round(u.top - pad), y1 = Math.round(u.bot + pad);
+  for (const [cx, cy, dx, dy] of [[x0, y0, 1, 1], [x1, y0, -1, 1], [x0, y1, 1, -1], [x1, y1, -1, -1]]) for (let k = 0; k < 3; k++) { g.px(cx + dx * k, cy, col, a); g.px(cx, cy + dy * k, col, a); }
+}
+// A small flame tuft at (x, y = its base), h tall, flickering with time t.
+function flame(g, x, y, h, t, seed) {
+  for (let j = 0; j < h; j++) { const w = j < h * 0.4 ? 1 : 0; const sway = Math.round(Math.sin(t / 90 + seed + j) * (j / h)); for (let k = -w; k <= w; k++) g.px(x + k + sway, y - j, j >= h - 1 ? '#ffffff' : j > h * 0.5 ? C.fire2 : C.fire, 0.95); }
+}
+
+// The same death everywhere: d = 0..1 over the death. White flash, squashed into the floor, gone.
+function dying(d) { if (d <= 0) return {}; if (d >= 1) return { hide: true }; return { flash: d < 0.3 ? 1 : 0, squash: ease.in(d) * 0.9, alpha: 1 - d * 0.4 }; }
+// Grey smoke puff where a unit died (q = 0..1).
+function deathPuff(g, u, q) { if (q <= 0 || q >= 1) return; for (let i = 0; i < 5; i++) g.disc(u.x + (i - 2) * 3, u.y - 3 - q * (6 + (i % 3) * 3), 2 + (i % 2), '#8c909c', (1 - q) * 0.8); }
+// A unit sprite rising out of the floor (r = 0..1): only the part above the floor shows.
+function rise(g, sp, x, y, r, o = {}) { const left = Math.round(x - sp.cx), off = Math.round((1 - r) * sp.h); for (const [px, py, c] of sp.px) { const yy = y - sp.h + py + off; if (yy < y) g.px(left + px, yy, c, o.alpha ?? 1); } }
+
+const FX = [
+// ---------------------------------------------------------------- HITS
+{ id: 'melee', name: 'Melee hit', group: 'hits', dur: 1200, note: 'The hero lunges, a white arc sweeps across the front of the enemy, it flashes white and is knocked back a pixel. White number.',
+  draw(g, t) { const { e } = solo(g, lunge(t, 300), hitReact(t, 300)); const [x, y] = front(E0()); g.slash(x, y, 8, C.grey, ph(t, 260, 500), -1); g.burst(x, y, 6, ['#ffffff', C.grey], ph(t, 300, 560), 7, 3); num(g, E0(), '12', '#ffffff', ph(t, 300, 1150)); } },
+{ id: 'ranged', name: 'Arrow hit', group: 'hits', dur: 1200, note: 'An arrow flies in a shallow arc, sticks in the front of the enemy with a small spark. Pale yellow number.',
+  draw(g, t) { solo(g, {}, hitReact(t, 460)); const [ax, ay] = muzzle(H0()), [bx, by] = front(E0()); const p = ph(t, 200, 460); if (p > 0 && p < 1) { const [x, y] = g.fly(ax, ay, bx, by, p, 6); const [x2, y2] = g.fly(ax, ay, bx, by, Math.max(0, p - 0.08), 6); g.line(x2, y2, x, y, '#c68a5e'); g.px(x, y, '#ffffff'); } g.burst(bx, by, 5, ['#ffffff', '#e6e6b8'], ph(t, 460, 700), 6, 9); num(g, E0(), '9', '#e6e6b8', ph(t, 460, 1150)); } },
+{ id: 'fire', name: 'Fire hit', group: 'hits', dur: 1200, note: 'A fire bolt with a flickering tail, then an orange burst on the enemy with sparks falling. Orange number.',
+  draw(g, t) { const q = ph(t, 480, 860); solo(g, {}, { ...hitReact(t, 480), tint: q > 0 && q < 1 ? [C.fire, 0.4 * (1 - q)] : null }); const [ax, ay] = muzzle(H0()), [bx, by] = front(E0()); const p = ph(t, 200, 480); if (p > 0 && p < 1) { const [x, y] = g.fly(ax, ay, bx, by, p, 4); for (let i = 1; i < 6; i++) { const [tx, ty] = g.fly(ax, ay, bx, by, Math.max(0, p - i * 0.03), 4); g.px(tx, ty + (rnd(i + Math.floor(t / 50)) - 0.5) * 2, i < 3 ? C.fire2 : C.fire, 1 - i / 6); } g.disc(x, y, 2, C.fire); g.px(x, y, C.fire2); } ((q > 0 && q < 1) && g.ring(bx, by, 2 + q * 7, C.fire, 1 - q)); g.burst(bx, by, 10, [C.fire, C.fire2, C.blood], q, 10, 5, 1); num(g, E0(), '18', C.fire, ph(t, 480, 1150)); } },
+{ id: 'ice', name: 'Ice hit', group: 'hits', dur: 1200, note: 'A spinning ice shard; on impact a white frost star and the enemy goes pale for a moment. Light blue number.',
+  draw(g, t) { const q = ph(t, 460, 860); solo(g, {}, { ...hitReact(t, 460), tint: q > 0 && q < 1 ? [C.ice, 0.5 * (1 - q)] : null }); const [ax, ay] = muzzle(H0()), [bx, by] = front(E0()); const p = ph(t, 200, 460); if (p > 0 && p < 1) { const [x, y] = g.fly(ax, ay, bx, by, p, 3); const r = Math.floor(t / 40) % 2; g.px(x, y, '#ffffff'); g.px(x + (r ? 1 : 0), y + (r ? 0 : 1), C.ice); g.px(x - (r ? 1 : 0), y - (r ? 0 : 1), C.ice); } if (q > 0 && q < 0.6) { const L = 2 + q * 9, a = 1 - q / 0.6; for (const [dx, dy] of [[1, 0], [0, 1], [-1, 0], [0, -1]]) g.line(bx, by, bx + dx * L, by + dy * L, C.ice, a); for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) g.line(bx, by, bx + dx * L * 0.5, by + dy * L * 0.5, '#ffffff', a); } num(g, E0(), '14', C.ice, ph(t, 460, 1150)); } },
+{ id: 'electric', name: 'Electric hit', group: 'hits', dur: 1200, note: 'An instant zig-zag bolt that flickers 3 times; the enemy twitches. Yellow number.',
+  draw(g, t) { const q = ph(t, 300, 600); const on = q > 0 && q < 1; solo(g, {}, on ? { flash: Math.floor(t / 60) % 2 ? 0.8 : 0, dx: Math.floor(t / 50) % 2 ? 1 : -1 } : {}); const [ax, ay] = muzzle(H0()), [bx, by] = front(E0()); if (on && Math.floor(t / 70) % 2 === 0) g.bolt(ax, ay, bx, by, C.elec, Math.floor(t / 70), 6, 4); g.burst(bx, by, 8, [C.elec, '#ffffff'], ph(t, 320, 620), 8, 7); num(g, E0(), '16', C.elec, ph(t, 320, 1150)); } },
+{ id: 'dark', name: 'Dark hit', group: 'hits', dur: 1300, note: 'A purple orb with a smoky tail; on impact it implodes (a ring shrinking into the body) and purple wisps rise. Purple number.',
+  draw(g, t) { const q2 = ph(t, 520, 1000); solo(g, {}, { ...hitReact(t, 520), tint: q2 > 0 && q2 < 1 ? [C.dark2, 0.5 * (1 - q2)] : null }); const e = E0(); const [ax, ay] = muzzle(H0()), [bx, by] = front(e); const p = ph(t, 200, 520); if (p > 0 && p < 1) { const [x, y] = g.fly(ax, ay, bx, by, p, 2); for (let i = 1; i < 7; i++) { const [tx, ty] = g.fly(ax, ay, bx, by, Math.max(0, p - i * 0.03), 2); g.px(tx, ty + Math.sin(t / 60 + i) * 1.5, C.dark2, 1 - i / 7); } g.disc(x, y, 2, C.dark); g.px(x, y, '#ffffff'); } const q = ph(t, 520, 760); if (q > 0 && q < 1) g.ring(e.x, e.mid, 8 * (1 - q), C.dark); for (let i = 0; i < 4; i++) { const r = ph(t, 600 + i * 80, 1100 + i * 80); g.px(e.x - 4 + i * 3, e.mid - r * 12, i % 2 ? C.dark : C.dark2, r > 0 && r < 1 ? 1 - r : 0); } num(g, e, '15', C.dark, ph(t, 520, 1250)); } },
+{ id: 'holy', name: 'Holy hit', group: 'hits', dur: 1300, note: 'A pillar of golden light drops straight onto the enemy, with a gold ring on the floor. Gold number.',
+  draw(g, t) { const q = ph(t, 300, 780); solo(g, {}, q > 0 && q < 1 ? { flash: (1 - q) * 0.8 } : {}); const e = E0(); if (q > 0 && q < 1) { const w = Math.round(4 * (1 - q)) + 1; const top = q < 0.2 ? e.mid - (q / 0.2) * 60 : -1; for (let y = Math.max(0, top); y < e.y; y++) for (let x = -w; x <= w; x++) g.px(e.x + x, y, Math.abs(x) < w / 2 ? '#ffffff' : C.holy, 0.8 * (1 - q)); ((q > 0 && q < 1) && g.ring(e.x, e.y, 4 + q * 10, C.holy2, 1 - q, 1 + q * 3)); } g.burst(e.x, e.mid, 8, [C.holy, '#ffffff'], ph(t, 340, 780), 9, 4); num(g, e, '17', C.holy2, ph(t, 340, 1250)); } },
+{ id: 'crit', name: 'Critical hit', group: 'hits', dur: 1400, note: 'Bigger: two crossing slashes, a star of rays, a tiny screen shake and a big yellow number with "!".',
+  draw(g, t) { const sh = shake(t, 300, 420); solo(g, { ...lunge(t, 300, 8), dy: sh }, { ...hitReact(t, 300), dy: sh }); const [x, y] = front(E0()); g.slash(x, y, 10, C.gold, ph(t, 250, 520), -1); g.slash(x, y, 10, '#ffffff', ph(t, 330, 600), 1); g.rays(x, y, 8, 14, C.gold, ph(t, 300, 640), t / 400); num(g, E0(), '48!', C.gold, ph(t, 300, 1350), 2); } },
+{ id: 'miss', name: 'Dodge / miss', group: 'hits', dur: 1200, note: 'The enemy side-steps with a fading after-image; the swing hits air where it stood. Grey "MISS".',
+  draw(g, t) { const p = ph(t, 260, 400), back = ph(t, 800, 1000); const d = Math.round(6 * ease.out(p) * (1 - back)); if (p > 0 && back < 1) g.sprite(SP.goblin, EX, EY, { alpha: 0.3 * (1 - p) }); solo(g, lunge(t, 300), { dx: d }); const [x, y] = front(E0()); g.slash(x, y, 8, C.grey, ph(t, 260, 500), -1); num(g, E0(), 'MISS', '#9a8fb8', ph(t, 320, 1150)); } },
+{ id: 'block', name: 'Block / parry', group: 'hits', dur: 1200, note: 'A bright shield shape flashes on the hero\'s front with sparks flying back. "BLOCK" in light blue.',
+  draw(g, t) { solo(g, {}, lunge(t, 320, -10)); const h = H0(); const fx = h.x + h.hw + 2; const p = ph(t, 300, 620); if (p > 0 && p < 1) { const a = 1 - p; for (let y = -6; y <= 5; y++) { const w = y < 2 ? 2 : y < 4 ? 1 : 0; for (let k = 0; k <= w; k++) g.px(fx + k, h.mid + y, k === 0 ? '#ffffff' : C.shield, a); } } g.burst(fx + 1, h.mid, 8, [C.shield, '#ffffff'], p, 9, 2); num(g, h, 'BLOCK', C.shield, ph(t, 320, 1150)); } },
+{ id: 'shieldSoak', name: 'Shield soaks a hit', group: 'hits', dur: 1300, note: 'A thin blue bubble lights up around the hero, a ripple where it was hit, then fades. Blue "-4".',
+  draw(g, t) { solo(g, {}, lunge(t, 320, -10)); const h = H0(); const R = h.hw + 7, RY = (h.bot - h.top) / 2 + 4; const p = ph(t, 320, 780); ((p > 0 && p < 1) && g.ring(h.x, h.mid, R, C.shield, 0.3 + 0.1 * Math.sin(t / 150) + (p > 0 && p < 1 ? 0.6 * (1 - p) : 0), RY)); if (p > 0 && p < 1) g.ring(h.x + R, h.mid, 1 + p * 5, '#ffffff', 1 - p); num(g, h, '-4', C.shield, ph(t, 320, 1250)); } },
+{ id: 'shieldBreak', name: 'Shield breaks', group: 'hits', dur: 1400, note: 'The bubble cracks into blue shards that fly out and fall; a small screen shake.',
+  draw(g, t) { solo(g, { dy: shake(t, 320, 450) }, lunge(t, 320, -10)); const h = H0(); const R = h.hw + 7, RY = (h.bot - h.top) / 2 + 4; const p = ph(t, 320, 980); if (p <= 0) g.ring(h.x, h.mid, R, C.shield, 0.5, RY); if (p > 0 && p < 1) for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2; const k = 1 + ease.out(p) * 0.7; g.px(h.x + Math.cos(a) * R * k, h.mid + Math.sin(a) * RY * k + p * p * 14, i % 2 ? C.shield : '#ffffff', 1 - p); } num(g, h, 'BREAK', C.shield, ph(t, 340, 1350)); } },
+{ id: 'heal', name: 'Heal', group: 'hits', dur: 1300, note: 'Soft green motes rise around the hero\'s body, a quick green glow, green "+15".',
+  draw(g, t) { const p = ph(t, 200, 860); solo(g, p > 0 && p < 1 ? { tint: [C.heal, 0.35 * Math.sin(p * Math.PI)] } : {}, {}); const h = H0(); for (let i = 0; i < 8; i++) { const q = ph(t, 200 + i * 60, 860 + i * 60); if (q > 0 && q < 1) { const x = h.x + (rnd(i) - 0.5) * (h.hw * 2 + 6), y = h.y - 2 - q * 22; g.px(x, y, C.heal, 1 - q); if (i % 3 === 0) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) g.px(x + a, y + b, C.heal, 1 - q); } } num(g, h, '+15', C.heal, ph(t, 250, 1250)); } },
+{ id: 'death', name: 'Enemy dies', group: 'hits', dur: 1500, note: 'A last white flash, it squashes flat into the floor, then a grey puff of smoke and it is gone.',
+  draw(g, t) { const f = ph(t, 300, 420), s = ph(t, 420, 760); g.shadow(HX, HY, 12); if (s < 1) g.sprite(SP.goblin, EX, EY, { flash: f > 0 && f < 1 ? 1 : 0, squash: s > 0 ? s : 0, alpha: 1 - s * 0.5 }); g.sprite(SP.knight, HX, HY, lunge(t, 300)); const e = E0(); const q = ph(t, 680, 1250); if (q > 0 && q < 1) for (let i = 0; i < 5; i++) g.disc(e.x + (i - 2) * 3, e.y - 3 - q * (6 + (i % 3) * 3), 2 + (i % 2), '#8c909c', (1 - q) * 0.8); } },
+
+// ---------------------------------------------------------------- STATUSES
+{ id: 'stun', name: 'Stun', group: 'status', dur: 1200, note: 'Three yellow stars circle over its head, centred on it; the unit stands still.',
+  draw(g, t) { solo(g, {}, {}); const e = E0(); for (let i = 0; i < 3; i++) { const a = t / 300 + (i * Math.PI * 2) / 3; const x = e.x + Math.cos(a) * 7, y = e.top - 4 + Math.sin(a) * 2; const al = Math.sin(a) > 0 ? 1 : 0.55; g.px(x, y, '#ffffff', al); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) g.px(x + dx, y + dy, C.gold, al); } } },
+{ id: 'freeze', name: 'Freeze', group: 'status', dur: 3000, note: 'Ice climbs up the body from the feet (the sprite itself turns to ice, its outline becomes a bright rim), crystals grow out of its shape, frost spreads on the floor and a glint sweeps across. At the end it cracks and the ice breaks off.',
+  draw(g, t) { const form = ph(t, 0, 600), brk = ph(t, 2300, 2700); const e = E0(); const level = ease.out(form) * (brk > 0 ? 1 - brk : 1);
+    // frost on the floor
+    const fr = form * (1 - brk); for (let x = -9; x <= 9; x++) if (Math.abs(x) < 9 * fr) g.px(e.x + x, e.y, Math.abs(x) % 3 ? '#9fe0ff' : '#ffffff', 0.7);
+    g.shadow(HX, HY, 12); g.sprite(SP.knight, HX, HY);
+    g.sprite(SP.goblin, EX, EY, { recolor: brk < 1 ? iceRecolor(SP.goblin, level) : null, dx: brk > 0 && brk < 1 ? (Math.floor(t / 40) % 2 ? 1 : -1) : 0 });
+    if (form >= 1 && brk === 0) { crystals(g, SP.goblin, e, 1); const s = ((t - 600) % 1200) / 1200; const left = Math.round(e.x - SP.goblin.cx), top = e.y - SP.goblin.h; for (const [px, py, , out] of SP.goblin.px) { if (out) continue; if (Math.abs(px + py * 0.7 - s * (SP.goblin.w + SP.goblin.h)) < 1) g.px(left + px, top + py, '#ffffff', 0.9); } }
+    else if (form > 0.6 && brk === 0) crystals(g, SP.goblin, e, (form - 0.6) / 0.4);
+    if (brk > 0 && brk < 1) { for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2 + rnd(i); const r = 4 + ease.out(brk) * 12; g.rect(e.x + Math.cos(a) * r, e.mid + Math.sin(a) * r * 0.8 + brk * brk * 10, 2, 1, i % 2 ? '#ffffff' : C.ice, 1 - brk); } }
+  } },
+{ id: 'chill', name: 'Chill (stacks, 5 = Freeze)', group: 'status', dur: 3200, note: 'Snowflakes drift down over the unit and it gets paler with every stack; a row of 5 pips under its feet counts them. At 5 the ice takes over (see Freeze).',
+  draw(g, t) { const stacks = Math.min(5, 1 + Math.floor(t / 520)); const e = E0(); const fz = ph(t, 2600, 2900); solo(g, {}, fz > 0 ? { recolor: iceRecolor(SP.goblin, fz) } : { tint: [C.ice, 0.1 * stacks] }); for (let i = 0; i < 3 + stacks; i++) { const y = e.top - 8 + ((t / 18 + i * 13) % 24); g.px(e.x + (rnd(i) - 0.5) * 16 + Math.sin(t / 300 + i) * 2, y, '#ffffff', 0.8); } for (let i = 0; i < 5; i++) g.rect(e.x - 9 + i * 4, e.y + 3, 3, 2, i < stacks ? C.ice : '#3a2f57'); if (fz >= 1) crystals(g, SP.goblin, e, 1); } },
+{ id: 'shock', name: 'Shock', group: 'status', dur: 1200, note: 'Small yellow crackles jump over the body and it twitches every few moments.',
+  draw(g, t) { const tw = Math.floor(t / 90) % 5 === 0; solo(g, {}, { dx: tw ? 1 : 0, flash: tw ? 0.4 : 0 }); const e = E0(); for (let i = 0; i < 3; i++) { const k = Math.floor(t / 110) * 3 + i; if (rnd(k) < 0.7) { const x = e.x + (rnd(k + 1) - 0.5) * e.hw * 2.4, y = e.top + rnd(k + 2) * (e.bot - e.top); g.line(x, y, x + 2, y + 1, C.elec); g.line(x + 2, y + 1, x + 1, y + 3, '#ffffff'); } } } },
+{ id: 'fear', name: 'Fear', group: 'status', dur: 1600, note: 'It trembles and backs away, purple shivers run up both sides of it and a sweat drop falls from its head.',
+  draw(g, t) { const back = Math.round(Math.sin((t / 1600) * Math.PI) * 6); const { e } = solo(g, {}, { dx: back + (Math.floor(t / 50) % 2 ? 1 : 0), tint: [C.dark2, 0.25] }); const H = e.bot - e.top; for (let i = 0; i < 4; i++) { const k = (t / 30 + i * 4) % H; g.px(e.x - e.hw - 3, e.bot - k, C.dark, 0.7); g.px(e.x + e.hw + 3, e.bot - ((k + H / 2) % H), C.dark, 0.7); } const d = (t % 800) / 800; g.px(e.x - 2, e.top + d * 6, '#9fe0ff', 1 - d); g.px(e.x - 2, e.top + 1 + d * 6, '#ffffff', 1 - d); } },
+{ id: 'taunt', name: 'Taunt', group: 'status', dur: 1400, note: 'A big red "!" pops over its head and a dashed red line runs from it to the hero it must attack.',
+  draw(g, t) { solo(g, {}, {}); const e = E0(), h = H0(); const [ax, ay] = front(e), [bx, by] = front(h, 1); for (let i = 0; i < 40; i++) { const p = i / 40; if ((i + Math.floor(t / 60)) % 4 < 2) g.px(ax + (bx - ax) * p, ay + (by - ay) * p, '#ff4a4a', 0.65); } const bob = Math.round(Math.sin(t / 150)); const s = 1 + (Math.floor(t / 400) % 2 ? 0 : 0); g.text('!', e.x, e.top - 9 + bob, '#ff4a4a', 2 * s); } },
+{ id: 'silence', name: 'Silence', group: 'status', dur: 1400, note: 'A grey padlock bobs over its head (it cannot use skills); when it tries, grey sparks fizzle.',
+  draw(g, t) { solo(g, {}, {}); const e = E0(); const y = e.top - 11 + Math.round(Math.sin(t / 250)); const x = e.x; for (let a = Math.PI; a <= Math.PI * 2; a += 0.3) g.px(x + Math.cos(a) * 2.5, y + 2 + Math.sin(a) * 2.5, '#c8ccd6'); g.rect(x - 3, y + 2, 7, 5, '#8c909c'); g.rect(x - 3, y + 2, 7, 1, '#c8ccd6'); g.px(x, y + 4, OUTL); g.px(x, y + 5, OUTL); g.burst(x, y + 4, 6, ['#8c909c', '#c8ccd6'], ph(t, 700, 1000), 7, 3); } },
+{ id: 'weaken', name: 'Weaken', group: 'status', dur: 1600, note: 'Its colours go dull and it slumps a pixel lower; brown dust sinks off it.',
+  draw(g, t) { solo(g, {}, { tint: ['#6f6890', 0.45], dy: Math.floor(t / 400) % 2 }); const e = E0(); for (let i = 0; i < 6; i++) { const q = ((t / 1600) + i / 6) % 1; g.px(e.x + (rnd(i) - 0.5) * e.hw * 2.6, e.top + q * (e.y - e.top + 3), '#9a6b3a', 1 - q); } } },
+{ id: 'armorBreak', name: 'Armor Break', group: 'status', dur: 1600, note: 'White crack lines across the body, and grey chips chip off its sides and tumble to the floor.',
+  draw(g, t) { solo(g, {}, {}); const e = E0(); for (let i = 0; i < 4; i++) { const q = ((t / 1400) + i / 4) % 1; const side = i % 2 ? 1 : -1; const x = e.x + side * (e.hw + q * 6), y = e.mid - 3 + i + q * q * (e.y - e.mid + 3); g.rect(x, y, 2, 1, '#c8ccd6', 1 - q); g.px(x, y + 1, '#8c909c', 1 - q); } const a = 0.5 + 0.4 * Math.sin(t / 200); g.line(e.x - 2, e.mid - 4, e.x, e.mid - 1, '#ffffff', a); g.line(e.x, e.mid - 1, e.x - 1, e.mid + 2, '#ffffff', a); g.line(e.x, e.mid - 1, e.x + 2, e.mid, '#ffffff', a); } },
+{ id: 'curse', name: 'Curse', group: 'status', dur: 2000, note: 'A small purple-eyed skull circles the unit leaving a purple trail; a faint purple tint.',
+  draw(g, t) { solo(g, {}, { tint: [C.dark2, 0.2] }); const e = E0(); for (let k = 6; k >= 0; k--) { const a = (t - k * 45) / 330; const x = e.x + Math.cos(a) * (e.hw + 6), y = e.mid + Math.sin(a) * 4 - 2; if (k === 0) { g.rect(x - 2, y - 2, 5, 4, '#ebe5cf'); g.rect(x - 1, y + 2, 3, 1, '#ebe5cf'); g.px(x - 1, y - 1, C.dark2); g.px(x + 1, y - 1, C.dark2); } else g.px(x, y, C.dark, 1 - k / 7); } } },
+{ id: 'blind', name: 'Blind', group: 'status', dur: 1600, note: 'A band of dark smoke swirls across its eyes; it swings wildly at nothing.',
+  draw(g, t) { const { e } = solo(g, {}, { dx: Math.round(Math.sin(t / 200) * 2) }); const y = e.top + 3; for (let i = 0; i < 6; i++) { const x = e.x - 8 + i * 3.2 + Math.sin(t / 200 + i) * 1.2; g.disc(x, y + Math.cos(t / 250 + i), 2, i % 2 ? '#333333' : '#4a4a5a', 0.9); } } },
+{ id: 'mark', name: 'Mark', group: 'status', dur: 1600, note: 'Four red corner brackets frame its body and pulse in and out, with a blinking dot in the middle (everyone deals more damage to it).',
+  draw(g, t) { solo(g, {}, {}); const e = E0(); const pad = 3 + Math.round(Math.sin(t / 220) + 1); brackets(g, e, pad, '#ff3d6e'); g.px(e.x, e.mid, '#ff3d6e', 0.5 + 0.5 * Math.sin(t / 100)); } },
+{ id: 'bleed', name: 'Bleed (stacks)', group: 'status', dur: 2000, note: 'Red drops fall from the body each tick and splash on the floor, a small red number each tick. More stacks = more drops.',
+  draw(g, t) { const tick = t % 1000; solo(g, {}, tick < 120 ? { tint: [C.blood, 0.45] } : {}); const e = E0(); for (let i = 0; i < 3; i++) { const q = ((t / 700) + i / 3) % 1; const x = e.x + (i - 1) * 4; const y = e.mid + q * (e.y - e.mid); g.px(x, y, C.blood); g.px(x, y + 1, '#8e2a2a'); if (q > 0.9) { g.px(x - 1, e.y, C.blood, 0.7); g.px(x + 1, e.y, C.blood, 0.7); } } num(g, e, '3', C.blood, tick / 900); } },
+{ id: 'burn', name: 'Burn (stacks, fast ticks)', group: 'status', dur: 2000, note: 'Little flame tufts flicker on its body and embers rise; it ticks twice a second with small orange numbers.',
+  draw(g, t) { solo(g, {}, { tint: [C.fire, 0.2] }); const e = E0(); [[-4, 0.55], [0, 0.85], [4, 0.6], [-2, 0.25], [3, 0.35]].forEach(([dx, f], i) => { const y = Math.round(e.top + f * (e.bot - e.top)); flame(g, e.x + dx, y, 3 + Math.round((Math.sin(t / 80 + i * 2) + 1) * 1.5), t, i); }); for (let i = 0; i < 4; i++) { const q = ((t / 900) + i / 4) % 1; g.px(e.x + (rnd(i) - 0.5) * 12 + Math.sin(t / 150 + i) * 2, e.top - q * 10, C.fire2, 1 - q); } num(g, e, '2', C.fire, (t % 500) / 480); } },
+{ id: 'poison', name: 'Poison (stacks)', group: 'status', dur: 2000, note: 'Green bubbles rise off the body and pop; it pulses green on every tick. Green number.',
+  draw(g, t) { const tick = t % 1000; solo(g, {}, { tint: [C.poison, tick < 160 ? 0.45 : 0.15] }); const e = E0(); for (let i = 0; i < 5; i++) { const q = ((t / 1200) + i / 5) % 1; const x = e.x + (rnd(i * 5) - 0.5) * e.hw * 2.4, y = e.mid - q * 16; if (q < 0.85) g.ring(x, y, 1 + (i % 2), C.poison, 0.9); else g.burst(x, y, 4, [C.poison], (q - 0.85) / 0.15, 3, i); } num(g, e, '4', C.poison, tick / 900); } },
+{ id: 'buff', name: 'Buff (stat up)', group: 'status', dur: 1600, note: 'Gold sparkles spiral up around the hero and it glints gold once a second.',
+  draw(g, t) { solo(g, { tint: [C.gold, (t % 1000) < 150 ? 0.35 : 0.08] }, {}); const h = H0(); for (let i = 0; i < 6; i++) { const q = ((t / 1400) + i / 6) % 1; const a = q * Math.PI * 4 + i; g.px(h.x + Math.cos(a) * (h.hw + 4), h.y - 2 - q * 26, i % 2 ? C.gold : '#fff7c0', 1 - q); } } },
+{ id: 'regen', name: 'Regeneration', group: 'status', dur: 1600, note: 'Slow green plus signs float up from the hero; a tiny green number each second.',
+  draw(g, t) { solo(g, {}, {}); const h = H0(); for (let i = 0; i < 3; i++) { const q = ((t / 1600) + i / 3) % 1; const x = h.x + (i - 1) * 6, y = h.y - 4 - q * 22; for (const [a, b] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) g.px(x + a, y + b, C.heal, 1 - q); } num(g, h, '+2', C.heal, (t % 1000) / 950); } },
+{ id: 'shieldStatus', name: 'Shield (active)', group: 'status', dur: 1800, note: 'A thin light-blue bubble fitted around the hero, with a shimmer running round it.',
+  draw(g, t) { solo(g, {}, {}); const h = H0(); const R = h.hw + 7, RY = (h.bot - h.top) / 2 + 4; g.ring(h.x, h.mid, R, C.shield, 0.45, RY); const a = t / 300; for (let k = 0; k < 5; k++) g.px(h.x + Math.cos(a - k * 0.12) * R, h.mid + Math.sin(a - k * 0.12) * RY, '#ffffff', 1 - k / 5); } },
+{ id: 'invulnerable', name: 'Invulnerable', group: 'status', dur: 1600, note: 'Two shimmering gold rims stand at its sides with gold motes rising, and its body pulses gold; hits bounce off ("IMMUNE").',
+  draw(g, t) { solo(g, { tint: ['#ffe08a', 0.3 + 0.2 * Math.sin(t / 150)] }, lunge(t, 700, -10)); const h = H0(); const R = Math.round(h.hw + 4); for (let y = Math.round(h.top - 6); y <= h.y; y++) { const a = 0.35 + 0.35 * Math.sin(t / 120 + y * 0.4); g.px(h.x - R, y, '#ffe08a', a); g.px(h.x + R, y, '#ffe08a', a); } for (let i = 0; i < 5; i++) { const q = ((t / 1200) + i / 5) % 1; g.px(h.x + (rnd(i) - 0.5) * R * 1.6, h.y - q * (h.y - h.top + 8), '#fff7c0', 1 - q); } const [fx, fy] = front(h, 1); g.burst(fx + 1, fy, 6, ['#ffe08a', '#ffffff'], ph(t, 700, 1000), 7, 4); num(g, h, 'IMMUNE', '#ffe08a', ph(t, 720, 1550)); } },
+{ id: 'stance', name: 'Parry stance (Samurai)', group: 'status', dur: 1800, note: 'The hero holds still with a gold edge on its body; pink petals drift across it. A hit that lands is stopped with "BLOCK".',
+  draw(g, t) { solo(g, { tint: ['#ffd27a', 0.2] }, {}); const h = H0(); for (let i = 0; i < 6; i++) { const q = ((t / 2000) + i / 6) % 1; const x = h.x + 16 - q * 32, y = h.top - 4 + q * (h.y - h.top) + Math.sin(t / 200 + i) * 2; g.rect(x, y, 2, 1, '#f6a8c8', Math.sin(q * Math.PI)); g.px(x + 1, y + 1, '#f6a8c8', Math.sin(q * Math.PI) * 0.7); } } },
+
+// ---------------------------------------------------------------- ITEMS
+{ id: 'fireBombs', name: 'Fire Bombs', group: 'items', dur: 1500, note: 'A black bomb with a sputtering fuse lobs over in an arc and explodes on the enemy: orange ring, flying sparks.',
+  draw(g, t) { solo(g, {}, hitReact(t, 650)); const e = E0(); const [ax, ay] = muzzle(H0()); const p = ph(t, 150, 650); if (p > 0 && p < 1) { const [x, y] = g.fly(ax, ay, e.x, e.mid, p, 18); g.disc(x, y, 2, '#4a4a5a'); g.px(x + 1, y - 3, Math.floor(t / 60) % 2 ? C.fire2 : C.fire); } const q = ph(t, 650, 1080); ((q > 0 && q < 1) && g.disc(e.x, e.mid, 3 + q * 6, C.fire2, (1 - q) * 0.9)); ((q > 0 && q < 1) && g.ring(e.x, e.mid, 4 + q * 10, C.fire, 1 - q)); g.burst(e.x, e.mid, 14, [C.fire, C.fire2, C.blood, '#4a4a5a'], q, 14, 2, 1); num(g, e, '38', C.fire, ph(t, 650, 1450), 2); } },
+{ id: 'chain', name: 'Static Crystal chain lightning', group: 'items', dur: 1400, note: 'A bolt hits the first enemy in the body and jumps to the two closest, each flashing in turn.',
+  draw(g, t) { const at = [300, 450, 600]; squad(g, [], at.map((a) => hitReact(t, a))); const flick = Math.floor(t / 60) % 2 === 0; const pts = [muzzle(HS(1)), [FS(0).x, FS(0).mid], [FS(1).x, FS(1).mid], [FS(2).x, FS(2).mid]]; for (let i = 0; i < 3; i++) { const p = ph(t, at[i] - 100, at[i] + 200); if (p > 0 && p < 1 && flick) g.bolt(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], C.elec, i * 10 + Math.floor(t / 60), 5, 3); g.burst(pts[i + 1][0], pts[i + 1][1], 6, [C.elec, '#ffffff'], ph(t, at[i], at[i] + 300), 6, i); } } },
+{ id: 'chillBand', name: 'Chill Band', group: 'items', dur: 1700, note: 'Each hit leaves a little frost puff on the enemy\'s front and adds a Chill pip; on the 5th the ice takes over.',
+  draw(g, t) { const n = Math.min(5, Math.floor(t / 280) + 1); const fz = ph(t, 1400, 1650); solo(g, lunge(t, (n - 1) * 280 + 140, 5), fz > 0 ? { recolor: iceRecolor(SP.goblin, fz) } : { tint: [C.ice, 0.1 * n] }); const e = E0(); const [x, y] = front(e); g.burst(x, y, 6, [C.ice, '#ffffff'], (t % 280) / 280, 6, n); for (let i = 0; i < 5; i++) g.rect(e.x - 9 + i * 4, e.y + 3, 3, 2, i < n ? C.ice : '#3a2f57'); } },
+{ id: 'doubleHit', name: 'Quick Gloves double hit', group: 'items', dur: 1200, note: 'Two fast slashes in a row from opposite sides on the enemy\'s front, two numbers one after the other.',
+  draw(g, t) { const r2 = ph(t, 450, 610); solo(g, lunge(t, 300, 7), r2 > 0 && r2 < 1 ? hitReact(t, 450) : hitReact(t, 300)); const e = E0(); const [x, y] = front(e); g.slash(x, y, 8, C.grey, ph(t, 260, 500), -1); g.slash(x, y, 8, '#ffffff', ph(t, 420, 650), 1); g.pop('10', e.x - 4, e.top - 2, '#ffffff', ph(t, 300, 1050)); g.pop('10', e.x + 4, e.top + 1, '#ffffff', ph(t, 450, 1150)); } },
+{ id: 'lifesteal', name: 'Bloodlust Mask lifesteal', group: 'items', dur: 1400, note: 'Red droplets pull out of the enemy and curve back into the hero, who glows green for a beat.',
+  draw(g, t) { const gl = ph(t, 800, 1100); solo(g, { ...lunge(t, 300), tint: gl > 0 && gl < 1 ? [C.heal, 0.3] : null }, hitReact(t, 300)); const e = E0(), h = H0(); const [ax, ay] = front(e); for (let i = 0; i < 5; i++) { const p = ph(t, 400 + i * 60, 860 + i * 60); if (p > 0 && p < 1) { const [x, y] = g.fly(ax, ay + (i - 2), h.x, h.mid, ease.inOut(p), 3 + i); g.px(x, y, C.blood); g.px(x + 1, y, '#8e2a2a', 0.6); } } num(g, h, '+3', C.heal, ph(t, 900, 1380)); } },
+{ id: 'thorns', name: 'Bulwark Plate thorns', group: 'items', dur: 1300, note: 'When the hero is hit, grey spikes jab out all around its body and the attacker flashes; purple number on the attacker.',
+  draw(g, t) { const at = 340; solo(g, {}, { ...lunge(t, at, -12), ...hitReact(t, at + 60) }); const h = H0(); const p = ph(t, at, at + 300); if (p > 0 && p < 1) for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; const rx = h.hw + 2, ry = (h.bot - h.top) / 2 + 1; const k = 1 + 0.5 * Math.sin(p * Math.PI); g.line(h.x + Math.cos(a) * rx, h.mid + Math.sin(a) * ry, h.x + Math.cos(a) * rx * k + Math.cos(a) * 3, h.mid + Math.sin(a) * ry * k + Math.sin(a) * 3, '#c8ccd6'); } num(g, E0(), '5', '#e8a0ff', ph(t, at + 60, 1250)); } },
+{ id: 'tornado', name: 'Excalibur tornado', group: 'items', dur: 2600, note: 'A swirling grey-blue funnel drifts from enemy to enemy along the floor; every enemy it touches flashes.',
+  draw(g, t) { const p = t / 2600; const path = [[46, 58], [FS(0).x, FS(0).y], [FS(2).x, FS(2).y], [FS(1).x, FS(1).y]]; const seg = Math.min(2.999, p * 3), i = Math.floor(seg), f = seg - i; const x = path[i][0] + (path[i + 1][0] - path[i][0]) * f, y = path[i][1] + (path[i + 1][1] - path[i][1]) * f; const near = FOES.map(([, fx, fy]) => (Math.hypot(fx - x, fy - y) < 8 && Math.floor(t / 80) % 2 ? { flash: 0.7 } : {})); squad(g, [], near); for (let j = 0; j < 16; j++) { const w = 1 + j * 0.45; const a = t / 60 + j * 0.9; g.px(x + Math.cos(a) * w, y - j, j % 3 ? '#c8ccd6' : '#9fe0ff', 0.85); g.px(x - Math.cos(a) * w, y - j, '#ffffff', 0.4); } } },
+{ id: 'knifeBurst', name: 'Thousand Cuts knife burst', group: 'items', dur: 1400, note: 'A bleeding enemy dies and a ring of small knives bursts out of its body into the enemies next to it.',
+  draw(g, t) { const d = ph(t, 250, 500); squad(g, [], [dying(d), hitReact(t, 700), hitReact(t, 700)]); deathPuff(g, FS(0), ph(t, 500, 1000)); const u = FS(0); const p = ph(t, 450, 800); if (p > 0 && p < 1) for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; const r = 2 + p * 16; const x = u.x + Math.cos(a) * r, y = u.mid + Math.sin(a) * r * 0.7; g.line(x, y, x + Math.cos(a) * 2, y + Math.sin(a) * 2, '#e4e8f0'); g.px(x - Math.cos(a), y - Math.sin(a), '#6b4a2a'); } g.burst(u.x, u.mid, 6, [C.blood], ph(t, 250, 700), 6, 1, 1); } },
+{ id: 'thunderbolt', name: 'Frozen Thunderbolt', group: 'items', dur: 1600, note: 'An electric hit cracks into an ice burst: a jagged bolt, then a frost ring spreads from the target to its neighbours, which ice over a little.',
+  draw(g, t) { const q = ph(t, 380, 900); const icy = q > 0.4 ? { recolor: null, tint: [C.ice, 0.35] } : {}; squad(g, [], [hitReact(t, 350), icy, icy]); const u = FS(0); if (ph(t, 250, 450) > 0 && ph(t, 250, 450) < 1 && Math.floor(t / 50) % 2) { const [ax, ay] = muzzle(HS(1)); g.bolt(ax, ay, u.x, u.mid, C.elec, Math.floor(t / 50), 5, 3); } ((q > 0 && q < 1) && g.ring(u.x, u.mid, 2 + q * 18, C.ice, 1 - q, 1 + q * 10)); g.burst(u.x, u.mid, 10, [C.ice, '#ffffff'], q, 16, 3); } },
+{ id: 'shatter', name: 'Shatter Hammer', group: 'items', dur: 1700, note: 'Hitting a frozen enemy smashes its ice: big white-blue shards blow outward, a heavy shake and a large number.',
+  draw(g, t) { const sh = shake(t, 400, 520); solo(g, { ...lunge(t, 400, 8), dy: sh }, { recolor: t < 400 ? iceRecolor(SP.goblin, 1) : null, ...hitReact(t, 400), dy: sh }); const e = E0(); if (t < 400) crystals(g, SP.goblin, e, 1); const p = ph(t, 400, 1000); if (p > 0 && p < 1) for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2 + rnd(i); const r = 4 + ease.out(p) * (12 + rnd(i * 2) * 8); g.rect(e.x + Math.cos(a) * r, e.mid + Math.sin(a) * r + p * p * 10, 2, 2, i % 2 ? C.ice : '#ffffff', 1 - p); } num(g, e, '62!', C.ice, ph(t, 420, 1650), 2); } },
+{ id: 'plague', name: 'Plague Flask spread', group: 'items', dur: 1600, note: 'A poisoned enemy dies; green wisps leap from it to the next enemies, which turn green.',
+  draw(g, t) { const d = ph(t, 250, 500), s = ph(t, 900, 1100); squad(g, [], [{ ...dying(d), tint: [C.poison, 0.4] }, { tint: [C.poison, 0.4 * s] }, { tint: [C.poison, 0.4 * s] }]); deathPuff(g, FS(0), ph(t, 500, 1000)); const a = FS(0); for (const k of [1, 2]) { const b = FS(k); const p = ph(t, 450, 950); if (p > 0 && p < 1) { const [x, y] = g.fly(a.x, a.mid, b.x, b.mid, p, 10); g.disc(x, y, 1.5, C.poison); g.px(x - 2, y + 1, C.poison, 0.5); } } } },
+{ id: 'grimoire', name: "Lost Cleric's Grimoire", group: 'items', dur: 1600, note: 'When the hero is healed, a green ghost-fire ball flies out of it at an enemy and bursts in green flames.',
+  draw(g, t) { const hl = ph(t, 100, 400); solo(g, { tint: hl > 0 && hl < 1 ? [C.heal, 0.35] : null }, hitReact(t, 800)); const h = H0(), e = E0(); num(g, h, '+12', C.heal, ph(t, 100, 700)); const p = ph(t, 450, 800); const [ax, ay] = muzzle(h); if (p > 0 && p < 1) { const [x, y] = g.fly(ax, ay, e.x, e.mid, p, 10); g.disc(x, y, 2, '#3aa84a'); g.px(x, y, '#c8ffd0'); } const q = ph(t, 800, 1200); ((q > 0 && q < 1) && g.ring(e.x, e.mid, 2 + q * 8, C.poison, 1 - q)); g.burst(e.x, e.mid, 8, [C.poison, '#c8ffd0'], q, 9, 5); } },
+{ id: 'mimic', name: 'Mimic Chest', group: 'items', dur: 1800, note: 'A chest pops out of the floor beside the hero, chomps open and shut, hops onto the enemy and explodes.',
+  draw(g, t) { solo(g, {}, hitReact(t, 1300)); const h = H0(), e = E0(); const up = ph(t, 100, 300), hop = ph(t, 800, 1300); if (t > 100 && t < 1300) { const [x, y] = hop > 0 ? g.fly(h.x + 14, h.y, e.x - e.hw - 4, e.y, hop, 14) : [h.x + 14, h.y]; const open = Math.floor(t / 150) % 2 && hop === 0; const yy = y + Math.round((1 - up) * 6); g.rect(x - 4, yy - 7 - (open ? 1 : 0), 9, 4, '#5e3a1a'); g.rect(x - 4, yy - 3, 9, 3, '#8b5a2b'); if (open) { g.rect(x - 4, yy - 4, 9, 1, C.blood); for (const k of [-3, -1, 1, 3]) g.px(x + k, yy - 3, '#ffffff'); } g.px(x, yy - 5 - (open ? 1 : 0), '#f2c544'); } const q = ph(t, 1300, 1700); const [fx, fy] = front(e); ((q > 0 && q < 1) && g.ring(fx, fy, 2 + q * 10, C.fire, 1 - q)); g.burst(fx, fy, 10, ['#8b5a2b', C.fire, '#f2c544'], q, 12, 8, 1); } },
+{ id: 'battleCry', name: 'War Banner battle cry', group: 'items', dur: 1600, note: 'A yellow shout ring ripples out from the holder over the whole squad; each hero gets yellow speed lines for a moment.',
+  draw(g, t) { const p = ph(t, 200, 900); squad(g, HEROS.map(() => (p > 0.4 && p < 1 ? { tint: ['#f2d03a', 0.25] } : {})), []); const c = HS(1); ((p > 0 && p < 1) && g.ring(c.x, c.mid, 3 + p * 30, '#f2d03a', 1 - p, 2 + p * 20)); if (p > 0.4 && p < 1) for (let i = 0; i < 3; i++) { const u = HS(i); for (let k = 0; k < 3; k++) { const s = (t / 40 + k * 3) % 8; g.line(u.x - u.hw - 3 - s, u.mid - 3 + k * 3, u.x - u.hw - s, u.mid - 3 + k * 3, '#f2d03a', 1 - p); } } } },
+{ id: 'suckerPunch', name: 'Sucker Punch Glove', group: 'items', dur: 1200, note: 'The very first hit on an enemy lands with a red-and-yellow impact star on its front; extra-big number.',
+  draw(g, t) { const kb = ph(t, 300, 500); solo(g, lunge(t, 300, 9), { ...hitReact(t, 300), dx: kb > 0 && kb < 1 ? 3 : 0 }); const e = E0(); const [x, y] = front(e); const p = ph(t, 300, 600); if (p > 0 && p < 1) { const r = 3 + p * 6; for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; const rr = i % 2 ? r : r * 0.5; g.line(x, y, x + Math.cos(a) * rr, y + Math.sin(a) * rr, i % 2 ? C.blood : C.fire2, 1 - p); } } num(g, e, '21', '#ffffff', ph(t, 300, 1150), 2); } },
+{ id: 'executioner', name: "Executioner's Axe", group: 'items', dur: 1300, note: 'On a nearly dead enemy a heavy red chop falls straight through its middle, and it is gone.',
+  draw(g, t) { const d = ph(t, 450, 700); solo(g, lunge(t, 380, 8), dying(d)); deathPuff(g, E0(), ph(t, 700, 1200)); const e = E0(); const p = ph(t, 300, 520); if (p > 0 && p < 1) { const y = e.top - 14 + p * (e.y - e.top + 14); for (let i = -1; i <= 1; i++) g.line(e.x + i, y - 8, e.x + i, y, i ? C.blood : '#ffffff', 1 - p * 0.3); } g.burst(e.x, e.mid, 10, [C.blood, '#8e2a2a'], ph(t, 450, 800), 10, 4, 1); } },
+{ id: 'critDebuff', name: "Gambler's Dice crit debuff", group: 'items', dur: 1800, note: 'After a crit a little white die tumbles above the enemy\'s head and lands; that debuff appears (here: Stun stars).',
+  draw(g, t) { solo(g, lunge(t, 300, 8), hitReact(t, 300)); const e = E0(); g.pop('30!', e.x, e.top - 2, C.gold, ph(t, 300, 900)); const p = ph(t, 400, 1000); if (p > 0 && t < 1050) { const y = e.top - 18 - (p < 1 ? Math.sin(p * Math.PI) * 5 : 0); g.rect(e.x - 2, y, 5, 5, '#ffffff'); const face = p < 1 ? Math.floor(t / 80) % 3 : 2; g.px(e.x, y + 2, OUTL); if (face >= 1) { g.px(e.x - 1, y + 1, OUTL); g.px(e.x + 1, y + 3, OUTL); } } if (t > 1050) for (let i = 0; i < 3; i++) { const a = t / 300 + (i * Math.PI * 2) / 3; const x = e.x + Math.cos(a) * 7, y = e.top - 4 + Math.sin(a) * 2; g.px(x, y, '#ffffff'); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) g.px(x + dx, y + dy, C.gold); } } },
+
+// ---------------------------------------------------------------- HERO SKILLS
+{ id: 'groundPound', name: 'Knight: Ground Pound', group: 'skills', dur: 1800, note: 'The Knight leaps up and slams down: a dust shockwave ripples out along the floor and every enemy is knocked back.',
+  draw(g, t) { const j = ph(t, 200, 600); const lift = j < 1 ? -Math.round(Math.sin(j * Math.PI) * 10) : 0; const k = ph(t, 600, 900); squad(g, [{}, {}, { dy: lift }], FOES.map(() => (k > 0 && k < 1 ? { dy: -Math.round(Math.sin(k * Math.PI) * 4), dx: Math.round(k * 4), flash: 1 - k } : {}))); const u = HS(2); const p = ph(t, 600, 1100); ((p > 0 && p < 1) && g.ring(u.x, u.y, 4 + p * 60, '#c9b18a', 1 - p, 1 + p * 6)); g.burst(u.x, u.y, 10, ['#c9b18a', '#8c909c'], p, 10, 1, 0.5); } },
+{ id: 'rallyCry', name: 'Knight: Rally Cry', group: 'skills', dur: 1800, note: 'The Knight raises his sword, a green ring rolls over the squad and a small blue shield pops over each hero\'s head (+defense, one debuff removed).',
+  draw(g, t) { const p = ph(t, 300, 1000); squad(g, HEROS.map((h, i) => (p > 0.3 + i * 0.1 && p < 1 ? { tint: [C.shield, 0.25] } : {})), []); const c = HS(2); ((p > 0 && p < 1) && g.ring(c.x, c.mid, 3 + p * 34, C.heal, 1 - p, 2 + p * 22)); for (let i = 0; i < 3; i++) { const u = HS(i); const q = ph(t, 600 + i * 100, 1300 + i * 100); if (q > 0 && q < 1) { const y = u.top - 5 - q * 5; g.rect(u.x - 2, y, 5, 3, C.shield, 1 - q); g.rect(u.x - 1, y + 3, 3, 1, C.shield, 1 - q); g.px(u.x, y + 4, C.shield, 1 - q); } } } },
+{ id: 'fanOfKnives', name: 'Rogue: Fan of Knives', group: 'skills', dur: 1500, note: 'The Rogue flicks her wrist and a fan of spinning knives flies out to every enemy at once, each hitting its front.',
+  draw(g, t) { squad(g, [], [0, 1, 2].map(() => hitReact(t, 650))); const [ax, ay] = muzzle(HS(1)); for (let i = 0; i < 3; i++) { const u = FS(i); const [bx, by] = front(u); const p = ph(t, 300, 650); if (p > 0 && p < 1) { const [x, y] = g.fly(ax, ay, bx, by, p, 4); const a = t / 30; g.line(x - Math.cos(a) * 2, y - Math.sin(a) * 2, x + Math.cos(a) * 2, y + Math.sin(a) * 2, '#e4e8f0'); g.px(x, y, '#ffffff'); } num(g, u, String(7 + i), '#e6e6b8', ph(t, 650, 1450)); } } },
+{ id: 'smokeBomb', name: 'Rogue: Smoke Bomb', group: 'skills', dur: 2000, note: 'Grey smoke blooms over every enemy\'s head (Blind) and the squad fades half see-through for a moment (+evasion).',
+  draw(g, t) { const p = ph(t, 300, 800), out = ph(t, 1600, 2000); squad(g, HEROS.map(() => (p > 0 && out < 1 ? { alpha: 0.6 } : {})), []); FOES.forEach((f, i) => { const u = FS(i); for (let k = 0; k < 5; k++) ((out > 0 && out < 1) && g.disc(u.x + (k - 2) * 3 + Math.sin(t / 300 + k) * 1.2, u.top + 2 + Math.cos(t / 250 + k) * 1.5, 1.5 + ease.out(p) * 1.5, k % 2 ? '#8c909c' : '#c8ccd6', 0.8 * ease.out(p) * (1 - out))); }); } },
+{ id: 'rainOfArrows', name: 'Archer: Rain of Arrows', group: 'skills', dur: 2200, note: 'For two seconds arrows rain down in waves onto each enemy\'s spot, with small dust puffs where they land.',
+  draw(g, t) { const on = t > 200 && t < 2000; squad(g, [], FOES.map((f, i) => (on && (t - i * 70) % 400 < 70 ? { flash: 0.6 } : {}))); if (on) for (let i = 0; i < 15; i++) { const u = FS(i % 3); const q = ((t - 200) / 420 + rnd(i)) % 1; const x = u.x + (rnd(i * 3) - 0.5) * 14; const y0 = -6, y1 = u.y - 2; const y = y0 + q * (y1 - y0); g.line(x - 1, y - 5, x, y, '#c68a5e'); g.px(x, y + 1, '#ffffff'); if (q > 0.9) g.px(x, u.y, '#c9b18a', 0.7); } } },
+{ id: 'huntersMark', name: "Archer: Hunter's Mark", group: 'skills', dur: 1800, note: 'A big red reticle drops from above onto the target\'s body, snaps tight and pulses once.',
+  draw(g, t) { squad(g, [], []); const u = FS(0); const p = ph(t, 300, 700); const R = Math.max(u.hw, (u.bot - u.top) / 2) + 4; const r = R + (1 - ease.out(p)) * 8, yy = u.mid - (1 - ease.out(p)) * 20; if (p > 0) { for (let i = 0; i < 4; i++) { const a = (i * Math.PI) / 2 + Math.PI / 4 + (1 - p) * 2; const cx = u.x + Math.cos(a) * r, cy = yy + Math.sin(a) * r; const ta = a + Math.PI / 2; for (let k = -2; k <= 2; k++) g.px(cx + Math.cos(ta) * k, cy + Math.sin(ta) * k, '#ff3d6e'); for (let k = 1; k <= 2; k++) g.px(cx - Math.cos(a) * k, cy - Math.sin(a) * k, '#ff3d6e'); } g.px(u.x, yy, '#ff3d6e'); } const q = ph(t, 700, 1000); if (q > 0 && q < 1) g.ring(u.x, u.mid, R + q * 6, '#ff3d6e', 1 - q); } },
+{ id: 'savageLeap', name: 'Berserker: Savage Leap', group: 'skills', dur: 1800, note: 'The hero arcs high through the air onto one enemy and crashes down in front of it: red impact star, dust, shake.',
+  draw(g, t) { const e = E0(); const land = e.x - e.hw - 8; const p = ph(t, 200, 700); const back = ph(t, 1200, 1600); let [x, y] = p < 1 ? g.fly(HX, HY, land, EY, ease.inOut(p), 26) : [land, EY]; if (back > 0) [x, y] = g.fly(land, EY, HX, HY, back, 8); const sh = shake(t, 700, 850); g.shadow(EX, EY, 12); g.sprite(SP.goblin, EX, EY, { ...hitReact(t, 700), dy: sh }); g.shadow(x, EY, 12); g.sprite(SP.knight, x, y, { dy: sh }); const q = ph(t, 700, 1100); const [fx, fy] = front(e); g.rays(fx, fy, 10, 16, C.blood, q); g.burst(land, EY, 8, ['#c9b18a'], q, 10, 2); num(g, e, '64!', C.fire, ph(t, 720, 1700), 2); } },
+{ id: 'warCry', name: 'Berserker: War Cry', group: 'skills', dur: 1800, note: 'A red roar: red rings blast out from the hero, the squad glows red (+attack) and the enemies sag grey (Weakened).',
+  draw(g, t) { const p = ph(t, 300, 1000); squad(g, HEROS.map(() => (p > 0.3 ? { tint: [C.blood, 0.22] } : {})), FOES.map(() => (p > 0.6 ? { tint: ['#6f6890', 0.4], dy: 1 } : {}))); const c = HS(2); for (let k = 0; k < 2; k++) { const q = ph(t, 300 + k * 150, 1000 + k * 150); if (q > 0 && q < 1) g.ring(c.x, c.mid, 4 + q * 40, '#ff4a4a', (1 - q) * 0.9, 3 + q * 24); } } },
+{ id: 'windCutter', name: 'Samurai: Wind Cutter', group: 'skills', dur: 1600, note: 'One swift draw: a thin white crescent sweeps across the whole enemy line at body height; each enemy flashes as it passes.',
+  draw(g, t) { const p = ph(t, 300, 800); const cx = 30 + p * 90; squad(g, [], FOES.map(([, fx]) => (Math.abs(fx - cx) < 6 ? { flash: 1 } : {}))); const midY = (FS(0).mid + FS(2).mid) / 2; if (p > 0 && p < 1) for (let a = -1.2; a <= 1.2; a += 0.05) { g.px(cx + Math.cos(a) * 10, midY + Math.sin(a) * 16, '#ffffff'); g.px(cx + Math.cos(a) * 9, midY + Math.sin(a) * 16, '#c8ccd6', 0.6); } } },
+{ id: 'focusStance', name: 'Samurai: Focus Stance', group: 'skills', dur: 1800, note: 'The hero goes still; a gold ring closes in on his body, petals swirl around him and he keeps a gold edge (parry + sure crit next).',
+  draw(g, t) { const p = ph(t, 200, 700); solo(g, { tint: ['#ffd27a', p * 0.25] }, {}); const h = H0(); if (p < 1) g.ring(h.x, h.mid, 22 - p * 12, '#ffd27a', 1, 18 - p * 6); for (let i = 0; i < 6; i++) { const a = t / 400 + i; g.rect(h.x + Math.cos(a) * 12, h.mid + Math.sin(a) * 8, 2, 1, '#f6a8c8', p); } } },
+{ id: 'fireball', name: 'Mage: Fireball', group: 'skills', dur: 1800, note: 'A big fireball with a long flame trail explodes on the target\'s body and splashes smaller flames onto its neighbours.',
+  draw(g, t) { squad(g, [], [hitReact(t, 800), hitReact(t, 950), hitReact(t, 950)]); const [ax, ay] = muzzle(HS(0)); const u = FS(0); const p = ph(t, 300, 800); if (p > 0 && p < 1) { const [x, y] = g.fly(ax, ay, u.x, u.mid, p, 8); for (let i = 1; i < 9; i++) { const [tx, ty] = g.fly(ax, ay, u.x, u.mid, Math.max(0, p - i * 0.025), 8); g.px(tx, ty + (rnd(i + Math.floor(t / 40)) - 0.5) * 3, i < 4 ? C.fire2 : C.fire, 1 - i / 9); } g.disc(x, y, 3, C.fire); g.disc(x, y, 1.5, C.fire2); } const q = ph(t, 800, 1300); ((q > 0 && q < 1) && g.disc(u.x, u.mid, 3 + q * 8, C.fire2, (1 - q) * 0.8)); ((q > 0 && q < 1) && g.ring(u.x, u.mid, 4 + q * 14, C.fire, 1 - q)); for (const k of [1, 2]) { const v = FS(k); const s = ph(t, 850, 950); if (s > 0 && s < 1) { const [x, y] = g.fly(u.x, u.mid, v.x, v.mid, s, 4); g.disc(x, y, 1.5, C.fire); } } num(g, u, '44!', C.fire, ph(t, 800, 1750), 2); } },
+{ id: 'frostNova', name: 'Mage: Frost Nova', group: 'skills', dur: 1900, note: 'A ring of ice bursts out from the middle of the enemy group; every enemy is iced over from the feet up and gains 2 Chill pips.',
+  draw(g, t) { const p = ph(t, 300, 900); const lv = ph(t, 600, 900); squad(g, [], FOES.map(([n]) => (lv > 0 ? { recolor: iceRecolor(SP[n], lv * 0.6) } : {}))); const cx = FOES.reduce((s, f) => s + f[1], 0) / 3, cy = FOES.reduce((s, f) => s + f[2], 0) / 3; ((p > 0 && p < 1) && g.ring(cx, cy, 2 + p * 30, C.ice, p < 1 ? 1 - p : 0, 1 + p * 14)); ((p > 0 && p < 1) && g.ring(cx, cy, p * 26, '#ffffff', p < 1 ? (1 - p) * 0.7 : 0, p * 12)); FOES.forEach((f, i) => { const u = FS(i); g.burst(u.x, u.mid, 6, [C.ice, '#ffffff'], ph(t, 500 + i * 60, 900 + i * 60), 6, i); if (p > 0.6) { g.rect(u.x - 4, u.y + 2, 3, 2, C.ice); g.rect(u.x, u.y + 2, 3, 2, C.ice); } }); } },
+{ id: 'chainLightning', name: 'Mage: Chain Lightning', group: 'skills', dur: 1600, note: 'A thick bright bolt from the staff zig-zags through EVERY enemy body, nearest first, all flickering together.',
+  draw(g, t) { squad(g, [], [0, 1, 2].map((i) => (ph(t, 300 + i * 100, 700) > 0 && ph(t, 300 + i * 100, 700) < 1 && Math.floor(t / 50) % 2 ? { flash: 0.9 } : {}))); const pts = [muzzle(HS(0)), [FS(2).x, FS(2).mid], [FS(0).x, FS(0).mid], [FS(1).x, FS(1).mid]]; for (let i = 0; i < 3; i++) { const p = ph(t, 250 + i * 100, 800); if (p > 0 && p < 1 && Math.floor(t / 50) % 3) { g.bolt(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], C.elec, i * 20 + Math.floor(t / 50), 6, 4); g.bolt(pts[i][0], pts[i][1] + 1, pts[i + 1][0], pts[i + 1][1] + 1, '#c8a8ff', i * 30 + Math.floor(t / 50), 6, 3, C.elec); } } } },
+{ id: 'arcaneWard', name: 'Mage: Arcane Ward', group: 'skills', dur: 2000, note: 'A glowing rune circle spins on the floor under the squad, then each hero gets a shimmering bubble fitted to its body.',
+  draw(g, t) { const p = ph(t, 200, 700); const cx = HEROS.reduce((s, h) => s + h[1], 0) / 3, cy = HEROS.reduce((s, h) => s + h[2], 0) / 3 + 3; for (let k = 0; k < 2; k++) g.ring(cx, cy, (16 + k * 6) * ease.out(p), k ? '#9b4dff' : C.shield, 0.8, (6 + k * 2) * ease.out(p)); for (let i = 0; i < 6; i++) { const a = t / 500 + (i * Math.PI) / 3; g.px(cx + Math.cos(a) * 19 * p, cy + Math.sin(a) * 7 * p, '#ffffff'); } squad(g, [], []); if (t > 700) for (let i = 0; i < 3; i++) { const u = HS(i); g.ring(u.x, u.mid, u.hw + 5, C.shield, 0.5 + 0.2 * Math.sin(t / 150 + i), (u.bot - u.top) / 2 + 3); } } },
+{ id: 'smite', name: 'Cleric: Smite', group: 'skills', dur: 1800, note: 'A holy pillar crashes straight onto the enemy, then a golden mote flies from it to the most hurt ally and heals.',
+  draw(g, t) { const q = ph(t, 300, 800); const hl = ph(t, 1100, 1400); squad(g, [{}, { tint: hl > 0 && hl < 1 ? [C.heal, 0.4] : null }, {}], [q > 0 && q < 1 ? { flash: 1 - q } : {}]); const u = FS(0), v = HS(1); if (q > 0 && q < 1) { const w = Math.round(5 * (1 - q)) + 1; for (let yy = 0; yy < u.y; yy++) for (let xx = -w; xx <= w; xx++) g.px(u.x + xx, yy, Math.abs(xx) < w / 2 ? '#ffffff' : C.holy, 0.85 * (1 - q)); } const p = ph(t, 700, 1100); if (p > 0 && p < 1) { const [mx, my] = g.fly(u.x, u.mid, v.x, v.mid, ease.inOut(p), 14); g.disc(mx, my, 1.5, C.holy2); g.px(mx, my, '#ffffff'); } num(g, u, '26', C.holy2, ph(t, 320, 1200)); num(g, v, '+8', C.heal, ph(t, 1100, 1750)); } },
+{ id: 'divineShield', name: 'Cleric: Divine Shield', group: 'skills', dur: 2000, note: 'A golden dome drops over the most hurt ally, sitting on the floor around it; hits bounce off; when it ends it bursts into a heal.',
+  draw(g, t) { const p = ph(t, 200, 500), e = ph(t, 1500, 1800); squad(g, [{}, {}, p > 0 && e < 1 ? { tint: ['#ffe08a', 0.3] } : {}], []); const u = HS(2); const R = u.hw + 6, HH = u.y - u.top + 4; if (p > 0 && e < 1) { for (let a = Math.PI; a <= Math.PI * 2; a += 0.05) g.px(u.x + Math.cos(a) * R, u.y + Math.sin(a) * HH * ease.out(p), '#ffe08a', 0.85); for (let x = -R; x <= R; x++) g.px(u.x + x, u.y, '#ffe08a', 0.6); } g.burst(u.x, u.mid, 12, [C.heal, '#ffe08a'], e, 14, 3); num(g, u, '+20', C.heal, ph(t, 1500, 1980)); } },
+{ id: 'deathCoil', name: 'Necromancer: Death Coil', group: 'skills', dur: 2000, note: 'A spiralling skull bolt hits the enemy\'s body; if it kills, the enemy flattens and a skeleton (green eyes) rises out of the floor on the same spot.',
+  draw(g, t) { const d = ph(t, 700, 900); squad(g, [], [dying(d)]); const u = FS(0); const [ax, ay] = muzzle(HS(1)); const p = ph(t, 300, 700); if (p > 0 && p < 1) { const [x, y] = g.fly(ax, ay, u.x, u.mid, p, 6); for (let i = 1; i < 6; i++) { const [tx, ty] = g.fly(ax, ay, u.x, u.mid, Math.max(0, p - i * 0.04), 6); const a = t / 40 + i; g.px(tx + Math.cos(a) * 1.5, ty + Math.sin(a) * 2, i % 2 ? '#6dff8a' : C.dark, 1 - i / 6); } g.rect(x - 1, y - 1, 3, 3, '#ebe5cf'); g.px(x - 1, y, OUTL); g.px(x + 1, y, OUTL); } const r = ph(t, 1000, 1500); if (r > 0) { rise(g, SP.skeleton, u.x, u.y, ease.out(r)); if (r < 1) g.burst(u.x, u.y, 8, ['#4a4a5a', C.dark, '#6dff8a'], r, 8, 3); if (r >= 1) { const sk = U(SP.skeleton, u.x, u.y); g.px(sk.x - 1, sk.top + 2, '#6dff8a'); g.px(sk.x + 1, sk.top + 2, '#6dff8a'); }} } },
+{ id: 'boneWard', name: 'Necromancer: Bone Ward', group: 'skills', dur: 2200, note: 'Small bones orbit each hero\'s body as a shield; when the ward breaks the bones shoot out at the enemies as shards.',
+  draw(g, t) { const brk = ph(t, 1400, 1900); squad(g, [], brk > 0.5 ? FOES.map(() => ({ flash: 1 - brk })) : []); for (let i = 0; i < 3; i++) { const u = HS(i); for (let k = 0; k < 4; k++) { const a = t / 300 + (k * Math.PI) / 2; const bx = u.x + Math.cos(a) * (u.hw + 4), by = u.mid + Math.sin(a) * 5; if (brk <= 0) g.rect(bx - 1, by, 3, 1, '#ebe5cf'); else if (brk < 1) { const f = FS(k % 3); const [x, y] = g.fly(bx, by, f.x, f.mid, brk, 6); g.rect(x - 1, y, 3, 1, '#ebe5cf'); } } } } },
+{ id: 'crescendo', name: 'Bard: Crescendo', group: 'skills', dur: 2400, note: 'Four beats of music notes fly to every enemy, each beat bigger and brighter, the last one a big chord burst on each body.',
+  draw(g, t) { const beats = [300, 650, 1000, 1400]; squad(g, [], FOES.map(() => (beats.some((b) => ph(t, b + 300, b + 420) > 0 && ph(t, b + 300, b + 420) < 1) ? { flash: 0.8 } : {}))); const [ax, ay] = muzzle(HS(1)); beats.forEach((b, k) => { for (let i = 0; i < 3; i++) { const u = FS(i); const p = ph(t, b, b + 300); if (p > 0 && p < 1) { const [x, y] = g.fly(ax, ay, u.x, u.mid, p, 6 + k * 2); const s = k === 3 ? 2 : 1; const col = k === 3 ? C.fire2 : '#f06ab4'; g.rect(x - s, y, 2 * s, 2 * s, col); g.line(x + s - 1, y, x + s - 1, y - 4 * s, col); } } }); const f = ph(t, 1700, 2100); for (let i = 0; i < 3; i++) { const u = FS(i); if (f > 0 && f < 1) g.ring(u.x, u.mid, 2 + f * 10, C.fire2, 1 - f); } } },
+{ id: 'ballad', name: 'Bard: Ballad of Rest', group: 'skills', dur: 2400, note: 'Soft green notes drift up from each hero for a few seconds while everyone slowly heals.',
+  draw(g, t) { squad(g, HEROS.map(() => ({ tint: [C.heal, 0.12] })), []); for (let i = 0; i < 6; i++) { const u = HS(i % 3); const q = ((t / 2400) + i / 6) % 1; const x = u.x + (i < 3 ? -u.hw - 3 : u.hw + 3) + Math.sin(t / 400 + i) * 2, y = u.mid - q * 22; g.rect(x - 1, y, 2, 2, C.heal, 1 - q); g.line(x, y, x, y - 3, C.heal, 1 - q); } } },
+{ id: 'flaskBarrage', name: 'Alchemist: Flask Barrage', group: 'skills', dur: 2000, note: 'Three flasks lob over, one per enemy, each a different colour: a fire splash, an ice splash, a green poison cloud.',
+  draw(g, t) { const cols = [[C.fire, C.fire2], [C.ice, '#ffffff'], [C.poison, '#c8ffd0']]; squad(g, [], [0, 1, 2].map((i) => hitReact(t, 700 + i * 200))); const [ax, ay] = muzzle(HS(0)); for (let i = 0; i < 3; i++) { const u = FS(i); const s = 200 + i * 200; const p = ph(t, s, s + 500); if (p > 0 && p < 1) { const [x, y] = g.fly(ax, ay, u.x, u.mid, p, 18); g.rect(x - 1, y - 1, 3, 3, cols[i][0]); g.px(x, y - 2, '#c8ccd6'); } const q = ph(t, s + 500, s + 1000); g.burst(u.x, u.mid, 10, cols[i], q, 10, i, i === 2 ? -0.5 : 1); if (i === 2 && q > 0 && q < 1) for (let k = 0; k < 4; k++) g.disc(u.x - 4.5 + k * 3, u.mid - 2 - q * 4, 2, C.poison, (1 - q) * 0.6); } } },
+{ id: 'mysteryBrew', name: 'Alchemist: Mystery Brew', group: 'skills', dur: 2000, note: 'Two bubbling flasks fly to random heroes and pop into a random effect on them: green heal or a blue shield bubble.',
+  draw(g, t) { const fx = [[C.heal, 0], [C.shield, 2]]; const q0 = ph(t, 700, 1200), q1 = ph(t, 900, 1400); squad(g, [{ tint: q0 > 0 && q0 < 1 ? [C.heal, 0.4] : null }, {}, { tint: q1 > 0 && q1 < 1 ? [C.shield, 0.4] : null }], []); const src = HS(1); fx.forEach(([col, hi], k) => { const u = HS(hi); const s = 200 + k * 200; const p = ph(t, s, s + 500); if (p > 0 && p < 1) { const [x, y] = g.fly(src.x, src.top - 2, u.x, u.top - 2, p, 14); g.rect(x - 1, y - 1, 3, 3, col); g.px(x, y - 2, '#c8ccd6'); } const q = ph(t, s + 500, s + 1000); g.burst(u.x, u.mid, 8, [col, '#ffffff'], q, 8, k, -0.5); if (k === 1 && q > 0) ((ph > 0 && ph < 1) && g.ring(u.x, u.mid, u.hw + 5, C.shield, 0.6 * (1 - ph(t, 1500, 2000)), (u.bot - u.top) / 2 + 3)); }); } },
+{ id: 'beat', name: 'Counter beat (Mage/Cleric/Bard)', group: 'skills', dur: 1800, note: 'After the 3rd attack the weapon tip glows with a pulsing orb; the 4th attack flashes the hero and bursts on the target\'s body with two rings and 8 rays.',
+  draw(g, t) { const at = 1000; const fl = ph(t, at, at + 200); solo(g, { ...lunge(t, at, 8), tint: fl > 0 && fl < 1 ? ['#9b4dff', 0.5] : null }, hitReact(t, at)); const h = H0(), e = E0(); const tipX = h.x + h.hw + 3, tipY = h.top + 2; if (t < at) { const r = 1.5 + Math.sin(t / 60) * 0.8; g.disc(tipX, tipY, r + 1, '#9b4dff', 0.5); g.disc(tipX, tipY, r * 0.5, '#ffffff'); } const q = ph(t, at, at + 450); if (q > 0 && q < 1) { g.ring(e.x, e.mid, 2 + q * 10, '#9b4dff', 1 - q); ((q > 0 && q < 1) && g.ring(e.x, e.mid, q * 16, '#ffffff', (1 - q) * 0.6)); } g.rays(e.x, e.mid, 8, 16, '#c8a8ff', q); } },
+];
+
+const ICON_ART={"whetstone":{"palette":["0x1a1020","0xffe94d","0x8c909c","0xc8ccd6","0x4a4a5a","0x8b5a2b","0x5e3a1a"],"rows":["................","..........0.....",".........010....","........01010...","....000000010...","...0222222220...","..023333333220..",".0232222222240..",".0222222222440..","..04444444440...","...0000000000...","..055555555550..",".05666666666650.","..000000000000..","................","................"]},"padded_vest":{"palette":["0x1a1020","0x8b5a2b","0xc68a5e","0x5e3a1a","0xf2c544"],"rows":["................","....00....00....","...0110..0110...","..01210..01210..","..012210012210..",".01222211222210.",".01232222232210.",".01222222222210.",".01232222232210.",".01222222222210.",".01232242232210.",".01222222222210.",".01333333333310.","..000000000000..","................","................"]},"lucky_coin":{"palette":["0x1a1020","0xf2c544","0xfff7c0","0xb8862a","0x57c26a","0x2f6b3a"],"rows":["................",".....000000.....","....01111110....","...0122111130...","..012114141130..",".01211444441130.",".01211145411130.",".01114445444130.",".01114454544130.",".01111115111130.",".01111115111330.","..011111111330..","...0311111330...","....03333330....",".....000000.....","................"]},"sharp_edge":{"palette":["0x1a1020","0xc8ccd6","0xffffff","0xf2c544","0x8b5a2b","0x5e3a1a"],"rows":["............00..","...........0110.","..........01210.",".........01210..","........01210...",".......01210....","......01210.....","...0.01210......","..0301210.......","..033110........","...0330.........","..045330........",".0450030........",".050..0.........","..0.............","................"]},"eagle_eye":{"palette":["0x1a1020","0xd9452b","0xffffff","0xf2c544","0xb8862a"],"rows":["................",".......00.......","......0110......",".....001100.....","...0000000000...","..000222222000..",".00222333322200.","0102233443322010","0102233003322010",".00222333322200.","..000222222000..","...0000000000...",".....001100.....","......0110......",".......00.......","................"]},"feather_boots":{"palette":["0x1a1020","0xffffff","0x8b5a2b","0xc68a5e","0xc8ccd6","0x5e3a1a"],"rows":["................","...0.....000....","..010...02220...",".0110...02320...","01140...02320...",".01410..02320...","..01410023320...","...0141023320...","....0142233200..",".....0233332220.",".....0233333320.",".....02333333220",".....05555555550","......000000000.","................","................"]},"heart_charm":{"palette":["0x1a1020","0xf2c544","0xffffff","0xd9452b","0xfff7c0","0x8e2a2a"],"rows":["................","......0..0...0..",".....010010.020.","...00001100000..","..033301103330..",".03443300333330.",".03433333333350.",".03333333333350.",".03333333333550.","..033333333550..","...0333333550...","....03333550....",".....033550.....","......0550......",".......00.......","................"]},"war_banner":{"palette":["0x1a1020","0xf2c544","0x8b5a2b","0x8e2a2a","0xd9452b","0x5e3a1a"],"rows":["..0.............",".01000000000....",".023333333330...",".0244444444440..",".0244111114440..",".0244411144440..",".024444144440...",".024444444440...",".02444444440....",".02444044440....",".02440.04440....",".0200...000.....",".020............",".050............","..0.............","................"]},"shield_totem":{"palette":["0x1a1020","0x3b6fd4","0x2a3f8a","0xffffff","0x8b5a2b","0x5e3a1a"],"rows":[".....000000.....","....01111110....","...0122222210...","...0133223310...","...0122222210...","...0100000010...","....01111110....","....04444440....","...0430440340...","...0444444440...","...0440000440...","....04444440....","...0555555550...","..055555555550..","...0000000000...","................"]},"quick_gloves":{"palette":["0x1a1020","0xc68a5e","0xffffff","0xd9452b","0xf2c544"],"rows":["................","......0.0.0.....",".....0101010....","....011111100...",".0..0111111010..","020.01111111110.",".02001111111110.","022001111111110.",".0200111111110..","020..011111110..",".0...03444430...",".....03333330...",".....03333330...","......000000....","................","................"]},"bulwark_plate":{"palette":["0x1a1020","0x8c909c","0xc8ccd6","0xffffff","0x4a4a5a","0x3b6fd4"],"rows":["..00........00..",".0110......0110.",".01210000001210.",".01221111112210.",".01222222222210.",".01222332222210.",".01222322222410.","..012222222210..","..012225522410..","..012255552410..","...0122552410...","....01222410....",".....014410.....","......0110......",".......00.......","................"]},"siege_cannon":{"palette":["0x1a1020","0xffe94d","0xff9a2e","0x4a4a5a","0x8c909c","0xc8ccd6","0x8b5a2b","0x5e3a1a"],"rows":["................","............00..","...........0120.","..000000000200..",".033333333340...","03033333333340..","03003355553340..","03033333333340..",".033333333340...","..0006666000....","...06777760.....","...06700760.....","...06777760.....","....066660......",".....0000.......","................"]},"bloodlust_mask":{"palette":["0x1a1020","0x8e2a2a","0xd9452b","0xf2c544","0xffffff"],"rows":["...0........0...","..010......010..","..021000000120..","..022222222220..",".02222222222220.",".02200222200220.",".02203222203220.",".02222222222220.","..022221122220..","..021000000120..","..020404404020..","...0200000020...","....02222220....",".....010010.....",".....010.0......","......0........."]},"gamblers_dice":{"palette":["0x1a1020","0xf2c544","0xc8ccd6","0xfff7c0","0xffffff","0xd9452b","0x8e2a2a"],"rows":["................","................",".............0..",".0000000....010.","022222220..01310","024444420...010.","024044420000000.","0244044205555550","0244404205455550","0222222205555550",".000000005555550","........05555450","........06666660",".........000000.","................","................"]},"fire_bombs":{"palette":["0x1a1020","0xffe94d","0xff9a2e","0x8b5a2b","0x4a4a5a","0xc8ccd6"],"rows":["..........0.....",".........010....","........0120....",".......0230.....",".....00300......","...004444400....","..04445444440...",".0445544444440..",".0445444444440..",".0444444444440..",".0444444444440..",".0444444444440..","..04444444440...","...004444400....",".....00000......","................"]},"chill_band":{"palette":["0x1a1020","0x7fd8ff","0xffffff","0x2f8ab0"],"rows":["................","......0.0.......",".....01010......",".....00200......","....0112110.....",".....00200......","....0010100.....","...033333330....","..03100000130...",".0310.....0130..",".030.......030..",".0310.....0130..","..03100000130...","...033333330....","....0000000.....","................"]},"static_crystal":{"palette":["0x1a1020","0xffe94d","0x9b4dff","0x5a2d8a","0xffffff"],"rows":["................","........0.......",".......010......","......02310.....",".....0223310....","....02242330....","....02422330....","....02222330....","...0122223310...","....02222330....","....02222330....",".....022330.....","......0230......",".......010......","........0.......","................"]},"aid_kit":{"palette":["0x1a1020","0x4a4a5a","0xc8ccd6","0xffffff","0x8c909c","0xd9452b"],"rows":["................","......0000......",".....011110.....","..000010010000..",".02222222222220.",".02333333333340.",".02333355333340.",".02333355333340.",".02335555553340.",".02335555553340.",".02333355333340.",".02333355333340.",".02333333333340.",".04444444444440.","..000000000000..","................"]},"shared_potion":{"palette":["0x1a1020","0x8b5a2b","0x5e3a1a","0xffffff","0x57c26a","0xb8f05a","0xf06ab4","0x2f6b3a"],"rows":["......0000......",".....011110.....",".....022220.....","......0330......","......0330......",".....033330.....","....03444430....","...0345444430...","..034554444430..","..034544644730..","..034446664730..","..034444647730..","...0377777730...","....03333330....",".....000000.....","................"]},"sucker_punch_glove":{"palette":["0x1a1020","0xf2c544","0xd9452b","0xfff7c0","0x8e2a2a","0xffffff","0xc8ccd6"],"rows":["................","................","..0.....0000....",".010...022220...",".0010.02222220..","011010232222220.",".000102322222240","0110002222222240",".00100222222240.",".010..022222240.","..0....0555550..",".......0566650..",".......0666660..","........00000...","................","................"]},"bandage_roll":{"palette":["0x1a1020","0xc8ccd6","0xffffff","0x8c909c","0xd9452b"],"rows":["................","....000000......","...01111110.....","..0122222210....",".012111111210...",".012133311210...",".012130311210...",".012133311210...",".0121111112100..","..0122222212220.","...011111124220.","....00000024420.",".........01110..","..........000...","................","................"]},"second_wind_flask":{"palette":["0x1a1020","0x8b5a2b","0x5e3a1a","0xffffff","0x7fd8ff","0x2f8ab0"],"rows":["................",".....00.........","....0110........","....0220........","....0330........","...034430...0...","..03444430.030..",".03434443003030.",".03444444300030.",".0344444430030..",".034445543000...","..03455530330...","...033330.0330..","....0000...00...","................","................"]},"full_vigor":{"palette":["0x1a1020","0xf2c9a0","0xc68a5e","0xfff7c0","0x57c26a","0x2f6b3a"],"rows":["................","...00...........","..0110..........",".011110.........",".011210...000...",".01110..001110..",".01110.0111110..",".01111011111110.","..0111111311110.","..0111111111110.","...01111111110..","....0111111110..",".....044444440..",".....045555540..","......0000000...","................"]},"brawlers_streak":{"palette":["0x1a1020","0xd9452b","0xff9a2e","0xf2c544"],"rows":["................","................","................",".00..00..00.....","011002200330....",".011002200330...","..011002200330..","...011002200330.","..011002200330..",".011002200330...","011002200330....",".00..00..00.....","................","................","................","................"]},"tough_skin":{"palette":["0x1a1020","0x57c26a","0x2f6b3a"],"rows":["................","................",".....000000.....","....01111110....","...0121111210...","..012211112210..",".01111222211110.",".01211211211210.",".01221211212210.",".01111222211110.","..012211112210..","...0121111210...","....01111110....",".....000000.....","................","................"]},"kindling":{"palette":["0x1a1020","0xff9a2e","0xf2c544","0xfff7c0","0x8b5a2b","0x5e3a1a","0xc68a5e"],"rows":["................",".......0........","......010.......",".....01210......","....012210......","...01232110.....","...01233210.....","...001221000....","..04444444440...",".0456666666540..","..04444444440...",".0456666666540..","..04444444440...","...000000000....","................","................"]},"frost_charm":{"palette":["0x1a1020","0x7fd8ff","0xffffff","0xfff7c0"],"rows":[".......0........",".....00100......","....0101010.....","...0.01110.0....","..010.010.010...","...010010010....",".0000122210000..","011111232111110.",".0000122210000..","...010010010....","..010.010.010...","...0.01110.0....","....0101010.....",".....00100......",".......0........","................"]},"storm_charm":{"palette":["0x1a1020","0xffe94d","0xfff7c0"],"rows":["................","........0000....",".......011110...","......012110....",".....012110.....","....01211000....","...0111111110...","....00001210....","......01210.....",".....01110......","....01110.......","...01100........","..0100..........","...0............","................","................"]},"shadow_charm":{"palette":["0x1a1020","0x5a2d8a","0x9b4dff","0xfff7c0"],"rows":["................","......0000......","....0011110.....","...0112220......","..0112200.......",".011220....0....",".01220....020...",".01220...02320..",".01220....020...",".011220....0....","..0112200.......","...0112220......","....0011110.....","......0000......","................","................"]},"mage_cloak":{"palette":["0x1a1020","0x3b6fd4","0x2a3f8a","0xf2c544"],"rows":["................","......0000......",".....011110.....","....01222210....","....01200210....","...0111331110...","...0111331110...","..011111111110..","..011211112110..",".01112111121110.",".01112111121110.",".01121111112110.","0111211111121110","0222222222222220",".00000000000000.","................"]},"hourglass":{"palette":["0x1a1020","0x8b5a2b","0xc8ccd6","0xffffff","0xf2c544"],"rows":["................","..00000000000...",".0111111111110..","..02333333320...","..02444444420...","...024444420....","....0244420.....",".....02420......",".....02420......","....0230420.....","...023004020....","..02300444020...","..02444444420...",".0111111111110..","..00000000000...","................"]},"ember_charm":{"palette":["0x1a1020","0xff9a2e","0xf2c544","0xd9452b","0x8e2a2a"],"rows":["................","................",".......0........","......010.......",".....01210......","....0311210.....","...033112230....","...0343112330...","..034433111330..","..034443333330..","...0344443330...","....04444440....",".....000000.....","................","................","................"]},"venom_fang":{"palette":["0x1a1020","0xebe5cf","0x57c26a","0xb8f05a"],"rows":["................","...00000000.....","..0111111110....","..01111111110...","...011111110....","...01111110.....","....0111110.....","....011110......",".....01110......",".....0110.......",".....0120.......","......020.......","......030.......","......020.......",".......0........","................"]},"rusty_nails":{"palette":["0x1a1020","0x8c909c","0xc8ccd6","0x8b5a2b","0xff9a2e","0x5e3a1a"],"rows":["................","................","..00.......00...",".0110.....0110..",".01210...01210..","..0130..03100...","...03300330.....","....034330......",".....0330.......","....033430......","...03300330.....","..0430..0340....",".0350....0530...","..00......00....","................","................"]},"serrated_edge":{"palette":["0x1a1020","0xc8ccd6","0xffffff","0xd9452b"],"rows":["......0..0......","....00100100....","...0111111110...","..011222222110..",".01122111122110.","..012110011210..",".011210..012110.","..01210..01210..",".011210..012110.","..012110011210..",".01122111123110.","..011222223110..","...0111111310...","....001001310...","......0..000....","................"]},"hex_doll":{"palette":["0x1a1020","0xc68a5e","0xd9452b","0xf2c544","0x9b4dff"],"rows":["................",".....0000.......","....011110......","...01111110.0...","...01011010020..","...0111111020...","...0100001030...","..0001111000....",".011111111110...",".010111411010...","..0011111100....","....010010......","...01100110.....","....00..00......","................","................"]},"dread_bell":{"palette":["0x1a1020","0x8b5a2b","0x4a4a5a","0xc8ccd6","0x9b4dff","0x5a2d8a"],"rows":["................",".......00.......","......0110......",".....022220.....","....02232220....","..002232222200..",".04022322222040.","0400222222220040",".04222222222240.",".02222222222220.",".02222222222220.","..000005500000..",".....055550.....","......0000......","................","................"]},"gag_rune":{"palette":["0x1a1020","0x8c909c","0xc8ccd6","0x4a4a5a","0x9b4dff"],"rows":["................","...0000000000...","..011111111110..",".01222222222310.",".01222222222310.",".01224222242310.",".01222422422310.",".01222244222310.",".01222244222310.",".01222422422310.",".01224222242310.",".01222222222310.","..011111111110..","...0000000000...","................","................"]},"fire_arrows":{"palette":["0x1a1020","0xf2c544","0xff9a2e","0xfff7c0","0xc8ccd6","0xffffff","0x8b5a2b"],"rows":["............00..","...........0120.","..........01320.",".........023120.","........021120..",".......045200...","......06400.....",".....0600.......","....060.........","...060..........","..060...........",".0550...........","0550............",".050............","..0.............","................"]},"executioners_axe":{"palette":["0x1a1020","0xc8ccd6","0xffffff","0x8b5a2b","0xd9452b","0x5e3a1a"],"rows":["................",".....0000.......","....011110......","...01221110.....","..0121111130....","..01211111330...","..012111113030..","..041111130.0...","...0411130......","....04130.......",".....030........","....030.........","...030..........","..050...........","...0............","................"]},"magma_core":{"palette":["0x1a1020","0x8e2a2a","0xd9452b","0xff9a2e","0xf2c544","0xfff7c0"],"rows":["................",".....000000.....","....01111110....","...0122222210...","..012331232210..",".01234431332210.",".01234543132210.",".01233443321210.",".01122333212210.",".01212222122210.","..012211222210..","...0112222110...","....01111110....",".....000000.....","................","................"]},"shatter_hammer":{"palette":["0x1a1020","0x7fd8ff","0x4a4a5a","0xc8ccd6","0x8b5a2b","0x5e3a1a"],"rows":["................","...00.......0...","..01100000.010..",".0100222220010..","..00233333200...","..02333333320...","..02322222320...","..002222222010..",".010000400010...","..0...040..0....","......040.......","......040.......","......040.......",".....0550.......","......00........","................"]},"blood_chalice":{"palette":["0x1a1020","0xf2c544","0xd9452b","0x8e2a2a","0xb8862a"],"rows":["................","................","...0000000000...","..011111111110..","..012222222210..","..013222222310..","...01322223120..","....0111111020..",".....001400.0...","......0140......",".....001400.....","....01111140....","...0111111440...","....00000000....","................","................"]},"plague_flask":{"palette":["0x1a1020","0x8b5a2b","0xffffff","0x57c26a","0xebe5cf"],"rows":["................","......000.......",".....01110......","......020.......",".....00200......","....0222220.....","...023333320....","..02333333320...","..02344444320...","..02340404320...","..02334443320...","..02334343420...","...022222220....","....0000000.....","................","................"]},"exploiters_lens":{"palette":["0x1a1020","0x8c909c","0x7fd8ff","0xffffff","0x2f8ab0","0xd9452b","0x8b5a2b"],"rows":["................","....00000.......","...0111110......","..012222210.....",".01232222410....",".01232522410....",".01225552410....",".01222524410....","..014444410.....","...011111160....","....000000660...","..........0660..","...........0660.","............060.",".............0..","................"]},"hunters_sigil":{"palette":["0x1a1020","0xf2c544","0xb8862a","0xd9452b"],"rows":["................",".....000000.....","....01111110....","...0122222210...","..012333333210..",".01230033003210.",".01230033003210.",".01233333333210.",".01233333333210.",".01230033003210.","..012333333210..","...0122222210...","....01111110....",".....000000.....","................","................"]},"thousand_cuts":{"palette":["0x1a1020","0xc8ccd6","0xd9452b"],"rows":["................",".0...........0..","010....0....010.",".010..010..010..","..010.010.010...","...010010010....","....0101010.....",".0000011100000..","011111121111110.",".0000011100000..","....0101010.....","...010010010....","..010.010.010...",".010..010..010..","..0....0....0...","................"]},"frozen_thunderbolt":{"palette":["0x1a1020","0x7fd8ff","0x2f8ab0","0xffe94d"],"rows":["................","................","...0000000000...","..011111111110..",".01211133311210.",".01211333111210.",".01213331111210.",".01213333331210.",".01211133311210.",".01211333111210.",".01213311111210.",".01233111111210.","..011111111110..","...0000000000...","................","................"]},"warding_charm":{"palette":["0x1a1020","0xf2c544","0x7fd8ff","0x2f8ab0","0xffffff"],"rows":["................","................","......0..0......",".....010010.....","....00011000....","...0222222220...","...0233333320...","...0234444320...","...0234224320...","...0234224320...","....02344320....",".....023320.....","......0220......",".......00.......","................","................"]},"overheal_ring":{"palette":["0x1a1020","0x57c26a","0xf2c544"],"rows":["................","......0.0.......",".....01010......","....0111110.....",".....01110......",".....00100......","....0222220.....","...020000020....","..020.....020...","..020.....020...","..020.....020...","...020000020....","....0222220.....",".....00000......","................","................"]},"spiked_aegis":{"palette":["0x1a1020","0xc8ccd6","0x8c909c","0x3b6fd4","0xf2c544"],"rows":["................",".......0........","....0.010.0.....","...010222010....","...002111200....",".0022133312200..","010213343312010.",".0021344431200..","010213343312010.",".0022133312200..","...002111200....","...010222010....","....0.010.0.....",".......0........","................","................"]},"provokers_horn":{"palette":["0x1a1020","0xf2c544","0x8b5a2b","0xd9452b","0xc68a5e","0x5e3a1a"],"rows":["................","................","............0...","...........010..","..0.......02110.",".030.....02410..","03030..002440...",".030.0022440....","..0002244440....","..0224444440....",".0244444450.....",".024444550......","..0255500.......","...0000.........","................","................"]},"spite_mail":{"palette":["0x1a1020","0x8c909c","0xc8ccd6","0xd9452b"],"rows":["................","................","...00......00...","..0110....0110..",".01221000012210.",".01212111121210.",".01212121212210.",".01221212121210.",".01212322321210.",".01221212121210.","..012121212110..","..012212121210..","..011111111110..","...0000000000...","................","................"]},"martyrs_shield":{"palette":["0x1a1020","0xf2c544","0xc8ccd6"],"rows":["................","................","..00000000000...",".0111111111110..",".0122221222210..",".0122221222210..",".0111111111110..",".0122221222210..","..01222122210...","..01222122210...","...012212210....","....0121210.....",".....01110......","......000.......","................","................"]},"fire_heart":{"palette":["0x1a1020","0xff9a2e","0xf2c544","0xfff7c0"],"rows":["................","...0.......0....","..010....0010...","..0120..01210...",".0122100122210..",".0123211232210..",".0123322232210..",".0112222222110..","..01122222110...","...011222110....","....0112110.....",".....01110......","......010.......",".......0........","................","................"]},"lost_clerics_grimoire":{"palette":["0x1a1020","0x57c26a","0xb8f05a","0x8b5a2b","0xc8ccd6","0xffffff","0xf2c544","0x5e3a1a"],"rows":["................","................","........0.......",".......010......","......01210.....","...0000121000...","..033333333330..","..034555555530..","..034566665530..","..034556655530..","..034556655530..","..034555555530..","..037777777730..","...0000000000...","................","................"]},"conductors_baton":{"palette":["0x1a1020","0xffffff","0x9b4dff","0x5a2d8a","0xf2c544"],"rows":["................","................","............0...","...........010..","....00....0110..","...0220..0110...","...0230.0110....","...020.0110.....","..02200110......",".02220110.......","..000440........","...0440.........","....00..........","................","................","................"]},"echo_rune":{"palette":["0x1a1020","0x8c909c","0xc8ccd6","0x4a4a5a","0x7fd8ff"],"rows":["................","................","...0000000000...","..011111111110..",".01222222222310.",".01244444422310.",".01242222422310.",".01242442422310.",".01242442422310.",".01242222422310.",".01244444422310.",".01222222222310.","..011111111110..","...0000000000...","................","................"]},"metronome":{"palette":["0x1a1020","0xf2c544","0x8b5a2b","0xc8ccd6","0x5e3a1a"],"rows":["................","................",".......0........","......010.......",".....02320......",".....02320......","....0223220.....","....0223220.....","...022232220....","...022112220....","..02222222220...","..02444444420...",".0222222222220..","..00000000000...","................","................"]},"rat_cage":{"palette":["0x1a1020","0xb8862a","0x8c909c","0xf06ab4","0x8b5a2b"],"rows":["................","................","......00........",".....0110.......","...0010010000...","..011111111110..","..010010010010..","..010010010010..","..012222221010..","..012022222130..","..012222222010..","..010210210010..",".04444444444440.","..000000000000..","................","................"]},"wisp_lantern":{"palette":["0x1a1020","0x4a4a5a","0xffffff","0x7fd8ff"],"rows":["................","................",".......00.......","......0110......",".....010010.....","....01111110....","....01233210....","....01322310....","....01322310....","....01233210....","....01111110....",".....011110.....","......0000......","................","................","................"]},"fire_imp_brazier":{"palette":["0x1a1020","0xff9a2e","0xf2c544","0xfff7c0","0x4a4a5a","0x8c909c"],"rows":["................","................",".....0.0..0.....","....00010000....","....00112100....","....01222210....","...0123332210...","..044444444440..","...04555555540..","....044444400...",".....040040.....","....04400440....",".....00..00.....","................","................","................"]},"mimic_chest":{"palette":["0x1a1020","0x8b5a2b","0x5e3a1a","0xf2c544","0xffffff","0xd9452b"],"rows":["................","................","...0000000000...","..011111111110..",".01222222222210.",".01223222322210.",".01404040404010.",".01055555555010.",".01404040404010.",".01222233222210.",".01222222222210.",".01111111111110.","..000000000000..","................","................","................"]},"gargoyle_idol":{"palette":["0x1a1020","0x8c909c","0x4a4a5a","0xc8ccd6","0xd9452b"],"rows":["................","................","..0.........0...",".010.......010..",".0110000000110..","..01222222210...","..02332223320...","..02242224220...","..02222222220...","...023000320....","...022222220....","..01111111110...",".0111111111110..","..00000000000...","................","................"]},"spirit_knight_banner":{"palette":["0x1a1020","0xf2c544","0x8b5a2b","0x7fd8ff","0x2f8ab0","0xffffff","0x5e3a1a"],"rows":["................","...0............","..0100000000....","..02333333330...","..02344444430...","..02345555430...","..02345005430...","..02345555430...","..02344444430...","..02333333330...","..02333003330...","..02300..0030...","..020......0....","..060...........","...0............","................"]},"phoenix_hatchling":{"palette":["0x1a1020","0xff9a2e","0xf2c544","0xd9452b","0xffffff","0xc8ccd6"],"rows":["................","................",".......0........","......010.......",".....01210......","....03333300....","...0330333310...","...0333333220...","...033333300....","..04433333440...","..04544444540...","...045454540....","....0444440.....",".....00000......","................","................"]},"bone_charm":{"palette":["0x1a1020","0xebe5cf"],"rows":["................","..00.......00...",".0110.....0110..","011110...011110.",".011110.011110..","..00111011100...","....0111110.....",".....01110......","....0111110.....","..00111011100...",".011110.011110..","011110...011110.",".0110.....0110..","..00.......00...","................","................"]},"overseers_whistle":{"palette":["0x1a1020","0xffffff","0xf2c544","0xfff7c0"],"rows":["................","................","................","............0...","..........0010..","..0000000010010.",".0222222220010..","0223333322200...","0222222202220...",".022222222220...","..0000022220....",".......0220.....","........00......","................","................","................"]},"grave_dust":{"palette":["0x1a1020","0xffffff","0x8b5a2b","0x5e3a1a","0xebe5cf"],"rows":["................","................","......0.0.0.....",".....0101010....","......02220.....",".....0233320....","....022222220...","...02244442220..","...02240404220..","...02224442220..","...02222222220..","...0022222220...","..01010101010...","...0.0.0.0.0....","................","................"]},"necro_crown":{"palette":["0x1a1020","0x5a2d8a","0x57c26a","0xebe5cf"],"rows":["................","................","................","..0....0....0...",".010..010..010..",".0110011100110..",".0111111111110..",".0112111211210..",".0111111111110..",".0333333333330..",".0111111111110..","..00000000000...","................","................","................","................"]},"jolly_banner":{"palette":["0x1a1020","0xf2c544","0x8b5a2b","0x5e3a1a"],"rows":["................","..0.............",".01000000000....",".021111111110...",".0211111111110..",".0211011101110..",".0211111111110..",".0210111110110..",".021100000110...",".021111111110...",".02111011110....",".02000.0000.....",".030............","..0.............","................","................"]},"excalibur":{"palette":["0x1a1020","0xffffff","0x7fd8ff","0xc8ccd6","0xf2c544","0x5e3a1a","0xb8862a"],"rows":["................",".......0.....0..","......010...020.",".....01310.020..","...0.01310020...","..02001310.0....",".020.01310..0...","020..01310.020..",".0.0001310020...","..04444244440...","...000050020....","......05020.....",".....04640......","......000.......","................","................"]}};
+const ICON_RAR={"whetstone":"common","padded_vest":"common","lucky_coin":"common","sharp_edge":"common","eagle_eye":"common","feather_boots":"rare","heart_charm":"rare","war_banner":"rare","shield_totem":"rare","quick_gloves":"epic","bulwark_plate":"epic","siege_cannon":"legendary","bloodlust_mask":"legendary","gamblers_dice":"legendary","fire_bombs":"rare","chill_band":"rare","static_crystal":"epic","aid_kit":"common","shared_potion":"legendary","sucker_punch_glove":"common","bandage_roll":"common","second_wind_flask":"common","full_vigor":"common","brawlers_streak":"common","tough_skin":"common","kindling":"common","frost_charm":"common","storm_charm":"common","shadow_charm":"common","mage_cloak":"common","hourglass":"common","ember_charm":"common","venom_fang":"common","rusty_nails":"common","serrated_edge":"rare","hex_doll":"rare","dread_bell":"rare","gag_rune":"rare","fire_arrows":"rare","executioners_axe":"rare","magma_core":"epic","shatter_hammer":"epic","blood_chalice":"epic","plague_flask":"epic","exploiters_lens":"epic","hunters_sigil":"epic","thousand_cuts":"epic","frozen_thunderbolt":"legendary","warding_charm":"rare","overheal_ring":"rare","spiked_aegis":"epic","provokers_horn":"rare","spite_mail":"epic","martyrs_shield":"epic","fire_heart":"legendary","lost_clerics_grimoire":"legendary","conductors_baton":"rare","echo_rune":"epic","metronome":"rare","rat_cage":"common","wisp_lantern":"rare","fire_imp_brazier":"epic","mimic_chest":"rare","gargoyle_idol":"rare","spirit_knight_banner":"epic","phoenix_hatchling":"legendary","bone_charm":"rare","overseers_whistle":"rare","grave_dust":"rare","necro_crown":"legendary","jolly_banner":"epic","excalibur":"legendary"};
+const ICON_FRAME={"common":{"edge":"0x8f8aa3","fill":"0x2a2438","hi":"0xb3aec4"},"rare":{"edge":"0x3b8ee0","fill":"0x182540","hi":"0x8cc4ff"},"epic":{"edge":"0xa45be6","fill":"0x2a1840","hi":"0xd6a8ff","stud":"0xf06ab4"},"legendary":{"edge":"0xf2b632","fill":"0x3a2a12","hi":"0xfff0a8","stud":"0xff5a4d"}};
+// SUGGESTION section: the simplified effect system. Same engine and anchors as the main page.
+// 1) A small KIT of pieces, effects are recipes (pieces + a colour).
+// 2) Item procs = the item's icon pops over the holder + the normal hit in its damage colour.
+// 3) Minor debuffs share ONE look (tint + falling flecks in the debuff colour); the TAG says which.
+// 4) Only the most important status loops on a unit; the rest are just tags.
+// 5) Damage over time: one added-up number per second. Real game speeds.
+
+// ---- extra helpers ------------------------------------------------------------------------------
+// The item's 16x16 icon, its middle at (x, y), with a thin rarity-coloured frame.
+function drawIcon(g, id, x, y, a = 1, framed = true) {
+  const art = ICON_ART[id]; if (!art) return;
+  const pal = art.palette.map((c) => '#' + c.slice(2));
+  const left = Math.round(x - 8), top = Math.round(y - 8);
+  if (framed) { const f = ICON_FRAME[ICON_RAR[id]] || ICON_FRAME.common; const edge = '#' + f.edge.slice(2), fill = '#' + f.fill.slice(2); for (let i = -1; i <= 16; i++) for (let j = -1; j <= 16; j++) { const e = i === -1 || j === -1 || i === 16 || j === 16; if (e && (i === -1 || i === 16) && (j === -1 || j === 16)) continue; g.px(left + i, top + j, e ? edge : fill, a); } }
+  art.rows.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.') g.px(left + i, top + j, pal[parseInt(ch, 36)], a); }));
+}
+// Icon pop over a unit: jumps up, holds, fades (p = 0..1 over ~0.6s).
+function iconPop(g, id, u, p) { if (p <= 0 || p >= 1) return; const up = ease.back(Math.min(1, p / 0.25)); const y = u.top - 12 - up * 4 - (p > 0.7 ? (p - 0.7) * 10 : 0); const a = p > 0.7 ? 1 - (p - 0.7) / 0.3 : 1; if (p < 0.25) g.ring(u.x, y, 9 + p * 16, '#ffffff', 1 - p / 0.25); drawIcon(g, id, u.x, y, a); }
+// A small health bar over a unit with status tags under it (the tag is what tells WHICH debuff).
+function barTags(g, u, tags, hp = 0.7) {
+  const w = 16, x0 = Math.round(u.x - w / 2), y0 = Math.round(u.top - 5);
+  g.rect(x0 - 1, y0 - 1, w + 2, 4, OUTL); g.rect(x0, y0, w, 2, '#3a2f57'); g.rect(x0, y0, Math.round(w * hp), 2, '#e0524d');
+  const widths = tags.map(([txt]) => txt.length * 4 + 1);
+  let x = Math.round(u.x - (widths.reduce((s, v) => s + v + 1, -1)) / 2);
+  tags.forEach(([txt, col], i) => { const tw = widths[i]; g.rect(x, y0 - 8, tw, 7, col); g.text(txt, x + tw / 2 + 0.5, y0 - 7, '#ffffff', 1, 1, false); x += tw + 1; });
+}
+// ONE look for every minor debuff: the unit is tinted in the debuff colour and a few flecks of that
+// colour drift down off it. Only the colour changes.
+function minorDebuff(g, u, col, t, seed = 0) { for (let i = 0; i < 4; i++) { const q = ((t / 1500) + i / 4 + seed * 0.13) % 1; g.px(u.x + (rnd(i + seed * 7) - 0.5) * u.hw * 2.4, u.top + q * (u.y - u.top + 2), col, 1 - q); } }
+// The standard HIT recipe: (optional shot) + spark burst on the front + ring + number, in one colour.
+function recipeHit(g, t, at, col, col2, shot = true) {
+  const h = H0(), e = E0(); const [ax, ay] = muzzle(h), [bx, by] = front(e);
+  const p = ph(t, at - 160, at); if (shot && p > 0 && p < 1) { const [x, y] = g.fly(ax, ay, bx, by, p, 3); g.disc(x, y, 1.5, col); g.px(x, y, col2); const [x2, y2] = g.fly(ax, ay, bx, by, Math.max(0, p - 0.08), 3); g.px(x2, y2, col, 0.5); }
+  const q = ph(t, at, at + 260); g.burst(bx, by, 8, [col, col2], q, 8, 3); if (q > 0 && q < 1) g.ring(bx, by, 2 + q * 6, col, 1 - q);
+}
+const DEB = { weaken: ['WEAK', '#9a6b3a'], armorBreak: ['ARMOR-', '#8c909c'], curse: ['CURSE', '#7a3fb0'], mark: ['MARK', '#ff3d6e'] };
+
+FX.push(
+// ---- 1. the kit ----------------------------------------------------------------------------------
+{ id: 's-kit', name: 'The kit: 8 pieces', group: 'simple', dur: 2400, note: 'Every effect in the game is built from these 8 pieces: spark, burst, ring, number (top row) and shot, bolt, pillar, tint (bottom row). An effect is just a recipe: which pieces, which colour, how big, how fast. This is also what the Studio\'s Effects section would edit.',
+  draw(g, t) { g.clear(); const cells = [[18, 18], [48, 18], [78, 18], [104, 18], [18, 48], [48, 48], [78, 48], [104, 48]]; const lab = ['SPARK', 'BURST', 'RING', 'NUMBER', 'SHOT', 'BOLT', 'PILLAR', 'TINT']; const p = (t % 1200) / 1200;
+    cells.forEach(([x, y], i) => g.text(lab[i], x, y + 10, '#9a8fb8'));
+    { const [x, y] = cells[0]; g.slash(x, y, 6, '#ffffff', p * 1.2 % 1); }
+    { const [x, y] = cells[1]; g.burst(x, y, 10, [C.fire, C.fire2], p, 10, 2, 0.5); }
+    { const [x, y] = cells[2]; g.ring(x, y, 1 + p * 8, C.ice, 1 - p, 1 + p * 6); }
+    { const [x, y] = cells[3]; g.pop('24', x, y + 4, '#ffffff', p); }
+    { const [x, y] = cells[4]; const [sx, sy] = g.fly(x - 12, y, x + 12, y, p, 6); g.disc(sx, sy, 1.5, C.poison); g.px(sx - 2, sy, C.poison, 0.5); }
+    { const [x, y] = cells[5]; if (Math.floor(t / 70) % 2) g.bolt(x - 12, y - 4, x + 12, y + 2, C.elec, Math.floor(t / 70), 5, 3); }
+    { const [x, y] = cells[6]; const w = Math.round(3 * (1 - p)) + 1; for (let yy = y - 14; yy < y + 4; yy++) for (let xx = -w; xx <= w; xx++) g.px(x + xx, yy, Math.abs(xx) < w / 2 ? '#ffffff' : C.holy, 0.8 * (1 - p)); }
+    { const [x, y] = cells[7]; g.sprite(SP.slime, x, y + 4, { tint: [C.dark, 0.5 * Math.sin(p * Math.PI)] }); } } },
+{ id: 's-recipe', name: 'One hit recipe, five colours', group: 'simple', dur: 3000, note: 'Instead of 7 hand-made hit effects, ONE recipe (shot + burst + ring + number) is used for every damage type; only the colour changes. Here it cycles fire, ice, electric, dark, holy at real game speed (a hit lasts about a quarter of a second).',
+  draw(g, t) { const els = [['FIRE', C.fire, C.fire2], ['ICE', C.ice, '#ffffff'], ['ELECTRIC', C.elec, '#ffffff'], ['DARK', C.dark, '#ffffff'], ['HOLY', C.holy2, '#ffffff']]; const k = Math.floor(t / 600) % 5, tt = t % 600; const [name, col, col2] = els[k]; solo(g, {}, hitReact(tt, 300)); recipeHit(g, tt, 300, col, col2); num(g, E0(), '18', col, ph(tt, 300, 600)); g.text(name, 60, 4, col); } },
+
+// ---- 2. item procs = icon pop ------------------------------------------------------------------------
+{ id: 's-venom', name: 'Venom Fang procs', group: 'simple', dur: 1800, note: 'The item\'s own icon pops up over the hero, the hit uses the normal recipe in poison green, and the Poison status starts on the enemy. No custom effect needed: the icon tells you which item did it.',
+  draw(g, t) { solo(g, lunge(t, 300), hitReact(t, 300)); const [x, y] = front(E0()); g.slash(x, y, 8, C.grey, ph(t, 260, 500), -1); g.burst(x, y, 8, [C.poison, '#c8ffd0'], ph(t, 300, 560), 8, 3); iconPop(g, 'venom_fang', H0(), ph(t, 300, 1000)); if (t > 400) { const e = E0(); for (let i = 0; i < 3; i++) { const q = ((t / 1200) + i / 3) % 1; g.ring(e.x + (i - 1) * 4, e.mid - q * 12, 1, C.poison, 0.9); } } num(g, E0(), '12', '#ffffff', ph(t, 300, 900)); } },
+{ id: 's-serrated', name: 'Serrated Edge procs', group: 'simple', dur: 1800, note: 'Same pattern: icon pop, normal hit, Bleed starts (red drops).',
+  draw(g, t) { solo(g, lunge(t, 300), hitReact(t, 300)); const e = E0(); const [x, y] = front(e); g.slash(x, y, 8, C.grey, ph(t, 260, 500), -1); g.burst(x, y, 8, [C.blood, '#ffffff'], ph(t, 300, 560), 8, 3); iconPop(g, 'serrated_edge', H0(), ph(t, 300, 1000)); if (t > 400) for (let i = 0; i < 2; i++) { const q = ((t / 700) + i / 2) % 1; g.px(e.x + (i ? 2 : -2), e.mid + q * (e.y - e.mid), C.blood); } num(g, e, '12', '#ffffff', ph(t, 300, 900)); } },
+{ id: 's-ember', name: 'Ember Charm procs', group: 'simple', dur: 1800, note: 'Icon pop, a fire-coloured burst, then the normal Burn loop.',
+  draw(g, t) { solo(g, lunge(t, 300), { ...hitReact(t, 300), tint: t > 400 ? [C.fire, 0.18] : null }); const e = E0(); const [x, y] = front(e); g.slash(x, y, 8, C.grey, ph(t, 260, 500), -1); g.burst(x, y, 10, [C.fire, C.fire2], ph(t, 300, 560), 9, 3, 0.5); iconPop(g, 'ember_charm', H0(), ph(t, 300, 1000)); if (t > 450) [[-3, 0.6], [2, 0.8], [0, 0.3]].forEach(([dx, f], i) => flame(g, e.x + dx, Math.round(e.top + f * (e.bot - e.top)), 3 + Math.round((Math.sin(t / 80 + i) + 1)), t, i)); num(g, e, '12', '#ffffff', ph(t, 300, 900)); } },
+{ id: 's-banner', name: 'War Banner procs', group: 'simple', dur: 1800, note: 'Squad items work the same: the icon pops over the holder and a ring in the item\'s colour rolls over the squad (+attack speed).',
+  draw(g, t) { const p = ph(t, 450, 1100); squad(g, HEROS.map(() => (p > 0.3 && p < 1 ? { tint: ['#f2d03a', 0.25] } : {})), []); iconPop(g, 'war_banner', HS(1), ph(t, 250, 950)); const c = HS(1); if (p > 0 && p < 1) g.ring(c.x, c.mid, 3 + p * 30, '#f2d03a', 1 - p, 2 + p * 20); } },
+{ id: 's-lifesteal', name: 'Bloodlust Mask lifesteal', group: 'simple', dur: 1800, note: 'Icon pop over the hero plus the standard green heal (+3). The red-droplets effect from the full version is dropped.',
+  draw(g, t) { const hp = ph(t, 450, 900); solo(g, { ...lunge(t, 300), tint: hp > 0 && hp < 1 ? [C.heal, 0.3 * Math.sin(hp * Math.PI)] : null }, hitReact(t, 300)); const [x, y] = front(E0()); g.slash(x, y, 8, C.grey, ph(t, 260, 500), -1); iconPop(g, 'bloodlust_mask', H0(), ph(t, 300, 1000)); num(g, E0(), '20', '#ffffff', ph(t, 300, 900)); g.pop('+3', H0().x + 10, H0().top + 4, C.heal, ph(t, 450, 1100)); } },
+{ id: 's-special', name: 'Kept special (examples)', group: 'simple', dur: 2400, note: 'A few items stay big and unique because they do something you must SEE: Fire Bombs, Static Crystal chain lightning, Excalibur tornado, Mimic Chest, Shatter Hammer, Frozen Thunderbolt. They also get the icon pop. Here: the bomb.',
+  draw(g, t) { solo(g, {}, hitReact(t, 750)); iconPop(g, 'fire_bombs', H0(), ph(t, 100, 800)); const e = E0(); const [ax, ay] = muzzle(H0()); const p = ph(t, 250, 750); if (p > 0 && p < 1) { const [x, y] = g.fly(ax, ay, e.x, e.mid, p, 18); g.disc(x, y, 2, '#4a4a5a'); g.px(x + 1, y - 3, Math.floor(t / 60) % 2 ? C.fire2 : C.fire); } const q = ph(t, 750, 1150); if (q > 0 && q < 1) { g.disc(e.x, e.mid, 3 + q * 6, C.fire2, (1 - q) * 0.9); g.ring(e.x, e.mid, 4 + q * 10, C.fire, 1 - q); } g.burst(e.x, e.mid, 14, [C.fire, C.fire2, C.blood, '#4a4a5a'], q, 14, 2, 1); num(g, e, '38', C.fire, ph(t, 750, 1500), 2); } },
+
+// ---- 3. one look for minor debuffs ---------------------------------------------------------------
+{ id: 's-minor', name: 'Minor debuffs share one look', group: 'simple', dur: 2400, note: 'Weaken, Armor Break and Curse (and Mark) all use the SAME look: a light tint plus a few flecks drifting off, in the debuff\'s colour. The tag above the health bar tells you which one it is. Fewer things to learn, less noise.',
+  draw(g, t) { const list = [['weaken', 'goblin', 22], ['armorBreak', 'rat', 60], ['curse', 'slime', 98]]; for (const [, n, x] of list) g.shadow(x, 56, 10); list.forEach(([k, n, x], i) => { g.sprite(SP[n], x, 56, { tint: [DEB[k][1], 0.3] }); const u = U(SP[n], x, 56); minorDebuff(g, u, DEB[k][1], t, i); barTags(g, u, [[DEB[k][0], DEB[k][1]]], 0.8 - i * 0.15); }); } },
+
+// ---- 4. one loop per unit -----------------------------------------------------------------------
+{ id: 's-priority', name: 'Only the top status loops', group: 'simple', dur: 4000, note: 'This goblin has Chill, Burn and Weaken at once. Only the most important one is drawn (control > damage over time > debuff > buff): first the Chill snow; when Chill ends the Burn flames take over. All of them still show as tags.',
+  draw(g, t) { const chill = t < 2000; const e = E0(); solo(g, {}, { tint: chill ? [C.ice, 0.35] : [C.fire, 0.2] }); if (chill) { for (let i = 0; i < 6; i++) { const y = e.top - 8 + ((t / 18 + i * 13) % 24); g.px(e.x + (rnd(i) - 0.5) * 16 + Math.sin(t / 300 + i) * 2, y, '#ffffff', 0.8); } } else [[-4, 0.55], [0, 0.85], [4, 0.6]].forEach(([dx, f], i) => flame(g, e.x + dx, Math.round(e.top + f * (e.bot - e.top)), 3 + Math.round((Math.sin(t / 80 + i * 2) + 1) * 1.5), t, i)); const tags = chill ? [['CHILL', '#2f8ab0'], ['BURN', '#c8562a'], ['WEAK', '#9a6b3a']] : [['BURN', '#c8562a'], ['WEAK', '#9a6b3a']]; barTags(g, e, tags, 0.6); } },
+
+// ---- 5. calmer numbers --------------------------------------------------------------------------
+{ id: 's-dotnum', name: 'One poison number per second', group: 'simple', dur: 3000, note: 'Three Poison stacks tick together: one added-up green number each second instead of three small ones. Same for Bleed and Burn (Burn adds up its two half-second ticks).',
+  draw(g, t) { const tick = t % 1000; solo(g, {}, { tint: [C.poison, tick < 160 ? 0.45 : 0.15] }); const e = E0(); for (let i = 0; i < 4; i++) { const q = ((t / 1200) + i / 4) % 1; g.ring(e.x + (rnd(i * 5) - 0.5) * e.hw * 2.4, e.mid - q * 14, 1, C.poison, 0.9); } num(g, e, '12', C.poison, tick / 900); barTags(g, e, [['PSN X3', '#2f8a4a']], 0.7 - (t / 3000) * 0.3); } },
+{ id: 's-scale', name: 'Size = importance (real speed)', group: 'simple', dur: 3000, note: 'At real game speed: a normal hit is small and over in a quarter second, an item proc adds its icon, a crit adds a star and a tiny shake. Skills (not shown here) stay the biggest. Screen shake only for crits and attack skills.',
+  draw(g, t) { const k = Math.floor(t / 1000), tt = t % 1000; const sh = k === 2 ? shake(tt, 300, 400) : 0; solo(g, { ...lunge(tt, 300, k === 2 ? 8 : 6), dy: sh }, { ...hitReact(tt, 300), dy: sh }); const [x, y] = front(E0()); g.slash(x, y, 8, k === 2 ? C.gold : C.grey, ph(tt, 260, 480), -1); if (k === 1) iconPop(g, 'rusty_nails', H0(), ph(tt, 300, 900)); if (k === 2) g.rays(x, y, 8, 12, C.gold, ph(tt, 300, 560)); num(g, E0(), k === 2 ? '24!' : '12', k === 2 ? C.gold : '#ffffff', ph(tt, 300, 950), k === 2 ? 2 : 1); g.text(['HIT', 'PROC', 'CRIT'][k], 60, 4, '#9a8fb8'); } },
+);
+// STRESS TEST: 5 enemies, each with 5 debuffs at once. Full version (every status draws its own loop and
+// text tag) vs simplified version (only the most important status loops, the rest are small colour pips).
+const ST = {
+  stun: { label: 'STUN', color: '#d9a400', rank: 1 }, freeze: { label: 'FREEZE', color: '#9fe8ff', rank: 0 },
+  chill: { label: 'CHILL', color: '#7fd8ff', rank: 5 }, shock: { label: 'SHOCK', color: '#ffe94d', rank: 2 },
+  fear: { label: 'FEAR', color: '#6a3fa0', rank: 3 }, taunt: { label: 'TAUNT', color: '#e05a2a', rank: 4 },
+  burn: { label: 'BURN', color: '#ff7a3d', rank: 6 }, poison: { label: 'PSN', color: '#3fae6a', rank: 7 }, bleed: { label: 'BLEED', color: '#c0303a', rank: 8 },
+  mark: { label: 'MARK', color: '#ff3d6e', rank: 9 }, blind: { label: 'BLIND', color: '#555566', rank: 10 }, curse: { label: 'CURSE', color: '#7a3fb0', rank: 11 },
+  armorBreak: { label: 'ARMOR-', color: '#b0b0b0', rank: 12 }, weaken: { label: 'WEAK', color: '#9a6b3a', rank: 13 },
+};
+// Five enemies in a line facing one hero, each with 5 debuffs.
+const CROWD = [
+  ['goblin', 34, 50, ['stun', 'burn', 'poison', 'weaken', 'mark']],
+  ['slime', 54, 58, ['freeze', 'bleed', 'curse', 'armorBreak', 'blind']],
+  ['rat', 72, 48, ['chill', 'poison', 'bleed', 'burn', 'mark']],
+  ['goblin', 90, 58, ['shock', 'burn', 'armorBreak', 'curse', 'weaken']],
+  ['slime', 108, 49, ['fear', 'poison', 'weaken', 'blind', 'mark']],
+];
+// One status loop on a unit (the same looks as in the full section, compact).
+function statusLoop(g, k, u, t, i) {
+  const sp = u.sp;
+  if (k === 'stun') { for (let s = 0; s < 3; s++) { const a = t / 300 + (s * Math.PI * 2) / 3 + i; const x = u.x + Math.cos(a) * 6, y = u.top - 4 + Math.sin(a) * 2; g.px(x, y, '#ffffff'); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) g.px(x + dx, y + dy, C.gold); } }
+  else if (k === 'freeze') { crystals(g, sp, u, 1); }
+  else if (k === 'chill') { for (let s = 0; s < 4; s++) g.px(u.x + (rnd(s + i) - 0.5) * 14, u.top - 6 + ((t / 18 + s * 13) % 20), '#ffffff', 0.8); }
+  else if (k === 'shock') { const q = Math.floor(t / 110) * 3 + i; if (rnd(q) < 0.7) { const x = u.x + (rnd(q + 1) - 0.5) * u.hw * 2.4, y = u.top + rnd(q + 2) * (u.bot - u.top); g.line(x, y, x + 2, y + 1, C.elec); g.line(x + 2, y + 1, x + 1, y + 3, '#ffffff'); } }
+  else if (k === 'fear') { const H = u.bot - u.top; for (let s = 0; s < 3; s++) { const q = (t / 30 + s * 4) % H; g.px(u.x - u.hw - 2, u.bot - q, C.dark, 0.7); g.px(u.x + u.hw + 2, u.bot - ((q + H / 2) % H), C.dark, 0.7); } }
+  else if (k === 'burn') { [[-3, 0.6], [2, 0.85], [0, 0.3]].forEach(([dx, f], s) => flame(g, u.x + dx, Math.round(u.top + f * (u.bot - u.top)), 3 + Math.round((Math.sin(t / 80 + s * 2 + i) + 1)), t, s + i)); }
+  else if (k === 'poison') { for (let s = 0; s < 3; s++) { const q = ((t / 1200) + s / 3 + i * 0.1) % 1; g.ring(u.x + (rnd(s * 5 + i) - 0.5) * u.hw * 2.4, u.mid - q * 12, 1, C.poison, 0.9); } }
+  else if (k === 'bleed') { for (let s = 0; s < 2; s++) { const q = ((t / 700) + s / 2 + i * 0.2) % 1; g.px(u.x + (s ? 2 : -2), u.mid + q * (u.y - u.mid), C.blood); } }
+  else if (k === 'mark') brackets(g, u, 2 + Math.round(Math.sin(t / 220 + i) + 1), '#ff3d6e');
+  else if (k === 'blind') { for (let s = 0; s < 4; s++) g.disc(u.x - 5 + s * 3.3 + Math.sin(t / 200 + s) * 1, u.top + 3, 1.5, s % 2 ? '#333333' : '#4a4a5a', 0.9); }
+  else if (k === 'curse') { const a = t / 330 + i; const x = u.x + Math.cos(a) * (u.hw + 5), y = u.mid + Math.sin(a) * 3 - 2; g.rect(x - 1, y - 1, 3, 3, '#ebe5cf'); g.px(x - 1, y, C.dark2); g.px(x + 1, y, C.dark2); }
+  else minorDebuff(g, u, ST[k].color, t, i); // weaken, armorBreak
+}
+function crowdBase(g, t, tintFor) {
+  g.shadow(14, 54, 10); g.sprite(SP.knight, 14, 54);
+  const us = CROWD.map(([n, x, y]) => U(SP[n], x, y));
+  CROWD.slice().sort((a, b) => a[2] - b[2]).forEach(([n, x, y, list]) => { const i = CROWD.findIndex((c) => c[1] === x); g.shadow(x, y, 9); const top = list.slice().sort((a, b) => ST[a].rank - ST[b].rank)[0]; g.sprite(SP[n], x, y, tintFor(list, top, i)); });
+  return us;
+}
+
+FX.push(
+{ id: 'stress-full', name: 'Full version: 5 enemies x 5 debuffs', group: 'stress', dur: 3000, note: 'Every status draws its own loop and its own text tag. Stars, ice, flames, bubbles, drops, brackets, smoke and skulls all at once, and the tags pile up over each other. Hard to read what is going on.',
+  draw(g, t) { const us = crowdBase(g, t, (list, top, i) => ({ recolor: list.includes('freeze') ? iceRecolor(SP[CROWD[i][0]], 1) : null, tint: [ST[list[1]].color, 0.25] }));
+    CROWD.forEach(([, , , list], i) => { const u = us[i]; for (const k of list) statusLoop(g, k, u, t, i); });
+    CROWD.forEach(([, , , list], i) => { const u = us[i]; const w = 14, x0 = Math.round(u.x - w / 2), y0 = Math.round(u.top - 5); g.rect(x0 - 1, y0 - 1, w + 2, 4, OUTL); g.rect(x0, y0, Math.round(w * 0.6), 2, '#e0524d'); list.forEach((k, j) => { const txt = ST[k].label; const tw = txt.length * 4 + 1; const x = Math.round(u.x - tw / 2 + ((j % 2) ? 6 : -6)); const y = y0 - 8 - j * 3; g.rect(x, y, tw, 7, ST[k].color); g.text(txt, x + tw / 2 + 0.5, y + 1, '#ffffff', 1, 1, false); }); });
+    for (let k = 0; k < 4; k++) { const i = (Math.floor(t / 250) + k) % 5; g.pop(String(2 + k), us[i].x + 5, us[i].top - 14, ['#ff7a3d', '#3fae6a', '#c0303a', '#ff7a3d'][k], ((t + k * 120) % 500) / 480); } } },
+{ id: 'stress-simple', name: 'Simplified: 5 enemies x 5 debuffs', group: 'stress', dur: 3000, note: 'Each enemy loops ONLY its most important status (Stun stars, Freeze ice, Chill snow, Shock sparks, Fear shivers). The others become a row of 5 small colour pips over its health bar (tap an enemy to read the full names). Damage over time: one added-up number per enemy per second.',
+  draw(g, t) { const us = crowdBase(g, t, (list, top, i) => (top === 'freeze' ? { recolor: iceRecolor(SP[CROWD[i][0]], 1) } : { tint: [ST[top].color, 0.2] }));
+    CROWD.forEach(([, , , list], i) => { const u = us[i]; const sorted = list.slice().sort((a, b) => ST[a].rank - ST[b].rank); statusLoop(g, sorted[0], u, t, i);
+      const w = 14, x0 = Math.round(u.x - w / 2), y0 = Math.round(u.top - 9); g.rect(x0 - 1, y0 - 1, w + 2, 4, OUTL); g.rect(x0, y0, w, 2, '#3a2f57'); g.rect(x0, y0, Math.round(w * 0.6), 2, '#e0524d');
+      sorted.forEach((k, j) => { const x = x0 + j * 3; g.rect(x - 1, y0 - 5, 4, 4, OUTL); g.rect(x, y0 - 4, 2, 2, ST[k].color); });
+      const tick = (t + i * 200) % 1000; g.pop(String(6 + i * 2), u.x, u.top - 12, '#ffffff', tick / 900); }); } },
+{ id: 'stress-tap', name: 'Simplified: tap an enemy to read', group: 'stress', dur: 3000, note: 'When you tap an enemy (you already do this to focus it), a small panel lists its statuses with names and time left. So nothing is hidden, it just is not all shouting at once.',
+  draw(g, t) { const us = crowdBase(g, t, (list, top, i) => (top === 'freeze' ? { recolor: iceRecolor(SP[CROWD[i][0]], 1) } : { tint: [ST[top].color, 0.2] }));
+    CROWD.forEach(([, , , list], i) => { const u = us[i]; const sorted = list.slice().sort((a, b) => ST[a].rank - ST[b].rank); statusLoop(g, sorted[0], u, t, i); const w = 14, x0 = Math.round(u.x - w / 2), y0 = Math.round(u.top - 9); g.rect(x0 - 1, y0 - 1, w + 2, 4, OUTL); g.rect(x0, y0, Math.round(w * 0.6), 2, '#e0524d'); sorted.forEach((k, j) => { g.rect(x0 + j * 3 - 1, y0 - 5, 4, 4, OUTL); g.rect(x0 + j * 3, y0 - 4, 2, 2, ST[k].color); }); });
+    const u = us[2]; brackets(g, u, 2, '#ffffff', 0.9); const sorted = CROWD[2][3].slice().sort((a, b) => ST[a].rank - ST[b].rank); const px = 4, py = 2, pw = 50; g.rect(px - 1, py - 1, pw + 2, sorted.length * 7 + 3, OUTL); g.rect(px, py, pw, sorted.length * 7 + 1, '#221b33'); sorted.forEach((k, j) => { g.rect(px + 2, py + 2 + j * 7, 3, 3, ST[k].color); g.text(ST[k].label, px + 8 + ST[k].label.length * 2, py + 1 + j * 7, '#ffffff', 1, 1, false); g.text(String(4 - j) + 'S', px + pw - 6, py + 1 + j * 7, '#9a8fb8', 1, 1, false); }); } },
+);
+
+buildSprites();
+const cards = [];
+for (const fx of FX) {
+  const sec = document.querySelector('#' + fx.group + ' .grid');
+  const card = document.createElement('article'); card.className = 'card';
+  const cv = document.createElement('canvas'); cv.width = W * Z; cv.height = H * Z; cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', fx.name + ' animation');
+  const h = document.createElement('h3'); h.textContent = fx.name;
+  const p = document.createElement('p'); p.textContent = fx.note;
+  card.append(cv, h, p); sec.append(card);
+  const ctx = cv.getContext('2d'); ctx.imageSmoothingEnabled = false;
+  cards.push({ fx, g: makeG(ctx), cv, visible: true });
+}
+const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => { const c = cards.find((k) => k.cv === e.target); if (c) c.visible = e.isIntersecting; })) : null;
+if (io) cards.forEach((c) => io.observe(c.cv));
+const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let speed = 1, clock = 0, last = performance.now();
+for (const [id, s] of [['sp1', 1], ['sp2', 0.5], ['sp4', 0.25]]) document.getElementById(id).onclick = () => { speed = s; document.querySelectorAll('.sp button').forEach((b) => b.classList.toggle('on', b.id === id)); };
+function frame(now) {
+  clock += (now - last) * speed; last = now;
+  for (const c of cards) {
+    if (!c.visible && !reduce) continue;
+    const t = reduce ? c.fx.dur * 0.45 : clock % c.fx.dur;
+    c.g.clear();
+    try { c.fx.draw(c.g, t); } catch (e) { /* keep the others running */ }
+  }
+  if (!reduce) requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>

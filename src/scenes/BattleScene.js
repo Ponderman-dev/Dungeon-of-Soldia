@@ -14,6 +14,7 @@ import rewardRules from '../data/rewards.json';
 import rawSkills from '../data/skills.json';
 import statusInfo from '../data/statuses.json';
 import Character from '../entities/Character.js';
+import Door from '../entities/Door.js';
 import { statusIconKey } from '../entities/statusIconTexture.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
 import itemFxData from '../data/itemFx.json';
@@ -589,7 +590,7 @@ export default class BattleScene extends Phaser.Scene {
   // Builds one floor: back wall, door, tiled ground and the enemies. yOffset places it off-screen.
   buildFloor(n, yOffset) {
     const container = this.add.container(0, yOffset).setDepth(DEPTH.floor);
-    // The inside of the door is drawn in front of the heroes, so they seem to step into it.
+    // (kept for the floor slide; the heroes now fade out in the doorway instead of being covered)
     const front = this.add.container(0, yOffset).setDepth(DEPTH.doorFront);
     const colors = this.dungeon.tileColors;
     const base = Number(colors[(n - 1) % colors.length]);
@@ -611,19 +612,8 @@ export default class BattleScene extends Phaser.Scene {
     }
     container.add(g);
 
-    // The door in the back wall (purple frame, dark inside; glows when open).
-    const frameColor = 0x7a3fb8;
-    const dark = 0x120b1f;
-    const parts = [
-      this.add.rectangle(DOOR_X, WALL_H - 28, 52, 56, frameColor),
-      this.add.ellipse(DOOR_X, WALL_H - 56, 52, 36, frameColor),
-    ];
-    const inner = [
-      this.add.rectangle(DOOR_X, WALL_H - 26, 36, 52, dark),
-      this.add.ellipse(DOOR_X, WALL_H - 52, 36, 28, dark),
-    ];
-    container.add(parts);
-    front.add(inner);
+    // The door in the back wall: closed wooden doors that swing open when the floor is cleared.
+    const door = new Door(this, container, DOOR_X, WALL_H);
 
     const enemies = this.state.spawnEnemies(enemiesForFloor(this.dungeon, n), n);
     enemies.forEach((unit, i) => {
@@ -634,7 +624,7 @@ export default class BattleScene extends Phaser.Scene {
     return {
       container,
       front,
-      setDoorOpen: (open) => inner.forEach((p) => p.setFillStyle(open ? 0xffd98a : dark)),
+      setDoorOpen: (open) => (open ? door.open() : door.close()),
     };
   }
 
@@ -748,7 +738,7 @@ export default class BattleScene extends Phaser.Scene {
   // One hero walks along a path of points at a steady pace, hopping with each step.
   // The further up the screen, the smaller the hero (perspective). Heroes lower on the
   // screen are drawn in front of heroes higher up.
-  walkPath(view, points, { delay, onDone }) {
+  walkPath(view, points, { delay, onDone, fadeLastPx = 0 }) {
     const ch = view.ch;
     const lengths = [];
     let total = 0;
@@ -779,6 +769,7 @@ export default class BattleScene extends Phaser.Scene {
         ch.y = y - Math.abs(Math.sin((walked / T.stepLenPx) * Math.PI)) * T.stepHeight; // the hop
         ch.setScale(scaleAt(y));
         ch.setDepth(DEPTH.hero + y / 10000);
+        if (fadeLastPx) ch.setAlpha(Phaser.Math.Clamp((total - walked) / fadeLastPx, 0, 1)); // fades out stepping through the door
       },
       onComplete: () => {
         const last = points[points.length - 1];
@@ -839,6 +830,7 @@ export default class BattleScene extends Phaser.Scene {
         v,
         [{ x: v.slotX, y: v.slotY ?? SLOT_Y }, gather, { x: DOOR_X, y: WALL_H - 10 }],
         {
+          fadeLastPx: T.doorFadePx,
           delay: ((base - toLine[i] + i * T.lineGapPx) * 1000) / T.walkSpeedPxPerSec,
           onDone: () => {
             v.ch.setVisible(false);

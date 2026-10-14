@@ -89,7 +89,8 @@
     "lineGapPx": 80,
     "stepLenPx": 90,
     "stepHeight": 6,
-    "slideMs": 1000
+    "slideMs": 1000,
+    "doorFadePx": 70
   },
   "manaRegenPerSec": 2,
   "winManaPercent": 20,

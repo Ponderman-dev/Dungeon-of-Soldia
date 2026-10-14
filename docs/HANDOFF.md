@@ -46,7 +46,7 @@ Done this session (all in CLAUDE.md too):
 
 ## NEXT (options offered to the user; ask which one, one step at a time)
 - DONE: the real reward screen (auto-pick removed, Back button, owned item icons on the hero cards).
-- Build what the user picks from the proposal page (boss engine first: big health bar, cast bar + interrupts, objects, phases), hero kit rework hero by hero, sounds (MUST batch first). Also: skill books, enemy skills, H2 tuning (only when the user has play-tested).
+- DONE since the proposal: 8 bosses (floors 20-160, `src/systems/bosses.js`, tests `bosses.test.mjs`), hero kits v2, Organic menu sounds. NEXT: skill books v3 once the user answers the proposal page (stat pages + universal modifier pages, see docs/proposals/README.md), fight sounds when kenney.nl is allowed or packs are uploaded, enemy skills, H2 tuning (bosses past floor 40 are untested for balance: the bot rarely gets there).
 - If the user saved effects or designs in the Studio: "apply the studio designs" (read BOTH db collections `designs` and `effects`).
 
 ## Testing tips (learned this session)

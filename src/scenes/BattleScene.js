@@ -9,7 +9,6 @@ import combatRules from '../data/combat.json';
 import damageTypes from '../data/damageTypes.json';
 import leveling from '../data/leveling.json';
 import rawItems from '../data/items.json';
-import itemTypes from '../data/itemTypes.json';
 import rarities from '../data/rarities.json';
 import rewardRules from '../data/rewards.json';
 import rawSkills from '../data/skills.json';
@@ -26,15 +25,13 @@ import { projectileFx, impactFx, critFx, IMPACT_MS, CRIT_MS, MOMENT_MS, dodgeFx,
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon, validateHeroSkills, validateDamageTypes } from '../systems/validate.js';
 import { enemiesForFloor } from '../systems/dungeon.js';
-import { pickSquad, perkMods } from '../systems/party.js';
+import { pickSquad } from '../systems/party.js';
 import { loadItems } from '../systems/items.js';
 import { rollChoices } from '../systems/rewards.js';
 import { loadProgress, saveProgress, recordRun, unlockedIds } from '../systems/progress.js';
 import unlocks from '../data/unlocks.json';
 
 const DUNGEON_ID = 'A';
-const SPECIAL_SHORT = { skillDamage: 'SKILL DMG', regen: 'HP/s', dotDamage: 'DOT DMG' };
-const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
 const SLOT_Y = 720;
 const ENEMY_Y = 340;
 const BAR_WIDTH = 44;
@@ -107,7 +104,7 @@ export default class BattleScene extends Phaser.Scene {
     for (const h of this.state.heroes) {
       const v = this.views.get(h.uid);
       // A fallen hero's labels stay dim and have no skill squares.
-      this.tweens.add({ targets: [v.label, v.perkLabel], alpha: show ? (h.alive ? 1 : 0.3) : 0, duration });
+      this.tweens.add({ targets: v.dots, alpha: show ? (h.alive ? 1 : 0.3) : 0, duration }); // the item icons under the skills
       const buttons = v.skillButtons.flatMap((b) => [b.g, b.code, b.cd]);
       this.tweens.add({ targets: buttons, alpha: show && h.alive ? 1 : 0, duration });
     }
@@ -445,18 +442,9 @@ export default class BattleScene extends Phaser.Scene {
   drawHeroSlots() {
     this.state.heroes.forEach((unit, i) => {
       const cx = this.slotWidth * i + this.slotWidth / 2;
-      const label = this.add
-        .text(cx, GAME_HEIGHT - 22, '', { fontFamily: 'monospace', fontSize: '12px', color: '#9a8fc0' })
-        .setOrigin(0.5)
-        .setDepth(DEPTH.slot);
-      // The hero's party perk, under the name.
-      const perkLabel = this.add
-        .text(cx, GAME_HEIGHT - 8, '', { fontFamily: 'monospace', fontSize: '9px', color: '#7fd8a0' })
-        .setOrigin(0.5)
-        .setDepth(DEPTH.slot);
       const view = this.makeView(unit, cx, SLOT_Y);
-      view.label = label;
-      view.perkLabel = perkLabel;
+      // The hero's items: small item icons under the skill squares (drawDots).
+      view.dots = this.add.container(cx, SKILL_Y + SKILL_H / 2 + 14).setDepth(DEPTH.slot);
       view.slotX = cx;
       view.ch.setDepth(DEPTH.hero);
       for (const part of [view.bg, view.fill]) part.setDepth(DEPTH.heroBar);
@@ -480,7 +468,6 @@ export default class BattleScene extends Phaser.Scene {
           .on('pointerdown', () => this.castFromUI(unit.uid, j));
         return button;
       });
-      this.setLabel(view);
     });
   }
 
@@ -535,11 +522,12 @@ export default class BattleScene extends Phaser.Scene {
     const view = { unit, ch, bg, fill, groundY, shieldFill };
     // Status icons (statusIcons.json, rows of 3) next to the bars.
     view.chipBox = this.add.container(x, barY - 18);
-    if (unit.side === 'hero') {
-      // Item dots above the health bar: dot colour = item type, ring = rarity.
-      // A container so the count numbers move, fade and hide together with the dots.
-      view.dotsG = this.add.graphics();
-      view.dots = this.add.container(x, barY - 12, [view.dotsG]).setDepth(DEPTH.heroBar);
+    // A hero's level, just left of its health bar ("Lv3").
+    if (unit.side === 'hero' && !unit.minion) {
+      view.lvl = this.add
+        .text(x - BAR_WIDTH / 2 - 3, barY, `Lv${unit.level}`, { fontFamily: 'monospace', fontSize: '10px', fontStyle: 'bold', color: '#ffd24d', stroke: '#000000', strokeThickness: 3 })
+        .setOrigin(1, 0.5)
+        .setDepth(DEPTH.heroBar);
     }
     this.views.set(unit.uid, view);
 
@@ -611,9 +599,8 @@ export default class BattleScene extends Phaser.Scene {
     view.bg.setPosition(view.ch.x, y).setAlpha(view.ch.alpha);
     view.fill.setPosition(view.ch.x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
     view.shieldFill.setPosition(view.ch.x - BAR_WIDTH / 2, y - 5).setAlpha(view.ch.alpha);
-    // Hero item dots sit above the status icon rows (if any).
-    if (view.dots) view.dots.setPosition(view.ch.x, y - 12 - (view.iconRows || 0) * ICON_PX * CHAR_SCALE).setAlpha(view.ch.alpha);
     view.chipBox.setPosition(view.ch.x, y - 18).setAlpha(view.ch.alpha);
+    if (view.lvl) view.lvl.setPosition(view.ch.x - BAR_WIDTH / 2 - 3, y).setAlpha(view.bg.alpha);
     this.blinkIcons(view);
   }
 
@@ -622,8 +609,8 @@ export default class BattleScene extends Phaser.Scene {
     view.bg.setVisible(visible);
     view.fill.setVisible(visible);
     view.shieldFill.setVisible(visible);
-    if (view.dots) view.dots.setVisible(visible);
     view.chipBox.setVisible(visible);
+    if (view.lvl) view.lvl.setVisible(visible);
   }
 
   // Redraws the status tags on a fighter: one tag per kind of status it has right now.
@@ -683,32 +670,27 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
-  // Redraws the dots for a hero's items: one dot per kind of item, with a small number beside it
-  // when the hero has several copies. Up to 5 dots per row, rows going up.
+  // The hero's items under its skill squares: one small framed item icon per kind of item (the frame tells
+  // the rarity), with a number when it has several copies. 5 per row, 2 rows; more kinds show "+N".
   drawDots(view) {
-    const g = view.dotsG;
-    g.clear();
-    view.dots.list.slice(1).forEach((o) => o.destroy()); // old count labels
+    if (!view || !view.dots) return;
+    view.dots.removeAll(true);
     const counts = new Map();
     for (const id of view.unit.items) counts.set(id, (counts.get(id) || 0) + 1);
-    const kinds = [...counts.entries()];
-    const perRow = 5;
-    const gap = 16;
+    let kinds = [...counts.entries()];
+    const perRow = 5, gap = 22, rowH = 22, maxShown = perRow * 2;
+    let more = 0;
+    if (kinds.length > maxShown) { more = kinds.length - (maxShown - 1); kinds = kinds.slice(0, maxShown - 1); }
+    const n = kinds.length + (more ? 1 : 0);
+    const at = (i) => { const row = Math.floor(i / perRow), inRow = Math.min(perRow, n - row * perRow); return [((i % perRow) - (inRow - 1) / 2) * gap, row * rowH]; };
+    const style = { fontFamily: 'monospace', fontSize: '10px', fontStyle: 'bold', color: '#ffffff', stroke: '#000000', strokeThickness: 3 };
     kinds.forEach(([id, count], i) => {
       const def = itemDefs[id];
-      const row = Math.floor(i / perRow);
-      const inRow = Math.min(perRow, kinds.length - row * perRow);
-      const x = ((i % perRow) - (inRow - 1) / 2) * gap;
-      const y = -row * 11;
-      g.fillStyle(Number(itemTypes[def.type].color), 1).fillCircle(x, y, 3.5);
-      g.lineStyle(1.5, Number(rarities[def.rarity].color), 1).strokeCircle(x, y, 4.5);
-      if (count > 1) {
-        const label = this.add
-          .text(x + 5, y + 1, String(count), { fontFamily: 'monospace', fontSize: '9px', fontStyle: 'bold', color: '#ffffff', stroke: '#000000', strokeThickness: 2 })
-          .setOrigin(0, 0.5);
-        view.dots.add(label);
-      }
+      const [x, y] = at(i);
+      view.dots.add(this.add.image(x, y, itemIconKey(this, id, def.rarity)));
+      if (count > 1) view.dots.add(this.add.text(x + 11, y + 11, String(count), style).setOrigin(1, 1));
     });
+    if (more) { const [x, y] = at(kinds.length); view.dots.add(this.add.text(x, y, `+${more}`, { ...style, fontSize: '11px' }).setOrigin(0.5)); }
   }
 
   // Who walks through the door with the squad: the living heroes, then any greater minions.
@@ -1076,8 +1058,8 @@ export default class BattleScene extends Phaser.Scene {
       for (const h of this.state.heroes) this.setBar(this.views.get(h.uid));
     } else if (e.type === 'levelup') {
       const v = this.views.get(e.unit.uid);
-      this.setLabel(v);
       this.setBar(v);
+      if (v.lvl) v.lvl.setText(`Lv${e.unit.level}`);
       this.popText(v, `Level up! Lv${e.unit.level}`, '#ffd24d', true);
     } else if (e.type === 'death') {
       const v = this.views.get(e.unit.uid);
@@ -1101,12 +1083,12 @@ export default class BattleScene extends Phaser.Scene {
         v.ch.setPosition(v.ch.homeX, v.ch.homeY).setDepth(DEPTH.hero);
         this.syncBar(v);
         v.ch.die(); // death clip if it has one, then it stops moving
-        v.perkLabel.setText('perk lost');
         v.ch.setAlpha(0.25);
         v.skillButtons.forEach((b) => [b.g, b.code, b.cd].forEach((o) => o.setAlpha(0)));
         v.bg.setAlpha(0.4);
         v.fill.setAlpha(0.4);
-        if (v.dots) v.dots.setAlpha(0.4);
+        if (v.lvl) v.lvl.setAlpha(0.4);
+        if (v.dots) v.dots.setAlpha(0.3); // its items stop working
         this.drawChips(v);
         this.drawAllBars(); // squad items from this hero stop working, so max health may change
       }
@@ -1286,14 +1268,6 @@ export default class BattleScene extends Phaser.Scene {
     for (const h of this.state.heroes) this.setBar(this.views.get(h.uid));
   }
 
-  setLabel(view) {
-    view.label.setText(`${view.unit.name} Lv${view.unit.level}`);
-    // e.g. "Team +10% HP" (the hero's perk; it grows with the hero's level)
-    const unit = view.unit;
-    const bits = perkMods(unit).map((m) => `${m.percent !== undefined ? `+${Math.round(m.percent * 10) / 10}%` : `+${Math.round(m.flat * 10) / 10}`} ${STAT_SHORT[m.stat] || SPECIAL_SHORT[m.special] || m.special}`);
-    view.perkLabel.setText(unit.def.perk ? `Team ${bits.join(' ')}` : '');
-  }
-
   setBar(view) {
     view.fill.width = BAR_WIDTH * (view.unit.hp / view.unit.maxHp);
     view.shieldFill.width = Math.min(BAR_WIDTH, BAR_WIDTH * (this.state.shieldAmount(view.unit) / view.unit.maxHp));
@@ -1307,6 +1281,7 @@ export default class BattleScene extends Phaser.Scene {
     v.fill.destroy();
     v.shieldFill.destroy();
     if (v.dots) v.dots.destroy();
+    if (v.lvl) v.lvl.destroy();
     v.chipBox.destroy();
     this.views.delete(uid);
   }

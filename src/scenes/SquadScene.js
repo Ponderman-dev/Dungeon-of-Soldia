@@ -10,6 +10,7 @@ import combatRules from '../data/combat.json';
 import defaultSquad from '../data/squad.json';
 import { perkMods } from '../systems/party.js';
 import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad } from '../systems/progress.js';
+import * as sfx from '../audio/sfx.js';
 import { slotsFrom, addToSlots, removeFromSlots, isFull, squadOrder } from '../systems/squadSlots.js';
 
 const INK = '#f3eefc';
@@ -138,6 +139,18 @@ export default class SquadScene extends Phaser.Scene {
   }
 
   drawUi() {
+    // Sound on/off (small, under the test button); saved in the progress.
+    const sx = GAME_WIDTH - 30, sy = 56;
+    this.soundBtn = this.add.text(sx, sy, '', { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: '#cfc6e6', backgroundColor: '#1d1530', padding: { x: 8, y: 4 } }).setOrigin(1, 0.5).setDepth(DEPTH.ui);
+    const drawSound = () => this.soundBtn.setText(sfx.isMuted() ? '♪ off' : '♪ on').setAlpha(sfx.isMuted() ? 0.6 : 1);
+    drawSound();
+    this.soundBtn.setInteractive().on('pointerdown', () => {
+      sfx.setMuted(!sfx.isMuted());
+      this.progress.settings = { ...(this.progress.settings || {}), muted: sfx.isMuted() }; // keep the scene's copy of the save in step
+      drawSound();
+      sfx.play('tap');
+    });
+    if (this.lastRun && (this.lastRun.newly || []).length) this.time.delayedCall(400, () => sfx.play('unlock'));
     // One short line at the top: the last run, or what to do.
     const info = this.lastRun ? `Last run: floor ${this.lastRun.floor}` : 'Choose 3 heroes';
     this.add.text(14, 19, info, { fontFamily: FONT, fontSize: '14px', fontStyle: 'bold', color: this.lastRun ? '#f2b632' : INK }).setDepth(DEPTH.ui).setShadow(0, 2, '#000000', 2, false, true);
@@ -274,6 +287,7 @@ export default class SquadScene extends Phaser.Scene {
   }
 
   scrollBy(dx) {
+    sfx.play('scroll');
     const to = Phaser.Math.Clamp(this.scroll + dx, 0, this.maxScroll());
     this.tweens.add({ targets: this, scroll: to, duration: 260, ease: 'Quad.easeOut' });
   }
@@ -310,6 +324,7 @@ export default class SquadScene extends Phaser.Scene {
   }
 
   choose(id) {
+    sfx.play('heroPick');
     const s = addToSlots(this.slots, id);
     if (s < 0) return;
     const f = this.figures.get(id);
@@ -319,6 +334,7 @@ export default class SquadScene extends Phaser.Scene {
   }
 
   sendBack(id) {
+    sfx.play('heroBack');
     if (removeFromSlots(this.slots, id) < 0) return;
     const f = this.figures.get(id);
     // Scroll so its bench spot is on screen, then it walks there.
@@ -330,6 +346,7 @@ export default class SquadScene extends Phaser.Scene {
 
   pickRandom() {
     if (this.panel || this.leaving) return;
+    sfx.play('tap');
     const pick = randomSquad(this.openIds());
     for (const id of [...this.slots]) if (id && !pick.includes(id)) this.sendBack(id);
     // Keep the ones that were picked again where they stand; the rest walk up.
@@ -338,6 +355,7 @@ export default class SquadScene extends Phaser.Scene {
 
   toggleUnlockAll() {
     if (this.panel || this.leaving) return;
+    sfx.play('tap');
     this.progress.unlockAll = !this.progress.unlockAll;
     saveProgress(this.progress);
     for (const id of [...this.slots]) if (id && !this.unlocked(id)) this.sendBack(id); // locked heroes can't stay picked
@@ -430,9 +448,10 @@ export default class SquadScene extends Phaser.Scene {
     // Close (X) in the corner, and a tap outside the card closes it too.
     g.fillStyle(0x14101f, 0.8).fillCircle(X + W - 26, Y + 26, 15);
     text(X + W - 26, Y + 26, '✕', 16, INK, true).setOrigin(0.5);
-    add(this.add.zone(X + W - 26, Y + 26, 48, 48).setInteractive()).on('pointerdown', () => this.closePanel());
+    add(this.add.zone(X + W - 26, Y + 26, 48, 48).setInteractive()).on('pointerdown', () => { sfx.play('cardClose'); this.closePanel(); });
 
     this.panel = objs;
+    sfx.play('cardOpen');
     // The card slides up a little and fades in.
     card.setAlpha(0).setY(30);
     this.tweens.add({ targets: card, alpha: 1, y: 0, duration: 200, ease: 'Quad.easeOut' });
@@ -451,6 +470,7 @@ export default class SquadScene extends Phaser.Scene {
   // The squad walks into the door one after another (smaller as they go deeper), then the run starts.
   descend() {
     if (!this.ready() || this.panel || this.leaving || this.walkers.size) return;
+    sfx.play('descend');
     this.leaving = true;
     const ids = squadOrder(this.slots);
     this.progress.lastSquad = [...ids];

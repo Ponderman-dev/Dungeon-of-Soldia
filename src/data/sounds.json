@@ -1,0 +1,26 @@
+{
+  "_about": "Sound effects. pack = the folder in src/assets/sounds (uisfx 'organic', CC0). cues: game moment -> { file, volume (0-1), pitchJitter (random +/- fraction) }. masterVolume for everything. Muting is saved in the progress (settings.muted).",
+  "pack": "organic",
+  "masterVolume": 0.7,
+  "minGapMs": 40,
+  "cues": {
+    "tap": { "file": "press", "volume": 0.5, "pitchJitter": 0.05 },
+    "heroPick": { "file": "select", "volume": 0.7 },
+    "heroBack": { "file": "deselect", "volume": 0.6 },
+    "cardOpen": { "file": "open", "volume": 0.5 },
+    "cardClose": { "file": "close", "volume": 0.45 },
+    "scroll": { "file": "swipe", "volume": 0.35 },
+    "descend": { "file": "start", "volume": 0.8 },
+    "rewardUp": { "file": "open", "volume": 0.5 },
+    "rewardCard": { "file": "reward", "volume": 0.5, "pitchJitter": 0.04 },
+    "itemGiven": { "file": "purchase", "volume": 0.7 },
+    "potion": { "file": "receive", "volume": 0.7 },
+    "unlock": { "file": "unlock", "volume": 0.8 },
+    "levelUp": { "file": "level-up", "volume": 0.55 },
+    "floorClear": { "file": "achievement", "volume": 0.7 },
+    "defeat": { "file": "error", "volume": 0.8 },
+    "skillReady": { "file": "notification", "volume": 0.3 },
+    "skillCast": { "file": "success", "volume": 0.35, "pitchJitter": 0.06 },
+    "interrupted": { "file": "warning", "volume": 0.4 }
+  }
+}

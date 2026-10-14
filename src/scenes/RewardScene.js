@@ -5,6 +5,7 @@ import itemTypes from '../data/itemTypes.json';
 import rarities from '../data/rarities.json';
 import { canReceive, countOf } from '../systems/items.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
+import * as sfx from '../audio/sfx.js';
 
 const COLORS = { sheet: 0x17112a, panel: 0x231b38, line: 0x3a2f57, purple: 0x8b55d6, gold: 0xf2b632, disabled: 0x3a3350 };
 const INK = '#f3eefc';
@@ -52,6 +53,7 @@ export default class RewardScene extends Phaser.Scene {
     this.sheet.add(bg);
     this.sheet.add(this.add.text(GAME_WIDTH / 2, SHEET_TOP + 24, `FLOOR ${this.payload.floor} CLEARED`, { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: '#f2b632' }).setOrigin(0.5, 0));
     this.tweens.add({ targets: this.sheet, y: 0, duration: 420, ease: 'Cubic.easeOut' });
+    sfx.play('rewardUp');
 
     this.showPick(true);
   }
@@ -145,13 +147,14 @@ export default class RewardScene extends Phaser.Scene {
       // The cards rise in one after another (only the first time the sheet comes up).
       if (first) {
         card.setAlpha(0).setY(y + 40);
-        this.tweens.add({ targets: card, alpha: 1, y, duration: 320, delay: 260 + i * 110, ease: 'Back.easeOut' });
+        this.tweens.add({ targets: card, alpha: 1, y, duration: 320, delay: 260 + i * 110, ease: 'Back.easeOut', onStart: () => sfx.play('rewardCard') });
       }
       y += h + 14;
     });
   }
 
   chooseCard(item) {
+    sfx.play('tap');
     this.chosen = item;
     if (item.kind === 'potion') return this.finish(item.id, null); // the potion heals the whole party: no hero to choose
     this.showAssign();
@@ -202,7 +205,7 @@ export default class RewardScene extends Phaser.Scene {
     const bb = this.track(this.add.graphics());
     bb.fillStyle(COLORS.panel, 1).fillRoundedRect(bx, SHEET_TOP + 48, bw, 32, 16).lineStyle(2, COLORS.line, 1).strokeRoundedRect(bx, SHEET_TOP + 48, bw, 32, 16);
     this.text(bx + bw / 2, SHEET_TOP + 64, '‹ Back', 14, INK, true).setOrigin(0.5);
-    this.track(this.add.zone(bx + bw / 2, SHEET_TOP + 64, bw + 10, 44).setInteractive()).on('pointerdown', () => this.showPick());
+    this.track(this.add.zone(bx + bw / 2, SHEET_TOP + 64, bw + 10, 44).setInteractive()).on('pointerdown', () => { sfx.play('tap'); this.showPick(); });
 
     const itemH = this.cardHeight(item);
     this.drawCard(item, PAD, SHEET_TOP + 94, itemH, true);
@@ -297,6 +300,7 @@ export default class RewardScene extends Phaser.Scene {
   }
 
   selectHero(i) {
+    sfx.play('tap');
     this.heroGraphics.forEach((_, idx) => this.drawHeroCard(idx, idx === i));
     this.selected = this.heroGraphics[i].hero;
     this.drawButton();
@@ -311,6 +315,7 @@ export default class RewardScene extends Phaser.Scene {
   finish(itemId, heroUid) {
     if (this.closing) return;
     this.closing = true;
+    sfx.play(heroUid ? 'itemGiven' : 'potion');
     this.tweens.add({ targets: this.dim, fillAlpha: 0, duration: 260 });
     this.tweens.add({ targets: this.sheet, y: GAME_HEIGHT, duration: 300, ease: 'Cubic.easeIn', onComplete: () => this.payload.onDone(itemId, heroUid) });
   }

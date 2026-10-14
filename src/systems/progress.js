@@ -10,6 +10,7 @@ export function emptyProgress() {
     seenUnlocked: [], // heroes the player has already seen unlocked on the squad screen (for the NEW badge)
     unlockAll: false, // the "unlock every hero" toggle
     lastSquad: null,
+    settings: { muted: false }, // player settings (sound on/off)
   };
 }
 
@@ -33,6 +34,7 @@ export function loadProgress(storage = defaultStorage()) {
       ...data,
       stats: { ...fresh.stats, ...(data && data.stats) },
       seenUnlocked: Array.isArray(data && data.seenUnlocked) ? data.seenUnlocked : [],
+      settings: { ...fresh.settings, ...(data && data.settings) },
     };
   } catch {
     return fresh; // damaged save: start over instead of crashing

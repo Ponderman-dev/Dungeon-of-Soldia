@@ -15,6 +15,7 @@ import rawSkills from '../data/skills.json';
 import statusInfo from '../data/statuses.json';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
+import * as sfx from '../audio/sfx.js';
 import { statusIconKey } from '../entities/statusIconTexture.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
 import itemFxData from '../data/itemFx.json';
@@ -997,9 +998,10 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'castCancel') {
       const cv = this.views.get(e.unit.uid);
       if (cv) cv.ch.castCancel();
-      if (e.reason === 'interrupted') this.popText(this.views.get(e.unit.uid), 'Interrupted!', '#ff8a5c', true);
+      if (e.reason === 'interrupted') { this.popText(this.views.get(e.unit.uid), 'Interrupted!', '#ff8a5c', true); sfx.play('interrupted'); }
     } else if (e.type === 'cast') {
       const caster = this.views.get(e.unit.uid);
+      if (e.unit.side === 'hero' && !e.unit.minion) sfx.play('skillCast');
       if (e.zone) this.showZone(e.zone, FX.areaMs);
       this.skillBurst(caster, e);
       if (e.skill.leap && e.targets[0]) this.leapAt(caster, this.views.get(e.targets[0].uid)); // Savage Leap
@@ -1133,6 +1135,7 @@ export default class BattleScene extends Phaser.Scene {
       this.drawMoraleWash();
       for (const h of this.state.heroes) this.setBar(this.views.get(h.uid));
     } else if (e.type === 'levelup') {
+      sfx.play('levelUp');
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
       if (v.lvl) v.lvl.setText(`Lv${e.unit.level}`);
@@ -1394,6 +1397,7 @@ export default class BattleScene extends Phaser.Scene {
 
   onWin() {
     this.mode = 'won';
+    sfx.play('floorClear');
     for (const e of this.state.endFloor()) this.showEvent(e); // weak minions vanish with the floor
     if (this.castBars) this.castBars.clear(); // a wind-up still going is dropped
     if (this.tauntLines) this.tauntLines.clear();
@@ -1479,6 +1483,7 @@ export default class BattleScene extends Phaser.Scene {
 
   onLoss() {
     this.mode = 'lost';
+    sfx.play('defeat');
     this.banner.setText(`Squad defeated\nReached floor ${this.floor}`);
     // Save the run (floor reached, enemies defeated) and see which heroes it unlocked.
     const progress = loadProgress();

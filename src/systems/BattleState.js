@@ -1307,12 +1307,13 @@ export default class BattleState {
     // Second Wind Flask: below its threshold ONE flask is used up and heals (once per floor per holder).
     const below = target.specials.secondWindBelow;
     if (target.specials.secondWind && !target.floor.flaskUsed && target.hp < (target.maxHp * below) / 100) {
+      const percent = target.specials.secondWind; // read it BEFORE the flask is used up (the last one leaves no special behind)
       const id = this.consumeItem(target, 'secondWind');
       if (id) {
         target.floor.flaskUsed = true;
         events.push({ type: 'proc', unit: target, label: 'Second Wind!', itemId: 'second_wind_flask' });
         events.push({ type: 'itemUsed', unit: target, itemId: id });
-        this.healUnit(target, (target.maxHp * target.specials.secondWind) / 100 / this.regenAura().factor, events);
+        this.healUnit(target, (target.maxHp * percent) / 100 / this.regenAura().factor, events);
       }
     }
   }

@@ -62,6 +62,7 @@ ok('Siege Cannon is legendary now, Feather Boots max 8, Bulwark Plate has no max
   ok('...only ONE use per floor', !ev2.some((e) => e.type === 'itemUsed') && k.items.length === 1);
   s.spawnEnemies(['goblin'], 2); k.hp = maxHp * 0.3; const ev3 = []; s.dealDamage(k, maxHp * 0.05, ev3);
   ok('...a new floor: the next flask can be used', ev3.some((e) => e.type === 'itemUsed') && k.items.length === 0);
+  ok('...the LAST flask still heals a real number (it used to turn health into NaN)', Number.isFinite(k.hp) && k.hp > maxHp * 0.5, `${k.hp}`);
   const ev4 = []; s.spawnEnemies(['goblin'], 3); k.hp = maxHp * 0.3; s.dealDamage(k, 10, ev4);
   ok('...no flask left, nothing happens', !ev4.some((e) => e.type === 'itemUsed')); }
 { const { s, es, k } = mk(['goblin']); give(s, k, 'second_wind_flask', 3);

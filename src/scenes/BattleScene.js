@@ -18,6 +18,8 @@ import { statusIconKey } from '../entities/statusIconTexture.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
 import itemFxData from '../data/itemFx.json';
 import * as itemFx from '../systems/itemFx.js';
+import skillFxData from '../data/skillFx.json';
+import { castFx, shotFx, CAST_MS, SHOT_MS } from '../systems/skillFx.js';
 import statusIcons from '../data/statusIcons.json';
 import { iconList, iconLayout, ICON_PX } from '../systems/statusIcons.js';
 import { statusLook, iceBreak, bodyBox } from '../systems/statusFx.js';
@@ -41,6 +43,13 @@ const T = combatRules.transition;
 const M = combatRules.attackMotion; // how walking looks (hop) and arrows
 const FX = combatRules.skillFx; // how skills look when they go off
 const itemDefs = loadItems(rawItems);
+// Skill name -> its own cast effect (skillFx.json; a rotation spell is 'skillId:SHORT').
+const SKILL_FX_BY_NAME = {};
+for (const [id, sk] of Object.entries(rawSkills)) {
+  if (id.startsWith('_')) continue;
+  if (sk.rotation) for (const r of sk.rotation) SKILL_FX_BY_NAME[r.name] = skillFxData[`${id}:${r.short}`];
+  else SKILL_FX_BY_NAME[sk.name] = skillFxData[id];
+}
 const skillDefs = rawSkills;
 const SKILL_Y = 772; // centre of the skill squares
 const SKILL_W = 40;
@@ -230,7 +239,14 @@ export default class BattleScene extends Phaser.Scene {
     }
     // Item effects and other timed recipes (addFx): each returns its pixels for its progress q.
     this.fxList = (this.fxList || []).filter((f) => now - f.start < f.ms);
-    for (const f of this.fxList) { try { draw(f.fn((now - f.start) / f.ms, now)); } catch (err) { console.error(err); f.ms = 0; } }
+    for (const f of this.fxList) {
+      try {
+        const out = f.fn((now - f.start) / f.ms, now);
+        if (Array.isArray(out)) { draw(out); continue; }
+        draw(out.draws || []);
+        for (const [v, tint] of out.tints || []) if (v && tint && (!v.hitTint || tint[1] > v.hitTint[1])) v.hitTint = tint; // a skill colours fighters for a moment
+      } catch (err) { console.error(err); f.ms = 0; }
+    }
     // Excalibur tornadoes: a swirling pixel funnel where each one is.
     if (this.tornadoViews) for (const tv of this.tornadoViews.values()) if (tv.g.active) draw(itemFx.tornadoFx(tv.g.x / S, tv.g.y / S, now));
     // Impacts and other hit moments (they follow the fighter while they play). A death puff stays put.
@@ -1178,47 +1194,24 @@ export default class BattleScene extends Phaser.Scene {
   // A flask lobbed in an arc from the thrower to the target, in the flask's colour.
   showFlask(from, to, color) {
     if (!from || !to) return;
-    const start = this.center(from);
-    const f = this.add.circle(start.x, start.y, 5, color).setStrokeStyle(2, 0x20242c).setDepth(DEPTH.popup);
-    this.tweens.addCounter({
-      from: 0,
-      to: 1,
-      duration: 360,
-      onUpdate: (tween) => {
-        const p = tween.getValue();
-        const now = this.center(to);
-        f.setPosition(start.x + (now.x - start.x) * p, start.y + (now.y - start.y) * p - Math.sin(p * Math.PI) * 40);
-      },
-      onComplete: () => {
-        const at = this.center(to);
-        f.destroy();
-        const splash = this.add.circle(at.x, at.y, 6, color, 0.7).setDepth(DEPTH.popup - 1);
-        this.tweens.add({ targets: splash, radius: 26, alpha: 0, duration: 420, onComplete: () => splash.destroy() });
-      },
-    });
+    // A pixel flask lobbed over that splashes in its colour (systems/skillFx.js); it aims at where the target is NOW.
+    const a = this.fxPoint(from);
+    let b = this.fxPoint(to);
+    const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
+    this.addFx(SHOT_MS.flask, (q, now) => { if (to.ch.active) b = this.fxPoint(to); return shotFx('flask', q, a, b, now, seed, color); });
   }
+
 
   showProjectile(from, to, kind) {
     if (!from || !to) return;
     const start = this.center(from);
-    const end = this.center(to);
-    if (kind === 'rain') {
-      // Rain of Arrows: an arrow drops from above onto the target.
-      const a = this.add.container(end.x + Phaser.Math.Between(-8, 8), end.y - 130, [this.add.rectangle(0, -4, 3, 20, Number(M.arrowColor)), this.add.triangle(0, 8, -4, 0, 4, 0, 0, 8, 0xffffff)]).setDepth(DEPTH.popup);
-      this.tweens.add({ targets: a, y: end.y, duration: 230, ease: 'Quad.easeIn', onComplete: () => a.destroy() });
-      return;
-    }
-    if (kind === 'note') {
-      // Crescendo: a music note floats up from the bard to the target.
-      const n = this.add.text(start.x, start.y, '♪', { fontFamily: 'monospace', fontSize: '22px', fontStyle: 'bold', color: '#ffd84d', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(DEPTH.popup);
-      this.tweens.add({ targets: n, x: end.x, y: end.y, duration: 320, ease: 'Sine.easeOut', onComplete: () => n.destroy() });
-      return;
-    }
-    if (kind === 'crescent') {
-      // Wind Cutter: a pale crescent wave sweeping to the target.
-      const c = this.add.arc(start.x, start.y, 16, 120, 240, false, 0xe8f4ff, 0.9).setStrokeStyle(2, 0xffffff).setDepth(DEPTH.popup);
-      c.rotation = Math.atan2(end.y - start.y, end.x - start.x) + Math.PI;
-      this.tweens.add({ targets: c, x: end.x, y: end.y, scale: 1.8, alpha: 0.2, duration: 300, onComplete: () => c.destroy() });
+    // Skill shots in pixels (systems/skillFx.js); they aim at where the target is NOW.
+    if (SHOT_MS[kind] || kind === 'crescent') {
+      if (kind === 'crescent') return; // Wind Cutter: the cast effect sweeps one crescent over the whole line
+      const a = this.fxPoint(from);
+      let b = this.fxPoint(to);
+      const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
+      this.addFx(SHOT_MS[kind], (q, now) => { if (to.ch.active) b = this.fxPoint(to); return shotFx(kind, q, a, b, now, seed); });
       return;
     }
     // Pixel looks from systems/itemFx.js: Fire Bombs' bomb, lightning bolts (Static Crystal, Chain Lightning),
@@ -1229,37 +1222,6 @@ export default class BattleScene extends Phaser.Scene {
       const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
       const fn = { bomb: itemFx.bombFx, lightning: itemFx.lightningFx, greenfire: itemFx.greenfireFx }[kind];
       this.addFx(itemFx.ITEM_MS[kind], (q, now) => { if (to.ch.active) b = this.fxPoint(to); return fn(q, a, b, now, seed); });
-      return;
-    }
-    if (kind === 'fireball' || kind === 'darkbolt' || kind === 'holybolt') {
-      const color = { fireball: 0xff7a3d, darkbolt: 0x9b5fe0, holybolt: 0xfff2a0, greenfire: 0x6bff7a }[kind];
-      const b = this.add.circle(start.x, start.y, kind === 'fireball' ? 9 : 7, color).setStrokeStyle(2, 0xffffff, 0.8).setDepth(DEPTH.popup);
-      this.tweens.add({ targets: b, x: end.x, y: end.y, duration: 320, ease: 'Quad.easeIn', onComplete: () => { const boom = this.add.circle(end.x, end.y, 8, color, 0.8).setDepth(DEPTH.popup - 1); this.tweens.add({ targets: boom, radius: 28, alpha: 0, duration: 300, onComplete: () => boom.destroy() }); b.destroy(); } });
-      return;
-    }
-    if (kind === 'lightning') {
-      const g = this.add.graphics().setDepth(DEPTH.popup);
-      g.lineStyle(3, 0xffe94d, 1).beginPath().moveTo(start.x, start.y);
-      for (let i = 1; i < 5; i++) g.lineTo(start.x + ((end.x - start.x) * i) / 5 + Phaser.Math.Between(-10, 10), start.y + ((end.y - start.y) * i) / 5 + Phaser.Math.Between(-10, 10));
-      g.lineTo(end.x, end.y).strokePath();
-      this.tweens.add({ targets: g, alpha: 0, duration: 350, onComplete: () => g.destroy() });
-      return;
-    }
-    if (kind === 'knife') {
-      // A small throwing knife that spins as it flies straight to its target.
-      const k = this.add.rectangle(start.x, start.y, 11, 3, 0xdfe6ee).setStrokeStyle(1, 0x20242c).setDepth(DEPTH.popup);
-      this.tweens.addCounter({
-        from: 0,
-        to: 1,
-        duration: 200,
-        onUpdate: (tween) => {
-          const p = tween.getValue();
-          const now = this.center(to);
-          k.setPosition(start.x + (now.x - start.x) * p, start.y + (now.y - start.y) * p);
-          k.rotation = p * 14;
-        },
-        onComplete: () => k.destroy(),
-      });
       return;
     }
     const b = this.add.circle(start.x, start.y, 5, 0xff7a3d).setStrokeStyle(2, 0xffd24d).setDepth(DEPTH.popup);
@@ -1273,7 +1235,7 @@ export default class BattleScene extends Phaser.Scene {
         b.setPosition(start.x + (now.x - start.x) * p, start.y + (now.y - start.y) * p - Math.sin(p * Math.PI) * 24);
       },
       onComplete: () => b.destroy(),
-    });
+    }); // any other kind: a plain orange ball (fallback)
   }
 
   drawAllBars() {
@@ -1321,7 +1283,9 @@ export default class BattleScene extends Phaser.Scene {
     const colorText = attack ? FX.attackColor : FX.supportColor;
     const color = Phaser.Display.Color.HexStringToColor(colorText).color;
     caster.ch.flash(color, FX.flashMs);
-    const spots = attack || e.skill.target === 'squad' || e.skill.target === 'enemy' || e.skill.target === 'lowestAlly' ? e.targets.map((t) => this.views.get(t.uid)).filter(Boolean) : [caster];
+    const own = SKILL_FX_BY_NAME[e.skill.name];
+    if (own) this.playSkillFx(own, caster, e); // the skill's own effect (systems/skillFx.js) instead of the plain rings
+    const spots = own ? [] : attack || e.skill.target === 'squad' || e.skill.target === 'enemy' || e.skill.target === 'lowestAlly' ? e.targets.map((t) => this.views.get(t.uid)).filter(Boolean) : [caster];
     for (const v of spots) {
       const c = this.center(v);
       const ring = this.add.circle(c.x, c.y, 10).setStrokeStyle(4, color).setDepth(DEPTH.popup - 1);
@@ -1335,11 +1299,25 @@ export default class BattleScene extends Phaser.Scene {
     this.tweens.add({ targets: banner, scale: 1, duration: 160, ease: 'Back.easeOut' });
     this.tweens.add({ targets: banner, alpha: 0, y: FX.bannerY - 16, delay: FX.bannerMs * 0.6, duration: FX.bannerMs * 0.4, onComplete: () => banner.destroy() });
     // A skill that puts statuses on every enemy (Smoke Bomb) also shows a grey cloud on each of them.
-    if (e.skill.applyEnemies) for (const en of this.state.enemies) if (en.alive && this.views.get(en.uid)) this.puff(this.views.get(en.uid).ch.x, this.views.get(en.uid).ch.y, 0x9a9aa8, 6);
+    if (e.skill.applyEnemies && !own) for (const en of this.state.enemies) if (en.alive && this.views.get(en.uid)) this.puff(this.views.get(en.uid).ch.x, this.views.get(en.uid).ch.y, 0x9a9aa8, 6);
     if (attack) {
       this.cameras.main.shake(FX.shakeMs, FX.shakeIntensity);
       this.hitStop = FX.hitStopMs;
     }
+  }
+
+  // A skill's own cast effect: the recipe gets where the caster, its targets, the squad and the enemies are
+  // NOW (every frame), and may colour some of them for a moment.
+  playSkillFx(name, caster, e) {
+    const views = (units) => units.map((u) => this.views.get(u.uid)).filter((v) => v && v.ch.active);
+    const lists = { caster: [caster], targets: views(e.targets), squad: views(this.state.heroes.filter((h) => h.alive)), enemies: views(this.state.enemies.filter((u) => u.alive)) };
+    const frozen = {}; // last known bodies, for fighters that are gone mid-effect
+    const bodies = (k) => lists[k].map((v, i) => (v.ch.active ? (frozen[k + i] = this.fxBody(v)) : frozen[k + i] || this.fxBody(v)));
+    this.addFx(CAST_MS[name], (q, now) => {
+      const c = { caster: bodies('caster')[0], targets: bodies('targets'), squad: bodies('squad'), enemies: bodies('enemies') };
+      const out = castFx(name, q, c, now);
+      return { draws: out.draws, tints: out.tints.map(([list, i, tint]) => [lists[list] && lists[list][i], tint]) };
+    });
   }
 
   popText(view, text, color, big = false, sizePx = null) {

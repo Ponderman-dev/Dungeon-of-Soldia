@@ -1,0 +1,16 @@
+{
+  "_about": "Hero skill effects (user's choice: every skill its own effect). Skill id -> cast effect recipe in src/systems/skillFx.js (CAST_MS). A rotation spell is named 'skillId:SHORT'. Skills not listed here keep the plain coloured ring. Projectiles (knife, rain, note, fireball, darkbolt, holybolt, flask) are drawn per projectile event (SHOT_MS); lightning comes from itemFx.js.",
+  "ground_pound": "groundPound",
+  "rally_cry": "rallyCry",
+  "smoke_bomb": "smokeBomb",
+  "hunters_mark": "huntersMark",
+  "savage_leap": "savageLeap",
+  "war_cry": "warCry",
+  "wind_cutter": "windCutter",
+  "focus_stance": "focusStance",
+  "elemental_rotation:FN": "frostNova",
+  "arcane_ward": "arcaneWard",
+  "divine_shield": "divineShield",
+  "bone_ward": "boneWard",
+  "ballad_of_rest": "ballad"
+}

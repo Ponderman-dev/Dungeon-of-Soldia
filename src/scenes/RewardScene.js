@@ -5,6 +5,7 @@ import itemTypes from '../data/itemTypes.json';
 import rarities from '../data/rarities.json';
 import rewardRules from '../data/rewards.json';
 import { canReceive, countOf } from '../systems/items.js';
+import { itemIconKey } from '../entities/itemIconTexture.js';
 
 const COLORS = { bg: 0x14101f, panel: 0x221b33, line: 0x3a2f57, purple: 0x8b55d6, gold: 0xf2b632, disabled: 0x4a3f66 };
 const INK = '#f3eefc';
@@ -83,14 +84,11 @@ export default class RewardScene extends Phaser.Scene {
     g.fillStyle(highlighted ? 0x2f2547 : COLORS.panel, 1).fillRoundedRect(x, y, CARD_W, CARD_H, 14);
     g.lineStyle(highlighted ? 5 : 3, highlighted ? COLORS.gold : rc, 1).strokeRoundedRect(x, y, CARD_W, CARD_H, 14);
 
-    // Placeholder icon: a dot coloured by item type, ringed in the rarity colour.
+    // The item's pixel icon in its rarity frame (itemIcons.json), its type underneath.
     const ix = x + 14 + 32;
     const iy = y + CARD_H / 2;
-    g.fillStyle(COLORS.bg, 1).fillRoundedRect(ix - 32, iy - 32, 64, 64, 12);
-    g.lineStyle(2, COLORS.line, 1).strokeRoundedRect(ix - 32, iy - 32, 64, 64, 12);
-    g.fillStyle(Number(itemTypes[item.type].color), 1).fillCircle(ix, iy - 6, 13);
-    g.lineStyle(3, rc, 1).strokeCircle(ix, iy - 6, 15);
-    this.text(ix, iy + 18, itemTypes[item.type].label, 9, MUTE, true).setOrigin(0.5);
+    this.track(this.add.image(ix, iy - 8, itemIconKey(this, item.id, item.rarity)).setScale(3));
+    this.text(ix, iy + 32, itemTypes[item.type].label, 9, MUTE, true).setOrigin(0.5);
 
     const tx = x + 14 + 64 + 14;
     this.text(tx, y + 14, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : 'ITEM'}`, 11, `#${rc.toString(16).padStart(6, '0')}`, true);

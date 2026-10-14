@@ -1,18 +1,40 @@
 {
   "common": {
     "label": "COMMON",
-    "color": "0x8f8aa3"
+    "color": "0x8f8aa3",
+    "frame": {
+      "edge": "0x8f8aa3",
+      "fill": "0x2a2438",
+      "hi": "0xb3aec4"
+    }
   },
   "rare": {
     "label": "RARE",
-    "color": "0x3b8ee0"
+    "color": "0x3b8ee0",
+    "frame": {
+      "edge": "0x3b8ee0",
+      "fill": "0x182540",
+      "hi": "0x8cc4ff"
+    }
   },
   "epic": {
     "label": "EPIC",
-    "color": "0xa45be6"
+    "color": "0xa45be6",
+    "frame": {
+      "edge": "0xa45be6",
+      "fill": "0x2a1840",
+      "hi": "0xd6a8ff",
+      "stud": "0xf06ab4"
+    }
   },
   "legendary": {
     "label": "LEGENDARY",
-    "color": "0xf2b632"
+    "color": "0xf2b632",
+    "frame": {
+      "edge": "0xf2b632",
+      "fill": "0x3a2a12",
+      "hi": "0xfff0a8",
+      "stud": "0xff5a4d"
+    }
   }
 }

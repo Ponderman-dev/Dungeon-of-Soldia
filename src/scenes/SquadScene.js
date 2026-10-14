@@ -110,23 +110,23 @@ export default class SquadScene extends Phaser.Scene {
   }
 
   drawSlots() {
+    // Each slot: a soft shadow on the floor; an empty one also has a faint pale ring and a small "+".
     this.slotMarks = SLOTS.map((s, i) => {
-      const glow = this.add.ellipse(s.x, s.y, 96, 32, ORANGE, 0.12).setDepth(DEPTH.slot);
-      const ring = this.add.ellipse(s.x, s.y, 70, 22).setDepth(DEPTH.slot);
-      // An empty slot shows a faint "+" (tap a hero on the bench to fill it).
-      const num = this.add.text(s.x, s.y - 34, '+', { fontFamily: FONT, fontSize: '30px', fontStyle: 'bold', color: '#ffb27a' }).setOrigin(0.5).setDepth(DEPTH.slot).setAlpha(0.55);
-      this.tweens.add({ targets: [ring, glow, num], alpha: '-=0.25', duration: 800 + i * 90, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-      return { ring, num, glow };
+      const shadow = this.add.ellipse(s.x, s.y, 64, 16, 0x000000, 0.28).setDepth(DEPTH.slot);
+      const ring = this.add.ellipse(s.x, s.y, 58, 14).setStrokeStyle(1, 0xd8c8ff, 0.35).setDepth(DEPTH.slot);
+      const num = this.add.text(s.x, s.y - 30, '+', { fontFamily: FONT, fontSize: '22px', color: '#d8c8ff' }).setOrigin(0.5).setDepth(DEPTH.slot).setAlpha(0.35);
+      this.tweens.add({ targets: [ring, num], alpha: '-=0.15', duration: 1100 + i * 120, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      // A small "Send back" button under a filled slot (the hero walks back to the bench).
+      const back = this.add.container(s.x, s.y + 42).setDepth(DEPTH.ui);
+      const bg = this.add.graphics();
+      bg.fillStyle(0x14101f, 0.75).fillRoundedRect(-34, -10, 68, 20, 10).lineStyle(1, 0x6f5a9a, 1).strokeRoundedRect(-34, -10, 68, 20, 10);
+      back.add([bg, this.add.text(0, 0, 'Send back', { fontFamily: FONT, fontSize: '10px', fontStyle: 'bold', color: '#cfc6e6' }).setOrigin(0.5)]);
+      return { shadow, ring, num, back };
     });
   }
 
   drawBench() {
-    // A long purple rug the heroes wait on.
-    const g = this.add.graphics().setDepth(DEPTH.bench);
-    g.fillStyle(0x000000, 0.25).fillRoundedRect(10, BENCH.top + 6, GAME_WIDTH - 20, BENCH.bottom - BENCH.top, 18);
-    g.fillStyle(0x2c1f4a, 1).fillRoundedRect(8, BENCH.top, GAME_WIDTH - 16, BENCH.bottom - BENCH.top, 18);
-    g.lineStyle(2, PURPLE, 0.9).strokeRoundedRect(8, BENCH.top, GAME_WIDTH - 16, BENCH.bottom - BENCH.top, 18);
-    g.lineStyle(1, PURPLE, 0.35).strokeRoundedRect(16, BENCH.top + 8, GAME_WIDTH - 32, BENCH.bottom - BENCH.top - 16, 12);
+    // The heroes simply stand in a row on the floor (no box around them).
     this.pager = this.add.graphics().setDepth(DEPTH.ui);
     this.benchSpots = this.add.graphics().setDepth(DEPTH.bench);
     // Arrows at both ends (also tappable).
@@ -194,12 +194,12 @@ export default class SquadScene extends Phaser.Scene {
     for (const f of this.figures.values()) {
       const x = this.benchX(f);
       const onBench = !this.slots.includes(f.def.id) && !this.walkers.has(f.def.id);
-      // An empty spot shows where a picked hero will come back to.
-      if (!onBench && x > -40 && x < GAME_WIDTH + 40) this.benchSpots.lineStyle(2, PURPLE, 0.6).strokeEllipse(x, BENCH.feetY, 52, 16);
-      if (onBench) f.ch.setPosition(x, BENCH.feetY);
       const inSlot = this.slots.includes(f.def.id) && !this.walkers.has(f.def.id);
-      f.name.setPosition(f.ch.x, f.ch.y + 6).setVisible(!this.walkers.has(f.def.id) && !(this.leaving && this.slots.includes(f.def.id)));
-      f.name.setColor(inSlot ? '#ffb27a' : this.unlocked(f.def.id) ? INK : '#6f6890');
+      // An empty spot shows where a picked hero will come back to.
+      if (x > -40 && x < GAME_WIDTH + 40) this.benchSpots.fillStyle(0x000000, onBench ? 0.28 : 0.14).fillEllipse(x, BENCH.feetY, 50, 13); // a soft shadow (faint = its hero is in a slot)
+      if (onBench) f.ch.setPosition(x, BENCH.feetY);
+      f.name.setPosition(f.ch.x, f.ch.y + (inSlot ? 13 : 9)).setVisible(!this.walkers.has(f.def.id) && !(this.leaving && this.slots.includes(f.def.id)));
+      f.name.setColor(inSlot ? INK : this.unlocked(f.def.id) ? '#cfc6e6' : '#6f6890');
       f.tag.setPosition(f.ch.x, f.ch.y - f.def.height * CHAR_SCALE - 4);
       // Heroes on the bench only show inside it (the strip is narrower than the screen).
       const hidden = onBench && (x < 14 || x > GAME_WIDTH - 14);
@@ -224,8 +224,9 @@ export default class SquadScene extends Phaser.Scene {
     }
     this.slots.forEach((id, i) => {
       const m = this.slotMarks[i];
-      m.ring.setFillStyle(ORANGE, id ? 0.35 : 0.08).setStrokeStyle(2, ORANGE, 1);
+      m.ring.setVisible(!id);
       m.num.setVisible(!id);
+      m.back.setVisible(!!id && !this.walkers.has(id) && !this.leaving);
     });
     const ready = this.ready() && !this.leaving;
     this.begin.setVisible(ready);
@@ -240,7 +241,10 @@ export default class SquadScene extends Phaser.Scene {
       if (this.panel || this.leaving) return;
       if (p.y >= BENCH.top && p.y <= BENCH.bottom) drag = { x: p.x, y: p.y, scroll: this.scroll, moved: 0 };
       else {
-        // A hero standing in a slot: tap to see its card (and send it back).
+        // The small "Send back" button under a slot.
+        const back = SLOTS.findIndex((s, i) => this.slots[i] && Math.abs(p.x - s.x) < 40 && Math.abs(p.y - (s.y + 42)) < 16);
+        if (back >= 0 && !this.walkers.has(this.slots[back])) return this.sendBack(this.slots[back]);
+        // A hero standing in a slot: tap to see its card.
         const hit = SLOTS.findIndex((s) => Math.abs(p.x - s.x) < 44 && p.y > s.y - 86 && p.y < s.y + 30);
         if (hit >= 0 && this.slots[hit] && !this.walkers.has(this.slots[hit])) this.openPanel(this.slots[hit]);
       }
@@ -330,7 +334,6 @@ export default class SquadScene extends Phaser.Scene {
     for (const id of [...this.slots]) if (id && !pick.includes(id)) this.sendBack(id);
     // Keep the ones that were picked again where they stand; the rest walk up.
     for (const id of pick) if (!this.slots.includes(id)) this.choose(id);
-    this.cameras.main.flash(120, 255, 255, 255, false);
   }
 
   toggleUnlockAll() {

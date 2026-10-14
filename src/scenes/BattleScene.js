@@ -307,6 +307,18 @@ export default class BattleScene extends Phaser.Scene {
       }
     } else if (spec.effect === 'thunderbolt' && tv) {
       this.addFx(ms, (q) => (tv.ch.active ? itemFx.thunderboltFx(q, this.fxBody(tv)) : []));
+    } else if (spec.effect === 'suckerPunch' && tv) {
+      const side = v.ch.x < tv.ch.x ? -1 : 1;
+      this.addFx(ms, (q) => (tv.ch.active ? itemFx.suckerPunchFx(q, this.fxBody(tv), side) : []));
+    } else if (spec.effect === 'executioner' && tv) {
+      const at = this.fxBody(tv); // the enemy may die from this very hit
+      this.addFx(ms, (q) => itemFx.executionerFx(q, tv.ch.active ? this.fxBody(tv) : at));
+    } else if (spec.effect === 'dice' && tv) {
+      const at = this.fxBody(tv);
+      this.addFx(ms, (q, now) => itemFx.diceFx(q, tv.ch.active ? this.fxBody(tv) : at, now));
+    } else if (spec.effect === 'mimic') {
+      const b = this.fxBody(v);
+      this.addFx(ms, (q, now) => itemFx.mimicFx(q, b.x + b.hw + 6, b.y, now)); // beside the holder
     } else if (spec.effect === 'aegisBlast') {
       this.addFx(ms, (q) => (v.ch.active ? itemFx.aegisBlastFx(q, this.fxBody(v)) : []));
     }

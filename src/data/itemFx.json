@@ -8,5 +8,9 @@
   "plague_flask": { "effect": "plague" },
   "frozen_thunderbolt": { "effect": "thunderbolt" },
   "spiked_aegis": { "effect": "aegisBlast" },
-  "bloodlust_mask": { "effect": "battleCry", "color": "0x6dff8f" }
+  "bloodlust_mask": { "effect": "battleCry", "color": "0x6dff8f" },
+  "sucker_punch_glove": { "effect": "suckerPunch" },
+  "executioners_axe": { "effect": "executioner" },
+  "gamblers_dice": { "effect": "dice" },
+  "mimic_chest": { "effect": "mimic" }
 }

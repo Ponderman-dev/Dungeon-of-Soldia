@@ -11,7 +11,7 @@ const easeInOut = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2)
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const BOMB = 0x4a4a5a, KNIFE = 0xe4e8f0, HILT = 0x6b4a2a, BANNER = 0xf2d03a, GREEN = 0x3aa84a, GREEN2 = 0xc8ffd0;
 
-export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 700, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520 };
+export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 700, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700 };
 export const ITEM_FX = Object.keys(ITEM_MS);
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -132,5 +132,46 @@ export function lifestealFx(q, a, b) {
 export function tornadoFx(x, y, t) {
   const g = pen();
   for (let j = 0; j < 16; j++) { const w = 1 + j * 0.45; const a = t / 60 + j * 0.9; g.px(x + Math.cos(a) * w, y - j, j % 3 ? C.grey : C.ice, 0.85); g.px(x - Math.cos(a) * w, y - j, C.white, 0.4); }
+  return g.out;
+}
+
+// Sucker Punch Glove: the first hit lands with a red-and-yellow impact star on the enemy's front (side = -1:
+// the attacker is on its left).
+export function suckerPunchFx(q, u, side) {
+  const g = pen();
+  if (q > 0 && q < 1) {
+    const x = u.x + side * u.hw, y = u.mid, r = 3 + q * 6;
+    for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; const rr = i % 2 ? r : r * 0.5; g.line(x, y, x + Math.cos(a) * rr, y + Math.sin(a) * rr, i % 2 ? C.blood : C.fire2, 1 - q); }
+  }
+  return g.out;
+}
+// Executioner's Axe: a heavy red chop falls straight through the nearly dead enemy, blood bursts out.
+export function executionerFx(q, u) {
+  const g = pen();
+  const p = ph(q, 0, 0.5);
+  if (p > 0 && p < 1) { const y = u.top - 14 + p * (u.y - u.top + 14); for (let i = -1; i <= 1; i++) g.line(u.x + i, y - 8, u.x + i, y, i ? C.blood : C.white, 1 - p * 0.3); }
+  burst(g, u.x, u.mid, 10, [C.blood, C.blood2], ph(q, 0.35, 1), 10, 4, 1);
+  return g.out;
+}
+// Gambler's Dice: a little white die tumbles above the enemy's head and lands (the debuff it rolled appears).
+export function diceFx(q, u, t) {
+  const g = pen();
+  if (q > 0 && q < 1) {
+    const p = ph(q, 0, 0.75); const y = u.top - 12 - Math.sin(p * Math.PI) * 5; const a = q > 0.85 ? 1 - (q - 0.85) / 0.15 : 1;
+    g.rect(u.x - 3, y - 1, 7, 7, C.outline, a); g.rect(u.x - 2, y, 5, 5, C.white, a);
+    const face = p < 1 ? Math.floor(t / 80) % 3 : 2;
+    g.px(u.x, y + 2, C.outline, a); if (face >= 1) { g.px(u.x - 1, y + 1, C.outline, a); g.px(u.x + 1, y + 3, C.outline, a); }
+  }
+  return g.out;
+}
+// Mimic Chest: a chest pops out of the floor beside the holder (x, y = that spot) and chomps open and shut.
+export function mimicFx(q, x, y, t) {
+  const g = pen();
+  if (q > 0 && q < 1) {
+    const up = easeOut(ph(q, 0, 0.3)); const open = Math.floor(t / 150) % 2 === 1; const yy = y + Math.round((1 - up) * 6); const a = q > 0.8 ? 1 - (q - 0.8) / 0.2 : 1;
+    g.rect(x - 4, yy - 7 - (open ? 1 : 0), 9, 4, 0x5e3a1a, a); g.rect(x - 4, yy - 3, 9, 3, 0x8b5a2b, a);
+    if (open) { g.rect(x - 4, yy - 4, 9, 1, C.blood, a); for (const k of [-3, -1, 1, 3]) g.px(x + k, yy - 3, C.white, a); }
+    g.px(x, yy - 5 - (open ? 1 : 0), C.gold, a);
+  }
   return g.out;
 }

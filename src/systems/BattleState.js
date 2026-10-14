@@ -997,6 +997,7 @@ export default class BattleState {
     const op = this.opportunist(attacker);
     if (op && this.isDebuffed(target)) opts = { ...opts, damagePercent: (opts.damagePercent || 0) + op.damagePercent, critBonus: (opts.critBonus || 0) + op.critFlat };
     const result = computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, opts);
+    if (!result.dodged) for (const [itemId, label] of this.bonusItems || []) events.push({ type: 'proc', unit: attacker, label, itemId, target });
     // Tough Skin: the first hit the holder takes each floor deals much less.
     if (!result.dodged && target.side === 'hero' && target.specials.toughSkin && !target.floor.toughUsed) {
       target.floor.toughUsed = true;
@@ -1068,10 +1069,11 @@ export default class BattleState {
   //  - brawlerMax: +2% per consecutive basic hit on the same target, up to the item's max (basic attacks only).
   itemDamageBonus(attacker, target, opts) {
     const sp = attacker.specials;
+    this.bonusItems = []; // items that boosted this hit (the scene shows them: Sucker Punch, Executioner's Axe)
     if (!sp || attacker.side !== 'hero' || attacker.minion) return 0;
     let bonus = 0;
     if (opts.basic) {
-      if (sp.suckerPunch && !attacker.firstHits.has(target.uid)) bonus += sp.suckerPunch;
+      if (sp.suckerPunch && !attacker.firstHits.has(target.uid)) { bonus += sp.suckerPunch; this.bonusItems.push(['sucker_punch_glove', 'Sucker Punch!']); }
       attacker.firstHits.add(target.uid);
       if (sp.brawlerMax) {
         const st = attacker.streak;
@@ -1086,7 +1088,7 @@ export default class BattleState {
     if (sp.bloodChalice && kinds.has('bleed')) bonus += sp.bloodChalice; // Blood Chalice
     if (sp.shatterHammer && kinds.has('freeze')) bonus += sp.shatterHammer; // Shatter Hammer (the freeze is broken after the hit)
     if (sp.exploiter && kinds.size >= 3) bonus += sp.exploiter; // Exploiter's Lens
-    if (sp.executioner && target.hp < target.maxHp * 0.25) bonus += sp.executioner; // Executioner's Axe
+    if (sp.executioner && target.hp < target.maxHp * 0.25) { bonus += sp.executioner; this.bonusItems.push(['executioners_axe', 'Execute!']); } // Executioner's Axe
     if (sp.hornDamage && this.has(target, 'taunt')) bonus += sp.hornDamage; // Provoker's Horn: taunted enemies take more
     return bonus;
   }
@@ -1228,6 +1230,7 @@ export default class BattleState {
     const dice = attacker.specials && attacker.specials.critDebuffList;
     if (result.crit && dice && dice.length && target.alive && target.hp > 0 && this.rng() * 100 < this.debuffChance(attacker, attacker.specials.critDebuff)) {
       const spec = dice[Math.floor(this.rng() * dice.length)];
+      events.push({ type: 'proc', unit: attacker, label: 'Dice!', itemId: 'gamblers_dice', target });
       this.applyStatus(target, spec, attacker, `dice_${attacker.uid}`, events);
     }
     const thorns = ((target.specials && target.specials.thorns) || 0) + (target.taunting ? target.specials.spiteReflect || 0 : 0); // Spite Mail adds reflect while taunting

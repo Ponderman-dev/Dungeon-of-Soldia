@@ -516,6 +516,9 @@ export default class BattleState {
 
   // The floor is won: weak minions vanish; greater ones stay, and a dead one is one floor closer to coming back.
   endFloor(events = []) {
+    // Excalibur tornadoes die out with the floor (they must not follow the squad to the next one).
+    for (const t of this.tornados) events.push({ type: 'tornadoEnd', tornado: t });
+    this.tornados = [];
     for (const m of [...this.minions]) {
       if (!m.greater) this.vanishMinion(m, 'floorEnd', events);
       else m.floors++; // a greater minion that survived the floor (Spirit Knight grows)

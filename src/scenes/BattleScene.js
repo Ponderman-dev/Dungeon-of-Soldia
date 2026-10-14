@@ -215,7 +215,7 @@ export default class BattleScene extends Phaser.Scene {
       try { look = statusLook(kinds, v.box, now + (u.uid % 7) * 137, TUNE); } // each fighter a little out of step
       catch (err) { console.error(err); continue; } // a broken effect must never stop the fight
       v.ch.setStatusLook(v.hitTint || look.tint, look.ice);
-      if (look.dx && this.mode === 'fighting') v.ch.x += look.dx * Math.abs(v.ch.scaleY);
+      if (look.dx && this.shakeable(v)) v.ch.x += look.dx * Math.abs(v.ch.scaleY);
       this.paintFx(g, v, look.draws);
     }
     // Ice breaking off a fighter whose Freeze just ended.
@@ -267,7 +267,7 @@ export default class BattleScene extends Phaser.Scene {
       const q = (now - h.start) / h.ms;
       if (h.crit) { paint('crit', critFx(q, u, now)); continue; }
       if (h.kind) {
-        if (h.kind === 'dodge') { const o = dodgeFx(q, u); paint('dodge', o.draws); if (o.dx && this.mode === 'fighting') ch.x += o.dx * S; }
+        if (h.kind === 'dodge') { const o = dodgeFx(q, u); paint('dodge', o.draws); if (o.dx && this.shakeable(v)) ch.x += o.dx * S; }
         else if (h.kind === 'block') paint('block', blockFx(q, u));
         else if (h.kind === 'soak') paint('soak', soakFx(q, u));
         else if (h.kind === 'shieldBreak') paint('shieldBreak', shieldBreakFx(q, u));
@@ -277,8 +277,15 @@ export default class BattleScene extends Phaser.Scene {
       const out = impactFx(h.type, q, u, now, h.seed, h.attacker && h.attacker.ch.active ? at(h.attacker) : null);
       paint(h.type, out.draws);
       if (out.tint && (!v.hitTint || out.tint[1] > v.hitTint[1])) v.hitTint = [TUNE.color('hit', h.type, out.tint[0]), out.tint[1]];
-      if (out.dx && this.mode === 'fighting') ch.x += out.dx * S;
+      if (out.dx && this.shakeable(v)) ch.x += out.dx * S;
     }
+  }
+
+  // Effects may nudge a figure sideways for one frame (a twitch, a side-step). That only works for
+  // figures that followPositions() puts back on their spot every frame: living, placed and not
+  // mid-jab. Anything else (a dead enemy squashing into the floor) would keep the nudges and slide away.
+  shakeable(v) {
+    return this.mode === 'fighting' && v.unit.alive && v.unit.x !== undefined && !v.ch.lunging;
   }
 
   // A timed effect: fn(q, now) returns pixel draws (character pixels) while q goes 0..1 over ms.

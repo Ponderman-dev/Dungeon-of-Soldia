@@ -38,7 +38,8 @@ Done this session (all in CLAUDE.md too):
 - Proposal pages: effects https://claude.ai/artifact/6N97in7zepDMZcMgbJJrYF (now has the status icon section), minions above, see docs/proposals/README.md.
 
 ## NEXT (options offered to the user; ask which one, one step at a time)
-- Bosses (every 10 floors, floor 100 super boss), skill books (attack/support book rewards), enemy skills (Silence needs them), the real reward screen (remove the TEST auto-reward), H2 tuning pass (only when the user has play-tested).
+- DONE: the real reward screen (auto-pick removed, Back button, owned item icons on the hero cards).
+- Bosses (every 10 floors, floor 100 super boss), skill books (attack/support book rewards), enemy skills (Silence needs them), H2 tuning pass (only when the user has play-tested).
 - If the user saved effects or designs in the Studio: "apply the studio designs" (read BOTH db collections `designs` and `effects`).
 
 ## Testing tips (learned this session)
@@ -55,7 +56,7 @@ Done this session (all in CLAUDE.md too):
 ## Tests and checks
 - `npm test` runs every `scripts/tests/*.test.mjs` (40 files, all must pass before every commit).
 - `node scripts/tests/balance.mjs 20 all` = whole-run bot (slow, run in the background).
-- Browser: to reach the game from Playwright, build with a temporary `window.__game = new Phaser.Game(...)` in src/main.js (sed, build, `git checkout src/main.js`; never commit it). Never call `scene.events.off('preupdate')` in a test page (it kills the scene clock). `npm run build`, `npx vite preview --port 4173 &` (never pkill it in the same command), Playwright from a scratch folder with `npm i playwright-core` (Chromium at /opt/pw-browsers/chromium-1194/chrome-linux/chrome). The game opens on the squad screen: START is at (202, 740) (390x844 viewport), the TEST auto-reward toggle at (300, 20), "Unlock every hero" at (195, 806). The Studio Line-up mode (`button[data-mode="lineup"]`, canvas `#lineup`) shows every character/icon at once.
+- Browser: to reach the game from Playwright, build with a temporary `window.__game = new Phaser.Game(...)` in src/main.js (sed, build, `git checkout src/main.js`; never commit it). Never call `scene.events.off('preupdate')` in a test page (it kills the scene clock). `npm run build`, `npx vite preview --port 4173 &` (never pkill it in the same command), Playwright from a scratch folder with `npm i playwright-core` (Chromium at /opt/pw-browsers/chromium-1194/chrome-linux/chrome). The game opens on the squad screen: START is at (202, 740) (390x844 viewport), the TEST restart-run button at (300, 20), "Unlock every hero" at (195, 806). The Studio Line-up mode (`button[data-mode="lineup"]`, canvas `#lineup`) shows every character/icon at once.
 
 ## Gotchas learned
 - Never pass the `apply` function in items.js straight to `forEach` (index becomes the multiplier).

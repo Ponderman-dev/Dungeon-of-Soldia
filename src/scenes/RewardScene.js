@@ -3,7 +3,6 @@ import { GAME_WIDTH, GAME_HEIGHT } from '../config.js';
 import Character from '../entities/Character.js';
 import itemTypes from '../data/itemTypes.json';
 import rarities from '../data/rarities.json';
-import rewardRules from '../data/rewards.json';
 import { canReceive, countOf } from '../systems/items.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
 
@@ -18,7 +17,6 @@ const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES',
 
 // The reward screen: pick 1 of 3 items, then choose which hero gets it.
 // It only shows choices and reports the result through payload.onDone(itemId, heroUid).
-// TEST MODE: when the registry flag `autoRewards` is on, it picks and assigns by itself.
 export default class RewardScene extends Phaser.Scene {
   constructor() {
     super('Reward');
@@ -33,26 +31,12 @@ export default class RewardScene extends Phaser.Scene {
     this.chosen = null;
     this.selected = null;
     this.stepObjects = [];
-    this.autoEvents = [];
-    this.userTookOver = false;
 
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.bg);
     this.add.text(16, 26, `Floor ${this.payload.floor} cleared`, { fontFamily: FONT, fontSize: '16px', fontStyle: 'bold', color: INK }).setOrigin(0, 0.5);
     this.add.rectangle(GAME_WIDTH / 2, 52, GAME_WIDTH, 2, COLORS.line);
-    this.autoText = this.add.text(GAME_WIDTH / 2, 744, '', { fontFamily: 'monospace', fontSize: '12px', color: '#6dff8f' }).setOrigin(0.5);
 
     this.showPick();
-
-    const onToggle = (parent, key, value) => {
-      if (key !== 'autoRewards') return;
-      this.userTookOver = false;
-      if (value) this.startAuto();
-      else this.cancelAuto();
-    };
-    this.registry.events.on('changedata', onToggle);
-    this.events.once('shutdown', () => this.registry.events.off('changedata', onToggle));
-
-    if (this.registry.get('autoRewards')) this.startAuto();
   }
 
   // ---- helpers -----------------------------------------------------------------------
@@ -110,11 +94,7 @@ export default class RewardScene extends Phaser.Scene {
       const y = 140 + i * (CARD_H + 12);
       this.drawCard(item, 16, y);
       const hit = this.track(this.add.zone(16 + CARD_W / 2, y + CARD_H / 2, CARD_W, CARD_H).setInteractive());
-      hit.on('pointerdown', () => {
-        this.takeOver();
-        this.chooseCard(item);
-      });
-      this.cardHits.push({ item, y });
+      hit.on('pointerdown', () => this.chooseCard(item));
     });
 
     const names = this.payload.state.heroes.map((h) => `${h.name} ${h.items.length}`).join(' · ');
@@ -125,12 +105,10 @@ export default class RewardScene extends Phaser.Scene {
     this.chosen = item;
     if (item.kind === 'potion') {
       // The potion heals the whole party, so there is no hero to choose.
-      this.cancelAuto();
       this.payload.onDone(item.id, null);
       return;
     }
     this.showAssign();
-    if (this.registry.get('autoRewards')) this.startAuto();
   }
 
   // ---- step 2: choose who gets it ----------------------------------------------------
@@ -172,6 +150,11 @@ export default class RewardScene extends Phaser.Scene {
     this.selected = null;
     const item = this.chosen;
     this.text(16, 66, 'Who gets it?', 26, INK, true);
+    // Back to the 3 rewards (changed your mind).
+    const back = this.text(GAME_WIDTH - 16, 80, '< Back', 16, INK, true).setOrigin(1, 0.5);
+    const bw = back.width + 24;
+    this.track(this.add.graphics()).lineStyle(2, COLORS.line, 1).strokeRoundedRect(GAME_WIDTH - 16 - bw + 6, 62, bw, 36, 10);
+    this.track(this.add.zone(GAME_WIDTH - 16 - bw / 2 + 6, 80, bw + 8, 44).setInteractive()).on('pointerdown', () => this.showPick());
     this.drawCard(item, 16, 108);
 
     this.heroHits = [];
@@ -206,22 +189,12 @@ export default class RewardScene extends Phaser.Scene {
         this.text(x + 12, y + 96, hero.alive ? 'Max stacks' : 'Fallen', 13, MUTE, true);
       }
 
-      // Items this hero already has (the same dots as above their head in battle).
-      const dots = this.track(this.add.graphics());
-      hero.items.forEach((id, di) => {
-        const def = this.payload.state.itemDefs[id];
-        const dx = x + 16 + (di % 12) * 12;
-        const dy = y + cardH - 18 - Math.floor(di / 12) * 12;
-        dots.fillStyle(Number(itemTypes[def.type].color), 1).fillCircle(dx, dy, 4);
-        dots.lineStyle(1.5, Number(rarities[def.rarity].color), 1).strokeCircle(dx, dy, 5);
-      });
+      // Items this hero already has: the same small icons as under the skill squares in battle.
+      this.drawOwnedIcons(hero, x, y + cardH - 34, colW, ok ? 1 : 0.5);
 
       if (ok) {
         const hit = this.track(this.add.zone(x + colW / 2, y + cardH / 2, colW, cardH).setInteractive());
-        hit.on('pointerdown', () => {
-          this.takeOver();
-          this.selectHero(i);
-        });
+        hit.on('pointerdown', () => this.selectHero(i));
         this.heroHits.push(hit);
       }
     });
@@ -231,10 +204,32 @@ export default class RewardScene extends Phaser.Scene {
     this.buttonText = this.text(GAME_WIDTH / 2, 798, 'Pick a hero', 18, '#ffffff', true).setOrigin(0.5);
     this.drawButton();
     this.buttonHit = this.track(this.add.zone(GAME_WIDTH / 2, 798, CARD_W, 52).setInteractive());
-    this.buttonHit.on('pointerdown', () => {
-      this.takeOver();
-      this.confirm();
+    this.buttonHit.on('pointerdown', () => this.confirm());
+  }
+
+  // One framed icon per kind of item (a white number = copies), 7 per row, 2 rows,
+  // the rest as "+N". The bottom row sits at `bottomY`.
+  drawOwnedIcons(hero, x, bottomY, w, alpha) {
+    const counts = new Map();
+    for (const id of hero.items) counts.set(id, (counts.get(id) || 0) + 1);
+    let kinds = [...counts.entries()];
+    const perRow = 7, gap = 22, maxShown = perRow * 2;
+    let more = 0;
+    if (kinds.length > maxShown) { more = kinds.length - (maxShown - 1); kinds = kinds.slice(0, maxShown - 1); }
+    const rows = Math.ceil((kinds.length + (more ? 1 : 0)) / perRow);
+    const left = x + (w - (perRow - 1) * gap) / 2;
+    const at = (i) => [left + (i % perRow) * gap, bottomY - (rows - 1 - Math.floor(i / perRow)) * gap];
+    const style = { fontFamily: 'monospace', fontSize: '10px', fontStyle: 'bold', color: '#ffffff', stroke: '#000000', strokeThickness: 3 };
+    kinds.forEach(([id, count], i) => {
+      const def = this.payload.state.itemDefs[id];
+      const [ix, iy] = at(i);
+      this.track(this.add.image(ix, iy, itemIconKey(this, id, def.rarity)).setAlpha(alpha));
+      if (count > 1) this.track(this.add.text(ix + 11, iy + 11, String(count), style).setOrigin(1, 1).setAlpha(alpha));
     });
+    if (more) {
+      const [ix, iy] = at(kinds.length);
+      this.text(ix, iy, `+${more}`, 11, INK, true).setOrigin(0.5).setAlpha(alpha);
+    }
   }
 
   drawHeroCard(i, selected) {
@@ -260,47 +255,6 @@ export default class RewardScene extends Phaser.Scene {
 
   confirm() {
     if (!this.selected) return;
-    this.cancelAuto();
     this.payload.onDone(this.chosen.id, this.selected.uid);
-  }
-
-  // ---- test mode: choose everything automatically ------------------------------------
-
-  // Any tap by the player takes over from the automatic picking for this reward.
-  takeOver() {
-    this.userTookOver = true;
-    this.cancelAuto();
-  }
-
-  cancelAuto() {
-    for (const e of this.autoEvents) e.remove(false);
-    this.autoEvents = [];
-    this.autoText.setText('');
-  }
-
-  after(ms, fn) {
-    this.autoEvents.push(this.time.delayedCall(ms, fn));
-  }
-
-  startAuto() {
-    this.cancelAuto();
-    if (this.userTookOver) return;
-    const rules = rewardRules;
-    if (this.step === 'pick') {
-      this.autoText.setText('TEST: picking a reward automatically...');
-      this.after(rules.autoPickDelayMs, () => {
-        const i = Math.floor(Math.random() * this.payload.choices.length);
-        const { item, y } = this.cardHits[i];
-        this.drawCard(item, 16, y, true); // flash the chosen card
-        this.after(rules.autoHighlightMs, () => this.chooseCard(item));
-      });
-    } else {
-      this.autoText.setText('TEST: giving it to a random hero...');
-      this.after(rules.autoAssignDelayMs, () => {
-        const options = this.heroGraphics.map((_, i) => i).filter((i) => canReceive(this.heroGraphics[i].hero, this.chosen));
-        this.selectHero(options[Math.floor(Math.random() * options.length)]);
-        this.after(rules.autoConfirmDelayMs, () => this.confirm());
-      });
-    }
   }
 }

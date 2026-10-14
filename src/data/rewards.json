@@ -1,9 +1,5 @@
 {
   "choices": 3,
-  "autoPickDelayMs": 2000,
-  "autoHighlightMs": 500,
-  "autoAssignDelayMs": 800,
-  "autoConfirmDelayMs": 600,
   "potionChance": 0.05,
   "rarityOdds": [
     { "fromFloor": 1, "odds": { "common": 62, "rare": 29, "epic": 7.5, "legendary": 1.5 } },

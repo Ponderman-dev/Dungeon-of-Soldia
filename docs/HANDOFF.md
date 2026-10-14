@@ -32,7 +32,7 @@ Done this session (all in CLAUDE.md too):
 - Hits: FULL version (each damage type its own hand-made hit). Item procs: FULL hand-made effect AND the item's icon pops over the holder. Hero skills: full.
 - So the simplified ideas are NOT used (no shared minor-debuff look, no "top status only").
 - DONE: status loops in the game (every status its own effect, systems/statusFx.js).
-- DONE: hits per damage type + crit (systems/hitFx.js). Also DONE: miss side-step, block flash, shield soak ripple, shield break shards, heal motes, death squash + puff. NEXT: item procs (full effect + the item's icon pops over the holder), then skill effects.
+- DONE: hits per damage type + crit (systems/hitFx.js). Also DONE: miss side-step, block flash, shield soak ripple, shield break shards, heal motes, death squash + puff. DONE: item procs (icon pop + own effects, systems/itemFx.js, data/itemFx.json). Left from the proposal's item list (need small new events): Sucker Punch star, Executioner chop, Gambler's Dice die, Mimic chest hop. NEXT: hero skill effects (proposal 'Hero skills' section).
 - NEXT build steps (one at a time): then item procs + icon pop, then skill effects. Effects should become data-driven recipes the Studio's Effects section can edit (ask the user before that refactor).
 
 ## NEXT (what the user asked right before this hand-off)

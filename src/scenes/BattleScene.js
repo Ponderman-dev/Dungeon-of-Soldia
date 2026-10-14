@@ -16,6 +16,9 @@ import rawSkills from '../data/skills.json';
 import statusInfo from '../data/statuses.json';
 import Character from '../entities/Character.js';
 import { statusIconKey } from '../entities/statusIconTexture.js';
+import { itemIconKey } from '../entities/itemIconTexture.js';
+import itemFxData from '../data/itemFx.json';
+import * as itemFx from '../systems/itemFx.js';
 import statusIcons from '../data/statusIcons.json';
 import { iconList, iconLayout, ICON_PX } from '../systems/statusIcons.js';
 import { statusLook, iceBreak, bodyBox } from '../systems/statusFx.js';
@@ -228,6 +231,11 @@ export default class BattleScene extends Phaser.Scene {
       const start = arrow.kind === 'electric' && v.ch.active ? at(v) : { x: arrow.startX / S, y: arrow.startY / S };
       draw(projectileFx(arrow.kind, start, head, now, v.unit.uid));
     }
+    // Item effects and other timed recipes (addFx): each returns its pixels for its progress q.
+    this.fxList = (this.fxList || []).filter((f) => now - f.start < f.ms);
+    for (const f of this.fxList) { try { draw(f.fn((now - f.start) / f.ms, now)); } catch (err) { console.error(err); f.ms = 0; } }
+    // Excalibur tornadoes: a swirling pixel funnel where each one is.
+    if (this.tornadoViews) for (const tv of this.tornadoViews.values()) if (tv.g.active) draw(itemFx.tornadoFx(tv.g.x / S, tv.g.y / S, now));
     // Impacts and other hit moments (they follow the fighter while they play). A death puff stays put.
     this.impacts = (this.impacts || []).filter((h) => now - h.start < h.ms && (h.kind === 'puff' || h.view.ch.active));
     for (const h of this.impacts) {
@@ -252,6 +260,79 @@ export default class BattleScene extends Phaser.Scene {
       if (out.tint && (!v.hitTint || out.tint[1] > v.hitTint[1])) v.hitTint = out.tint;
       if (out.dx && this.mode === 'fighting') ch.x += out.dx * S;
     }
+  }
+
+  // A timed effect: fn(q, now) returns pixel draws (character pixels) while q goes 0..1 over ms.
+  addFx(ms, fn) {
+    (this.fxList = this.fxList || []).push({ start: this.time.now, ms, fn });
+  }
+
+  // Where a fighter is, in character pixels: its middle (pt) and its body (body, as the fx recipes want it).
+  fxPoint(v) {
+    const c = this.center(v);
+    return { x: c.x / CHAR_SCALE, y: c.y / CHAR_SCALE };
+  }
+
+  fxBody(v) {
+    if (!v.box) v.box = bodyBox(v.unit.def.parts, v.unit.def.height);
+    const x = (v.ch.x + v.box.cx * v.ch.scaleX) / CHAR_SCALE, y = v.ch.y / CHAR_SCALE;
+    return { x, y, top: y + v.box.top, mid: y + v.box.mid, bot: y + v.box.bot, hw: v.box.hw };
+  }
+
+  // An item went off: its icon pops over the holder (instead of a text label) and its own effect plays
+  // (src/data/itemFx.json says which; systems/itemFx.js draws it).
+  itemProc(e, v) {
+    this.iconPop(v, e.itemId);
+    const spec = itemFxData[e.itemId];
+    if (!spec || !spec.effect) return;
+    const ms = itemFx.ITEM_MS[spec.effect];
+    const tv = e.target ? this.views.get(e.target.uid) : null;
+    if (spec.effect === 'battleCry') {
+      const color = spec.color ? Number(spec.color) : undefined;
+      const squad = this.state.heroes.filter((h) => h.alive).map((h) => this.views.get(h.uid)).filter(Boolean);
+      this.addFx(ms, (q, now) => [...itemFx.battleCryFx(q, this.fxBody(v), color), ...squad.flatMap((h) => (h.ch.active ? itemFx.speedLinesFx(q, this.fxBody(h), now, color) : []))]);
+    } else if (spec.effect === 'shatter' && tv) {
+      const at = this.fxBody(tv);
+      this.addFx(ms, (q) => itemFx.shatterFx(q, tv.ch.active ? this.fxBody(tv) : at));
+      this.cameras.main.shake(110, 0.004);
+    } else if (spec.effect === 'knifeBurst' && e.at) {
+      const dv = this.views.get(e.at.uid);
+      if (!dv) return;
+      const b = this.fxBody(dv); // where the enemy died (it is gone soon)
+      this.addFx(ms, (q) => itemFx.knifeBurstFx(q, b.x, b.mid));
+    } else if (spec.effect === 'plague' && e.from && e.to) {
+      const fv = this.views.get(e.from.uid);
+      if (!fv) return;
+      const a = this.fxPoint(fv);
+      for (const o of e.to) {
+        const ov = this.views.get(o.uid);
+        if (ov) this.addFx(ms, (q) => itemFx.plagueFx(q, a, ov.ch.active ? this.fxPoint(ov) : a));
+      }
+    } else if (spec.effect === 'thunderbolt' && tv) {
+      this.addFx(ms, (q) => (tv.ch.active ? itemFx.thunderboltFx(q, this.fxBody(tv)) : []));
+    } else if (spec.effect === 'aegisBlast') {
+      this.addFx(ms, (q) => (v.ch.active ? itemFx.aegisBlastFx(q, this.fxBody(v)) : []));
+    }
+  }
+
+  // The item's framed icon jumps up over the holder, holds, then floats up and fades. Several at once
+  // stand side by side.
+  iconPop(v, itemId) {
+    const def = itemDefs[itemId];
+    if (!v || !def || !v.ch.active) return;
+    const cfg = itemFxData.iconPop;
+    v.pops = (v.pops || []).filter((o) => o.active);
+    const n = v.pops.length;
+    const x = v.ch.x + (n ? (n % 2 ? 1 : -1) * Math.ceil(n / 2) * cfg.gapPx : 0);
+    const y = v.bg.y - 34;
+    const img = this.add.image(x, y + 12, itemIconKey(this, itemId, def.rarity)).setScale(cfg.scale).setDepth(DEPTH.popup);
+    v.pops.push(img);
+    const ms = cfg.ms;
+    this.tweens.add({ targets: img, y, duration: ms * 0.25, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: img, y: y - cfg.riseCharPx * CHAR_SCALE, alpha: 0, delay: ms * 0.7, duration: ms * 0.3, onComplete: () => img.destroy() });
+    // a white ring flashes out from the icon as it appears
+    const c = { x: x / CHAR_SCALE, y: y / CHAR_SCALE };
+    this.addFx(ms * 0.25, (q) => { const out = []; const r = 9 + q * 16; for (let i = 0; i < 40; i++) { const a = (i / 40) * Math.PI * 2; out.push([Math.round(c.x + Math.cos(a) * r), Math.round(c.y + Math.sin(a) * r), 1, 1, 0xffffff, 1 - q]); } return out; });
   }
 
   // Starts one of the other hit moments on a fighter: 'dodge', 'block', 'soak', 'shieldBreak', 'heal'.
@@ -900,13 +981,7 @@ export default class BattleScene extends Phaser.Scene {
       this.showMinion(e.unit);
     } else if (e.type === 'tornadoSpawn') {
       this.tornadoViews = this.tornadoViews || new Map();
-      const g = this.add.container(0, 0).setDepth(DEPTH.popup - 2);
-      for (let i = 0; i < 4; i++) {
-        const w = 40 - i * 8;
-        const r = this.add.rectangle(0, -i * 10, w, 6, 0xcfe8ff, 0.8 - i * 0.12);
-        g.add(r);
-        this.tweens.add({ targets: r, x: { from: -6, to: 6 }, duration: 160 + i * 40, yoyo: true, repeat: -1 });
-      }
+      const g = this.add.container(0, 0).setDepth(DEPTH.popup - 2); // only carries the position: drawHitFx() draws the funnel
       this.tornadoViews.set(e.tornado.id, { g, t: e.tornado });
       this.puff(g.x, g.y, 0xcfe8ff, 4);
     } else if (e.type === 'tornadoEnd') {
@@ -965,7 +1040,12 @@ export default class BattleScene extends Phaser.Scene {
       this.addMoment('shieldBreak', v);
       this.cameras.main.shake(90, 0.003);
     } else if (e.type === 'proc') {
-      this.popText(this.views.get(e.unit.uid), e.label, '#ffd24d', true);
+      const v = this.views.get(e.unit.uid);
+      if (e.itemId && itemDefs[e.itemId]) this.itemProc(e, v); // an item: its icon pops + its own effect
+      else this.popText(v, e.label, '#ffd24d', true); // passives and other moments keep their text
+    } else if (e.type === 'lifesteal') {
+      const v = this.views.get(e.unit.uid), fv = this.views.get(e.from.uid);
+      if (v && fv) { const a = this.fxPoint(fv); this.addFx(itemFx.ITEM_MS.lifesteal, (q) => itemFx.lifestealFx(q, a, v.ch.active ? this.fxPoint(v) : a)); }
     } else if (e.type === 'heal') {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
@@ -976,6 +1056,8 @@ export default class BattleScene extends Phaser.Scene {
       v.ch.flash();
       this.setBar(v);
       this.popText(v, `${e.amount} thorns`, '#e8a0ff');
+      const hv = e.holder ? this.views.get(e.holder.uid) : null;
+      if (hv) this.addFx(itemFx.ITEM_MS.thorns, (q) => (hv.ch.active ? itemFx.thornsFx(q, this.fxBody(hv)) : [])); // spikes jab out of the holder
     } else if (e.type === 'dot') {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
@@ -1145,7 +1227,17 @@ export default class BattleScene extends Phaser.Scene {
       this.tweens.add({ targets: c, x: end.x, y: end.y, scale: 1.8, alpha: 0.2, duration: 300, onComplete: () => c.destroy() });
       return;
     }
-    if (kind === 'fireball' || kind === 'darkbolt' || kind === 'holybolt' || kind === 'greenfire') {
+    // Pixel looks from systems/itemFx.js: Fire Bombs' bomb, lightning bolts (Static Crystal, Chain Lightning),
+    // the Grimoire's green ghost fire. They aim at where the target is NOW.
+    if (kind === 'bomb' || kind === 'lightning' || kind === 'greenfire') {
+      const a = this.fxPoint(from);
+      let b = this.fxPoint(to);
+      const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
+      const fn = { bomb: itemFx.bombFx, lightning: itemFx.lightningFx, greenfire: itemFx.greenfireFx }[kind];
+      this.addFx(itemFx.ITEM_MS[kind], (q, now) => { if (to.ch.active) b = this.fxPoint(to); return fn(q, a, b, now, seed); });
+      return;
+    }
+    if (kind === 'fireball' || kind === 'darkbolt' || kind === 'holybolt') {
       const color = { fireball: 0xff7a3d, darkbolt: 0x9b5fe0, holybolt: 0xfff2a0, greenfire: 0x6bff7a }[kind];
       const b = this.add.circle(start.x, start.y, kind === 'fireball' ? 9 : 7, color).setStrokeStyle(2, 0xffffff, 0.8).setDepth(DEPTH.popup);
       this.tweens.add({ targets: b, x: end.x, y: end.y, duration: 320, ease: 'Quad.easeIn', onComplete: () => { const boom = this.add.circle(end.x, end.y, 8, color, 0.8).setDepth(DEPTH.popup - 1); this.tweens.add({ targets: boom, radius: 28, alpha: 0, duration: 300, onComplete: () => boom.destroy() }); b.destroy(); } });

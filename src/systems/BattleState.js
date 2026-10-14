@@ -787,7 +787,7 @@ export default class BattleState {
     // Fire Arrows: ranged attacks have a 50% chance (it does not stack) for an extra fire hit; more copies hit harder.
     const fa = unit.specials && unit.specials.fireArrows;
     if (fa && unit.damageType !== 'melee' && target.alive && this.rng() < 0.5) {
-      events.push({ type: 'proc', unit, label: 'Fire Arrow!' });
+      events.push({ type: 'proc', unit, label: 'Fire Arrow!', itemId: 'fire_arrows', target });
       this.strike(unit, target, events, { multiplier: fa / 100, damageType: 'fire', projectile: 'bomb', item: true });
     }
   }
@@ -974,7 +974,7 @@ export default class BattleState {
       const martyr = this.martyrFor(target);
       if (martyr) {
         target = martyr;
-        events.push({ type: 'proc', unit: martyr, label: 'Martyr!' });
+        events.push({ type: 'proc', unit: martyr, label: 'Martyr!', itemId: 'martyrs_shield' });
         const copies = martyr.specials.martyrCopies || 1;
         martyr.floor.martyrCd = this.martyrCooldown(copies);
         const cost = Math.max(1, Math.round(martyr.maxHp * 0.03 * Math.pow(0.8, copies - 1))); // health cost (placeholder numbers)
@@ -1002,7 +1002,7 @@ export default class BattleState {
       target.floor.toughUsed = true;
       const cut = Math.min(0.9, 1 - 0.4 * Math.pow(0.75, target.specials.toughSkin - 1));
       result.amount = Math.max(1, Math.round(result.amount * (1 - cut)));
-      events.push({ type: 'proc', unit: target, label: 'Tough Skin!' });
+      events.push({ type: 'proc', unit: target, label: 'Tough Skin!', itemId: 'tough_skin' });
     }
     let dealt = null;
     if (!result.dodged) {
@@ -1046,7 +1046,7 @@ export default class BattleState {
       if (freeze) {
         target.statuses.splice(target.statuses.indexOf(freeze), 1);
         events.push({ type: 'status', unit: target, change: 'expire', status: freeze });
-        events.push({ type: 'proc', unit: attacker, label: 'Shatter!' });
+        events.push({ type: 'proc', unit: attacker, label: 'Shatter!', itemId: 'shatter_hammer', target });
       }
     }
     if (sp.hunterSigil && !attacker.sigilHits.has(target.uid) && target.side === 'enemy') {
@@ -1055,6 +1055,7 @@ export default class BattleState {
       this.applyStatus(target, { status: 'mark', durationMs: 5000 + 2500 * (copies - 1), damageTakenPercent: sp.hunterSigil }, attacker, `sigil_${attacker.uid}`, events);
     }
     if (sp.frozenThunderbolt && (opts.damageType || attacker.damageType) === 'electric' && !opts.burst) {
+      if (this.neighbours(target).length) events.push({ type: 'proc', unit: attacker, label: 'Thunderbolt!', itemId: 'frozen_thunderbolt', target });
       for (const e of this.neighbours(target)) {
         this.strike(attacker, e, events, { multiplier: sp.frozenThunderbolt / 100, damageType: 'ice', item: true, burst: true });
         if (e.alive) this.applyStatus(e, { status: 'chill', durationMs: 5000, stacks: 2 }, attacker, 'thunderbolt', events);
@@ -1104,7 +1105,7 @@ export default class BattleState {
       const chance = debuffs ? this.debuffChance(hero, proc.chance) : proc.chance; // Opportunist: his debuffs are likelier
       if (proc.meleeOnly && hero.damageType !== 'melee') continue; // Thousand Cuts: melee hits only
       if (proc.proc !== trigger || (!ctx.force && this.rng() * 100 >= chance)) continue; // ctx.force: every proc goes off
-      if (!proc.silent) events.push({ type: 'proc', unit: hero, label: proc.label });
+      if (!proc.silent) events.push({ type: 'proc', unit: hero, label: proc.label, itemId: proc.itemId, target: ctx.target || null });
       const enemy = ctx.target && ctx.target.alive ? ctx.target : null;
       let landed = ctx.hit !== false; // statuses on the target need the attack to have connected
       if (proc.doubleHit && enemy) this.strike(hero, enemy, events);
@@ -1212,12 +1213,12 @@ export default class BattleState {
     const lifesteal = (attacker.specials && attacker.specials.lifesteal) || 0;
     if (lifesteal > 0 && attacker.alive) {
       const base = Math.max(1, Math.round(((amount * lifesteal) / 100) * this.regenAura().factor)); // the Cleric's aura makes item heals stronger
-      this.healUnit(attacker, base, events, { aura: false });
+      if (this.healUnit(attacker, base, events, { aura: false }) > 0) events.push({ type: 'lifesteal', unit: attacker, from: target }); // drawn as drops flying back
       // Bloodlust Mask: sometimes the heal is shared with the rest of the squad (then a cooldown).
       const share = attacker.specials.lifestealShare || 0;
       if (share > 0 && attacker.shareCd <= 0 && this.rng() * 100 < share) {
         attacker.shareCd = attacker.specials.lifestealShareCooldownMs || 3000;
-        events.push({ type: 'proc', unit: attacker, label: 'Life Share!' });
+        events.push({ type: 'proc', unit: attacker, label: 'Life Share!', itemId: 'bloodlust_mask' });
         for (const ally of this.heroes) {
           if (ally !== attacker && ally.alive) this.healUnit(ally, base, events, { aura: false });
         }
@@ -1233,7 +1234,7 @@ export default class BattleState {
     if (thorns > 0 && target.alive && target.hp > 0 && attacker.damageType === 'melee' && attacker.alive) {
       const back = Math.max(1, Math.round((amount * thorns) / 100));
       const d = this.dealDamage(attacker, back, events);
-      if (!d.immune) events.push({ type: 'thorns', unit: attacker, amount: back - d.absorbed });
+      if (!d.immune) events.push({ type: 'thorns', unit: attacker, amount: back - d.absorbed, holder: target });
       this.breakEffects(attacker, d.broken, events);
       if (attacker.hp <= 0 && attacker.alive) this.killUnit(attacker, events);
     }
@@ -1285,7 +1286,7 @@ export default class BattleState {
       const id = this.consumeItem(target, 'secondWind');
       if (id) {
         target.floor.flaskUsed = true;
-        events.push({ type: 'proc', unit: target, label: 'Second Wind!' });
+        events.push({ type: 'proc', unit: target, label: 'Second Wind!', itemId: 'second_wind_flask' });
         events.push({ type: 'itemUsed', unit: target, itemId: id });
         this.healUnit(target, (target.maxHp * target.specials.secondWind) / 100 / this.regenAura().factor, events);
       }
@@ -1306,7 +1307,7 @@ export default class BattleState {
   onHeroHit(target, events) {
     if (!target.minion && target.alive && target.specials.mimic && this.rng() * 100 < target.specials.mimic) {
       const src = { key: 'mimic_chest', kind: 'weak', capGroup: 'items', upkeep: true, upkeepScale: this.rules.minions.upkeepWeakScale ?? 0.5, spec: { minion: 'mimic' }, copies: target.specials.mimicCopies || 1 };
-      events.push({ type: 'proc', unit: target, label: 'Mimic!' });
+      events.push({ type: 'proc', unit: target, label: 'Mimic!', itemId: 'mimic_chest' });
       this.spawnMinion(target, src, events);
     }
     const ph = target.minion && target.alive && target.def.onHitHeal;
@@ -1340,13 +1341,13 @@ export default class BattleState {
       if (plague > 0 && poison.length) {
         const half = poison.slice(0, Math.ceil(poison.length / 2));
         const others = this.enemies.filter((e) => e.alive && e !== victim).sort((a, b) => this.distance(victim, a) - this.distance(victim, b)).slice(0, plague);
-        if (others.length) events.push({ type: 'proc', unit: hero, label: 'Plague!' });
+        if (others.length) events.push({ type: 'proc', unit: hero, label: 'Plague!', itemId: 'plague_flask', from: victim, to: others });
         for (const e of others) for (const st of half) this.addDotStack(e, st);
       }
       // Thousand Cuts: an enemy dying while bleeding bursts knives into the enemies next to it.
       const burst = hero.specials.knifeBurst || 0;
       if (burst > 0 && mine('bleed').length) {
-        events.push({ type: 'proc', unit: hero, label: 'Knife burst!' });
+        events.push({ type: 'proc', unit: hero, label: 'Knife burst!', itemId: 'thousand_cuts', at: victim });
         for (const e of this.neighbours(victim)) this.strike(hero, e, events, { multiplier: burst / 100, damageType: 'melee', item: true });
       }
     }
@@ -1365,7 +1366,7 @@ export default class BattleState {
       events.push({ type: 'shieldBreak', unit, status: shield });
       // Spiked Aegis: a shield of the holder broken by damage explodes (item damage on every enemy).
       if (unit.side === 'hero' && !unit.minion && unit.specials.spikedAegis) {
-        events.push({ type: 'proc', unit, label: 'Aegis blast!' });
+        events.push({ type: 'proc', unit, label: 'Aegis blast!', itemId: 'spiked_aegis' });
         for (const foe of this.enemies.filter((e) => e.alive)) this.strike(unit, foe, events, { multiplier: unit.specials.spikedAegis / 100, damageType: 'melee', item: true });
       }
       if (!shield.onBreak) continue;
@@ -1653,7 +1654,7 @@ export default class BattleState {
       const near = this.neighbours(targets[0]);
       if (near.length) {
         targets = [...targets, ...near];
-        events.push({ type: 'proc', unit: hero, label: 'Splash!' });
+        events.push({ type: 'proc', unit: hero, label: 'Splash!', itemId: 'siege_cannon' });
       }
     }
 
@@ -1686,7 +1687,7 @@ export default class BattleState {
     // Channels (Rain of Arrows, Crescendo) do not echo.
     const chance = hero.specials.echo || 0;
     if (!echo && chance > 0 && !skill.channel && this.rng() * 100 < chance) {
-      events.push({ type: 'proc', unit: hero, label: 'Echo!' });
+      events.push({ type: 'proc', unit: hero, label: 'Echo!', itemId: 'echo_rune' });
       const copies = hero.specials.echoCopies || 1;
       this.releaseSkill(hero, index, events, { spell: skill, power: Math.min(1, 0.6 + 0.1 * (copies - 1)) });
     }
@@ -1820,7 +1821,7 @@ export default class BattleState {
     const foes = this.enemies.filter((e) => e.alive);
     if (!foes.length || this.rng() * 100 >= sp.grimoireChance) return;
     const target = foes[Math.floor(this.rng() * foes.length)];
-    events.push({ type: 'proc', unit, label: 'Grimoire!' });
+    events.push({ type: 'proc', unit, label: 'Grimoire!', itemId: 'lost_clerics_grimoire', target });
     this.strike(unit, target, events, { multiplier: sp.grimoireDamage / 100, damageType: 'fire', projectile: 'greenfire', item: true });
   }
 

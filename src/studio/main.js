@@ -569,6 +569,31 @@ function renderUndo() {
 
 // ---- Page UI ------------------------------------------------------------------------------------
 
+// The studio has three sections: Units (heroes, enemies, minions), Items (item icons) and Effects.
+let section = 'units';
+const sectionOf = (c) => (c.kind === 'item' ? 'items' : 'units');
+function setSection(s) {
+  section = s;
+  document.querySelectorAll('[data-sect]').forEach((b) => b.classList.toggle('on', b.dataset.sect === s));
+  const fx = s === 'effects';
+  $('effects-pane').hidden = !fx;
+  $('unit-pane').hidden = fx;
+  $('pick').hidden = fx;
+  $('mode-tabs').hidden = fx;
+  $('status').hidden = fx;
+  $('save').hidden = fx;
+  if (fx) return;
+  if (sectionOf(byKey[current]) !== s) {
+    endEdit();
+    current = characters.find((c) => sectionOf(c) === s).key;
+    selected = null;
+    timeline.selKey = null;
+  }
+  renderAll();
+  redraw();
+  if (!$('mode-lineup').hidden) drawLineup();
+}
+
 function fillPicker() {
   const pick = $('pick');
   const opt = (c) => {
@@ -578,7 +603,7 @@ function fillPicker() {
   };
   const group = (kind, label) =>
     `<optgroup label="${label}">${characters.filter((c) => c.kind === kind).map(opt).join('')}</optgroup>`;
-  pick.innerHTML = group('hero', 'Heroes') + group('enemy', 'Enemies') + group('minion', 'Minions') + group('item', 'Item icons');
+  pick.innerHTML = section === 'items' ? group('item', 'Item icons') : group('hero', 'Heroes') + group('enemy', 'Enemies') + group('minion', 'Minions');
 }
 
 function renderStatus() {
@@ -888,6 +913,7 @@ document.addEventListener('click', (e) => {
   const t = e.target.closest('button');
   if (!t) return;
   if (t.dataset.part) return select(t.dataset.part);
+  if (t.dataset.sect) return setSection(t.dataset.sect);
   if (t.dataset.mode) return setMode(t.dataset.mode);
   if (t.dataset.tool) return setTool(t.dataset.tool);
   if (t.id === 'mirror-draw') return toggleMirrorDraw();
@@ -1078,12 +1104,13 @@ function drawLineup() {
   const cv = $('lineup');
   const ctx = cv.getContext('2d');
   const S = 3; // game size
-  const groups = [
-    ['Heroes', characters.filter((c) => c.kind === 'hero')],
-    ['Enemies', characters.filter((c) => c.kind === 'enemy')],
-    ['Minions', characters.filter((c) => c.kind === 'minion')],
-    ['Item icons', characters.filter((c) => c.kind === 'item')],
-  ];
+  const groups = (section === 'items'
+    ? [['Item icons', characters.filter((c) => c.kind === 'item')]]
+    : [
+        ['Heroes', characters.filter((c) => c.kind === 'hero')],
+        ['Enemies', characters.filter((c) => c.kind === 'enemy')],
+        ['Minions', characters.filter((c) => c.kind === 'minion')],
+      ]);
   const slot = 104;
   const perRow = Math.max(1, Math.floor((cv.clientWidth || 1000) / slot));
   const rows = groups.reduce((n, [, list]) => n + Math.ceil(list.length / perRow), 0);

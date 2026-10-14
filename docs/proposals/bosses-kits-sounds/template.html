@@ -103,10 +103,48 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 760px; font-si
 .tech { margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
 .tech div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--soft); }
 .tech b { display: block; color: var(--ink); }
+.defchip { font: 600 11px/1 var(--mono); color: #9ff0c0; background: #173326; border: 1px solid #2a5a40; padding: 5px 8px; border-radius: 6px; }
+.defchip.none { color: var(--mute); background: transparent; border-color: var(--line); }
+.items { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; }
+.items > span:first-child { font: 600 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-right: 2px; }
+.item { background: #2a2040; color: var(--soft); padding: 3px 8px; border-radius: 999px; font-size: 12px; }
+.hook { font-size: 14px; color: var(--soft); background: #18122a; border-radius: 10px; padding: 8px 12px; }
+.hook b { color: var(--gold); }
+.dot.ok.on { background: #3fbf8a; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.rules div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--soft); }
+.rules b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 2px; }
+.bookFlow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.bookFlow .step { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.bookFlow .arrow { color: var(--gold); }
+.pages { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.page { background: linear-gradient(160deg, #2a2142, #1f1833); border: 1px solid #4a3a72; border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--soft); }
+.page b { display: block; font-family: var(--display); color: var(--ink); font-size: 17px; }
+.page span { font: 500 11px var(--mono); color: var(--mute); }
+.heroPages { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+.heroPages table { border-collapse: collapse; width: 100%; min-width: 680px; font-size: 14px; }
+.heroPages td, .heroPages th { padding: 9px 12px; border-bottom: 1px solid #2a2240; text-align: left; vertical-align: top; color: var(--soft); }
+.heroPages th { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--mute); }
+.heroPages td:first-child { color: var(--ink); font-weight: 600; white-space: nowrap; }
+.forbidden { color: #ffb36b; }
+.libs { display: grid; gap: 10px; margin-bottom: 18px; }
+.lib { display: grid; grid-template-columns: minmax(150px, 220px) 1fr auto; gap: 14px; align-items: start; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; font-size: 14px; color: var(--soft); }
+.lib b { color: var(--ink); font-size: 16px; display: block; }
+.lib .lic { font: 600 11px var(--mono); color: #9ff0c0; white-space: nowrap; }
+.lib.best { border-color: var(--gold); }
+.lib a { color: #c9a8ff; }
+.uiPlayer { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 18px; display: grid; gap: 12px; }
+.packs { display: flex; flex-wrap: wrap; gap: 6px; }
+.packs button, .cues button { font: 600 13px var(--body); background: var(--panel2); color: var(--soft); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.packs button[aria-pressed="true"] { background: var(--purple); color: #fff; border-color: var(--purple); }
+.cues { display: flex; flex-wrap: wrap; gap: 6px; }
+.cues button:hover, .cues button:focus-visible, .packs button:focus-visible { border-color: var(--gold); outline: none; }
+.src { font: 600 11px/1.3 var(--mono); color: var(--mute); }
 .decide { margin-top: 22px; background: linear-gradient(135deg, #2a1d45, #1f1833); border: 1px solid var(--purple); border-radius: 16px; padding: 18px 20px; display: grid; gap: 8px; }
 .decide ol { margin: 0; padding-left: 20px; color: var(--soft); display: grid; gap: 4px; }
 
 @media (max-width: 760px) {
+  .lib { grid-template-columns: 1fr; gap: 6px; }
   .boss { grid-template-columns: 1fr; }
   .stage { min-height: 210px; }
   .meta { grid-template-columns: 1fr; }
@@ -122,28 +160,28 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 760px; font-si
 <div class="wrap">
   <p class="eyebrow">Dungeon of Soldia · proposals</p>
   <h1>Bosses, hero kits &amp; sounds</h1>
-  <p class="lead">Three proposals to look over before anything goes into the game: eight bosses with their own trick, a rework so every hero plays differently, and every sound the game needs. Nothing here is built yet. Tell me which parts you like and I'll build them one step at a time.</p>
+  <p class="lead">Version 2, after your notes: bosses every 20 floors, hero kits that work with the items (and a bit of shared defense), a new skill book system, and real sound libraries instead of 8-bit sketches. Nothing here is built yet. Tell me which parts you like and I'll build them one step at a time.</p>
 </div>
 <nav class="tabs" aria-label="Sections"><div class="in">
-  <a href="#bosses">8 Bosses</a><a href="#kits">Hero kits</a><a href="#sounds">Sound effects</a><a href="#decide">What to decide</a>
+  <a href="#bosses">Bosses</a><a href="#kits">Hero kits</a><a href="#books">Skill books</a><a href="#sounds">Sounds</a><a href="#decide">What to decide</a>
 </div></nav>
 <div class="wrap">
   <section id="bosses">
     <div class="sechead">
-      <p class="eyebrow">Proposal 1 · every 10 floors</p>
+      <p class="eyebrow">Proposal 1 · every 20 floors</p>
       <h2>Eight bosses</h2>
-      <p class="lead">One boss every 10 floors (10 to 80). Each one has ONE trick that asks you to use a different part of the game: tapping a target, timing a skill, picking an element, switching targets. Bosses show a big health bar at the top and a red cast bar before their big moves. Pixel designs are drafts in the game's style (they can be redrawn in the Studio later).</p>
+      <p class="lead">One boss every 20 floors (20 to 160). Normal floors in between, as now. Each one has ONE trick that asks you to use a different part of the game: tapping a target, timing a skill, picking an element, switching targets. Bosses show a big health bar at the top and a red cast bar before their big moves. Pixel designs are drafts in the game's style (they can be redrawn in the Studio later).</p>
     </div>
     <div class="bosses" id="bossList"></div>
-    <div class="later"><b>Floor 90 and 100 (later):</b> floor 90 could be a "gauntlet" (two earlier bosses together, stronger), and floor 100 the super boss. I'd design those once the first bosses feel right.</div>
+    <div class="later"><b>Note:</b> today most runs end around floors 15 to 30, so the first two bosses are what players will meet; the later ones become reachable as items, skill books and balancing grow. Morthul on floor 100 is the big halfway boss. After 160 the bosses could come back as harder "echo" versions.</div>
     <div class="engine" id="engine"></div>
   </section>
 
   <section id="kits">
     <div class="sechead">
-      <p class="eyebrow">Proposal 2 · rework</p>
+      <p class="eyebrow">Proposal 2 · rework, version 2</p>
       <h2>Hero kits that feel different</h2>
-      <p class="lead">Right now many heroes share the same pieces: 7 of 10 attack skills hit every enemy, three heroes have an "every 4th attack" counter, three give squad shields, two have channels. The rework gives each hero ONE signature mechanic nobody else has, and keeps what already works (perks, most passives, the art).</p>
+      <p class="lead">Each hero gets ONE signature mechanic nobody else has. New in version 2: every hero lists the items that power them and exactly how their mechanic hooks into those items, and most heroes keep a defensive tool (some overlap there is fine, as you asked: Smoke Bomb, Arcane Ward, Bone Ward and Mystery Brew stay). The removed ideas (Vanish, Time Warp, Corpse Explosion, Detonate, Last Rites) come back as skill book pages.</p>
     </div>
     <div class="matrixWrap">
       <div class="toggle" role="group" aria-label="Show overlap">
@@ -156,14 +194,34 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 760px; font-si
     <div class="heroes" id="heroList"></div>
   </section>
 
+  <section id="books">
+    <div class="sechead">
+      <p class="eyebrow">Proposal 3 · new reward</p>
+      <h2>Skill books</h2>
+      <p class="lead">A new kind of reward that changes a hero's skills for the rest of the run, so two runs with the same squad can play differently. Books use the same reward screen (sheet, cards, "Who gets it?") with one more step: choosing the page.</p>
+    </div>
+    <div class="bookFlow"><span class="step">Reward card: SKILL BOOK</span><span class="arrow">›</span><span class="step">Who reads it? (hero)</span><span class="arrow">›</span><span class="step">Pick 1 of 2 pages</span><span class="arrow">›</span><span class="step">Pip under the skill square (I, II, III)</span></div>
+    <div class="rules" id="bookRules"></div>
+    <h3 style="margin-bottom:10px">Pages any skill can get</h3>
+    <div class="pages" id="genericPages"></div>
+    <h3 style="margin-bottom:10px">Hero pages (2 examples per skill)</h3>
+    <div class="heroPages"><table id="heroPages"></table></div>
+  </section>
+
   <section id="sounds">
     <div class="sechead">
-      <p class="eyebrow">Proposal 3 · audio</p>
-      <h2>Every sound effect</h2>
-      <p class="lead">The full list, grouped by where you hear it. The ▶ buttons play a rough 8-bit sketch made right in your browser, only to give the idea; the real sounds would be made properly (retro "chiptune" style fits the pixel art).</p>
+      <p class="eyebrow">Proposal 4 · audio, version 2</p>
+      <h2>Sounds: real, short and simple</h2>
+      <p class="lead">No more 8-bit beeps. The style: short, soft, real recorded sounds (wood, metal, cloth, a little magic shimmer), mixed quietly so a busy fight never gets noisy. These free libraries cover everything; all of them can be used in a paid game.</p>
+    </div>
+    <div class="libs" id="libs"></div>
+    <div class="uiPlayer">
+      <div><b>Listen: menu sounds (real files, public domain)</b><p class="src">From the free "uisfx" pack (CC0). Pick a style, then tap a sound. Fight sounds would come from Kenney / Sonniss / Freesound (see the Source column below).</p></div>
+      <div class="packs" id="packs" role="group" aria-label="Sound style"></div>
+      <div class="cues" id="cues"></div>
     </div>
     <div class="soundTools">
-      <div class="legend"><span class="pri p1">MUST</span> first batch <span class="pri p2">NICE</span> second batch <span class="pri p3">LATER</span> polish</div>
+      <div class="legend"><span class="pri p1">MUST</span> first batch <span class="pri p2">NICE</span> second batch <span class="pri p3">LATER</span> polish · ▶ = a real menu sound you can hear now</div>
       <span id="soundCount"></span>
     </div>
     <div id="soundList"></div>
@@ -179,9 +237,10 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 760px; font-si
     <div class="decide">
       <h3>What I need from you</h3>
       <ol>
-        <li>Bosses: which ones do you like, which to change? I'd build the boss engine first (big health bar, cast bar, interrupts), then Grukk.</li>
-        <li>Hero kits: yes / no / change, hero by hero. The Cleric "Last Rites" revive is optional because it breaks "dead heroes stay dead".</li>
-        <li>Sounds: OK with the list and the retro style? I'd start with the MUST batch.</li>
+        <li>Bosses every 20 floors: which ones do you like, which to change? I'd build the boss engine first (big health bar, cast bar, interrupts), then Grukk on floor 20.</li>
+        <li>Hero kits v2: yes / no / change, hero by hero.</li>
+        <li>Skill books: OK with "pick 1 of 2 pages, up to 3 per skill" and a free book after each boss? Is the FORBIDDEN swap page (incl. Last Rites, which breaks "dead heroes stay dead") OK?</li>
+        <li>Sounds: OK with Kenney as the base + Sonniss/Freesound for magic? Which menu style (Soft, Organic, Glass, Studio...)? I can't reach those sites from here: add kenney.nl (and freesound.org) to the allowed domains in this environment's network settings, or download the packs and upload them, and I'll put them in.</li>
       </ol>
     </div>
   </section>

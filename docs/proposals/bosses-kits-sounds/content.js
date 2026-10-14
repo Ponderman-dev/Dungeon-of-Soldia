@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------- BOSSES
 const BOSSES = [
   {
-    floor: 10, key: 'grukk', extra: 'drum', name: 'Grukk', title: 'the War Drum', color: '#5fa83a',
+    floor: 20, key: 'grukk', extra: 'drum', name: 'Grukk', title: 'the War Drum', color: '#5fa83a',
     look: 'A fat goblin warchief in a horned iron helmet and a fur cape, swinging a huge cleaver. A goblin war drum stands beside him.',
     gimmick: ['WAR DRUM', 'The drum is its own target (it never attacks). Every 8s it beats: a goblin joins the fight (max 3) and every goblin attacks 30% faster while the drum stands.'],
     skills: [
@@ -13,7 +13,7 @@ const BOSSES = [
     tech: ['Boss cast bar + interrupts', 'Object targets', 'Boss summons adds'],
   },
   {
-    floor: 20, key: 'brood', extra: 'egg', name: 'The Brood Mother', title: '', color: '#a45be6',
+    floor: 40, key: 'brood', extra: 'egg', name: 'The Brood Mother', title: '', color: '#a45be6',
     look: 'A giant purple spider with a red hourglass, six red eyes and long jointed legs.',
     gimmick: ['EGG SACS', 'Every 10s she lays 2 egg sacs. Each hatches into 3 spiderlings after 6s unless it is destroyed first. Eggs have little health: area skills clear them.'],
     skills: [
@@ -25,7 +25,7 @@ const BOSSES = [
     tech: ['Timed spawns from objects', 'New status: Webbed'],
   },
   {
-    floor: 30, key: 'warden', name: 'The Frost Warden', title: '', color: '#9fd8f0',
+    floor: 60, key: 'warden', name: 'The Frost Warden', title: '', color: '#9fd8f0',
     look: 'A stone golem wearing three plates of ice (two shoulders, one chest) with glowing cyan eyes and crystals on its back.',
     gimmick: ['GLACIER ARMOR', 'While any of the 3 ice plates stands he takes 70% less damage. A plate cracks from big single hits (crits, skills) and melts 3x faster from fire. Immune to Chill and Freeze.'],
     skills: [
@@ -37,7 +37,7 @@ const BOSSES = [
     tech: ['Armor layers (plates)', 'Element weakness per layer', 'Boss channel'],
   },
   {
-    floor: 40, key: 'rask', extra: 'vesh', name: 'Rask & Vesh', title: 'the Bandit Kings', color: '#b8402a',
+    floor: 80, key: 'rask', extra: 'vesh', name: 'Rask & Vesh', title: 'the Bandit Kings', color: '#b8402a',
     look: 'Two bandits: Rask, a bearded brute with a red bandana and a great axe; Vesh, a slim hooded knife-thrower in purple.',
     gimmick: ['BLOOD OATH', 'When one falls, the other ENRAGES (+60% attack, +40% attack speed) and raises the partner at 30% health after 8s. Kill both within 8s of each other.'],
     skills: [
@@ -50,7 +50,7 @@ const BOSSES = [
     tech: ['Linked bosses', 'Enrage + revive timer', 'Boss swap positions'],
   },
   {
-    floor: 50, key: 'morthul', extra: 'phylactery', name: 'Morthul', title: 'the Bone Archon', color: '#6dff8f',
+    floor: 100, key: 'morthul', extra: 'phylactery', name: 'Morthul', title: 'the Bone Archon', color: '#6dff8f',
     look: 'A lich in a purple robe with bone shoulder pads, a gold crown and green eyes, holding a staff with a green orb.',
     gimmick: ['PHYLACTERY', 'At 0 health he falls to dust and a green crystal appears. Break it within 10s or he comes back at 50% health. The crystal is weak to physical damage and gets tougher every time.'],
     skills: [
@@ -63,7 +63,7 @@ const BOSSES = [
     tech: ['Second phase on death', 'Beam channel', 'Revive countdown'],
   },
   {
-    floor: 60, key: 'ignatius', name: 'Ignatius', title: 'the Forge Heart', color: '#ff8a3d',
+    floor: 120, key: 'ignatius', name: 'Ignatius', title: 'the Forge Heart', color: '#ff8a3d',
     look: 'A rock golem with glowing lava cracks, anvil-shaped fists, two chimneys on its head and a molten heart in its chest.',
     gimmick: ['HEAT GAUGE', 'A heat bar over his head rises every second, and faster when he is hit by fire. Ice hits and Chill lower it, a Freeze dumps a big chunk. At 100%: ERUPTION, heavy fire damage + Burn on every hero, then the bar resets.'],
     skills: [
@@ -75,7 +75,7 @@ const BOSSES = [
     tech: ['Boss gauge (heat)', 'Damage-type reactions on a boss'],
   },
   {
-    floor: 70, key: 'sela', name: 'Sela', title: 'the Mirror Witch', color: '#5fc4bc',
+    floor: 140, key: 'sela', name: 'Sela', title: 'the Mirror Witch', color: '#5fc4bc',
     look: 'A pale witch in a teal glass-patterned dress with silver hair and a hand mirror, glass shards floating around her.',
     gimmick: ['MIRROR IMAGES + MIRROR WARD', 'At the start and at half health she copies every living hero as a glass clone (40% of their stats, uses their basic attack and attack skill; clones shatter in one big hit). Every 12s her Mirror Ward shimmers for 3s: the next SKILL that hits her bounces back at your squad.'],
     skills: [
@@ -87,7 +87,7 @@ const BOSSES = [
     tech: ['Clones of heroes', 'Reflect status'],
   },
   {
-    floor: 80, key: 'vharox', extra: 'sprite', name: 'Vharox', title: 'the Storm Wyrm', color: '#ffe04a',
+    floor: 160, key: 'vharox', extra: 'sprite', name: 'Vharox', title: 'the Storm Wyrm', color: '#ffe04a',
     look: 'A blue and purple dragon with wide wings, horns and lightning crackling around it.',
     gimmick: ['SKY PHASE', 'He FLIES (melee misses 40%). At 75%, 50% and 25% health he rises out of reach for 8s while lightning strikes random heroes (Shock) and 3 Storm Sprites attack. Killing all sprites early drags him down: stunned for 3s and takes +25% damage.'],
     skills: [
@@ -100,93 +100,7 @@ const BOSSES = [
   },
 ];
 
-// ---------------------------------------------------------------- HEROES
-const HEROES = [
-  { id: 'knight', role: 'Guardian', color: '#3b6fd4',
-    now: 'Taunt Wall proc, Ground Pound (hits ALL + knockback), Rally Cry (squad +defense, cleanse).',
-    problem: 'Ground Pound is one of 7 attack skills that hit every enemy. His "protector" fantasy is only a random 10% taunt.',
-    sig: ['INTERCEPT (passive)', 'When an ally drops under 35% health he jumps in front of them and takes half of the damage they get for 3s (8s cooldown).'],
-    atk: ['Shield Bash', 'One enemy: 140% damage and a 1.5s stun. The squad\'s reliable way to interrupt boss casts.'],
-    sup: ['Challenge', 'Taunts EVERY enemy for 3s and gives himself +30 defense.'],
-    keeps: 'Stalwart perk.' },
-  { id: 'berserker', role: 'Bruiser', color: '#c0303a',
-    now: 'Bloodrage (faster when hurt), Savage Leap, War Cry (squad +attack, weaken).',
-    problem: 'War Cry is another "squad +stat for a few seconds" support, like 4 others.',
-    sig: ['RAGE BAR (passive)', 'Hitting and being hit fills Rage. Full: 6s FRENZY (+50% attack speed, 15% lifesteal). Bloodrage stays.'],
-    atk: ['Savage Leap', 'Unchanged: big single hit, double damage on bleeding or half-dead enemies.'],
-    sup: ['Blood Pact', 'Pays 15% of his OWN health: the whole squad gets 12% lifesteal for 6s.'],
-    keeps: 'Battle Fury perk, Savage Leap.' },
-  { id: 'rogue', role: 'Assassin', color: '#5a2f7a',
-    now: 'Opportunist (+damage vs debuffed, debuffs likelier), Fan of Knives (ALL), Smoke Bomb (squad evasion + blind).',
-    problem: 'Shares "debuffs 25% likelier" and Bleed with the Samurai. Fan of Knives is another hit-all skill.',
-    sig: ['COMBO POINTS (passive)', 'Each basic attack on the SAME enemy adds a combo point (max 5, little pips over it). Opportunist stays (bonus vs debuffed enemies).'],
-    atk: ['Eviscerate', 'Spends all combo points on one enemy: 60% + 60% per point; at 5 points it always crits and makes it Bleed.'],
-    sup: ['Vanish', '3s untargetable: enemies lose him and pick someone else; his next hit is a sure crit.'],
-    keeps: 'Shadow Step perk, Opportunist.' },
-  { id: 'archer', role: 'Sniper', color: '#3f8f3a',
-    now: 'Steady Aim, Rain of Arrows (channel on ALL), Hunter\'s Mark.',
-    problem: 'Rain of Arrows is a channel on all enemies, like the Bard\'s Crescendo. Two armor breakers (with the Samurai).',
-    sig: ['STEADY AIM (passive, kept)', '3s without being hit: faster, crit-heavy shots. Now also: shots on a Marked enemy pierce to the enemy behind it.'],
-    atk: ['Headshot', 'One enemy: 300% damage that ignores defense, x2 on a Marked enemy.'],
-    sup: ['Hunter\'s Mark', 'Kept: the target takes +25% damage from everyone for 6s.'],
-    keeps: 'Marksman perk, Steady Aim, Hunter\'s Mark.' },
-  { id: 'samurai', role: 'Duelist', color: '#b8402a',
-    now: 'Focused Strike (35% bleed, debuffs likelier), Wind Cutter (ALL + armor break), Focus Stance (parry + sure crit).',
-    problem: 'Bleed and "debuffs likelier" overlap the Rogue. His parry is his real identity but only lives in one skill.',
-    sig: ['IAIDO (passive)', 'Every 3rd hit he takes is parried and answered with an instant 120% counter-cut. Slow heavy attacks stay; the bleed proc goes away.'],
-    atk: ['Wind Cutter', 'Kept: crescent on ALL enemies + Armor Break. Now the ONLY armor breaker.'],
-    sup: ['Focus Stance', 'Kept: 4s parry everything, next attack a sure crit. Every parried hit counter-cuts.'],
-    keeps: 'Bushido perk, Wind Cutter, Focus Stance.' },
-  { id: 'mage', role: 'Elementalist', color: '#3b4fd4',
-    now: 'Spellweaver (every 4th attack), Elemental Rotation, Arcane Ward (squad shield).',
-    problem: 'One of three "every 4th attack" heroes, and one of three squad-shield heroes.',
-    sig: ['REACTIONS (passive)', 'Spells leave an element on the enemy. A DIFFERENT element on top makes a reaction: fire+ice = Steam (Blind), ice+electric = Shatter (+50% hit), fire+electric = Overload (explosion on its neighbours).'],
-    atk: ['Elemental Rotation', 'Kept: Fireball > Frost Nova > Chain Lightning, and now they combo into each other.'],
-    sup: ['Time Warp', 'Every hero\'s skill cooldowns -3s and +20% attack speed for 4s.'],
-    keeps: 'Arcane Haste perk, the rotation.' },
-  { id: 'cleric', role: 'Healer', color: '#e8e2cf',
-    now: 'Mending (regen aura + heal every 4th attack), Smite, Divine Shield.',
-    problem: 'Fine already. Becomes the ONLY counter hero and the only real healer.',
-    sig: ['MENDING (passive, kept)', 'Regen aura + every 4th attack heals the most hurt ally.'],
-    atk: ['Smite', 'Kept: holy hit, heals the most hurt ally.'],
-    sup: ['Divine Shield', 'Kept: 2s immune + heal. OPTIONAL idea for later: "Last Rites" brings a fallen hero back once per run (this breaks the "dead stay dead" rule, so only if you want it).'],
-    keeps: 'Everything.' },
-  { id: 'necromancer', role: 'Summoner', color: '#56307f',
-    now: 'Skeleton Summoner, Death Coil, Bone Ward (squad + skeleton shield).',
-    problem: 'Bone Ward is the third squad shield.',
-    sig: ['SKELETON SUMMONER (passive, kept)', 'Skeletons rise during every fight.'],
-    atk: ['Death Coil', 'Kept: dark bolt, a kill raises a skeleton.'],
-    sup: ['Corpse Explosion', 'Blows up all his skeletons: each one hits the enemies around it for 120% dark + Poison. New ones rise as usual.'],
-    keeps: 'Grim Resolve perk, summoner, Death Coil.' },
-  { id: 'bard', role: 'Conductor', color: '#e0524d',
-    now: 'Rhythm (every 4th squad attack), Crescendo (channel on ALL), Ballad of Rest (regen).',
-    problem: 'Counter like the Mage and Cleric; channel like the Archer.',
-    sig: ['SONGS (passive)', 'Always plays one of two songs for the squad: MARCH (+15% attack speed) or BALLAD (+0.6% health per second). The current song shows as notes over him.'],
-    atk: ['Discord', 'Every enemy is CHARMED for 2.5s: they attack each other (new status).'],
-    sup: ['Change Song', 'Switches songs with a big 1s burst of the new song (a quick heal or a speed burst).'],
-    keeps: 'Inspiration perk.' },
-  { id: 'alchemist', role: 'Plague Doctor', color: '#c98a5a',
-    now: 'Catalyst (longer debuffs, stronger DoTs), Flask Barrage, Mystery Brew (random heal/speed/shield).',
-    problem: 'Mystery Brew is random support with another shield.',
-    sig: ['CATALYST (passive, kept)', 'Enemy debuffs last 30% longer and damage over time hits 30% harder.'],
-    atk: ['Flask Barrage', 'Kept: 3 random flasks (fire, ice, poison).'],
-    sup: ['Detonate', 'Every Burn, Poison and Bleed on every enemy deals ALL its remaining damage at once.'],
-    keeps: 'Volatile Mix perk, Catalyst, Flask Barrage.' },
-];
-
-// Which shared mechanics each hero has, before and after.
-const OVERLAP = {
-  rows: ['Attack skill hits ALL enemies', '"Every 4th attack" counter', 'Squad shield', 'Channel (waves)', 'Armor Break', 'Debuffs 25% likelier', 'Bleed', 'Squad stat buff for a few seconds'],
-  before: {
-    knight: [1, 0, 0, 0, 0, 0, 0, 1], berserker: [0, 0, 0, 0, 0, 0, 1, 1], rogue: [1, 0, 0, 0, 0, 1, 1, 1], archer: [1, 0, 0, 1, 1, 0, 0, 0], samurai: [1, 0, 0, 0, 1, 1, 1, 0],
-    mage: [1, 1, 1, 0, 0, 0, 0, 1], cleric: [0, 1, 0, 0, 0, 0, 0, 0], necromancer: [0, 0, 1, 0, 0, 0, 0, 0], bard: [1, 1, 0, 1, 0, 0, 0, 1], alchemist: [1, 0, 1, 0, 0, 0, 0, 1],
-  },
-  after: {
-    knight: [0, 0, 0, 0, 0, 0, 0, 0], berserker: [0, 0, 0, 0, 0, 0, 1, 1], rogue: [0, 0, 0, 0, 0, 0, 1, 0], archer: [0, 0, 0, 0, 0, 0, 0, 0], samurai: [1, 0, 0, 0, 1, 0, 0, 0],
-    mage: [1, 0, 0, 0, 0, 0, 0, 1], cleric: [0, 1, 0, 0, 0, 0, 0, 0], necromancer: [0, 0, 0, 0, 0, 0, 0, 0], bard: [0, 0, 0, 0, 0, 0, 0, 1], alchemist: [1, 0, 0, 0, 0, 0, 0, 0],
-  },
-};
-
+__HEROES__
 // ---------------------------------------------------------------- SOUNDS
 // [name, when it plays, how it should feel, priority (1 must, 2 nice, 3 later), synth preset]
 const SOUNDS = [

@@ -10,3 +10,9 @@ const TEST_SKILLS = {
   archer: { attack: 'power_shot', support: 'eagle_focus' },
 };
 export const noPerks = (defs) => defs.filter((h) => TEST_SKILLS[h.id]).map((h) => ({ ...h, perk: undefined, passive: undefined, skills: TEST_SKILLS[h.id] }));
+
+// The FIRST hero kits (passive + skills, before the v2 rework) are frozen in fixtures/heroes-v1-kits.json.
+// Mechanic tests that were written with them (channels, cleanse, knockback, counters...) keep using them.
+import fs from 'fs';
+const V1 = JSON.parse(fs.readFileSync(new URL('./fixtures/heroes-v1-kits.json', import.meta.url), 'utf8'));
+export const kitsV1 = (defs) => defs.map((h) => (V1[h.id] ? { ...h, passive: V1[h.id].passive, skills: V1[h.id].skills } : h));

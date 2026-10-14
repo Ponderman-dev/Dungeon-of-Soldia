@@ -1,13 +1,13 @@
 // Phase G3: debuff appliers (real items.json).
 import fs from 'fs';
-import { noPerks } from './util.mjs';
+import { noPerks, kitsV1 } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems } from '../../src/systems/items.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const itemDefs = loadItems(r('items.json')), rules = { ...r('combat.json'), skillWindUp: { defaultCastMs: 0 } };
 const mk = (enemyIds = ['goblin'], rng = () => 0.99, heroIds = null) => {
-  const real = r('heroes.json');
+  const real = kitsV1(r('heroes.json'));
   const defs = heroIds ? heroIds.map((id) => ({ ...real.find((x) => x.id === id), perk: undefined })) : noPerks(real).slice(0, 3);
   const s = new BattleState({ heroDefs: defs, enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });
   const es = s.spawnEnemies(enemyIds, 1);
@@ -57,7 +57,7 @@ ok('...2 copies: 10% + 8% (diminishing, 0.8x)', within(rate('serrated_edge', 2, 
   ok('Fear makes the enemy skip its attack', s.has(es[0], 'fear') && !ev.some((e) => e.type === 'attackStart' && e.attacker === es[0])); }
 
 // Rogue / Samurai bonus applies to item debuffs
-{ const real = r('heroes.json'); const sq = ['rogue', 'knight', 'archer'];
+{ const real = kitsV1(r('heroes.json')); const sq = ['rogue', 'knight', 'archer'];
   const rg = rate('venom_fang', 1, 'poison', 12000, 0, sq), kn = rate('venom_fang', 1, 'poison', 12000, 1, sq);
   ok('Rogue: item debuffs 25% likelier (8% -> 10%), others stay 8%', within(rg, 0.10, 0.012) && within(kn, 0.08, 0.012), `${rg} / ${kn}`); }
 
@@ -90,5 +90,5 @@ ok('...2 copies: 10% + 8% (diminishing, 0.8x)', within(rate('serrated_edge', 2, 
 { const { s, es } = mk(['goblin'], () => 0.1, ['archer', 'knight', 'rogue']); const a = s.heroes[0]; give(s, a, 'fire_arrows'); a.specials.lifesteal = 100; a.hp = 1;
   s.landAttack(a, es[0], []); const afterBasic = a.hp;
   ok('item fire hits do no lifesteal (only the basic hit does)', afterBasic > 1); }
-{ const { s } = mk(['goblin']); const real = r('heroes.json'); const rw = r('rewards.json');
+{ const { s } = mk(['goblin']); const real = kitsV1(r('heroes.json')); const rw = r('rewards.json');
   ok('Fire Arrows needs a ranged source', itemDefs.fire_arrows.needs === 'ranged'); }

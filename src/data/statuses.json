@@ -174,5 +174,24 @@
     "label": "REGEN",
     "color": "#6dff8f",
     "textColor": "#000000"
+  },
+  "guarded": {
+    "popup": false,
+    "label": "GUARD",
+    "color": "#6fa8ff",
+    "textColor": "#ffffff"
+  },
+  "charm": {
+    "label": "CHARM",
+    "color": "#ff7ad9",
+    "textColor": "#ffffff",
+    "control": true,
+    "debuff": true
+  },
+  "element": {
+    "popup": false,
+    "label": "ELEM",
+    "color": "#c9a8ff",
+    "textColor": "#000000"
   }
 }

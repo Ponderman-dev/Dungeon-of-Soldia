@@ -14,7 +14,7 @@ const easeInOut = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2)
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const DUST = 0xc9b18a, KNIFE = 0xe4e8f0, ARROW = 0xc68a5e, NOTE = 0xf06ab4, RUNE = 0x9b4dff, ROAR = 0xff4a4a, DULL = 0x6f6890, GREENEYE = 0x6dff8a, BONE = 0xebe5cf, PETAL = 0xf6a8c8, STANCE = 0xffd27a;
 
-export const CAST_MS = { groundPound: 700, rallyCry: 1100, smokeBomb: 1400, huntersMark: 900, savageLeap: 750, warCry: 900, windCutter: 500, focusStance: 700, frostNova: 800, arcaneWard: 1200, divineShield: 700, boneWard: 1200, ballad: 1600 };
+export const CAST_MS = { shieldBash: 600, challenge: 900, bloodPact: 1000, eviscerate: 600, changeSong: 1100, groundPound: 700, rallyCry: 1100, smokeBomb: 1400, huntersMark: 900, savageLeap: 750, warCry: 900, windCutter: 500, focusStance: 700, frostNova: 800, arcaneWard: 1200, divineShield: 700, boneWard: 1200, ballad: 1600 };
 export const SHOT_MS = { knife: 200, rain: 300, note: 320, fireball: 720, darkbolt: 520, holybolt: 520, flask: 900 };
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -127,6 +127,41 @@ const CAST = {
   boneWard(q, c, t) {
     const g = pen(); const a = 1 - ph(q, 0.75, 1);
     c.targets.forEach((u) => { for (let k = 0; k < 4; k++) { const an = t / 300 + (k * Math.PI) / 2; g.rect(u.x + Math.cos(an) * (u.hw + 4) - 1, u.mid + Math.sin(an) * 5, 3, 1, BONE, a); } });
+    return g.out;
+  },
+  // Knight: Shield Bash. A blue impact star on the target and little stars circling its head (stun).
+  shieldBash(q, c, t) {
+    const g = pen(); const u = c.targets[0]; if (!u) return g.out;
+    rays(g, u.x - u.hw, u.mid, 8, 12, C.shield, ph(q, 0, 0.6));
+    for (let i = 0; i < 3; i++) { const a = t / 150 + (i * Math.PI * 2) / 3; g.px(u.x + Math.cos(a) * 5, u.top - 2 + Math.sin(a) * 2, C.stun || 0xffe14a, 1 - ph(q, 0.6, 1)); }
+    return g.out;
+  },
+  // Knight: Challenge. A red shout ring rolls out from him; a red "!" pops over every taunted enemy.
+  challenge(q, c) {
+    const g = pen(); const u = c.caster; const p = ph(q, 0, 0.6);
+    if (p > 0 && p < 1) g.ring(u.x, u.mid, 4 + p * 46, ROAR, 1 - p, 2 + p * 20);
+    c.targets.forEach((e, i) => { const s = ph(q, 0.2 + i * 0.06, 1); if (s > 0 && s < 1) { const y = e.top - 6 - easeOut(s) * 3; g.rect(e.x, y, 1, 3, ROAR, 1 - s * 0.6); g.px(e.x, y + 4, ROAR, 1 - s * 0.6); } });
+    return { draws: g.out, tints: [['caster', 0, q < 0.8 ? [C.shield, 0.25] : null]] };
+  },
+  // Berserker: Blood Pact. Red drops fly from him to every hero, who glow red for a moment.
+  bloodPact(q, c) {
+    const g = pen(); const u = c.caster;
+    c.squad.forEach((h, i) => { const p = ph(q, 0.1 + i * 0.05, 0.7 + i * 0.05); if (p > 0 && p < 1) { const [x, y] = fly({ x: u.x, y: u.mid }, { x: h.x, y: h.mid }, easeInOut(p), 10); g.rect(x - 1, y - 1, 2, 3, C.blood); } });
+    return { draws: g.out, tints: [['caster', 0, q < 0.4 ? [C.blood, 0.5] : null], ...c.squad.map((h, i) => ['squad', i, q > 0.6 && q < 1 ? [C.blood, 0.2] : null])] };
+  },
+  // Rogue: Eviscerate. Two quick purple slashes cross over the target.
+  eviscerate(q, c) {
+    const g = pen(); const u = c.targets[0]; if (!u) return g.out;
+    const s1 = ph(q, 0, 0.35), s2 = ph(q, 0.2, 0.55);
+    const slash = (p, dir) => { if (p <= 0 || p >= 1) return; for (let k = 0; k < 14 * p; k++) g.px(u.x - 7 * dir + k * dir, u.top + 2 + k, 0xc06bff, 1 - p * 0.5); };
+    slash(s1, 1); slash(s2, -1);
+    burst(g, u.x, u.mid, 8, [C.blood, 0xc06bff], ph(q, 0.4, 1), 9, 3, 0.4);
+    return g.out;
+  },
+  // Bard: Change Song. Notes swirl around him in the new song's colour (gold March, green Ballad).
+  changeSong(q, c, t) {
+    const g = pen(); const u = c.caster; const col = c.song === 'ballad' ? C.heal : 0xffb84d;
+    for (let i = 0; i < 5; i++) { const a = t / 300 + (i * Math.PI * 2) / 5; const r = 6 + q * 12; const x = u.x + Math.cos(a) * r, y = u.mid + Math.sin(a) * r * 0.6 - q * 6; g.rect(x - 1, y, 2, 2, col, 1 - q); g.line(x + 1, y, x + 1, y - 3, col, 1 - q); }
     return g.out;
   },
   // Bard: Ballad of Rest. Soft green notes drift up from each hero.

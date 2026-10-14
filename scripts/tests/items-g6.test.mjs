@@ -1,11 +1,12 @@
 // Phase G6: skill items (real items.json): Conductor's Baton, Echo Rune, Metronome.
 import fs from 'fs';
 import BattleState from '../../src/systems/BattleState.js';
+import { kitsV1 } from './util.mjs';
 import { loadItems } from '../../src/systems/items.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const itemDefs = loadItems(r('items.json')), rules = { ...r('combat.json'), skillWindUp: { defaultCastMs: 0 } };
-const heroDefs = r('heroes.json'), skills = r('skills.json');
+const heroDefs = kitsV1(r('heroes.json')), skills = r('skills.json');
 const noCast = Object.fromEntries(Object.entries(skills).map(([id, d]) => [id, { ...d, castMs: 0, ...(d.rotation ? { rotation: d.rotation.map((x) => ({ ...x, castMs: 0 })) } : {}) }]));
 const mk = (ids, enemyIds = ['goblin'], rng = () => 0.99) => {
   const s = new BattleState({ heroDefs: ids.map((id) => ({ ...heroDefs.find((x) => x.id === id), perk: undefined })), enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: noCast, rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });

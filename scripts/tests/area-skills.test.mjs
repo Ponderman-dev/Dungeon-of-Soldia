@@ -2,10 +2,11 @@
 // only hits the ones standing inside its area (circle around the target, cone from the caster, band).
 import fs from 'fs';
 import BattleState from '../../src/systems/BattleState.js';
+import { kitsV1 } from './util.mjs';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const rules = { ...r('combat.json'), skillWindUp: { defaultCastMs: 0 } };
-const heroes = r('heroes.json');
+const heroes = kitsV1(r('heroes.json')); // the first kits had these area skills
 const skills = Object.fromEntries(Object.entries(r('skills.json')).map(([k, v]) => [k, { ...v, castMs: 0, ...(v.rotation ? { rotation: v.rotation.map((x) => ({ ...x, castMs: 0 })) } : {}) }]));
 const mk = (id, enemyIds = ['goblin', 'goblin', 'goblin']) => {
   const s = new BattleState({ heroDefs: [heroes.find((h) => h.id === id)], enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs: {}, skillDefs: skills, statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });

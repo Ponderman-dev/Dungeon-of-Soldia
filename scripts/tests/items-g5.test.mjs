@@ -1,6 +1,6 @@
 // Phase G5: shield / heal / taunt items (real items.json).
 import fs from 'fs';
-import { noPerks } from './util.mjs';
+import { noPerks, kitsV1 } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems } from '../../src/systems/items.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
@@ -57,7 +57,7 @@ ok('all 8 G5 items exist', ['warding_charm', 'overheal_ring', 'spiked_aegis', 'p
 { const { s, es, k } = mk(['goblin'], Math.random); give(s, k, 'provokers_horn'); s.rng = Math.random; let n = 0; const N = 8000;
   for (let i = 0; i < N; i++) { es[0].statuses = []; s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true }); if (es[0].statuses.some((x) => x.type === 'taunt')) n++; }
   ok('...10% chance', Math.abs(n / N - 0.1) < 0.015, `${n / N}`); }
-{ const real = r('heroes.json'); const s2 = new BattleState({ heroDefs: ['knight', 'rogue', 'archer'].map((id) => ({ ...real.find((x) => x.id === id), perk: undefined })), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng: () => 0 });
+{ const real = kitsV1(r('heroes.json')); const s2 = new BattleState({ heroDefs: ['knight', 'rogue', 'archer'].map((id) => ({ ...real.find((x) => x.id === id), perk: undefined })), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng: () => 0 });
   const e = s2.spawnEnemies(['goblin'], 1)[0]; s2.giveItem(s2.heroes[0].uid, 'provokers_horn');
   ok('the Knight adds the Horn to his own Taunt Wall (two taunt rolls)', s2.heroes[0].procs.filter((p) => p.apply && p.apply.some((a) => a.status === 'taunt')).length === 2); void e; }
 

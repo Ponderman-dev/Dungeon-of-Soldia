@@ -3,8 +3,12 @@
     "id": "knight",
     "name": "Knight",
     "role": "Tank",
-    "summary": "Stands in front and soaks the hits.",
-    "tips": ["Ground Pound resets every enemy's attack: use it right before they swing.", "Rally Cry removes a debuff from every hero: save it for poison or curse.", "Give him defense and health items so the others stay safe."],
+    "summary": "Guards the squad and stops enemy wind-ups.",
+    "tips": [
+      "Shield Bash stuns: use it when a boss starts a big wind-up.",
+      "Challenge pulls every enemy around him onto himself.",
+      "Bulwark Plate and Spite Mail make Intercept hurt the attackers."
+    ],
     "damageType": "melee",
     "height": 24,
     "stats": {
@@ -137,8 +141,8 @@
       "resist": 0.3
     },
     "skills": {
-      "attack": "ground_pound",
-      "support": "rally_cry"
+      "attack": "knight_bash",
+      "support": "challenge"
     },
     "perk": {
       "name": "Stalwart",
@@ -156,34 +160,14 @@
       ]
     },
     "passive": {
-      "name": "Taunt Wall",
-      "description": "10% chance on each attack to taunt the enemy he hit for 3s (it must attack the Knight) and give himself +20 defense for 3s.",
-      "procs": [
-        {
-          "proc": "onAttack",
-          "chance": 10,
-          "label": "Taunt Wall!",
-          "targets": "self",
-          "apply": [
-            {
-              "status": "taunt",
-              "durationMs": 3000,
-              "to": "target"
-            },
-            {
-              "status": "buff",
-              "durationMs": 3000,
-              "mods": [
-                {
-                  "stat": "defense",
-                  "flat": 20
-                }
-              ],
-              "to": "self"
-            }
-          ]
-        }
-      ]
+      "name": "Intercept",
+      "description": "When an ally drops under 35% health he guards them for 3s: he takes half of every hit on them (his reflect items reflect those hits too). 8s cooldown.",
+      "intercept": {
+        "belowPercent": 35,
+        "sharePercent": 50,
+        "durationMs": 3000,
+        "cooldownMs": 8000
+      }
     },
     "provides": [
       "taunt"
@@ -193,8 +177,12 @@
     "id": "berserker",
     "name": "Berserker",
     "role": "Bruiser",
-    "summary": "Hits harder the more hurt he is.",
-    "tips": ["Bloodrage: the lower his health, the faster he attacks.", "Savage Leap does double damage to a bleeding or half-dead enemy.", "War Cry boosts the whole squad's attack: tap it before a big fight."],
+    "summary": "Fills his Rage and goes into a Frenzy.",
+    "tips": [
+      "Crits and lifesteal fill Rage faster.",
+      "Blood Pact costs his own health but gives the squad lifesteal.",
+      "Savage Leap does double damage to bleeding or half-dead enemies."
+    ],
     "damageType": "melee",
     "height": 23,
     "stats": {
@@ -328,7 +316,7 @@
     },
     "skills": {
       "attack": "savage_leap",
-      "support": "war_cry"
+      "support": "blood_pact"
     },
     "perk": {
       "name": "Battle Fury",
@@ -341,10 +329,29 @@
       ]
     },
     "passive": {
-      "name": "Bloodrage",
-      "description": "+0.6% attack speed for every 1% of health he is missing (at half health: +30%).",
+      "name": "Rage",
+      "description": "His hits (crits twice) and hits he takes fill a Rage bar. Full: 6s FRENZY (+50% attack speed, 15% lifesteal). Also attacks faster the more hurt he is.",
       "bloodrage": {
         "attackSpeedPercentPerMissing": 0.6
+      },
+      "rage": {
+        "max": 100,
+        "perHitDealt": 8,
+        "perHitTaken": 10,
+        "critMultiplier": 2,
+        "frenzy": {
+          "durationMs": 6000,
+          "mods": [
+            {
+              "stat": "attackEfficiency",
+              "percent": 50
+            },
+            {
+              "special": "lifesteal",
+              "percent": 15
+            }
+          ]
+        }
       }
     }
   },
@@ -352,8 +359,12 @@
     "id": "rogue",
     "name": "Rogue",
     "role": "Assassin",
-    "summary": "Punishes enemies that already have a debuff.",
-    "tips": ["Opportunist: +15% damage and +10 crit on debuffed enemies.", "Fan of Knives hits every enemy and each crit makes them bleed.", "Smoke Bomb blinds every enemy: great when the squad is in trouble."],
+    "summary": "Builds combo points, then finishes with Eviscerate.",
+    "tips": [
+      "Tap one enemy so all his hits build points on it.",
+      "Eviscerate at 5 points: sure crit, bleed and every on-hit item fires.",
+      "Smoke Bomb is the squad's escape: evasion + blind."
+    ],
     "damageType": "melee",
     "height": 23,
     "stats": {
@@ -481,7 +492,7 @@
       "attackEfficiency": 0.5
     },
     "skills": {
-      "attack": "fan_of_knives",
+      "attack": "eviscerate",
       "support": "smoke_bomb"
     },
     "perk": {
@@ -495,12 +506,14 @@
       ]
     },
     "passive": {
-      "name": "Opportunist",
-      "description": "+15% damage and +10 crit against any enemy that has a debuff. His own chance-based debuffs (item procs, crit debuffs) are 25% more likely.",
+      "name": "Combo",
+      "description": "Each hit on the SAME enemy adds a combo point (max 5); debuff item procs and double hits add points too. +15% damage and +10 crit against debuffed enemies.",
       "opportunist": {
         "damagePercent": 15,
-        "critFlat": 10,
-        "debuffChancePercent": 25
+        "critFlat": 10
+      },
+      "combo": {
+        "max": 5
       }
     },
     "provides": [
@@ -511,8 +524,12 @@
     "id": "archer",
     "name": "Archer",
     "role": "Marksman",
-    "summary": "Shoots from the back line, gets deadly when left alone.",
-    "tips": ["Steady Aim: 3 seconds without being hit = faster, crit-heavy shots.", "Hunter's Mark makes the target take 25% more from everyone.", "Rain of Arrows breaks armor on every enemy."],
+    "summary": "Marks a target, then deletes it with a Headshot.",
+    "tips": [
+      "Hunter's Mark first, then Headshot: double damage.",
+      "Headshot ignores defense: great on armored enemies.",
+      "Keep her safe: being hit turns off Steady Aim."
+    ],
     "damageType": "ranged",
     "height": 23,
     "stats": {
@@ -651,7 +668,7 @@
       "evasion": 0.4
     },
     "skills": {
-      "attack": "rain_of_arrows",
+      "attack": "headshot",
       "support": "hunters_mark"
     },
     "perk": {
@@ -666,11 +683,15 @@
     },
     "passive": {
       "name": "Steady Aim",
-      "description": "While he has not been hit for 3s he gets +25% attack speed and +15 crit. Being hit resets it.",
+      "description": "While she has not been hit for 3s: +25% attack speed and +15 crit. Her shots on a Marked enemy pierce to the enemy next to it.",
       "steadyAim": {
         "afterMs": 3000,
         "attackSpeedPercent": 25,
-        "critFlat": 15
+        "critFlat": 15,
+        "pierce": {
+          "radius": 140,
+          "damageMultiplier": 0.6
+        }
       }
     }
   },
@@ -678,8 +699,12 @@
     "id": "samurai",
     "name": "Samurai",
     "role": "Duelist",
-    "summary": "Slow, heavy cuts that open bleeding wounds.",
-    "tips": ["Every hit has a 35% chance to bleed.", "Focus Stance blocks every hit for 4s and makes his next attack a crit.", "Wind Cutter breaks the armor of the whole enemy line."],
+    "summary": "Parries and answers every blow.",
+    "tips": [
+      "Focus Stance parries everything for 4s: every hit becomes a counter.",
+      "Shield Totem blocks also counter-cut.",
+      "Wind Cutter breaks the armor of a whole row."
+    ],
     "damageType": "melee",
     "height": 23,
     "stats": {
@@ -713,27 +738,12 @@
       ]
     },
     "passive": {
-      "name": "Focused Strike",
-      "description": "Slow but heavy attacks, 35% chance on each hit to make the enemy bleed, and his own chance-based debuffs are 25% likelier.",
-      "focusedStrike": {
-        "debuffChancePercent": 25
-      },
-      "procs": [
-        {
-          "proc": "onAttack",
-          "chance": 35,
-          "label": "Bleed!",
-          "silent": true,
-          "targets": "target",
-          "apply": [
-            {
-              "status": "bleed",
-              "durationMs": 5000,
-              "damageMultiplier": 0.4
-            }
-          ]
-        }
-      ]
+      "name": "Iaido",
+      "description": "Every 3rd hit he takes is parried. A parried, blocked or dodged hit is answered with an instant 120% counter-cut (on-hit items can go off).",
+      "iaido": {
+        "every": 3,
+        "counterMultiplier": 1.2
+      }
     },
     "parts": {
       "body": {
@@ -857,8 +867,12 @@
     "id": "mage",
     "name": "Mage",
     "role": "Elementalist",
-    "summary": "Cycles fire, ice and lightning.",
-    "tips": ["His skill changes every cast: Fireball, then Frost Nova, then Chain Lightning.", "Every 4th attack is a free elemental hit that fires all his item procs.", "Arcane Ward shields the whole squad."],
+    "summary": "Combines elements into reactions.",
+    "tips": [
+      "His spells cycle fire > ice > lightning: each one reacts with the last.",
+      "Chill Band, Static Crystal and Fire Bombs on anyone set up reactions.",
+      "Arcane Ward shields the whole squad."
+    ],
     "damageType": "fire",
     "height": 24,
     "stats": {
@@ -892,62 +906,21 @@
       ]
     },
     "passive": {
-      "name": "Spellweaver",
-      "description": "Every 4th basic attack is a free empowered spell that cycles Fire (Burn), Ice (2 Chill) and Electric (Shock), and all his on-hit items go off.",
-      "counter": {
-        "id": "spellweave",
-        "label": "SPELL",
-        "color": "#ff9a4d",
-        "every": 4,
-        "scope": "self",
-        "effect": "empower",
-        "firedLabel": "Spellweave!",
-        "strike": {
-          "damageMultiplier": 1.2,
-          "damageType": "fire"
-        },
-        "apply": [
+      "name": "Reactions",
+      "description": "Fire, ice and electric hits leave their element on the enemy. A different element on top reacts: fire+ice = Steam (Blind), ice+electric = Shatter (+50% hit), fire+electric = Overload (fire burst on enemies around it). Item hits count too.",
+      "reactions": {
+        "markMs": 4000,
+        "steam": [
           {
-            "status": "burn",
-            "durationMs": 4000,
-            "damageMultiplier": 0.3
+            "status": "blind",
+            "durationMs": 3000
           }
         ],
-        "forceProcs": true,
-        "rotation": [
-          {
-            "damageType": "fire",
-            "color": "#ff9a4d",
-            "apply": [
-              {
-                "status": "burn",
-                "durationMs": 4000,
-                "damageMultiplier": 0.3
-              }
-            ]
-          },
-          {
-            "damageType": "ice",
-            "color": "#7fd8ff",
-            "apply": [
-              {
-                "status": "chill",
-                "durationMs": 6000,
-                "stacks": 2
-              }
-            ]
-          },
-          {
-            "damageType": "electric",
-            "color": "#ffe94d",
-            "apply": [
-              {
-                "status": "shock",
-                "durationMs": 4000
-              }
-            ]
-          }
-        ]
+        "shatterPercent": 50,
+        "overload": {
+          "radius": 110,
+          "damageMultiplier": 0.6
+        }
       }
     },
     "parts": {
@@ -1079,7 +1052,11 @@
     "name": "Cleric",
     "role": "Healer",
     "summary": "Keeps the squad standing.",
-    "tips": ["Every hero regenerates health while she lives.", "Every 4th attack heals the most hurt ally instead.", "Divine Shield makes the weakest ally immune for 2s."],
+    "tips": [
+      "Every hero regenerates health while she lives.",
+      "Every 4th attack heals the most hurt ally instead.",
+      "Divine Shield makes the weakest ally immune for 2s."
+    ],
     "damageType": "holy",
     "height": 24,
     "stats": {
@@ -1254,7 +1231,11 @@
     "name": "Necromancer",
     "role": "Summoner",
     "summary": "Raises skeletons that fight beside the squad.",
-    "tips": ["Skeletons rise during every fight, no upkeep.", "A Death Coil kill raises an extra skeleton.", "Bone Ward shields heroes AND skeletons; broken shields hit back."],
+    "tips": [
+      "Skeletons rise during every fight, no upkeep.",
+      "A Death Coil kill raises an extra skeleton.",
+      "Bone Ward shields heroes AND skeletons; broken shields hit back."
+    ],
     "damageType": "dark",
     "height": 23,
     "stats": {
@@ -1419,8 +1400,12 @@
     "id": "bard",
     "name": "Bard",
     "role": "Support",
-    "summary": "Every 4th squad attack gets a bonus hit.",
-    "tips": ["Rhythm counts the attacks of the WHOLE squad: fast heroes power him up.", "Crescendo builds up to a big final hit on every enemy.", "Ballad of Rest heals the squad quickly over 4 seconds."],
+    "summary": "Plays songs for the squad and turns enemies on each other.",
+    "tips": [
+      "March when you are winning, Ballad when the squad is hurt.",
+      "Discord charms a group: they hit each other for 2.5s.",
+      "War Banner and fast heroes love the March."
+    ],
     "damageType": "ranged",
     "height": 23,
     "stats": {
@@ -1440,8 +1425,8 @@
       "attackEfficiency": 0.3
     },
     "skills": {
-      "attack": "crescendo",
-      "support": "ballad_of_rest"
+      "attack": "discord",
+      "support": "change_song"
     },
     "perk": {
       "name": "Inspiration",
@@ -1454,19 +1439,27 @@
       ]
     },
     "passive": {
-      "name": "Rhythm",
-      "description": "Every 4th basic attack of ANY hero is empowered with a bonus hit (a shared beat for the whole squad).",
-      "counter": {
-        "id": "rhythm",
-        "label": "RHYTHM",
-        "color": "#ffb84d",
-        "every": 4,
-        "scope": "squad",
-        "effect": "empower",
-        "firedLabel": "Beat!",
-        "strike": {
-          "damageMultiplier": 0.8,
-          "damageType": "ranged"
+      "name": "Songs",
+      "description": "Always plays a song for the squad: MARCH (+15% attack speed) or BALLAD (+0.6% health per second). Conductor's Baton makes his songs stronger.",
+      "songs": {
+        "start": "march",
+        "march": {
+          "attackSpeedPercent": 15,
+          "burst": {
+            "durationMs": 3000,
+            "mods": [
+              {
+                "stat": "attackEfficiency",
+                "percent": 30
+              }
+            ]
+          }
+        },
+        "ballad": {
+          "regenPercentPerSec": 0.6,
+          "burst": {
+            "healPercent": 8
+          }
         }
       }
     },
@@ -1590,7 +1583,11 @@
     "name": "Alchemist",
     "role": "Debuffer",
     "summary": "Makes every debuff last longer and hurt more.",
-    "tips": ["Catalyst: enemy debuffs last 30% longer and damage over time hits 30% harder.", "Flask Barrage throws 3 random flasks (fire, ice or poison).", "Mystery Brew gives two random heroes a heal, speed or a shield."],
+    "tips": [
+      "Catalyst: enemy debuffs last 30% longer and damage over time hits 30% harder.",
+      "Flask Barrage throws 3 random flasks (fire, ice or poison).",
+      "Mystery Brew gives two random heroes a heal, speed or a shield."
+    ],
     "damageType": "ranged",
     "height": 23,
     "stats": {

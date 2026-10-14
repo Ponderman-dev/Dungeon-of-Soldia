@@ -12,5 +12,10 @@
   "arcane_ward": "arcaneWard",
   "divine_shield": "divineShield",
   "bone_ward": "boneWard",
-  "ballad_of_rest": "ballad"
+  "ballad_of_rest": "ballad",
+  "knight_bash": "shieldBash",
+  "challenge": "challenge",
+  "blood_pact": "bloodPact",
+  "eviscerate": "eviscerate",
+  "change_song": "changeSong"
 }

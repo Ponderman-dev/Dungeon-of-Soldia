@@ -1,10 +1,11 @@
 // E1 Knight (real hero data): passive Taunt Wall, attack Ground Pound, support Rally Cry.
 import fs from 'fs';
 import BattleState from '../../src/systems/BattleState.js';
+import { kitsV1 } from './util.mjs';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const rules = { ...r('combat.json'), skillWindUp: { defaultCastMs: 0 } };
-const heroDefs = r('heroes.json'), skills = r('skills.json');
+const heroDefs = kitsV1(r('heroes.json')), skills = r('skills.json');
 const mk = (enemyIds = ['goblin', 'goblin', 'goblin'], rng = Math.random) => {
   const defs = ['knight', 'rogue', 'archer'].map((id) => ({ ...heroDefs.find((h) => h.id === id), perk: undefined }));
   const s = new BattleState({ heroDefs: defs, enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs: {}, statusDefs: r('statuses.json'), skillDefs: Object.fromEntries(Object.entries(skills).map(([id, d]) => [id, { ...d, castMs: 0 }])), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });

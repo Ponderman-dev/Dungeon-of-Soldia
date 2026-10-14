@@ -307,13 +307,17 @@
     "target": "enemy",
     "cooldownMs": 9000,
     "castMs": 600,
-    "damageMultiplier": 2.0,
+    "damageMultiplier": 2,
     "leap": true,
     "doubleIf": [
       "bleed",
       "below50"
     ],
-    "description": "Leap at one enemy for 200% damage; DOUBLE damage if it is bleeding or below half health."
+    "description": "Leaps at one enemy for 200% damage (DOUBLE if it is bleeding or below half health); a shockwave hits the enemies next to it for 60%.",
+    "landSplash": {
+      "radius": 80,
+      "damageMultiplier": 0.6
+    }
   },
   "war_cry": {
     "name": "War Cry",
@@ -350,7 +354,7 @@
     "damageType": "ranged",
     "cooldownMs": 9000,
     "castMs": 700,
-    "damageMultiplier": 1.0,
+    "damageMultiplier": 1,
     "projectile": "crescent",
     "apply": [
       {
@@ -542,10 +546,10 @@
     "apply": [
       {
         "status": "shield",
-        "attackMultiplier": 2.0,
+        "attackMultiplier": 2,
         "durationMs": 5000,
         "onBreak": {
-          "damageMultiplier": 1.0,
+          "damageMultiplier": 1,
           "damageType": "dark"
         }
       }
@@ -642,9 +646,13 @@
             }
           ]
         }
-      ]
+      ],
+      "splash": {
+        "radius": 70,
+        "multiplier": 0.5
+      }
     },
-    "description": "Throws 3 random flasks (fire, ice or poison) at random enemies; each applies its debuff."
+    "description": "Throws 3 random flasks (fire, ice or poison) at random enemies; each splashes the enemies next to where it lands."
   },
   "mystery_brew": {
     "name": "Mystery Brew",
@@ -693,5 +701,148 @@
       ]
     },
     "description": "Throws 2 random flasks at random teammates: heal, speed boost or shield."
+  },
+  "knight_bash": {
+    "name": "Shield Bash",
+    "short": "SB",
+    "kind": "attack",
+    "target": "enemy",
+    "cooldownMs": 9000,
+    "castMs": 500,
+    "damageMultiplier": 1.4,
+    "apply": [
+      {
+        "status": "stun",
+        "durationMs": 1500
+      }
+    ],
+    "description": "Bashes one enemy: 140% damage and a 1.5s stun. Stuns stop enemy wind-ups (great against bosses)."
+  },
+  "challenge": {
+    "name": "Challenge",
+    "short": "CH",
+    "kind": "support",
+    "target": "allEnemies",
+    "area": {
+      "shape": "circle",
+      "at": "caster",
+      "radius": 150
+    },
+    "cooldownMs": 13000,
+    "castMs": 500,
+    "apply": [
+      {
+        "status": "taunt",
+        "durationMs": 3000
+      }
+    ],
+    "selfApply": [
+      {
+        "status": "buff",
+        "durationMs": 3000,
+        "mods": [
+          {
+            "stat": "defense",
+            "flat": 30
+          }
+        ]
+      }
+    ],
+    "description": "Taunts every enemy around him for 3s (they must attack him) and gives himself +30 defense."
+  },
+  "blood_pact": {
+    "name": "Blood Pact",
+    "short": "BP",
+    "kind": "support",
+    "target": "squad",
+    "cooldownMs": 14000,
+    "castMs": 500,
+    "selfCostPercent": 15,
+    "apply": [
+      {
+        "status": "buff",
+        "durationMs": 6000,
+        "mods": [
+          {
+            "special": "lifesteal",
+            "percent": 12
+          }
+        ]
+      }
+    ],
+    "description": "Pays 15% of his own health: the whole squad gets 12% lifesteal for 6s."
+  },
+  "eviscerate": {
+    "name": "Eviscerate",
+    "short": "EV",
+    "kind": "attack",
+    "target": "enemy",
+    "cooldownMs": 8000,
+    "castMs": 400,
+    "damageMultiplier": 0.6,
+    "finisher": {
+      "perPoint": 0.6,
+      "applyAtMax": [
+        {
+          "status": "bleed",
+          "durationMs": 5000,
+          "damageMultiplier": 0.3,
+          "stacks": 1
+        }
+      ]
+    },
+    "description": "Spends his combo points on one enemy: 60% damage + 60% per point. With 5 points it always crits, makes it Bleed and fires all his on-hit items."
+  },
+  "headshot": {
+    "name": "Headshot",
+    "short": "HS",
+    "kind": "attack",
+    "target": "enemy",
+    "cooldownMs": 10000,
+    "castMs": 700,
+    "damageMultiplier": 3,
+    "damageType": "ranged",
+    "ignoresArmor": true,
+    "bonusVs": [
+      {
+        "status": "mark",
+        "multiplier": 2
+      }
+    ],
+    "triggersOnHit": true,
+    "projectile": "knife",
+    "description": "One aimed shot: 300% damage that ignores defense, DOUBLE on a Marked enemy. Counts as an attack for on-hit items."
+  },
+  "discord": {
+    "name": "Discord",
+    "short": "DC",
+    "kind": "attack",
+    "target": "allEnemies",
+    "area": {
+      "shape": "circle",
+      "at": "target",
+      "radius": 120
+    },
+    "cooldownMs": 13000,
+    "castMs": 600,
+    "damageMultiplier": 0.4,
+    "projectile": "note",
+    "apply": [
+      {
+        "status": "charm",
+        "durationMs": 2500
+      }
+    ],
+    "description": "A jarring tune around his target: 40% damage and the enemies there are CHARMED for 2.5s (they attack each other)."
+  },
+  "change_song": {
+    "name": "Change Song",
+    "short": "CS",
+    "kind": "support",
+    "target": "self",
+    "cooldownMs": 10000,
+    "castMs": 400,
+    "songSwitch": true,
+    "description": "Switches between MARCH (squad attacks 15% faster) and BALLAD (squad regenerates 0.6% health/s). Switching plays a burst: a quick heal or a speed rush."
   }
 }

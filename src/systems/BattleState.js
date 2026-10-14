@@ -115,6 +115,11 @@ export default class BattleState {
       specials: {},
       procs: [],
       shareCd: 0, // Bloodlust Mask: ms until its lifesteal can be shared again
+      rage: 0, // Berserker: Rage bar (0..max), full = Frenzy
+      combo: { uid: null, points: 0 }, // Rogue: combo points on one enemy
+      iaidoHits: 0, // Samurai: hits taken (every Nth is parried)
+      interceptCd: 0, // Knight: ms until Intercept can save someone again
+      song: (def.passive && def.passive.songs && def.passive.songs.start) || null, // Bard: the song he plays
       alive: true,
       damageType: def.damageType,
       flying: !!def.flying,
@@ -244,6 +249,11 @@ export default class BattleState {
   //  - Melee enemies keep their opponent too, and a new one is always the NEAREST hero (melee or
   //    ranged). Ranged enemies pick at random.
   pickTarget(unit) {
+    // Charmed (Bard's Discord): an enemy attacks the nearest OTHER enemy instead.
+    if (unit.side === 'enemy' && this.has(unit, 'charm')) {
+      const others = this.enemies.filter((e) => e.alive && e !== unit);
+      return others.length ? this.nearest(unit, others) : null;
+    }
     const taunter = this.tauntedBy(unit);
     if (taunter) return taunter;
     const foes = (unit.side === 'hero' ? this.enemies.filter((u) => u.alive) : this.defenders());
@@ -652,6 +662,7 @@ export default class BattleState {
     for (const st of m.statuses) {
       if (st.type !== 'buff') continue;
       for (const mod of st.mods) {
+        if (!mod.stat) continue; // specials (e.g. Blood Pact's lifesteal) are for heroes only
         if (mod.percent !== undefined) stats[mod.stat] += ((m.baseStats[mod.stat] || 0) * mod.percent) / 100;
         else stats[mod.stat] = (stats[mod.stat] || 0) + mod.flat;
       }
@@ -676,7 +687,7 @@ export default class BattleState {
       if (!hero.alive) continue;
       // Regen (Heart Charm) and the Cleric's aura: every hero regenerates a little, and regen/heals from items are stronger.
       const aura = this.regenAura();
-      const regen = ((hero.specials && hero.specials.regen) || 0) * aura.factor + aura.base; // % of max health per second
+      const regen = ((hero.specials && hero.specials.regen) || 0) * aura.factor + aura.base + this.songRegen(); // % of max health per second
       if (regen > 0) {
         const gain = Math.min(hero.maxHp - hero.hp, (hero.maxHp * regen * dt) / 100000);
         hero.hp += gain;
@@ -689,6 +700,7 @@ export default class BattleState {
         hero.regenAcc = 0;
       }
       this.tickSteadyAim(hero, dt);
+      if (hero.interceptCd > 0) hero.interceptCd -= dt; // Knight's Intercept cooldown
       this.tickTaunting(hero);
       if (hero.floor.martyrCd > 0) hero.floor.martyrCd -= dt;
       hero.shareCd = Math.max(0, hero.shareCd - dt);
@@ -789,6 +801,8 @@ export default class BattleState {
     }
     const empower = fired.filter((f) => f.counter.effect === 'empower');
     const hit = this.strike(unit, target, events, { basic: true });
+    if (!hit.dodged) this.addCombo(unit, target, 1, events); // Rogue: a combo point on this enemy
+    this.pierce(unit, target, hit, events); // Archer: a shot on a Marked enemy goes through to the one behind
     // Minion hits that put a status on the target (Imp burns, Gargoyle taunts).
     if (unit.minion && unit.def.onAttackApply && target.alive && !hit.dodged) {
       for (const spec of unit.def.onAttackApply) this.applyStatus(target, spec, unit, `minion_${unit.def.id}`, events);
@@ -809,12 +823,152 @@ export default class BattleState {
       if (target.alive && !hit.dodged) for (const spec of (el ? el.apply : c.apply) || []) this.applyStatus(target, spec, unit, `counter_${f.holder.uid}`, events);
     }
     this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, force: empower.some((f) => f.counter.forceProcs) });
-    // Fire Arrows: ranged attacks have a 50% chance (it does not stack) for an extra fire hit; more copies hit harder.
+    this.fireArrows(unit, target, events);
+  }
+
+  // Fire Arrows: ranged attacks have a 50% chance (it does not stack) for an extra fire hit; more copies hit harder.
+  fireArrows(unit, target, events) {
     const fa = unit.specials && unit.specials.fireArrows;
     if (fa && unit.damageType !== 'melee' && target.alive && this.rng() < 0.5) {
       events.push({ type: 'proc', unit, label: 'Fire Arrow!', itemId: 'fire_arrows', target });
       this.strike(unit, target, events, { multiplier: fa / 100, damageType: 'fire', projectile: 'bomb', item: true });
     }
+  }
+
+  // ---- hero rework v2: signature mechanics (all numbers in the hero's passive in heroes.json) ----------
+
+  // Knight's INTERCEPT (passive.intercept): when an ally drops under `belowPercent` health, the Knight guards
+  // them for `durationMs`: he takes `sharePercent` of every enemy hit on them (see strike). Cooldown `cooldownMs`.
+  tryIntercept(ally, events) {
+    for (const k of this.heroes) {
+      const ic = k.alive && k !== ally && k.def.passive && k.def.passive.intercept;
+      if (!ic || k.interceptCd > 0 || ally.hp >= (ally.maxHp * ic.belowPercent) / 100) continue;
+      k.interceptCd = ic.cooldownMs;
+      this.applyStatus(ally, { status: 'guarded', durationMs: ic.durationMs }, k, 'intercept', events);
+      events.push({ type: 'intercept', unit: k, ally });
+      return;
+    }
+  }
+
+  // The Knight takes his share of a hit on a guarded ally. Returns the amount the ally still takes.
+  interceptHit(attacker, target, amount, events) {
+    const g = target.statuses.find((st) => st.type === 'guarded');
+    const k = g && this.heroes.find((h) => h.uid === g.sourceUid && h.alive && h !== target);
+    if (!k) return amount;
+    const part = Math.round((amount * k.def.passive.intercept.sharePercent) / 100);
+    if (part <= 0) return amount;
+    const d = this.dealDamage(k, part, events);
+    events.push({ type: 'intercepted', unit: k, ally: target, amount: d.immune ? 0 : part - d.absorbed });
+    this.breakEffects(k, d.broken, events);
+    if (!d.immune) this.afterHit(attacker, k, part - d.absorbed, events); // his Bulwark Plate / Spite Mail reflect it
+    if (k.hp <= 0 && k.alive) this.killUnit(k, events, attacker);
+    return amount - part;
+  }
+
+  // Berserker's RAGE (passive.rage): fills from his hits (`perHitDealt`, x`critMultiplier` on crits) and
+  // hits he takes (`perHitTaken`); full = FRENZY (a buff with `frenzy.mods` for `frenzy.durationMs`).
+  gainRage(hero, amount, events) {
+    const r = hero.def.passive && hero.def.passive.rage;
+    if (!r || !hero.alive || hero.side !== 'hero' || this.frenzied(hero)) return;
+    hero.rage = Math.min(r.max, hero.rage + amount);
+    if (hero.rage < r.max) return;
+    hero.rage = 0;
+    if (events) events.push({ type: 'proc', unit: hero, label: 'Frenzy!' });
+    this.applyStatus(hero, { status: 'buff', durationMs: r.frenzy.durationMs, mods: r.frenzy.mods }, hero, 'frenzy', events || []);
+  }
+
+  frenzied(hero) {
+    return hero.statuses.some((st) => st.key === 'buff:frenzy');
+  }
+
+  // Rogue's COMBO (passive.combo): points on ONE enemy (another enemy starts over), up to `max`.
+  addCombo(hero, target, n, events) {
+    const c = hero.def.passive && hero.def.passive.combo;
+    if (!c || !target || target.side !== 'enemy') return;
+    if (hero.combo.uid !== target.uid) hero.combo = { uid: target.uid, points: 0 };
+    hero.combo.points = Math.min(c.max, hero.combo.points + n);
+    events.push({ type: 'combo', unit: hero, target, points: hero.combo.points });
+  }
+
+  // Archer's pierce (passive.steadyAim.pierce): a basic shot on a MARKED enemy also hits the closest other
+  // enemy within `radius` of it for `damageMultiplier`.
+  pierce(unit, target, hit, events) {
+    const p = unit.def.passive && unit.def.passive.steadyAim && unit.def.passive.steadyAim.pierce;
+    if (!p || hit.dodged || !this.has(target, 'mark')) return;
+    const others = this.enemies.filter((e) => e.alive && e !== target && (!this.hasPositions(e) || this.distance(e, target) <= p.radius));
+    if (!others.length) return;
+    const next = this.nearest(target, others);
+    events.push({ type: 'proc', unit, label: 'Pierce!' });
+    this.strike(unit, next, events, { multiplier: p.damageMultiplier, projectile: 'knife', from: target });
+  }
+
+  // Bard's SONGS (passive.songs): the song he plays helps the squad while he lives.
+  bards() {
+    return this.heroes.filter((h) => h.alive && h.def.passive && h.def.passive.songs);
+  }
+
+  songRegen() {
+    let regen = 0;
+    for (const b of this.bards()) if (b.song === 'ballad') regen += b.def.passive.songs.ballad.regenPercentPerSec * (1 + (b.specials.baton || 0) / 100);
+    return regen;
+  }
+
+  // Change Song: switches the song and plays a short burst of the new one (a squad heal or a speed buff).
+  switchSong(bard, events) {
+    const songs = bard.def.passive.songs;
+    bard.song = bard.song === 'march' ? 'ballad' : 'march';
+    const burst = songs[bard.song].burst || {};
+    events.push({ type: 'song', unit: bard, song: bard.song });
+    for (const u of this.squadUnits()) {
+      if (burst.healPercent) this.healUnit(u, (u.maxHp * burst.healPercent) / 100, events);
+      if (burst.mods) this.applyStatus(u, { status: 'buff', durationMs: burst.durationMs, mods: burst.mods }, bard, 'song_burst', events);
+    }
+    this.refreshStats();
+  }
+
+  // Mage's REACTIONS (passive.reactions, while the Mage lives): a fire / ice / electric hit leaves that element
+  // on the enemy (status 'element'); a DIFFERENT element on top reacts (and uses the mark up):
+  //   fire + ice = steam (`steam` statuses: Blind), ice + electric = shatter (this hit +`shatterPercent`%),
+  //   fire + electric = overload (`overload`: a fire burst on the enemies around it).
+  // Returns { damagePercent, overload } for the hit that is about to land.
+  reaction(attacker, target, type, events) {
+    const out = { damagePercent: 0, overload: null };
+    if (attacker.side !== 'hero' || target.side !== 'enemy' || !['fire', 'ice', 'electric'].includes(type)) return out;
+    const mage = this.heroes.find((h) => h.alive && h.def.passive && h.def.passive.reactions);
+    if (!mage) return out;
+    const R = mage.def.passive.reactions;
+    const mark = target.statuses.find((st) => st.type === 'element');
+    if (mark && mark.element !== type) {
+      target.statuses.splice(target.statuses.indexOf(mark), 1);
+      events.push({ type: 'status', unit: target, change: 'expire', status: mark });
+      const pair = [mark.element, type].sort().join('+');
+      const kind = pair === 'fire+ice' ? 'steam' : pair === 'electric+ice' ? 'shatter' : 'overload';
+      events.push({ type: 'reaction', unit: target, kind, attacker });
+      if (kind === 'steam') for (const spec of R.steam) this.applyStatus(target, spec, mage, 'steam', events);
+      if (kind === 'shatter') out.damagePercent = R.shatterPercent;
+      if (kind === 'overload') out.overload = R.overload;
+      return out;
+    }
+    if (mark) target.statuses.splice(target.statuses.indexOf(mark), 1);
+    this.applyStatus(target, { status: 'element', durationMs: R.markMs }, mage, 'element', events);
+    const st = target.statuses.find((x) => x.type === 'element');
+    if (st) st.element = type;
+    return out;
+  }
+
+  // Samurai's IAIDO (passive.iaido): every `every`th hit he takes is parried. A parried, blocked or dodged
+  // hit is answered with a counter-cut (`counterMultiplier`, a basic melee hit: his on-hit items can go off).
+  iaido(target) {
+    return (target.def.passive && target.def.passive.iaido) || null;
+  }
+
+  counterCut(samurai, attacker, events) {
+    const ia = this.iaido(samurai);
+    if (!ia || !samurai.alive || !attacker.alive || this.isStunned(samurai)) return;
+    if (this.hasPositions(samurai) && this.hasPositions(attacker) && !this.inReach(samurai, attacker)) return; // too far to cut back
+    events.push({ type: 'proc', unit: samurai, label: 'Counter!' });
+    const res = this.strike(samurai, attacker, events, { multiplier: ia.counterMultiplier, counter: true });
+    this.rollProcs(samurai, 'onAttack', events, { target: attacker, hit: !res.dodged });
   }
 
   // ---- passives that change over time or need a living hero --------------------------------------
@@ -1021,7 +1175,15 @@ export default class BattleState {
     if (bonus) opts = { ...opts, damagePercent: (opts.damagePercent || 0) + bonus };
     const op = this.opportunist(attacker);
     if (op && this.isDebuffed(target)) opts = { ...opts, damagePercent: (opts.damagePercent || 0) + op.damagePercent, critBonus: (opts.critBonus || 0) + op.critFlat };
-    const result = computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, opts);
+    // Mage's reactions: a different element on top of the last one.
+    const react = this.reaction(attacker, target, opts.damageType || attacker.damageType, events);
+    if (react.damagePercent) opts = { ...opts, damagePercent: (opts.damagePercent || 0) + react.damagePercent };
+    // Samurai's Iaido: every Nth hit on him is parried outright.
+    const ia = attacker.side === 'enemy' ? this.iaido(target) : null;
+    let forced = false;
+    if (ia && target.alive) { target.iaidoHits++; forced = target.iaidoHits % ia.every === 0; }
+    const result = forced ? { dodged: true, blocked: true, parried: true, crit: false, amount: 0, mult: 1 } : computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, opts);
+    if (!result.dodged && attacker.side === 'enemy' && target.side === 'hero') result.amount = this.interceptHit(attacker, target, result.amount, events); // Knight takes his share
     if (!result.dodged) for (const [itemId, label] of this.bonusItems || []) events.push({ type: 'proc', unit: attacker, label, itemId, target });
     // Tough Skin: the first hit the holder takes each floor deals much less.
     if (!result.dodged && target.side === 'hero' && target.specials.toughSkin && !target.floor.toughUsed) {
@@ -1057,7 +1219,16 @@ export default class BattleState {
     // Fire Heart: an enemy that hits the fire shield catches fire.
     if (dealt && dealt.absorbed > 0 && dealt.burnShield && attacker.alive && attacker.side === 'enemy') this.applyStatus(attacker, { status: 'burn', durationMs: 3000, damageMultiplier: 0.15, damageType: 'fire' }, target, 'fireheart', events);
     if (!result.dodged && !result.fullyAbsorbed && !opts.item) this.afterHit(attacker, target, result.amount - (result.absorbed || 0), events, result);
+    const rage = attacker.def.passive && attacker.def.passive.rage;
+    if (rage && !result.dodged && opts.basic) this.gainRage(attacker, rage.perHitDealt * (result.crit ? rage.critMultiplier : 1), events); // Berserker: his hits fill Rage (crits twice)
+    if (react.overload && !result.dodged) {
+      // Overload: a fire burst on the enemies around the target.
+      const near = this.enemies.filter((e) => e.alive && e !== target && (!this.hasPositions(e) || !this.hasPositions(target) || this.distance(e, target) <= react.overload.radius));
+      for (const e of near) this.strike(attacker, e, events, { multiplier: react.overload.damageMultiplier, damageType: 'fire', item: true, burst: true });
+    }
     if (target.hp <= 0 && target.alive) this.killUnit(target, events, attacker);
+    // Iaido: a parried / blocked / dodged hit on the Samurai is answered (not a blind miss, not his own counter).
+    if (ia && result.dodged && !result.missed && !opts.counter) this.counterCut(target, attacker, events);
     return result;
   }
 
@@ -1102,8 +1273,9 @@ export default class BattleState {
       attacker.firstHits.add(target.uid);
       if (sp.brawlerMax) {
         const st = attacker.streak;
-        bonus += Math.min(sp.brawlerMax, st.uid === target.uid ? st.count * 2 : 0);
-        attacker.streak = { uid: target.uid, count: st.uid === target.uid ? st.count + 1 : 1 };
+        const same = st.uid === target.uid || this.frenzied(attacker); // Frenzy: every hit counts as "the same target"
+        bonus += Math.min(sp.brawlerMax, same ? st.count * 2 : 0);
+        attacker.streak = { uid: target.uid, count: same ? st.count + 1 : 1 };
       }
     }
     if (sp.fullVigor && attacker.hp >= attacker.maxHp) bonus += sp.fullVigor;
@@ -1135,7 +1307,8 @@ export default class BattleState {
       if (!proc.silent) events.push({ type: 'proc', unit: hero, label: proc.label, itemId: proc.itemId, target: ctx.target || null });
       const enemy = ctx.target && ctx.target.alive ? ctx.target : null;
       let landed = ctx.hit !== false; // statuses on the target need the attack to have connected
-      if (proc.doubleHit && enemy) this.strike(hero, enemy, events);
+      if (proc.doubleHit && enemy) { const dh = this.strike(hero, enemy, events); if (!dh.dodged) this.addCombo(hero, enemy, 1, events); }
+      if (debuffs && enemy && ctx.hit !== false && !String(proc.itemId).startsWith('passive_')) this.addCombo(hero, enemy, 1, events); // Rogue: a debuff item proc = a combo point
       if (proc.strike && enemy) {
         const hit = this.strike(hero, enemy, events, {
           multiplier: proc.strike.damageMultiplier,
@@ -1240,7 +1413,10 @@ export default class BattleState {
     const lifesteal = (attacker.specials && attacker.specials.lifesteal) || 0;
     if (lifesteal > 0 && attacker.alive) {
       const base = Math.max(1, Math.round(((amount * lifesteal) / 100) * this.regenAura().factor)); // the Cleric's aura makes item heals stronger
-      if (this.healUnit(attacker, base, events, { aura: false }) > 0) events.push({ type: 'lifesteal', unit: attacker, from: target }); // drawn as drops flying back
+      if (this.healUnit(attacker, base, events, { aura: false }) > 0) {
+        events.push({ type: 'lifesteal', unit: attacker, from: target }); // drawn as drops flying back
+        if (attacker.def.passive && attacker.def.passive.rage) this.gainRage(attacker, attacker.def.passive.rage.perHitDealt, events); // lifesteal fills Rage twice as fast
+      }
       // Bloodlust Mask: sometimes the heal is shared with the rest of the squad (then a cooldown).
       const share = attacker.specials.lifestealShare || 0;
       if (share > 0 && attacker.shareCd <= 0 && this.rng() * 100 < share) {
@@ -1294,6 +1470,7 @@ export default class BattleState {
       }
     }
     target.hp = Math.max(0, target.hp - left);
+    if (left > 0 && target.def.passive && target.def.passive.rage) this.gainRage(target, target.def.passive.rage.perHitTaken, events); // Berserker: hits taken fill Rage
     if (left > 0 || absorbed > 0) {
       target.sinceHit = 0; // being hit resets Steady Aim
       if (target.steady) {
@@ -1308,6 +1485,7 @@ export default class BattleState {
   // Things that react to a unit having lost health (called from dealDamage when it has an events list).
   afterDamage(target, events) {
     if (!events || target.side !== 'hero' || target.minion || target.hp <= 0) return;
+    this.tryIntercept(target, events); // Knight: jumps in front of a hero who drops low
     // Second Wind Flask: below its threshold ONE flask is used up and heals (once per floor per holder).
     const below = target.specials.secondWindBelow;
     if (target.specials.secondWind && !target.floor.flaskUsed && target.hp < (target.maxHp * below) / 100) {
@@ -1463,7 +1641,7 @@ export default class BattleState {
       status.remaining = duration;
       status.total = duration;
       if (spec.status === 'buff') status.mods = spec.mods;
-      if (spec.status === 'taunt') status.sourceUid = source.uid;
+      if (spec.status === 'taunt' || spec.status === 'guarded') status.sourceUid = source.uid; // who taunted / who guards
       if (spec.status === 'shield') {
         // Size: a flat `amount`, plus `percentMaxHp` of the holder's health, plus `attackMultiplier` x the
         // caster's attack. The same shield (same source + skill) is refilled instead of stacking.
@@ -1498,6 +1676,10 @@ export default class BattleState {
     if (spec.status === 'buff') this.refreshStats();
     events.push({ type: 'status', unit: target, change: 'apply', status });
     if (spec.status === 'taunt') this.redirectToTaunter(target, events);
+    if (spec.status === 'charm' && target.pending) {
+      target.pending = null; // charmed: whatever it was swinging at, it now turns on its friends
+      events.push({ type: 'attackCancel', unit: target, reason: 'charmed' });
+    }
     // Thousand Cuts: whenever the holder applies Bleed it adds 1 EXTRA Bleed stack.
     if (spec.status === 'bleed' && source && source.specials && source.specials.thousandCuts && !spec.extra && source.side === 'hero') {
       this.applyStatus(target, { ...spec, extra: true }, source, `${skillId}_extra`, events);
@@ -1689,6 +1871,14 @@ export default class BattleState {
     }
 
     events.push({ type: 'cast', unit: hero, skill, targets, zone });
+    // Blood Pact: the skill costs the caster some of their own health.
+    if (skill.selfCostPercent) {
+      const cost = Math.round((hero.maxHp * skill.selfCostPercent) / 100);
+      hero.hp = Math.max(1, hero.hp - cost);
+      events.push({ type: 'selfCost', unit: hero, amount: cost });
+    }
+    for (const spec of skill.selfApply || []) this.applyStatus(hero, spec, hero, `${slot.id}_self`, events); // Challenge: +defense for himself
+    if (skill.songSwitch) this.switchSong(hero, events); // Bard's Change Song
     // `cleanse: N`: every target loses N debuffs (a whole kind each, the oldest first).
     if (skill.cleanse) for (const t of targets) this.cleanse(t, skill.cleanse, events);
     // `applyEnemies`: statuses every living enemy gets (Smoke Bomb: blind).
@@ -1706,7 +1896,30 @@ export default class BattleState {
     }
     let first = true;
     for (const target of targets) {
-      this.skillHit(hero, skill, slot.id, target, events, { jumpFrom: skill.chain && !first ? targets[targets.indexOf(target) - 1] : null, scale: echo ? echo.power : 1 });
+      // Eviscerate (`finisher`): spends the combo points on this enemy; a full combo crits, bleeds and fires every on-hit item.
+      let fin = null;
+      if (skill.finisher) {
+        const pts = hero.combo.uid === target.uid ? hero.combo.points : 0;
+        const full = pts >= ((hero.def.passive && hero.def.passive.combo && hero.def.passive.combo.max) || 5);
+        fin = { multiplier: skill.damageMultiplier + skill.finisher.perPoint * pts, critBonus: full ? 100 : 0, full };
+        hero.combo = { uid: target.uid, points: 0 };
+        events.push({ type: 'combo', unit: hero, target, points: 0, spent: pts });
+      }
+      const res = this.skillHit(hero, skill, slot.id, target, events, { jumpFrom: skill.chain && !first ? targets[targets.indexOf(target) - 1] : null, scale: echo ? echo.power : 1, multiplier: fin ? fin.multiplier : undefined, critBonus: fin ? fin.critBonus : 0 });
+      if (fin && fin.full && target.alive && res && !res.dodged) {
+        for (const spec of skill.finisher.applyAtMax || []) this.applyStatus(target, spec, hero, `${slot.id}_max`, events);
+        this.rollProcs(hero, 'onAttack', events, { target, hit: true, force: true });
+      }
+      // Headshot (`triggersOnHit`): counts as a basic attack for on-hit items (and Fire Arrows).
+      if (skill.triggersOnHit && res && target.alive) {
+        this.rollProcs(hero, 'onAttack', events, { target, hit: !res.dodged });
+        this.fireArrows(hero, target, events);
+      }
+      // Savage Leap (`landSplash`): a shockwave hits the other enemies near where he lands.
+      if (skill.landSplash && first) {
+        const near = this.enemies.filter((e) => e.alive && e !== target && (this.hasPositions(e) && this.hasPositions(target) ? this.distance(e, target) <= skill.landSplash.radius : this.neighbours(target).includes(e)));
+        for (const e of near) this.skillHit(hero, { ...skill, apply: null, doubleIf: null, landSplash: null }, slot.id, e, events, { multiplier: skill.landSplash.damageMultiplier });
+      }
       first = false;
       // Fireball: the neighbours of its target are hit too, for a share of the damage, with the same debuffs.
       if (skill.splash && target === targets[0] && skill.target === 'enemy') {
@@ -1757,6 +1970,8 @@ export default class BattleState {
       result = this.strike(hero, target, events, {
         multiplier: mult,
         damageType: skill.damageType,
+        critBonus: opts.critBonus || 0,
+        ignoreArmor: !!skill.ignoresArmor,
         skill,
         projectile: skill.chain ? 'lightning' : skill.projectile,
         from: opts.jumpFrom || undefined,
@@ -1848,6 +2063,12 @@ export default class BattleState {
       const flask = r.pool[Math.floor(this.rng() * r.pool.length)];
       events.push({ type: 'flask', unit: hero, target, flask });
       this.skillHit(hero, { damageType: flask.damageType, damageMultiplier: flask.damageMultiplier, apply: flask.apply, heal: flask.heal }, `${slotId}_${flask.name}`, target, events);
+      // Enemy flasks splash a small area where they land (`splash: { radius, multiplier }`).
+      if (r.target === 'enemy' && r.splash) {
+        for (const e of this.enemies.filter((x) => x.alive && x !== target && this.hasPositions(x) && this.hasPositions(target) && this.distance(x, target) <= r.splash.radius)) {
+          this.skillHit(hero, { damageType: flask.damageType, damageMultiplier: flask.damageMultiplier * r.splash.multiplier, apply: flask.apply }, `${slotId}_${flask.name}_splash`, e, events);
+        }
+      }
     }
   }
 
@@ -1980,6 +2201,8 @@ export default class BattleState {
     if (hero.taunting && hero.specials && hero.specials.spiteMail) upkeep.push({ stat: 'defense', flat: hero.specials.spiteMail }); // Spite Mail
     const sa = hero.def.passive && hero.def.passive.steadyAim;
     if (sa && hero.steady) upkeep.push({ stat: 'attackEfficiency', percent: sa.attackSpeedPercent }, { stat: 'crit', flat: sa.critFlat });
+    // Bard's March: the whole squad attacks faster while he plays it (Conductor's Baton makes it stronger).
+    for (const b of this.bards()) if (b.song === 'march') upkeep.push({ stat: 'attackEfficiency', percent: b.def.passive.songs.march.attackSpeedPercent * (1 + ((b.specials && b.specials.baton) || 0) / 100) });
     return upkeep;
   }
 

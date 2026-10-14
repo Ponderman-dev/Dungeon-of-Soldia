@@ -195,7 +195,45 @@ export default class BattleScene extends Phaser.Scene {
   // Status effects ON the fighters, every frame: each status plays its own loop (stars, ice, snow, sparks,
   // flames, bubbles, drops, brackets...) all at once, and tints the sprite (Freeze turns it to ice).
   // The recipes live in systems/statusFx.js; this only draws them at the fighter's body.
+  // Small per-frame markers for the hero mechanics (rework v2): the Berserker's Rage bar under his health bar,
+  // the Rogue's combo pips under the enemy he is working on, and the Bard's current song (a note: gold = March,
+  // green = Ballad) right of his health bar.
+  drawHeroHud() {
+    if (!this.heroHud) this.heroHud = this.add.graphics().setDepth(DEPTH.heroBar + 0.5);
+    const g = this.heroHud;
+    g.clear();
+    for (const h of this.state.heroes) {
+      const v = this.views.get(h.uid);
+      if (!v || !h.alive || !v.bg.visible || !v.ch.active) continue;
+      const rage = h.def.passive && h.def.passive.rage;
+      if (rage) {
+        const x = v.bg.x - BAR_WIDTH / 2, y = v.bg.y + 5;
+        const full = this.state.frenzied(h);
+        g.fillStyle(0x000000, 0.85).fillRect(x - 1, y - 1, BAR_WIDTH + 2, 4);
+        g.fillStyle(full ? 0xffd24d : 0xff6a2a, 1).fillRect(x, y, full ? BAR_WIDTH : (BAR_WIDTH * h.rage) / rage.max, 2);
+      }
+      if (h.def.passive && h.def.passive.combo && h.combo.points > 0) {
+        const tv = this.views.get(h.combo.uid);
+        if (tv && tv.unit.alive && tv.ch.active && tv.bg.visible) {
+          const max = h.def.passive.combo.max;
+          for (let i = 0; i < max; i++) {
+            const px = tv.bg.x - (max * 6) / 2 + i * 6 + 1, py = tv.bg.y + 6;
+            g.fillStyle(0x000000, 0.9).fillRect(px - 1, py - 1, 6, 5);
+            g.fillStyle(i < h.combo.points ? (h.combo.points >= max ? 0xff4a4a : 0xffd24d) : 0x3a3350, 1).fillRect(px, py, 4, 3);
+          }
+        }
+      }
+      if (h.song) {
+        const col = h.song === 'ballad' ? 0x6dff8f : 0xffb84d;
+        const x = v.bg.x + BAR_WIDTH / 2 + 6, y = v.bg.y - 2;
+        g.fillStyle(0x000000, 1).fillRect(x - 3, y + 1, 5, 4).fillRect(x + 1, y - 6, 3, 8);
+        g.fillStyle(col, 1).fillRect(x - 2, y + 2, 3, 2).fillRect(x + 2, y - 5, 1, 7).fillRect(x + 2, y - 5, 2, 1);
+      }
+    }
+  }
+
   drawStatusFx() {
+    this.drawHeroHud();
     this.drawHitFx(); // hits first: a hit's colour flash wins over the status tint this frame
     if (!this.statusG) this.statusG = this.add.graphics().setDepth(DEPTH.heroBar - 0.05);
     const g = this.statusG;
@@ -1134,6 +1172,28 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'morale') {
       this.drawMoraleWash();
       for (const h of this.state.heroes) this.setBar(this.views.get(h.uid));
+    } else if (e.type === 'intercept') {
+      // Knight's Intercept: he jumps in to guard a hurt ally.
+      const kv = this.views.get(e.unit.uid), av = this.views.get(e.ally.uid);
+      if (kv) { this.popText(kv, 'Intercept!', '#6fa8ff', true); kv.ch.flash(0x6fa8ff, 160); }
+      if (av) av.ch.flash(0x6fa8ff, 160);
+    } else if (e.type === 'intercepted') {
+      const kv = this.views.get(e.unit.uid);
+      if (kv) { this.setBar(kv); if (e.amount > 0) this.popText(kv, `-${e.amount}`, '#9cc4ff'); }
+    } else if (e.type === 'selfCost') {
+      const v = this.views.get(e.unit.uid);
+      if (v) { this.setBar(v); this.popText(v, `-${e.amount}`, '#ff5a5a'); }
+    } else if (e.type === 'reaction') {
+      // Mage's reactions: a big coloured word over the enemy.
+      const v = this.views.get(e.unit.uid);
+      const look = { steam: ['Steam!', '#e8e8f0'], shatter: ['Shatter!', '#8fe0ff'], overload: ['Overload!', '#ffa040'] }[e.kind];
+      if (v && look) { this.popText(v, look[0], look[1], true); v.ch.flash(Number('0x' + look[1].slice(1)), 140); }
+    } else if (e.type === 'song') {
+      const v = this.views.get(e.unit.uid);
+      if (v) this.popText(v, e.song === 'ballad' ? 'Ballad!' : 'March!', e.song === 'ballad' ? '#6dff8f' : '#ffb84d', true);
+      this.drawAllBars();
+    } else if (e.type === 'combo') {
+      // drawn every frame by drawHeroHud()
     } else if (e.type === 'levelup') {
       sfx.play('levelUp');
       const v = this.views.get(e.unit.uid);

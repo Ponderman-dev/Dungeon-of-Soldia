@@ -1,0 +1,257 @@
+{
+  "_about": "The FIRST hero kits (before the v2 rework): passive + skills per hero. Mechanic tests (channels, cleanse, knockback, counters...) still use them through kitsV1() in util.mjs; the real heroes are tested in heroes-v2.test.mjs.",
+  "knight": {
+    "passive": {
+      "name": "Taunt Wall",
+      "description": "10% chance on each attack to taunt the enemy he hit for 3s (it must attack the Knight) and give himself +20 defense for 3s.",
+      "procs": [
+        {
+          "proc": "onAttack",
+          "chance": 10,
+          "label": "Taunt Wall!",
+          "targets": "self",
+          "apply": [
+            {
+              "status": "taunt",
+              "durationMs": 3000,
+              "to": "target"
+            },
+            {
+              "status": "buff",
+              "durationMs": 3000,
+              "mods": [
+                {
+                  "stat": "defense",
+                  "flat": 20
+                }
+              ],
+              "to": "self"
+            }
+          ]
+        }
+      ]
+    },
+    "skills": {
+      "attack": "ground_pound",
+      "support": "rally_cry"
+    }
+  },
+  "berserker": {
+    "passive": {
+      "name": "Bloodrage",
+      "description": "+0.6% attack speed for every 1% of health he is missing (at half health: +30%).",
+      "bloodrage": {
+        "attackSpeedPercentPerMissing": 0.6
+      }
+    },
+    "skills": {
+      "attack": "savage_leap",
+      "support": "war_cry"
+    }
+  },
+  "rogue": {
+    "passive": {
+      "name": "Opportunist",
+      "description": "+15% damage and +10 crit against any enemy that has a debuff. His own chance-based debuffs (item procs, crit debuffs) are 25% more likely.",
+      "opportunist": {
+        "damagePercent": 15,
+        "critFlat": 10,
+        "debuffChancePercent": 25
+      }
+    },
+    "skills": {
+      "attack": "fan_of_knives",
+      "support": "smoke_bomb"
+    }
+  },
+  "archer": {
+    "passive": {
+      "name": "Steady Aim",
+      "description": "While he has not been hit for 3s he gets +25% attack speed and +15 crit. Being hit resets it.",
+      "steadyAim": {
+        "afterMs": 3000,
+        "attackSpeedPercent": 25,
+        "critFlat": 15
+      }
+    },
+    "skills": {
+      "attack": "rain_of_arrows",
+      "support": "hunters_mark"
+    }
+  },
+  "samurai": {
+    "passive": {
+      "name": "Focused Strike",
+      "description": "Slow but heavy attacks, 35% chance on each hit to make the enemy bleed, and his own chance-based debuffs are 25% likelier.",
+      "focusedStrike": {
+        "debuffChancePercent": 25
+      },
+      "procs": [
+        {
+          "proc": "onAttack",
+          "chance": 35,
+          "label": "Bleed!",
+          "silent": true,
+          "targets": "target",
+          "apply": [
+            {
+              "status": "bleed",
+              "durationMs": 5000,
+              "damageMultiplier": 0.4
+            }
+          ]
+        }
+      ]
+    },
+    "skills": {
+      "attack": "wind_cutter",
+      "support": "focus_stance"
+    }
+  },
+  "mage": {
+    "passive": {
+      "name": "Spellweaver",
+      "description": "Every 4th basic attack is a free empowered spell that cycles Fire (Burn), Ice (2 Chill) and Electric (Shock), and all his on-hit items go off.",
+      "counter": {
+        "id": "spellweave",
+        "label": "SPELL",
+        "color": "#ff9a4d",
+        "every": 4,
+        "scope": "self",
+        "effect": "empower",
+        "firedLabel": "Spellweave!",
+        "strike": {
+          "damageMultiplier": 1.2,
+          "damageType": "fire"
+        },
+        "apply": [
+          {
+            "status": "burn",
+            "durationMs": 4000,
+            "damageMultiplier": 0.3
+          }
+        ],
+        "forceProcs": true,
+        "rotation": [
+          {
+            "damageType": "fire",
+            "color": "#ff9a4d",
+            "apply": [
+              {
+                "status": "burn",
+                "durationMs": 4000,
+                "damageMultiplier": 0.3
+              }
+            ]
+          },
+          {
+            "damageType": "ice",
+            "color": "#7fd8ff",
+            "apply": [
+              {
+                "status": "chill",
+                "durationMs": 6000,
+                "stacks": 2
+              }
+            ]
+          },
+          {
+            "damageType": "electric",
+            "color": "#ffe94d",
+            "apply": [
+              {
+                "status": "shock",
+                "durationMs": 4000
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "skills": {
+      "attack": "elemental_rotation",
+      "support": "arcane_ward"
+    }
+  },
+  "cleric": {
+    "passive": {
+      "name": "Mending",
+      "description": "While she lives every hero regenerates a little (and regen/heals from items are 25% stronger). Every 4th attack heals the most hurt ally instead of hitting.",
+      "regenAura": {
+        "baseRegenPercentPerSec": 0.3,
+        "healMultiplierPercent": 25
+      },
+      "counter": {
+        "id": "mend",
+        "label": "MEND",
+        "color": "#9fe8a8",
+        "every": 4,
+        "scope": "self",
+        "effect": "heal",
+        "firedLabel": "Heal!",
+        "heal": {
+          "percentMaxHp": 10,
+          "attackMultiplier": 1
+        }
+      }
+    },
+    "skills": {
+      "attack": "smite",
+      "support": "divine_shield"
+    }
+  },
+  "necromancer": {
+    "passive": {
+      "name": "Skeleton Summoner",
+      "description": "Raises a skeleton every 8-10s (up to 4); one rises at the start of every floor. They vanish when the floor ends.",
+      "spawner": {
+        "minion": "skeleton",
+        "minMs": 8000,
+        "maxMs": 10000,
+        "cap": 4,
+        "atFloorStart": 1
+      }
+    },
+    "skills": {
+      "attack": "death_coil",
+      "support": "bone_ward"
+    }
+  },
+  "bard": {
+    "passive": {
+      "name": "Rhythm",
+      "description": "Every 4th basic attack of ANY hero is empowered with a bonus hit (a shared beat for the whole squad).",
+      "counter": {
+        "id": "rhythm",
+        "label": "RHYTHM",
+        "color": "#ffb84d",
+        "every": 4,
+        "scope": "squad",
+        "effect": "empower",
+        "firedLabel": "Beat!",
+        "strike": {
+          "damageMultiplier": 0.8,
+          "damageType": "ranged"
+        }
+      }
+    },
+    "skills": {
+      "attack": "crescendo",
+      "support": "ballad_of_rest"
+    }
+  },
+  "alchemist": {
+    "passive": {
+      "name": "Catalyst",
+      "description": "While he lives, debuffs on enemies last 30% longer and damage over time hits 30% harder.",
+      "catalyst": {
+        "durationPercent": 30,
+        "dotPercent": 30
+      }
+    },
+    "skills": {
+      "attack": "flask_barrage",
+      "support": "mystery_brew"
+    }
+  }
+}

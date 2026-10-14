@@ -76,7 +76,7 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
   const mult = weakResistMultiplier(defender, type, rules, damageTypes);
   amount *= mult;
   amount *= 1 + ((attacker.damageBonus && attacker.damageBonus[type]) || 0) / 100;
-  amount *= 1 - armourCut(defender, type, rules, damageTypes) / 100;
+  if (!opts.ignoreArmor) amount *= 1 - armourCut(defender, type, rules, damageTypes) / 100; // Headshot ignores defense
   amount *= markMultiplier(defender);
   amount *= 1 + (opts.damagePercent || 0) / 100; // e.g. the Rogue's Opportunist vs debuffed enemies
 

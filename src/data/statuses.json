@@ -1,6 +1,7 @@
 {
-  "_about": "Status tags and rules. dot: damage over time, every application adds a STACK (no limit, each stack has its own timer, all stacks of one kind tick together every tickMs). control: bosses take it for half as long (statusDurationScale). Numbers here are defaults a skill/item spec can override. stacking: like dot it stacks (each stack own timer) but deals no damage (chill). instant: no lasting status (knockback). Stat debuffs (weaken, armorBreak, curse, blind, mark) refresh per source; different sources add up. shield: absorbs damage (amount / percentMaxHp / attackMultiplier), lasts durationMs or until broken, optional onBreak {damageMultiplier, damageType}; invulnerable: takes no damage at all, optional healPercentOnEnd. debuff: true marks harmful statuses (Rally Cry's cleanse removes one kind of them). parry: hits against the holder are stopped completely (Samurai's Focus Stance). guaranteedCrit: the holder's next basic attack is a sure crit, then it is used up. regenBoost: heals percentMaxHpPerSec of max health every second for its duration (Bard's Ballad of Rest).",
+  "_about": "Status tags and rules. popup: false = no text pops up when it lands (its icon and body effect already show it; only big moments like stun/freeze/fear/taunt/silence pop text). dot: damage over time, every application adds a STACK (no limit, each stack has its own timer, all stacks of one kind tick together every tickMs). control: bosses take it for half as long (statusDurationScale). Numbers here are defaults a skill/item spec can override. stacking: like dot it stacks (each stack own timer) but deals no damage (chill). instant: no lasting status (knockback). Stat debuffs (weaken, armorBreak, curse, blind, mark) refresh per source; different sources add up. shield: absorbs damage (amount / percentMaxHp / attackMultiplier), lasts durationMs or until broken, optional onBreak {damageMultiplier, damageType}; invulnerable: takes no damage at all, optional healPercentOnEnd. debuff: true marks harmful statuses (Rally Cry's cleanse removes one kind of them). parry: hits against the holder are stopped completely (Samurai's Focus Stance). guaranteedCrit: the holder's next basic attack is a sure crit, then it is used up. regenBoost: heals percentMaxHpPerSec of max health every second for its duration (Bard's Ballad of Rest).",
   "bleed": {
+    "popup": false,
     "label": "BLEED",
     "color": "#c0303a",
     "textColor": "#ffffff",
@@ -11,6 +12,7 @@
     "debuff": true
   },
   "burn": {
+    "popup": false,
     "label": "BURN",
     "color": "#ff7a3d",
     "textColor": "#000000",
@@ -20,6 +22,7 @@
     "debuff": true
   },
   "poison": {
+    "popup": false,
     "label": "PSN",
     "color": "#3fae6a",
     "textColor": "#000000",
@@ -29,6 +32,7 @@
     "debuff": true
   },
   "chill": {
+    "popup": false,
     "label": "CHILL",
     "color": "#7fd8ff",
     "textColor": "#000000",
@@ -47,6 +51,7 @@
     "debuff": true
   },
   "shock": {
+    "popup": false,
     "label": "SHOCK",
     "color": "#ffe94d",
     "textColor": "#000000",
@@ -71,6 +76,7 @@
     "debuff": true
   },
   "knockback": {
+    "popup": false,
     "label": "KNOCKBACK",
     "color": "#c9b18a",
     "textColor": "#000000",
@@ -103,6 +109,7 @@
     "debuff": true
   },
   "weaken": {
+    "popup": false,
     "label": "WEAK",
     "color": "#9a6b3a",
     "textColor": "#ffffff",
@@ -110,6 +117,7 @@
     "debuff": true
   },
   "armorBreak": {
+    "popup": false,
     "label": "ARMOR-",
     "color": "#b0b0b0",
     "textColor": "#000000",
@@ -117,6 +125,7 @@
     "debuff": true
   },
   "curse": {
+    "popup": false,
     "label": "CURSE",
     "color": "#5a2a7a",
     "textColor": "#ffffff",
@@ -124,6 +133,7 @@
     "debuff": true
   },
   "blind": {
+    "popup": false,
     "label": "BLIND",
     "color": "#333333",
     "textColor": "#ffffff",
@@ -131,6 +141,7 @@
     "debuff": true
   },
   "mark": {
+    "popup": false,
     "label": "MARK",
     "color": "#ff3d6e",
     "textColor": "#ffffff",

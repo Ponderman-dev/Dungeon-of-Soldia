@@ -723,6 +723,7 @@
           "proc": "onAttack",
           "chance": 35,
           "label": "Bleed!",
+          "silent": true,
           "targets": "target",
           "apply": [
             {

@@ -1238,10 +1238,23 @@ async function save() {
   }
 }
 
-// Unsaved edits are also kept in this browser, so a reload does not lose them.
+// Unsaved edits are also kept in this browser, so a reload does not lose them. Only characters that
+// were actually changed are kept, each with a fingerprint of the game look it was drawn over: when the
+// game look changes later (new sprites), an old draft no longer hides it (it is set aside instead).
+const DRAFT_KEY = LOCAL_KEY + '-draft2';
+const fingerprint = (o) => {
+  const t = JSON.stringify(o);
+  let h = 5381;
+  for (let i = 0; i < t.length; i++) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+};
 function persistDraft() {
   try {
-    localStorage.setItem(LOCAL_KEY + '-draft', JSON.stringify(working));
+    const d = {};
+    for (const [k, look] of Object.entries(working)) {
+      if (!same(look, baseline(k))) d[k] = { look, base: fingerprint(gameLook[k]) };
+    }
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
   } catch {
     /* storage blocked: fine */
   }
@@ -1249,8 +1262,15 @@ function persistDraft() {
 
 function loadDraft() {
   try {
-    const d = JSON.parse(localStorage.getItem(LOCAL_KEY + '-draft') || 'null');
-    if (d) for (const k of Object.keys(d)) if (working[k]) working[k] = d[k];
+    // Drafts from the old studio (every character, no fingerprint) were made over the old game looks:
+    // keep them aside under '-draft-old' and start from the game.
+    const old = localStorage.getItem(LOCAL_KEY + '-draft');
+    if (old) {
+      localStorage.setItem(LOCAL_KEY + '-draft-old', old);
+      localStorage.removeItem(LOCAL_KEY + '-draft');
+    }
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    if (d) for (const k of Object.keys(d)) if (working[k] && d[k].base === fingerprint(gameLook[k])) working[k] = d[k].look;
   } catch {
     /* nothing */
   }

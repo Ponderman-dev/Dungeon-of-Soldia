@@ -46,3 +46,15 @@ ok('Excalibur and Jolly Banner exist', itemDefs.excalibur && itemDefs.jolly_bann
   const ev = s.endFloor();
   console.log(had === 1 && s.tornados.length === 0 && ev.some((e) => e.type === 'tornadoEnd') ? 'PASS' : 'FAIL', 'a won floor ends Excalibur tornadoes (tornadoEnd events)', `${had} -> ${s.tornados.length}`);
 }
+// A proc on a killing blow or a miss used to pop its icon and do nothing.
+{ const { s, a, es } = mk(); s.giveItem(a.uid, 'excalibur'); es[0].hp = 1; const ev = [];
+  s.landAttack(a, es[0], ev);
+  ok('Excalibur on a KILLING blow still makes a tornado (on the next enemy)', !es[0].alive && s.tornados.length === 1 && s.tornados[0].target === es[1]); }
+{ const { s, a, es } = mk(); s.giveItem(a.uid, 'excalibur'); const ev = [];
+  s.rollProcs(a, 'onAttack', ev, { target: es[0], hit: false });
+  ok('...and on a miss', s.tornados.length === 1); }
+{ const { s, a, es } = mk(); s.giveItem(a.uid, 'venom_fang'); const ev = [];
+  s.rollProcs(a, 'onAttack', ev, { target: es[0], hit: false });
+  ok('a debuff item does not pop its icon when the attack missed', !ev.some((e) => e.type === 'proc'));
+  es[0].alive = false; const ev2 = []; s.rollProcs(a, 'onAttack', ev2, { target: es[0], hit: true });
+  ok('...or when the enemy is already dead', !ev2.some((e) => e.type === 'proc')); }

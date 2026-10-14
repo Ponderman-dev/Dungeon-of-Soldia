@@ -1327,27 +1327,34 @@ export default class BattleState {
       const chance = debuffs ? this.debuffChance(hero, proc.chance) : proc.chance; // Opportunist: his debuffs are likelier
       if (proc.meleeOnly && hero.damageType !== 'melee') continue; // Thousand Cuts: melee hits only
       if (proc.proc !== trigger || (!ctx.force && this.rng() * 100 >= chance)) continue; // ctx.force: every proc goes off
-      if (!proc.silent) events.push({ type: 'proc', unit: hero, label: proc.label, itemId: proc.itemId, target: ctx.target || null });
       const enemy = ctx.target && ctx.target.alive ? ctx.target : null;
       let landed = ctx.hit !== false; // statuses on the target need the attack to have connected
-      if (proc.doubleHit && enemy) { const dh = this.strike(hero, enemy, events); if (!dh.dodged) this.addCombo(hero, enemy, 1, events); }
-      if (debuffs && enemy && ctx.hit !== false && !String(proc.itemId).startsWith('passive_')) this.addCombo(hero, enemy, 1, events); // Rogue: a debuff item proc = a combo point
-      if (proc.strike && enemy) {
-        const hit = this.strike(hero, enemy, events, {
-          multiplier: proc.strike.damageMultiplier,
-          damageType: proc.strike.damageType,
-          projectile: proc.strike.projectile,
-          item: true, // damage made BY an item never triggers lifesteal, thorns or other item effects
-        });
-        landed = !hit.dodged;
-      }
-      if (proc.chain && enemy) this.chainHit(hero, enemy, proc.chain, events);
-      if (proc.tornado && enemy && landed) this.spawnTornado(hero, proc.tornado, enemy, events);
+      // Damage from a proc (extra hit, bomb, bolt, tornado) is never wasted: if the attack just killed its
+      // enemy it goes to the enemy nearest to it instead. Statuses on the target still need the hit enemy.
+      const foe = enemy || (ctx.target ? this.nearest(ctx.target, this.targetableEnemies()) : null);
+      const damages = !!(proc.doubleHit || proc.strike || proc.chain || proc.tornado);
       const targets = proc.targets === 'squad' ? this.squadUnits() : proc.targets === 'target' ? (enemy && landed ? [enemy] : []) : [hero];
       // A status spec can pick its own receivers with `to` (self / squad / target), e.g. a proc that taunts
       // the enemy hit AND gives the holder a defense buff.
       let ally; // Jolly Banner: the holder and ONE random other living hero (picked once per proc)
       const receivers = (to) => (to === 'selfAndAlly' ? (ally = ally || this.randomAlly(hero), ally ? [hero, ally] : [hero]) : to === 'squad' ? this.squadUnits() : to === 'target' ? (enemy && landed ? [enemy] : []) : to === 'self' ? [hero] : targets);
+      // A proc that can't do anything (its enemy died or the attack missed) doesn't go off at all, so its
+      // icon never pops for nothing.
+      if (!(damages && foe) && !(proc.apply || []).some((spec) => receivers(spec.to).length)) continue;
+      if (!proc.silent) events.push({ type: 'proc', unit: hero, label: proc.label, itemId: proc.itemId, target: foe || ctx.target || null });
+      if (proc.doubleHit && foe) { const dh = this.strike(hero, foe, events); if (!dh.dodged) this.addCombo(hero, foe, 1, events); }
+      if (debuffs && enemy && ctx.hit !== false && !String(proc.itemId).startsWith('passive_')) this.addCombo(hero, enemy, 1, events); // Rogue: a debuff item proc = a combo point
+      if (proc.strike && foe) {
+        const hit = this.strike(hero, foe, events, {
+          multiplier: proc.strike.damageMultiplier,
+          damageType: proc.strike.damageType,
+          projectile: proc.strike.projectile,
+          item: true, // damage made BY an item never triggers lifesteal, thorns or other item effects
+        });
+        landed = foe === enemy && !hit.dodged;
+      }
+      if (proc.chain && foe) this.chainHit(hero, foe, proc.chain, events);
+      if (proc.tornado && foe) this.spawnTornado(hero, proc.tornado, foe, events); // a tornado also comes on a miss
       for (const spec of proc.apply || []) {
         // scalesWithCopies: the status gets stronger with every copy of the item held (Ember Charm's burn).
         let real = spec.scalesWithCopies ? { ...spec, damageMultiplier: spec.damageMultiplier * (proc.copies || 1) } : spec;
@@ -1377,8 +1384,8 @@ export default class BattleState {
       t.tick -= dt;
       while (t.tick <= 0 && t.remaining > -t.spec.tickMs) {
         t.tick += t.spec.tickMs;
-        if (!t.holder.alive || !t.target.alive) {
-          const alive = this.enemies.filter((e) => e.alive);
+        if (!t.holder.alive || !t.target.alive || this.untargetable(t.target)) {
+          const alive = this.targetableEnemies();
           if (!alive.length) break;
           t.target = alive[Math.floor(this.rng() * alive.length)];
           events.push({ type: 'tornadoMove', tornado: t, target: t.target });
@@ -1386,7 +1393,7 @@ export default class BattleState {
         this.strike(t.holder, t.target, events, { multiplier: t.spec.damageMultiplier, damageType: t.spec.damageType, item: true });
         t.ticks++;
         if (t.spec.hopEvery && t.ticks % t.spec.hopEvery === 0) {
-          const others = this.enemies.filter((e) => e.alive && e !== t.target);
+          const others = this.targetableEnemies().filter((e) => e !== t.target);
           if (others.length) {
             t.target = others[Math.floor(this.rng() * others.length)];
             events.push({ type: 'tornadoMove', tornado: t, target: t.target });
@@ -1442,12 +1449,11 @@ export default class BattleState {
       }
       // Bloodlust Mask: sometimes the heal is shared with the rest of the squad (then a cooldown).
       const share = attacker.specials.lifestealShare || 0;
-      if (share > 0 && attacker.shareCd <= 0 && this.rng() * 100 < share) {
+      const hurt = this.heroes.filter((ally) => ally !== attacker && ally.alive && ally.hp < ally.maxHp);
+      if (share > 0 && hurt.length && attacker.shareCd <= 0 && this.rng() * 100 < share) { // only when someone can use it
         attacker.shareCd = attacker.specials.lifestealShareCooldownMs || 3000;
         events.push({ type: 'proc', unit: attacker, label: 'Life Share!', itemId: 'bloodlust_mask' });
-        for (const ally of this.heroes) {
-          if (ally !== attacker && ally.alive) this.healUnit(ally, base, events, { aura: false });
-        }
+        for (const ally of hurt) this.healUnit(ally, base, events, { aura: false });
       }
     }
     // Gambler's Dice: a crit also gives the enemy a random debuff.
@@ -1576,9 +1582,10 @@ export default class BattleState {
       }
       // Thousand Cuts: an enemy dying while bleeding bursts knives into the enemies next to it.
       const burst = hero.specials.knifeBurst || 0;
-      if (burst > 0 && mine('bleed').length) {
+      const near = burst > 0 && mine('bleed').length ? this.neighbours(victim) : [];
+      if (near.length) {
         events.push({ type: 'proc', unit: hero, label: 'Knife burst!', itemId: 'thousand_cuts', at: victim });
-        for (const e of this.neighbours(victim)) this.strike(hero, e, events, { multiplier: burst / 100, damageType: 'melee', item: true });
+        for (const e of near) this.strike(hero, e, events, { multiplier: burst / 100, damageType: 'melee', item: true });
       }
     }
   }

@@ -21,6 +21,9 @@ export function playRun(ids) {
     let t = 0;
     while (!s.allEnemiesDead() && !s.allHeroesDead() && t < 600000) {
       s.update(50); t += 50;
+      // Like a player: tap the boss's objects (War Drum, egg sacs, the phylactery) to break them first.
+      const obj = !s.focusUnit && s.enemies.find((e) => e.alive && e.def.object && !s.untargetable(e));
+      if (obj) s.setFocus(obj.uid);
       for (const h of s.heroes) for (let i = 0; i < h.skills.length; i++) s.castSkill(h.uid, i);
     }
     if (s.allHeroesDead()) break;

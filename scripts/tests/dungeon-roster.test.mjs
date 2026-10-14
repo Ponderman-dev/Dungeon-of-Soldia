@@ -12,6 +12,7 @@ ok('every roster enemy exists in enemies.json', A.roster.every((e) => enemies[e.
 let bad = [];
 for (let n = 4; n <= 120; n++) {
   for (let k = 0; k < 20; k++) {
+    if (A.bosses?.[n]) continue; // boss floors have a fixed line-up
     const ids = enemiesForFloor(A, n, rng);
     const allowed = rosterFor(A, n).map((e) => e.id);
     if (ids.some((id) => !allowed.includes(id))) bad.push(n);
@@ -30,3 +31,4 @@ let a = 0; for (let k = 0; k < 4000; k++) if (randomEnemies(E, 1, 1, rng)[0] ===
 ok('weights are respected (about 75% a)', a > 2800 && a < 3200, String(a));
 import { validateDungeon } from '../../src/systems/validate.js';
 ok('validateDungeon accepts random floors and checks the roster', validateDungeon(A, enemies).length === 0 && validateDungeon({ floors: [{ floor: 1, enemies: 2 }], roster: [{ id: 'nope', from: 1 }] }, enemies).length === 1);
+ok('boss floors 20-160 return their fixed boss line-up', [20, 40, 60, 80, 100, 120, 140, 160].every((n) => JSON.stringify(enemiesForFloor(A, n, rng)) === JSON.stringify(A.bosses[n])));

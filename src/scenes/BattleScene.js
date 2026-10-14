@@ -62,6 +62,9 @@ const SKILL_W = 40;
 const SKILL_H = 44;
 
 // Depth order: floor < slots < hero < hero bars < popups < banner/HUD
+// How big one character pixel is on screen (bosses use finer pixels: `drawScale` in enemies.json).
+const charScale = (def) => def.drawScale ?? CHAR_SCALE;
+
 const DEPTH = { floor: 0, slot: 1, marker: 2, hero: 5, heroBar: 6, doorFront: 7, popup: 10, hud: 20 };
 
 // The battle screen: enemies at the top, the squad (3 heroes) at the bottom, everyone auto-attacks.
@@ -299,10 +302,9 @@ export default class BattleScene extends Phaser.Scene {
       const paint = (name, draws) => draw(TUNE.paint('hit', name, draws));
       if (h.kind === 'puff') { paint('puff', deathPuffFx((now - h.start) / h.ms, h.x, h.y)); continue; }
       const v = h.view, ch = v.ch;
-      if (!v.box) v.box = bodyBox(v.unit.def.parts, v.unit.def.height);
-      const x = (ch.x + v.box.cx * ch.scaleX) / S, y = ch.y / S;
       if (h.attacker && h.attacker.ch.active) h.side = h.attacker.ch.x < ch.x ? -1 : 1;
-      const u = { x, y, top: y + v.box.top, mid: y + v.box.mid, bot: y + v.box.bot, hw: v.box.hw, side: h.side };
+      const u = { ...this.fxBody(v), side: h.side };
+      const { x, y } = u;
       const q = (now - h.start) / h.ms;
       if (h.crit) { paint('crit', critFx(q, u, now)); continue; }
       if (h.kind) {
@@ -351,8 +353,9 @@ export default class BattleScene extends Phaser.Scene {
 
   fxBody(v) {
     if (!v.box) v.box = bodyBox(v.unit.def.parts, v.unit.def.height);
+    const k = charScale(v.unit.def) / CHAR_SCALE; // a boss's body box is in its own (finer) pixels
     const x = (v.ch.x + v.box.cx * v.ch.scaleX) / CHAR_SCALE, y = v.ch.y / CHAR_SCALE;
-    return { x, y, top: y + v.box.top, mid: y + v.box.mid, bot: y + v.box.bot, hw: v.box.hw };
+    return { x, y, top: y + v.box.top * k, mid: y + v.box.mid * k, bot: y + v.box.bot * k, hw: v.box.hw * k };
   }
 
   // An item went off: its icon pops over the holder (instead of a text label) and its own effect plays
@@ -515,6 +518,16 @@ export default class BattleScene extends Phaser.Scene {
       g.fillStyle(0x000000, 1).fillRect(x - 1, y - 1, BAR_WIDTH + 2, 5);
       g.fillStyle(SKILL_COLORS[kind].ready, 1).fillRect(x, y, BAR_WIDTH * Math.max(0, Math.min(1, p)), 3);
     }
+    // A boss winding up a move: a red bar that fills (a channel: it empties while it lasts). Stun it to stop it!
+    for (const u of this.state.enemies) {
+      const c = u.alive && u.bossCast;
+      const v = c && this.views.get(u.uid);
+      if (!v || !(c.total > 0)) continue;
+      const p = c.channel ? c.remaining / c.total : 1 - c.remaining / c.total;
+      const x = v.bg.x - BAR_WIDTH / 2, y = v.bg.y + 6;
+      g.fillStyle(0x000000, 1).fillRect(x - 1, y - 1, BAR_WIDTH + 2, 5);
+      g.fillStyle(c.channel ? 0xc070ff : 0xff4a3a, 1).fillRect(x, y, BAR_WIDTH * Math.max(0, Math.min(1, p)), 3);
+    }
   }
 
   // Morale: a faint wash over every living hero (light = INCOMPLETE, darker = ALL ALONE). No text.
@@ -631,7 +644,7 @@ export default class BattleScene extends Phaser.Scene {
   makeView(unit, x, groundY, parent = null) {
     const hover = unit.flying ? unit.def.hover || 0 : 0;
     const ch = new Character(this, x, groundY - hover, unit.def);
-    const barY = groundY - hover - unit.def.height * CHAR_SCALE - 10;
+    const barY = groundY - hover - unit.def.height * charScale(unit.def) - 10;
     const bg = this.add.rectangle(x, barY, BAR_WIDTH + 2, 7, 0x000000);
     const fill = this.add
       .rectangle(x - BAR_WIDTH / 2, barY, BAR_WIDTH, 5, unit.side === 'hero' ? 0x4cd16a : 0xe04b4b)
@@ -653,7 +666,8 @@ export default class BattleScene extends Phaser.Scene {
     if (unit.side === 'enemy') {
       // Tap an enemy to focus it.
       const h = unit.def.height;
-      ch.setInteractive(new Phaser.Geom.Rectangle(-16, -h - 2, 32, h + 4), Phaser.Geom.Rectangle.Contains);
+      const w = Math.max(32, bodyBox(unit.def.parts, h).hw * 2 + 6); // big bosses are wider
+      ch.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h - 2, w, h + 4), Phaser.Geom.Rectangle.Contains);
       ch.on('pointerdown', () => this.state.setFocus(unit.uid));
     }
     if (parent) parent.add([ch, bg, fill, shieldFill, view.chipBox]);
@@ -955,6 +969,7 @@ export default class BattleScene extends Phaser.Scene {
     this.drawTornados();
     this.drawCastBars();
     this.drawTauntLines();
+    this.drawBossHud();
     this.drawStatusFx();
 
     const focus = this.state.focusUnit;
@@ -1029,13 +1044,18 @@ export default class BattleScene extends Phaser.Scene {
       this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : color, crit);
     } else if (e.type === 'projectile') {
       this.showProjectile(this.views.get(e.from.uid), this.views.get(e.to.uid), e.kind);
+    } else if (e.type === 'castStart' && e.boss) {
+      // A boss winds up a move: its name in red over it, and a red bar fills (drawCastBars).
+      const bv = this.views.get(e.unit.uid);
+      if (bv) { this.popText(bv, e.skill.name, '#ff7a6a', true); bv.ch.flash(0xff4a3a, 140); }
     } else if (e.type === 'castStart') {
       // The hero winds up: its name pops up and a charge bar fills (see drawCastBars).
       this.popText(this.views.get(e.unit.uid), e.skill.name, '#9fc4ff');
       this.views.get(e.unit.uid).ch.castWindUp(e.castMs); // crouch and raise the weapon
     } else if (e.type === 'castCancel') {
       const cv = this.views.get(e.unit.uid);
-      if (cv) cv.ch.castCancel();
+      if (!cv) return;
+      cv.ch.castCancel();
       if (e.reason === 'interrupted') { this.popText(this.views.get(e.unit.uid), 'Interrupted!', '#ff8a5c', true); sfx.play('interrupted'); }
     } else if (e.type === 'cast') {
       const caster = this.views.get(e.unit.uid);
@@ -1194,6 +1214,8 @@ export default class BattleScene extends Phaser.Scene {
       this.drawAllBars();
     } else if (e.type === 'combo') {
       // drawn every frame by drawHeroHud()
+    } else if (this.showBossEvent(e)) {
+      // boss moves (systems/bosses.js): handled in showBossEvent()
     } else if (e.type === 'levelup') {
       sfx.play('levelUp');
       const v = this.views.get(e.unit.uid);
@@ -1431,11 +1453,161 @@ export default class BattleScene extends Phaser.Scene {
     }, ['skill', name]);
   }
 
+  // ---- bosses (systems/bosses.js) -------------------------------------------------------------
+  // Draws the boss moves. Returns false for events that are not boss events.
+  showBossEvent(e) {
+    const v = e.unit && this.views.get(e.unit.uid);
+    switch (e.type) {
+      case 'enemySpawn': this.showEnemySpawn(e.unit); return true;
+      case 'revive':
+        this.removeView(e.unit.uid); // its old figure may still be fading
+        this.showEnemySpawn(e.unit, 0xffd24d);
+        this.popText(this.views.get(e.unit.uid), 'Revived!', '#ffd24d', true);
+        return true;
+      case 'hatch': if (v) { this.puff(v.ch.x, v.ch.y, 0xd8d0a0, 6); this.popText(v, 'Hatched!', '#e8e0b0'); } return true;
+      case 'dust':
+        if (!v) return true;
+        this.setBar(v);
+        this.drawChips(v);
+        this.puff(v.ch.x, v.ch.y, 0x8a8a9a, 9);
+        this.tweens.add({ targets: v.ch, alpha: 0.2, duration: 400 });
+        this.popText(v, 'Break the crystal!', '#c8a0ff', true);
+        return true;
+      case 'reform':
+        if (!v) return true;
+        this.setBar(v);
+        this.tweens.add({ targets: v.ch, alpha: e.unit.def.alpha ?? 1, duration: 400 });
+        this.popText(v, 'He rises again!', '#c070ff', true);
+        this.cameras.main.shake(160, 0.004);
+        return true;
+      case 'bossAbility': {
+        if (e.quiet) {
+          for (const t of e.targets) { const tv = this.views.get(t.uid); if (tv && v) this.showProjectile(v, tv, 'lightning'); }
+          return true;
+        }
+        if (v) v.ch.flash(0xff4a3a, 160);
+        this.bossBanner(e.ability.name);
+        for (const t of e.targets) this.ring(this.views.get(t.uid), 0xff4a3a);
+        this.cameras.main.shake(120, 0.003);
+        return true;
+      }
+      case 'bossChannel':
+        for (const t of e.targets) this.ring(this.views.get(t.uid), 0xc070ff, 0.6);
+        return true;
+      case 'drain': {
+        const tv = this.views.get(e.unit.uid), fv = this.views.get(e.from.uid);
+        if (tv) { this.setBar(tv); if (e.amount > 0) this.popText(tv, `-${e.amount}`, '#c070ff'); }
+        if (fv) this.setBar(fv);
+        return true;
+      }
+      case 'plateBreak':
+        if (!v) return true;
+        this.popText(v, e.left > 0 ? 'Armor cracked!' : 'Armor shattered!', '#bfe0ff', true);
+        this.puff(v.ch.x, v.ch.y - 30, 0xbfe0ff, 6);
+        this.cameras.main.shake(140, 0.004);
+        return true;
+      case 'immuneStatus': if (v) this.popText(v, 'Immune', '#aaaaaa'); return true;
+      case 'enrage':
+        if (!v) return true;
+        v.ch.flash(0xff2a2a, 300);
+        this.popText(v, 'ENRAGED!', '#ff4a3a', true);
+        this.drawChips(v);
+        return true;
+      case 'swap': {
+        const w = this.views.get(e.with.uid);
+        for (const x of [v, w]) if (x) this.puff(x.ch.x, x.ch.y, 0x4a3a6a, 6);
+        if (v) this.popText(v, 'Swap!', '#c8a0ff');
+        return true;
+      }
+      case 'skyPhase':
+        if (!v) return true;
+        this.bossBanner('TAKES TO THE SKY!');
+        this.tweens.add({ targets: v, leapLift: 90, duration: 600, ease: 'Quad.easeOut' });
+        return true;
+      case 'grounded':
+        if (!v) return true;
+        this.tweens.add({ targets: v, leapLift: 0, duration: 220, ease: 'Quad.easeIn', onComplete: () => this.puff(v.ch.x, v.ch.y, 0x8a7a6a, 8) });
+        this.popText(v, 'Grounded!', '#ffd24d', true);
+        this.cameras.main.shake(200, 0.006);
+        return true;
+      case 'reflect': if (v) this.popText(v, 'Reflected!', '#bfe0ff', true); return true;
+      default: return false;
+    }
+  }
+
+  // A new enemy joins the fight (summon, hatchling, clone, a revived twin): it grows out of a dark puff.
+  showEnemySpawn(unit, color = 0x4a3a6a) {
+    if (this.views.has(unit.uid)) return;
+    const v = this.makeView(unit, unit.x ?? GAME_WIDTH / 2, unit.y ?? ENEMY_Y);
+    if (this.layer) this.layer.container.add(v.ch); // drawn with the other enemies (under the heroes)
+    for (const part of [v.bg, v.fill, v.shieldFill, v.chipBox]) part.setDepth(DEPTH.heroBar);
+    const target = v.ch.scaleY;
+    v.ch.scaleY = 0.05;
+    this.puff(v.ch.x, v.ch.y, color, 6);
+    this.tweens.add({ targets: v.ch, scaleY: target, duration: 360, ease: 'Back.easeOut' });
+    this.syncBar(v);
+  }
+
+  // A thin ring that bursts on a fighter (boss moves mark who they hit).
+  ring(v, color, alpha = 0.9) {
+    if (!v || !v.ch.active) return;
+    const c = this.center(v);
+    const r = this.add.circle(c.x, c.y, 10).setStrokeStyle(3, color, alpha).setDepth(DEPTH.popup - 1);
+    this.tweens.add({ targets: r, scale: 3, alpha: 0, duration: 420, ease: 'Quad.easeOut', onComplete: () => r.destroy() });
+  }
+
+  // A boss move's name, big and red, in the middle of the screen.
+  bossBanner(text) {
+    const b = this.add
+      .text(GAME_WIDTH / 2, FX.bannerY - 40, text, { fontFamily: 'monospace', fontSize: '22px', fontStyle: 'bold', color: '#ff6a5a', stroke: '#000000', strokeThickness: 5 })
+      .setOrigin(0.5)
+      .setDepth(DEPTH.popup + 1)
+      .setScale(1.4);
+    b.x = Phaser.Math.Clamp(b.x, b.width / 2 + 4, GAME_WIDTH - b.width / 2 - 4);
+    this.tweens.add({ targets: b, scale: 1, duration: 160, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: b, alpha: 0, y: b.y - 16, delay: 900, duration: 400, onComplete: () => b.destroy() });
+  }
+
+  // The boss bar at the top of the screen: its name, a big health bar, its heat gauge (Ignatius) and
+  // armor plates (Frost Warden). Twin bosses get one bar each.
+  drawBossHud() {
+    if (!this.bossG) {
+      this.bossG = this.add.graphics().setDepth(DEPTH.hud);
+      this.bossNames = [];
+    }
+    const g = this.bossG;
+    g.clear();
+    const bosses = this.mode === 'fighting' ? this.state.enemies.filter((u) => u.def.boss && (u.alive || this.state.enemies.some((o) => o.alive && o.reviveUid === u.uid))) : [];
+    const W = 300, X = (GAME_WIDTH - W) / 2;
+    bosses.forEach((u, i) => {
+      const y = 104 + i * 34;
+      let t = this.bossNames[i];
+      if (!t) t = this.bossNames[i] = this.add.text(X, 0, '', { fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color: '#ffe0d8', stroke: '#000000', strokeThickness: 3 }).setOrigin(0, 1).setDepth(DEPTH.hud);
+      t.setText(u.dust ? `${u.name} (dust)` : u.alive ? u.name : `${u.name} (down)`).setPosition(X, y - 3).setVisible(true);
+      g.fillStyle(0x000000, 0.85).fillRect(X - 2, y - 2, W + 4, 12);
+      g.fillStyle(0x3a1018, 1).fillRect(X, y, W, 8);
+      const p = u.alive && !u.dust ? Math.max(0, u.hp / u.maxHp) : 0;
+      g.fillStyle(u.dust ? 0x8a8a9a : 0xe04b4b, 1).fillRect(X, y, W * p, 8);
+      g.fillStyle(0xffffff, 0.25).fillRect(X, y, W * p, 2);
+      if (u.def.plates) for (let k = 0; k < u.def.plates.count; k++) {
+        const px = X + W - 10 - k * 14;
+        g.fillStyle(0x000000, 1).fillRect(px - 1, y - 13, 12, 9);
+        g.fillStyle(k < u.plates ? 0xbfe0ff : 0x30384a, 1).fillRect(px, y - 12, 10, 7);
+      }
+      if (u.def.heat) {
+        const hp = Math.min(1, u.heat / u.def.heat.max);
+        g.fillStyle(0x000000, 0.85).fillRect(X - 2, y + 11, W + 4, 6);
+        g.fillStyle(hp > 0.8 ? 0xffe060 : 0xff8a2a, 1).fillRect(X, y + 12, W * hp, 4);
+      }
+    });
+    for (let i = bosses.length; i < this.bossNames.length; i++) this.bossNames[i].setVisible(false);
+  }
+
   popText(view, text, color, big = false, sizePx = null) {
     // Pop-ups that appear together stack upwards instead of overlapping.
     view.popSlot = ((view.popSlot ?? -1) + 1) % 4;
     // Above where the fighter is right now (a hero may be away at an enemy).
-    const y = view.ch.y + view.ch.hopOffset - view.unit.def.height * CHAR_SCALE - 22 - view.popSlot * 15;
+    const y = view.ch.y + view.ch.hopOffset - view.unit.def.height * charScale(view.unit.def) - 22 - view.popSlot * 15;
     const t = this.add
       .text(view.ch.x, y, text, {
         fontFamily: 'monospace',
@@ -1461,6 +1633,7 @@ export default class BattleScene extends Phaser.Scene {
     for (const e of this.state.endFloor()) this.showEvent(e); // weak minions vanish with the floor
     if (this.castBars) this.castBars.clear(); // a wind-up still going is dropped
     if (this.tauntLines) this.tauntLines.clear();
+    this.drawBossHud(); // mode is 'won': the boss bar goes away
     this.focusMarker.setVisible(false);
     this.banner.setText(`Floor ${this.floor} cleared!`);
     this.layer.setDoorOpen(true);
@@ -1544,6 +1717,7 @@ export default class BattleScene extends Phaser.Scene {
   onLoss() {
     this.mode = 'lost';
     sfx.play('defeat');
+    this.drawBossHud();
     this.banner.setText(`Squad defeated\nReached floor ${this.floor}`);
     // Save the run (floor reached, enemies defeated) and see which heroes it unlocked.
     const progress = loadProgress();

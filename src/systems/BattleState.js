@@ -1,3 +1,4 @@
+import { bossMethods } from './bosses.js';
 import { computeDamage, computeDotDamage } from './combat.js';
 import { xpForNextLevel, statsAtLevel } from './leveling.js';
 import { computeHeroStats } from './items.js';
@@ -39,7 +40,8 @@ export default class BattleState {
     this.skillDefs = skillDefs;
     this.leveling = leveling;
     this.damageTypes = damageTypes;
-    this.enemyDefs = enemyDefs;
+    // Every enemy def knows its own id (bosses refer to other enemies by id: auras, summons, twins).
+    this.enemyDefs = Object.fromEntries(Object.entries(enemyDefs || {}).map(([id, d]) => [id, d && typeof d === 'object' && !id.startsWith('_') ? { id, ...d } : d]));
     this.rng = rng;
     this.nextUid = 1;
     this.focusUid = null;
@@ -56,7 +58,7 @@ export default class BattleState {
   makeUnit(def, side, floor, fightSize = 1) {
     const stats = { defense: 0, resist: 0, evasion: 0, crit: 0, attackEfficiency: 100, ...def.stats };
     delete stats.mana; // mana is switched off for now (skills run on cooldown only)
-    if (side === 'enemy') {
+    if (side === 'enemy' && !def.noFloorScaling) {
       const s = this.rules.floorScaling;
       // Health and attack grow in steps: +perStep every stepFloors floors.
       const hpSteps = Math.floor((floor - 1) / s.hpStepFloors);
@@ -127,6 +129,7 @@ export default class BattleState {
       resists: def.resists || [],
       timer: 0,
     };
+    if (side === 'enemy') this.initBoss(unit); // boss abilities, plates, heat... (bosses.js)
     unit.timer = this.rng() * this.interval(unit); // so attacks don't all land together
     return unit;
   }
@@ -139,6 +142,7 @@ export default class BattleState {
     // Bloodrage (Berserker): faster the more health he is missing.
     const rage = unit.def.passive && unit.def.passive.bloodrage;
     if (rage) change += rage.attackSpeedPercentPerMissing * (100 - (100 * unit.hp) / unit.maxHp);
+    if (unit.side === 'enemy') change += this.auraSpeed(unit); // War Drum
     const speed = (unit.stats.attackEfficiency / 100) * Math.max(0.2, 1 + change / 100);
     return this.rules.baseAttackIntervalMs / speed;
   }
@@ -149,7 +153,7 @@ export default class BattleState {
 
   // Stunned or frozen: can't attack or cast.
   isStunned(unit) {
-    return unit.statuses.some((s) => s.type === 'stun' || s.type === 'freeze');
+    return unit.statuses.some((s) => s.type === 'stun' || s.type === 'freeze' || s.type === 'webbed');
   }
 
   spawnEnemies(ids, floor) {
@@ -164,6 +168,8 @@ export default class BattleState {
       h.foe = null;
       h.casting = null;
     }
+    this.floorNo = floor;
+    this.hasStarted = false;
     this.enemies = ids.map((id) => this.makeUnit(this.enemyDefs[id], 'enemy', floor, ids.length));
     return this.enemies;
   }
@@ -256,7 +262,7 @@ export default class BattleState {
     }
     const taunter = this.tauntedBy(unit);
     if (taunter) return taunter;
-    const foes = (unit.side === 'hero' ? this.enemies.filter((u) => u.alive) : this.defenders());
+    const foes = (unit.side === 'hero' ? this.targetableEnemies() : this.defenders());
     if (!foes.length) return null;
     if (unit.side === 'hero' && !unit.minion) { // minions ignore tap focus
       const focus = foes.find((e) => e.uid === this.focusUid);
@@ -331,7 +337,7 @@ export default class BattleState {
         if (u.knock.remaining <= 0) u.knock = null;
         continue;
       }
-      if (this.isStunned(u) || u.pending || u.casting) continue; // frozen in place, or busy swinging / casting
+      if (this.isStunned(u) || u.pending || u.casting || u.bossCast || u.def.object || u.dust) continue; // frozen in place, busy, or an object
       let goal = null;
       if (this.has(u, 'fear')) goal = { x: u.homeX, y: u.homeY, stop: 0 };
       else if (u.damageType === 'melee') {
@@ -353,6 +359,7 @@ export default class BattleState {
     const L = M.layout;
     const settled = M.settledPushShare ?? 1;
     const share = (u, other) => {
+      if (u.def.object) return 0; // objects (War Drum, eggs) never budge
       if (u.damageType !== 'melee' && other.damageType === 'melee') return 0; // ranged hold their ground
       return walking.has(u) || u.knock ? 1 : settled;
     };
@@ -402,6 +409,7 @@ export default class BattleState {
 
   // Marks a unit dead. Enemies give XP; a dead hero's items stop working.
   killUnit(target, events, killer = null) {
+    if (target.def.phylactery && !target.finalDeath) return this.turnToDust(target, events); // Morthul: his crystal appears
     const was = this.morale;
     const lastStatuses = target.statuses.slice(); // what it was suffering from when it died (item reactions below)
     target.alive = false;
@@ -419,7 +427,9 @@ export default class BattleState {
       return;
     }
     if (target.side === 'enemy') {
-      this.awardXp(target, events);
+      if (target.def.reformFor) this.phylacteryBroken(target, events); // Morthul's crystal broke: he dies for good
+      if (target.def.link) this.linkDeath(target, events); // Rask & Vesh: the other one enrages
+      if (!target.xpless) this.awardXp(target, events);
       this.onKill(killer, target, events, lastStatuses);
       if (target.def.onDeath) this.deathBurst(target, target.def.onDeath, events);
     }
@@ -500,6 +510,7 @@ export default class BattleState {
   // The fight of a new floor begins: floor-start minions rise, greater minions that are due come back,
   // spawn timers start over.
   startFloor(events = []) {
+    this.hasStarted = true;
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
       hero.sinceHit = 0; // Steady Aim starts counting again with every fight
@@ -681,6 +692,7 @@ export default class BattleState {
     this.move(dt);
     for (const m of this.minions) if (m.healCd > 0) m.healCd -= dt; // Phoenix heal cooldown
     this.tickTornados(dt, events);
+    this.tickBosses(dt, events); // boss moves, eggs, heat, revives... (bosses.js)
 
     // Health regenerates (Heart Charm) and skill cooldowns run down.
     for (const hero of this.heroes) {
@@ -727,7 +739,8 @@ export default class BattleState {
         }
       }
       if (!unit.alive || busy) continue;
-      if (unit.casting) continue; // winding up a skill: no basic attacks meanwhile
+      if (unit.casting || unit.bossCast) continue; // winding up a skill: no basic attacks meanwhile
+      if (unit.def.object || unit.dust || this.untargetable(unit)) continue; // objects never attack; dust / in the sky cannot
       unit.timer += dt;
       const interval = this.interval(unit);
       if (unit.timer < interval) continue;
@@ -1148,6 +1161,12 @@ export default class BattleState {
   // basic (a hero's/enemy's normal attack, not a skill or item hit),
   // projectile ('bomb', 'lightning': the scene draws it flying from the attacker).
   strike(attacker, target, events, opts = {}) {
+    // Out of reach (Morthul's dust, Vharox in the sky): the hit just misses.
+    if (target.side === 'enemy' && this.untargetable(target)) {
+      const miss = { dodged: true, missed: true, crit: false, amount: 0, mult: 1 };
+      events.push({ type: 'attack', attacker, target, result: miss, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic });
+      return miss;
+    }
     // Martyr's Shield: when an enemy hits a hero, another hero holding it may take the hit instead.
     if (attacker.side === 'enemy' && target.side === 'hero' && !target.minion) {
       const martyr = this.martyrFor(target);
@@ -1184,6 +1203,10 @@ export default class BattleState {
     if (ia && target.alive) { target.iaidoHits++; forced = target.iaidoHits % ia.every === 0; }
     const result = forced ? { dodged: true, blocked: true, parried: true, crit: false, amount: 0, mult: 1 } : computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, opts);
     if (!result.dodged && attacker.side === 'enemy' && target.side === 'hero') result.amount = this.interceptHit(attacker, target, result.amount, events); // Knight takes his share
+    if (!result.dodged && target.side === 'enemy') {
+      result.amount = this.plateHit(target, result.amount, opts.damageType || attacker.damageType, events); // Frost Warden's ice plates
+      this.heatFromHit(target, opts.damageType || attacker.damageType, events); // Ignatius: fire heats him, ice cools him
+    }
     if (!result.dodged) for (const [itemId, label] of this.bonusItems || []) events.push({ type: 'proc', unit: attacker, label, itemId, target });
     // Tough Skin: the first hit the holder takes each floor deals much less.
     if (!result.dodged && target.side === 'hero' && target.specials.toughSkin && !target.floor.toughUsed) {
@@ -1602,6 +1625,11 @@ export default class BattleState {
   // stun, freeze, chill, fear...) last less on them. Damage over time is never shortened.
   applyStatus(target, spec, source, skillId, events) {
     const info = this.statusDefs[spec.status] || {};
+    if ((target.def.statusImmune || []).includes(spec.status)) {
+      events.push({ type: 'immuneStatus', unit: target, status: spec.status }); // Frost Warden: no Chill / Freeze
+      return;
+    }
+    if (target.def.heat) this.heatFromStatus(target, spec.status, events);
     const scale = info.control ? target.def.statusDurationScale ?? 1 : 1;
     // A shield with no durationMs lasts until it is broken.
     // Catalyst (Alchemist): debuffs on ENEMIES last longer.
@@ -1958,6 +1986,15 @@ export default class BattleState {
   // skill's damageMultiplier (waves, splash). Returns the strike result or null (no damage in this skill).
   skillHit(hero, skill, slotId, target, events, opts = {}) {
     let result = null;
+    // Sela's Mirror Ward: the first hero skill that hits her bounces back on the caster.
+    const ward = hero.side === 'hero' && target.side === 'enemy' && this.reflects(target);
+    if (ward && (skill.damageMultiplier || (skill.apply || []).length)) {
+      target.statuses.splice(target.statuses.indexOf(ward), 1);
+      events.push({ type: 'status', unit: target, change: 'expire', status: ward });
+      events.push({ type: 'reflect', unit: target, at: hero });
+      if (skill.damageMultiplier) return this.strike(hero, hero, events, { multiplier: (opts.multiplier ?? skill.damageMultiplier), damageType: skill.damageType, reflected: true });
+      return null;
+    }
     const base = opts.multiplier ?? skill.damageMultiplier;
     if (base) {
       let mult = base * (1 + ((hero.specials && hero.specials.skillDamage) || 0) / 100) * (opts.scale ?? 1);
@@ -2020,7 +2057,7 @@ export default class BattleState {
   //   { shape: 'band', halfHeight }                                   a strip across the field at the target's height
   // The target itself is always hit. Without positions (some rule tests) or without `area`: every living enemy.
   areaHit(hero, skill) {
-    const alive = this.enemies.filter((e) => e.alive);
+    const alive = this.targetableEnemies();
     const a = skill.area;
     if (!a || !this.hasPositions(hero) || !alive.every((e) => this.hasPositions(e))) return { targets: alive, zone: null };
     const aim = this.pickTarget(hero) || alive[0];
@@ -2258,3 +2295,6 @@ export default class BattleState {
     this.refreshStats();
   }
 }
+
+// Boss rules live in bosses.js (abilities, objects, plates, heat, twins, phylactery, clones, sky phase).
+Object.assign(BattleState.prototype, bossMethods);

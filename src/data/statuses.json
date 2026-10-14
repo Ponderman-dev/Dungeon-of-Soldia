@@ -193,5 +193,24 @@
     "label": "ELEM",
     "color": "#c9a8ff",
     "textColor": "#000000"
+  },
+  "webbed": {
+    "label": "WEBBED",
+    "color": "#e9e0f0",
+    "textColor": "#000000",
+    "control": true,
+    "debuff": true
+  },
+  "reflect": {
+    "popup": false,
+    "label": "MIRROR",
+    "color": "#a8e8ff",
+    "textColor": "#000000"
+  },
+  "airborne": {
+    "popup": false,
+    "label": "SKY",
+    "color": "#7ab0ff",
+    "textColor": "#000000"
   }
 }

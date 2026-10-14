@@ -108,6 +108,35 @@
         "id": "ghost",
         "from": 34
       }
-    ]
+    ],
+    "bosses": {
+      "20": [
+        "grukk",
+        "war_drum"
+      ],
+      "40": [
+        "brood_mother"
+      ],
+      "60": [
+        "frost_warden"
+      ],
+      "80": [
+        "rask",
+        "vesh"
+      ],
+      "100": [
+        "morthul"
+      ],
+      "120": [
+        "ignatius"
+      ],
+      "140": [
+        "sela"
+      ],
+      "160": [
+        "vharox"
+      ]
+    },
+    "_bosses": "A boss every 20 floors (user's choice). bosses: floor -> the fight (bosses.js reads their abilities from enemies.json)."
   }
 }

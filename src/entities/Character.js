@@ -54,7 +54,7 @@ export default class Character extends Phaser.GameObjects.Container {
       this.add(image);
     }
 
-    this.setScale(CHAR_SCALE);
+    this.setScale(def.drawScale ?? CHAR_SCALE); // bosses are drawn with finer pixels (drawScale 2)
     scene.add.existing(this);
     this.followPose = () => this.syncParts();
     this.homeScene = scene; // kept so destroy() can unhook even after Phaser clears this.scene

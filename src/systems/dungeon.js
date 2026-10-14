@@ -5,6 +5,7 @@
 // An entry's enemies are either a fixed list (["slime", "goblin"]) or a NUMBER: that many enemies
 // picked at random from the dungeon's `roster` (see rosterFor).
 export function enemiesForFloor(dungeon, n, rng = Math.random) {
+  if (dungeon.bosses && dungeon.bosses[n]) return dungeon.bosses[n]; // a boss floor (every 20 floors)
   const entry = [...dungeon.floors].reverse().find((f) => f.floor <= n) || dungeon.floors[0];
   const pick = entry.every && (n - entry.floor) % entry.every !== 0 ? entry.otherwise : entry.enemies;
   return typeof pick === 'number' ? randomEnemies(dungeon, n, pick, rng) : pick;

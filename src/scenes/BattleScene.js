@@ -15,6 +15,9 @@ import rewardRules from '../data/rewards.json';
 import rawSkills from '../data/skills.json';
 import statusInfo from '../data/statuses.json';
 import Character from '../entities/Character.js';
+import { statusIconKey } from '../entities/statusIconTexture.js';
+import statusIcons from '../data/statusIcons.json';
+import { iconList, iconLayout, ICON_PX } from '../systems/statusIcons.js';
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon, validateHeroSkills, validateDamageTypes } from '../systems/validate.js';
 import { enemiesForFloor } from '../systems/dungeon.js';
@@ -338,8 +341,8 @@ export default class BattleScene extends Phaser.Scene {
     // A thin light-blue bar above the health bar: how much shield is left (full width = max health).
     const shieldFill = this.add.rectangle(x - BAR_WIDTH / 2, barY - 5, 0, 3, 0x6fd0ff).setOrigin(0, 0.5).setStrokeStyle(1, 0x103050);
     const view = { unit, ch, bg, fill, groundY, shieldFill };
-    // Status tags (STUN, SLOW, PSN, BUFF) next to the bars.
-    view.chipBox = this.add.container(x, barY + (unit.side === 'hero' ? 20 : -22));
+    // Status icons (statusIcons.json, rows of 3) next to the bars.
+    view.chipBox = this.add.container(x, barY - 18);
     if (unit.side === 'hero') {
       // Item dots above the health bar: dot colour = item type, ring = rarity.
       // A container so the count numbers move, fade and hide together with the dots.
@@ -416,8 +419,10 @@ export default class BattleScene extends Phaser.Scene {
     view.bg.setPosition(view.ch.x, y).setAlpha(view.ch.alpha);
     view.fill.setPosition(view.ch.x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
     view.shieldFill.setPosition(view.ch.x - BAR_WIDTH / 2, y - 5).setAlpha(view.ch.alpha);
-    if (view.dots) view.dots.setPosition(view.ch.x, y - 12).setAlpha(view.ch.alpha);
-    view.chipBox.setPosition(view.ch.x, y + (view.unit.side === 'hero' ? 20 : -22)).setAlpha(view.ch.alpha);
+    // Hero item dots sit above the status icon rows (if any).
+    if (view.dots) view.dots.setPosition(view.ch.x, y - 12 - (view.iconRows || 0) * ICON_PX * CHAR_SCALE).setAlpha(view.ch.alpha);
+    view.chipBox.setPosition(view.ch.x, y - 18).setAlpha(view.ch.alpha);
+    this.blinkIcons(view);
   }
 
   // Shows or hides a fighter's health bar (and item dots).
@@ -433,29 +438,57 @@ export default class BattleScene extends Phaser.Scene {
   drawChips(view) {
     view.chipBox.removeAll(true);
     const kinds = [...new Set(view.unit.statuses.map((st) => st.type))];
-    // Stacking statuses (bleed, burn, poison, chill) show how many stacks there are: "PSN x3".
-    const tags = kinds.map((kind) => {
-      const n = this.state.stacks(view.unit, kind);
-      if (kind === 'shield') return { ...statusInfo.shield, label: `SHIELD ${Math.round(this.state.shieldAmount(view.unit))}` };
-      return (statusInfo[kind].dot || statusInfo[kind].stacking) && n > 1 ? { ...statusInfo[kind], label: `${statusInfo[kind].label} x${n}` } : statusInfo[kind];
-    });
-    // An "every Nth attack" passive shows its count: "RHYTHM 2/4".
+    // An "every Nth attack" passive shows its count on the hero itself: after the (N-1)th attack the weapon
+    // shines until the Nth goes off (a counter with a rotation shows the colour of the element that comes NEXT).
     const counter = view.unit.side === 'hero' && view.unit.alive ? view.unit.def.counter : null;
-    if (view.unit.steady) tags.unshift({ label: 'STEADY', color: '#9fe0ff', textColor: '#000000' });
-    // The count is shown on the hero itself: after the (N-1)th attack the weapon shines until the Nth goes off.
-    // (a counter with a rotation shows the colour of the element that comes NEXT)
     const next = counter && counter.rotation ? counter.rotation[(view.unit.beatsFired || 0) % counter.rotation.length].color : null;
     view.ch.setGlow(counter && view.unit.counterCount >= counter.every - 1 ? Phaser.Display.Color.HexStringToColor(next || counter.color || '#c8a0ff').color : null);
+    // Status ICONS (statusIcons.json) in rows of 3 over the health bar, rows going up (a hero's item dots move
+    // up above them). Stacking statuses (bleed, burn, poison, chill) show their
+    // stack count just right of the icon. The icon pops up a little when it arrives or gains a stack.
+    const S = CHAR_SCALE;
+    const list = iconList(statusIcons, kinds, (k) => (statusInfo[k] && (statusInfo[k].dot || statusInfo[k].stacking) ? this.state.stacks(view.unit, k) : 1), view.unit.steady ? ['steady'] : []);
+    const before = view.iconCounts || {};
+    view.iconCounts = {};
+    view.icons = [];
+    view.iconRows = Math.ceil(list.length / 3);
+    for (const e of iconLayout(list)) {
+      view.iconCounts[e.id] = e.n;
+      const img = this.add.image(e.x * S, e.y * S, statusIconKey(this, e.id)).setScale(S);
+      view.chipBox.add(img);
+      const parts = [img];
+      if (e.n > 1) {
+        const num = this.add
+          .text((e.x + ICON_PX / 2) * S, e.y * S + 1, String(e.n), { fontFamily: 'monospace', fontSize: '13px', fontStyle: 'bold', color: '#ffffff', stroke: '#1a1020', strokeThickness: 3 })
+          .setOrigin(0, 0.5);
+        view.chipBox.add(num);
+        parts.push(num);
+      }
+      if (before[e.id] !== e.n && (before[e.id] || 0) < e.n) this.tweens.add({ targets: parts, y: `-=${S}`, duration: 75, yoyo: true });
+      view.icons.push({ id: e.id, parts });
+    }
+    // A status that has no icon yet still shows its old text tag, so nothing is ever hidden.
     let x = 0;
-    for (const info of tags) {
+    const leftovers = kinds.filter((k) => !statusIcons[k] && statusInfo[k] && !statusInfo[k].instant);
+    for (const k of leftovers) {
       const chip = this.add
-        .text(x, 0, info.label, { fontFamily: 'monospace', fontSize: '9px', fontStyle: 'bold', color: info.textColor, backgroundColor: info.color, padding: { x: 2, y: 1 } })
+        .text(x, -((Math.ceil(list.length / 3) || 0) * ICON_PX * S) - 10, statusInfo[k].label, { fontFamily: 'monospace', fontSize: '9px', fontStyle: 'bold', color: statusInfo[k].textColor, backgroundColor: statusInfo[k].color, padding: { x: 2, y: 1 } })
         .setOrigin(0, 0.5);
       view.chipBox.add(chip);
       x += chip.width + 3;
     }
-    // Centre the row on the fighter.
-    view.chipBox.iterate((chip) => (chip.x -= (x - 3) / 2));
+  }
+
+  // Makes a status icon blink in its last moments (every frame, from syncBar).
+  blinkIcons(view) {
+    if (!view.icons || !view.icons.length) return;
+    const blinkOn = Math.floor(this.time.now / 100) % 2 === 1;
+    for (const ic of view.icons) {
+      const sts = view.unit.statuses.filter((st) => st.type === ic.id);
+      const left = sts.length ? Math.max(...sts.map((st) => st.remaining)) : Infinity;
+      const hide = blinkOn && left > 0 && left < 800;
+      for (const p of ic.parts) p.setVisible(!hide);
+    }
   }
 
   // Redraws the dots for a hero's items: one dot per kind of item, with a small number beside it

@@ -1,5 +1,30 @@
 {
-  "_about": "Status icons (Risk of Rain style): one per status, shown in a row over the health bar with the stack count next to it. 7x7 including the dark outline (palette index 0). Same format as itemIcons.json. Made by docs/proposals/make-status-icons.mjs; not used by the game yet (proposal).",
+  "_about": "Status icons (Risk of Rain style): one per status, shown in a row over the health bar with the stack count next to it. 7x7 including the dark outline (palette index 0). Same format as itemIcons.json. Shown in rows of 3 (BattleScene.drawChips, src/systems/statusIcons.js); _order = left-to-right order. Made by docs/proposals/make-status-icons.mjs.",
+  "_order": [
+    "freeze",
+    "stun",
+    "shock",
+    "fear",
+    "taunt",
+    "silence",
+    "chill",
+    "burn",
+    "poison",
+    "bleed",
+    "mark",
+    "blind",
+    "curse",
+    "armorBreak",
+    "weaken",
+    "invulnerable",
+    "shield",
+    "parry",
+    "guaranteedCrit",
+    "steady",
+    "buff",
+    "regenBoost",
+    "blockCooldown"
+  ],
   "stun": {
     "palette": [
       "0x1a1020",

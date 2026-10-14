@@ -26,6 +26,13 @@ Done this session (all in CLAUDE.md too):
 4. STUDIO: sections Units / Items / Effects; item icons editable; unsaved drafts no longer hide new game sprites (old drafts set aside under `soldia-studio-designs-draft-old` in the user's browser; they may hold unsaved Knight edits, offer to restore if asked).
 5. HIT EFFECTS PROPOSAL (not in the game yet): https://claude.ai/artifact/6N97in7zepDMZcMgbJJrYF . Sections: Hits, Statuses, Item procs, Hero skills (the FULL set, 72, all re-aligned on body anchors, new Freeze = the sprite turns to ice + crystals), "Simplified (suggestion)" and "Stress test" (5 enemies x 5 debuffs: full vs simplified pips vs tap panel). The user has NOT chosen full vs simplified yet.
 
+## EFFECTS DECISIONS (made by the user, next session)
+- Status icons: 5x5 (+outline), rows of 3 over the health bar, stack number beside the icon. DONE in the game.
+- EVERY debuff plays its own looping effect on the unit at the same time (not only the most important one).
+- Hits: FULL version (each damage type its own hand-made hit). Item procs: FULL hand-made effect AND the item's icon pops over the holder. Hero skills: full.
+- So the simplified ideas are NOT used (no shared minor-debuff look, no "top status only").
+- NEXT build steps (one at a time): status loops in the game (every status its own effect), then hits per damage type, then item procs + icon pop, then skill effects. Effects should become data-driven recipes the Studio's Effects section can edit (ask the user before that refactor).
+
 ## NEXT (what the user asked right before this hand-off)
 The user showed Risk of Rain 2's debuff display as the reference: **every debuff has its OWN small icon in a row above the health bar, with a small stack number next to it** ("x8", "x1"). So:
 1. Make a proposal: a tiny pixel ICON per status (about 7x7 or 8x8, readable at game size, in the status colour: stun star, freeze crystal, chill snowflake, shock bolt, fear face, taunt "!", silence lock, bleed drop, burn flame, poison drop/skull, weaken broken sword, armor break cracked shield, curse skull, blind closed eye, mark target, buff up-arrow, shield, regen plus...) shown in a row over the health bar with a stack count ("x3") where it stacks. Add it to the effects proposal page (new section, and redo the stress test with icons instead of colour pips) so the user can compare. Keep the icons as data (like itemIcons.json, probably `statusIcons.json`) and editable in the Studio later.

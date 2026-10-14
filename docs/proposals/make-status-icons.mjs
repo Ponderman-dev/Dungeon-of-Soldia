@@ -33,7 +33,10 @@ const D = {
   steady: [['0x2a7aa8', '0x9fe0ff', W], ['..2..', '..22.', '11223', '..22.', '..2..']],
 };
 
-const out = { _about: 'Status icons (Risk of Rain style): one per status, shown in a row over the health bar with the stack count next to it. 7x7 including the dark outline (palette index 0). Same format as itemIcons.json. Made by docs/proposals/make-status-icons.mjs; not used by the game yet (proposal).' };
+const out = { _about: 'Status icons (Risk of Rain style): one per status, shown in a row over the health bar with the stack count next to it. 7x7 including the dark outline (palette index 0). Same format as itemIcons.json. Shown in rows of 3 (BattleScene.drawChips, src/systems/statusIcons.js); _order = left-to-right order. Made by docs/proposals/make-status-icons.mjs.' };
+// The order icons are shown in (left to right, top row first): control, damage over time, debuffs, buffs.
+out._order = ['freeze', 'stun', 'shock', 'fear', 'taunt', 'silence', 'chill', 'burn', 'poison', 'bleed', 'mark', 'blind', 'curse', 'armorBreak', 'weaken',
+  'invulnerable', 'shield', 'parry', 'guaranteedCrit', 'steady', 'buff', 'regenBoost', 'blockCooldown'];
 for (const [id, [pal, rows]] of Object.entries(D)) {
   if (rows.length !== 5 || rows.some((r) => r.length !== 5)) throw new Error('bad size: ' + id);
   const at = (x, y) => (x >= 0 && y >= 0 && x < 5 && y < 5 && rows[y][x] !== '.' ? rows[y][x] : null);

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { CHAR_SCALE } from '../config.js';
 import { partArt, artSize, partAnchor, artPixels, mixColor, artKey } from '../systems/pixelArt.js';
 import { samplePose } from '../systems/animClips.js';
+import { iceColor } from '../systems/statusFx.js';
 
 // A character built from separate parts (body, head, weapon...), described by JSON data.
 // Each part is a small pixel picture (`art`, drawn in the Character Studio) or, until it is drawn,
@@ -47,7 +48,7 @@ export default class Character extends Phaser.GameObjects.Container {
         name, x, y, angle: 0, restX: x, restY: y, restAngle: 0,
         width: w, height: h, originX: ax / w, originY: ay / h,
         pixels: artPixels(art), anchor: [ax, ay], key: artKey(art), image,
-        wash: null, shown: null,
+        wash: null, look: null, shown: null, top0: p.y - h / 2,
       };
       this.parts[name] = part;
       this.add(image);
@@ -161,7 +162,9 @@ export default class Character extends Phaser.GameObjects.Container {
   // The texture of a part's picture (washed in a colour if needed), made once and shared.
   texture(part) {
     const wash = part.wash ? `${part.wash.color.toString(16)}-${Math.round(part.wash.amount * 100)}` : '';
-    const key = `px-${part.key}-${wash}`;
+    const look = part.look ? `-${part.look.tint ? part.look.tint[0].toString(16) + '-' + Math.round(part.look.tint[1] * 100) : ''}-i${Math.round(part.look.ice * 100)}` : '';
+    const key = `px-${part.key}-${wash}${look}`;
+    const iceCut = part.look && part.look.ice > 0 ? -part.look.ice * ((this.def.height || 24) + 2) : Infinity;
     const textures = this.scene.textures;
     if (!textures.exists(key)) {
       const tex = textures.createCanvas(key, part.width, part.height);
@@ -169,7 +172,9 @@ export default class Character extends Phaser.GameObjects.Container {
       part.pixels.forEach((row, y) =>
         row.forEach((c, x) => {
           if (c === null) return;
-          const col = part.wash ? mixColor(c, part.wash.color, part.wash.amount) : c;
+          let col = part.top0 + y + 1 > iceCut ? iceColor(c) : c; // Freeze: ice climbs up from the feet
+          if (part.look && part.look.tint) col = mixColor(col, part.look.tint[0], part.look.tint[1]);
+          if (part.wash) col = mixColor(col, part.wash.color, part.wash.amount);
           ctx.fillStyle = '#' + col.toString(16).padStart(6, '0');
           ctx.fillRect(x, y, 1, 1);
         }),
@@ -266,6 +271,17 @@ export default class Character extends Phaser.GameObjects.Container {
   // of the way towards `color`. amount 0 = the normal colours.
   setWash(color, amount) {
     for (const part of Object.values(this.parts)) part.wash = amount > 0 ? { color, amount } : null;
+    this.syncParts();
+  }
+
+  // What its statuses do to the whole sprite: tint = [colour, amount] (mixed over every pixel) and
+  // ice = 0..1 (Freeze: how far up from the feet the sprite has turned to ice). See systems/statusFx.js.
+  setStatusLook(tint, ice = 0) {
+    const look = tint || ice > 0 ? { tint, ice } : null;
+    const sig = look ? `${tint ? tint.join('-') : ''}-${ice}` : '';
+    if (sig === this.lookSig) return;
+    this.lookSig = sig;
+    for (const part of Object.values(this.parts)) part.look = look;
     this.syncParts();
   }
 

@@ -18,6 +18,7 @@ import Character from '../entities/Character.js';
 import { statusIconKey } from '../entities/statusIconTexture.js';
 import statusIcons from '../data/statusIcons.json';
 import { iconList, iconLayout, ICON_PX } from '../systems/statusIcons.js';
+import { statusLook, iceBreak, bodyBox } from '../systems/statusFx.js';
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon, validateHeroSkills, validateDamageTypes } from '../systems/validate.js';
 import { enemiesForFloor } from '../systems/dungeon.js';
@@ -172,6 +173,49 @@ export default class BattleScene extends Phaser.Scene {
       const dx = (i - (count - 1) / 2) * 7;
       const c = this.add.circle(x + dx, y - 2, 5 + (i % 3) * 2, color, 0.8).setDepth(DEPTH.popup - 2);
       this.tweens.add({ targets: c, y: y - 22 - (i % 3) * 8, x: x + dx * 1.6, alpha: 0, scale: 1.6, duration: 520 + (i % 3) * 90, ease: 'Quad.easeOut', onComplete: () => c.destroy() });
+    }
+  }
+
+  // Status effects ON the fighters, every frame: each status plays its own loop (stars, ice, snow, sparks,
+  // flames, bubbles, drops, brackets...) all at once, and tints the sprite (Freeze turns it to ice).
+  // The recipes live in systems/statusFx.js; this only draws them at the fighter's body.
+  drawStatusFx() {
+    if (!this.statusG) this.statusG = this.add.graphics().setDepth(DEPTH.heroBar - 0.05);
+    const g = this.statusG;
+    g.clear();
+    const now = this.time.now;
+    for (const v of this.views.values()) {
+      const u = v.unit;
+      if (!u.alive || !v.ch.active) { if (v.ch.active) v.ch.setStatusLook(null, 0); continue; }
+      const kinds = {};
+      for (const st of u.statuses) {
+        const age = isFinite(st.total) && isFinite(st.remaining) ? st.total - st.remaining : 1e9;
+        const k = kinds[st.type] || (kinds[st.type] = { stacks: 0, age: Infinity });
+        k.stacks += 1;
+        k.age = Math.min(k.age, age);
+      }
+      if (!v.box) v.box = bodyBox(u.def.parts, u.def.height);
+      let look;
+      try { look = statusLook(kinds, v.box, now + (u.uid % 7) * 137); } // each fighter a little out of step
+      catch (err) { console.error(err); continue; } // a broken effect must never stop the fight
+      v.ch.setStatusLook(look.tint, look.ice);
+      if (look.dx && this.mode === 'fighting') v.ch.x += look.dx * Math.abs(v.ch.scaleY);
+      this.paintFx(g, v, look.draws);
+    }
+    // Ice breaking off a fighter whose Freeze just ended.
+    this.iceBreaks = (this.iceBreaks || []).filter((b) => now - b.start < 400 && b.view.ch.active);
+    for (const b of this.iceBreaks) this.paintFx(g, b.view, iceBreak(b.view.box || bodyBox(b.view.unit.def.parts, b.view.unit.def.height), (now - b.start) / 400));
+  }
+
+  // Draws effect pixels (character pixels around the feet, x = 0 at the body's middle) on a fighter.
+  paintFx(g, v, draws) {
+    if (!draws.length || !v.ch.visible || v.ch.alpha <= 0) return;
+    const S = Math.abs(v.ch.scaleY);
+    const box = v.box || { cx: 0 };
+    const X = v.ch.x + box.cx * v.ch.scaleX, Y = v.ch.y;
+    for (const [x, y, w, h, c, a] of draws) {
+      g.fillStyle(c, a * v.ch.alpha);
+      g.fillRect(X + x * S - S / 2, Y + y * S, w * S, h * S);
     }
   }
 
@@ -653,11 +697,15 @@ export default class BattleScene extends Phaser.Scene {
 
   update(time, delta) {
     this.refreshHud();
-    if (this.mode !== 'fighting') return;
+    if (this.mode !== 'fighting') {
+      this.drawStatusFx();
+      return;
+    }
 
     // Hit-stop: a big skill hit freezes the fight for a split second (the drawing keeps going).
     if (this.hitStop > 0) {
       this.hitStop -= delta;
+      this.drawStatusFx();
       return;
     }
     // Cap the step so switching browser tabs doesn't cause a huge jump.
@@ -667,6 +715,7 @@ export default class BattleScene extends Phaser.Scene {
     this.drawTornados();
     this.drawCastBars();
     this.drawTauntLines();
+    this.drawStatusFx();
 
     const focus = this.state.focusUnit;
     if (focus) {
@@ -758,6 +807,9 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'status') {
       const v = this.views.get(e.unit.uid);
       this.drawChips(v);
+      if (e.change === 'expire' && e.status.type === 'freeze' && v && !e.unit.statuses.some((st) => st.type === 'freeze')) {
+        (this.iceBreaks = this.iceBreaks || []).push({ view: v, start: this.time.now }); // the ice breaks off
+      }
       if (e.change === 'apply' && e.status.type !== 'buff' && statusInfo[e.status.type].popup !== false) {
         this.popText(v, statusInfo[e.status.type].label + '!', statusInfo[e.status.type].color);
       }

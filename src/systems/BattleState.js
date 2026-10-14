@@ -1900,14 +1900,7 @@ export default class BattleState {
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
       const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
-      const upkeep = [];
-      const paying = this.upkeepCount(hero);
-      const mr = this.rules.minions || {};
-      if (paying > 0) upkeep.push({ stat: 'attackEfficiency', percent: (mr.upkeepAttackSpeedPercent || 0) * paying }, { stat: 'defense', percent: (mr.upkeepDefensePercent || 0) * paying });
-      if (hero.taunting && hero.specials && hero.specials.spiteMail) upkeep.push({ stat: 'defense', flat: hero.specials.spiteMail }); // Spite Mail
-      const sa = hero.def.passive && hero.def.passive.steadyAim;
-      if (sa && hero.steady) upkeep.push({ stat: 'attackEfficiency', percent: sa.attackSpeedPercent }, { stat: 'crit', flat: sa.critFlat });
-      const { stats, damageBonus, specials, procs, minionSources } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale, upkeep);
+      const { stats, damageBonus, specials, procs, minionSources } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale, this.statUpkeep(hero));
       hero.minionSources = this.buildSources(hero, minionSources);
       const hpDelta = stats.health - hero.maxHp;
       hero.stats = stats;
@@ -1927,6 +1920,19 @@ export default class BattleState {
     }
   }
 
+  // Changes to a hero's stats that come from its current state, not its items: minion upkeep,
+  // Spite Mail while taunting, the Archer's Steady Aim.
+  statUpkeep(hero) {
+    const upkeep = [];
+    const paying = this.upkeepCount(hero);
+    const mr = this.rules.minions || {};
+    if (paying > 0) upkeep.push({ stat: 'attackEfficiency', percent: (mr.upkeepAttackSpeedPercent || 0) * paying }, { stat: 'defense', percent: (mr.upkeepDefensePercent || 0) * paying });
+    if (hero.taunting && hero.specials && hero.specials.spiteMail) upkeep.push({ stat: 'defense', flat: hero.specials.spiteMail }); // Spite Mail
+    const sa = hero.def.passive && hero.def.passive.steadyAim;
+    if (sa && hero.steady) upkeep.push({ stat: 'attackEfficiency', percent: sa.attackSpeedPercent }, { stat: 'crit', flat: sa.critFlat });
+    return upkeep;
+  }
+
   // Gives a hero an item.
   giveItem(heroUid, itemId) {
     const hero = this.heroes.find((h) => h.uid === heroUid);
@@ -1939,7 +1945,7 @@ export default class BattleState {
     const hero = this.heroes.find((h) => h.uid === heroUid);
     hero.items.push(itemId);
     const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
-    const result = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale);
+    const result = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale, this.statUpkeep(hero)); // same state bonuses as now, so before > after compares like with like
     hero.items.pop();
     return result;
   }

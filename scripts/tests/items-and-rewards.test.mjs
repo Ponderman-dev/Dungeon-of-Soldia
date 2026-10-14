@@ -28,3 +28,18 @@ const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
 // rarity frequency
 { const s = mk(); const tally = {}; for (let i = 0; i < 6000; i++) for (const it of rollChoices({ itemDefs, rules: rw, count: 3, heroes: s.heroes })) tally[it.rarity] = (tally[it.rarity] || 0) + 1;
   const tot = Object.values(tally).reduce((a, b) => a + b, 0); console.log('rarity mix:', Object.fromEntries(Object.entries(tally).map(([k, v]) => [k, (100 * v / tot).toFixed(1) + '%']))); }
+
+// The reward preview keeps the hero's state bonuses (Archer's Steady Aim): a crit item never shows as a LOSS.
+{
+  const fs2 = await import('fs');
+  const rd = (f) => JSON.parse(fs2.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
+  const { default: BS } = await import('../../src/systems/BattleState.js');
+  const { loadItems: li } = await import('../../src/systems/items.js');
+  const heroes = rd('heroes.json');
+  const s = new BS({ heroDefs: [heroes.find((h) => h.id === 'archer')], enemyDefs: rd('enemies.json'), itemDefs: li(rd('items.json')), skillDefs: rd('skills.json'), statusDefs: rd('statuses.json'), rules: rd('combat.json'), damageTypes: rd('damageTypes.json'), leveling: rd('leveling.json') });
+  const a = s.heroes[0];
+  a.steady = true;
+  s.refreshStats();
+  const after = s.previewStats(a.uid, 'lucky_coin');
+  console.log(after.stats.crit > a.stats.crit ? 'PASS' : 'FAIL', 'reward preview: Lucky Coin on a Steady Archer raises crit', `${a.stats.crit} > ${after.stats.crit}`);
+}

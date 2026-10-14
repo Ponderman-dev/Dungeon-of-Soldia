@@ -13,7 +13,10 @@ const FONT = 'system-ui, Arial, sans-serif';
 const SHEET_TOP = 44; // the sheet slides up to here; the dungeon stays visible (dimmed) above it
 const PAD = 16;
 const CARD_W = GAME_WIDTH - PAD * 2;
-const TEXT_X = 94; // where a card's text starts (right of the icon)
+const TEXT_X = 112; // where a card's text starts (right of the icon)
+const ICON_W = 98; // the icon column
+const DESC_PX = 15; // description text size
+const TITLE_H = 54; // the step title above the cards
 const SPECIAL_LABEL = { block: 'BLOCK', regen: 'REGEN/s', thorns: 'THORNS', lifesteal: 'LIFESTEAL', skillDamage: 'SKILL DMG', critDamage: 'CRIT DMG', skillSplash: 'SPLASH', lifestealShare: 'SHARE', critDebuff: 'CRIT DEBUFF', clearHeal: 'CLEAR HEAL' };
 const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
 const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
@@ -85,10 +88,10 @@ export default class RewardScene extends Phaser.Scene {
 
   // How tall a card must be for its description (the card grows instead of the text spilling out).
   cardHeight(item) {
-    const probe = this.add.text(0, 0, item.description, { fontFamily: FONT, fontSize: '13px', lineSpacing: 2, wordWrap: { width: CARD_W - TEXT_X - 14, useAdvancedWrap: true } });
+    const probe = this.add.text(0, 0, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, lineSpacing: 3, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
     const h = probe.height;
     probe.destroy();
-    return Math.max(108, 58 + h + 14);
+    return Math.max(136, 68 + h + 18);
   }
 
   // One reward card: icon in its rarity frame + type, rarity, name, description.
@@ -101,18 +104,18 @@ export default class RewardScene extends Phaser.Scene {
       g.clear();
       g.fillStyle(0x000000, 0.3).fillRoundedRect(2, 4, CARD_W, h, 16);
       g.fillStyle(lit ? 0x31254d : COLORS.panel, 1).fillRoundedRect(0, 0, CARD_W, h, 16);
-      g.fillStyle(rc, 0.12).fillRoundedRect(0, 0, 82, h, { tl: 16, bl: 16, tr: 0, br: 0 }); // a rarity tint behind the icon
+      g.fillStyle(rc, 0.12).fillRoundedRect(0, 0, ICON_W, h, { tl: 16, bl: 16, tr: 0, br: 0 }); // a rarity tint behind the icon
       g.lineStyle(lit ? 4 : 2, lit ? COLORS.gold : rc, 1).strokeRoundedRect(0, 0, CARD_W, h, 16);
     };
     paint(highlighted);
     card.add(g);
-    card.add(this.add.image(41, h / 2 - 8, itemIconKey(this, item.id, item.rarity)).setScale(3));
-    card.add(this.add.text(41, h / 2 + 30, itemTypes[item.type].label, { fontFamily: FONT, fontSize: '9px', fontStyle: 'bold', color: MUTE }).setOrigin(0.5));
-    card.add(this.add.text(TEXT_X, 14, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : 'ITEM'}`, { fontFamily: FONT, fontSize: '11px', fontStyle: 'bold', color: hex(rc) }));
-    const name = this.add.text(TEXT_X, 30, item.name, { fontFamily: FONT, fontSize: '17px', fontStyle: 'bold', color: INK });
-    for (let s = 16; name.width > CARD_W - TEXT_X - 14 && s >= 12; s--) name.setFontSize(s); // long names shrink to fit
+    card.add(this.add.image(ICON_W / 2, h / 2 - 9, itemIconKey(this, item.id, item.rarity)).setScale(4));
+    card.add(this.add.text(ICON_W / 2, h / 2 + 42, itemTypes[item.type].label, { fontFamily: FONT, fontSize: '10px', fontStyle: 'bold', color: MUTE }).setOrigin(0.5));
+    card.add(this.add.text(TEXT_X, 16, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : 'ITEM'}`, { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: hex(rc) }));
+    const name = this.add.text(TEXT_X, 34, item.name, { fontFamily: FONT, fontSize: '21px', fontStyle: 'bold', color: INK });
+    for (let s = 20; name.width > CARD_W - TEXT_X - 16 && s >= 13; s--) name.setFontSize(s); // long names shrink to fit
     card.add(name);
-    card.add(this.add.text(TEXT_X, 56, item.description, { fontFamily: FONT, fontSize: '13px', color: MUTE, lineSpacing: 2, wordWrap: { width: CARD_W - TEXT_X - 14, useAdvancedWrap: true } }));
+    card.add(this.add.text(TEXT_X, 66, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, color: MUTE, lineSpacing: 3, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } }));
     card.paint = paint;
     return card;
   }
@@ -122,11 +125,15 @@ export default class RewardScene extends Phaser.Scene {
   showPick(first = false) {
     this.step = 'pick';
     this.clearStep();
-    this.text(PAD, SHEET_TOP + 46, 'Choose a reward', 26, INK, true);
+    // The title and the cards sit in the MIDDLE of the sheet (user's choice), not at its top.
+    const heights = this.payload.choices.map((item) => this.cardHeight(item));
+    const total = TITLE_H + heights.reduce((a, b) => a + b, 0) + 14 * (heights.length - 1);
+    const top = SHEET_TOP + Math.max(44, (GAME_HEIGHT - SHEET_TOP - total) / 2);
+    this.text(GAME_WIDTH / 2, top, 'Choose a reward', 28, INK, true).setOrigin(0.5, 0);
 
-    let y = SHEET_TOP + 94;
+    let y = top + TITLE_H;
     this.payload.choices.forEach((item, i) => {
-      const h = this.cardHeight(item);
+      const h = heights[i];
       const card = this.drawCard(item, PAD, y, h);
       const hit = this.track(this.add.zone(PAD + CARD_W / 2, y + h / 2, CARD_W, h).setInteractive());
       hit.on('pointerdown', () => {
@@ -140,7 +147,7 @@ export default class RewardScene extends Phaser.Scene {
         card.setAlpha(0).setY(y + 40);
         this.tweens.add({ targets: card, alpha: 1, y, duration: 320, delay: 260 + i * 110, ease: 'Back.easeOut' });
       }
-      y += h + 12;
+      y += h + 14;
     });
   }
 

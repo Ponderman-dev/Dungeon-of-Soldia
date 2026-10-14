@@ -50,12 +50,63 @@
       },
       {
         "id": "goblin",
-        "from": 1
+        "from": 1,
+        "until": 40
       },
       {
         "id": "bat",
         "from": 2,
         "until": 24
+      },
+      {
+        "id": "rat",
+        "from": 4,
+        "until": 30
+      },
+      {
+        "id": "skeletonArcher",
+        "from": 6
+      },
+      {
+        "id": "spider",
+        "from": 8
+      },
+      {
+        "id": "bandit",
+        "from": 10
+      },
+      {
+        "id": "fireImp",
+        "from": 13
+      },
+      {
+        "id": "orcBrute",
+        "from": 16,
+        "max": 1
+      },
+      {
+        "id": "frostWisp",
+        "from": 19
+      },
+      {
+        "id": "puffshroom",
+        "from": 22
+      },
+      {
+        "id": "beetle",
+        "from": 25
+      },
+      {
+        "id": "stormSprite",
+        "from": 28
+      },
+      {
+        "id": "cultist",
+        "from": 31
+      },
+      {
+        "id": "ghost",
+        "from": 34
       }
     ]
   }

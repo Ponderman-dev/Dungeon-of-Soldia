@@ -1,10 +1,15 @@
 // Checks the dungeon data for mistakes. Returns a list of problems (empty = all good).
 export function validateDungeon(dungeon, enemyDefs) {
   const problems = [];
+  // A floor's enemies are a fixed list or a number (that many random ones from the roster).
+  const list = (x) => (Array.isArray(x) ? x : []);
   for (const f of dungeon.floors) {
-    for (const id of [...f.enemies, ...(f.otherwise || [])]) {
+    for (const id of [...list(f.enemies), ...list(f.otherwise)]) {
       if (!enemyDefs[id]) problems.push(`Floor ${f.floor}: unknown enemy "${id}"`);
     }
+  }
+  for (const e of dungeon.roster || []) {
+    if (!enemyDefs[e.id]) problems.push(`Roster: unknown enemy "${e.id}"`);
   }
   return problems;
 }

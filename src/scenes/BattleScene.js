@@ -795,6 +795,14 @@ export default class BattleScene extends Phaser.Scene {
       }
       this.puff(c.x, c.y + 10, color, 6);
       this.cameras.main.shake(70, 0.002);
+    } else if (e.type === 'deathBurst') {
+      // An enemy bursts when it dies (Puffshroom poison cloud): a cloud that spreads to its radius.
+      const v = this.views.get(e.unit.uid);
+      const c = v ? this.center(v) : { x: e.unit.x, y: e.unit.y };
+      const color = Phaser.Display.Color.HexStringToColor(e.color || '#6de07a').color;
+      const cloud = this.add.circle(c.x, c.y, 10, color, 0.45).setDepth(DEPTH.popup - 2);
+      this.tweens.add({ targets: cloud, radius: e.radius || 80, alpha: 0, duration: 650, ease: 'Quad.easeOut', onComplete: () => cloud.destroy() });
+      this.puff(c.x, c.y + 8, color, 8);
     } else if (e.type === 'shieldBreak') {
       const v = this.views.get(e.unit.uid);
       this.drawChips(v);

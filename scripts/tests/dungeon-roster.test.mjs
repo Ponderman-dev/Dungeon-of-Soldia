@@ -28,3 +28,5 @@ ok('`max` caps an enemy per fight', capped);
 const E = { roster: [{ id: 'a', from: 1, weight: 300 }, { id: 'b', from: 1, weight: 100 }] };
 let a = 0; for (let k = 0; k < 4000; k++) if (randomEnemies(E, 1, 1, rng)[0] === 'a') a++;
 ok('weights are respected (about 75% a)', a > 2800 && a < 3200, String(a));
+import { validateDungeon } from '../../src/systems/validate.js';
+ok('validateDungeon accepts random floors and checks the roster', validateDungeon(A, enemies).length === 0 && validateDungeon({ floors: [{ floor: 1, enemies: 2 }], roster: [{ id: 'nope', from: 1 }] }, enemies).length === 1);

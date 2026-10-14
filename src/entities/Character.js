@@ -42,6 +42,7 @@ export default class Character extends Phaser.GameObjects.Container {
       const x = p.x - w / 2 + ax;
       const y = p.y - h / 2 + ay;
       const image = scene.add.image(x, y, '__DEFAULT');
+      if (def.alpha) image.setAlpha(def.alpha); // see-through characters (Ghost)
       const part = {
         name, x, y, angle: 0, restX: x, restY: y, restAngle: 0,
         width: w, height: h, originX: ax / w, originY: ay / h,

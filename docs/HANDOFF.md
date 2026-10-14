@@ -26,20 +26,26 @@ Done this session (all in CLAUDE.md too):
 4. STUDIO: sections Units / Items / Effects; item icons editable; unsaved drafts no longer hide new game sprites (old drafts set aside under `soldia-studio-designs-draft-old` in the user's browser; they may hold unsaved Knight edits, offer to restore if asked).
 5. HIT EFFECTS PROPOSAL (not in the game yet): https://claude.ai/artifact/6N97in7zepDMZcMgbJJrYF . Sections: Hits, Statuses, Item procs, Hero skills (the FULL set, 72, all re-aligned on body anchors, new Freeze = the sprite turns to ice + crystals), "Simplified (suggestion)" and "Stress test" (5 enemies x 5 debuffs: full vs simplified pips vs tap panel). The user has NOT chosen full vs simplified yet.
 
-## EFFECTS DECISIONS (made by the user, next session)
-- Status icons: 5x5 (+outline), rows of 3 over the health bar, stack number beside the icon. DONE in the game.
-- EVERY debuff plays its own looping effect on the unit at the same time (not only the most important one).
-- Hits: FULL version (each damage type its own hand-made hit). Item procs: FULL hand-made effect AND the item's icon pops over the holder. Hero skills: full.
-- So the simplified ideas are NOT used (no shared minor-debuff look, no "top status only").
-- DONE: status loops in the game (every status its own effect, systems/statusFx.js).
-- DONE: hits per damage type + crit (systems/hitFx.js). Also DONE: miss side-step, block flash, shield soak ripple, shield break shards, heal motes, death squash + puff. DONE: item procs (icon pop + own effects, systems/itemFx.js, data/itemFx.json). The 4 leftovers (Sucker Punch, Executioner, Dice, Mimic) are DONE too. DONE: hero skill effects (systems/skillFx.js, data/skillFx.json). ALL effects from the proposal page are now in the game. MINION SPRITES: proposal page https://claude.ai/artifact/2BpJkQAsqqxBjnKcEibJpL (docs/proposals/minion-designs.mjs, build-minions.mjs); APPLIED (user said put it in): in minions.json and in the Studio. EFFECTS IN THE STUDIO: DONE (Effects tab: live preview of all 76 effects, speed + colour swaps per effect, saved to db `effects`, applied into src/data/effects.json by apply-designs.mjs). RECHECK done: all 70 givable items run without errors in a real fight with procs forced; Excalibur tornado fixed (it spawned in the screen corner) and made bigger. Possible next (was): make the effect recipes editable in the Studio's Effects section, or the options offered earlier (bosses, skill books, enemy skills, real reward screen, minion sprites).
-- NEXT build steps (one at a time): then item procs + icon pop, then skill effects. Effects should become data-driven recipes the Studio's Effects section can edit (ask the user before that refactor).
+## DONE IN THE EFFECTS SESSION (all in CLAUDE.md with file names)
+- Status ICONS (5x5 + outline, rows of 3 over the health bar, stack number beside the icon) and EVERY status playing its own looping effect on the body (systems/statusFx.js).
+- HITS: own shot + impact per damage type, crit layer, miss side-step, block, shield soak / break, heal motes, enemy death squash + smoke (systems/hitFx.js).
+- ITEM EFFECTS: the item's icon pops over the holder (instead of the text label) + its own effect for the special items, Excalibur tornado (fixed: it spawned in the screen corner; now on its enemy, bigger) (systems/itemFx.js, data/itemFx.json).
+- SKILL EFFECTS: every hero skill its own cast effect + pixel projectiles (systems/skillFx.js, data/skillFx.json).
+- HERO HUD: no name/perk text under the skills; "Lv3" left of the health bar; items as small framed icons UNDER the skill squares.
+- MINION SPRITES: all 8 minions are pixel sprites (proposal https://claude.ai/artifact/2BpJkQAsqqxBjnKcEibJpL, source docs/proposals/minion-designs.mjs), also in the Studio.
+- STUDIO EFFECTS TAB: live preview of all 76 effects with the game's own code, per effect speed + colour swaps, saved to db `effects`, applied into src/data/effects.json by scripts/apply-designs.mjs, read by the game through systems/fxTune.js.
+- RECHECK: all 70 givable items ran in a real fight with procs forced, no errors.
+- Proposal pages: effects https://claude.ai/artifact/6N97in7zepDMZcMgbJJrYF (now has the status icon section), minions above, see docs/proposals/README.md.
 
-## NEXT (what the user asked right before this hand-off)
-The user showed Risk of Rain 2's debuff display as the reference: **every debuff has its OWN small icon in a row above the health bar, with a small stack number next to it** ("x8", "x1"). So:
-1. Make a proposal: a tiny pixel ICON per status (about 7x7 or 8x8, readable at game size, in the status colour: stun star, freeze crystal, chill snowflake, shock bolt, fear face, taunt "!", silence lock, bleed drop, burn flame, poison drop/skull, weaken broken sword, armor break cracked shield, curse skull, blind closed eye, mark target, buff up-arrow, shield, regen plus...) shown in a row over the health bar with a stack count ("x3") where it stacks. Add it to the effects proposal page (new section, and redo the stress test with icons instead of colour pips) so the user can compare. Keep the icons as data (like itemIcons.json, probably `statusIcons.json`) and editable in the Studio later.
-2. Then the user picks full / simplified / mix for the effects, and only then build the effects into the game (BattleScene draws events; effects should become data-driven recipes so the Studio's Effects section can edit them).
-Other options offered earlier: bosses, skill books, enemy skills, real reward screen (remove TEST auto-reward), minion sprites (still blocks).
+## NEXT (options offered to the user; ask which one, one step at a time)
+- Bosses (every 10 floors, floor 100 super boss), skill books (attack/support book rewards), enemy skills (Silence needs them), the real reward screen (remove the TEST auto-reward), H2 tuning pass (only when the user has play-tested).
+- If the user saved effects or designs in the Studio: "apply the studio designs" (read BOTH db collections `designs` and `effects`).
+
+## Testing tips (learned this session)
+- To drive the game from Playwright, build with a temporary `window.__game = new Phaser.Game(...)` in src/main.js (sed it in, `npm run build`, then `git checkout src/main.js`; NEVER commit it; `npm run build:page` must not contain `__game`).
+- `npx vite preview --port 4173` in the background; stop it with `ps aux | grep "[v]ite preview" | awk '{print $2}' | xargs -r kill` (never `pkill -f`/`pgrep -f` with that text in the same command: it kills its own shell).
+- Never `scene.events.off('preupdate')` in a test page (it kills the scene clock). Screenshots right after a clock step can show the previous frame: to inspect an effect, pin its progress (set `start` = now - ms*q before each step).
+- Publishing the game/studio: if the Artifact tool refuses ("not viewed"), build the previous commit in a `git worktree`, compare line hashes with the saved live copy (only the first/last skeleton lines should differ), Read a few lines of the saved file, publish again.
 
 ## How the fight works (so you do not break it)
 - BattleState (no Phaser) is the rules; BattleScene draws events. Positions live in BattleState (`place()`, `move()`); the scene only draws (`followPositions()`). Do not fake movement in the scene.

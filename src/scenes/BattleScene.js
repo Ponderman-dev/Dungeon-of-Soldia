@@ -366,7 +366,12 @@ export default class BattleScene extends Phaser.Scene {
     const cfg = itemFxData.iconPop;
     v.pops = (v.pops || []).filter((o) => o.active);
     const n = v.pops.length;
-    const x = v.ch.x + (n ? (n % 2 ? 1 : -1) * Math.ceil(n / 2) * cfg.gapPx : 0);
+    // Extra pops stand side by side; near a side of the screen they line up towards the middle
+    // instead, so none is cut off by the edge.
+    const half = (20 * cfg.scale) / 2 + 4;
+    const nearEdge = v.ch.x < GAME_WIDTH * 0.3 ? 1 : v.ch.x > GAME_WIDTH * 0.7 ? -1 : 0;
+    const offset = nearEdge ? nearEdge * n * cfg.gapPx : (n ? (n % 2 ? 1 : -1) * Math.ceil(n / 2) * cfg.gapPx : 0);
+    const x = Phaser.Math.Clamp(v.ch.x + offset, half, GAME_WIDTH - half);
     const y = v.bg.y - 34;
     const img = this.add.image(x, y + 12, itemIconKey(this, itemId, def.rarity)).setScale(cfg.scale).setDepth(DEPTH.popup);
     v.pops.push(img);

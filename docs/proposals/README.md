@@ -32,3 +32,6 @@ by the game.
   with the Artifact tool (read the live page first if the tool asks; it is this same file).
 - To check visually: Playwright screenshots of the page, or draw each effect at a few times into a
   contact sheet (every card exposes `cards[i].fx.draw(g, t)`).
+
+## Bosses, hero kits & sounds (proposal, not built)
+Page: https://claude.ai/artifact/C7SHzkoUvkxRdV2ryMV8L2 . Source in `bosses-kits-sounds/` (`template.html` + `sprites.js` boss pixel art DSL + `content.js` all the text/data; `page.html` = the built page with the hero art from heroes.json inlined). Eight bosses (floors 10-80) each with one gimmick, a hero kit rework (one signature mechanic per hero, overlap table), and the full sound list (84 rows) with WebAudio sketch sounds. Waiting for the user's decisions.

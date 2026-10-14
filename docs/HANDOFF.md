@@ -37,9 +37,16 @@ Done this session (all in CLAUDE.md too):
 - RECHECK: all 70 givable items ran in a real fight with procs forced, no errors.
 - Proposal pages: effects https://claude.ai/artifact/6N97in7zepDMZcMgbJJrYF (now has the status icon section), minions above, see docs/proposals/README.md.
 
+## DONE IN THE UI SESSION (after the effects session)
+- Reward screen LIVE (no auto-pick; the DebugScene only has 'TEST: restart run'), then restyled: a sheet that slides up, big centered cards that fit their text, Back button, owned item icons on hero cards.
+- Squad select rebuilt from the user's sketch (entrance room, bench of heroes, details card, slots, Begin Descent), then simplified twice on request (see CLAUDE.md).
+- Doors: plain purple door that swings open with a soft lavender glow; heroes fade out in the doorway (`Door.js`).
+- Crowd pushing gentler (`crowd.test.mjs`). Bugs fixed: last Second Wind Flask made health NaN (heroes became unkillable, this inflated old balance numbers: bot medians are now ~15-30), reward preview lost state bonuses (fake red loss), less popup text, item icon pops clamped on screen.
+- PROPOSAL page (bosses, hero kits, sounds): https://claude.ai/artifact/C7SHzkoUvkxRdV2ryMV8L2 , waiting for the user's choices.
+
 ## NEXT (options offered to the user; ask which one, one step at a time)
 - DONE: the real reward screen (auto-pick removed, Back button, owned item icons on the hero cards).
-- Bosses (every 10 floors, floor 100 super boss), skill books (attack/support book rewards), enemy skills (Silence needs them), H2 tuning pass (only when the user has play-tested).
+- Build what the user picks from the proposal page (boss engine first: big health bar, cast bar + interrupts, objects, phases), hero kit rework hero by hero, sounds (MUST batch first). Also: skill books, enemy skills, H2 tuning (only when the user has play-tested).
 - If the user saved effects or designs in the Studio: "apply the studio designs" (read BOTH db collections `designs` and `effects`).
 
 ## Testing tips (learned this session)

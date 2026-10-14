@@ -1,0 +1,392 @@
+<title>Soldia Bosses, Kits &amp; Sounds</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a dark dungeon-ledger page; sticky section tabs; boss cards with a pixel portrait stage, hero rows, a sound table. Single dark look on purpose (matches the game). */
+:root {
+  color-scheme: dark;
+  --bg: #14101f; --panel: #1f1833; --panel2: #29203f; --line: #3a2f57;
+  --ink: #f3eefc; --mute: #a399c2; --soft: #cfc6e6;
+  --purple: #8b55d6; --gold: #f2b632; --orange: #ff8a3d; --green: #6dff8f; --red: #ff7a7a;
+  --display: 'Pixelify Sans', 'Courier New', monospace;
+  --body: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.5 var(--body); margin: 0; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 28px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .02em; }
+h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.05; }
+h2 { font-size: clamp(24px, 4vw, 32px); }
+h3 { font-size: 22px; }
+p { margin: 0; }
+.lead { color: var(--soft); max-width: 66ch; margin-top: 10px; }
+.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(20,16,31,.94); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); margin-top: 22px; }
+.tabs .in { display: flex; gap: 6px; overflow-x: auto; padding-block: 10px; max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.tabs a { font-family: var(--display); color: var(--soft); text-decoration: none; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; white-space: nowrap; }
+.tabs a:hover, .tabs a:focus-visible { color: var(--ink); border-color: var(--purple); outline: none; }
+section { padding-top: 46px; scroll-margin-top: 60px; }
+.sechead { display: grid; gap: 8px; margin-bottom: 22px; }
+.eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+
+/* bosses */
+.bosses { display: grid; gap: 18px; }
+.boss { display: grid; grid-template-columns: 260px 1fr; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.stage { position: relative; background: radial-gradient(ellipse at 50% 85%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%), linear-gradient(#0f0b19, #1d1530); display: flex; align-items: flex-end; justify-content: center; gap: 10px; padding: 26px 10px 22px; min-height: 250px; }
+.stage canvas { image-rendering: pixelated; max-width: 100%; height: auto; animation: bob 2.4s ease-in-out infinite; }
+.stage canvas.extra { animation-delay: -.8s; }
+.floorTag { position: absolute; top: 12px; left: 12px; font: 600 12px/1 var(--mono); color: var(--bg); background: var(--accent); padding: 5px 8px; border-radius: 6px; }
+@keyframes bob { 50% { transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .stage canvas { animation: none; } }
+.bossBody { padding: 20px 22px; display: grid; gap: 12px; min-width: 0; }
+.bossName small { font-family: var(--body); font-weight: 600; font-size: 15px; color: var(--mute); margin-left: 6px; }
+.look { color: var(--mute); font-size: 14px; }
+.gimmick { border-left: 3px solid var(--accent); background: var(--panel2); padding: 10px 14px; border-radius: 0 10px 10px 0; }
+.gimmick b { font-family: var(--display); letter-spacing: .04em; color: var(--accent); }
+.skills { display: grid; gap: 6px; padding: 0; margin: 0; list-style: none; }
+.skills li { display: grid; grid-template-columns: minmax(120px, 170px) 1fr; gap: 10px; font-size: 15px; }
+.skills li b { color: var(--orange); }
+.meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px; }
+.meta div { background: #18122a; border-radius: 10px; padding: 8px 12px; }
+.meta span { display: block; font: 600 11px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 12px/1 var(--mono); color: var(--soft); border: 1px dashed var(--line); padding: 5px 8px; border-radius: 6px; }
+.later { margin-top: 18px; background: var(--panel); border: 1px dashed var(--line); border-radius: 14px; padding: 16px 18px; color: var(--soft); }
+.engine { margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.engine div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--soft); }
+.engine b { display: block; color: var(--ink); font-size: 15px; }
+
+/* heroes */
+.matrixWrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 20px; }
+table.matrix { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13px; }
+.matrix th, .matrix td { padding: 7px 8px; text-align: center; border-bottom: 1px solid #2a2240; }
+.matrix th:first-child, .matrix td:first-child { text-align: left; color: var(--soft); white-space: nowrap; }
+.matrix th { font: 600 11px/1.2 var(--mono); color: var(--mute); text-transform: uppercase; letter-spacing: .06em; }
+.dot { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #2a2240; }
+.dot.on { background: var(--red); }
+.dot.after.on { background: var(--green); }
+.toggle { display: flex; gap: 6px; padding: 12px 12px 0; }
+.toggle button { font: 600 13px var(--body); background: var(--panel2); color: var(--soft); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.toggle button[aria-pressed="true"] { background: var(--purple); color: #fff; border-color: var(--purple); }
+.toggle button:focus-visible { outline: 2px solid var(--gold); }
+.matrixNote { padding: 8px 12px 12px; color: var(--mute); font-size: 13px; }
+.heroes { display: grid; gap: 14px; }
+.hero { display: grid; grid-template-columns: 110px 1fr; gap: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.port { background: linear-gradient(#0f0b19, #241b3a); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 10px 6px; gap: 8px; }
+.port canvas { image-rendering: pixelated; max-width: 100%; height: auto; }
+.role { font: 600 11px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--hc) 50%, #ffffff); text-align: center; }
+.heroBody { display: grid; gap: 10px; min-width: 0; }
+.heroTop { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+.now { font-size: 14px; color: var(--mute); }
+.problem { font-size: 14px; color: #ffb3b3; }
+.kit { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.kit div { background: var(--panel2); border-radius: 10px; padding: 10px 12px; font-size: 14px; color: var(--soft); }
+.kit span { display: block; font: 600 10px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.kit b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 2px; }
+.k-p span { color: var(--gold); } .k-a span { color: var(--orange); } .k-s span { color: var(--green); }
+.keeps { font-size: 13px; color: var(--mute); }
+
+/* sounds */
+.soundTools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; color: var(--mute); font-size: 14px; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; }
+.pri { font: 600 11px/1 var(--mono); padding: 4px 7px; border-radius: 5px; white-space: nowrap; }
+.p1 { background: #4a1e2a; color: #ffb3b3; } .p2 { background: #3a3014; color: #ffe08a; } .p3 { background: #22304a; color: #a8c8ff; }
+.sgroup { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 14px; overflow: hidden; }
+.sgroup h3 { font-size: 18px; padding: 12px 16px; background: var(--panel2); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sgroup h3 small { font: 500 12px var(--mono); color: var(--mute); }
+.srow { display: grid; grid-template-columns: 40px minmax(140px, 1.1fr) minmax(0, 1.4fr) minmax(0, 1.3fr) 70px; gap: 10px; align-items: center; padding: 8px 16px; border-top: 1px solid #2a2240; font-size: 14px; }
+.srow .when { color: var(--soft); } .srow .feel { color: var(--mute); }
+.play { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: #18122a; color: var(--gold); cursor: pointer; font-size: 12px; }
+.play:hover, .play:focus-visible { border-color: var(--gold); outline: none; }
+.play[disabled] { opacity: .25; cursor: default; }
+.tech { margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.tech div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--soft); }
+.tech b { display: block; color: var(--ink); }
+.decide { margin-top: 22px; background: linear-gradient(135deg, #2a1d45, #1f1833); border: 1px solid var(--purple); border-radius: 16px; padding: 18px 20px; display: grid; gap: 8px; }
+.decide ol { margin: 0; padding-left: 20px; color: var(--soft); display: grid; gap: 4px; }
+
+@media (max-width: 760px) {
+  .boss { grid-template-columns: 1fr; }
+  .stage { min-height: 210px; }
+  .meta { grid-template-columns: 1fr; }
+  .skills li { grid-template-columns: 1fr; gap: 0; }
+  .hero { grid-template-columns: 1fr; }
+  .port { flex-direction: row; justify-content: center; align-items: flex-end; }
+  .kit { grid-template-columns: 1fr; }
+  .srow { grid-template-columns: 36px 1fr 60px; }
+  .srow .when, .srow .feel { grid-column: 2 / 4; }
+}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Dungeon of Soldia · proposals</p>
+  <h1>Bosses, hero kits &amp; sounds</h1>
+  <p class="lead">Three proposals to look over before anything goes into the game: eight bosses with their own trick, a rework so every hero plays differently, and every sound the game needs. Nothing here is built yet. Tell me which parts you like and I'll build them one step at a time.</p>
+</div>
+<nav class="tabs" aria-label="Sections"><div class="in">
+  <a href="#bosses">8 Bosses</a><a href="#kits">Hero kits</a><a href="#sounds">Sound effects</a><a href="#decide">What to decide</a>
+</div></nav>
+<div class="wrap">
+  <section id="bosses">
+    <div class="sechead">
+      <p class="eyebrow">Proposal 1 · every 10 floors</p>
+      <h2>Eight bosses</h2>
+      <p class="lead">One boss every 10 floors (10 to 80). Each one has ONE trick that asks you to use a different part of the game: tapping a target, timing a skill, picking an element, switching targets. Bosses show a big health bar at the top and a red cast bar before their big moves. Pixel designs are drafts in the game's style (they can be redrawn in the Studio later).</p>
+    </div>
+    <div class="bosses" id="bossList"></div>
+    <div class="later"><b>Floor 90 and 100 (later):</b> floor 90 could be a "gauntlet" (two earlier bosses together, stronger), and floor 100 the super boss. I'd design those once the first bosses feel right.</div>
+    <div class="engine" id="engine"></div>
+  </section>
+
+  <section id="kits">
+    <div class="sechead">
+      <p class="eyebrow">Proposal 2 · rework</p>
+      <h2>Hero kits that feel different</h2>
+      <p class="lead">Right now many heroes share the same pieces: 7 of 10 attack skills hit every enemy, three heroes have an "every 4th attack" counter, three give squad shields, two have channels. The rework gives each hero ONE signature mechanic nobody else has, and keeps what already works (perks, most passives, the art).</p>
+    </div>
+    <div class="matrixWrap">
+      <div class="toggle" role="group" aria-label="Show overlap">
+        <button type="button" id="showBefore" aria-pressed="true">Now</button>
+        <button type="button" id="showAfter" aria-pressed="false">After the rework</button>
+      </div>
+      <table class="matrix" id="matrix"></table>
+      <p class="matrixNote" id="matrixNote"></p>
+    </div>
+    <div class="heroes" id="heroList"></div>
+  </section>
+
+  <section id="sounds">
+    <div class="sechead">
+      <p class="eyebrow">Proposal 3 · audio</p>
+      <h2>Every sound effect</h2>
+      <p class="lead">The full list, grouped by where you hear it. The ▶ buttons play a rough 8-bit sketch made right in your browser, only to give the idea; the real sounds would be made properly (retro "chiptune" style fits the pixel art).</p>
+    </div>
+    <div class="soundTools">
+      <div class="legend"><span class="pri p1">MUST</span> first batch <span class="pri p2">NICE</span> second batch <span class="pri p3">LATER</span> polish</div>
+      <span id="soundCount"></span>
+    </div>
+    <div id="soundList"></div>
+    <div class="tech">
+      <div><b>How they play</b>Each sound gets a slight random pitch (±5%) so 50 sword hits in a row don't sound like a machine gun.</div>
+      <div><b>Not too many at once</b>At most 3 copies of the same sound at the same time; quieter hits (DoT ticks) are skipped when the fight is busy.</div>
+      <div><b>Volume</b>Separate sliders for music and effects; music gets quieter for a moment during big skills and boss roars.</div>
+      <div><b>Files</b>Small .ogg / .m4a files, one sprite sheet of sounds per group to load fast on phones.</div>
+    </div>
+  </section>
+
+  <section id="decide">
+    <div class="decide">
+      <h3>What I need from you</h3>
+      <ol>
+        <li>Bosses: which ones do you like, which to change? I'd build the boss engine first (big health bar, cast bar, interrupts), then Grukk.</li>
+        <li>Hero kits: yes / no / change, hero by hero. The Cleric "Last Rites" revive is optional because it breaks "dead heroes stay dead".</li>
+        <li>Sounds: OK with the list and the retro style? I'd start with the MUST batch.</li>
+      </ol>
+    </div>
+  </section>
+</div>
+
+<script>
+__SPRITES__
+__CONTENT__
+const HERO_ART = __HEROART__;
+
+// Bosses
+const bossList = document.getElementById('bossList');
+for (const b of BOSSES) {
+  const el = document.createElement('article');
+  el.className = 'boss';
+  el.style.setProperty('--accent', b.color);
+  el.innerHTML = `
+    <div class="stage"><span class="floorTag">FLOOR ${b.floor}</span></div>
+    <div class="bossBody">
+      <h3 class="bossName">${b.name}${b.title ? `<small>${b.title}</small>` : ''}</h3>
+      <p class="look">${b.look}</p>
+      <div class="gimmick"><b>${b.gimmick[0]}</b><p>${b.gimmick[1]}</p></div>
+      <ul class="skills">${b.skills.map(([n, d]) => `<li><b>${n}</b><span>${d}</span></li>`).join('')}</ul>
+      <div class="meta"><div><span>How you beat it</span>${b.beat}</div><div><span>It teaches</span>${b.teaches}</div></div>
+      <div class="chips">${b.tech.map((t) => `<span class="chip">${t}</span>`).join('')}</div>
+    </div>`;
+  const stage = el.querySelector('.stage');
+  const big = document.createElement('canvas');
+  const scale = BOSSES_ART[b.key].w > 50 ? 4 : 5;
+  drawSprite(big, b.key, scale);
+  big.setAttribute('aria-label', b.name);
+  stage.appendChild(big);
+  if (b.extra) {
+    const ex = document.createElement('canvas');
+    ex.className = 'extra';
+    drawSprite(ex, b.extra, BOSSES_ART[b.extra].w > 20 ? 5 : 4);
+    stage.appendChild(ex);
+  }
+  bossList.appendChild(el);
+}
+const ENGINE = [
+  ['Boss health bar', 'Big bar with the boss name at the top of the screen.'],
+  ['Boss cast bar + interrupts', 'A red bar over the boss before big moves; stun, knockback or freeze cancels it (your skills finally have a job against bosses).'],
+  ['Objects', 'Targets that never attack: the drum, eggs, the crystal. Tap them to focus.'],
+  ['Phases', 'Things that happen at 75 / 50 / 25% health or at 0 (Morthul).'],
+  ['New statuses', 'Webbed, Reflect (Mirror Ward), Untargetable (sky phase), Charmed (for the Bard rework).'],
+  ['Boss gauge', 'A second bar on a boss (Ignatius heat).'],
+];
+document.getElementById('engine').innerHTML = ENGINE.map(([t, d]) => `<div><b>${t}</b>${d}</div>`).join('');
+
+// Hero overlap matrix
+const order = HEROES.map((h) => h.id);
+const names = Object.fromEntries(order.map((id) => [id, HERO_ART[id].name]));
+function drawMatrix(which) {
+  const data = OVERLAP[which];
+  let html = `<thead><tr><th>Shared mechanic</th>${order.map((id) => `<th>${names[id]}</th>`).join('')}<th>Heroes</th></tr></thead><tbody>`;
+  OVERLAP.rows.forEach((row, r) => {
+    const count = order.filter((id) => data[id][r]).length;
+    html += `<tr><td>${row}</td>${order.map((id) => `<td><span class="dot ${which === 'after' ? 'after' : ''} ${data[id][r] ? 'on' : ''}" title="${data[id][r] ? 'has it' : 'no'}"></span></td>`).join('')}<td><b>${count}</b></td></tr>`;
+  });
+  document.getElementById('matrix').innerHTML = html + '</tbody>';
+  const total = OVERLAP.rows.reduce((s, _, r) => s + order.filter((id) => data[id][r]).length, 0);
+  document.getElementById('matrixNote').textContent = which === 'before'
+    ? `Now: ${total} shared pieces across the 10 heroes. Red = the hero has that mechanic.`
+    : `After: ${total} shared pieces, and each hero has its own signature (see below). Green = still shared.`;
+  document.getElementById('showBefore').setAttribute('aria-pressed', which === 'before');
+  document.getElementById('showAfter').setAttribute('aria-pressed', which === 'after');
+}
+document.getElementById('showBefore').onclick = () => drawMatrix('before');
+document.getElementById('showAfter').onclick = () => drawMatrix('after');
+drawMatrix('before');
+
+// Hero rows
+const heroList = document.getElementById('heroList');
+for (const h of HEROES) {
+  const el = document.createElement('article');
+  el.className = 'hero';
+  el.style.setProperty('--hc', h.color);
+  el.innerHTML = `
+    <div class="port"><span class="role">${h.role}</span></div>
+    <div class="heroBody">
+      <div class="heroTop"><h3>${HERO_ART[h.id].name}</h3></div>
+      <p class="now"><b>Now:</b> ${h.now}</p>
+      <p class="problem"><b>Why change:</b> ${h.problem}</p>
+      <div class="kit">
+        <div class="k-p"><span>Signature</span><b>${h.sig[0]}</b>${h.sig[1]}</div>
+        <div class="k-a"><span>Attack skill</span><b>${h.atk[0]}</b>${h.atk[1]}</div>
+        <div class="k-s"><span>Support skill</span><b>${h.sup[0]}</b>${h.sup[1]}</div>
+      </div>
+      <p class="keeps"><b>Keeps:</b> ${h.keeps}</p>
+    </div>`;
+  const c = document.createElement('canvas');
+  drawHero(c, HERO_ART[h.id], 4);
+  c.setAttribute('aria-label', HERO_ART[h.id].name);
+  el.querySelector('.port').prepend(c);
+  heroList.appendChild(el);
+}
+
+// Sounds
+let actx = null;
+function ctx() { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); return actx; }
+function tone(a, { type = 'square', f0 = 440, f1 = f0, dur = 0.12, vol = 0.18, delay = 0, attack = 0.005 }) {
+  const t = a.currentTime + delay;
+  const o = a.createOscillator(); const g = a.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function noise(a, { dur = 0.15, vol = 0.25, f0 = 2000, f1 = f0, q = 1, delay = 0, type = 'bandpass', attack = 0.004 }) {
+  const t = a.currentTime + delay;
+  const buf = a.createBuffer(1, Math.ceil(a.sampleRate * dur), a.sampleRate);
+  const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const s = a.createBufferSource(); s.buffer = buf;
+  const f = a.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur);
+  const g = a.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f).connect(g).connect(a.destination); s.start(t); s.stop(t + dur + 0.02);
+}
+const notes = (a, list, type = 'square', len = 0.09, vol = 0.12) => list.forEach((f, i) => tone(a, { type, f0: f, dur: len, vol, delay: i * len * 0.9 }));
+const PRESETS = {
+  tap: (a) => noise(a, { dur: 0.04, f0: 2500, q: 4, vol: 0.3 }),
+  pick: (a) => notes(a, [660, 990], 'square', 0.08),
+  unpick: (a) => notes(a, [660, 440], 'square', 0.08),
+  whoosh: (a) => noise(a, { dur: 0.25, f0: 600, f1: 2400, q: 1.5, vol: 0.25, attack: 0.08 }),
+  swoosh: (a) => noise(a, { dur: 0.35, f0: 300, f1: 3000, q: 2, vol: 0.25, attack: 0.15 }),
+  tick: (a) => tone(a, { type: 'square', f0: 1800, dur: 0.02, vol: 0.08 }),
+  horn: (a) => { tone(a, { type: 'sawtooth', f0: 147, dur: 0.6, vol: 0.12, attack: 0.08 }); tone(a, { type: 'sawtooth', f0: 220, dur: 0.6, vol: 0.08, attack: 0.08 }); noise(a, { dur: 0.2, f0: 120, type: 'lowpass', vol: 0.5 }); },
+  rarity: (a) => { notes(a, [523], 'triangle', 0.1); setTimeout(() => notes(a, [659, 784], 'triangle', 0.1), 250); setTimeout(() => notes(a, [880, 1175, 1318], 'square', 0.07), 550); setTimeout(() => notes(a, [1046, 1318, 1568, 2093], 'triangle', 0.09, 0.1), 900); },
+  coin: (a) => { tone(a, { type: 'square', f0: 988, dur: 0.06, vol: 0.12 }); tone(a, { type: 'square', f0: 1319, dur: 0.18, vol: 0.12, delay: 0.06 }); },
+  glug: (a) => { for (let i = 0; i < 3; i++) tone(a, { type: 'sine', f0: 300, f1: 160, dur: 0.08, vol: 0.25, delay: i * 0.1 }); notes(a, [1318, 1568, 2093], 'triangle', 0.06, 0.06); },
+  fanfare: (a) => notes(a, [523, 659, 784, 1046, 784, 1046], 'square', 0.11),
+  stepMetal: (a) => { noise(a, { dur: 0.05, f0: 3500, q: 6, vol: 0.2 }); noise(a, { dur: 0.06, f0: 200, type: 'lowpass', vol: 0.3 }); },
+  step: (a) => noise(a, { dur: 0.06, f0: 250, type: 'lowpass', vol: 0.45 }),
+  swish: (a) => noise(a, { dur: 0.12, f0: 1800, q: 0.8, vol: 0.12, attack: 0.04 }),
+  creak: (a) => { tone(a, { type: 'sawtooth', f0: 110, f1: 180, dur: 0.5, vol: 0.06, attack: 0.1 }); noise(a, { dur: 0.06, f0: 1500, q: 5, vol: 0.2, delay: 0.5 }); },
+  rumble: (a) => noise(a, { dur: 0.7, f0: 90, type: 'lowpass', vol: 0.6, attack: 0.15 }),
+  crackle: (a) => { for (let i = 0; i < 6; i++) noise(a, { dur: 0.02, f0: 3000, q: 3, vol: 0.15, delay: Math.random() * 0.5 }); },
+  swing: (a) => noise(a, { dur: 0.14, f0: 900, f1: 3000, q: 2, vol: 0.3, attack: 0.03 }),
+  swingHeavy: (a) => noise(a, { dur: 0.22, f0: 300, f1: 1200, q: 2, vol: 0.4, attack: 0.05 }),
+  stab: (a) => noise(a, { dur: 0.07, f0: 2500, f1: 4500, q: 3, vol: 0.3 }),
+  katana: (a) => { noise(a, { dur: 0.12, f0: 2000, f1: 5000, q: 3, vol: 0.3 }); tone(a, { type: 'sine', f0: 2600, dur: 0.35, vol: 0.06, delay: 0.05 }); },
+  bow: (a) => { tone(a, { type: 'triangle', f0: 220, f1: 110, dur: 0.1, vol: 0.3 }); noise(a, { dur: 0.2, f0: 4000, f1: 1500, q: 4, vol: 0.12, delay: 0.05 }); },
+  zap: (a) => { for (let i = 0; i < 4; i++) tone(a, { type: 'sawtooth', f0: 1400 - i * 200, f1: 300, dur: 0.05, vol: 0.08, delay: i * 0.035 }); },
+  pluck: (a) => tone(a, { type: 'triangle', f0: 392, dur: 0.35, vol: 0.25 }),
+  squelch: (a) => { tone(a, { type: 'sine', f0: 220, f1: 90, dur: 0.12, vol: 0.3 }); noise(a, { dur: 0.08, f0: 700, q: 2, vol: 0.2 }); },
+  hit: (a) => { noise(a, { dur: 0.08, f0: 400, type: 'lowpass', vol: 0.6 }); tone(a, { type: 'sine', f0: 150, f1: 60, dur: 0.1, vol: 0.3 }); },
+  clang: (a) => { tone(a, { type: 'square', f0: 1200, f1: 1100, dur: 0.18, vol: 0.08 }); tone(a, { type: 'square', f0: 1710, dur: 0.15, vol: 0.05 }); noise(a, { dur: 0.04, f0: 4000, q: 2, vol: 0.2 }); },
+  fire: (a) => noise(a, { dur: 0.35, f0: 300, f1: 1200, q: 0.8, vol: 0.45, attack: 0.04 }),
+  ice: (a) => { noise(a, { dur: 0.05, f0: 5000, q: 3, vol: 0.3 }); tone(a, { type: 'triangle', f0: 2093, f1: 1568, dur: 0.2, vol: 0.08, delay: 0.03 }); },
+  dark: (a) => { noise(a, { dur: 0.35, f0: 2000, f1: 200, q: 1.5, vol: 0.3, attack: 0.25 }); tone(a, { type: 'sine', f0: 80, dur: 0.3, vol: 0.2, delay: 0.2 }); },
+  holy: (a) => { tone(a, { type: 'sine', f0: 1318, dur: 0.6, vol: 0.12 }); tone(a, { type: 'sine', f0: 1975, dur: 0.6, vol: 0.06 }); },
+  crit: (a) => { PRESETS.hit(a); noise(a, { dur: 0.06, f0: 5000, q: 2, vol: 0.3, delay: 0.02 }); tone(a, { type: 'square', f0: 1568, dur: 0.08, vol: 0.06, delay: 0.03 }); },
+  miss: (a) => noise(a, { dur: 0.2, f0: 1200, f1: 400, q: 1, vol: 0.2, attack: 0.05 }),
+  ting: (a) => { tone(a, { type: 'triangle', f0: 2637, dur: 0.25, vol: 0.12 }); noise(a, { dur: 0.03, f0: 5000, q: 2, vol: 0.2 }); },
+  soak: (a) => tone(a, { type: 'sine', f0: 600, f1: 400, dur: 0.12, vol: 0.2 }),
+  shatter: (a) => { for (let i = 0; i < 7; i++) tone(a, { type: 'triangle', f0: 1800 + Math.random() * 2400, dur: 0.08, vol: 0.06, delay: i * 0.03 }); noise(a, { dur: 0.2, f0: 5000, q: 1, vol: 0.2 }); },
+  heal: (a) => notes(a, [784, 988, 1175, 1568], 'triangle', 0.07, 0.09),
+  bonk: (a) => { tone(a, { type: 'square', f0: 330, f1: 220, dur: 0.08, vol: 0.15 }); notes(a, [2093, 2637, 2093, 2637], 'sine', 0.06, 0.05); },
+  chill: (a) => noise(a, { dur: 0.3, f0: 6000, f1: 3000, q: 4, vol: 0.08, attack: 0.1 }),
+  wail: (a) => tone(a, { type: 'sine', f0: 700, f1: 420, dur: 0.6, vol: 0.12, attack: 0.1 }),
+  shout: (a) => { tone(a, { type: 'sawtooth', f0: 180, f1: 140, dur: 0.25, vol: 0.12, attack: 0.02 }); noise(a, { dur: 0.2, f0: 900, q: 1.5, vol: 0.12 }); },
+  thud: (a) => noise(a, { dur: 0.1, f0: 180, type: 'lowpass', vol: 0.4 }),
+  bubble: (a) => { for (let i = 0; i < 3; i++) tone(a, { type: 'sine', f0: 400 + i * 150, f1: 800 + i * 200, dur: 0.06, vol: 0.12, delay: i * 0.08 }); },
+  buff: (a) => notes(a, [523, 659, 880], 'square', 0.07, 0.08),
+  debuff: (a) => notes(a, [440, 349, 262], 'square', 0.08, 0.08),
+  charge: (a) => tone(a, { type: 'sawtooth', f0: 150, f1: 900, dur: 0.7, vol: 0.06, attack: 0.3 }),
+  fizzle: (a) => { noise(a, { dur: 0.25, f0: 3000, f1: 300, q: 1, vol: 0.15 }); tone(a, { type: 'square', f0: 300, f1: 80, dur: 0.2, vol: 0.06 }); },
+  ping: (a) => tone(a, { type: 'sine', f0: 1760, dur: 0.15, vol: 0.12 }),
+  slam: (a) => { noise(a, { dur: 0.45, f0: 140, type: 'lowpass', vol: 0.8 }); tone(a, { type: 'sine', f0: 120, f1: 40, dur: 0.4, vol: 0.35 }); },
+  burst: (a) => { noise(a, { dur: 0.15, f0: 1500, q: 1, vol: 0.4 }); notes(a, [1046, 1568], 'square', 0.06, 0.08); },
+  pop: (a) => tone(a, { type: 'sine', f0: 500, f1: 1400, dur: 0.07, vol: 0.25 }),
+  boom: (a) => { noise(a, { dur: 0.2, f0: 3000, f1: 1000, q: 3, vol: 0.06 }); noise(a, { dur: 0.6, f0: 200, type: 'lowpass', vol: 0.9, delay: 0.2 }); },
+  chain: (a) => { for (let k = 0; k < 3; k++) for (let i = 0; i < 3; i++) tone(a, { type: 'sawtooth', f0: 1500 - i * 300, f1: 300, dur: 0.04, vol: 0.07, delay: k * 0.13 + i * 0.03 }); },
+  wind: (a) => noise(a, { dur: 0.9, f0: 400, f1: 1600, q: 3, vol: 0.2, attack: 0.3 }),
+  summon: (a) => { noise(a, { dur: 0.4, f0: 100, type: 'lowpass', vol: 0.5, attack: 0.1 }); tone(a, { type: 'sine', f0: 300, f1: 900, dur: 0.12, vol: 0.2, delay: 0.35 }); },
+  puff: (a) => noise(a, { dur: 0.18, f0: 800, f1: 300, q: 0.7, vol: 0.3 }),
+  squeak: (a) => tone(a, { type: 'square', f0: 900, f1: 1300, dur: 0.07, vol: 0.08 }),
+  gas: (a) => noise(a, { dur: 0.5, f0: 900, f1: 500, q: 0.6, vol: 0.3, attack: 0.05 }),
+  roar: (a) => { tone(a, { type: 'sawtooth', f0: 90, f1: 60, dur: 0.9, vol: 0.15, attack: 0.1 }); noise(a, { dur: 0.9, f0: 400, f1: 200, q: 0.8, vol: 0.35, attack: 0.1 }); },
+  drum: (a) => { tone(a, { type: 'sine', f0: 110, f1: 45, dur: 0.35, vol: 0.6 }); noise(a, { dur: 0.05, f0: 1200, q: 1, vol: 0.2 }); },
+  levelup: (a) => notes(a, [523, 659, 784, 1046, 1318], 'square', 0.07, 0.1),
+  fall: (a) => { tone(a, { type: 'triangle', f0: 220, f1: 110, dur: 0.6, vol: 0.2 }); noise(a, { dur: 0.15, f0: 150, type: 'lowpass', vol: 0.4 }); },
+  swell: (a) => { tone(a, { type: 'sawtooth', f0: 147, dur: 1, vol: 0.05, attack: 0.5 }); tone(a, { type: 'sawtooth', f0: 175, dur: 1, vol: 0.04, attack: 0.5 }); },
+  win: (a) => notes(a, [784, 784, 784, 1046, 988, 1046], 'square', 0.1, 0.1),
+  lose: (a) => notes(a, [392, 370, 349, 262], 'triangle', 0.22, 0.15),
+};
+const soundList = document.getElementById('soundList');
+let total = 0;
+const pri = { 1: '<span class="pri p1">MUST</span>', 2: '<span class="pri p2">NICE</span>', 3: '<span class="pri p3">LATER</span>' };
+for (const [group, rows] of SOUNDS) {
+  total += rows.length;
+  const box = document.createElement('div');
+  box.className = 'sgroup';
+  box.innerHTML = `<h3>${group}<small>${rows.length} sounds</small></h3>` + rows.map(([name, when, feel, p, preset], i) => `
+    <div class="srow">
+      <button class="play" type="button" ${preset ? `data-p="${preset}" aria-label="Play a sketch of ${name}"` : 'disabled aria-label="Music: no sketch"'}>▶</button>
+      <b>${name}</b><span class="when">${when}</span><span class="feel">${feel}</span>${pri[p]}
+    </div>`).join('');
+  soundList.appendChild(box);
+}
+document.getElementById('soundCount').textContent = `${total} sounds and music tracks in total.`;
+soundList.addEventListener('click', (e) => {
+  const b = e.target.closest('.play[data-p]');
+  if (!b) return;
+  const a = ctx();
+  if (a.state === 'suspended') a.resume();
+  PRESETS[b.dataset.p](a);
+});
+</script>

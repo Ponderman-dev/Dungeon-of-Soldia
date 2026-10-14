@@ -1,0 +1,912 @@
+<title>Soldia Bosses, Kits &amp; Sounds</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a dark dungeon-ledger page; sticky section tabs; boss cards with a pixel portrait stage, hero rows, a sound table. Single dark look on purpose (matches the game). */
+:root {
+  color-scheme: dark;
+  --bg: #14101f; --panel: #1f1833; --panel2: #29203f; --line: #3a2f57;
+  --ink: #f3eefc; --mute: #a399c2; --soft: #cfc6e6;
+  --purple: #8b55d6; --gold: #f2b632; --orange: #ff8a3d; --green: #6dff8f; --red: #ff7a7a;
+  --display: 'Pixelify Sans', 'Courier New', monospace;
+  --body: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.5 var(--body); margin: 0; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 28px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .02em; }
+h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.05; }
+h2 { font-size: clamp(24px, 4vw, 32px); }
+h3 { font-size: 22px; }
+p { margin: 0; }
+.lead { color: var(--soft); max-width: 66ch; margin-top: 10px; }
+.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(20,16,31,.94); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); margin-top: 22px; }
+.tabs .in { display: flex; gap: 6px; overflow-x: auto; padding-block: 10px; max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.tabs a { font-family: var(--display); color: var(--soft); text-decoration: none; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; white-space: nowrap; }
+.tabs a:hover, .tabs a:focus-visible { color: var(--ink); border-color: var(--purple); outline: none; }
+section { padding-top: 46px; scroll-margin-top: 60px; }
+.sechead { display: grid; gap: 8px; margin-bottom: 22px; }
+.eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+
+/* bosses */
+.bosses { display: grid; gap: 18px; }
+.boss { display: grid; grid-template-columns: 260px 1fr; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.stage { position: relative; background: radial-gradient(ellipse at 50% 85%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%), linear-gradient(#0f0b19, #1d1530); display: flex; align-items: flex-end; justify-content: center; gap: 10px; padding: 26px 10px 22px; min-height: 250px; }
+.stage canvas { image-rendering: pixelated; max-width: 100%; height: auto; animation: bob 2.4s ease-in-out infinite; }
+.stage canvas.extra { animation-delay: -.8s; }
+.floorTag { position: absolute; top: 12px; left: 12px; font: 600 12px/1 var(--mono); color: var(--bg); background: var(--accent); padding: 5px 8px; border-radius: 6px; }
+@keyframes bob { 50% { transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .stage canvas { animation: none; } }
+.bossBody { padding: 20px 22px; display: grid; gap: 12px; min-width: 0; }
+.bossName small { font-family: var(--body); font-weight: 600; font-size: 15px; color: var(--mute); margin-left: 6px; }
+.look { color: var(--mute); font-size: 14px; }
+.gimmick { border-left: 3px solid var(--accent); background: var(--panel2); padding: 10px 14px; border-radius: 0 10px 10px 0; }
+.gimmick b { font-family: var(--display); letter-spacing: .04em; color: var(--accent); }
+.skills { display: grid; gap: 6px; padding: 0; margin: 0; list-style: none; }
+.skills li { display: grid; grid-template-columns: minmax(120px, 170px) 1fr; gap: 10px; font-size: 15px; }
+.skills li b { color: var(--orange); }
+.meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px; }
+.meta div { background: #18122a; border-radius: 10px; padding: 8px 12px; }
+.meta span { display: block; font: 600 11px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 12px/1 var(--mono); color: var(--soft); border: 1px dashed var(--line); padding: 5px 8px; border-radius: 6px; }
+.later { margin-top: 18px; background: var(--panel); border: 1px dashed var(--line); border-radius: 14px; padding: 16px 18px; color: var(--soft); }
+.engine { margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.engine div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--soft); }
+.engine b { display: block; color: var(--ink); font-size: 15px; }
+
+/* heroes */
+.matrixWrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 20px; }
+table.matrix { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13px; }
+.matrix th, .matrix td { padding: 7px 8px; text-align: center; border-bottom: 1px solid #2a2240; }
+.matrix th:first-child, .matrix td:first-child { text-align: left; color: var(--soft); white-space: nowrap; }
+.matrix th { font: 600 11px/1.2 var(--mono); color: var(--mute); text-transform: uppercase; letter-spacing: .06em; }
+.dot { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #2a2240; }
+.dot.on { background: var(--red); }
+.dot.after.on { background: var(--green); }
+.toggle { display: flex; gap: 6px; padding: 12px 12px 0; }
+.toggle button { font: 600 13px var(--body); background: var(--panel2); color: var(--soft); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.toggle button[aria-pressed="true"] { background: var(--purple); color: #fff; border-color: var(--purple); }
+.toggle button:focus-visible { outline: 2px solid var(--gold); }
+.matrixNote { padding: 8px 12px 12px; color: var(--mute); font-size: 13px; }
+.heroes { display: grid; gap: 14px; }
+.hero { display: grid; grid-template-columns: 110px 1fr; gap: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.port { background: linear-gradient(#0f0b19, #241b3a); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 10px 6px; gap: 8px; }
+.port canvas { image-rendering: pixelated; max-width: 100%; height: auto; }
+.role { font: 600 11px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--hc) 50%, #ffffff); text-align: center; }
+.heroBody { display: grid; gap: 10px; min-width: 0; }
+.heroTop { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+.now { font-size: 14px; color: var(--mute); }
+.problem { font-size: 14px; color: #ffb3b3; }
+.kit { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.kit div { background: var(--panel2); border-radius: 10px; padding: 10px 12px; font-size: 14px; color: var(--soft); }
+.kit span { display: block; font: 600 10px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.kit b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 2px; }
+.k-p span { color: var(--gold); } .k-a span { color: var(--orange); } .k-s span { color: var(--green); }
+.keeps { font-size: 13px; color: var(--mute); }
+
+/* sounds */
+.soundTools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; color: var(--mute); font-size: 14px; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; }
+.pri { font: 600 11px/1 var(--mono); padding: 4px 7px; border-radius: 5px; white-space: nowrap; }
+.p1 { background: #4a1e2a; color: #ffb3b3; } .p2 { background: #3a3014; color: #ffe08a; } .p3 { background: #22304a; color: #a8c8ff; }
+.sgroup { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 14px; overflow: hidden; }
+.sgroup h3 { font-size: 18px; padding: 12px 16px; background: var(--panel2); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sgroup h3 small { font: 500 12px var(--mono); color: var(--mute); }
+.srow { display: grid; grid-template-columns: 40px minmax(140px, 1.1fr) minmax(0, 1.4fr) minmax(0, 1.3fr) 70px; gap: 10px; align-items: center; padding: 8px 16px; border-top: 1px solid #2a2240; font-size: 14px; }
+.srow .when { color: var(--soft); } .srow .feel { color: var(--mute); }
+.play { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: #18122a; color: var(--gold); cursor: pointer; font-size: 12px; }
+.play:hover, .play:focus-visible { border-color: var(--gold); outline: none; }
+.play[disabled] { opacity: .25; cursor: default; }
+.tech { margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.tech div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--soft); }
+.tech b { display: block; color: var(--ink); }
+.decide { margin-top: 22px; background: linear-gradient(135deg, #2a1d45, #1f1833); border: 1px solid var(--purple); border-radius: 16px; padding: 18px 20px; display: grid; gap: 8px; }
+.decide ol { margin: 0; padding-left: 20px; color: var(--soft); display: grid; gap: 4px; }
+
+@media (max-width: 760px) {
+  .boss { grid-template-columns: 1fr; }
+  .stage { min-height: 210px; }
+  .meta { grid-template-columns: 1fr; }
+  .skills li { grid-template-columns: 1fr; gap: 0; }
+  .hero { grid-template-columns: 1fr; }
+  .port { flex-direction: row; justify-content: center; align-items: flex-end; }
+  .kit { grid-template-columns: 1fr; }
+  .srow { grid-template-columns: 36px 1fr 60px; }
+  .srow .when, .srow .feel { grid-column: 2 / 4; }
+}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Dungeon of Soldia · proposals</p>
+  <h1>Bosses, hero kits &amp; sounds</h1>
+  <p class="lead">Three proposals to look over before anything goes into the game: eight bosses with their own trick, a rework so every hero plays differently, and every sound the game needs. Nothing here is built yet. Tell me which parts you like and I'll build them one step at a time.</p>
+</div>
+<nav class="tabs" aria-label="Sections"><div class="in">
+  <a href="#bosses">8 Bosses</a><a href="#kits">Hero kits</a><a href="#sounds">Sound effects</a><a href="#decide">What to decide</a>
+</div></nav>
+<div class="wrap">
+  <section id="bosses">
+    <div class="sechead">
+      <p class="eyebrow">Proposal 1 · every 10 floors</p>
+      <h2>Eight bosses</h2>
+      <p class="lead">One boss every 10 floors (10 to 80). Each one has ONE trick that asks you to use a different part of the game: tapping a target, timing a skill, picking an element, switching targets. Bosses show a big health bar at the top and a red cast bar before their big moves. Pixel designs are drafts in the game's style (they can be redrawn in the Studio later).</p>
+    </div>
+    <div class="bosses" id="bossList"></div>
+    <div class="later"><b>Floor 90 and 100 (later):</b> floor 90 could be a "gauntlet" (two earlier bosses together, stronger), and floor 100 the super boss. I'd design those once the first bosses feel right.</div>
+    <div class="engine" id="engine"></div>
+  </section>
+
+  <section id="kits">
+    <div class="sechead">
+      <p class="eyebrow">Proposal 2 · rework</p>
+      <h2>Hero kits that feel different</h2>
+      <p class="lead">Right now many heroes share the same pieces: 7 of 10 attack skills hit every enemy, three heroes have an "every 4th attack" counter, three give squad shields, two have channels. The rework gives each hero ONE signature mechanic nobody else has, and keeps what already works (perks, most passives, the art).</p>
+    </div>
+    <div class="matrixWrap">
+      <div class="toggle" role="group" aria-label="Show overlap">
+        <button type="button" id="showBefore" aria-pressed="true">Now</button>
+        <button type="button" id="showAfter" aria-pressed="false">After the rework</button>
+      </div>
+      <table class="matrix" id="matrix"></table>
+      <p class="matrixNote" id="matrixNote"></p>
+    </div>
+    <div class="heroes" id="heroList"></div>
+  </section>
+
+  <section id="sounds">
+    <div class="sechead">
+      <p class="eyebrow">Proposal 3 · audio</p>
+      <h2>Every sound effect</h2>
+      <p class="lead">The full list, grouped by where you hear it. The ▶ buttons play a rough 8-bit sketch made right in your browser, only to give the idea; the real sounds would be made properly (retro "chiptune" style fits the pixel art).</p>
+    </div>
+    <div class="soundTools">
+      <div class="legend"><span class="pri p1">MUST</span> first batch <span class="pri p2">NICE</span> second batch <span class="pri p3">LATER</span> polish</div>
+      <span id="soundCount"></span>
+    </div>
+    <div id="soundList"></div>
+    <div class="tech">
+      <div><b>How they play</b>Each sound gets a slight random pitch (±5%) so 50 sword hits in a row don't sound like a machine gun.</div>
+      <div><b>Not too many at once</b>At most 3 copies of the same sound at the same time; quieter hits (DoT ticks) are skipped when the fight is busy.</div>
+      <div><b>Volume</b>Separate sliders for music and effects; music gets quieter for a moment during big skills and boss roars.</div>
+      <div><b>Files</b>Small .ogg / .m4a files, one sprite sheet of sounds per group to load fast on phones.</div>
+    </div>
+  </section>
+
+  <section id="decide">
+    <div class="decide">
+      <h3>What I need from you</h3>
+      <ol>
+        <li>Bosses: which ones do you like, which to change? I'd build the boss engine first (big health bar, cast bar, interrupts), then Grukk.</li>
+        <li>Hero kits: yes / no / change, hero by hero. The Cleric "Last Rites" revive is optional because it breaks "dead heroes stay dead".</li>
+        <li>Sounds: OK with the list and the retro style? I'd start with the MUST batch.</li>
+      </ol>
+    </div>
+  </section>
+</div>
+
+<script>
+// Boss sprites drawn with a tiny pixel DSL on a grid, then outlined like the game's art.
+// Each boss: { w, h, draw(P) } where P has rect/px/ell/line/mirror helpers. Colours are hex strings.
+const OUT = '#1a1020';
+
+function makeGrid(w, h) {
+  const g = Array.from({ length: h }, () => Array(w).fill(null));
+  const set = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < w && y < h) g[y][x] = c; };
+  const P = {
+    g, w, h,
+    px: set,
+    rect(x, y, rw, rh, c) { for (let j = 0; j < rh; j++) for (let i = 0; i < rw; i++) set(x + i, y + j, c); },
+    ell(cx, cy, rx, ry, c) { for (let y = Math.floor(cy - ry); y <= cy + ry; y++) for (let x = Math.floor(cx - rx); x <= cx + rx; x++) { const dx = (x - cx) / rx, dy = (y - cy) / ry; if (dx * dx + dy * dy <= 1) set(x, y, c); } },
+    line(x0, y0, x1, y1, c) { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) || 1; for (let i = 0; i <= n; i++) set(x0 + ((x1 - x0) * i) / n, y0 + ((y1 - y0) * i) / n, c); },
+    // Draw something on the left half and mirror it to the right half (symmetrical bodies).
+    sym(fn) { const before = g.map((r) => r.slice()); fn(); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (g[y][x] !== before[y][x]) g[y][w - 1 - x] = g[y][x]; },
+  };
+  return P;
+}
+
+function outline(g) {
+  const h = g.length, w = g[0].length;
+  const out = g.map((r) => r.slice());
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (g[y][x]) continue;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const v = (g[y + dy] || [])[x + dx]; if (v && v !== OUT) { out[y][x] = OUT; break; } }
+  }
+  return out;
+}
+
+const BOSSES_ART = {
+  grukk: { w: 44, h: 40, draw(P) {
+    const skin = '#5fa83a', dark = '#3d7426', fur = '#7a5530', furD = '#5a3c20', iron = '#9aa0ad', ironD = '#5c6170', red = '#c0303a', bone = '#efe6cf';
+    // legs + feet
+    P.rect(13, 31, 5, 6, dark); P.rect(22, 31, 5, 6, dark); P.rect(12, 37, 7, 2, furD); P.rect(21, 37, 7, 2, furD);
+    // belly + body
+    P.ell(20, 25, 10, 8, skin); P.ell(20, 27, 7, 5, '#6fbb46');
+    P.rect(11, 29, 18, 3, fur); P.rect(18, 29, 4, 3, '#d9b44a'); // belt + buckle
+    // fur cape on shoulders
+    P.ell(10, 18, 5, 4, fur); P.ell(30, 18, 5, 4, fur); P.rect(8, 17, 24, 3, furD);
+    // arms
+    P.rect(6, 19, 4, 9, skin); P.rect(30, 19, 4, 9, skin); P.rect(5, 27, 5, 3, dark); P.rect(30, 27, 5, 3, dark);
+    // head with helmet + horns
+    P.ell(20, 12, 7, 6, skin); P.rect(13, 6, 14, 4, iron); P.rect(13, 9, 14, 1, ironD);
+    P.line(13, 7, 9, 2, bone); P.line(12, 7, 8, 3, bone); P.line(26, 7, 30, 2, bone); P.line(27, 7, 31, 3, bone);
+    P.px(17, 12, red); P.px(23, 12, red); P.rect(16, 11, 2, 1, '#1a1020'); P.rect(22, 11, 2, 1, '#1a1020');
+    P.rect(17, 15, 6, 1, '#2a4a1a'); P.px(17, 16, bone); P.px(22, 16, bone); // mouth + tusks
+    P.ell(13, 13, 2, 1, skin); P.ell(27, 13, 2, 1, skin); // ears
+    // cleaver in the right hand
+    P.rect(34, 24, 2, 8, furD); P.rect(33, 13, 8, 12, iron); P.rect(33, 13, 8, 2, '#c8ccd6'); P.rect(39, 15, 2, 10, ironD); P.px(36, 17, red); P.px(37, 18, red);
+  } },
+  drum: { w: 18, h: 18, draw(P) {
+    P.ell(9, 6, 7, 3, '#e8d9b0'); P.rect(2, 6, 15, 9, '#8a3a24'); P.ell(9, 15, 7, 2, '#8a3a24');
+    for (let x = 3; x < 16; x += 3) P.line(x, 7, x + 1, 14, '#e8d9b0');
+    P.rect(2, 8, 15, 1, '#d9b44a'); P.rect(2, 13, 15, 1, '#d9b44a');
+    P.line(12, 2, 16, 0, '#7a5530'); P.ell(12, 3, 1, 1, '#efe6cf');
+  } },
+  brood: { w: 48, h: 34, draw(P) {
+    const body = '#3a2450', bodyL = '#56357a', red = '#e04a4a', leg = '#2a1a3a';
+    // legs (4 per side)
+    const legs = [[14, 20, 4, 10, 1, 30], [15, 22, 6, 16, 3, 31], [17, 23, 10, 20, 8, 32], [19, 24, 14, 24, 12, 33]];
+    P.sym(() => { for (const [x0, y0, x1, y1, x2, y2] of legs) { P.line(x0, y0, x1, y1 - 4, leg); P.line(x1, y1 - 4, x2, y2, leg); P.line(x0, y0 + 1, x1, y1 - 3, leg); } });
+    // abdomen + head
+    P.ell(24, 14, 12, 10, body); P.ell(24, 12, 9, 6, bodyL);
+    P.rect(22, 9, 5, 2, red); P.rect(23, 11, 3, 2, red); P.rect(22, 13, 5, 2, red); // hourglass
+    P.ell(24, 25, 6, 5, body);
+    // many eyes
+    for (const [x, y] of [[21, 24], [27, 24], [22, 26], [26, 26], [24, 23], [24, 27]]) P.px(x, y, red);
+    P.px(21, 23, '#ff9a9a'); P.px(27, 23, '#ff9a9a');
+    // fangs
+    P.rect(22, 29, 1, 3, '#efe6cf'); P.rect(26, 29, 1, 3, '#efe6cf');
+  } },
+  egg: { w: 14, h: 14, draw(P) {
+    P.ell(7, 8, 5, 5, '#e9e0f0'); P.ell(6, 7, 3, 3, '#ffffff'); P.line(3, 3, 11, 13, '#c9bed6'); P.line(11, 3, 3, 13, '#c9bed6'); P.px(8, 9, '#7a5a9a'); P.px(6, 10, '#7a5a9a');
+  } },
+  warden: { w: 44, h: 44, draw(P) {
+    const ice = '#9fd8f0', iceL = '#d8f4ff', iceD = '#5aa0c8', rock = '#4a6680', glow = '#7ff0ff';
+    // legs
+    P.rect(12, 34, 7, 8, rock); P.rect(25, 34, 7, 8, rock); P.rect(11, 40, 9, 3, iceD); P.rect(24, 40, 9, 3, iceD);
+    // body block
+    P.rect(10, 16, 24, 19, rock); P.rect(12, 18, 20, 15, '#5a7a96');
+    // ice plates (3)
+    P.rect(4, 12, 10, 9, ice); P.rect(5, 12, 8, 2, iceL); P.rect(30, 12, 10, 9, ice); P.rect(31, 12, 8, 2, iceL); // shoulders
+    P.rect(15, 21, 14, 10, ice); P.rect(16, 21, 12, 2, iceL); P.line(18, 24, 22, 29, iceD); // chest plate
+    // arms
+    P.rect(3, 21, 7, 13, rock); P.rect(34, 21, 7, 13, rock); P.ell(6, 35, 4, 3, iceD); P.ell(37, 35, 4, 3, iceD);
+    // head
+    P.rect(16, 7, 12, 9, rock); P.rect(16, 7, 12, 2, iceD); P.rect(18, 11, 3, 2, glow); P.rect(23, 11, 3, 2, glow);
+    // crystals on the back
+    P.line(14, 6, 11, 0, iceL); P.line(15, 6, 12, 1, ice); P.line(29, 6, 32, 0, iceL); P.line(28, 6, 31, 1, ice); P.line(22, 6, 22, 1, iceL);
+  } },
+  rask: { w: 26, h: 36, draw(P) {
+    const skin = '#c98a5a', red = '#b8402a', leather = '#5a3c20', dark = '#2a2233', steel = '#b7bcc8';
+    P.rect(7, 28, 4, 6, dark); P.rect(14, 28, 4, 6, dark); P.rect(6, 33, 6, 2, leather); P.rect(13, 33, 6, 2, leather);
+    P.rect(5, 15, 15, 14, leather); P.rect(7, 17, 11, 10, '#7a5530'); P.line(5, 15, 19, 28, '#3a2614');
+    P.rect(2, 16, 4, 10, skin); P.rect(19, 16, 4, 10, skin);
+    P.ell(12, 10, 5, 5, skin); P.rect(7, 5, 11, 3, red); P.line(17, 6, 21, 9, red); P.rect(8, 11, 9, 2, '#3a2614'); // bandana + beard
+    P.px(10, 9, dark); P.px(14, 9, dark);
+    // big axe
+    P.rect(22, 6, 2, 24, leather); P.ell(23, 9, 3, 5, steel); P.rect(24, 5, 2, 9, '#d8dce6');
+  } },
+  vesh: { w: 24, h: 36, draw(P) {
+    const cloak = '#5a2f7a', cloakL = '#7a45a0', skin = '#e0b48a', dark = '#1e1630', steel = '#c8ccd6';
+    P.rect(8, 28, 3, 6, dark); P.rect(13, 28, 3, 6, dark);
+    P.rect(6, 14, 12, 15, cloak); P.rect(8, 16, 8, 12, cloakL); P.rect(6, 22, 12, 2, '#d9b44a');
+    P.ell(12, 9, 6, 6, cloak); P.ell(12, 11, 3, 3, skin); P.rect(10, 11, 1, 1, dark); P.rect(13, 11, 1, 1, dark); P.rect(9, 13, 6, 1, dark); // hood + mask
+    P.rect(3, 15, 3, 9, cloak); P.rect(18, 15, 3, 9, cloak);
+    P.line(2, 24, 0, 30, steel); P.line(21, 24, 23, 30, steel); // daggers
+    P.px(2, 23, '#d9b44a'); P.px(21, 23, '#d9b44a');
+  } },
+  morthul: { w: 40, h: 46, draw(P) {
+    const robe = '#3a1f5a', robeL = '#56307f', bone = '#e8e2cf', boneD = '#b8b09a', gold = '#d9b44a', green = '#6dff8f';
+    // robe
+    P.sym(() => { P.line(12, 18, 6, 44, robe); P.line(13, 18, 7, 44, robe); });
+    for (let y = 18; y < 44; y++) { const half = 6 + (y - 18) * 0.42; P.rect(20 - half, y, half * 2, 1, robe); }
+    P.rect(18, 20, 4, 24, robeL); P.rect(10, 42, 20, 2, '#24123a');
+    // shoulders with bone pads
+    P.ell(11, 18, 4, 3, bone); P.ell(29, 18, 4, 3, bone); P.px(11, 17, boneD); P.px(29, 17, boneD);
+    // skull + crown
+    P.ell(20, 12, 5, 6, bone); P.rect(17, 11, 2, 2, '#1a1020'); P.rect(21, 11, 2, 2, '#1a1020'); P.px(17, 11, green); P.px(22, 11, green);
+    P.rect(18, 15, 4, 1, boneD); P.px(18, 16, bone); P.px(20, 16, bone); P.px(22, 16, bone);
+    P.rect(15, 5, 10, 2, gold); P.px(15, 3, gold); P.px(15, 4, gold); P.px(20, 2, gold); P.rect(20, 3, 1, 2, gold); P.px(24, 3, gold); P.px(24, 4, gold); P.px(20, 5, '#e04a4a');
+    // bony hands + staff with green orb
+    P.rect(5, 26, 3, 3, bone); P.rect(32, 26, 3, 3, bone);
+    P.rect(35, 10, 2, 32, '#5a3c20'); P.ell(36, 7, 3, 3, green); P.ell(36, 6, 1, 1, '#dfffe8');
+  } },
+  phylactery: { w: 14, h: 18, draw(P) {
+    P.line(7, 0, 12, 7, '#6dff8f'); P.line(7, 0, 2, 7, '#6dff8f'); P.line(2, 7, 7, 15, '#3fbf6a'); P.line(12, 7, 7, 15, '#3fbf6a');
+    for (let y = 1; y < 15; y++) { const half = y < 7 ? y * 0.7 : (15 - y) * 0.6; P.rect(7 - half, y, half * 2 + 1, 1, y < 7 ? '#9affb8' : '#4fd47c'); }
+    P.px(6, 5, '#ffffff'); P.rect(4, 16, 7, 2, '#5c6170');
+  } },
+  ignatius: { w: 46, h: 44, draw(P) {
+    const rock = '#3a2a2a', rockL = '#5a4040', lava = '#ff8a3d', lavaL = '#ffd27a', ember = '#e0402a';
+    P.rect(12, 34, 8, 8, rock); P.rect(26, 34, 8, 8, rock); P.rect(11, 41, 10, 2, rockL); P.rect(25, 41, 10, 2, rockL);
+    P.ell(23, 24, 15, 12, rock); P.ell(23, 22, 12, 9, rockL);
+    P.ell(23, 24, 5, 5, lava); P.ell(23, 24, 3, 3, lavaL); // the forge heart
+    for (const [a, b, c, d] of [[14, 18, 19, 24], [32, 17, 27, 23], [16, 30, 21, 27], [30, 31, 26, 27], [20, 14, 23, 19]]) P.line(a, b, c, d, lava);
+    // arms like anvils
+    P.rect(3, 20, 8, 14, rock); P.rect(1, 31, 12, 5, rockL); P.rect(35, 20, 8, 14, rock); P.rect(33, 31, 12, 5, rockL);
+    P.line(5, 24, 8, 30, lava); P.line(40, 24, 37, 30, lava);
+    // head with two chimneys
+    P.rect(17, 7, 12, 8, rock); P.rect(19, 10, 3, 2, lavaL); P.rect(25, 10, 3, 2, lavaL);
+    P.rect(15, 2, 3, 6, rockL); P.rect(28, 2, 3, 6, rockL); P.px(16, 0, ember); P.px(29, 0, ember); P.px(16, 1, lava); P.px(29, 1, lava);
+  } },
+  sela: { w: 34, h: 44, draw(P) {
+    const dress = '#2f8f8a', dressL = '#5fc4bc', silver = '#d8e6ee', skin = '#f0d4bc', hair = '#e8e8ff', dark = '#1e1630';
+    for (let y = 20; y < 42; y++) { const half = 5 + (y - 20) * 0.45; P.rect(17 - half, y, half * 2, 1, dress); }
+    for (let y = 22; y < 42; y += 4) P.rect(17 - 2, y, 4, 2, dressL);
+    P.rect(12, 14, 10, 8, dress); P.rect(14, 15, 6, 5, dressL);
+    P.ell(17, 9, 5, 6, hair); P.ell(17, 10, 3, 4, skin); P.px(16, 10, dark); P.px(18, 10, dark); P.px(17, 12, '#c0303a');
+    P.line(12, 6, 10, 18, hair); P.line(22, 6, 24, 18, hair); P.rect(14, 3, 6, 1, silver); P.px(17, 2, '#7ff0ff');
+    P.rect(8, 15, 4, 8, dress); P.rect(22, 15, 4, 8, dress);
+    // the hand mirror
+    P.rect(27, 18, 1, 6, silver); P.ell(28, 14, 4, 5, silver); P.ell(28, 14, 3, 4, '#a8e8ff'); P.px(27, 12, '#ffffff');
+    // floating shards
+    for (const [x, y] of [[3, 8], [5, 26], [31, 30], [2, 36]]) { P.line(x, y, x + 1, y - 2, '#a8e8ff'); P.px(x + 1, y - 1, '#ffffff'); }
+  } },
+  vharox: { w: 60, h: 46, draw(P) {
+    const scale = '#3a4aa0', scaleL = '#5a6ad0', belly = '#c8c0e8', bolt = '#ffe04a', wing = '#2a3478', wingL = '#4a58b8';
+    // wings
+    P.sym(() => {
+      for (let i = 0; i < 18; i++) P.line(22, 16, 22 - i - 2, 2 + i * 0.6, i % 6 === 0 ? wingL : wing);
+      P.line(22, 16, 2, 3, wingL); P.line(4, 3, 4, 20, wingL); P.line(10, 4, 10, 18, wingL); P.line(16, 6, 16, 17, wingL);
+    });
+    // body + tail
+    P.ell(30, 26, 10, 9, scale); P.ell(30, 28, 6, 6, belly);
+    P.line(38, 32, 50, 40, scale); P.line(38, 33, 50, 41, scale); P.line(50, 40, 56, 36, scale); P.line(54, 34, 57, 37, bolt);
+    // legs
+    P.rect(23, 33, 4, 7, scale); P.rect(33, 33, 4, 7, scale); P.rect(22, 40, 6, 2, scaleL); P.rect(32, 40, 6, 2, scaleL);
+    // neck + head
+    P.line(30, 18, 30, 10, scale); P.line(31, 18, 31, 10, scale); P.line(29, 18, 29, 11, scale);
+    P.ell(30, 8, 5, 4, scale); P.rect(31, 7, 7, 3, scale); P.px(30, 6, bolt); P.rect(36, 9, 2, 1, '#efe6cf');
+    P.line(26, 6, 23, 1, scaleL); P.line(34, 5, 36, 0, scaleL); // horns
+    // lightning
+    P.line(44, 10, 46, 14, bolt); P.line(46, 14, 44, 15, bolt); P.line(44, 15, 47, 20, bolt);
+    P.line(10, 26, 12, 30, bolt); P.line(12, 30, 10, 31, bolt); P.line(10, 31, 13, 36, bolt);
+  } },
+  sprite: { w: 12, h: 14, draw(P) {
+    P.ell(6, 7, 4, 5, '#7ab0ff'); P.ell(6, 6, 2, 3, '#d8ecff'); P.px(5, 6, '#1a1020'); P.px(7, 6, '#1a1020'); P.line(9, 2, 11, 0, '#ffe04a'); P.line(2, 11, 0, 13, '#ffe04a');
+  } },
+};
+
+function drawSprite(canvas, key, scale) {
+  const art = BOSSES_ART[key];
+  const P = makeGrid(art.w + 2, art.h + 2);
+  const inner = makeGrid(art.w, art.h);
+  art.draw(inner);
+  for (let y = 0; y < art.h; y++) for (let x = 0; x < art.w; x++) P.g[y + 1][x + 1] = inner.g[y][x];
+  const g = outline(P.g);
+  canvas.width = (art.w + 2) * scale;
+  canvas.height = (art.h + 2) * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  g.forEach((row, y) => row.forEach((c, x) => { if (c) { ctx.fillStyle = c; ctx.fillRect(x * scale, y * scale, scale, scale); } }));
+}
+
+// The game's own hero art (heroes.json parts): parts drawn at their place, feet at the bottom middle.
+function drawHero(canvas, hero, scale) {
+  const boxes = hero.parts.map((p) => {
+    const rows = p.art ? p.art.rows : null;
+    const w = rows ? Math.max(...rows.map((r) => r.length)) : Math.round(p.w);
+    const h = rows ? rows.length : Math.round(p.h);
+    return { p, w, h, x0: Math.round(p.x - w / 2), y0: Math.round(p.y - h / 2) };
+  });
+  const minX = Math.min(...boxes.map((b) => b.x0)), maxX = Math.max(...boxes.map((b) => b.x0 + b.w));
+  const minY = Math.min(...boxes.map((b) => b.y0));
+  const W = maxX - minX + 2, H = -minY + 2;
+  canvas.width = W * scale; canvas.height = H * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  const DIG = '0123456789abcdefghijklmnopqrstuvwxyz';
+  const order = ['body', 'head', 'weapon'];
+  boxes.sort((a, b) => order.indexOf(a.p.n) - order.indexOf(b.p.n));
+  for (const b of boxes) {
+    const pal = b.p.art ? b.p.art.palette.map((c) => '#' + c.slice(2)) : ['#' + String(b.p.color).slice(2)];
+    for (let y = 0; y < b.h; y++) for (let x = 0; x < b.w; x++) {
+      let c = null;
+      if (b.p.art) { const ch = b.p.art.rows[y][x]; if (ch && ch !== '.') c = pal[DIG.indexOf(ch)]; } else c = pal[0];
+      if (!c) continue;
+      ctx.fillStyle = c;
+      ctx.fillRect((b.x0 + x - minX + 1) * scale, (b.y0 + y - minY + 1) * scale, scale, scale);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- BOSSES
+const BOSSES = [
+  {
+    floor: 10, key: 'grukk', extra: 'drum', name: 'Grukk', title: 'the War Drum', color: '#5fa83a',
+    look: 'A fat goblin warchief in a horned iron helmet and a fur cape, swinging a huge cleaver. A goblin war drum stands beside him.',
+    gimmick: ['WAR DRUM', 'The drum is its own target (it never attacks). Every 8s it beats: a goblin joins the fight (max 3) and every goblin attacks 30% faster while the drum stands.'],
+    skills: [
+      ['Cleaver Charge', '1.2s wind-up (red bar over his head), then he runs at your BACK-line hero: 180% damage + knockback.'],
+      ['Rally Shout', 'Once, at half health: heals every goblin 20%.'],
+    ],
+    beat: 'Tap the drum first. Any stun or knockback during Cleaver Charge cancels it.',
+    teaches: 'Tap-to-focus and interrupting a boss.',
+    tech: ['Boss cast bar + interrupts', 'Object targets', 'Boss summons adds'],
+  },
+  {
+    floor: 20, key: 'brood', extra: 'egg', name: 'The Brood Mother', title: '', color: '#a45be6',
+    look: 'A giant purple spider with a red hourglass, six red eyes and long jointed legs.',
+    gimmick: ['EGG SACS', 'Every 10s she lays 2 egg sacs. Each hatches into 3 spiderlings after 6s unless it is destroyed first. Eggs have little health: area skills clear them.'],
+    skills: [
+      ['Web Spit', 'Wraps one hero in a cocoon for 3s (new status WEBBED: cannot act). A cleanse frees them.'],
+      ['Venom Bite', 'Every bite adds 2 Poison stacks.'],
+    ],
+    beat: 'Save an area skill (Ground Pound, Fan of Knives, Flask Barrage) for each egg drop. Rally Cry frees a webbed hero.',
+    teaches: 'Timing area skills and cleanses.',
+    tech: ['Timed spawns from objects', 'New status: Webbed'],
+  },
+  {
+    floor: 30, key: 'warden', name: 'The Frost Warden', title: '', color: '#9fd8f0',
+    look: 'A stone golem wearing three plates of ice (two shoulders, one chest) with glowing cyan eyes and crystals on its back.',
+    gimmick: ['GLACIER ARMOR', 'While any of the 3 ice plates stands he takes 70% less damage. A plate cracks from big single hits (crits, skills) and melts 3x faster from fire. Immune to Chill and Freeze.'],
+    skills: [
+      ['Blizzard', '3s channel with a big blue cast bar: every hero gets a Chill stack every 0.5s (5 = Freeze). Stun or knockback stops it.'],
+      ['Ice Slam', 'Hits the front hero for 150% and gives 2 Chill.'],
+    ],
+    beat: 'Bring fire (Mage, Kindling, Fire Bombs) and burst skills to crack the plates, keep a stun ready for Blizzard.',
+    teaches: 'Picking the right element, interrupting channels.',
+    tech: ['Armor layers (plates)', 'Element weakness per layer', 'Boss channel'],
+  },
+  {
+    floor: 40, key: 'rask', extra: 'vesh', name: 'Rask & Vesh', title: 'the Bandit Kings', color: '#b8402a',
+    look: 'Two bandits: Rask, a bearded brute with a red bandana and a great axe; Vesh, a slim hooded knife-thrower in purple.',
+    gimmick: ['BLOOD OATH', 'When one falls, the other ENRAGES (+60% attack, +40% attack speed) and raises the partner at 30% health after 8s. Kill both within 8s of each other.'],
+    skills: [
+      ['Shoulder Bash (Rask)', 'Stuns the front hero for 1s.'],
+      ['Smoke & Daggers (Vesh)', 'Blinds the whole squad for 3s and throws 5 daggers that make heroes Bleed.'],
+      ['Switch!', 'Every 15s they swap places, so your melee heroes have to walk again.'],
+    ],
+    beat: 'Spread damage: tap-focus one, then switch to the other so both get low together. Burst at the end.',
+    teaches: 'Switching targets on purpose.',
+    tech: ['Linked bosses', 'Enrage + revive timer', 'Boss swap positions'],
+  },
+  {
+    floor: 50, key: 'morthul', extra: 'phylactery', name: 'Morthul', title: 'the Bone Archon', color: '#6dff8f',
+    look: 'A lich in a purple robe with bone shoulder pads, a gold crown and green eyes, holding a staff with a green orb.',
+    gimmick: ['PHYLACTERY', 'At 0 health he falls to dust and a green crystal appears. Break it within 10s or he comes back at 50% health. The crystal is weak to physical damage and gets tougher every time.'],
+    skills: [
+      ['Raise Dead', 'Two skeletons climb out of the floor.'],
+      ['Soul Drain', 'A green beam on your weakest hero: drains 4% health every 0.5s and heals him. Interruptible.'],
+      ['Curse Wave', 'Every hero is Cursed (-15 resist) for 6s.'],
+    ],
+    beat: 'Hold your burst skills until the crystal shows up. Interrupt Soul Drain.',
+    teaches: 'Saving skills for the right moment.',
+    tech: ['Second phase on death', 'Beam channel', 'Revive countdown'],
+  },
+  {
+    floor: 60, key: 'ignatius', name: 'Ignatius', title: 'the Forge Heart', color: '#ff8a3d',
+    look: 'A rock golem with glowing lava cracks, anvil-shaped fists, two chimneys on its head and a molten heart in its chest.',
+    gimmick: ['HEAT GAUGE', 'A heat bar over his head rises every second, and faster when he is hit by fire. Ice hits and Chill lower it, a Freeze dumps a big chunk. At 100%: ERUPTION, heavy fire damage + Burn on every hero, then the bar resets.'],
+    skills: [
+      ['Slag Hammer', 'Armor Break on his target for 6s.'],
+      ['Molten Ground', 'Every 6s melee heroes standing next to him start to Burn.'],
+    ],
+    beat: 'Bring ice (Mage Frost Nova, Chill Band, Frost Charm), avoid fire, ranged heroes are safer.',
+    teaches: 'Reading a gauge, counter-elements.',
+    tech: ['Boss gauge (heat)', 'Damage-type reactions on a boss'],
+  },
+  {
+    floor: 70, key: 'sela', name: 'Sela', title: 'the Mirror Witch', color: '#5fc4bc',
+    look: 'A pale witch in a teal glass-patterned dress with silver hair and a hand mirror, glass shards floating around her.',
+    gimmick: ['MIRROR IMAGES + MIRROR WARD', 'At the start and at half health she copies every living hero as a glass clone (40% of their stats, uses their basic attack and attack skill; clones shatter in one big hit). Every 12s her Mirror Ward shimmers for 3s: the next SKILL that hits her bounces back at your squad.'],
+    skills: [
+      ['Shatter', 'Breaks all her clones at once: each shard hits the nearest hero.'],
+      ['Glass Prison', 'One hero is Silenced for 4s.'],
+    ],
+    beat: 'Watch the shimmer and wait to tap skills until it breaks. Area skills clean up the clones.',
+    teaches: 'Skill timing.',
+    tech: ['Clones of heroes', 'Reflect status'],
+  },
+  {
+    floor: 80, key: 'vharox', extra: 'sprite', name: 'Vharox', title: 'the Storm Wyrm', color: '#ffe04a',
+    look: 'A blue and purple dragon with wide wings, horns and lightning crackling around it.',
+    gimmick: ['SKY PHASE', 'He FLIES (melee misses 40%). At 75%, 50% and 25% health he rises out of reach for 8s while lightning strikes random heroes (Shock) and 3 Storm Sprites attack. Killing all sprites early drags him down: stunned for 3s and takes +25% damage.'],
+    skills: [
+      ['Thunder Breath', 'Lightning on every hero, jumps to minions too.'],
+      ['Static Field', 'Every hero is Shocked for 5s.'],
+    ],
+    beat: 'Ranged damage keeps working the whole fight. A melee squad has to kill the sprites to ground him.',
+    teaches: 'Squad variety (melee AND ranged).',
+    tech: ['Untargetable phase', 'Phase triggers at health %'],
+  },
+];
+
+// ---------------------------------------------------------------- HEROES
+const HEROES = [
+  { id: 'knight', role: 'Guardian', color: '#3b6fd4',
+    now: 'Taunt Wall proc, Ground Pound (hits ALL + knockback), Rally Cry (squad +defense, cleanse).',
+    problem: 'Ground Pound is one of 7 attack skills that hit every enemy. His "protector" fantasy is only a random 10% taunt.',
+    sig: ['INTERCEPT (passive)', 'When an ally drops under 35% health he jumps in front of them and takes half of the damage they get for 3s (8s cooldown).'],
+    atk: ['Shield Bash', 'One enemy: 140% damage and a 1.5s stun. The squad\'s reliable way to interrupt boss casts.'],
+    sup: ['Challenge', 'Taunts EVERY enemy for 3s and gives himself +30 defense.'],
+    keeps: 'Stalwart perk.' },
+  { id: 'berserker', role: 'Bruiser', color: '#c0303a',
+    now: 'Bloodrage (faster when hurt), Savage Leap, War Cry (squad +attack, weaken).',
+    problem: 'War Cry is another "squad +stat for a few seconds" support, like 4 others.',
+    sig: ['RAGE BAR (passive)', 'Hitting and being hit fills Rage. Full: 6s FRENZY (+50% attack speed, 15% lifesteal). Bloodrage stays.'],
+    atk: ['Savage Leap', 'Unchanged: big single hit, double damage on bleeding or half-dead enemies.'],
+    sup: ['Blood Pact', 'Pays 15% of his OWN health: the whole squad gets 12% lifesteal for 6s.'],
+    keeps: 'Battle Fury perk, Savage Leap.' },
+  { id: 'rogue', role: 'Assassin', color: '#5a2f7a',
+    now: 'Opportunist (+damage vs debuffed, debuffs likelier), Fan of Knives (ALL), Smoke Bomb (squad evasion + blind).',
+    problem: 'Shares "debuffs 25% likelier" and Bleed with the Samurai. Fan of Knives is another hit-all skill.',
+    sig: ['COMBO POINTS (passive)', 'Each basic attack on the SAME enemy adds a combo point (max 5, little pips over it). Opportunist stays (bonus vs debuffed enemies).'],
+    atk: ['Eviscerate', 'Spends all combo points on one enemy: 60% + 60% per point; at 5 points it always crits and makes it Bleed.'],
+    sup: ['Vanish', '3s untargetable: enemies lose him and pick someone else; his next hit is a sure crit.'],
+    keeps: 'Shadow Step perk, Opportunist.' },
+  { id: 'archer', role: 'Sniper', color: '#3f8f3a',
+    now: 'Steady Aim, Rain of Arrows (channel on ALL), Hunter\'s Mark.',
+    problem: 'Rain of Arrows is a channel on all enemies, like the Bard\'s Crescendo. Two armor breakers (with the Samurai).',
+    sig: ['STEADY AIM (passive, kept)', '3s without being hit: faster, crit-heavy shots. Now also: shots on a Marked enemy pierce to the enemy behind it.'],
+    atk: ['Headshot', 'One enemy: 300% damage that ignores defense, x2 on a Marked enemy.'],
+    sup: ['Hunter\'s Mark', 'Kept: the target takes +25% damage from everyone for 6s.'],
+    keeps: 'Marksman perk, Steady Aim, Hunter\'s Mark.' },
+  { id: 'samurai', role: 'Duelist', color: '#b8402a',
+    now: 'Focused Strike (35% bleed, debuffs likelier), Wind Cutter (ALL + armor break), Focus Stance (parry + sure crit).',
+    problem: 'Bleed and "debuffs likelier" overlap the Rogue. His parry is his real identity but only lives in one skill.',
+    sig: ['IAIDO (passive)', 'Every 3rd hit he takes is parried and answered with an instant 120% counter-cut. Slow heavy attacks stay; the bleed proc goes away.'],
+    atk: ['Wind Cutter', 'Kept: crescent on ALL enemies + Armor Break. Now the ONLY armor breaker.'],
+    sup: ['Focus Stance', 'Kept: 4s parry everything, next attack a sure crit. Every parried hit counter-cuts.'],
+    keeps: 'Bushido perk, Wind Cutter, Focus Stance.' },
+  { id: 'mage', role: 'Elementalist', color: '#3b4fd4',
+    now: 'Spellweaver (every 4th attack), Elemental Rotation, Arcane Ward (squad shield).',
+    problem: 'One of three "every 4th attack" heroes, and one of three squad-shield heroes.',
+    sig: ['REACTIONS (passive)', 'Spells leave an element on the enemy. A DIFFERENT element on top makes a reaction: fire+ice = Steam (Blind), ice+electric = Shatter (+50% hit), fire+electric = Overload (explosion on its neighbours).'],
+    atk: ['Elemental Rotation', 'Kept: Fireball > Frost Nova > Chain Lightning, and now they combo into each other.'],
+    sup: ['Time Warp', 'Every hero\'s skill cooldowns -3s and +20% attack speed for 4s.'],
+    keeps: 'Arcane Haste perk, the rotation.' },
+  { id: 'cleric', role: 'Healer', color: '#e8e2cf',
+    now: 'Mending (regen aura + heal every 4th attack), Smite, Divine Shield.',
+    problem: 'Fine already. Becomes the ONLY counter hero and the only real healer.',
+    sig: ['MENDING (passive, kept)', 'Regen aura + every 4th attack heals the most hurt ally.'],
+    atk: ['Smite', 'Kept: holy hit, heals the most hurt ally.'],
+    sup: ['Divine Shield', 'Kept: 2s immune + heal. OPTIONAL idea for later: "Last Rites" brings a fallen hero back once per run (this breaks the "dead stay dead" rule, so only if you want it).'],
+    keeps: 'Everything.' },
+  { id: 'necromancer', role: 'Summoner', color: '#56307f',
+    now: 'Skeleton Summoner, Death Coil, Bone Ward (squad + skeleton shield).',
+    problem: 'Bone Ward is the third squad shield.',
+    sig: ['SKELETON SUMMONER (passive, kept)', 'Skeletons rise during every fight.'],
+    atk: ['Death Coil', 'Kept: dark bolt, a kill raises a skeleton.'],
+    sup: ['Corpse Explosion', 'Blows up all his skeletons: each one hits the enemies around it for 120% dark + Poison. New ones rise as usual.'],
+    keeps: 'Grim Resolve perk, summoner, Death Coil.' },
+  { id: 'bard', role: 'Conductor', color: '#e0524d',
+    now: 'Rhythm (every 4th squad attack), Crescendo (channel on ALL), Ballad of Rest (regen).',
+    problem: 'Counter like the Mage and Cleric; channel like the Archer.',
+    sig: ['SONGS (passive)', 'Always plays one of two songs for the squad: MARCH (+15% attack speed) or BALLAD (+0.6% health per second). The current song shows as notes over him.'],
+    atk: ['Discord', 'Every enemy is CHARMED for 2.5s: they attack each other (new status).'],
+    sup: ['Change Song', 'Switches songs with a big 1s burst of the new song (a quick heal or a speed burst).'],
+    keeps: 'Inspiration perk.' },
+  { id: 'alchemist', role: 'Plague Doctor', color: '#c98a5a',
+    now: 'Catalyst (longer debuffs, stronger DoTs), Flask Barrage, Mystery Brew (random heal/speed/shield).',
+    problem: 'Mystery Brew is random support with another shield.',
+    sig: ['CATALYST (passive, kept)', 'Enemy debuffs last 30% longer and damage over time hits 30% harder.'],
+    atk: ['Flask Barrage', 'Kept: 3 random flasks (fire, ice, poison).'],
+    sup: ['Detonate', 'Every Burn, Poison and Bleed on every enemy deals ALL its remaining damage at once.'],
+    keeps: 'Volatile Mix perk, Catalyst, Flask Barrage.' },
+];
+
+// Which shared mechanics each hero has, before and after.
+const OVERLAP = {
+  rows: ['Attack skill hits ALL enemies', '"Every 4th attack" counter', 'Squad shield', 'Channel (waves)', 'Armor Break', 'Debuffs 25% likelier', 'Bleed', 'Squad stat buff for a few seconds'],
+  before: {
+    knight: [1, 0, 0, 0, 0, 0, 0, 1], berserker: [0, 0, 0, 0, 0, 0, 1, 1], rogue: [1, 0, 0, 0, 0, 1, 1, 1], archer: [1, 0, 0, 1, 1, 0, 0, 0], samurai: [1, 0, 0, 0, 1, 1, 1, 0],
+    mage: [1, 1, 1, 0, 0, 0, 0, 1], cleric: [0, 1, 0, 0, 0, 0, 0, 0], necromancer: [0, 0, 1, 0, 0, 0, 0, 0], bard: [1, 1, 0, 1, 0, 0, 0, 1], alchemist: [1, 0, 1, 0, 0, 0, 0, 1],
+  },
+  after: {
+    knight: [0, 0, 0, 0, 0, 0, 0, 0], berserker: [0, 0, 0, 0, 0, 0, 1, 1], rogue: [0, 0, 0, 0, 0, 0, 1, 0], archer: [0, 0, 0, 0, 0, 0, 0, 0], samurai: [1, 0, 0, 0, 1, 0, 0, 0],
+    mage: [1, 0, 0, 0, 0, 0, 0, 1], cleric: [0, 1, 0, 0, 0, 0, 0, 0], necromancer: [0, 0, 0, 0, 0, 0, 0, 0], bard: [0, 0, 0, 0, 0, 0, 0, 1], alchemist: [1, 0, 0, 0, 0, 0, 0, 0],
+  },
+};
+
+// ---------------------------------------------------------------- SOUNDS
+// [name, when it plays, how it should feel, priority (1 must, 2 nice, 3 later), synth preset]
+const SOUNDS = [
+  ['Menus & screens', [
+    ['Button tap', 'Any button', 'Short soft wooden click', 1, 'tap'],
+    ['Hero picked', 'CHOOSE on the hero card', 'Bright two-note chime', 1, 'pick'],
+    ['Hero sent back', 'SEND BACK', 'Lower two-note chime', 2, 'unpick'],
+    ['Card open / close', 'Hero details card, reward sheet', 'Paper whoosh', 2, 'whoosh'],
+    ['Bench scroll', 'Dragging the bench', 'Soft tick per hero passed', 3, 'tick'],
+    ['Begin descent', 'BEGIN DESCENT', 'Low horn + drum hit', 1, 'horn'],
+    ['Reward sheet up', 'Sheet slides in', 'Rising swoosh', 1, 'swoosh'],
+    ['Reward card appears', 'Each card rising in (by rarity)', 'Common: soft blip. Rare: chime. Epic: sparkle. Legendary: choir shimmer', 1, 'rarity'],
+    ['Item given', 'Give to hero', 'Leather + coin clink', 1, 'coin'],
+    ['Potion drunk', 'Shared Potion', 'Glug + sparkle', 2, 'glug'],
+    ['Unlock', 'A new hero unlocked', 'Fanfare sting', 2, 'fanfare'],
+  ]],
+  ['Movement & dungeon', [
+    ['Footsteps: plate', 'Knight walking', 'Metal clank per step', 2, 'stepMetal'],
+    ['Footsteps: leather', 'Rogue, Archer, Bard, Alchemist, Samurai', 'Soft thud per step', 2, 'step'],
+    ['Footsteps: robe', 'Mage, Cleric, Necromancer', 'Cloth swish', 3, 'swish'],
+    ['Door opens', 'Floor cleared', 'Wooden creak + latch', 1, 'creak'],
+    ['Step through door', 'Hero fades into the door', 'Soft whoosh (pitch goes up per hero)', 2, 'whoosh'],
+    ['Floor slide', 'Camera moves to the next floor', 'Low rumble', 2, 'rumble'],
+    ['Torch crackle', 'Squad screen (loop)', 'Quiet fire crackle', 3, 'crackle'],
+  ]],
+  ['Basic attacks (swing / shot)', [
+    ['Sword swing', 'Knight', 'Short blade whoosh', 1, 'swing'],
+    ['Axe swing', 'Berserker', 'Heavy low whoosh', 1, 'swingHeavy'],
+    ['Dagger stab', 'Rogue', 'Very short sharp whoosh', 1, 'stab'],
+    ['Katana draw-cut', 'Samurai', 'Ringing slice', 1, 'katana'],
+    ['Bow shot', 'Archer', 'String twang + arrow whistle', 1, 'bow'],
+    ['Spell cast', 'Mage, Cleric, Necromancer', 'Magic zip in their element', 1, 'zap'],
+    ['Lute strum', 'Bard', 'One plucked note', 1, 'pluck'],
+    ['Flask throw', 'Alchemist', 'Glass whoosh', 1, 'whoosh'],
+    ['Enemy bite / claw', 'Slime, Rat, Spider, Bat', 'Wet squelch / chitter', 1, 'squelch'],
+  ]],
+  ['Hits (one per damage type)', [
+    ['Physical on flesh', 'Melee / ranged hit an enemy', 'Meaty thud', 1, 'hit'],
+    ['Physical on armor', 'Hit on Knight, Beetle, Golem', 'Metal clang', 1, 'clang'],
+    ['Fire', 'Fire hit', 'Whoomph', 1, 'fire'],
+    ['Ice', 'Ice hit', 'Crisp crack', 1, 'ice'],
+    ['Electric', 'Electric hit', 'Zap crackle', 1, 'zap'],
+    ['Dark', 'Dark hit', 'Low reverse whoosh', 1, 'dark'],
+    ['Holy', 'Holy hit', 'Bell ping', 1, 'holy'],
+    ['Critical hit', 'Any crit', 'Sharp extra crack on top', 1, 'crit'],
+    ['Miss / dodge', 'Evasion, blind', 'Air whoosh', 1, 'miss'],
+    ['Block / parry', 'Shield Totem, Focus Stance', 'Metal ting', 1, 'ting'],
+    ['Shield soak', 'Damage into a shield', 'Glassy thunk', 2, 'soak'],
+    ['Shield break', 'Shield runs out by damage', 'Glass shatter', 1, 'shatter'],
+    ['Heal', 'Any heal', 'Soft rising sparkle', 1, 'heal'],
+    ['Damage over time tick', 'Bleed / Burn / Poison tick', 'Tiny tick (different per type)', 2, 'tick'],
+  ]],
+  ['Statuses', [
+    ['Stun', 'Stun lands', 'Bonk + birds', 1, 'bonk'],
+    ['Freeze', 'Freeze lands', 'Ice locking crack', 1, 'ice'],
+    ['Freeze breaks', 'Freeze ends', 'Ice shatter', 2, 'shatter'],
+    ['Chill stack', 'Each Chill stack', 'Small cold breath', 3, 'chill'],
+    ['Shock', 'Shock lands', 'Crackle', 2, 'zap'],
+    ['Fear', 'Fear lands', 'Ghostly wail (short)', 2, 'wail'],
+    ['Taunt', 'Taunt lands', 'Shout "Hey!" style grunt', 1, 'shout'],
+    ['Silence', 'Silence lands', 'Muffled thud', 3, 'thud'],
+    ['Bleed / Burn / Poison start', 'First stack', 'Drip / ignite / bubble', 2, 'bubble'],
+    ['Buff (any)', 'A buff on a hero', 'Up-chime', 1, 'buff'],
+    ['Debuff (any)', 'A debuff on a hero', 'Down-chime', 1, 'debuff'],
+  ]],
+  ['Hero skills', [
+    ['Wind-up', 'Any skill charging', 'Rising hum (length = cast time)', 1, 'charge'],
+    ['Interrupted', 'Skill lost to stun', 'Fizzle', 1, 'fizzle'],
+    ['Skill cooldown ready', 'Skill square lights up', 'Tiny ping', 2, 'ping'],
+    ['Each hero\'s attack skill', '10 sounds: Ground Pound slam, Savage Leap roar, knife fan, arrow rain, crescent slash, fireball/nova/lightning, smite, death coil, crescendo, flask volley', 'Big and different per hero', 1, 'slam'],
+    ['Each hero\'s support skill', '10 sounds: rally horn, war cry, smoke puff, mark ping, stance chime, ward hum, divine choir, bone rattle, ballad, brew pop', 'Lighter, musical', 1, 'buff'],
+    ['Counter charged', 'Weapon starts to glow (every 4th)', 'Soft rising tone', 2, 'ping'],
+    ['Counter fires', 'The 4th attack bursts', 'Punchy burst', 1, 'burst'],
+  ]],
+  ['Items & minions', [
+    ['Item proc (generic)', 'Item icon pops over a hero', 'Bright pop', 1, 'pop'],
+    ['Bomb', 'Fire Bombs', 'Fuse + boom', 1, 'boom'],
+    ['Chain lightning', 'Static Crystal', 'Crackle jumping 3 times', 1, 'chain'],
+    ['Tornado', 'Excalibur', 'Wind loop', 2, 'wind'],
+    ['Lifesteal', 'Bloodlust Mask', 'Wet slurp sparkle', 2, 'heal'],
+    ['Thorns', 'Bulwark Plate, Spite Mail', 'Spiky ting', 2, 'ting'],
+    ['Minion summon', 'Any minion rises', 'Earth rumble + pop', 1, 'summon'],
+    ['Minion dies / vanishes', 'Minion gone', 'Puff', 2, 'puff'],
+  ]],
+  ['Enemies & bosses', [
+    ['Enemy hurt', 'Per enemy (15 kinds)', 'Small squeak/grunt per kind', 2, 'squeak'],
+    ['Enemy death', 'Per enemy', 'Pop + puff', 1, 'puff'],
+    ['Puffshroom cloud', 'On its death', 'Gas burst', 2, 'gas'],
+    ['Boss intro', 'Boss floor starts', 'Deep roar + drum', 1, 'roar'],
+    ['Boss cast warning', 'Red cast bar appears', 'Warning horn', 1, 'horn'],
+    ['Boss phase change', 'Phase / enrage', 'Rumble + roar', 1, 'rumble'],
+    ['War drum beat', 'Grukk\'s drum', 'Big drum hit', 2, 'drum'],
+  ]],
+  ['Progress & run', [
+    ['Level up', 'Hero levels up', 'Bright arpeggio', 1, 'levelup'],
+    ['Hero falls', 'A hero dies', 'Low sad hit', 1, 'fall'],
+    ['Morale drop', 'Squad becomes Incomplete / All Alone', 'Low string swell', 2, 'swell'],
+    ['Floor cleared', 'Win', 'Short victory jingle', 1, 'win'],
+    ['Defeat', 'Squad wiped', 'Falling notes', 1, 'lose'],
+  ]],
+  ['Music', [
+    ['Squad screen', 'Loop', 'Calm, torch-lit tavern', 2, null],
+    ['Dungeon A', 'Loop, layers get busier deeper', 'Dark adventurous', 1, null],
+    ['Boss', 'Loop', 'Fast drums', 1, null],
+    ['Victory sting', 'Boss killed', '4 seconds', 2, null],
+    ['Game over', 'Defeat', 'Slow, short', 2, null],
+  ]],
+];
+
+const HERO_ART = {"knight":{"name":"Knight","parts":[{"n":"body","x":0,"y":-8,"w":10,"h":16,"art":{"palette":["0xb7bcc8","0x3b6fd4","0xf2c544","0xf2c9a0","0x2a4fa0","0x4a3a3a"],"rows":[".00111100.","0011111100","0011221100","0011221100","0011111100","0011221100","0011111100","3011111103",".44444444.",".11111111.",".00....00.",".00....00.",".00....00.",".00....00.",".00....00.",".55....55."]}},{"n":"head","x":0,"y":-20,"w":10,"h":8,"art":{"palette":["0xb7bcc8","0x7d8494","0x1a1020"],"rows":["..000000..",".00000000.","0000000000","0122222210","0000000000","0000000000",".01000010.","..000000.."]}},{"n":"weapon","x":5.5,"y":-13.5,"w":5,"h":11,"art":{"palette":["0xe4e8f0","0xf2c544","0x6b4a2a"],"rows":["..0..",".000.",".000.",".000.",".000.",".000.",".000.",".000.","11111","..2..","..2.."]}}]},"berserker":{"name":"Berserker","parts":[{"n":"body","x":0,"y":-7.5,"w":11,"h":15,"art":{"palette":["0x8a6a4a","0xf2c9a0","0xd9a87c","0x6b4a2a","0x3a2a20"],"rows":["0000000000.","00011100000","11111111111","11211112111","11111111111","11211112111","11111111111","1111111111.",".33333333..",".33333333..",".11....11..",".11....11..",".11....11..",".11....11..",".44....44.."]}},{"n":"head","x":0,"y":-19,"w":10,"h":8,"art":{"palette":["0xc8502a","0xf2c9a0","0x1a1020","0x8e3418"],"rows":[".0.00.0.0.","0000000000","0011111000","0111111100","0121112100","001111100.",".0333330..","..03330..."]}},{"n":"weapon","x":5,"y":-12.5,"w":7,"h":13,"art":{"palette":["0xc9ccd6","0x8c909c","0x6b4a2a"],"rows":["00...00","001.100","0002000","001.100","00.2.00","...2...","...2...","...2...","...2...","...2...","...2...","...2...","...2..."]}}]},"rogue":{"name":"Rogue","parts":[{"n":"body","x":0,"y":-7.5,"w":10,"h":15,"art":{"palette":["0x5b3f8f","0x3a2a40","0xf2c9a0","0x6b4a2a","0x241a2a"],"rows":["..000000..",".00000000.",".00111100.",".00111100.",".00111100.",".00111100.",".00111100.",".23333332.","..111111..","..11..11..","..11..11..","..11..11..","..11..11..","..11..11..","..44..44.."]}},{"n":"head","x":0,"y":-19,"w":10,"h":8,"art":{"palette":["0x5b3f8f","0x3d2a63","0xf2c9a0","0x1a1020","0x2a2238"],"rows":["...0000...","..000000..",".00000000.","0001111000","0012222210","0012322321","0044444440",".04444440."]}},{"n":"weapon","x":5,"y":-10,"w":4,"h":6,"art":{"palette":["0xd6dae4","0x3a2a40"],"rows":["...0","..00",".00.",".00.","111.",".1.."]}}]},"archer":{"name":"Archer","parts":[{"n":"body","x":0,"y":-7.5,"w":10,"h":15,"art":{"palette":["0x3f9a4a","0x7a4a2a","0xf2c9a0","0x2a6e34","0x4a3a2a"],"rows":["..000000..",".00100000.",".00010000.",".00001000.",".00000100.",".00001000.",".00000100.",".20000012.","..111111..","..33..33..","..33..33..","..33..33..","..33..33..","..33..33..","..44..44.."]}},{"n":"head","x":0,"y":-19,"w":10,"h":8,"art":{"palette":["0xf4f0e6","0x3f9a4a","0x2a6e34","0x7a4a2a","0xf2c9a0","0x1a1020"],"rows":[".........0","...1111.0.","..111111..",".11111111.",".12333321.",".12444441.",".12454451.","..144444.."]}},{"n":"weapon","x":4,"y":-8,"w":4,"h":16,"art":{"palette":["0x8b5a2b","0xe4e4ea"],"rows":["0...",".0.1",".001","..01","..01","..01","..01","..01","..01","..01","..01","..01","..01",".001",".0.1","0..."]}}]},"samurai":{"name":"Samurai","parts":[{"n":"body","x":0,"y":-7.5,"w":10,"h":15,"art":{"palette":["0xc23a3a","0x8a2424","0xf2c9a0","0x1e1a24","0x2a2030"],"rows":["000....000","0100000010","0100000010",".01111110.",".00000000.",".01111110.",".00000000.",".20000002.",".33333333.","3333333333",".33....33.",".33....33.",".33....33.",".33....33.",".44....44."]}},{"n":"head","x":0,"y":-19,"w":10,"h":8,"art":{"palette":["0x1e1a24","0xf0ece4","0xf2c9a0","0x1a1020"],"rows":["...000....","...000....","..000000..",".00000000.",".11111111.",".02222222.",".0232232..","..22222..."]}},{"n":"weapon","x":7.5,"y":-14,"w":5,"h":16,"art":{"palette":["0xe8ecf4","0xc9a24a","0x1e1a24"],"rows":["....0","...00","...0.","..00.","..0..","..0..",".00..",".0...",".0...",".0...",".0...",".0...","111..",".2...",".2...",".2..."]}}]},"mage":{"name":"Mage","parts":[{"n":"body","x":0,"y":-7,"w":10,"h":14,"art":{"palette":["0x3b5fc4","0xf2c544","0xf2c9a0","0x2a4290"],"rows":["..000000..",".00000000.",".00011000.","0000110000","2000000002","0000110000","2000000002","0000000000","0000000000","0300000030","0300000030","0300000030","0300000030","3333333333"]}},{"n":"head","x":0,"y":-19,"w":10,"h":10,"art":{"palette":["0x4a3aa8","0xf2c544","0xf2c9a0","0x1a1020","0xe8e4f0"],"rows":[".......00.","...000000.","..000000..",".00000000.",".00111100.","0000000000","..222222..","..232232..","..444444..","...4444..."]}},{"n":"weapon","x":5.5,"y":-9,"w":3,"h":14,"art":{"palette":["0xff8a2e","0xffe066","0x7a4a2a"],"rows":[".0.","010","000",".2.",".2.",".2.",".2.",".2.",".2.",".2.",".2.",".2.",".2.",".2."]}}]},"cleric":{"name":"Cleric","parts":[{"n":"body","x":0,"y":-7.5,"w":10,"h":15,"art":{"palette":["0xf2eee6","0xf2d24a","0xf2c9a0","0xc8c2b4","0x8a7a5a"],"rows":["..000000..",".00011000.",".00011000.","0000110000","2000110002","0000110000","2000110002",".00011000.",".00011000.",".30011003.",".33333333.",".33333333.",".33333333.",".33333333.","..44..44.."]}},{"n":"head","x":0,"y":-19.5,"w":10,"h":9,"art":{"palette":["0xf2d24a","0xf2eee6","0xf2c9a0","0xc8c2b4","0x1a1020"],"rows":["..000000..",".0......0.","..000000..","...1111...","..111111..",".11222211.",".13242421.",".13222221.","..111111.."]}},{"n":"weapon","x":5.5,"y":-12,"w":3,"h":10,"art":{"palette":["0xf2d24a","0xb8962a","0x7a4a2a"],"rows":[".0.","000","010","000",".2.",".2.",".2.",".2.",".2.",".2."]}}]},"necromancer":{"name":"Necromancer","parts":[{"n":"body","x":0,"y":-7.5,"w":10,"h":15,"art":{"palette":["0x2a2236","0x3f8a4a","0xe8e2cf","0x1a1424"],"rows":["..000000..",".00000000.",".00111000.","0000100000","2000100002","0000100000","2000100002",".00010000.",".00000000.","0000000000","0303003030","0303003030","0303003030","0303003030","3.3.33.3.3"]}},{"n":"head","x":0,"y":-19,"w":10,"h":8,"art":{"palette":["0x2a2236","0x1a1424","0xe8e2cf","0x6dff8a"],"rows":["...0000...","..000000..",".00000000.",".01222210.",".01232230.",".01222220.",".01212120.","..000000.."]}},{"n":"weapon","x":5.5,"y":-11,"w":3,"h":14,"art":{"palette":["0xe8e2cf","0x6dff8a","0x4a3a3a"],"rows":["000","010","000",".0.",".2.",".2.",".2.",".2.",".2.",".2.",".2.",".2.",".2.",".2."]}}]},"bard":{"name":"Bard","parts":[{"n":"body","x":0,"y":-7.5,"w":10,"h":15,"art":{"palette":["0xf2c544","0xc8433a","0xf2c9a0","0x6b4a2a","0x3a2a2a"],"rows":["..010101..",".01010101.",".01010101.",".01010101.",".01010101.",".01010101.",".01010101.",".20101012.","..333333..","..33..33..","..33..33..","..33..33..","..33..33..","..33..33..","..44..44.."]}},{"n":"head","x":0,"y":-19,"w":10,"h":8,"art":{"palette":["0x7fd6ff","0xc8433a","0x8e2a2a","0x7a4a2a","0xf2c9a0","0x1a1020"],"rows":[".........0","..11111.0.",".11111110.","111111111.",".2222222..",".3444444..",".3454453..","..444444.."]}},{"n":"weapon","x":4.5,"y":-12,"w":5,"h":10,"art":{"palette":["0x3a2a1a","0x8a5a2a","0xc88a4a"],"rows":["..0..","..00.","..1..","..1..","..1..",".222.","22222","22022","22222",".222."]}}]},"alchemist":{"name":"Alchemist","parts":[{"n":"body","x":0,"y":-7.5,"w":10,"h":15,"art":{"palette":["0xe8e4dc","0x8a5a32","0x6de07a","0xf2c9a0","0x5e3a1a","0x3a2a20"],"rows":["..000000..",".00111100.",".00111100.",".00111100.",".00121100.",".00111100.",".00121100.",".31111113.","..444444..","..11..11..","..00..00..","..00..00..","..00..00..","..00..00..","..55..55.."]}},{"n":"head","x":0,"y":-19,"w":10,"h":8,"art":{"palette":["0x7a4a2a","0xc9a24a","0x8fe6ff","0xf2c9a0","0x1a1020"],"rows":[".0.00.0...","00000000..","000000000.","1111111111","1221111221","1113331110",".03433433.","..3333333."]}},{"n":"weapon","x":4.5,"y":-6.5,"w":5,"h":7,"art":{"palette":["0xc8ffd0","0xd8d0c0","0x6de07a","0x3aa84a"],"rows":[".0.0.","..1..","..1..",".222.","23022","22222",".222."]}}]}};
+
+// Bosses
+const bossList = document.getElementById('bossList');
+for (const b of BOSSES) {
+  const el = document.createElement('article');
+  el.className = 'boss';
+  el.style.setProperty('--accent', b.color);
+  el.innerHTML = `
+    <div class="stage"><span class="floorTag">FLOOR ${b.floor}</span></div>
+    <div class="bossBody">
+      <h3 class="bossName">${b.name}${b.title ? `<small>${b.title}</small>` : ''}</h3>
+      <p class="look">${b.look}</p>
+      <div class="gimmick"><b>${b.gimmick[0]}</b><p>${b.gimmick[1]}</p></div>
+      <ul class="skills">${b.skills.map(([n, d]) => `<li><b>${n}</b><span>${d}</span></li>`).join('')}</ul>
+      <div class="meta"><div><span>How you beat it</span>${b.beat}</div><div><span>It teaches</span>${b.teaches}</div></div>
+      <div class="chips">${b.tech.map((t) => `<span class="chip">${t}</span>`).join('')}</div>
+    </div>`;
+  const stage = el.querySelector('.stage');
+  const big = document.createElement('canvas');
+  const scale = BOSSES_ART[b.key].w > 50 ? 4 : 5;
+  drawSprite(big, b.key, scale);
+  big.setAttribute('aria-label', b.name);
+  stage.appendChild(big);
+  if (b.extra) {
+    const ex = document.createElement('canvas');
+    ex.className = 'extra';
+    drawSprite(ex, b.extra, BOSSES_ART[b.extra].w > 20 ? 5 : 4);
+    stage.appendChild(ex);
+  }
+  bossList.appendChild(el);
+}
+const ENGINE = [
+  ['Boss health bar', 'Big bar with the boss name at the top of the screen.'],
+  ['Boss cast bar + interrupts', 'A red bar over the boss before big moves; stun, knockback or freeze cancels it (your skills finally have a job against bosses).'],
+  ['Objects', 'Targets that never attack: the drum, eggs, the crystal. Tap them to focus.'],
+  ['Phases', 'Things that happen at 75 / 50 / 25% health or at 0 (Morthul).'],
+  ['New statuses', 'Webbed, Reflect (Mirror Ward), Untargetable (sky phase), Charmed (for the Bard rework).'],
+  ['Boss gauge', 'A second bar on a boss (Ignatius heat).'],
+];
+document.getElementById('engine').innerHTML = ENGINE.map(([t, d]) => `<div><b>${t}</b>${d}</div>`).join('');
+
+// Hero overlap matrix
+const order = HEROES.map((h) => h.id);
+const names = Object.fromEntries(order.map((id) => [id, HERO_ART[id].name]));
+function drawMatrix(which) {
+  const data = OVERLAP[which];
+  let html = `<thead><tr><th>Shared mechanic</th>${order.map((id) => `<th>${names[id]}</th>`).join('')}<th>Heroes</th></tr></thead><tbody>`;
+  OVERLAP.rows.forEach((row, r) => {
+    const count = order.filter((id) => data[id][r]).length;
+    html += `<tr><td>${row}</td>${order.map((id) => `<td><span class="dot ${which === 'after' ? 'after' : ''} ${data[id][r] ? 'on' : ''}" title="${data[id][r] ? 'has it' : 'no'}"></span></td>`).join('')}<td><b>${count}</b></td></tr>`;
+  });
+  document.getElementById('matrix').innerHTML = html + '</tbody>';
+  const total = OVERLAP.rows.reduce((s, _, r) => s + order.filter((id) => data[id][r]).length, 0);
+  document.getElementById('matrixNote').textContent = which === 'before'
+    ? `Now: ${total} shared pieces across the 10 heroes. Red = the hero has that mechanic.`
+    : `After: ${total} shared pieces, and each hero has its own signature (see below). Green = still shared.`;
+  document.getElementById('showBefore').setAttribute('aria-pressed', which === 'before');
+  document.getElementById('showAfter').setAttribute('aria-pressed', which === 'after');
+}
+document.getElementById('showBefore').onclick = () => drawMatrix('before');
+document.getElementById('showAfter').onclick = () => drawMatrix('after');
+drawMatrix('before');
+
+// Hero rows
+const heroList = document.getElementById('heroList');
+for (const h of HEROES) {
+  const el = document.createElement('article');
+  el.className = 'hero';
+  el.style.setProperty('--hc', h.color);
+  el.innerHTML = `
+    <div class="port"><span class="role">${h.role}</span></div>
+    <div class="heroBody">
+      <div class="heroTop"><h3>${HERO_ART[h.id].name}</h3></div>
+      <p class="now"><b>Now:</b> ${h.now}</p>
+      <p class="problem"><b>Why change:</b> ${h.problem}</p>
+      <div class="kit">
+        <div class="k-p"><span>Signature</span><b>${h.sig[0]}</b>${h.sig[1]}</div>
+        <div class="k-a"><span>Attack skill</span><b>${h.atk[0]}</b>${h.atk[1]}</div>
+        <div class="k-s"><span>Support skill</span><b>${h.sup[0]}</b>${h.sup[1]}</div>
+      </div>
+      <p class="keeps"><b>Keeps:</b> ${h.keeps}</p>
+    </div>`;
+  const c = document.createElement('canvas');
+  drawHero(c, HERO_ART[h.id], 4);
+  c.setAttribute('aria-label', HERO_ART[h.id].name);
+  el.querySelector('.port').prepend(c);
+  heroList.appendChild(el);
+}
+
+// Sounds
+let actx = null;
+function ctx() { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); return actx; }
+function tone(a, { type = 'square', f0 = 440, f1 = f0, dur = 0.12, vol = 0.18, delay = 0, attack = 0.005 }) {
+  const t = a.currentTime + delay;
+  const o = a.createOscillator(); const g = a.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function noise(a, { dur = 0.15, vol = 0.25, f0 = 2000, f1 = f0, q = 1, delay = 0, type = 'bandpass', attack = 0.004 }) {
+  const t = a.currentTime + delay;
+  const buf = a.createBuffer(1, Math.ceil(a.sampleRate * dur), a.sampleRate);
+  const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const s = a.createBufferSource(); s.buffer = buf;
+  const f = a.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur);
+  const g = a.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f).connect(g).connect(a.destination); s.start(t); s.stop(t + dur + 0.02);
+}
+const notes = (a, list, type = 'square', len = 0.09, vol = 0.12) => list.forEach((f, i) => tone(a, { type, f0: f, dur: len, vol, delay: i * len * 0.9 }));
+const PRESETS = {
+  tap: (a) => noise(a, { dur: 0.04, f0: 2500, q: 4, vol: 0.3 }),
+  pick: (a) => notes(a, [660, 990], 'square', 0.08),
+  unpick: (a) => notes(a, [660, 440], 'square', 0.08),
+  whoosh: (a) => noise(a, { dur: 0.25, f0: 600, f1: 2400, q: 1.5, vol: 0.25, attack: 0.08 }),
+  swoosh: (a) => noise(a, { dur: 0.35, f0: 300, f1: 3000, q: 2, vol: 0.25, attack: 0.15 }),
+  tick: (a) => tone(a, { type: 'square', f0: 1800, dur: 0.02, vol: 0.08 }),
+  horn: (a) => { tone(a, { type: 'sawtooth', f0: 147, dur: 0.6, vol: 0.12, attack: 0.08 }); tone(a, { type: 'sawtooth', f0: 220, dur: 0.6, vol: 0.08, attack: 0.08 }); noise(a, { dur: 0.2, f0: 120, type: 'lowpass', vol: 0.5 }); },
+  rarity: (a) => { notes(a, [523], 'triangle', 0.1); setTimeout(() => notes(a, [659, 784], 'triangle', 0.1), 250); setTimeout(() => notes(a, [880, 1175, 1318], 'square', 0.07), 550); setTimeout(() => notes(a, [1046, 1318, 1568, 2093], 'triangle', 0.09, 0.1), 900); },
+  coin: (a) => { tone(a, { type: 'square', f0: 988, dur: 0.06, vol: 0.12 }); tone(a, { type: 'square', f0: 1319, dur: 0.18, vol: 0.12, delay: 0.06 }); },
+  glug: (a) => { for (let i = 0; i < 3; i++) tone(a, { type: 'sine', f0: 300, f1: 160, dur: 0.08, vol: 0.25, delay: i * 0.1 }); notes(a, [1318, 1568, 2093], 'triangle', 0.06, 0.06); },
+  fanfare: (a) => notes(a, [523, 659, 784, 1046, 784, 1046], 'square', 0.11),
+  stepMetal: (a) => { noise(a, { dur: 0.05, f0: 3500, q: 6, vol: 0.2 }); noise(a, { dur: 0.06, f0: 200, type: 'lowpass', vol: 0.3 }); },
+  step: (a) => noise(a, { dur: 0.06, f0: 250, type: 'lowpass', vol: 0.45 }),
+  swish: (a) => noise(a, { dur: 0.12, f0: 1800, q: 0.8, vol: 0.12, attack: 0.04 }),
+  creak: (a) => { tone(a, { type: 'sawtooth', f0: 110, f1: 180, dur: 0.5, vol: 0.06, attack: 0.1 }); noise(a, { dur: 0.06, f0: 1500, q: 5, vol: 0.2, delay: 0.5 }); },
+  rumble: (a) => noise(a, { dur: 0.7, f0: 90, type: 'lowpass', vol: 0.6, attack: 0.15 }),
+  crackle: (a) => { for (let i = 0; i < 6; i++) noise(a, { dur: 0.02, f0: 3000, q: 3, vol: 0.15, delay: Math.random() * 0.5 }); },
+  swing: (a) => noise(a, { dur: 0.14, f0: 900, f1: 3000, q: 2, vol: 0.3, attack: 0.03 }),
+  swingHeavy: (a) => noise(a, { dur: 0.22, f0: 300, f1: 1200, q: 2, vol: 0.4, attack: 0.05 }),
+  stab: (a) => noise(a, { dur: 0.07, f0: 2500, f1: 4500, q: 3, vol: 0.3 }),
+  katana: (a) => { noise(a, { dur: 0.12, f0: 2000, f1: 5000, q: 3, vol: 0.3 }); tone(a, { type: 'sine', f0: 2600, dur: 0.35, vol: 0.06, delay: 0.05 }); },
+  bow: (a) => { tone(a, { type: 'triangle', f0: 220, f1: 110, dur: 0.1, vol: 0.3 }); noise(a, { dur: 0.2, f0: 4000, f1: 1500, q: 4, vol: 0.12, delay: 0.05 }); },
+  zap: (a) => { for (let i = 0; i < 4; i++) tone(a, { type: 'sawtooth', f0: 1400 - i * 200, f1: 300, dur: 0.05, vol: 0.08, delay: i * 0.035 }); },
+  pluck: (a) => tone(a, { type: 'triangle', f0: 392, dur: 0.35, vol: 0.25 }),
+  squelch: (a) => { tone(a, { type: 'sine', f0: 220, f1: 90, dur: 0.12, vol: 0.3 }); noise(a, { dur: 0.08, f0: 700, q: 2, vol: 0.2 }); },
+  hit: (a) => { noise(a, { dur: 0.08, f0: 400, type: 'lowpass', vol: 0.6 }); tone(a, { type: 'sine', f0: 150, f1: 60, dur: 0.1, vol: 0.3 }); },
+  clang: (a) => { tone(a, { type: 'square', f0: 1200, f1: 1100, dur: 0.18, vol: 0.08 }); tone(a, { type: 'square', f0: 1710, dur: 0.15, vol: 0.05 }); noise(a, { dur: 0.04, f0: 4000, q: 2, vol: 0.2 }); },
+  fire: (a) => noise(a, { dur: 0.35, f0: 300, f1: 1200, q: 0.8, vol: 0.45, attack: 0.04 }),
+  ice: (a) => { noise(a, { dur: 0.05, f0: 5000, q: 3, vol: 0.3 }); tone(a, { type: 'triangle', f0: 2093, f1: 1568, dur: 0.2, vol: 0.08, delay: 0.03 }); },
+  dark: (a) => { noise(a, { dur: 0.35, f0: 2000, f1: 200, q: 1.5, vol: 0.3, attack: 0.25 }); tone(a, { type: 'sine', f0: 80, dur: 0.3, vol: 0.2, delay: 0.2 }); },
+  holy: (a) => { tone(a, { type: 'sine', f0: 1318, dur: 0.6, vol: 0.12 }); tone(a, { type: 'sine', f0: 1975, dur: 0.6, vol: 0.06 }); },
+  crit: (a) => { PRESETS.hit(a); noise(a, { dur: 0.06, f0: 5000, q: 2, vol: 0.3, delay: 0.02 }); tone(a, { type: 'square', f0: 1568, dur: 0.08, vol: 0.06, delay: 0.03 }); },
+  miss: (a) => noise(a, { dur: 0.2, f0: 1200, f1: 400, q: 1, vol: 0.2, attack: 0.05 }),
+  ting: (a) => { tone(a, { type: 'triangle', f0: 2637, dur: 0.25, vol: 0.12 }); noise(a, { dur: 0.03, f0: 5000, q: 2, vol: 0.2 }); },
+  soak: (a) => tone(a, { type: 'sine', f0: 600, f1: 400, dur: 0.12, vol: 0.2 }),
+  shatter: (a) => { for (let i = 0; i < 7; i++) tone(a, { type: 'triangle', f0: 1800 + Math.random() * 2400, dur: 0.08, vol: 0.06, delay: i * 0.03 }); noise(a, { dur: 0.2, f0: 5000, q: 1, vol: 0.2 }); },
+  heal: (a) => notes(a, [784, 988, 1175, 1568], 'triangle', 0.07, 0.09),
+  bonk: (a) => { tone(a, { type: 'square', f0: 330, f1: 220, dur: 0.08, vol: 0.15 }); notes(a, [2093, 2637, 2093, 2637], 'sine', 0.06, 0.05); },
+  chill: (a) => noise(a, { dur: 0.3, f0: 6000, f1: 3000, q: 4, vol: 0.08, attack: 0.1 }),
+  wail: (a) => tone(a, { type: 'sine', f0: 700, f1: 420, dur: 0.6, vol: 0.12, attack: 0.1 }),
+  shout: (a) => { tone(a, { type: 'sawtooth', f0: 180, f1: 140, dur: 0.25, vol: 0.12, attack: 0.02 }); noise(a, { dur: 0.2, f0: 900, q: 1.5, vol: 0.12 }); },
+  thud: (a) => noise(a, { dur: 0.1, f0: 180, type: 'lowpass', vol: 0.4 }),
+  bubble: (a) => { for (let i = 0; i < 3; i++) tone(a, { type: 'sine', f0: 400 + i * 150, f1: 800 + i * 200, dur: 0.06, vol: 0.12, delay: i * 0.08 }); },
+  buff: (a) => notes(a, [523, 659, 880], 'square', 0.07, 0.08),
+  debuff: (a) => notes(a, [440, 349, 262], 'square', 0.08, 0.08),
+  charge: (a) => tone(a, { type: 'sawtooth', f0: 150, f1: 900, dur: 0.7, vol: 0.06, attack: 0.3 }),
+  fizzle: (a) => { noise(a, { dur: 0.25, f0: 3000, f1: 300, q: 1, vol: 0.15 }); tone(a, { type: 'square', f0: 300, f1: 80, dur: 0.2, vol: 0.06 }); },
+  ping: (a) => tone(a, { type: 'sine', f0: 1760, dur: 0.15, vol: 0.12 }),
+  slam: (a) => { noise(a, { dur: 0.45, f0: 140, type: 'lowpass', vol: 0.8 }); tone(a, { type: 'sine', f0: 120, f1: 40, dur: 0.4, vol: 0.35 }); },
+  burst: (a) => { noise(a, { dur: 0.15, f0: 1500, q: 1, vol: 0.4 }); notes(a, [1046, 1568], 'square', 0.06, 0.08); },
+  pop: (a) => tone(a, { type: 'sine', f0: 500, f1: 1400, dur: 0.07, vol: 0.25 }),
+  boom: (a) => { noise(a, { dur: 0.2, f0: 3000, f1: 1000, q: 3, vol: 0.06 }); noise(a, { dur: 0.6, f0: 200, type: 'lowpass', vol: 0.9, delay: 0.2 }); },
+  chain: (a) => { for (let k = 0; k < 3; k++) for (let i = 0; i < 3; i++) tone(a, { type: 'sawtooth', f0: 1500 - i * 300, f1: 300, dur: 0.04, vol: 0.07, delay: k * 0.13 + i * 0.03 }); },
+  wind: (a) => noise(a, { dur: 0.9, f0: 400, f1: 1600, q: 3, vol: 0.2, attack: 0.3 }),
+  summon: (a) => { noise(a, { dur: 0.4, f0: 100, type: 'lowpass', vol: 0.5, attack: 0.1 }); tone(a, { type: 'sine', f0: 300, f1: 900, dur: 0.12, vol: 0.2, delay: 0.35 }); },
+  puff: (a) => noise(a, { dur: 0.18, f0: 800, f1: 300, q: 0.7, vol: 0.3 }),
+  squeak: (a) => tone(a, { type: 'square', f0: 900, f1: 1300, dur: 0.07, vol: 0.08 }),
+  gas: (a) => noise(a, { dur: 0.5, f0: 900, f1: 500, q: 0.6, vol: 0.3, attack: 0.05 }),
+  roar: (a) => { tone(a, { type: 'sawtooth', f0: 90, f1: 60, dur: 0.9, vol: 0.15, attack: 0.1 }); noise(a, { dur: 0.9, f0: 400, f1: 200, q: 0.8, vol: 0.35, attack: 0.1 }); },
+  drum: (a) => { tone(a, { type: 'sine', f0: 110, f1: 45, dur: 0.35, vol: 0.6 }); noise(a, { dur: 0.05, f0: 1200, q: 1, vol: 0.2 }); },
+  levelup: (a) => notes(a, [523, 659, 784, 1046, 1318], 'square', 0.07, 0.1),
+  fall: (a) => { tone(a, { type: 'triangle', f0: 220, f1: 110, dur: 0.6, vol: 0.2 }); noise(a, { dur: 0.15, f0: 150, type: 'lowpass', vol: 0.4 }); },
+  swell: (a) => { tone(a, { type: 'sawtooth', f0: 147, dur: 1, vol: 0.05, attack: 0.5 }); tone(a, { type: 'sawtooth', f0: 175, dur: 1, vol: 0.04, attack: 0.5 }); },
+  win: (a) => notes(a, [784, 784, 784, 1046, 988, 1046], 'square', 0.1, 0.1),
+  lose: (a) => notes(a, [392, 370, 349, 262], 'triangle', 0.22, 0.15),
+};
+const soundList = document.getElementById('soundList');
+let total = 0;
+const pri = { 1: '<span class="pri p1">MUST</span>', 2: '<span class="pri p2">NICE</span>', 3: '<span class="pri p3">LATER</span>' };
+for (const [group, rows] of SOUNDS) {
+  total += rows.length;
+  const box = document.createElement('div');
+  box.className = 'sgroup';
+  box.innerHTML = `<h3>${group}<small>${rows.length} sounds</small></h3>` + rows.map(([name, when, feel, p, preset], i) => `
+    <div class="srow">
+      <button class="play" type="button" ${preset ? `data-p="${preset}" aria-label="Play a sketch of ${name}"` : 'disabled aria-label="Music: no sketch"'}>▶</button>
+      <b>${name}</b><span class="when">${when}</span><span class="feel">${feel}</span>${pri[p]}
+    </div>`).join('');
+  soundList.appendChild(box);
+}
+document.getElementById('soundCount').textContent = `${total} sounds and music tracks in total.`;
+soundList.addEventListener('click', (e) => {
+  const b = e.target.closest('.play[data-p]');
+  if (!b) return;
+  const a = ctx();
+  if (a.state === 'suspended') a.resume();
+  PRESETS[b.dataset.p](a);
+});
+</script>

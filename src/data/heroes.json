@@ -2,6 +2,9 @@
   {
     "id": "knight",
     "name": "Knight",
+    "role": "Tank",
+    "summary": "Stands in front and soaks the hits.",
+    "tips": ["Ground Pound resets every enemy's attack: use it right before they swing.", "Rally Cry removes a debuff from every hero: save it for poison or curse.", "Give him defense and health items so the others stay safe."],
     "damageType": "melee",
     "height": 24,
     "stats": {
@@ -189,6 +192,9 @@
   {
     "id": "berserker",
     "name": "Berserker",
+    "role": "Bruiser",
+    "summary": "Hits harder the more hurt he is.",
+    "tips": ["Bloodrage: the lower his health, the faster he attacks.", "Savage Leap does double damage to a bleeding or half-dead enemy.", "War Cry boosts the whole squad's attack: tap it before a big fight."],
     "damageType": "melee",
     "height": 23,
     "stats": {
@@ -345,6 +351,9 @@
   {
     "id": "rogue",
     "name": "Rogue",
+    "role": "Assassin",
+    "summary": "Punishes enemies that already have a debuff.",
+    "tips": ["Opportunist: +15% damage and +10 crit on debuffed enemies.", "Fan of Knives hits every enemy and each crit makes them bleed.", "Smoke Bomb blinds every enemy: great when the squad is in trouble."],
     "damageType": "melee",
     "height": 23,
     "stats": {
@@ -501,6 +510,9 @@
   {
     "id": "archer",
     "name": "Archer",
+    "role": "Marksman",
+    "summary": "Shoots from the back line, gets deadly when left alone.",
+    "tips": ["Steady Aim: 3 seconds without being hit = faster, crit-heavy shots.", "Hunter's Mark makes the target take 25% more from everyone.", "Rain of Arrows breaks armor on every enemy."],
     "damageType": "ranged",
     "height": 23,
     "stats": {
@@ -665,6 +677,9 @@
   {
     "id": "samurai",
     "name": "Samurai",
+    "role": "Duelist",
+    "summary": "Slow, heavy cuts that open bleeding wounds.",
+    "tips": ["Every hit has a 35% chance to bleed.", "Focus Stance blocks every hit for 4s and makes his next attack a crit.", "Wind Cutter breaks the armor of the whole enemy line."],
     "damageType": "melee",
     "height": 23,
     "stats": {
@@ -840,6 +855,9 @@
   {
     "id": "mage",
     "name": "Mage",
+    "role": "Elementalist",
+    "summary": "Cycles fire, ice and lightning.",
+    "tips": ["His skill changes every cast: Fireball, then Frost Nova, then Chain Lightning.", "Every 4th attack is a free elemental hit that fires all his item procs.", "Arcane Ward shields the whole squad."],
     "damageType": "fire",
     "height": 24,
     "stats": {
@@ -1058,6 +1076,9 @@
   {
     "id": "cleric",
     "name": "Cleric",
+    "role": "Healer",
+    "summary": "Keeps the squad standing.",
+    "tips": ["Every hero regenerates health while she lives.", "Every 4th attack heals the most hurt ally instead.", "Divine Shield makes the weakest ally immune for 2s."],
     "damageType": "holy",
     "height": 24,
     "stats": {
@@ -1230,6 +1251,9 @@
   {
     "id": "necromancer",
     "name": "Necromancer",
+    "role": "Summoner",
+    "summary": "Raises skeletons that fight beside the squad.",
+    "tips": ["Skeletons rise during every fight, no upkeep.", "A Death Coil kill raises an extra skeleton.", "Bone Ward shields heroes AND skeletons; broken shields hit back."],
     "damageType": "dark",
     "height": 23,
     "stats": {
@@ -1393,6 +1417,9 @@
   {
     "id": "bard",
     "name": "Bard",
+    "role": "Support",
+    "summary": "Every 4th squad attack gets a bonus hit.",
+    "tips": ["Rhythm counts the attacks of the WHOLE squad: fast heroes power him up.", "Crescendo builds up to a big final hit on every enemy.", "Ballad of Rest heals the squad quickly over 4 seconds."],
     "damageType": "ranged",
     "height": 23,
     "stats": {
@@ -1560,6 +1587,9 @@
   {
     "id": "alchemist",
     "name": "Alchemist",
+    "role": "Debuffer",
+    "summary": "Makes every debuff last longer and hurt more.",
+    "tips": ["Catalyst: enemy debuffs last 30% longer and damage over time hits 30% harder.", "Flask Barrage throws 3 random flasks (fire, ice or poison).", "Mystery Brew gives two random heroes a heal, speed or a shield."],
     "damageType": "ranged",
     "height": 23,
     "stats": {

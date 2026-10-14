@@ -1,0 +1,123 @@
+<title>Soldia Minion Sprites</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: same dungeon-dark sheet as the other Soldia proposals; a line-up on the floor, then one card per minion (old block vs new sprite, beside a hero for scale). */
+:root {
+  --bg: #120e1c; --panel: #1c1629; --line: #2e2542; --fg: #e9e2f5; --muted: #a297b8;
+  --accent: #f2b544; --floor: #221b33; --wall: #1b1629;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px; display: flex; flex-direction: column; gap: 22px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 5vw, 40px); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 20px; margin: 0; letter-spacing: .04em; }
+.lede { color: var(--muted); max-width: 70ch; margin: 6px 0 0; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.rule { border-left: 3px solid var(--accent); padding: 4px 12px; color: var(--muted); font-size: 14px; }
+.rule b { color: var(--fg); display: block; }
+.stage { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.stage canvas { width: 100%; max-width: 100%; height: auto; image-rendering: pixelated; border-radius: 3px; display: block; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.card canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 3px; display: block; }
+.card h3 { font-family: var(--display); font-size: 14px; margin: 0; letter-spacing: .03em; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.tag { font-family: var(--body); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 0 6px; }
+.tag.greater { color: var(--accent); border-color: var(--accent); }
+.card p { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.45; }
+.card .from { font-size: 12px; color: var(--muted); }
+.card .from b { color: var(--fg); font-weight: 600; }
+.big { display: flex; gap: 10px; align-items: flex-end; }
+.big canvas { width: auto; max-width: 100%; }
+.caps { display: flex; justify-content: space-around; font-family: var(--display); font-size: 11px; color: var(--muted); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+
+<div class="wrap">
+  <div>
+    <h1>Soldia minion sprites</h1>
+    <p class="lede">The 8 minions are still coloured blocks. Here is a simple pixel sprite for each one, in the same style as the heroes and enemies: 3 to 5 colours, no tiny details. Each card shows the old block and the new sprite at game size, next to the hero that brings it, plus a big view of the new one.</p>
+  </div>
+  <div class="rules">
+    <div class="rule"><b>Smaller than heroes</b>Weak minions (Skeleton, Rat, Wisp, Imp, Mimic) are clearly smaller than a hero so you can tell them apart in a crowd. Greater minions (Gargoyle, Spirit Knight, Phoenix) are close to hero size.</div>
+    <div class="rule"><b>Built from parts</b>Like the heroes, each sprite is split into parts that can move: the Skeleton's and Imp's weapons swing, the Mimic's lid chomps, the Phoenix's wing flaps.</div>
+    <div class="rule"><b>Easy to edit</b>Once you like them they go into the game and show up in the Character Studio, where you can redraw any pixel.</div>
+  </div>
+  <section class="stage" aria-label="Line-up">
+    <h2>Line-up at game size</h2>
+    <canvas id="lineup" role="img" aria-label="Every new minion standing on the floor next to the Knight and the Necromancer"></canvas>
+  </section>
+  <div class="grid" id="cards"></div>
+</div>
+
+<script>
+const DATA = {"minions":[{"id":"skeleton","name":"Skeleton","kind":"weak","damageType":"melee","flying":false,"hover":0,"from":"Necromancer","idea":"Small bone-white skeleton with green glowing eyes and a short rusty sword (raised by the Necromancer).","colours":4,"old":{"height":22,"parts":{"body":{"w":9,"h":12,"x":0,"y":-6,"color":"0xd8d4c4","idle":{"dy":-1,"duration":500}},"head":{"w":9,"h":8,"x":0,"y":-16,"color":"0xefece0","idle":{"dy":-1.5,"duration":500,"delay":100}},"weapon":{"w":3,"h":12,"x":8,"y":-6,"color":"0x8c8a7c","pivotY":1,"idle":{"angle":8,"duration":600}}}},"now":{"height":15,"parts":{"body":{"x":0,"y":-7,"w":8,"h":14,"art":{"palette":["0xebe5cf","0xb8b29c","0x6dff8a","0x1a1020"],"rows":["..0000..",".000000.",".020020.",".000000.","..0330..","...00...",".000000.","0.0101.0","0..00..0","..0100..","..0..0..","..0..0..","..1..1..",".00..00."]},"anchor":[4.5,13.5],"idle":{"dy":-1,"duration":520}},"weapon":{"x":3.5,"y":-9.5,"w":3,"h":7,"art":{"palette":["0xb8b29c","0x1a1020"],"rows":[".0.",".0.",".0.",".0.",".0.","111",".1."]},"anchor":[1.5,5.5],"idle":{"angle":8,"duration":650}}}}},{"id":"rat","name":"Rat","kind":"weak","damageType":"melee","flying":false,"hover":0,"from":"Rat Cage","idea":"A small grey-brown rat with pink ears and tail, smaller than the Cave Rat enemy.","colours":4,"old":{"height":12,"parts":{"body":{"w":12,"h":6,"x":0,"y":-3,"color":"0x8a7a6a","idle":{"dy":-1,"duration":300}},"head":{"w":6,"h":5,"x":6,"y":-6,"color":"0xa89a88","idle":{"dy":-1,"duration":300}},"weapon":{"w":5,"h":2,"x":-8,"y":-3,"color":"0xd8b0b0","pivotY":0.5}}},"now":{"height":6,"parts":{"body":{"x":0,"y":-3,"w":12,"h":6,"art":{"palette":["0x8a7a6a","0xc4b6a4","0xd99090","0x1a1020"],"rows":[".........22.","....0000020.","..0000000030","2.0000000000",".2011111100.","...0....0..."]},"anchor":[6.5,5.5],"idle":{"dy":-0.5,"duration":260}}}}},{"id":"wisp","name":"Wisp","kind":"weak","damageType":"electric","flying":true,"hover":30,"from":"Wisp Lantern","idea":"A crackling ball of pale blue light with yellow sparks around it (flies).","colours":3,"old":{"height":10,"parts":{"body":{"w":9,"h":9,"x":0,"y":-5,"color":"0x9fe8ff","idle":{"dy":-3,"duration":420}},"head":{"w":5,"h":5,"x":0,"y":-5,"color":"0xffffff","idle":{"dy":-3,"duration":420}},"weapon":{"w":2,"h":2,"x":6,"y":-5,"color":"0xffffff"}}},"now":{"height":8,"parts":{"body":{"x":0,"y":-4,"w":8,"h":8,"art":{"palette":["0x9fe8ff","0xffffff","0xffe94d"],"rows":["...2....","..000.2.",".00110..","20111102",".011110.","..0110..",".2.00...",".....2.."]},"anchor":[4.5,4.5],"idle":{"dy":-1.5,"duration":420}}}}},{"id":"imp","name":"Imp","kind":"weak","damageType":"fire","flying":false,"hover":0,"from":"Fire Imp Brazier","idea":"A little red devil with dark horns, yellow eyes, a pointy tail and a fire pitchfork.","colours":4,"old":{"height":16,"parts":{"body":{"w":9,"h":10,"x":0,"y":-5,"color":"0xd9482e","idle":{"dy":-1,"duration":450}},"head":{"w":8,"h":7,"x":0,"y":-13,"color":"0xff7a3d","idle":{"dy":-1.5,"duration":450,"delay":100}},"weapon":{"w":3,"h":9,"x":7,"y":-5,"color":"0xffb84d","pivotY":1,"idle":{"angle":8,"duration":600}}}},"now":{"height":12,"parts":{"body":{"x":0,"y":-6,"w":8,"h":12,"art":{"palette":["0xd9482e","0x8a2a1a","0xffd24d","0x3a2a2a"],"rows":[".3....3.",".300003.",".000000.",".020020.",".001100.","..0000..",".000000.","0.0000.0","..0000..","..0..0.1","..0..0.1",".11..111"]},"anchor":[4.5,11.5],"idle":{"dy":-1,"duration":380}},"weapon":{"x":5.5,"y":-8.5,"w":5,"h":9,"art":{"palette":["0xffd24d","0x8a2a1a"],"rows":["0.0.0","00000","..1..","..1..","..1..","..1..","..1..","..1..","..1.."]},"anchor":[2.5,7.5],"idle":{"angle":6,"duration":600}}}}},{"id":"mimic","name":"Mimic","kind":"weak","damageType":"melee","flying":false,"hover":0,"from":"Mimic Chest","idea":"A treasure chest with a gold lock, a row of white teeth and a red tongue. The lid is its own part so it can chomp.","colours":5,"old":{"height":14,"parts":{"body":{"w":16,"h":10,"x":0,"y":-5,"color":"0x8a5a2b","idle":{"dy":-1,"duration":380}},"head":{"w":16,"h":5,"x":0,"y":-12,"color":"0xb07a3b","idle":{"dy":-2,"duration":380}},"weapon":{"w":4,"h":4,"x":6,"y":-9,"color":"0xf2d66b"}}},"now":{"height":10,"parts":{"body":{"x":0.5,"y":-2.5,"w":13,"h":5,"art":{"palette":["0x5e3a1a","0x8a5a2b","0xc0303a","0xffffff","0xf2c544"],"rows":["3232323232323","0111111111110","0111114111110","0111111111110",".00.......00."]},"anchor":[6.5,4.5],"idle":{"dy":-0.5,"duration":300}},"head":{"x":0.5,"y":-7.5,"w":13,"h":5,"art":{"palette":["0x5e3a1a","0x8a5a2b","0xf2c544","0xffffff"],"rows":[".00000000000.","0111111111110","0111112111110","0111111111110","3030303030303"]},"anchor":[1.5,4.5],"idle":{"angle":-6,"duration":300}}}}},{"id":"gargoyle","name":"Gargoyle","kind":"greater","damageType":"melee","flying":false,"hover":0,"from":"Gargoyle Idol","idea":"A crouching stone gargoyle with folded bat wings, small horns and glowing red eyes. Bigger, it is a greater minion.","colours":5,"old":{"height":26,"parts":{"body":{"w":14,"h":14,"x":0,"y":-7,"color":"0x8a8f9c","idle":{"dy":-1,"duration":700}},"head":{"w":12,"h":9,"x":0,"y":-19,"color":"0xa4a9b6","idle":{"dy":-1.5,"duration":700,"delay":120}},"weapon":{"w":5,"h":13,"x":9,"y":-5,"color":"0x5c606c","pivotY":1,"idle":{"angle":8,"duration":800}}}},"now":{"height":18,"parts":{"body":{"x":0,"y":-9,"w":16,"h":18,"art":{"palette":["0x8a8f9c","0x5c606c","0x6e7280","0x4a4e5a","0xff4a4a"],"rows":["...3........3...","...33......33...","....00000000....","2...04000040...2","22..00000000..22","222..011110..222","2222000000000222","2220000000000222",".22001000010022.","..200100001002..","...0000000000...","...0000000000...","...000.00.000...","..0000....0000..","..0000....0000..","..0100....0010..",".00000....00000.",".0.0.0....0.0.0."]},"anchor":[8.5,17.5],"idle":{"dy":-1,"duration":700}}}}},{"id":"spirit_knight","name":"Spirit Knight","kind":"greater","damageType":"melee","flying":false,"hover":0,"from":"Spirit Knight Banner","idea":"A pale blue ghost of a knight: helmet with a glowing visor, no legs (a wispy tail), a light sword. A bit see-through.","colours":4,"old":{"height":26,"parts":{"body":{"w":12,"h":14,"x":0,"y":-7,"color":"0x7fc8ff","idle":{"dy":-1,"duration":450}},"head":{"w":10,"h":9,"x":0,"y":-18,"color":"0xcfeaff","idle":{"dy":-1.5,"duration":450,"delay":100}},"weapon":{"w":3,"h":9,"x":7,"y":-5,"color":"0xe8f4ff","pivotY":1,"idle":{"angle":8,"duration":600}}}},"now":{"height":21,"alpha":0.8,"parts":{"body":{"x":0,"y":-6.5,"w":10,"h":13,"art":{"palette":["0xcfeaff","0x7fc8ff","0xffffff"],"rows":[".00111100.","0011111100","0011221100","0011221100",".01111110.","..111111..","..111111..","...1111...","...1111...","....11....","...1..1...","..1....1..",".........."]},"anchor":[5.5,12.5],"idle":{"dy":-1.5,"duration":600}},"head":{"x":0,"y":-17,"w":10,"h":8,"art":{"palette":["0xcfeaff","0x7fc8ff","0xffffff"],"rows":["..000000..",".00000000.","0000000000","0122222210","0000000000","0000000000",".01000010.","..000000.."]},"anchor":[5.5,7.5],"idle":{"dy":-1.5,"duration":600,"delay":120}},"weapon":{"x":5.5,"y":-12.5,"w":5,"h":11,"art":{"palette":["0xe8f4ff","0x7fc8ff"],"rows":["..0..",".000.",".000.",".000.",".000.",".000.",".000.",".000.","11111","..1..","..1.."]},"anchor":[2.5,10.5],"idle":{"angle":8,"duration":700}}}}},{"id":"phoenix","name":"Phoenix","kind":"greater","damageType":"fire","flying":true,"hover":34,"from":"Phoenix Hatchling","idea":"A small fire bird with a golden head, orange body, a long red tail and a wing that flaps (flies).","colours":5,"old":{"height":16,"parts":{"body":{"w":12,"h":9,"x":0,"y":-5,"color":"0xff7a3d","idle":{"dy":-2,"duration":350}},"head":{"w":6,"h":6,"x":6,"y":-9,"color":"0xffd24d","idle":{"dy":-2,"duration":350}},"wingL":{"w":9,"h":4,"x":-8,"y":-8,"color":"0xffb84d","idle":{"dy":-3,"duration":200}},"weapon":{"w":3,"h":3,"x":9,"y":-6,"color":"0xffffff"}}},"now":{"height":10,"parts":{"body":{"x":0,"y":-4,"w":16,"h":8,"art":{"palette":["0xffd24d","0xff7a3d","0xd9482e","0xfff2a0","0x1a1020"],"rows":["...........00...","..........0004..",".........000003.","....111111000...","..1111111111....","222111111111....","..222.1111......","222...1..1......"]},"anchor":[8.5,4.5],"idle":{"dy":-2,"duration":350}},"wingL":{"x":-2,"y":-8.5,"w":8,"h":5,"art":{"palette":["0xffd24d","0xff7a3d","0xfff2a0"],"rows":["1.......","11....2.",".1100.22","..100000","...0000."]},"anchor":[7.5,4.5],"idle":{"dy":-3,"duration":200}}}}}],"knight":{"name":"Knight","height":24,"parts":{"body":{"x":0,"y":-8,"w":10,"h":16,"art":{"palette":["0xb7bcc8","0x3b6fd4","0xf2c544","0xf2c9a0","0x2a4fa0","0x4a3a3a"],"rows":[".00111100.","0011111100","0011221100","0011221100","0011111100","0011221100","0011111100","3011111103",".44444444.",".11111111.",".00....00.",".00....00.",".00....00.",".00....00.",".00....00.",".55....55."]},"anchor":[5,8],"idle":{"dy":-1,"duration":500}},"head":{"x":0,"y":-20,"w":10,"h":8,"art":{"palette":["0xb7bcc8","0x7d8494","0x1a1020"],"rows":["..000000..",".00000000.","0000000000","0122222210","0000000000","0000000000",".01000010.","..000000.."]},"anchor":[5,8],"idle":{"dy":-1.5,"duration":500,"delay":120}},"weapon":{"x":5.5,"y":-13.5,"w":5,"h":11,"art":{"palette":["0xe4e8f0","0xf2c544","0x6b4a2a"],"rows":["..0..",".000.",".000.",".000.",".000.",".000.",".000.",".000.","11111","..2..","..2.."]},"anchor":[2.5,10.5],"idle":{"angle":8,"duration":700}}}},"necro":{"name":"Necromancer","height":23,"parts":{"body":{"x":0,"y":-7.5,"w":10,"h":15,"art":{"palette":["0x2a2236","0x3f8a4a","0xe8e2cf","0x1a1424"],"rows":["..000000..",".00000000.",".00111000.","0000100000","2000100002","0000100000","2000100002",".00010000.",".00000000.","0000000000","0303003030","0303003030","0303003030","0303003030","3.3.33.3.3"]},"anchor":[5,7.5],"idle":{"dy":-1,"duration":480}},"head":{"x":0,"y":-19,"w":10,"h":8,"art":{"palette":["0x2a2236","0x1a1424","0xe8e2cf","0x6dff8a"],"rows":["...0000...","..000000..",".00000000.",".01222210.",".01232230.",".01222220.",".01212120.","..000000.."]},"anchor":[5,8],"idle":{"dy":-1.5,"duration":480,"delay":110}},"weapon":{"x":5.5,"y":-11,"w":3,"h":14,"art":{"palette":["0xe8e2cf","0x6dff8a","0x4a3a3a"],"rows":["000","010","000",".0.",".2.",".2.",".2.",".2.",".2.",".2.",".2.",".2.",".2.",".2."]},"anchor":[1.5,9.5],"idle":{"angle":5,"duration":700}}}}};
+const OUT = '#1a1020';
+const DIG = '0123456789abcdefghijklmnopqrstuvwxyz';
+// A part's picture: its art, or the old block (filled, dark outline), as rows of colours.
+function partPixels(p) {
+  if (p.art) { const pal = p.art.palette.map((c) => '#' + c.slice(2)); return p.art.rows.map((r) => [...r].map((ch) => (ch === '.' ? null : pal[DIG.indexOf(ch)]))); }
+  const w = Math.max(1, Math.round(p.w)), h = Math.max(1, Math.round(p.h)), col = '#' + p.color.slice(2);
+  return Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) => (x === 0 || y === 0 || x === w - 1 || y === h - 1 ? OUT : col)));
+}
+// Draws a character (game part format) with its feet at (fx, fy) in character pixels, z = pixel size.
+function drawChar(ctx, ch, fx, fy, z, t = 0, alpha = 1) {
+  ctx.save(); ctx.globalAlpha = alpha * (ch.alpha || 1);
+  for (const p of Object.values(ch.parts)) {
+    const px = partPixels(p); const h = px.length, w = Math.max(...px.map((r) => r.length));
+    const bob = p.idle && p.idle.dy ? Math.round(Math.sin((t / (p.idle.duration || 500)) * Math.PI + (p.idle.delay || 0) / 100) * p.idle.dy * 0.5 - p.idle.dy * 0.5) : 0;
+    const left = Math.round(fx + p.x - w / 2), top = Math.round(fy + p.y - h / 2 + bob);
+    px.forEach((row, y) => row.forEach((c, x) => { if (c) { ctx.fillStyle = c; ctx.fillRect((left + x) * z, (top + y) * z, z, z); } }));
+  }
+  ctx.restore();
+}
+function floor(ctx, W, H, fy, z) {
+  ctx.fillStyle = '#1b1629'; ctx.fillRect(0, 0, W * z, H * z);
+  ctx.fillStyle = '#221b33'; ctx.fillRect(0, (fy - 4) * z, W * z, (H - fy + 4) * z);
+  ctx.fillStyle = '#2e2542'; for (let x = 0; x < W; x += 20) ctx.fillRect(x * z, (fy - 4) * z, z, (H - fy + 4) * z); ctx.fillRect(0, (fy - 4) * z, W * z, z);
+}
+function shadow(ctx, x, y, w, z) { ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(Math.round(x - w / 2) * z, y * z, w * z, z); }
+
+const Z = 3; // game size: 1 character pixel = 3 screen pixels
+const scenes = [];
+// Line-up
+{
+  const W = 196, H = 46, FY = 40;
+  const cv = document.getElementById('lineup'); cv.width = W * Z; cv.height = H * Z;
+  const ctx = cv.getContext('2d'); ctx.imageSmoothingEnabled = false;
+  const row = [['knight', DATA.knight, 0], ...DATA.minions.map((m) => [m.id, m.now, m.flying ? Math.round(m.hover / 3 / 2) : 0]), ['necro', DATA.necro, 0]];
+  const widths = row.map(([, ch]) => Math.max(8, ...Object.values(ch.parts).map((p) => Math.abs(p.x) * 2 + (p.art ? p.art.rows[0].length : p.w))));
+  const total = widths.reduce((s, w) => s + w + 4, -4); let x = (W - total) / 2;
+  const spots = row.map(([id, ch, lift], i) => { const s = { ch, x: x + widths[i] / 2, lift }; x += widths[i] + 4; return s; });
+  scenes.push((t) => { floor(ctx, W, H, FY, Z); for (const s of spots) { shadow(ctx, s.x, FY, 8, Z); drawChar(ctx, s.ch, s.x, FY - s.lift, Z, t); } });
+}
+// One card per minion
+const cards = document.getElementById('cards');
+for (const m of DATA.minions) {
+  const hero = m.id === 'skeleton' ? DATA.necro : DATA.knight;
+  const card = document.createElement('article'); card.className = 'card';
+  const W = 110, H = 40, FY = 35;
+  const cv = document.createElement('canvas'); cv.width = W * Z; cv.height = H * Z; cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', `${m.name}: the old block and the new sprite next to a hero`);
+  const ctx = cv.getContext('2d'); ctx.imageSmoothingEnabled = false;
+  const lift = m.flying ? Math.round(m.hover / 3 / 2) : 0;
+  scenes.push((t) => {
+    floor(ctx, W, H, FY, Z);
+    for (const [ch, x, l] of [[hero, 18, 0], [m.old, 55, lift], [m.now, 92, lift]]) { shadow(ctx, x, FY, 8, Z); drawChar(ctx, ch, x, FY - l, Z, t); }
+  });
+  const caps = document.createElement('div'); caps.className = 'caps'; caps.innerHTML = `<span>${hero.name}</span><span>Old block</span><span>New sprite</span>`;
+  const bigZ = 7; const bw = 30, bh = Math.max(16, m.now.height + 6);
+  const big = document.createElement('canvas'); big.width = bw * bigZ; big.height = bh * bigZ; big.setAttribute('aria-hidden', 'true');
+  const bctx = big.getContext('2d'); bctx.imageSmoothingEnabled = false;
+  scenes.push((t) => { bctx.clearRect(0, 0, big.width, big.height); drawChar(bctx, m.now, bw / 2, bh - 2, bigZ, t); });
+  const bigWrap = document.createElement('div'); bigWrap.className = 'big'; bigWrap.append(big);
+  const h = document.createElement('h3'); h.innerHTML = `${m.name} <span class="tag ${m.kind === 'greater' ? 'greater' : ''}">${m.kind}</span><span class="tag">${m.damageType}${m.flying ? ', flies' : ''}</span><span class="tag">${m.colours} colours</span>`;
+  const p = document.createElement('p'); p.textContent = m.idea;
+  const from = document.createElement('div'); from.className = 'from'; from.innerHTML = `Comes from: <b></b>`; from.querySelector('b').textContent = m.from || 'an item';
+  card.append(h, cv, caps, bigWrap, p, from); cards.append(card);
+}
+const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(now) { for (const s of scenes) s(reduce ? 0 : now); if (!reduce) requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+</script>

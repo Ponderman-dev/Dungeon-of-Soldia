@@ -8,6 +8,7 @@ by the game.
 |---|---|---|
 | Sprite proposal (heroes 3 parts + 12 enemies) | https://claude.ai/artifact/2Kez8Co8SnreR9NLVgK3uw | `sprite-proposal.html` (built from `page-template.html` + `sprites-data.js`; already in the game) |
 | Item icons (72) | https://claude.ai/artifact/S7cbuLJoStsdi5hpg2SBef | `item-icons.html` (built from `icons-template.html` + `icons-data.js` + `items-meta.js`; already in the game as `src/data/itemIcons.json`) |
+| Minion sprites (8 minions, old block vs new) | https://claude.ai/artifact/2BpJkQAsqqxBjnKcEibJpL | `minion-proposal.html`, built by `node docs/proposals/build-minions.mjs` from `minion-designs.mjs` (designs + `toGame()`) and `minion-template.html` |
 | Hit effects (animated) | https://claude.ai/artifact/6N97in7zepDMZcMgbJJrYF | `hit-effects.html`, rebuilt by `node docs/proposals/build-effects.mjs` |
 
 ## Hit effects page

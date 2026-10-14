@@ -1098,7 +1098,7 @@
     "rarity": "common",
     "type": "minion",
     "scope": "self",
-    "description": "Every 12s a Rat joins the fight.",
+    "description": "A Rat joins at the start of every fight, then another every 12s.",
     "effects": [
       {
         "minionSpawner": {
@@ -1118,7 +1118,7 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "Every 15s a flying Wisp (ranged shock) joins the fight.",
+    "description": "A flying Wisp (ranged shock) joins at the start of every fight, then another every 15s.",
     "effects": [
       {
         "minionSpawner": {
@@ -1138,7 +1138,7 @@
     "rarity": "epic",
     "type": "minion",
     "scope": "self",
-    "description": "Every 10s a fire Imp (its hits Burn) joins the fight.",
+    "description": "A fire Imp (its hits Burn) joins at the start of every fight, then another every 10s.",
     "effects": [
       {
         "minionSpawner": {

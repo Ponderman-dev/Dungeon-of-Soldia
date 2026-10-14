@@ -383,6 +383,28 @@ export default class BattleScene extends Phaser.Scene {
     this.addFx(ms * 0.25, (q) => { const out = []; const r = 9 + q * 16; for (let i = 0; i < 40; i++) { const a = (i / 40) * Math.PI * 2; out.push([Math.round(c.x + Math.cos(a) * r), Math.round(c.y + Math.sin(a) * r), 1, 1, 0xffffff, 1 - q]); } return out; });
   }
 
+  // Where an AREA skill lands: a faint ring (circle), wedge (cone) or strip (band) on the floor that
+  // flashes and fades, so you can see who is inside (BattleState.areaHit).
+  showZone(z, ms) {
+    const g = this.add.graphics().setDepth(DEPTH.marker);
+    const color = Number(FX.areaColor);
+    const draw = (q) => {
+      g.clear();
+      const a = 0.5 * (1 - q);
+      g.fillStyle(color, a * 0.35).lineStyle(2, color, a);
+      if (z.shape === 'band') {
+        g.fillRect(0, z.y - z.halfHeight, GAME_WIDTH, z.halfHeight * 2).lineBetween(0, z.y - z.halfHeight, GAME_WIDTH, z.y - z.halfHeight).lineBetween(0, z.y + z.halfHeight, GAME_WIDTH, z.y + z.halfHeight);
+      } else if (z.shape === 'cone') {
+        g.slice(z.x, z.y, z.range, z.dir - z.half, z.dir + z.half, false).fillPath().strokePath();
+      } else {
+        const grow = 0.85 + 0.15 * Math.min(1, q * 4);
+        g.fillEllipse(z.x, z.y, z.radius * 2 * grow, z.radius * 2 * z.ySquash * grow).strokeEllipse(z.x, z.y, z.radius * 2 * grow, z.radius * 2 * z.ySquash * grow);
+      }
+    };
+    draw(0);
+    this.tweens.addCounter({ from: 0, to: 1, duration: ms, onUpdate: (tw) => draw(tw.getValue()), onComplete: () => g.destroy() });
+  }
+
   // Starts one of the other hit moments on a fighter: 'dodge', 'block', 'soak', 'shieldBreak', 'heal'.
   addMoment(kind, v, attacker = null) {
     if (!v || !v.ch || !v.ch.active) return;
@@ -971,6 +993,7 @@ export default class BattleScene extends Phaser.Scene {
       if (e.reason === 'interrupted') this.popText(this.views.get(e.unit.uid), 'Interrupted!', '#ff8a5c', true);
     } else if (e.type === 'cast') {
       const caster = this.views.get(e.unit.uid);
+      if (e.zone) this.showZone(e.zone, FX.areaMs);
       this.skillBurst(caster, e);
       if (e.skill.leap && e.targets[0]) this.leapAt(caster, this.views.get(e.targets[0].uid)); // Savage Leap
       caster.ch.castRelease(e.skill.kind); // the skill's own animation (not the normal swing)
@@ -992,6 +1015,7 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'itemUsed') {
       this.drawDots(this.views.get(e.unit.uid)); // a consumable was used up: one dot less
     } else if (e.type === 'wave') {
+      if (e.zone) this.showZone(e.zone, FX.areaMs * 0.7);
       // One wave of a channel (Rain of Arrows, Crescendo): a ring on the caster that grows with the wave.
       const v = this.views.get(e.unit.uid);
       if (v) {

@@ -504,7 +504,8 @@ export default class BattleState {
         const st = this.sourceState(hero, src.key);
         if (src.kind === 'weak' && !src.onHit) {
           st.timer = this.spawnDelay(src.spec);
-          for (let i = 0; i < (src.spec.atFloorStart || 0) * (src.burst || 1); i++) this.spawnMinion(hero, src, events);
+          // Weak minions are there from the START of every fight (user's choice), then more come on the timer.
+          for (let i = 0; i < (src.spec.atFloorStart ?? 1) * (src.burst || 1); i++) this.spawnMinion(hero, src, events);
         } else if (src.kind === 'greater' && st.wait <= 0 && !this.minions.some((m) => m.holderUid === hero.uid && m.sourceKey === src.key)) {
           this.spawnMinion(hero, src, events);
         }
@@ -1667,11 +1668,12 @@ export default class BattleState {
     if (!echo && this.skillDefs[slot.id].rotation) slot.rotation = ((slot.rotation || 0) + 1) % this.skillDefs[slot.id].rotation.length; // next spell next time
 
     let targets;
+    let zone = null;
     if (skill.random) targets = [];
     else if (skill.target === 'self') targets = [hero];
     else if (skill.target === 'squad') targets = this.squadUnits(); // every living hero and minion
     else if (skill.target === 'lowestAlly') targets = [this.lowestHealthPercent()];
-    else if (skill.target === 'allEnemies') targets = this.enemies.filter((e) => e.alive);
+    else if (skill.target === 'allEnemies') ({ targets, zone } = this.areaHit(hero, skill)); // an `area` skill hits only who stands in it
     else targets = [this.pickTarget(hero)];
     if (skill.chain && targets[0]) targets = this.chainOrder(targets[0]); // Chain Lightning: through ALL enemies, nearest next
     const splash = (hero.specials && hero.specials.skillSplash) || 0; // Siege Cannon: % chance to hit the neighbours too
@@ -1683,7 +1685,7 @@ export default class BattleState {
       }
     }
 
-    events.push({ type: 'cast', unit: hero, skill, targets });
+    events.push({ type: 'cast', unit: hero, skill, targets, zone });
     // `cleanse: N`: every target loses N debuffs (a whole kind each, the oldest first).
     if (skill.cleanse) for (const t of targets) this.cleanse(t, skill.cleanse, events);
     // `applyEnemies`: statuses every living enemy gets (Smoke Bomb: blind).
@@ -1692,7 +1694,7 @@ export default class BattleState {
     if (skill.channel) {
       // A channel: after the cast it keeps firing waves; the hero is busy until the last one.
       const ch = skill.channel;
-      hero.casting = { index, remaining: ch.waves.length * ch.intervalMs, total: ch.waves.length * ch.intervalMs, channel: { skill, slotId: slot.id, waves: ch.waves, intervalMs: ch.intervalMs, timer: 0, wave: 0 } };
+      hero.casting = { index, remaining: ch.waves.length * ch.intervalMs, total: ch.waves.length * ch.intervalMs, channel: { skill, slotId: slot.id, waves: ch.waves, intervalMs: ch.intervalMs, timer: 0, wave: 0, zone } };
       return;
     }
     if (skill.random) {
@@ -1778,13 +1780,58 @@ export default class BattleState {
   // One wave of a channel: every living enemy takes a hit (growing in Crescendo), `waveApply` statuses with a chance each.
   fireWave(hero, ch, events) {
     const mult = ch.waves[ch.wave];
-    const targets = this.enemies.filter((e) => e.alive);
-    events.push({ type: 'wave', unit: hero, skill: ch.skill, wave: ch.wave, waves: ch.waves.length, targets });
+    // The zone follows its main target while that one lives (enemies walk during a channel).
+    const z = ch.zone;
+    const aim = z && this.enemies.find((e) => e.uid === z.aimUid && e.alive);
+    if (aim && z.at !== 'caster') {
+      if (z.shape === 'cone') z.dir = Math.atan2(aim.y - z.y, aim.x - z.x);
+      else { z.x = aim.x; z.y = aim.y; }
+    }
+    const targets = this.enemies.filter((e) => e.alive && (!z || e === aim || this.inZone(e, z)));
+    events.push({ type: 'wave', unit: hero, skill: ch.skill, wave: ch.wave, waves: ch.waves.length, targets, zone: z });
     for (const t of targets) {
       const res = this.skillHit(hero, { ...ch.skill, apply: null, onCrit: ch.skill.onCrit }, ch.slotId, t, events, { multiplier: mult });
       if (res && !res.dodged && t.alive) for (const spec of ch.skill.waveApply || []) if (this.rng() * 100 < (spec.chance ?? 100)) this.applyStatus(t, spec, hero, ch.slotId, events);
     }
     ch.wave++;
+  }
+
+  // AREA skills (skills.json `area`): where the skill lands and which enemies stand in it.
+  //   { shape: 'circle', at: 'target' | 'caster', radius, ySquash }  an oval around the hero's target (or itself)
+  //   { shape: 'cone', range, angleDeg }                              a wedge from the caster towards its target
+  //   { shape: 'band', halfHeight }                                   a strip across the field at the target's height
+  // The target itself is always hit. Without positions (some rule tests) or without `area`: every living enemy.
+  areaHit(hero, skill) {
+    const alive = this.enemies.filter((e) => e.alive);
+    const a = skill.area;
+    if (!a || !this.hasPositions(hero) || !alive.every((e) => this.hasPositions(e))) return { targets: alive, zone: null };
+    const aim = this.pickTarget(hero) || alive[0];
+    let zone;
+    if (a.shape === 'cone') zone = { shape: 'cone', x: hero.x, y: hero.y, dir: Math.atan2(aim.y - hero.y, aim.x - hero.x), range: a.range, half: ((a.angleDeg || 60) * Math.PI) / 360 };
+    else if (a.shape === 'band') zone = { shape: 'band', x: aim.x, y: aim.y, halfHeight: a.halfHeight };
+    else {
+      const c = a.at === 'caster' ? hero : aim;
+      zone = { shape: 'circle', x: c.x, y: c.y, radius: a.radius, ySquash: a.ySquash ?? 0.7 };
+    }
+    zone.aimUid = aim.uid;
+    zone.at = a.at;
+    return { targets: alive.filter((e) => e === aim || this.inZone(e, zone)), zone };
+  }
+
+  inZone(unit, z) {
+    if (!this.hasPositions(unit)) return true;
+    const dx = unit.x - z.x;
+    const dy = unit.y - z.y;
+    if (z.shape === 'band') return Math.abs(dy) <= z.halfHeight;
+    if (z.shape === 'cone') {
+      if (Math.hypot(dx, dy) > z.range) return false;
+      let diff = Math.atan2(dy, dx) - z.dir;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      return Math.abs(diff) <= z.half;
+    }
+    const ry = z.radius * z.ySquash;
+    return (dx / z.radius) ** 2 + (dy / ry) ** 2 <= 1;
   }
 
   // Alchemist flasks: `random: { count, target: 'enemy' | 'ally', pool: [ { name, color, damageType,

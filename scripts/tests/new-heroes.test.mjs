@@ -7,6 +7,8 @@ const rules = r('combat.json'), heroDefs = r('heroes.json'), skills = r('skills.
 const noCast = Object.fromEntries(Object.entries(skills).map(([id, d]) => [id, { ...d, castMs: 0, ...(d.rotation ? { rotation: d.rotation.map((x) => ({ ...x, castMs: 0 })) } : {}) }]));
 const def = (id) => ({ ...heroDefs.find((h) => h.id === id), perk: undefined });
 // A squad of 3 (first = the hero under test) against `enemyIds`; rng can be fixed.
+// Area skills only hit enemies close together: these tests stand the enemies side by side.
+const huddle = (es) => es.forEach((e, n) => { e.x = e.homeX = 165 + n * 30; });
 const mk = (ids, enemyIds = ['goblin', 'goblin', 'goblin'], rng = Math.random, sk = noCast) => {
   const s = new BattleState({ heroDefs: ids.map(def), enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs: {}, statusDefs: r('statuses.json'), skillDefs: sk, rules: { ...rules, skillWindUp: { defaultCastMs: 0 } }, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });
   const es = s.spawnEnemies(enemyIds, 1);
@@ -33,14 +35,14 @@ const T = ['knight', 'rogue'];
   s.strike(es[0], a, [], {});
   ok('...being hit resets it at once', !a.steady && a.stats.attackEfficiency === atk0 && a.sinceHit === 0);
   run(s, 2000); ok('...and it takes another 3s', !a.steady); run(s, 1200); ok('...then it is back', a.steady); }
-{ const { s, a, es } = mk(['archer', ...T]); const i = a.skills.findIndex((x) => x.kind === 'attack'); const hp0 = es.map((e) => e.hp);
+{ const { s, a, es } = mk(['archer', ...T]); huddle(es); const i = a.skills.findIndex((x) => x.kind === 'attack'); const hp0 = es.map((e) => e.hp);
   const ev = cast(s, a, 'attack');
   ok('Rain of Arrows: nothing hits at the cast itself, he is BUSY while it rains', atk(ev).length === 0 && a.casting && a.casting.channel);
   const ev2 = run(s, 2200);
   ok('...5 waves of arrows on ALL enemies over about 2s', ev2.filter((e) => e.type === 'wave').length === 5 && atk(ev2).length === 15 && es.every((e, n) => e.hp < hp0[n]));
   ok('...as ranged damage with arrows falling', atk(ev2).every((e) => e.damageType === 'ranged') && ev2.filter((e) => e.type === 'projectile' && e.kind === 'rain').length === 15);
   ok('...and then he is free again', !a.casting); }
-{ const { s, a, es } = mk(['archer', ...T], ['goblin', 'goblin'], () => 0.1); // rng .1 < 25%: every hit breaks armor
+{ const { s, a, es } = mk(['archer', ...T], ['goblin', 'goblin'], () => 0.1); huddle(es); // rng .1 < 25%: every hit breaks armor
   cast(s, a, 'attack'); run(s, 2200);
   ok('each arrow hit can Armor Break (25%)', es.every((e) => e.statuses.some((x) => x.type === 'armorBreak'))); }
 { const { s, a } = mk(['archer', ...T]); cast(s, a, 'attack'); run(s, 500);
@@ -96,7 +98,7 @@ const T = ['knight', 'rogue'];
   const main = atk(ev).find((e) => e.target === g).result.amount, spl = atk(ev).find((e) => e.target === g2).result.amount;
   ok('...the splash is smaller', spl < main * 0.6, `${main} / ${spl}`);
   ok('...the square now shows the NEXT spell', s.currentSpell(a, 0).name === 'Frost Nova'); }
-{ const { s, a, es } = mk(['mage', ...T]); a.skills[0].rotation = 1; const ev = cast(s, a, 'attack');
+{ const { s, a, es } = mk(['mage', ...T]); huddle(es); a.skills[0].rotation = 1; const ev = cast(s, a, 'attack');
   ok('Frost Nova: ice burst on ALL enemies, 2 Chill stacks each', atk(ev).length === 3 && atk(ev).every((e) => e.damageType === 'ice') && es.every((e) => s.stacks(e, 'chill') === 2));
   ok('...then Chain Lightning is next', s.currentSpell(a, 0).name === 'Chain Lightning'); }
 { const { s, a, es } = mk(['mage', ...T]); a.skills[0].rotation = 2; s.setFocus(es[0].uid);
@@ -155,7 +157,7 @@ const T = ['knight', 'rogue'];
 { const { s, a, h, es } = mk(['bard', ...T]); const [, k] = h; let beats = 0, fired = 0;
   for (const u of [a, k, h[2], a, k, h[2], a, k]) { const ev = []; s.landAttack(u, es[0], ev); const b = ev.find((e) => e.type === 'beat'); if (b) beats++; if (b && b.fired) fired++; }
   ok('Rhythm: a squad beat, the 4th attack of ANY hero is empowered (bonus hit)', beats === 8 && fired === 2); }
-{ const { s, a, es } = mk(['bard', ...T]); const hp0 = es.map((e) => e.hp); const ev = cast(s, a, 'attack');
+{ const { s, a, es } = mk(['bard', ...T]); huddle(es); const hp0 = es.map((e) => e.hp); const ev = cast(s, a, 'attack');
   ok('Crescendo: the cast itself does nothing, then he sings (busy ~3s)', atk(ev).length === 0 && a.casting && a.casting.channel);
   const ev2 = run(s, 3500); const waves = ev2.filter((e) => e.type === 'wave');
   ok('...4 beats on ALL enemies: 30%, 50%, 70%, then a final 180%', waves.length === 4 && atk(ev2).length === 12);

@@ -171,7 +171,12 @@
         "durationMs": 0
       }
     ],
-    "description": "Slam the ground: hit ALL enemies for 90% damage and knock them back (their attack timers start over)."
+    "description": "Slam the ground at his target: hits every enemy CLOSE to it for 90% damage and knocks them back (their attack timers start over).",
+    "area": {
+      "shape": "circle",
+      "at": "target",
+      "radius": 105
+    }
   },
   "rally_cry": {
     "name": "Rally Cry",
@@ -212,7 +217,12 @@
         "damageMultiplier": 0.3
       }
     ],
-    "description": "Throw knives at ALL enemies (ranged damage, from his slot, 70% damage each). Every knife crits on its own, and a crit makes the enemy bleed."
+    "description": "Throws a fan of knives towards his target: every enemy inside the fan takes 70% ranged damage. Every knife crits on its own, and a crit makes the enemy bleed.",
+    "area": {
+      "shape": "cone",
+      "range": 560,
+      "angleDeg": 70
+    }
   },
   "smoke_bomb": {
     "name": "Smoke Bomb",
@@ -267,7 +277,12 @@
       }
     ],
     "projectile": "rain",
-    "description": "A shower of arrows on ALL enemies for about 2s (5 waves of 35% damage, each hit has a 25% chance to Armor Break). He is busy while it rains."
+    "description": "Arrows rain on an area around his target for about 2s (5 waves of 35% damage on every enemy standing in it, each hit has a 25% chance to Armor Break). He is busy while it rains.",
+    "area": {
+      "shape": "circle",
+      "at": "target",
+      "radius": 110
+    }
   },
   "hunters_mark": {
     "name": "Hunter's Mark",
@@ -343,7 +358,11 @@
         "durationMs": 5000
       }
     ],
-    "description": "A crescent slash across the field: ranged-type damage to ALL enemies and Armor Break. He stays in his slot."
+    "description": "A crescent slash across the field: ranged-type damage and Armor Break to every enemy in the same row as his target. He stays in his slot.",
+    "area": {
+      "shape": "band",
+      "halfHeight": 55
+    }
   },
   "focus_stance": {
     "name": "Focus Stance",
@@ -405,7 +424,12 @@
             "stacks": 2
           }
         ],
-        "description": "Frost Nova: an ice burst on ALL enemies, 2 Chill stacks each."
+        "description": "Frost Nova: an ice burst around the target, 2 Chill stacks on every enemy close to it.",
+        "area": {
+          "shape": "circle",
+          "at": "target",
+          "radius": 120
+        }
       },
       {
         "name": "Chain Lightning",
@@ -546,7 +570,12 @@
       ]
     },
     "projectile": "note",
-    "description": "A song that builds: damage to ALL enemies grows each beat (30%, 50%, 70%), then a final big 180% hit."
+    "description": "A song that builds around his target: enemies near it take growing damage each beat (30%, 50%, 70%), then a final big 180% hit.",
+    "area": {
+      "shape": "circle",
+      "at": "target",
+      "radius": 125
+    }
   },
   "ballad_of_rest": {
     "name": "Ballad of Rest",

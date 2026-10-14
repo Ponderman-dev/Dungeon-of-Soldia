@@ -49,3 +49,12 @@ ok('all 11 G7 items exist', ids.every((id) => itemDefs[id] && itemDefs[id].descr
   ok('Necro Crown: a kill raises a skeleton', s.minions.some((m) => m.def.id === 'skeleton')); }
 { const { s, a } = mk(); give(s, a, 'bone_charm'); give(s, a, 'overseers_whistle'); give(s, a, 'rat_cage');
   const b = s.minionBoost(); ok('Boosters register', b.bone > 0 && b.weakCap > 0 && b.weakSpeed > 0); }
+
+// Weak minions are there from the START of the fight (then more on the timer).
+{ const { s, a } = mk(); give(s, a, 'rat_cage'); const ev = s.startFloor([]);
+  ok('Rat Cage: a Rat is there as soon as the fight starts', s.minions.filter((m) => m.def.id === 'rat').length === 1 && ev.some((e) => e.type === 'minionSpawn'));
+  let spawned = 0;
+  for (let t = 0; t < 11000; t += 50) spawned += s.update(50).filter((e) => e.type === 'minionSpawn').length;
+  ok('...the next one comes after the normal 12s wait', spawned === 0, spawned);
+  for (let t = 0; t < 1500; t += 50) spawned += s.update(50).filter((e) => e.type === 'minionSpawn').length;
+  ok('...and then it does', spawned === 1, spawned); }

@@ -34,10 +34,10 @@ ok('Ground Pound winds up longer than Rally Cry, both longer than a swing', skil
   ok('other heroes have no Taunt Wall', !s.tauntedBy(es[0])); }
 
 // ---- Ground Pound
-{ const { s, es, k } = mk(); const i = slot(k, 'attack'); const hp0 = es.map((e) => e.hp);
+{ const { s, es, k } = mk(); es.forEach((e, n) => { e.x = e.homeX = 165 + n * 30; }); /* standing together: all inside the slam */ const i = slot(k, 'attack'); const hp0 = es.map((e) => e.hp);
   es.forEach((e) => (e.timer = 700)); const y0 = es.map((e) => e.y);
   const ev = s.castSkill(k.uid, i);
-  ok('Ground Pound hits ALL enemies', es.every((e, n) => e.hp < hp0[n]) && ev.filter((x) => x.type === 'attack').length === 3);
+  ok('Ground Pound hits ALL enemies standing close together', es.every((e, n) => e.hp < hp0[n]) && ev.filter((x) => x.type === 'attack').length === 3);
   ok('...and knocks them back (attack timers start over)', es.every((e) => e.timer === 0) && ev.filter((x) => x.type === 'status' && x.status.type === 'knockback').length === 3);
   s.update(rules.movement.knockbackMs + 20);
   ok('...they are pushed away (up the screen)', es.every((e, n) => e.y < y0[n] - 10)); }

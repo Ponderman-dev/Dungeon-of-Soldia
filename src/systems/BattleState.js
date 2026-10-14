@@ -302,12 +302,16 @@ export default class BattleState {
   // Everyone who can walks this update: melee fighters towards their target (until in reach), feared
   // ones back to their own spot, knocked-back ones get pushed. Then fighters that stand too close push
   // apart a little (`separateX/Y`), so a crowd spreads around a target instead of piling up.
+  // Pushing is gentle: a fighter that is standing still (swinging, waiting, stunned) gives way much
+  // less than one that is walking (`settledPushShare`), and near the side walls a fighter is hardly
+  // pushed further towards the wall (`wallSoftPx`), so crowds do not slide into the walls.
   move(dt) {
     const M = this.rules.movement;
     if (!M) return;
     const units = this.allUnits().filter((u) => u.alive && this.hasPositions(u));
     const before = new Map(units.map((u) => [u, { x: u.x, y: u.y }]));
     const step = (M.walkSpeedPxPerSec * dt) / 1000;
+    const walking = new Set();
     for (const u of units) {
       if (u.knock) {
         const t = Math.min(dt, u.knock.remaining);
@@ -332,9 +336,22 @@ export default class BattleState {
       const d = Math.min(step, len);
       u.x += (dx / len) * d;
       u.y += (dy / len) * d;
+      walking.add(u);
     }
     // Push apart. Ranged fighters hold their ground (only the other one moves).
     const push = (M.separatePushPerSec * dt) / 1000;
+    const L = M.layout;
+    const settled = M.settledPushShare ?? 1;
+    const share = (u, other) => {
+      if (u.damageType !== 'melee' && other.damageType === 'melee') return 0; // ranged hold their ground
+      return walking.has(u) || u.knock ? 1 : settled;
+    };
+    // How much of a sideways push towards the nearest side wall a fighter still takes (1 far away, 0 at the wall).
+    const wallFactor = (u, dirX) => {
+      if (!M.wallSoftPx || !L) return 1;
+      const room = dirX < 0 ? u.x - L.marginX : L.width - L.marginX - u.x;
+      return Math.max(0, Math.min(1, room / M.wallSoftPx));
+    };
     for (let i = 0; i < units.length; i++) {
       for (let j = i + 1; j < units.length; j++) {
         const a = units[i];
@@ -350,15 +367,19 @@ export default class BattleState {
           len = 1;
         }
         const amount = Math.min(push, (1 - d) * M.separateX);
-        const wa = a.damageType === 'melee' || b.damageType !== 'melee' ? 1 : 0;
-        const wb = b.damageType === 'melee' || a.damageType !== 'melee' ? 1 : 0;
-        a.x -= (nx / len) * amount * (wa / (wa + wb));
-        a.y -= (ny / len) * amount * (wa / (wa + wb));
-        b.x += (nx / len) * amount * (wb / (wa + wb));
-        b.y += (ny / len) * amount * (wb / (wa + wb));
+        let wa = share(a, b);
+        let wb = share(b, a);
+        if (wa + wb === 0) wa = wb = 1;
+        // Two fighters both standing still only drift apart slowly (no jostling while they swing).
+        const calm = wa < 1 && wb < 1 ? M.settledPairPush ?? 1 : 1;
+        const fa = (amount * calm * wa) / (wa + wb);
+        const fb = (amount * calm * wb) / (wa + wb);
+        a.x -= (nx / len) * fa * wallFactor(a, -nx);
+        a.y -= (ny / len) * fa;
+        b.x += (nx / len) * fb * wallFactor(b, nx);
+        b.y += (ny / len) * fb;
       }
     }
-    const L = M.layout;
     for (const u of units) {
       u.x = Math.min(L.width - L.marginX, Math.max(L.marginX, u.x));
       u.y = Math.min(L.heroY, Math.max(L.enemyY + L.topMarginY, u.y));

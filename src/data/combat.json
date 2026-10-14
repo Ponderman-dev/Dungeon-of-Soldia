@@ -58,13 +58,16 @@
     "hitStopMs": 70
   },
   "movement": {
-    "_about": "Real movement in fights (BattleState.move). Melee walk to their target at walkSpeedPxPerSec until it is inside the reach oval (reachX sideways, reachY up/down), then swing. Fighters closer than the separate oval push apart. layout = where the lines stand (also used by tests/bot).",
+    "_about": "Real movement in fights (BattleState.move). Melee walk to their target at walkSpeedPxPerSec until it is inside the reach oval (reachX sideways, reachY up/down), then swing. Fighters closer than the separate oval push apart; a fighter standing still gives way only settledPushShare as much as a walking one, and within wallSoftPx of a side wall it is hardly pushed further towards it; two fighters both standing still drift apart at only settledPairPush of the speed. layout = where the lines stand (also used by tests/bot).",
     "walkSpeedPxPerSec": 170,
     "reachX": 64,
     "reachY": 94,
     "separateX": 54,
     "separateY": 82,
     "separatePushPerSec": 140,
+    "settledPushShare": 0.3,
+    "settledPairPush": 0.4,
+    "wallSoftPx": 60,
     "knockbackPx": 40,
     "knockbackMs": 160,
     "layout": {

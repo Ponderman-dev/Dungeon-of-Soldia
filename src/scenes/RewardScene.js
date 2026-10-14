@@ -6,17 +6,21 @@ import rarities from '../data/rarities.json';
 import { canReceive, countOf } from '../systems/items.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
 
-const COLORS = { bg: 0x14101f, panel: 0x221b33, line: 0x3a2f57, purple: 0x8b55d6, gold: 0xf2b632, disabled: 0x4a3f66 };
+const COLORS = { sheet: 0x17112a, panel: 0x231b38, line: 0x3a2f57, purple: 0x8b55d6, gold: 0xf2b632, disabled: 0x3a3350 };
 const INK = '#f3eefc';
-const MUTE = '#9a8fb8';
+const MUTE = '#a399c2';
 const FONT = 'system-ui, Arial, sans-serif';
-const CARD_W = 358;
-const CARD_H = 112;
+const SHEET_TOP = 44; // the sheet slides up to here; the dungeon stays visible (dimmed) above it
+const PAD = 16;
+const CARD_W = GAME_WIDTH - PAD * 2;
+const TEXT_X = 94; // where a card's text starts (right of the icon)
 const SPECIAL_LABEL = { block: 'BLOCK', regen: 'REGEN/s', thorns: 'THORNS', lifesteal: 'LIFESTEAL', skillDamage: 'SKILL DMG', critDamage: 'CRIT DMG', skillSplash: 'SPLASH', lifestealShare: 'SHARE', critDebuff: 'CRIT DEBUFF', clearHeal: 'CLEAR HEAL' };
 const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
+const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
 
-// The reward screen: pick 1 of 3 items, then choose which hero gets it.
-// It only shows choices and reports the result through payload.onDone(itemId, heroUid).
+// The reward screen: a sheet that slides up over the dungeon. Pick 1 of 3 items, then choose which
+// hero gets it (or go back). It only shows choices and reports the result through
+// payload.onDone(itemId, heroUid), after sliding back down.
 export default class RewardScene extends Phaser.Scene {
   constructor() {
     super('Reward');
@@ -31,17 +35,28 @@ export default class RewardScene extends Phaser.Scene {
     this.chosen = null;
     this.selected = null;
     this.stepObjects = [];
+    this.busy = false;
+    this.closing = false;
 
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.bg);
-    this.add.text(16, 26, `Floor ${this.payload.floor} cleared`, { fontFamily: FONT, fontSize: '16px', fontStyle: 'bold', color: INK }).setOrigin(0, 0.5);
-    this.add.rectangle(GAME_WIDTH / 2, 52, GAME_WIDTH, 2, COLORS.line);
+    // The dungeon behind gets darker; the sheet slides up from the bottom.
+    this.dim = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x05030a, 0).setInteractive();
+    this.tweens.add({ targets: this.dim, fillAlpha: 0.6, duration: 300 });
+    this.sheet = this.add.container(0, GAME_HEIGHT);
+    const bg = this.add.graphics();
+    bg.fillStyle(COLORS.sheet, 1).fillRoundedRect(0, SHEET_TOP, GAME_WIDTH, GAME_HEIGHT - SHEET_TOP + 40, 24);
+    bg.lineStyle(2, COLORS.purple, 0.8).strokeRoundedRect(0, SHEET_TOP, GAME_WIDTH, GAME_HEIGHT - SHEET_TOP + 40, 24);
+    bg.fillStyle(COLORS.line, 1).fillRoundedRect(GAME_WIDTH / 2 - 22, SHEET_TOP + 8, 44, 5, 3); // the little handle
+    this.sheet.add(bg);
+    this.sheet.add(this.add.text(GAME_WIDTH / 2, SHEET_TOP + 24, `FLOOR ${this.payload.floor} CLEARED`, { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: '#f2b632' }).setOrigin(0.5, 0));
+    this.tweens.add({ targets: this.sheet, y: 0, duration: 420, ease: 'Cubic.easeOut' });
 
-    this.showPick();
+    this.showPick(true);
   }
 
   // ---- helpers -----------------------------------------------------------------------
 
   track(obj) {
+    this.sheet.add(obj);
     this.stepObjects.push(obj);
     return obj;
   }
@@ -52,68 +67,92 @@ export default class RewardScene extends Phaser.Scene {
   }
 
   text(x, y, str, size, color, bold = false, wrap = 0) {
-    const style = { fontFamily: FONT, fontSize: `${size}px`, fontStyle: bold ? 'bold' : 'normal', color };
-    if (wrap) style.wordWrap = { width: wrap };
+    const style = { fontFamily: FONT, fontSize: `${size}px`, fontStyle: bold ? 'bold' : 'normal', color, lineSpacing: 2 };
+    if (wrap) style.wordWrap = { width: wrap, useAdvancedWrap: true };
     return this.track(this.add.text(x, y, str, style));
+  }
+
+  // Text that must fit a box: wraps to `w` and shrinks a size at a time until it is at most `maxH` tall.
+  fitText(x, y, str, size, color, w, maxH, bold = false) {
+    const t = this.text(x, y, str, size, color, bold, w);
+    for (let s = size - 1; t.height > maxH && s >= 10; s--) t.setFontSize(s);
+    return t;
   }
 
   rarityColor(item) {
     return Number(rarities[item.rarity].color);
   }
 
-  // One reward card (as in the wireframe): icon, rarity label, name, description.
-  drawCard(item, x, y, highlighted = false) {
+  // How tall a card must be for its description (the card grows instead of the text spilling out).
+  cardHeight(item) {
+    const probe = this.add.text(0, 0, item.description, { fontFamily: FONT, fontSize: '13px', lineSpacing: 2, wordWrap: { width: CARD_W - TEXT_X - 14, useAdvancedWrap: true } });
+    const h = probe.height;
+    probe.destroy();
+    return Math.max(108, 58 + h + 14);
+  }
+
+  // One reward card: icon in its rarity frame + type, rarity, name, description.
+  drawCard(item, x, y, h, highlighted = false) {
     const rc = this.rarityColor(item);
-    const g = this.track(this.add.graphics());
-    g.fillStyle(highlighted ? 0x2f2547 : COLORS.panel, 1).fillRoundedRect(x, y, CARD_W, CARD_H, 14);
-    g.lineStyle(highlighted ? 5 : 3, highlighted ? COLORS.gold : rc, 1).strokeRoundedRect(x, y, CARD_W, CARD_H, 14);
-
-    // The item's pixel icon in its rarity frame (itemIcons.json), its type underneath.
-    const ix = x + 14 + 32;
-    const iy = y + CARD_H / 2;
-    this.track(this.add.image(ix, iy - 8, itemIconKey(this, item.id, item.rarity)).setScale(3));
-    this.text(ix, iy + 32, itemTypes[item.type].label, 9, MUTE, true).setOrigin(0.5);
-
-    const tx = x + 14 + 64 + 14;
-    this.text(tx, y + 14, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : 'ITEM'}`, 11, `#${rc.toString(16).padStart(6, '0')}`, true);
-    this.text(tx, y + 32, item.name, 17, INK, true);
-    this.text(tx, y + 56, item.description, 13, MUTE, false, CARD_W - (tx - x) - 14);
-    return g;
+    const card = this.add.container(x, y);
+    this.track(card);
+    const g = this.add.graphics();
+    const paint = (lit) => {
+      g.clear();
+      g.fillStyle(0x000000, 0.3).fillRoundedRect(2, 4, CARD_W, h, 16);
+      g.fillStyle(lit ? 0x31254d : COLORS.panel, 1).fillRoundedRect(0, 0, CARD_W, h, 16);
+      g.fillStyle(rc, 0.12).fillRoundedRect(0, 0, 82, h, { tl: 16, bl: 16, tr: 0, br: 0 }); // a rarity tint behind the icon
+      g.lineStyle(lit ? 4 : 2, lit ? COLORS.gold : rc, 1).strokeRoundedRect(0, 0, CARD_W, h, 16);
+    };
+    paint(highlighted);
+    card.add(g);
+    card.add(this.add.image(41, h / 2 - 8, itemIconKey(this, item.id, item.rarity)).setScale(3));
+    card.add(this.add.text(41, h / 2 + 30, itemTypes[item.type].label, { fontFamily: FONT, fontSize: '9px', fontStyle: 'bold', color: MUTE }).setOrigin(0.5));
+    card.add(this.add.text(TEXT_X, 14, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : 'ITEM'}`, { fontFamily: FONT, fontSize: '11px', fontStyle: 'bold', color: hex(rc) }));
+    const name = this.add.text(TEXT_X, 30, item.name, { fontFamily: FONT, fontSize: '17px', fontStyle: 'bold', color: INK });
+    for (let s = 16; name.width > CARD_W - TEXT_X - 14 && s >= 12; s--) name.setFontSize(s); // long names shrink to fit
+    card.add(name);
+    card.add(this.add.text(TEXT_X, 56, item.description, { fontFamily: FONT, fontSize: '13px', color: MUTE, lineSpacing: 2, wordWrap: { width: CARD_W - TEXT_X - 14, useAdvancedWrap: true } }));
+    card.paint = paint;
+    return card;
   }
 
   // ---- step 1: pick a reward ---------------------------------------------------------
 
-  showPick() {
+  showPick(first = false) {
     this.step = 'pick';
     this.clearStep();
-    this.text(16, 66, 'Pick 1 reward', 26, INK, true);
-    this.text(16, 104, 'Then choose which hero gets it.', 14, MUTE);
+    this.text(PAD, SHEET_TOP + 46, 'Choose a reward', 26, INK, true);
 
-    this.cardHits = [];
+    let y = SHEET_TOP + 94;
     this.payload.choices.forEach((item, i) => {
-      const y = 140 + i * (CARD_H + 12);
-      this.drawCard(item, 16, y);
-      const hit = this.track(this.add.zone(16 + CARD_W / 2, y + CARD_H / 2, CARD_W, CARD_H).setInteractive());
-      hit.on('pointerdown', () => this.chooseCard(item));
+      const h = this.cardHeight(item);
+      const card = this.drawCard(item, PAD, y, h);
+      const hit = this.track(this.add.zone(PAD + CARD_W / 2, y + h / 2, CARD_W, h).setInteractive());
+      hit.on('pointerdown', () => {
+        if (this.busy || this.closing) return;
+        card.paint(true);
+        this.busy = true;
+        this.time.delayedCall(140, () => { this.busy = false; this.chooseCard(item); });
+      });
+      // The cards rise in one after another (only the first time the sheet comes up).
+      if (first) {
+        card.setAlpha(0).setY(y + 40);
+        this.tweens.add({ targets: card, alpha: 1, y, duration: 320, delay: 260 + i * 110, ease: 'Back.easeOut' });
+      }
+      y += h + 12;
     });
-
-    const names = this.payload.state.heroes.map((h) => `${h.name} ${h.items.length}`).join(' · ');
-    this.text(16, 780, `Squad items: ${names}`, 12, MUTE, true, CARD_W);
   }
 
   chooseCard(item) {
     this.chosen = item;
-    if (item.kind === 'potion') {
-      // The potion heals the whole party, so there is no hero to choose.
-      this.payload.onDone(item.id, null);
-      return;
-    }
+    if (item.kind === 'potion') return this.finish(item.id, null); // the potion heals the whole party: no hero to choose
     this.showAssign();
   }
 
   // ---- step 2: choose who gets it ----------------------------------------------------
 
-  // The lines under a hero: "ATK 18 -> 22" for each stat the item touches.
+  // The lines under a hero: "ATK 18 > 22" for each stat the item touches.
   previewLines(hero, item) {
     const after = this.payload.state.previewStats(hero.uid, item.id);
     const lines = [];
@@ -121,7 +160,7 @@ export default class RewardScene extends Phaser.Scene {
     for (const e of item.effects) {
       if (e.proc) {
         const copies = countOf(hero, item.id);
-        const name = e.label.replace('!', '').toUpperCase();
+        const name = (e.label || item.name).replace('!', '').toUpperCase();
         if (e.unique) lines.push({ text: `${name} ${copies ? e.chance : 0}>${e.chance}%`, up: true }); // more copies do not add chance
         else if (e.chance >= 100 && e.strike) lines.push({ text: `${name} ${copies * e.strike.damageMultiplier * 100}>${(copies + 1) * e.strike.damageMultiplier * 100}% ATK`, up: true });
         else lines.push({ text: `${name} ${copies * e.chance}>${(copies + 1) * e.chance}%`, up: true });
@@ -134,7 +173,7 @@ export default class RewardScene extends Phaser.Scene {
         const before = hero.damageBonus[e.damageBonus] || 0;
         const now = after.damageBonus[e.damageBonus] || 0;
         lines.push({ text: `${e.damageBonus.toUpperCase()} DMG ${before}>${now}%`, up: true });
-      } else if (!seen.has(e.stat)) {
+      } else if (e.stat && !seen.has(e.stat)) {
         seen.add(e.stat);
         const before = Math.round(hero.stats[e.stat]);
         const now = Math.round(after.stats[e.stat]);
@@ -149,62 +188,63 @@ export default class RewardScene extends Phaser.Scene {
     this.clearStep();
     this.selected = null;
     const item = this.chosen;
-    this.text(16, 66, 'Who gets it?', 26, INK, true);
+    this.text(PAD, SHEET_TOP + 46, 'Who gets it?', 26, INK, true);
     // Back to the 3 rewards (changed your mind).
-    const back = this.text(GAME_WIDTH - 16, 80, '< Back', 16, INK, true).setOrigin(1, 0.5);
-    const bw = back.width + 24;
-    this.track(this.add.graphics()).lineStyle(2, COLORS.line, 1).strokeRoundedRect(GAME_WIDTH - 16 - bw + 6, 62, bw, 36, 10);
-    this.track(this.add.zone(GAME_WIDTH - 16 - bw / 2 + 6, 80, bw + 8, 44).setInteractive()).on('pointerdown', () => this.showPick());
-    this.drawCard(item, 16, 108);
+    const bw = 84;
+    const bx = GAME_WIDTH - PAD - bw;
+    const bb = this.track(this.add.graphics());
+    bb.fillStyle(COLORS.panel, 1).fillRoundedRect(bx, SHEET_TOP + 48, bw, 32, 16).lineStyle(2, COLORS.line, 1).strokeRoundedRect(bx, SHEET_TOP + 48, bw, 32, 16);
+    this.text(bx + bw / 2, SHEET_TOP + 64, '‹ Back', 14, INK, true).setOrigin(0.5);
+    this.track(this.add.zone(bx + bw / 2, SHEET_TOP + 64, bw + 10, 44).setInteractive()).on('pointerdown', () => this.showPick());
 
-    this.heroHits = [];
+    const itemH = this.cardHeight(item);
+    this.drawCard(item, PAD, SHEET_TOP + 94, itemH, true);
+
     this.heroGraphics = [];
     const colW = (CARD_W - 12) / 2;
-    const cardH = 190;
-    this.payload.state.heroes.forEach((hero, i) => {
+    const cardH = 184;
+    const top = SHEET_TOP + 94 + itemH + 14;
+    const heroes = this.payload.state.heroes;
+    heroes.forEach((hero, i) => {
       // Two cards per row; a lonely last card (3 heroes) sits in the middle.
-      const total = this.payload.state.heroes.length;
-      const alone = i === total - 1 && total % 2 === 1;
-      const x = alone ? 16 + (colW + 12) / 2 : 16 + (i % 2) * (colW + 12);
-      const y = 240 + Math.floor(i / 2) * (cardH + 12);
+      const alone = i === heroes.length - 1 && heroes.length % 2 === 1;
+      const x = alone ? PAD + (colW + 12) / 2 : PAD + (i % 2) * (colW + 12);
+      const y = top + Math.floor(i / 2) * (cardH + 10);
       const ok = canReceive(hero, item);
       const g = this.track(this.add.graphics());
       this.heroGraphics.push({ g, x, y, w: colW, h: cardH, hero });
       this.drawHeroCard(i, false);
 
       // A small copy of the hero (same parts as in battle).
-      const ch = new Character(this, x + 38, y + 78, hero.def);
-      ch.setScale(1.6);
+      const ch = new Character(this, x + 34, y + 70, hero.def);
+      ch.setScale(2);
       ch.setAlpha(ok ? 1 : 0.4);
       this.track(ch);
 
-      this.text(x + 76, y + 14, hero.name, 16, INK, true).setAlpha(ok ? 1 : 0.5);
-      this.text(x + 76, y + 36, `Lv${hero.level}`, 12, MUTE).setAlpha(ok ? 1 : 0.5);
+      this.text(x + 66, y + 14, hero.name, 15, INK, true).setAlpha(ok ? 1 : 0.5);
+      this.text(x + 66, y + 34, `Lv ${hero.level}`, 12, MUTE).setAlpha(ok ? 1 : 0.5);
 
       if (ok) {
-        this.previewLines(hero, item).forEach((line, li) => {
-          this.text(x + 12, y + 96 + li * 18, line.text, 12, line.up ? '#6dff8f' : '#ff8c8c', true);
-        });
+        let ly = y + 88;
+        for (const line of this.previewLines(hero, item)) {
+          const t = this.fitText(x + 10, ly, line.text, 12, line.up ? '#6dff8f' : '#ff8c8c', colW - 20, 30, true);
+          ly += t.height + 3;
+        }
       } else {
-        this.text(x + 12, y + 96, hero.alive ? 'Max stacks' : 'Fallen', 13, MUTE, true);
+        this.text(x + 10, y + 90, hero.alive ? 'Max stacks' : 'Fallen', 13, MUTE, true);
       }
 
       // Items this hero already has: the same small icons as under the skill squares in battle.
-      this.drawOwnedIcons(hero, x, y + cardH - 34, colW, ok ? 1 : 0.5);
+      this.drawOwnedIcons(hero, x, y + cardH - 18, colW, ok ? 1 : 0.5);
 
-      if (ok) {
-        const hit = this.track(this.add.zone(x + colW / 2, y + cardH / 2, colW, cardH).setInteractive());
-        hit.on('pointerdown', () => this.selectHero(i));
-        this.heroHits.push(hit);
-      }
+      if (ok) this.track(this.add.zone(x + colW / 2, y + cardH / 2, colW, cardH).setInteractive()).on('pointerdown', () => this.selectHero(i));
     });
 
-    // The confirm button at the bottom.
+    // The Give button at the bottom.
     this.buttonGraphics = this.track(this.add.graphics());
-    this.buttonText = this.text(GAME_WIDTH / 2, 798, 'Pick a hero', 18, '#ffffff', true).setOrigin(0.5);
+    this.buttonText = this.text(GAME_WIDTH / 2, GAME_HEIGHT - 46, 'Pick a hero', 18, '#ffffff', true).setOrigin(0.5);
     this.drawButton();
-    this.buttonHit = this.track(this.add.zone(GAME_WIDTH / 2, 798, CARD_W, 52).setInteractive());
-    this.buttonHit.on('pointerdown', () => this.confirm());
+    this.track(this.add.zone(GAME_WIDTH / 2, GAME_HEIGHT - 46, CARD_W, 52).setInteractive()).on('pointerdown', () => this.confirm());
   }
 
   // One framed icon per kind of item (a white number = copies), 7 per row, 2 rows,
@@ -235,16 +275,18 @@ export default class RewardScene extends Phaser.Scene {
   drawHeroCard(i, selected) {
     const { g, x, y, w, h, hero } = this.heroGraphics[i];
     g.clear();
-    g.fillStyle(COLORS.panel, 1).fillRoundedRect(x, y, w, h, 14);
-    g.lineStyle(selected ? 4 : 2, selected ? COLORS.gold : COLORS.line, 1).strokeRoundedRect(x, y, w, h, 14);
-    if (!hero.alive) g.fillStyle(0x000000, 0.35).fillRoundedRect(x, y, w, h, 14);
+    g.fillStyle(selected ? 0x31254d : COLORS.panel, 1).fillRoundedRect(x, y, w, h, 16);
+    g.lineStyle(selected ? 4 : 2, selected ? COLORS.gold : COLORS.line, 1).strokeRoundedRect(x, y, w, h, 16);
+    if (!hero.alive) g.fillStyle(0x000000, 0.35).fillRoundedRect(x, y, w, h, 16);
   }
 
   drawButton() {
     const g = this.buttonGraphics;
     g.clear();
-    g.fillStyle(this.selected ? COLORS.purple : COLORS.disabled, 1).fillRoundedRect(16, 772, CARD_W, 52, 14);
-    this.buttonText.setText(this.selected ? `Give to ${this.selected.name}` : 'Pick a hero');
+    const y = GAME_HEIGHT - 72;
+    g.fillStyle(this.selected ? 0x2f9a55 : COLORS.disabled, 1).fillRoundedRect(PAD, y, CARD_W, 52, 26);
+    if (this.selected) g.lineStyle(2, COLORS.gold, 1).strokeRoundedRect(PAD, y, CARD_W, 52, 26);
+    this.buttonText.setText(this.selected ? `Give to ${this.selected.name}` : 'Pick a hero').setColor(this.selected ? '#ffffff' : '#8a82a8');
   }
 
   selectHero(i) {
@@ -255,6 +297,14 @@ export default class RewardScene extends Phaser.Scene {
 
   confirm() {
     if (!this.selected) return;
-    this.payload.onDone(this.chosen.id, this.selected.uid);
+    this.finish(this.chosen.id, this.selected.uid);
+  }
+
+  // The sheet slides back down, then the battle gets the result.
+  finish(itemId, heroUid) {
+    if (this.closing) return;
+    this.closing = true;
+    this.tweens.add({ targets: this.dim, fillAlpha: 0, duration: 260 });
+    this.tweens.add({ targets: this.sheet, y: GAME_HEIGHT, duration: 300, ease: 'Cubic.easeIn', onComplete: () => this.payload.onDone(itemId, heroUid) });
   }
 }

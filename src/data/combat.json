@@ -84,7 +84,7 @@
     "arrowColor": "0xe6e6b8"
   },
   "transition": {
-    "clearPauseMs": 600,
+    "clearPauseMs": 900,
     "walkSpeedPxPerSec": 420,
     "lineGapPx": 80,
     "stepLenPx": 90,

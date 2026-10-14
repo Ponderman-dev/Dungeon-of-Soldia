@@ -390,12 +390,22 @@ export default class BattleState {
     if (target.side === 'enemy') {
       this.awardXp(target, events);
       this.onKill(killer, target, events, lastStatuses);
+      if (target.def.onDeath) this.deathBurst(target, target.def.onDeath, events);
     }
     else {
       this.removeMinionsOf(target, 'holderDied', events); // minions vanish when their holder dies
       this.refreshStats();
       if (this.morale !== was) events.push({ type: 'morale', tier: this.morale });
     }
+  }
+
+  // An enemy that bursts when it dies (enemies.json `onDeath: { radius, apply: [status specs] }`, e.g.
+  // the Puffshroom's poison cloud): every living hero and minion within `radius` px gets the statuses
+  // (everyone when there are no positions). Event `deathBurst` (the scene draws the cloud).
+  deathBurst(enemy, spec, events) {
+    const hit = this.defenders().filter((u) => !this.hasPositions(enemy) || !this.hasPositions(u) || Math.hypot(u.x - enemy.x, u.y - enemy.y) <= (spec.radius ?? Infinity));
+    events.push({ type: 'deathBurst', unit: enemy, radius: spec.radius, color: spec.color, targets: hit });
+    for (const u of hit) for (const st of spec.apply || []) this.applyStatus(u, st, enemy, `death_${enemy.uid}`, events);
   }
 
   // ---- minions (minions.json) ------------------------------------------------------------------
@@ -757,6 +767,13 @@ export default class BattleState {
     // Minion hits that put a status on the target (Imp burns, Gargoyle taunts).
     if (unit.minion && unit.def.onAttackApply && target.alive && !hit.dodged) {
       for (const spec of unit.def.onAttackApply) this.applyStatus(target, spec, unit, `minion_${unit.def.id}`, events);
+    }
+    // Enemy hits that may put a status on the hero they hit (enemies.json `onHit`: each spec has a
+    // `chance` in %, e.g. the Spider poisons). Only when the hit connected.
+    if (unit.side === 'enemy' && unit.def.onHit && target.alive && !hit.dodged) {
+      for (const spec of unit.def.onHit) {
+        if (this.rng() * 100 < (spec.chance ?? 100)) this.applyStatus(target, spec, unit, `enemy_${unit.name}`, events);
+      }
     }
     // An empowered beat (Mage Spellweaver, Bard Rhythm): a free extra hit and debuffs on the target.
     for (const f of empower) {

@@ -27,26 +27,13 @@
       },
       {
         "floor": 4,
-        "enemies": [
-          "goblin",
-          "goblin",
-          "slime"
-        ]
+        "enemies": 3
       },
       {
         "floor": 32,
-        "enemies": [
-          "goblin",
-          "goblin",
-          "slime",
-          "bat"
-        ],
+        "enemies": 4,
         "every": 5,
-        "otherwise": [
-          "goblin",
-          "goblin",
-          "slime"
-        ]
+        "otherwise": 3
       }
     ],
     "tileColors": [
@@ -54,6 +41,22 @@
       "0x172338",
       "0x2a1a30",
       "0x1b2a2a"
+    ],
+    "roster": [
+      {
+        "id": "slime",
+        "from": 1,
+        "until": 18
+      },
+      {
+        "id": "goblin",
+        "from": 1
+      },
+      {
+        "id": "bat",
+        "from": 2,
+        "until": 24
+      }
     ]
   }
 }

@@ -11,6 +11,8 @@ import { partArt, artPixels, flipGridH, flipGridV, rotateGrid90, outlineGrid, re
 import heroes from '../data/heroes.json';
 import enemies from '../data/enemies.json';
 import minions from '../data/minions.json';
+import items from '../data/items.json';
+import itemIcons from '../data/itemIcons.json';
 import combat from '../data/combat.json';
 
 const STAGE = 360; // preview canvas size in pixels
@@ -26,6 +28,11 @@ const STARTER = [
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
+// An item icon as a one-part "character": the 16x16 picture sits on the floor (feet = bottom edge).
+function iconDef(art) {
+  return { height: 16, parts: { icon: { x: 0, y: -8, w: 16, h: 16, art: clone(art), anchor: [8, 8] } } };
+}
+
 // Every character the studio can edit, with its game version (from the JSON files).
 const characters = [
   ...heroes.map((h) => ({ key: `hero-${h.id}`, kind: 'hero', id: h.id, name: h.name, def: h })),
@@ -33,6 +40,10 @@ const characters = [
   ...Object.entries(minions)
     .filter(([, m]) => m && m.parts)
     .map(([id, m]) => ({ key: `minion-${id}`, kind: 'minion', id, name: m.name, def: m })),
+  // Item icons (itemIcons.json): one 16x16 part called "icon", standing on the floor like a character.
+  ...Object.entries(itemIcons)
+    .filter(([id]) => items[id])
+    .map(([id, art]) => ({ key: `item-${id}`, kind: 'item', id, name: items[id].name, def: iconDef(art) })),
 ];
 const byKey = Object.fromEntries(characters.map((c) => [c.key, c]));
 
@@ -567,7 +578,7 @@ function fillPicker() {
   };
   const group = (kind, label) =>
     `<optgroup label="${label}">${characters.filter((c) => c.kind === kind).map(opt).join('')}</optgroup>`;
-  pick.innerHTML = group('hero', 'Heroes') + group('enemy', 'Enemies') + group('minion', 'Minions');
+  pick.innerHTML = group('hero', 'Heroes') + group('enemy', 'Enemies') + group('minion', 'Minions') + group('item', 'Item icons');
 }
 
 function renderStatus() {
@@ -1071,6 +1082,7 @@ function drawLineup() {
     ['Heroes', characters.filter((c) => c.kind === 'hero')],
     ['Enemies', characters.filter((c) => c.kind === 'enemy')],
     ['Minions', characters.filter((c) => c.kind === 'minion')],
+    ['Item icons', characters.filter((c) => c.kind === 'item')],
   ];
   const slot = 104;
   const perRow = Math.max(1, Math.floor((cv.clientWidth || 1000) / slot));

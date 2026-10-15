@@ -210,3 +210,14 @@ Caveats: the front hero is always melee in this check (Quiver does nothing on me
   crescent (projectile `moon`) hits its target 3 times for 60% each, +20% per extra copy. The ranged twin of Excalibur.
 - [built] Ghastly Fire (epic, needs fire): the holder's fire hits and burns also deal 20% (per copy) of their damage as
   dark; enemies burning from the holder attack 5% slower per burn stack (+2% per extra copy), max 75% (`ghastlySlow()`).
+
+Full-run check (itemruns.mjs, 60 runs per number, front hero, base 26.9; under ~2 floors = noise; Soul Lantern 3 copies cannot happen any more):
+```
+phoenix_feather      0: 26.9 (base)   1: 28.2 (+1.3)   3: 29.4 (+2.5)
+flame_spirit         0: 26.9 (base)   1: 26.0 (-0.9)   3: 28.2 (+1.3)
+spirit_axe           0: 26.9 (base)   1: 29.7 (+2.8)   3: 30.2 (+3.3)
+heart_of_the_beast   0: 26.9 (base)   1: 30.1 (+3.2)   3: 35.4 (+8.5)
+ghastly_fire         0: 26.9 (base)   1: 27.8 (+0.9)   3: 30.2 (+3.3)
+soul_lantern         0: 26.9 (base)   1: 29.7 (+2.8)   3: 28.7 (+1.8)
+
+```

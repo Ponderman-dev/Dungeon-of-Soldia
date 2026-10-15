@@ -32,8 +32,7 @@ Status: [built] = already in the code, [decided] = still to build.
 - [decided] Lucky Coin: no max stacks; each coin also adds +5% crit damage (the +10 crit with x0.93 shrink stays; check at the end
   whether the shrink should go).
 - [decided] Gambler's Dice: +20 crit stays; EACH die adds +50% crit damage (no max, damage grows forever). Debuff on crit stays.
-- [decided] Feather Boots: no max; evasion from boots creeps towards 90 with diminishing steps. OPEN: the global evasion cap
-  is 70% (`caps.evasion`), so boots past 70 need that cap raised for them (ask at the end).
+- [decided] Feather Boots: no max; evasion from boots creeps towards 70 (the global cap) with smaller and smaller steps.
 - [decided] Shield Totem: no max; each totem blocks 10% of what is left (1 = 10%, 6 = 47%, 20 = 88%), recharge 2.5s stays.
 
 ## Barely-grows group
@@ -42,7 +41,7 @@ Status: [built] = already in the code, [decided] = still to build.
 - [decided] Mimic Chest: chance 10% +3% per extra copy, and +25% explosion damage per extra copy (stronger mimic stays).
 - [decided] Second Wind Flask: unchanged (consumable, spares are the point).
 - [decided] Hex Doll: ONE proc, chance 8% +4% per extra doll; Curse STACKS with every proc hit (-15 resist per stack;
-  OPEN: stack limit / per-stack timers, check at build).
+  no stack limit, each stack has its own timer, like poison).
 - [decided] Rusty Nails: same as Hex Doll for Armor Break (8% +4% per extra copy, stacks with every proc hit).
 - [decided] Brawler's Streak: counts a COMBO of the holder's hits on ANY enemy (not one target). The combo is lost when the
   holder is stunned, frozen or feared. (+2% per hit, max +10% per copy stays unless said otherwise.)
@@ -75,8 +74,7 @@ Status: [built] = already in the code, [decided] = still to build.
 - [decided] Whetstone: unchanged.
 - [decided] Sharp Edge, Eagle Eye, Kindling, Shadow Charm: unchanged.
 - [decided] Quick Gloves: +18% attack speed per pair (grows); double-hit chance 8% ONCE (does not grow).
-- [decided] Static Crystal: 5% chance per crystal (was 10%) and +1 jump per crystal (1 crystal = 3 jumps? -> read as:
-  base 2 jumps +1 per EXTRA crystal; confirm at build).
+- [decided] Static Crystal: 5% chance per crystal (was 10%); 2 jumps, +1 per EXTRA crystal.
 - [decided] Fire Bombs: unchanged.
 - [decided] Chill Band: unchanged.
 - [decided] Ember Charm: chance as is (6% per charm); burn damage +10% per extra charm (check at build what
@@ -95,3 +93,14 @@ Status: [built] = already in the code, [decided] = still to build.
 - [decided] Executioner's Axe: unchanged.
 - [decided] Provoker's Horn: taunt chance 18% ONCE (does not grow); each horn: taunted enemies take +15% damage and the
   taunt lasts +0.3s (3s base).
+- [decided] War Banner, Gargoyle Idol, Spirit Knight Banner, Phoenix Hatchling, Bone Charm, Grave Dust, Frozen Thunderbolt: unchanged.
+
+## Open numbers (user: "yes, use all of these")
+- Necro Crown +20% minion health and attack per crown; kills still raise skeletons.
+- Plague Flask +15% more poison spread per extra flask.
+- Excalibur +20% tornado damage per extra copy.
+- Magma Core +15% burn tick damage per core.
+- Lucky Coin: drop the x0.93 shrink (full +10 crit per coin) + 5% crit damage per coin.
+- Brawler's Streak: +2% per hit, max +10% per copy.
+
+ALL ITEMS DECIDED. Next: build them (code), run tests + stacking bench, republish.

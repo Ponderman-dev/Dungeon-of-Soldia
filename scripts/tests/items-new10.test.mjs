@@ -92,8 +92,8 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
 { const { s, es, h } = mk(['archer', 'knight', 'rogue'], ['goblin'], () => 0); const a = h[0]; give(s, a, 'moonlight_twinblade', 2); const ev = []; s.rollProcs(a, 'onAttack', ev, { target: es[0], hit: true, force: true });
   const all = [...ev]; for (let t = 0; t < 1000; t += 50) all.push(...s.update(50)); const cres = all.filter((e) => e.type === 'attack' && e.attacker === a && e.result && e.result.amount > 0 && e.target === es[0] && !e.basic);
   ok('Moonlight Twinblade: a crescent hits its target 3 times', all.some((e) => e.kind === 'moon') && cres.length >= 3, `${cres.length}`);
-  const { s: s2, es: e2, k: kn } = mk(['knight', 'archer', 'rogue'], ['goblin'], () => 0); give(s2, kn, 'moonlight_twinblade'); const ev2 = []; s2.rollProcs(kn, 'onAttack', ev2, { target: e2[0], hit: true });
-  ok('...ranged attacks only', !ev2.some((e) => e.kind === 'moon')); }
+  const { s: s2, es: e2, k: kn } = mk(['knight', 'archer', 'rogue'], ['goblin'], () => 0); give(s2, kn, 'moonlight_twinblade'); const ev2 = []; s2.rollProcs(kn, 'onAttack', ev2, { target: e2[0], hit: true, force: true });
+  ok('...melee attacks trigger it too, and the crescent deals RANGED damage', ev2.some((e) => e.kind === 'moon') && (() => { const all = [...ev2]; for (let t = 0; t < 1000; t += 50) all.push(...s2.update(50)); return all.some((e) => e.type === 'attack' && e.attacker === kn && !e.basic && e.damageType === 'ranged'); })()); }
 // Ghastly Fire
 { const { s, es, k } = mk(); give(s, k, 'ghastly_fire'); const ev = []; s.strike(k, es[0], ev, { damageType: 'fire' });
   const fire = ev.find((e) => e.type === 'attack' && e.damageType === 'fire'), dark = ev.find((e) => e.type === 'attack' && e.damageType === 'dark');

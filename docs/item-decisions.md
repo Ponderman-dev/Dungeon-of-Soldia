@@ -15,3 +15,35 @@ Status: [built] = already in the code, [decided] = still to build.
 - [built] Fire Imp Brazier: upkeep once. Each extra brazier: imps +15% stats (was +50%).
 - [built] All weak minion items (Mimic Chest too) pay their upkeep once, however many copies.
   Found: copies of weak minion items already gave +50% stats each (`copyStatBonus`), now set per item.
+
+## Stops-growing group
+- [decided] Hourglass: each copy cuts 5% of the cooldown that is LEFT (1 = 5%, 10 = 40%, 20 = 64%), no cap.
+- [decided] Echo Rune: echo chance creeps closer to 90% (never stops growing); echo power +10% per copy with no limit (past 100%).
+- [decided] Overheal Ring: overheal shield cap = +25% max health PER RING (conversion still 40% per ring up to 100%).
+- [decided] Tough Skin: EVERY hit the holder takes deals 2 less per copy (never below 1). Replaces the first-hit rule.
+- [decided] Necro Crown: NO minion cap bonus any more. Instead: every weak minion gets +stats per copy (grows with copies,
+  number to set: proposal +20% health and attack per copy) and weak minions spawn 50% faster (does NOT grow with copies).
+  The "kill raises a skeleton" part is kept as is (not mentioned by the user, check at the end).
+- [decided] Overseer's Whistle: unchanged (+1 cap up to +4, +15% minion attack speed per copy keeps growing).
+- [decided] Plague Flask: at first copy 15% of the dead enemy's poison spreads; each extra copy spreads more stacks
+  (number to set: proposal +15% per copy); the +1 enemy per copy stays.
+- [decided] Excalibur: tornado chance +8% PER COPY (no more x0.85 shrink) and tornado damage +X% per copy
+  (number to set: proposal +20%). Max 3 tornadoes unchanged.
+- [decided] Lucky Coin: no max stacks; each coin also adds +5% crit damage (the +10 crit with x0.93 shrink stays; check at the end
+  whether the shrink should go).
+- [decided] Gambler's Dice: +20 crit stays; EACH die adds +50% crit damage (no max, damage grows forever). Debuff on crit stays.
+- [decided] Feather Boots: no max; evasion from boots creeps towards 90 with diminishing steps. OPEN: the global evasion cap
+  is 70% (`caps.evasion`), so boots past 70 need that cap raised for them (ask at the end).
+- [decided] Shield Totem: no max; each totem blocks 10% of what is left (1 = 10%, 6 = 47%, 20 = 88%), recharge 2.5s stays.
+
+## Barely-grows group
+- [decided] Jolly Banner: chance 5% +3% per extra copy (the +0.5s per copy stays).
+- [decided] Martyr's Shield: chance 8% +4% per extra copy (the cooldown shrink stays).
+- [decided] Mimic Chest: chance 10% +3% per extra copy, and +25% explosion damage per extra copy (stronger mimic stays).
+- [decided] Second Wind Flask: unchanged (consumable, spares are the point).
+- [decided] Hex Doll: ONE proc, chance 8% +4% per extra doll; Curse STACKS with every proc hit (-15 resist per stack;
+  OPEN: stack limit / per-stack timers, check at build).
+- [decided] Rusty Nails: same as Hex Doll for Armor Break (8% +4% per extra copy, stacks with every proc hit).
+- [decided] Brawler's Streak: counts a COMBO of the holder's hits on ANY enemy (not one target). The combo is lost when the
+  holder is stunned, frozen or feared. (+2% per hit, max +10% per copy stays unless said otherwise.)
+- [decided] Serrated Edge: bleed chance 10% for the first copy, +5% for each extra (10 copies = 55%).

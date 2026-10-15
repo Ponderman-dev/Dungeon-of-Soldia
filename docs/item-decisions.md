@@ -82,3 +82,16 @@ Status: [built] = already in the code, [decided] = still to build.
 - [decided] Ember Charm: chance as is (6% per charm); burn damage +10% per extra charm (check at build what
   `scalesWithCopies` gives today and set it to +10% per copy).
 - [decided] Venom Fang, Thousand Cuts, Hunter's Sigil: unchanged.
+- [decided] Siege Cannon: NO attack bonus any more. +40% skill damage per cannon, +10% skill splash chance per cannon.
+- [decided] Bloodlust Mask: unchanged.
+- [decided] Lost Cleric's Grimoire: NEW MECHANIC (user's idea, after a Risk of Rain 2 item): the holder stores 100% (+100% per
+  extra copy) of the healing it receives as Soul Energy. When Soul Energy reaches 10% of the holder's max health it fires a
+  GREEN FIREBALL at an enemy dealing 250% of the stored Soul Energy as damage (energy used up). At most one fireball per
+  0.1s. New text, e.g. "Healing you receive is stored as Soul Energy (100% per copy). At 10% of your max health it bursts
+  out as a green fireball dealing 250% of the stored energy."
+- [decided] Fire Arrows: 50% chance stays; extra fire hit = 20% damage per copy (was 50% per copy).
+- [decided] Sucker Punch Glove: unchanged.
+- [decided] Full Vigor: +15% per copy while the holder is ABOVE 90% health (was: only at full health).
+- [decided] Executioner's Axe: unchanged.
+- [decided] Provoker's Horn: taunt chance 18% ONCE (does not grow); each horn: taunted enemies take +15% damage and the
+  taunt lasts +0.3s (3s base).

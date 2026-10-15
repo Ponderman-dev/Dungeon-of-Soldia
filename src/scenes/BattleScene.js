@@ -146,6 +146,15 @@ export default class BattleScene extends Phaser.Scene {
     // fighter, like the heroes' bars, so a character never covers a bar.
     for (const v of this.views.values()) {
       if (v.unit.side !== 'enemy') continue;
+      // The enemy itself leaves its floor too: from now on heroes and enemies are drawn in ONE order (lower on
+      // the screen = in front), so a hero standing behind a big boss is drawn behind it.
+      const fp = v.ch.parentContainer;
+      if (fp) {
+        fp.remove(v.ch);
+        v.ch.setPosition(v.ch.x + fp.x, v.ch.y + fp.y);
+        this.add.existing(v.ch);
+        v.ch.setDepth(DEPTH.hero + v.ch.y / 10000);
+      }
       for (const part of [v.bg, v.fill, v.shieldFill, v.chipBox]) {
         const parent = part.parentContainer;
         if (!parent) continue;
@@ -261,7 +270,7 @@ export default class BattleScene extends Phaser.Scene {
       try { look = statusLook(kinds, v.box, now + (u.uid % 7) * 137, TUNE); } // each fighter a little out of step
       catch (err) { console.error(err); continue; } // a broken effect must never stop the fight
       v.ch.setStatusLook(v.hitTint || look.tint, look.ice);
-      if (look.dx && this.shakeable(v)) v.ch.x += look.dx * Math.abs(v.ch.scaleY);
+      this.nudge(v, look.dx * Math.abs(v.ch.scaleY));
       this.paintFx(g, v, look.draws);
     }
     // Ice breaking off a fighter whose Freeze just ended.
@@ -312,7 +321,7 @@ export default class BattleScene extends Phaser.Scene {
       const q = (now - h.start) / h.ms;
       if (h.crit) { paint('crit', critFx(q, u, now)); continue; }
       if (h.kind) {
-        if (h.kind === 'dodge') { const o = dodgeFx(q, u); paint('dodge', o.draws); if (o.dx && this.shakeable(v)) ch.x += o.dx * S; }
+        if (h.kind === 'dodge') { const o = dodgeFx(q, u); paint('dodge', o.draws); this.nudge(v, o.dx * S); }
         else if (h.kind === 'block') paint('block', blockFx(q, u));
         else if (h.kind === 'soak') paint('soak', soakFx(q, u));
         else if (h.kind === 'shieldBreak') paint('shieldBreak', shieldBreakFx(q, u));
@@ -322,13 +331,27 @@ export default class BattleScene extends Phaser.Scene {
       const out = impactFx(h.type, q, u, now, h.seed, h.attacker && h.attacker.ch.active ? at(h.attacker) : null);
       paint(h.type, out.draws);
       if (out.tint && (!v.hitTint || out.tint[1] > v.hitTint[1])) v.hitTint = [TUNE.color('hit', h.type, out.tint[0]), out.tint[1]];
-      if (out.dx && this.shakeable(v)) ch.x += out.dx * S;
+      this.nudge(v, out.dx * S);
     }
   }
 
   // Effects may nudge a figure sideways for one frame (a twitch, a side-step). That only works for
   // figures that followPositions() puts back on their spot every frame: living, placed and not
   // mid-jab. Anything else (a dead enemy squashing into the floor) would keep the nudges and slide away.
+  // A one-frame sideways nudge (twitch, side-step, shake). Several in the same frame do NOT pile up:
+  // the total never goes past the biggest single one (so a fighter missed by three heroes at once doesn't
+  // jump far away), and nudges from opposite sides cancel out (no flicker).
+  nudge(v, px) {
+    if (!px || !this.shakeable(v)) return;
+    const frame = this.game.loop.frame;
+    if (v.nudgeFrame !== frame) { v.nudgeFrame = frame; v.nudgeSum = 0; v.nudgeMax = 0; v.nudgeX = 0; }
+    v.nudgeSum += px;
+    v.nudgeMax = Math.max(v.nudgeMax, Math.abs(px));
+    const want = Math.max(-v.nudgeMax, Math.min(v.nudgeMax, v.nudgeSum));
+    v.ch.x += want - v.nudgeX;
+    v.nudgeX = want;
+  }
+
   shakeable(v) {
     return this.mode === 'fighting' && v.unit.alive && v.unit.x !== undefined && !v.ch.lunging;
   }
@@ -571,7 +594,7 @@ export default class BattleScene extends Phaser.Scene {
       if (foe && foe.alive && foe.x !== undefined && Math.abs(foe.x - u.x) > 6) v.ch.face(foe.x < u.x ? -1 : 1);
       v.ch.setWalking(!!u.moving || !!v.ch.moveTween); // walk clip (if it has one)
       v.ch.setStunned(this.state.isStunned(u)); // stunned clip (if it has one)
-      if (u.side === 'hero') v.ch.setDepth(DEPTH.hero + u.y / 10000);
+      v.ch.setDepth(DEPTH.hero + u.y / 10000); // heroes, minions and enemies: lower on the screen = in front
       this.syncBar(v);
     }
   }
@@ -987,6 +1010,9 @@ export default class BattleScene extends Phaser.Scene {
     // Hit-stop: a big skill hit freezes the fight for a split second (the drawing keeps going).
     if (this.hitStop > 0) {
       this.hitStop -= delta;
+      // Positions are put back every frame here too: the small shakes/twitches drawStatusFx adds are
+      // one-frame nudges, and without this they piled up during the freeze (the enemy slid away).
+      this.followPositions();
       this.drawStatusFx();
       return;
     }
@@ -1612,7 +1638,7 @@ export default class BattleScene extends Phaser.Scene {
   showEnemySpawn(unit, color = 0x4a3a6a) {
     if (this.views.has(unit.uid)) return;
     const v = this.makeView(unit, unit.x ?? GAME_WIDTH / 2, unit.y ?? ENEMY_Y);
-    if (this.layer) this.layer.container.add(v.ch); // drawn with the other enemies (under the heroes)
+    v.ch.setDepth(DEPTH.hero + v.ch.y / 10000); // sorted with everyone else (followPositions keeps it up to date)
     for (const part of [v.bg, v.fill, v.shieldFill, v.chipBox]) part.setDepth(DEPTH.heroBar);
     const target = v.ch.scaleY;
     v.ch.scaleY = 0.05;

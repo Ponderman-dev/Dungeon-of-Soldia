@@ -3,6 +3,7 @@ import { computeDamage, computeDotDamage } from './combat.js';
 import { xpForNextLevel, statsAtLevel } from './leveling.js';
 import { computeHeroStats } from './items.js';
 import { moraleTier } from './party.js';
+import { partArt, artSize } from './pixelArt.js';
 
 // Every hero has one attack skill and one support skill, in this order (index 0 and 1).
 export const SKILL_SLOTS = ['attack', 'support'];
@@ -129,6 +130,7 @@ export default class BattleState {
       resists: def.resists || [],
       timer: 0,
     };
+    unit.size = this.bodySize(def); // 1 = hero-sized; bosses are 2-3 (movement: push-apart and reach)
     if (side === 'enemy') this.initBoss(unit); // boss abilities, plates, heat... (bosses.js)
     unit.timer = this.rng() * this.interval(unit); // so attacks don't all land together
     return unit;
@@ -310,9 +312,26 @@ export default class BattleState {
   inReach(unit, target) {
     if (!this.hasPositions(unit) || !this.hasPositions(target)) return true;
     const M = this.rules.movement;
-    const dx = (target.x - unit.x) / M.reachX;
-    const dy = (target.y - unit.y) / M.reachY;
+    const big = (target.size || 1) - 1; // a big target can be hit from its edge
+    const dx = (target.x - unit.x) / (M.reachX * (1 + big * 0.5));
+    const dy = (target.y - unit.y) / (M.reachY * (1 + big * 0.3));
     return dx * dx + dy * dy <= 1;
+  }
+
+  // How big a fighter's body is compared with a hero (1): its sprite width (without the weapon) on screen
+  // divided by movement.normalBodyPx, never below 1.
+  bodySize(def) {
+    const M = this.rules.movement;
+    if (!M || !M.normalBodyPx || !def.parts) return 1;
+    let x0 = Infinity, x1 = -Infinity;
+    for (const [name, p] of Object.entries(def.parts)) {
+      if (name === 'weapon') continue;
+      const { w } = artSize(partArt(p));
+      x0 = Math.min(x0, p.x - w / 2);
+      x1 = Math.max(x1, p.x + w / 2);
+    }
+    if (!isFinite(x0)) return 1;
+    return Math.max(1, ((x1 - x0) * (def.drawScale ?? 3)) / M.normalBodyPx);
   }
 
   // Everyone who can walks this update: melee fighters towards their target (until in reach), feared
@@ -373,7 +392,8 @@ export default class BattleState {
       for (let j = i + 1; j < units.length; j++) {
         const a = units[i];
         const b = units[j];
-        const d = Math.hypot((b.x - a.x) / M.separateX, (b.y - a.y) / M.separateY); // < 1 = too close
+        const k = ((a.size || 1) + (b.size || 1)) / 2; // big bodies (bosses) keep others further away
+        const d = Math.hypot((b.x - a.x) / (M.separateX * k), (b.y - a.y) / (M.separateY * (1 + (k - 1) * 0.5))); // < 1 = too close
         if (d >= 1) continue;
         let nx = b.x - a.x;
         let ny = b.y - a.y;
@@ -383,7 +403,7 @@ export default class BattleState {
           ny = 0;
           len = 1;
         }
-        const amount = Math.min(push, (1 - d) * M.separateX);
+        const amount = Math.min(push, (1 - d) * M.separateX * k);
         let wa = share(a, b);
         let wb = share(b, a);
         if (wa + wb === 0) wa = wb = 1;

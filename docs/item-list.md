@@ -1,5 +1,7 @@
 # Item list (master list, recompiled for the big update)
 
+> **Phase H update:** this is the OLD master list (72 items, old numbers). The current numbers of every item, and the 15 new items (73-87), are in `docs/item-decisions.md`.
+
 Status: `BUILT` = already in `src/data/items.json`. `NEW` = designed in chat, not built yet. Numbers are placeholders, tuned last.
 No mana items. Items are passive only. Items on a dead hero stop working. Details of how new systems work are in `docs/big-update-plan.md`.
 

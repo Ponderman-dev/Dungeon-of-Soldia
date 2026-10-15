@@ -160,3 +160,20 @@ Reading: summoning items add about +1.6 floors on average, matter most for the N
   after-floor heal, which did nothing next to the 25% win heal.
 - Full-run check (80 runs per number, base 30.4): 1 kit +1.3, 3 kits +6.7, 8 kits +15.0 floors. Now one of the strongest
   defensive items (Heart Charm +12, Martyr's Shield +10 at 8) although it is a common: watch it.
+
+## 10 new items (user: "implement all", proposal docs/proposals/item-sheet/new-items-10.html), items 73-82
+- Quiver of Plenty (rare, needs ranged): ranged basic attack 15%/copy for an extra arrow at a different enemy (full damage,
+  on-hit items roll); past 100% the rest is a chance for a third (max 2 extra). `extraArrows()`.
+- Spotter's Lens (rare, squad): the TAPPED enemy takes +12% per copy from the whole squad. `itemDamageBonus` spotter.
+- Giantslayer's Brand (epic): +30% damage to bosses per copy; while a holder lives boss wind-ups take 20% longer per copy.
+- Catalyst Vial (epic): each different DoT kind on an enemy makes the holder's ticks on it 15% stronger per copy.
+- Scholar's Bookmark (rare): +4% skill damage per copy per page on the holder's skills (modifiers count double).
+- Last Stand Banner (epic): a hero falls = survivors get a shield of 20% max health and +30% attack for 8s, per copy;
+  the holder's morale penalty x0.5 per copy.
+- Mirror Buckler (rare): 12%/copy (max 60%) that a ranged/magic hit on the holder bounces back at the attacker; past 5
+  copies +25% bounce damage per copy.
+- Soul Lantern (epic): every 8 squad kills +1% attack and max health per lantern, up to +30% per lantern.
+- Phoenix Feather (legendary, used up): a killing blow leaves the holder at 1 health and heals 40% (+10% per feather
+  left) over 3s.
+- Iron Will Talisman (common): +6 resist; stuns/freezes/webs/fears on the holder 25% shorter, each copy cuts 25% of what
+  is left. Icons written by `scripts/art/new-item-icons.mjs` from the proposal page. Tests: `items-new10.test.mjs`.

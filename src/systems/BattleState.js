@@ -450,10 +450,12 @@ export default class BattleState {
       if (target.def.reformFor) this.phylacteryBroken(target, events); // Morthul's crystal broke: he dies for good
       if (target.def.link) this.linkDeath(target, events); // Rask & Vesh: the other one enrages
       if (!target.xpless) this.awardXp(target, events);
+      if (!target.def.object) this.soulLanternKill();
       this.onKill(killer, target, events, lastStatuses);
       if (target.def.onDeath) this.deathBurst(target, target.def.onDeath, events);
     }
     else {
+      this.lastStand(target, events); // Last Stand Banner: the survivors rally
       this.removeMinionsOf(target, 'holderDied', events); // minions vanish when their holder dies
       this.refreshStats();
       if (this.morale !== was) events.push({ type: 'morale', tier: this.morale });
@@ -879,6 +881,25 @@ export default class BattleState {
     }
     this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, force: empower.some((f) => f.counter.forceProcs) });
     this.fireArrows(unit, target, events);
+    this.extraArrows(unit, target, events);
+  }
+
+  // Quiver of Plenty: a RANGED basic attack of the holder has `extraArrow`% (15 per copy) to shoot one more arrow at a
+  // DIFFERENT enemy (full damage, on-hit items roll); past 100% the rest is the chance for a third arrow (max 2 extra).
+  extraArrows(unit, target, events) {
+    const ch = (unit.specials && unit.specials.extraArrow) || 0;
+    if (!ch || unit.minion || unit.side !== 'hero' || unit.damageType === 'melee') return;
+    let n = Math.min(2, Math.floor(ch / 100) + (this.rng() * 100 < ch % 100 ? 1 : 0));
+    const hit = new Set([target]);
+    while (n-- > 0) {
+      const others = this.targetableEnemies().filter((e) => !hit.has(e));
+      if (!others.length) return;
+      const other = others[Math.floor(this.rng() * others.length)];
+      hit.add(other);
+      events.push({ type: 'proc', unit, label: 'Extra arrow!', itemId: 'quiver_of_plenty', target: other });
+      const res = this.strike(unit, other, events, { projectile: 'arrow' });
+      this.rollProcs(unit, 'onAttack', events, { target: other, hit: !res.dodged });
+    }
   }
 
   // Metronome: the holder counts its own basic attacks; every 4th (`metronomeEvery`) gets +`metronome`% damage
@@ -1282,6 +1303,8 @@ export default class BattleState {
     if (!result.dodged && target.side === 'hero' && target.specials.toughSkin && result.amount > 1) {
       result.amount = Math.max(1, Math.round(result.amount - target.specials.toughSkin));
     }
+    // Mirror Buckler: a RANGED or MAGIC enemy hit on the holder may bounce back at the attacker (the holder takes nothing).
+    if (!result.dodged && attacker.side === 'enemy' && target.side === 'hero' && !target.minion && attacker.alive && this.mirrorBounce(attacker, target, result, opts, events)) return result;
     let dealt = null;
     if (!result.dodged) {
       dealt = this.dealDamage(target, result.amount, events);
@@ -1378,6 +1401,8 @@ export default class BattleState {
     if (sp.exploiter && kinds.size >= 3) bonus += sp.exploiter; // Exploiter's Lens
     if (sp.executioner && target.hp < target.maxHp * 0.25) { bonus += sp.executioner; this.bonusItems.push(['executioners_axe', 'Execute!']); } // Executioner's Axe
     if (sp.hornDamage && this.has(target, 'taunt')) bonus += sp.hornDamage; // Provoker's Horn: taunted enemies take more
+    if (sp.spotter && this.focusUid === target.uid) bonus += sp.spotter; // Spotter's Lens: the TAPPED enemy takes more from the squad
+    if (sp.bossDamage && target.def.boss) bonus += sp.bossDamage; // Giantslayer's Brand
     return bonus;
   }
 
@@ -1581,6 +1606,7 @@ export default class BattleState {
       }
     }
     target.hp = Math.max(0, target.hp - left);
+    if (target.hp <= 0) this.phoenixSave(target, events || []); // Phoenix Feather: one feather is used up instead of dying
     if (left > 0 && target.def.passive && target.def.passive.rage) this.gainRage(target, target.def.passive.rage.perHitTaken, events); // Berserker: hits taken fill Rage
     if (left > 0 || absorbed > 0) {
       target.sinceHit = 0; // being hit resets Steady Aim
@@ -1591,6 +1617,78 @@ export default class BattleState {
     }
     this.afterDamage(target, events);
     return { lost: left, absorbed, immune: false, broken, burnShield };
+  }
+
+  // Last Stand Banner: when a hero falls every survivor gets a shield of 20% max health and +30% attack for 8s, both per
+  // banner held by living heroes (`lastStand` = copies). The holder's morale penalty shrinks too (items.js).
+  lastStand(fallen, events) {
+    const copies = this.heroes.filter((h) => h.alive && h !== fallen).reduce((n, h) => n + ((h.specials && h.specials.lastStand) || 0), 0);
+    if (!copies) return;
+    const holder = this.heroes.find((h) => h.alive && h.specials && h.specials.lastStand);
+    events.push({ type: 'proc', unit: holder, label: 'Last Stand!', itemId: 'last_stand_banner' });
+    for (const h of this.heroes.filter((x) => x.alive && x !== fallen)) {
+      this.applyStatus(h, { status: 'shield', percentMaxHp: 20 * copies, durationMs: 8000 }, h, 'last_stand', events);
+      this.applyStatus(h, { status: 'buff', durationMs: 8000, mods: [{ stat: 'attack', percent: 30 * copies }] }, h, 'last_stand', events);
+    }
+  }
+
+  // Soul Lantern: every `lanternEvery` (8) enemies the squad defeats, each holder gains +1% attack and max health per
+  // lantern for the rest of the run, up to 30% per lantern (`hero.lanternGain`, used in statUpkeep()).
+  soulLanternKill() {
+    let changed = false;
+    for (const h of this.heroes) {
+      const n = h.alive && h.specials ? h.specials.soulLantern || 0 : 0;
+      if (!n) continue;
+      h.lanternKills = (h.lanternKills || 0) + 1;
+      if (h.lanternKills % 8 !== 0) continue;
+      const before = h.lanternGain || 0;
+      h.lanternGain = Math.min(30 * n, before + n);
+      if (h.lanternGain !== before) changed = true;
+    }
+    if (changed) this.refreshStats();
+  }
+
+  // Scholar's Bookmark: +`bookmark`% skill damage (4 per copy) for every page on the holder's skills, modifiers count double.
+  bookmarkBonus(hero) {
+    const per = (hero.specials && hero.specials.bookmark) || 0;
+    if (!per) return 0;
+    let pages = 0;
+    for (const slot of hero.skills || []) for (const p of slot.pages || []) pages += p.kind === 'modifier' ? 2 : 1;
+    return per * pages;
+  }
+
+  // Phoenix Feather (used up): when the holder would die it stays at 1 health and heals `phoenixFeather`% (40) of max
+  // health over 3s (a regen boost), +10% for every feather still in the bag after this one.
+  phoenixSave(target, events) {
+    const sp = target.specials;
+    if (target.side !== 'hero' || target.minion || !target.alive || !sp || !sp.phoenixFeather) return;
+    const id = this.consumeItem(target, 'phoenixFeather');
+    if (!id) return;
+    target.hp = 1;
+    const left = target.items.filter((x) => x === id).length;
+    const heal = 40 + 10 * left;
+    events.push({ type: 'proc', unit: target, label: 'Phoenix!', itemId: 'phoenix_feather' });
+    events.push({ type: 'itemUsed', unit: target, itemId: id });
+    this.applyStatus(target, { status: 'regenBoost', durationMs: 3000, percentMaxHpPerSec: heal / 3 }, target, 'phoenix_feather', events);
+  }
+
+  // Mirror Buckler: `mirrorBuckler`% chance (12 per copy, stops at 60%) that a ranged/magic hit bounces back; every copy
+  // past 5 makes the bounced hit 25% stronger. Returns true when it bounced (the hit is then reported as blocked).
+  mirrorBounce(attacker, target, result, opts, events) {
+    const sp = target.specials;
+    const type = opts.damageType || attacker.damageType;
+    if (!sp || !sp.mirrorBuckler || type === 'melee') return false;
+    const copies = sp.mirrorBuckler / 12;
+    if (this.rng() * 100 >= Math.min(60, sp.mirrorBuckler)) return false;
+    const back = Math.max(1, Math.round(result.amount * (1 + 0.25 * Math.max(0, copies - 5))));
+    result.dodged = true; result.blocked = true; result.reflected = true; result.amount = 0;
+    events.push({ type: 'proc', unit: target, label: 'Mirror!', itemId: 'mirror_buckler', target: attacker });
+    events.push({ type: 'attack', attacker, target, result, damageType: type });
+    const d = this.dealDamage(attacker, back, events);
+    if (!d.immune) events.push({ type: 'thorns', unit: attacker, amount: back - d.absorbed, holder: target });
+    this.breakEffects(attacker, d.broken, events);
+    if (attacker.hp <= 0 && attacker.alive) this.killUnit(attacker, events);
+    return true;
   }
 
   // Things that react to a unit having lost health (called from dealDamage when it has an events list).
@@ -1743,7 +1841,8 @@ export default class BattleState {
     // A shield with no durationMs lasts until it is broken.
     // Catalyst (Alchemist): debuffs on ENEMIES last longer.
     const cat = target.side === 'enemy' && this.statusDefs[spec.status] && this.statusDefs[spec.status].debuff ? this.catalyst() : { dur: 1, dot: 1 };
-    const duration = (spec.durationMs ?? (spec.status === 'shield' ? Infinity : 0)) * scale * cat.dur;
+    const will = info.control && target.side === 'hero' && target.specials ? target.specials.ironWill || 0 : 0; // Iron Will Talisman
+    const duration = (spec.durationMs ?? (spec.status === 'shield' ? Infinity : 0)) * scale * cat.dur * (1 - Math.min(95, will) / 100);
     const key = `${spec.status}:${skillId}`;
 
     if (info.instant) {
@@ -1885,7 +1984,10 @@ export default class BattleState {
       unit.dotClocks[type] += dt * (1 + ((src && src.specials.burnSpeed) || 0) / 100);
       while (unit.dotClocks[type] >= tickMs && unit.alive) {
         unit.dotClocks[type] -= tickMs;
-        const total = stacks.reduce((sum, s) => sum + s.damage, 0);
+        // Catalyst Vial: each DIFFERENT damage over time on this enemy makes the holder's stacks tick `dotMix`% harder.
+        const kinds = unit.side === 'enemy' ? new Set(unit.statuses.filter((s) => s.stack).map((s) => s.type)).size : 0;
+        const mix = (s) => { const h = kinds && this.heroes.find((x) => x.uid === s.sourceUid && x.alive); return h && h.specials.dotMix ? 1 + (h.specials.dotMix * kinds) / 100 : 1; };
+        const total = stacks.reduce((sum, s) => sum + s.damage * mix(s), 0);
         const { damageType, ignoresArmor } = stacks[0];
         const amount = computeDotDamage(unit, total, damageType, this.rules, this.damageTypes, { ignoresArmor });
         const d = this.dealDamage(unit, amount, events);
@@ -2283,7 +2385,7 @@ export default class BattleState {
     }
     const base = opts.multiplier ?? skill.damageMultiplier;
     if (base) {
-      let mult = base * (1 + ((hero.specials && hero.specials.skillDamage) || 0) / 100) * (opts.scale ?? 1);
+      let mult = base * (1 + (((hero.specials && hero.specials.skillDamage) || 0) + this.bookmarkBonus(hero)) / 100) * (opts.scale ?? 1);
       // Bonus damage against certain enemies: `debuffedMultiplier` (any debuff: Smite, Death Coil), `bonusVs`
       // (a list of { status, multiplier }: Chain Lightning vs burning/frozen), `doubleIf` (x2 if the target
       // is bleeding / below half health: Savage Leap).
@@ -2531,6 +2633,7 @@ export default class BattleState {
     const mr = this.rules.minions || {};
     if (paying > 0) upkeep.push({ stat: 'attackEfficiency', percent: (mr.upkeepAttackSpeedPercent || 0) * paying }, { stat: 'defense', percent: (mr.upkeepDefensePercent || 0) * paying });
     if (hero.taunting && hero.specials && hero.specials.spiteMail) upkeep.push({ stat: 'defense', flat: hero.specials.spiteMail }); // Spite Mail
+    if (hero.lanternGain) upkeep.push({ stat: 'attack', percent: hero.lanternGain }, { stat: 'health', percent: hero.lanternGain }); // Soul Lantern
     const sa = hero.def.passive && hero.def.passive.steadyAim;
     if (sa && hero.steady) upkeep.push({ stat: 'attackEfficiency', percent: sa.attackSpeedPercent }, { stat: 'crit', flat: sa.critFlat });
     // Bard's March: the whole squad attacks faster while he plays it (Conductor's Baton makes it stronger).

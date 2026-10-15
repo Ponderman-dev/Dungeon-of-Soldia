@@ -80,7 +80,8 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
   for (const holder of heroes) if (holder.alive) perkMods(holder).forEach((m) => apply(m));
   // Morale: the party is weaker once heroes have fallen.
   const tier = moraleRules[moraleTier(heroes)];
-  if (tier) tier.mods.forEach((m) => apply(m));
+  // Last Stand Banner: the holder feels 50% less of the morale penalty, each extra banner halves what is left again.
+  if (tier) tier.mods.forEach((m) => apply(m, Math.pow(0.5, specials.lastStand || 0)));
   // Extra mods from the game rules (minion upkeep).
   extraMods.forEach((m) => apply(m));
   // Temporary buffs from skills.

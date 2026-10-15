@@ -1401,6 +1401,7 @@ export default class BattleScene extends Phaser.Scene {
 
   showProjectile(from, to, kind) {
     if (!from || !to) return;
+    if (kind === 'arrow') return this.shootArrow(from, to, 200); // Quiver of Plenty's extra arrow: a normal shot
     const start = this.center(from);
     // Skill shots in pixels (systems/skillFx.js); they aim at where the target is NOW.
     if (SHOT_MS[kind] || kind === 'crescent') {

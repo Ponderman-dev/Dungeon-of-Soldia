@@ -1449,5 +1449,155 @@
     ],
     "dropWeight": 100,
     "needs": "melee"
+  },
+  "quiver_of_plenty": {
+    "name": "Quiver of Plenty",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "Ranged attacks: 15% chance per copy to shoot an extra arrow at a different enemy (past 100%: a chance for a third).",
+    "effects": [
+      {
+        "special": "extraArrow",
+        "percent": 15
+      }
+    ],
+    "dropWeight": 90,
+    "needs": "ranged"
+  },
+  "spotters_lens": {
+    "name": "Spotter's Lens",
+    "rarity": "rare",
+    "type": "squad",
+    "scope": "squad",
+    "description": "The enemy you tap takes +12% damage per copy from the whole squad.",
+    "effects": [
+      {
+        "special": "spotter",
+        "percent": 12
+      }
+    ],
+    "dropWeight": 90
+  },
+  "giantslayers_brand": {
+    "name": "Giantslayer's Brand",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "+30% damage to bosses per copy. While the holder lives, boss wind-ups take 20% longer per copy.",
+    "effects": [
+      {
+        "special": "bossDamage",
+        "percent": 30
+      },
+      {
+        "special": "bossWindup",
+        "percent": 20
+      }
+    ],
+    "dropWeight": 90
+  },
+  "catalyst_vial": {
+    "name": "Catalyst Vial",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "Each different damage over time on an enemy (bleed, burn, poison) makes the holder's ticks on it 15% stronger per copy.",
+    "effects": [
+      {
+        "special": "dotMix",
+        "percent": 15
+      }
+    ],
+    "dropWeight": 90
+  },
+  "scholars_bookmark": {
+    "name": "Scholar's Bookmark",
+    "rarity": "rare",
+    "type": "skill",
+    "scope": "self",
+    "description": "+4% skill damage per copy for every page on the holder's skills (modifier pages count double).",
+    "effects": [
+      {
+        "special": "bookmark",
+        "percent": 4
+      }
+    ],
+    "dropWeight": 80
+  },
+  "last_stand_banner": {
+    "name": "Last Stand Banner",
+    "rarity": "epic",
+    "type": "squad",
+    "scope": "self",
+    "description": "When a hero falls, every survivor gets a shield of 20% max health and +30% attack for 8s, per copy. The holder feels half the morale penalty (halved again per copy).",
+    "effects": [
+      {
+        "special": "lastStand",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 90
+  },
+  "mirror_buckler": {
+    "name": "Mirror Buckler",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "12% chance per copy (max 60%) that a ranged or magic hit on the holder bounces back at the attacker. Past 5 copies the bounce hits 25% harder per copy.",
+    "effects": [
+      {
+        "special": "mirrorBuckler",
+        "percent": 12
+      }
+    ],
+    "dropWeight": 90
+  },
+  "soul_lantern": {
+    "name": "Soul Lantern",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "Every 8 enemies the squad defeats: +1% attack and max health per lantern for the rest of the run (up to +30% per lantern).",
+    "effects": [
+      {
+        "special": "soulLantern",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 90
+  },
+  "phoenix_feather": {
+    "name": "Phoenix Feather",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "Used up: when the holder would die, they stay at 1 health and heal 40% over 3s (+10% per feather left in the bag).",
+    "effects": [
+      {
+        "special": "phoenixFeather",
+        "percent": 1
+      }
+    ],
+    "dropWeight": 100
+  },
+  "iron_will_talisman": {
+    "name": "Iron Will Talisman",
+    "rarity": "common",
+    "type": "stat",
+    "scope": "self",
+    "description": "+6 resist. Stuns, freezes, webs and fears on the holder are 25% shorter (each copy cuts 25% of what is left).",
+    "effects": [
+      {
+        "stat": "resist",
+        "flat": 6
+      },
+      {
+        "special": "ironWill",
+        "percent": 25,
+        "falloffRatio": 0.75
+      }
+    ],
+    "dropWeight": 100
   }
 }

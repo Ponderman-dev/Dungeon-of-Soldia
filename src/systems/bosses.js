@@ -145,7 +145,9 @@ export const bossMethods = {
       u.pending = null;
       events.push({ type: 'attackCancel', unit: u, reason: 'ability' });
     }
-    const castMs = a.castMs || 0;
+    // Giantslayer's Brand: while a holder lives, boss wind-ups take `bossWindup`% longer (20 per copy).
+    const slow = this.heroes.filter((h) => h.alive && h.specials).reduce((n, h) => n + (h.specials.bossWindup || 0), 0);
+    const castMs = (a.castMs || 0) * (1 + slow / 100);
     if (castMs <= 0 && !a.channel) return this.releaseAbility(u, a, events);
     u.bossCast = { def: a, remaining: castMs, total: castMs, channel: null };
     events.push({ type: 'castStart', unit: u, skill: { name: a.name, kind: 'attack' }, castMs, boss: true });

@@ -755,6 +755,7 @@ export default class BattleState {
       if (hero.floor.martyrCd > 0) hero.floor.martyrCd -= dt;
       hero.shareCd = Math.max(0, hero.shareCd - dt);
       if (hero.soulCd > 0) hero.soulCd -= dt; // Grimoire fireball cooldown
+      if (hero.triageCd > 0) hero.triageCd -= dt; // Aid Kit triage cooldown
       this.tickBandages(hero, dt, events);
       this.tickSpawner(hero, dt, events);
       for (const slot of hero.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - dt);
@@ -1593,9 +1594,26 @@ export default class BattleState {
   }
 
   // Things that react to a unit having lost health (called from dealDamage when it has an events list).
+  // Aid Kit (TRIAGE): when any living hero drops below `triageBelow`% (30) health, a living holder whose kit is ready
+  // patches them at once for `triage` FLAT health (15 per kit), then waits `triageCooldownMs` (10s).
+  tryTriage(target, events) {
+    if (target.hp <= 0) return;
+    for (const h of this.heroes) {
+      const sp = h.specials;
+      if (!h.alive || !sp || !sp.triage || (h.triageCd || 0) > 0) continue;
+      if (target.hp >= (target.maxHp * (sp.triageBelow || 30)) / 100) return;
+      h.triageCd = sp.triageCooldownMs || 10000;
+      events.push({ type: 'proc', unit: h, label: 'Triage!', itemId: 'aid_kit', target });
+      if (h !== target) events.push({ type: 'flask', unit: h, target, flask: { color: '0xff6b6b' } }); // a red-cross kit lobbed over
+      this.healUnit(target, sp.triage, events, { aura: false });
+      return;
+    }
+  }
+
   afterDamage(target, events) {
     if (!events || target.side !== 'hero' || target.minion || target.hp <= 0) return;
     this.tryIntercept(target, events); // Knight: jumps in front of a hero who drops low
+    this.tryTriage(target, events); // Aid Kit: patches a hero who drops low
     // Second Wind Flask: below its threshold ONE flask is used up and heals (once per floor per holder).
     const below = target.specials.secondWindBelow;
     if (target.specials.secondWind && !target.floor.flaskUsed && target.hp < (target.maxHp * below) / 100) {

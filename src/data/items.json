@@ -363,12 +363,25 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Heals 20 health per kit when a floor is cleared.",
+    "description": "Triage: when any hero drops below 30% health, the holder patches them for 15 health per kit (10s cooldown).",
     "effects": [
       {
-        "special": "clearHealFlat",
-        "percent": 20
+        "special": "triage",
+        "percent": 15
+      },
+      {
+        "special": "triageBelow",
+        "percent": 30,
+        "unique": true
+      },
+      {
+        "special": "triageCooldownMs",
+        "percent": 10000,
+        "unique": true
       }
+    ],
+    "provides": [
+      "heal"
     ]
   },
   "shared_potion": {

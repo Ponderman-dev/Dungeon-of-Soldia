@@ -153,3 +153,10 @@ same dice, without summoning items the run went: deeper 198, shallower 257, same
 
 ```
 Reading: summoning items add about +1.6 floors on average, matter most for the Necromancer (+3) and the floor-40 Brood Mother (86% wins with, 53% without). Runs that never picked one (mean 17.2) are mostly runs that died early, so that number is not a fair comparison.
+
+## Aid Kit rework (round 3)
+- [built] Aid Kit = TRIAGE (user's pick): when ANY hero drops below 30% health, the holder patches them at once for 15 FLAT
+  health per kit, then a 10s cooldown (`tryTriage()`, specials `triage` / `triageBelow` / `triageCooldownMs`). Replaces the
+  after-floor heal, which did nothing next to the 25% win heal.
+- Full-run check (80 runs per number, base 30.4): 1 kit +1.3, 3 kits +6.7, 8 kits +15.0 floors. Now one of the strongest
+  defensive items (Heart Charm +12, Martyr's Shield +10 at 8) although it is a common: watch it.

@@ -1663,11 +1663,11 @@
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "8% chance per copy on any attack to throw a crescent of moonlight (ranged damage) that hits its target 3 times (60% each, +20% per extra copy).",
+    "description": "18% chance per copy on any attack to throw a crescent of moonlight (ranged damage) that hits its target 3 times (60% each, +20% per extra copy).",
     "effects": [
       {
         "proc": "onAttack",
-        "chance": 8,
+        "chance": 18,
         "label": "Moonlight!",
         "silent": true,
         "targets": "self",

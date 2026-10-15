@@ -430,9 +430,12 @@ export default class SquadScene extends Phaser.Scene {
       color = 0x6b2f3a;
       action = () => this.sendBack(id);
     } else if (full) {
-      label = 'SQUAD IS FULL';
-      color = 0x3a3350;
-      text(GAME_WIDTH / 2, by - 22, 'Tap a hero in a slot to send it back first.', 12, MUTE, true).setOrigin(0.5);
+      // Squad full: choosing still works, the hero in the last slot walks back to the bench (user's choice).
+      const out = this.slots[this.slots.length - 1];
+      label = 'CHOOSE';
+      color = 0x2f9a55;
+      text(GAME_WIDTH / 2, by - 22, `${heroDefs.find((h) => h.id === out).name} goes back to the bench.`, 12, MUTE, true).setOrigin(0.5);
+      action = () => { this.sendBack(out); this.choose(id); };
     } else {
       label = 'CHOOSE';
       color = 0x2f9a55;

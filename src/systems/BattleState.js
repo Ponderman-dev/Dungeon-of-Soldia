@@ -1835,8 +1835,9 @@ export default class BattleState {
     if (!hero || !this.canCast(hero, index)) return events;
     const slot = hero.skills[index];
     const skill = this.currentSpell(hero, index);
-    slot.cooldownLeft = skill.cooldownMs * (1 - Math.min(50, hero.specials.cooldown || 0) / 100); // Hourglass
-    const castMs = this.castTime(skill);
+    const book = this.pageTotals(slot); // skill book pages: shorter cooldown / wind-up (Swift, Steady Hands, Hasty, Overcharge)
+    slot.cooldownLeft = skill.cooldownMs * (1 - Math.min(50, hero.specials.cooldown || 0) / 100) * (1 - Math.min(75, book.cooldown) / 100); // Hourglass
+    const castMs = this.castTime(skill) * (1 - Math.min(75, book.windup) / 100) * book.windupMultiplier;
     if (castMs <= 0) {
       this.releaseSkill(hero, index, events);
       return events;
@@ -1881,6 +1882,9 @@ export default class BattleState {
     let skill = echo ? echo.spell : this.currentSpell(hero, index);
     // Conductor's Baton: the holder's SUPPORT skills are stronger and last longer.
     if (skill.kind === 'support' && hero.specials.baton) skill = this.scaleSupport(skill, 1 + hero.specials.baton / 100);
+    // Skill book pages on this skill: power and duration (an echo is already scaled), modifiers (see bookCast / skillHit).
+    const book = this.pageTotals(slot);
+    if (!echo && (book.power || book.duration)) skill = this.scaleSkill(skill, Math.max(0.1, 1 + book.power / 100), 1 + book.duration / 100);
     if (!this.targetsAllies(skill) && !this.enemies.some((e) => e.alive)) {
       events.push({ type: 'castCancel', unit: hero, skill, reason: 'noTarget' });
       return;
@@ -1906,6 +1910,8 @@ export default class BattleState {
     }
 
     events.push({ type: 'cast', unit: hero, skill, targets, zone });
+    if (!echo) this.bookCast(hero, skill, book.mods, events);
+    this.castPages = book.mods.length ? { hero, mods: book.mods } : null; // on-hit modifiers (Inks, Siphon) for this cast's hits
     // Blood Pact: the skill costs the caster some of their own health.
     if (skill.selfCostPercent) {
       const cost = Math.round((hero.maxHp * skill.selfCostPercent) / 100);
@@ -1922,11 +1928,13 @@ export default class BattleState {
     if (skill.channel) {
       // A channel: after the cast it keeps firing waves; the hero is busy until the last one.
       const ch = skill.channel;
-      hero.casting = { index, remaining: ch.waves.length * ch.intervalMs, total: ch.waves.length * ch.intervalMs, channel: { skill, slotId: slot.id, waves: ch.waves, intervalMs: ch.intervalMs, timer: 0, wave: 0, zone } };
+      hero.casting = { index, remaining: ch.waves.length * ch.intervalMs, total: ch.waves.length * ch.intervalMs, channel: { skill, slotId: slot.id, waves: ch.waves, intervalMs: ch.intervalMs, timer: 0, wave: 0, zone, book: book.mods } };
+      this.castPages = null;
       return;
     }
     if (skill.random) {
       this.throwFlasks(hero, skill, slot.id, events);
+      this.castPages = null;
       return;
     }
     let first = true;
@@ -1961,6 +1969,7 @@ export default class BattleState {
         for (const n of this.neighbours(target)) this.skillHit(hero, skill, slot.id, n, events, { multiplier: skill.splash.damageMultiplier, scale: echo ? echo.power : 1 });
       }
     }
+    this.castPages = null;
     // Echo Rune: a skill sometimes casts a second time (the echo cannot echo, the Mage's rotation does not move again).
     // Channels (Rain of Arrows, Crescendo) do not echo.
     const chance = hero.specials.echo || 0;
@@ -1969,6 +1978,97 @@ export default class BattleState {
       const copies = hero.specials.echoCopies || 1;
       this.releaseSkill(hero, index, events, { spell: skill, power: Math.min(1, 0.6 + 0.1 * (copies - 1)) });
     }
+  }
+
+  // ---- skill books (skillBooks.json pages, combat.json `books` limits) ----------------------------------------
+  // Puts a page ({ id, kind, ... } from skillBooks.json) on skill `index` of a hero, for the rest of the run.
+  // Stat pages: at most books.maxStatPages per skill (they may repeat). Modifiers: at most books.modifierSlots, no
+  // duplicates; on a full skill pass `replace` = which of its modifiers (0, 1...) the new one replaces.
+  // Returns { ok, reason?: 'noHero' | 'full' | 'duplicate', replaced? }.
+  addPage(heroUid, index, page, replace = null) {
+    const hero = this.heroes.find((h) => h.uid === heroUid);
+    const slot = hero && hero.skills[index];
+    if (!slot || !hero.alive) return { ok: false, reason: 'noHero' };
+    const lim = this.rules.books || {};
+    const pages = (slot.pages = slot.pages || []);
+    if (page.kind === 'stat') {
+      if (pages.filter((p) => p.kind === 'stat').length >= (lim.maxStatPages ?? 3)) return { ok: false, reason: 'full' };
+      pages.push(page);
+      return { ok: true };
+    }
+    const mods = pages.filter((p) => p.kind === 'modifier');
+    if (mods.some((p) => p.id === page.id)) return { ok: false, reason: 'duplicate' };
+    if (mods.length >= (lim.modifierSlots ?? 2)) {
+      if (replace === null || !mods[replace]) return { ok: false, reason: 'full' };
+      pages.splice(pages.indexOf(mods[replace]), 1, page);
+      return { ok: true, replaced: mods[replace] };
+    }
+    pages.push(page);
+    return { ok: true };
+  }
+
+  // What the pages on one skill add up to (percent numbers; windupMultiplier multiplies).
+  pageTotals(slot) {
+    const t = { power: 0, cooldown: 0, windup: 0, duration: 0, windupMultiplier: 1, mods: [] };
+    for (const p of (slot && slot.pages) || []) {
+      t.power += p.power || 0;
+      t.cooldown += p.cooldown || 0;
+      t.windup += p.windup || 0;
+      t.duration += p.duration || 0;
+      if (p.windupMultiplier) t.windupMultiplier *= p.windupMultiplier;
+      if (p.kind === 'modifier') t.mods.push(p);
+    }
+    return t;
+  }
+
+  // Modifiers that act once when the skill goes off: statuses on the caster / squad (Bulwark, Rally). A skill that
+  // hits no enemy (a support skill) uses the page's support version: Inks go on the enemy nearest the caster,
+  // Siphon heals the caster a % of max health.
+  bookCast(hero, skill, mods, events) {
+    const hitsEnemies = !!(skill.damageMultiplier || skill.channel || (skill.random && skill.random.target === 'enemy'));
+    for (const m of mods) {
+      for (const spec of m.selfApply || []) this.applyStatus(hero, spec, hero, `book_${m.id}`, events);
+      for (const spec of m.squadApply || []) for (const u of this.squadUnits()) this.applyStatus(u, spec, hero, `book_${m.id}`, events);
+      if (hitsEnemies) continue;
+      if (m.ink) {
+        const e = this.nearest(hero, this.targetableEnemies());
+        if (e) for (const spec of m.ink) this.applyStatus(e, spec, hero, `book_${m.id}`, events);
+      }
+      if (m.supportHealPercent) this.healUnit(hero, Math.round((hero.maxHp * m.supportHealPercent) / 100), events);
+    }
+  }
+
+  // Modifiers on every enemy a skill hit lands on: Inks (statuses), Siphon (heals the caster).
+  bookOnHit(hero, target, result, events) {
+    const cp = this.castPages;
+    if (!cp || cp.hero !== hero || target.side !== 'enemy' || !result || result.dodged) return;
+    for (const m of cp.mods) {
+      const dealt = (result.amount || 0) - (result.absorbed || 0);
+      if (m.siphonPercent && dealt > 0) this.healUnit(hero, Math.max(1, Math.round((dealt * m.siphonPercent) / 100)), events);
+      if (m.ink && target.alive) for (const spec of m.ink) this.applyStatus(target, spec, hero, `book_${m.id}`, events);
+    }
+  }
+
+  // A skill with skill book power `power` (1.08 = +8%: damage, heals, shields, buff sizes) and `dur` (1.15 = what it
+  // gives lasts 15% longer). Returns a scaled copy.
+  scaleSkill(skill, power, dur) {
+    const spec = (s) => {
+      const out = { ...s };
+      if (out.durationMs) out.durationMs *= dur;
+      if (out.mods) out.mods = out.mods.map((m) => ({ ...m, ...(m.percent !== undefined ? { percent: m.percent * power } : {}), ...(m.flat !== undefined ? { flat: m.flat * power } : {}) }));
+      for (const f of ['amount', 'percentMaxHp', 'attackMultiplier', 'healPercentOnEnd', 'percentMaxHpPerSec']) if (out[f] !== undefined) out[f] *= power;
+      return out;
+    };
+    const list = (a) => (a ? a.map(spec) : a);
+    const out = { ...skill, apply: list(skill.apply), applyEnemies: list(skill.applyEnemies), selfApply: list(skill.selfApply), waveApply: list(skill.waveApply), onCrit: list(skill.onCrit) };
+    if (skill.damageMultiplier) out.damageMultiplier = skill.damageMultiplier * power;
+    if (skill.heal) out.heal = { ...skill.heal, percentMaxHp: (skill.heal.percentMaxHp || 0) * power, attackMultiplier: (skill.heal.attackMultiplier || 0) * power };
+    if (skill.channel) out.channel = { ...skill.channel, waves: skill.channel.waves.map((w) => w * power) };
+    if (skill.finisher) out.finisher = { ...skill.finisher, perPoint: skill.finisher.perPoint * power, applyAtMax: list(skill.finisher.applyAtMax) };
+    if (skill.splash) out.splash = { ...skill.splash, damageMultiplier: skill.splash.damageMultiplier * power };
+    if (skill.landSplash) out.landSplash = { ...skill.landSplash, damageMultiplier: skill.landSplash.damageMultiplier * power };
+    if (skill.random) out.random = { ...skill.random, pool: skill.random.pool.map((f) => ({ ...f, ...(f.damageMultiplier ? { damageMultiplier: f.damageMultiplier * power } : {}), ...(f.apply ? { apply: list(f.apply) } : {}), ...(f.heal ? { heal: { ...f.heal, percentMaxHp: f.heal.percentMaxHp * power } } : {}) })) };
+    return out;
   }
 
   // A support skill made stronger and longer by `k` (1.25 = 25%): every status it applies lasts longer, its
@@ -2030,6 +2130,7 @@ export default class BattleState {
       if (!target.alive && skill.onKill && skill.onKill.raise) {
         this.spawnMinion(hero, { kind: 'weak', key: 'hero', spec: { minion: skill.onKill.raise, cap: (hero.def.spawner && hero.def.spawner.cap) || 4 } }, events);
       }
+      this.bookOnHit(hero, target, result, events); // Inks, Siphon
       if (result.dodged || !target.alive) return result;
       // `onCrit`: statuses that only a crit puts on the target (Fan of Knives: bleed).
       if (result.crit) for (const spec of skill.onCrit || []) this.applyStatus(target, spec, hero, `${slotId}_crit`, events);
@@ -2041,6 +2142,7 @@ export default class BattleState {
 
   // One wave of a channel: every living enemy takes a hit (growing in Crescendo), `waveApply` statuses with a chance each.
   fireWave(hero, ch, events) {
+    this.castPages = ch.book && ch.book.length ? { hero, mods: ch.book } : null;
     const mult = ch.waves[ch.wave];
     // The zone follows its main target while that one lives (enemies walk during a channel).
     const z = ch.zone;
@@ -2055,6 +2157,7 @@ export default class BattleState {
       const res = this.skillHit(hero, { ...ch.skill, apply: null, onCrit: ch.skill.onCrit }, ch.slotId, t, events, { multiplier: mult });
       if (res && !res.dodged && t.alive) for (const spec of ch.skill.waveApply || []) if (this.rng() * 100 < (spec.chance ?? 100)) this.applyStatus(t, spec, hero, ch.slotId, events);
     }
+    this.castPages = null;
     ch.wave++;
   }
 

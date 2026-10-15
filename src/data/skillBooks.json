@@ -1,0 +1,19 @@
+{
+  "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. Pages still to come (book step 4): huntersInk, bloodPrice, cyclone, ricochet, aftershock, titan, purify, roar, gravecall, concussive, reckless, desperate.",
+  "bookChancePerScreen": 0.0667,
+  "pages": {
+    "sharpen": { "kind": "stat", "name": "Sharpen", "text": "+8% skill power (damage, healing, shield or buff size).", "power": 8 },
+    "swift": { "kind": "stat", "name": "Swift", "text": "Cooldown 8% shorter.", "cooldown": 8 },
+    "steady": { "kind": "stat", "name": "Steady Hands", "text": "Wind-up 15% shorter.", "windup": 15 },
+    "lasting": { "kind": "stat", "name": "Lasting", "text": "What the skill gives lasts 15% longer.", "duration": 15 },
+    "venomInk": { "kind": "modifier", "tag": "Debuff", "name": "Venom Ink", "text": "Every enemy the skill hits also gets 2 stacks of Poison.", "ink": [{ "status": "poison", "stacks": 2, "durationMs": 5000, "damageMultiplier": 0.2, "damageType": "dark" }] },
+    "razorInk": { "kind": "modifier", "tag": "Debuff", "name": "Razor Ink", "text": "Every enemy the skill hits also gets 2 stacks of Bleed.", "ink": [{ "status": "bleed", "stacks": 2, "durationMs": 4000, "damageMultiplier": 0.2 }] },
+    "emberInk": { "kind": "modifier", "tag": "Debuff", "name": "Ember Ink", "text": "Every enemy the skill hits also gets 2 stacks of Burn.", "ink": [{ "status": "burn", "stacks": 2, "durationMs": 3000, "damageMultiplier": 0.15, "damageType": "fire" }] },
+    "frostInk": { "kind": "modifier", "tag": "Debuff", "name": "Frost Ink", "text": "Every enemy the skill hits also gets 2 stacks of Chill.", "ink": [{ "status": "chill", "stacks": 2, "durationMs": 5000 }] },
+    "siphon": { "kind": "modifier", "tag": "Heal", "name": "Siphon", "text": "15% of the damage it deals heals the caster (support skill: heals the caster 5% of max health).", "siphonPercent": 15, "supportHealPercent": 5 },
+    "bulwark": { "kind": "modifier", "tag": "Defense", "name": "Bulwark", "text": "Casting gives the caster a shield of 8% of its max health for 4s.", "selfApply": [{ "status": "shield", "percentMaxHp": 8, "durationMs": 4000 }] },
+    "rally": { "kind": "modifier", "tag": "Team", "name": "Rally", "text": "Casting gives the whole squad +10% attack speed for 3s.", "squadApply": [{ "status": "buff", "durationMs": 3000, "mods": [{ "stat": "attackEfficiency", "percent": 10 }] }] },
+    "hasty": { "kind": "modifier", "tag": "Tempo", "name": "Hasty", "text": "Cooldown 25% shorter, but skill power 20% lower.", "cooldown": 25, "power": -20 },
+    "overcharge": { "kind": "modifier", "tag": "Risk", "name": "Overcharge", "text": "+40% skill power, but the wind-up is twice as long.", "power": 40, "windupMultiplier": 2 }
+  }
+}

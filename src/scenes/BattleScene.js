@@ -637,11 +637,32 @@ export default class BattleScene extends Phaser.Scene {
           g.fillStyle(0x000000, 0.55).fillRoundedRect(b.x, b.y, SKILL_W, SKILL_H * frac, 8);
         }
         g.lineStyle(ready ? 3 : 2, ready ? 0xf2b632 : colors.ready, ready ? 1 : 0.5).strokeRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
+        this.drawPageMarks(g, b, slot, hero.alive);
         b.cd.setText(slot.cooldownLeft > 0 ? String(Math.ceil(slot.cooldownLeft / 1000)) : '');
         b.code.setColor(ready ? '#f3eefc' : '#8a86a0');
         b.code.setVisible(slot.cooldownLeft <= 0); // the cooldown number takes the letters' place
       });
     }
+  }
+
+  // Skill book pages on a skill square: a small white dot per stat page along the bottom edge, a purple diamond
+  // per modifier in the top corners.
+  drawPageMarks(g, b, slot, alive) {
+    const pages = slot.pages || [];
+    if (!pages.length) return;
+    const a = alive ? 1 : 0.4;
+    const stats = pages.filter((p) => p.kind === 'stat').length;
+    for (let i = 0; i < stats; i++) {
+      const x = b.x + SKILL_W / 2 + (i - (stats - 1) / 2) * 7 - 2;
+      g.fillStyle(0x000000, a).fillRect(x - 1, b.y + SKILL_H - 8, 6, 6);
+      g.fillStyle(0xf3eefc, a).fillRect(x, b.y + SKILL_H - 7, 4, 4);
+    }
+    pages.filter((p) => p.kind === 'modifier').forEach((_, i) => {
+      const cx = i === 0 ? b.x + 7 : b.x + SKILL_W - 7;
+      const cy = b.y + 7;
+      g.fillStyle(0x000000, a).fillTriangle(cx - 5, cy, cx, cy - 5, cx + 5, cy).fillTriangle(cx - 5, cy, cx, cy + 5, cx + 5, cy);
+      g.fillStyle(0xc8a0ff, a).fillTriangle(cx - 3, cy, cx, cy - 3, cx + 3, cy).fillTriangle(cx - 3, cy, cx, cy + 3, cx + 3, cy);
+    });
   }
 
   // Draws one fighter: the character, plus a health bar above it.

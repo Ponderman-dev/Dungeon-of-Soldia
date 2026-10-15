@@ -47,3 +47,19 @@ Status: [built] = already in the code, [decided] = still to build.
 - [decided] Brawler's Streak: counts a COMBO of the holder's hits on ANY enemy (not one target). The combo is lost when the
   holder is stunned, frozen or feared. (+2% per hit, max +10% per copy stays unless said otherwise.)
 - [decided] Serrated Edge: bleed chance 10% for the first copy, +5% for each extra (10 copies = 55%).
+- [decided] Aid Kit: FLAT heal: +8 health per kit when a floor is cleared (grows forever, replaces the 5% with shrink).
+- [decided] Conductor's Baton: first baton +25% (strength and length), each extra baton +8% (no shrink).
+
+## Grows-fine / needs-its-build group
+- [decided] Frost Charm: unchanged.
+- [decided] Storm Charm: unchanged.
+- [decided] Magma Core: burn ticks 40% faster, ONCE (does not grow with cores). +25% damage vs burning per core stays, and
+  burn TICK damage grows per core (number to set: proposal +15% per core).
+- [decided] Blood Chalice: first chalice +20% vs bleeding, each extra only +10% (kill heal 3% per chalice stays).
+- [decided] Shatter Hammer: +60% vs frozen per hammer stays, PLUS +10% per hammer vs chilled (not frozen) enemies.
+- [decided] Exploiter's Lens: unchanged.
+- [decided] Warding Charm: shields +20% bigger per charm (was +30%).
+- [decided] Spiked Aegis: unchanged.
+- [decided] Gag Rune: unchanged, but rarity rare -> EPIC.
+- [decided] Dread Bell: ONE roll (copies add up instead of rolling separately): 5% chance, +3% per extra bell; fear lasts
+  1s on the first bell, +0.2s per extra bell (was 1.5s).

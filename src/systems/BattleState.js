@@ -144,9 +144,91 @@ export default class BattleState {
     // Bloodrage (Berserker): faster the more health he is missing.
     const rage = unit.def.passive && unit.def.passive.bloodrage;
     if (rage) change += rage.attackSpeedPercentPerMissing * (100 - (100 * unit.hp) / unit.maxHp);
-    if (unit.side === 'enemy') change += this.auraSpeed(unit); // War Drum
+    if (unit.side === 'enemy') change += this.auraSpeed(unit) - this.ghastlySlow(unit); // War Drum; Ghastly Fire burns slow
     const speed = (unit.stats.attackEfficiency / 100) * Math.max(0.2, 1 + change / 100);
     return this.rules.baseAttackIntervalMs / speed;
+  }
+
+  // Ghastly Fire: an enemy burning from a holder attacks `ghastlySlow`% slower per burn stack (5, +2 per extra copy), max 75%.
+  ghastlySlow(unit) {
+    let slow = 0;
+    for (const st of unit.statuses) {
+      if (st.type !== 'burn') continue;
+      const h = this.heroes.find((x) => x.uid === st.sourceUid && x.alive);
+      if (h && h.specials && h.specials.ghastlySlow) slow += h.specials.ghastlySlow;
+    }
+    return Math.min(75, slow);
+  }
+
+  // Spirit Axe: `spiritAxe`% (8 per copy) when the holder is hit: a ghostly axe spins around it for 3s, hitting every
+  // enemy within `spiritAxeRadius` (110 px) every 0.5s for 35% of the holder's attack (item damage). One spin at a time.
+  trySpiritAxe(target, events) {
+    const ch = (target.specials && target.specials.spiritAxe) || 0;
+    if (!ch || target.minion || !target.alive || (target.axeLeft || 0) > 0 || this.rng() * 100 >= ch) return;
+    target.axeLeft = 3000;
+    target.axeTick = 0;
+    events.push({ type: 'proc', unit: target, label: 'Spirit Axe!', itemId: 'spirit_axe' });
+  }
+
+  tickSpiritAxe(hero, dt, events) {
+    if (!(hero.axeLeft > 0)) return;
+    hero.axeLeft -= dt;
+    hero.axeTick -= dt;
+    while (hero.axeTick <= 0 && hero.axeLeft > 0) { // a pulse at once, then every 0.5s: 6 pulses in 3s
+      hero.axeTick += 500;
+      const near = this.targetableEnemies().filter((e) => !this.hasPositions(hero) || !this.hasPositions(e) || Math.hypot(e.x - hero.x, e.y - hero.y) <= 110);
+      for (const e of near) this.strike(hero, e, events, { multiplier: 0.35, damageType: 'melee', item: true });
+    }
+    if (hero.axeLeft <= 0) hero.axeLeft = 0;
+  }
+
+  // Flame Spirit: launches 3-5 slow dark fireballs, one after another, at random enemies (80% dark each, item damage).
+  conjureSpirit(hero, events) {
+    const n = 3 + Math.floor(this.rng() * 3);
+    events.push({ type: 'proc', unit: hero, label: 'Flame Spirit!', itemId: 'flame_spirit' });
+    for (let i = 0; i < n; i++) this.later(250 * i, (ev) => {
+      if (!hero.alive) return;
+      const foes = this.targetableEnemies();
+      if (!foes.length) return;
+      const t = foes[Math.floor(this.rng() * foes.length)];
+      ev.push({ type: 'projectile', from: hero, to: t, kind: 'darkbolt' });
+      this.later(900, (ev2) => { if (t.alive && hero.alive) this.strike(hero, t, ev2, { multiplier: 0.8, damageType: 'dark', item: true }); });
+    });
+  }
+
+  // Moonlight Twinblade: a crescent flies at the enemy and hits it 3 times (60% each, +20% per extra copy, item damage).
+  moonCrescent(hero, foe, copies, events) {
+    events.push({ type: 'proc', unit: hero, label: 'Moonlight!', itemId: 'moonlight_twinblade', target: foe });
+    events.push({ type: 'projectile', from: hero, to: foe, kind: 'moon' });
+    const mult = 0.6 * (1 + 0.2 * (copies - 1));
+    for (let i = 0; i < 3; i++) this.later(300 + 120 * i, (ev) => { if (foe.alive && hero.alive) this.strike(hero, foe, ev, { multiplier: mult, damageType: 'ranged', item: true }); });
+  }
+
+  // Things that happen a little later (Flame Spirit fireballs, Moonlight hits): `this.delays`, ticked in update().
+  later(ms, fn) {
+    (this.delays = this.delays || []).push({ remaining: ms, fn });
+  }
+
+  tickDelays(dt, events) {
+    if (!this.delays || !this.delays.length) return;
+    const due = [];
+    for (const d of this.delays) { d.remaining -= dt; if (d.remaining <= 0) due.push(d); }
+    this.delays = this.delays.filter((d) => d.remaining > 0);
+    for (const d of due) d.fn(events);
+  }
+
+  // Ghastly Fire on a burn tick: each holder's share of the burn also hits as DARK damage (`ghastly`% per copy).
+  ghastlyBurn(unit, stacks, events) {
+    for (const h of this.heroes) {
+      const pct = h.alive && h.specials ? h.specials.ghastly || 0 : 0;
+      if (!pct) continue;
+      const mine = stacks.filter((s) => s.sourceUid === h.uid).reduce((n, s) => n + s.damage, 0);
+      if (!mine) continue;
+      const amount = Math.max(1, Math.round(computeDotDamage(unit, (mine * pct) / 100, 'dark', this.rules, this.damageTypes, {})));
+      const d = this.dealDamage(unit, amount, events);
+      events.push({ type: 'dot', unit, amount: d.immune ? 0 : amount - d.absorbed, absorbed: d.absorbed, immune: d.immune, damageType: 'dark', status: 'burn', stacks: 0 });
+      this.breakEffects(unit, d.broken, events);
+    }
   }
 
   has(unit, type) {
@@ -565,6 +647,8 @@ export default class BattleState {
     for (const t of this.tornados) events.push({ type: 'tornadoEnd', tornado: t });
     this.tornados = [];
     this.bookTimers = []; // Aftershock pulses do not follow the squad to the next floor
+    this.delays = []; // nor do fireballs / crescents still on their way
+    for (const h of this.heroes) h.axeLeft = 0;
     for (const m of [...this.minions]) {
       if (!m.greater) this.vanishMinion(m, 'floorEnd', events);
       else m.floors++; // a greater minion that survived the floor (Spirit Knight grows)
@@ -731,6 +815,7 @@ export default class BattleState {
     this.move(dt);
     for (const m of this.minions) if (m.healCd > 0) m.healCd -= dt; // Phoenix heal cooldown
     this.tickTornados(dt, events);
+    this.tickDelays(dt, events); // Flame Spirit / Moonlight Twinblade hits on their way
     this.tickBookTimers(dt, events); // skill book Aftershock pulses
     this.tickBosses(dt, events); // boss moves, eggs, heat, revives... (bosses.js)
 
@@ -739,7 +824,7 @@ export default class BattleState {
       if (!hero.alive) continue;
       // Regen (Heart Charm) and the Cleric's aura: every hero regenerates a little, and regen/heals from items are stronger.
       const aura = this.regenAura();
-      const regen = ((hero.specials && hero.specials.regen) || 0) * aura.factor + aura.base + this.songRegen(); // % of max health per second
+      const regen = (((hero.specials && hero.specials.regen) || 0) * aura.factor + aura.base + this.songRegen()) * (1 + ((hero.specials && hero.specials.healAmp) || 0) / 100); // % of max health per second
       if (regen > 0) {
         const gain = Math.min(hero.maxHp - hero.hp, (hero.maxHp * regen * dt) / 100000);
         hero.hp += gain;
@@ -759,6 +844,7 @@ export default class BattleState {
       if (hero.soulCd > 0) hero.soulCd -= dt; // Grimoire fireball cooldown
       if (hero.triageCd > 0) hero.triageCd -= dt; // Aid Kit triage cooldown
       this.tickBandages(hero, dt, events);
+      this.tickSpiritAxe(hero, dt, events);
       this.tickSpawner(hero, dt, events);
       for (const slot of hero.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - dt);
       this.tickCasting(hero, dt, events);
@@ -1322,6 +1408,11 @@ export default class BattleState {
     events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic });
     if (dealt) this.breakEffects(target, dealt.broken, events);
     if (!result.dodged) this.afterItemHit(attacker, target, opts, events);
+    // Ghastly Fire: the holder's fire hits also deal `ghastly`% (20 per copy) of the damage as DARK (it triggers nothing).
+    const gf = attacker.side === 'hero' && !attacker.minion && attacker.specials ? attacker.specials.ghastly || 0 : 0;
+    if (gf && !result.dodged && !opts.ghastly && (opts.damageType || attacker.damageType) === 'fire' && target.alive && target.hp > 0 && result.amount > 0) {
+      this.strike(attacker, target, events, { multiplier: (result.amount * gf) / 100 / Math.max(1, attacker.stats.attack), damageType: 'dark', item: true, ghastly: true, burst: true });
+    }
     if (!result.dodged && attacker.side === 'enemy' && target.side === 'hero') this.onHeroHit(target, events);
     if (result.blocked && target.specials.blockCooldownMs) {
       // A successful block sends the holder's Shield Totems on cooldown (only if the item has a `cooldownMs`; phase H: none).
@@ -1419,13 +1510,14 @@ export default class BattleState {
       const debuffs = (proc.apply || []).some((sp) => (sp.to === 'target' || (!sp.to && proc.targets === 'target')) && this.statusDefs[sp.status] && this.statusDefs[sp.status].debuff);
       const chance = debuffs ? this.debuffChance(hero, proc.chance) : proc.chance; // Opportunist: his debuffs are likelier
       if (proc.meleeOnly && hero.damageType !== 'melee') continue; // Thousand Cuts: melee hits only
+      if (proc.rangedOnly && hero.damageType === 'melee') continue; // Moonlight Twinblade: ranged attacks only
       if (proc.proc !== trigger || (!ctx.force && this.rng() * 100 >= chance)) continue; // ctx.force: every proc goes off
       const enemy = ctx.target && ctx.target.alive ? ctx.target : null;
       let landed = ctx.hit !== false; // statuses on the target need the attack to have connected
       // Damage from a proc (extra hit, bomb, bolt, tornado) is never wasted: if the attack just killed its
       // enemy it goes to the enemy nearest to it instead. Statuses on the target still need the hit enemy.
       const foe = enemy || (ctx.target ? this.nearest(ctx.target, this.targetableEnemies()) : null);
-      const damages = !!(proc.doubleHit || proc.strike || proc.chain || proc.tornado);
+      const damages = !!(proc.doubleHit || proc.strike || proc.chain || proc.tornado || proc.flameSpirit || proc.moonlight);
       const targets = proc.targets === 'squad' ? this.squadUnits() : proc.targets === 'target' ? (enemy && landed ? [enemy] : []) : [hero];
       // A status spec can pick its own receivers with `to` (self / squad / target), e.g. a proc that taunts
       // the enemy hit AND gives the holder a defense buff.
@@ -1450,6 +1542,8 @@ export default class BattleState {
       // Static Crystal: +`jumpsPerExtra` jumps per extra crystal.
       if (proc.chain && foe) this.chainHit(hero, foe, proc.chain.jumpsPerExtra ? { ...proc.chain, jumps: proc.chain.jumps + proc.chain.jumpsPerExtra * extra } : proc.chain, events);
       // Excalibur: tornadoes hit `damagePerExtraPercent` harder per extra copy. A tornado also comes on a miss.
+      if (proc.flameSpirit && foe) this.conjureSpirit(hero, events);
+      if (proc.moonlight && foe) this.moonCrescent(hero, foe, proc.copies || 1, events);
       if (proc.tornado && foe) this.spawnTornado(hero, proc.tornado.damagePerExtraPercent ? { ...proc.tornado, damageMultiplier: proc.tornado.damageMultiplier * (1 + (proc.tornado.damagePerExtraPercent * extra) / 100) } : proc.tornado, foe, events);
       for (const spec of proc.apply || []) {
         // scalesWithCopies: the status gets stronger with every copy of the item held; `damagePerExtraPercent`:
@@ -1633,7 +1727,7 @@ export default class BattleState {
   }
 
   // Soul Lantern: every `lanternEvery` (8) enemies the squad defeats, each holder gains +1% attack and max health per
-  // lantern for the rest of the run, up to 30% per lantern (`hero.lanternGain`, used in statUpkeep()).
+  // lantern for the rest of the run, with NO limit (`hero.lanternGain`, used in statUpkeep()).
   soulLanternKill() {
     let changed = false;
     for (const h of this.heroes) {
@@ -1642,7 +1736,7 @@ export default class BattleState {
       h.lanternKills = (h.lanternKills || 0) + 1;
       if (h.lanternKills % 8 !== 0) continue;
       const before = h.lanternGain || 0;
-      h.lanternGain = Math.min(30 * n, before + n);
+      h.lanternGain = before + n; // no limit (user's choice: legendary, offered at most once per run)
       if (h.lanternGain !== before) changed = true;
     }
     if (changed) this.refreshStats();
@@ -1657,19 +1751,19 @@ export default class BattleState {
     return per * pages;
   }
 
-  // Phoenix Feather (used up): when the holder would die it stays at 1 health and heals `phoenixFeather`% (40) of max
-  // health over 3s (a regen boost), +10% for every feather still in the bag after this one.
+  // Phoenix Feather (used up): when the holder would die it stays at 1 health, is invulnerable for 1s and heals back up
+  // to 70% of max health over 3s (a regen boost). Every feather is one more save.
   phoenixSave(target, events) {
     const sp = target.specials;
     if (target.side !== 'hero' || target.minion || !target.alive || !sp || !sp.phoenixFeather) return;
     const id = this.consumeItem(target, 'phoenixFeather');
     if (!id) return;
     target.hp = 1;
-    const left = target.items.filter((x) => x === id).length;
-    const heal = 40 + 10 * left;
     events.push({ type: 'proc', unit: target, label: 'Phoenix!', itemId: 'phoenix_feather' });
     events.push({ type: 'itemUsed', unit: target, itemId: id });
-    this.applyStatus(target, { status: 'regenBoost', durationMs: 3000, percentMaxHpPerSec: heal / 3 }, target, 'phoenix_feather', events);
+    // 1s untouchable, then it climbs back to 70% of max health over 3s.
+    this.applyStatus(target, { status: 'invulnerable', durationMs: 1000 }, target, 'phoenix_feather', events);
+    this.applyStatus(target, { status: 'regenBoost', durationMs: 3000, percentMaxHpPerSec: (70 - 100 / target.maxHp) / 3 }, target, 'phoenix_feather', events);
   }
 
   // Mirror Buckler: `mirrorBuckler`% chance (12 per copy, stops at 60%) that a ranged/magic hit bounces back; every copy
@@ -1738,6 +1832,7 @@ export default class BattleState {
   // Item reactions to a kill (killer = the unit that dealt the last blow, if known).
   // A friendly was hit by an enemy: Mimic Chest (10% a Mimic pops out of the holder) and Phoenix (heals the squad a little).
   onHeroHit(target, events) {
+    this.trySpiritAxe(target, events);
     if (!target.minion && target.alive && target.specials.mimic && this.rng() * 100 < target.specials.mimic) {
       const src = { key: 'mimic_chest', kind: 'weak', capGroup: 'items', upkeep: true, upkeepScale: this.rules.minions.upkeepWeakScale ?? 0.5, spec: { minion: 'mimic' }, copies: target.specials.mimicCopies || 1 };
       events.push({ type: 'proc', unit: target, label: 'Mimic!', itemId: 'mimic_chest' });
@@ -1992,6 +2087,7 @@ export default class BattleState {
         const amount = computeDotDamage(unit, total, damageType, this.rules, this.damageTypes, { ignoresArmor });
         const d = this.dealDamage(unit, amount, events);
         events.push({ type: 'dot', unit, amount: d.immune ? 0 : amount - d.absorbed, absorbed: d.absorbed, immune: d.immune, damageType, status: type, stacks: stacks.length });
+        if (type === 'burn' && unit.alive && unit.hp > 0) this.ghastlyBurn(unit, stacks, events); // Ghastly Fire: burns also deal dark damage
         this.breakEffects(unit, d.broken, events);
         if (unit.hp <= 0 && unit.alive) this.killUnit(unit, events);
       }
@@ -2510,7 +2606,8 @@ export default class BattleState {
   // that really restored health is a "heal received": the Lost Cleric's Grimoire reacts to it.
   // Returns the health restored.
   healUnit(unit, amount, events, opts = {}) {
-    const raw = Math.round(amount * (opts.aura === false ? 1 : this.regenAura().factor));
+    const amp = 1 + ((unit.specials && unit.specials.healAmp) || 0) / 100; // Heart of the Beast: all healing received is stronger
+    const raw = Math.round(amount * amp * (opts.aura === false ? 1 : this.regenAura().factor));
     const room = unit.maxHp - unit.hp;
     const got = Math.min(room, raw);
     if (raw - got > 0) this.overheal(unit, raw - got, events);

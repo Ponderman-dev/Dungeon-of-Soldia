@@ -12,5 +12,6 @@
   "sucker_punch_glove": { "effect": "suckerPunch" },
   "executioners_axe": { "effect": "executioner" },
   "gamblers_dice": { "effect": "dice" },
-  "mimic_chest": { "effect": "mimic" }
+  "mimic_chest": { "effect": "mimic" },
+  "spirit_axe": { "effect": "spiritAxe" }
 }

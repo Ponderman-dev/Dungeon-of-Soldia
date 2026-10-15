@@ -193,3 +193,20 @@ quiver_of_plenty     0: 26.8 (base)   1: 26.8 (+0.0)   3: 26.8 (+0.0)
 
 ```
 Caveats: the front hero is always melee in this check (Quiver does nothing on melee), the bot only taps boss objects (Spotter's Lens rarely active), Giantslayer only matters on boss floors, Bookmark needs skill book pages.
+
+## Round after the 10 new items (user)
+- [built] Phoenix Feather: after the save the holder is INVULNERABLE for 1s and heals back up to 70% of max health over 3s.
+- [built] Soul Lantern: LEGENDARY, `oncePerRun` (offered on a reward card at most once per run: `rollChoices({ offered })`,
+  the Set lives on BattleState `offeredOnce`), and NO limit (+1% attack and max health every 8 squad kills, forever).
+
+## The user's own items (numbers are my first guesses, all in items.json)
+- [built] Flame Spirit (legendary, onhit): 4% per copy on attack: 3-5 slow dark fireballs (darkbolt shots, 0.25s apart,
+  0.9s flight) at random enemies, 80% dark each (item damage). `conjureSpirit()`, delayed hits via `later()/tickDelays()`.
+- [built] Spirit Axe (epic): 8% per copy when the holder is hit: a ghostly axe spins around it for 3s, every 0.5s it hits
+  every enemy within 110 px for 35% (item damage, 6 pulses). `trySpiritAxe()/tickSpiritAxe()`, effect `spiritAxe`.
+- [built] Heart of the Beast (legendary): +2% max health regen per second (fights) and +30% healing received, per copy
+  (`healAmp` in healUnit and regen).
+- [built] Moonlight Twinblade (legendary, onhit, ranged only, needs ranged): 8% per copy on a ranged attack: a moonlight
+  crescent (projectile `moon`) hits its target 3 times for 60% each, +20% per extra copy. The ranged twin of Excalibur.
+- [built] Ghastly Fire (epic, needs fire): the holder's fire hits and burns also deal 20% (per copy) of their damage as
+  dark; enemies burning from the holder attack 5% slower per burn stack (+2% per extra copy), max 75% (`ghastlySlow()`).

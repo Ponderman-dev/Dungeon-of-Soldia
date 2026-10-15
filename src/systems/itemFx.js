@@ -11,7 +11,7 @@ const easeInOut = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2)
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const BOMB = 0x4a4a5a, KNIFE = 0xe4e8f0, HILT = 0x6b4a2a, BANNER = 0xf2d03a, GREEN = 0x3aa84a, GREEN2 = 0xc8ffd0;
 
-export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 700, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700 };
+export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 700, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 3000, moon: 380 };
 export const ITEM_FX = Object.keys(ITEM_MS);
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -117,6 +117,32 @@ export function thunderboltFx(q, u) {
 }
 // Spiked Aegis: the broken shield bursts into big spikes all around the holder.
 export function aegisBlastFx(q, u) { const g = pen(); spikes(g, u, q, 1.6); burst(g, u.x, u.mid, 10, [C.grey, C.shield], q, 14, 4); return g.out; }
+// Spirit Axe: a ghostly green axe circles the holder (u = its body) for the whole spin, leaving a faint trail ring.
+export function spiritAxeFx(q, u, t) {
+  const g = pen();
+  const fade = q < 0.08 ? q / 0.08 : q > 0.9 ? (1 - q) / 0.1 : 1;
+  const rx = 16, ry = 6, cy = u.mid + 4;
+  for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2; g.px(u.x + Math.cos(a) * rx, cy + Math.sin(a) * ry, C.poison, 0.18 * fade); }
+  for (let k = 0; k < 3; k++) {
+    const a = t / 90 - k * 0.35; const x = u.x + Math.cos(a) * rx, y = cy + Math.sin(a) * ry;
+    const al = fade * (k ? 0.35 / k : 1);
+    // handle towards the holder, a crescent blade on the outside
+    g.line(x, y, x - Math.cos(a) * 5, y - Math.sin(a) * 2, C.heal, al * 0.8);
+    for (let j = -2; j <= 2; j++) g.px(x + Math.cos(a) * 1 - Math.sin(a) * j, y + Math.sin(a) * 1 + Math.cos(a) * j * 0.6, k ? C.poison : C.white, al);
+  }
+  return g.out;
+}
+// Moonlight Twinblade: a pale blue crescent spins from a to b.
+export function moonFx(q, a, b, t, seed) {
+  const g = pen();
+  if (q >= 1) return g.out;
+  const p = easeInOut(Math.min(1, q * 1.15));
+  const [x, y] = fly(a, b, p, 3);
+  const spin = t / 40 + seed;
+  for (let i = -4; i <= 4; i++) { const ang = spin + i * 0.28; const r = 5 - Math.abs(i) * 0.25; g.px(x + Math.cos(ang) * r, y + Math.sin(ang) * r * 0.7, Math.abs(i) < 2 ? C.white : C.ice, 1 - Math.abs(i) * 0.08); }
+  for (let k = 1; k <= 3; k++) { const [tx, ty] = fly(a, b, Math.max(0, p - k * 0.06), 3); g.px(tx, ty, C.ice2, 0.5 / k); }
+  return g.out;
+}
 // Bulwark Plate thorns: grey spikes jab out around the holder when it is hit.
 export function thornsFx(q, u) { const g = pen(); spikes(g, u, q, 1); return g.out; }
 // Lifesteal: red drops pull out of the enemy (a) and curve back into the hero (b).

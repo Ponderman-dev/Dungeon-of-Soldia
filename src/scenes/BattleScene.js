@@ -433,6 +433,8 @@ export default class BattleScene extends Phaser.Scene {
       this.addFx(ms, (q, now) => itemFx.mimicFx(q, b.x + b.hw + 6, b.y, now), tag); // beside the holder
     } else if (spec.effect === 'aegisBlast') {
       this.addFx(ms, (q) => (v.ch.active ? itemFx.aegisBlastFx(q, this.fxBody(v)) : []), tag);
+    } else if (spec.effect === 'spiritAxe') {
+      this.addFx(ms, (q, now) => (v.ch.active ? itemFx.spiritAxeFx(q, this.fxBody(v), now) : []), tag);
     }
   }
 
@@ -1414,11 +1416,11 @@ export default class BattleScene extends Phaser.Scene {
     }
     // Pixel looks from systems/itemFx.js: Fire Bombs' bomb, lightning bolts (Static Crystal, Chain Lightning),
     // the Grimoire's green ghost fire. They aim at where the target is NOW.
-    if (kind === 'bomb' || kind === 'lightning' || kind === 'greenfire') {
+    if (kind === 'bomb' || kind === 'lightning' || kind === 'greenfire' || kind === 'moon') {
       const a = this.fxPoint(from);
       let b = this.fxPoint(to);
       const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
-      const fn = { bomb: itemFx.bombFx, lightning: itemFx.lightningFx, greenfire: itemFx.greenfireFx }[kind];
+      const fn = { bomb: itemFx.bombFx, lightning: itemFx.lightningFx, greenfire: itemFx.greenfireFx, moon: itemFx.moonFx }[kind];
       this.addFx(itemFx.ITEM_MS[kind], (q, now) => { if (to.ch.active) b = this.fxPoint(to); return fn(q, a, b, now, seed); }, ['item', kind]);
       return;
     }
@@ -1788,7 +1790,7 @@ export default class BattleScene extends Phaser.Scene {
 
   // Shows the reward screen. When it is done, the hero gets the item and `next` runs.
   showReward(next) {
-    let choices = rollChoices({ itemDefs, rules: rewardRules, floor: this.floor, count: rewardRules.choices, heroes: this.state.heroes, potionChance: rewardRules.potionChance });
+    let choices = rollChoices({ itemDefs, rules: rewardRules, floor: this.floor, count: rewardRules.choices, heroes: this.state.heroes, potionChance: rewardRules.potionChance, offered: (this.state.offeredOnce = this.state.offeredOnce || new Set()) });
     choices = maybeAddBook(choices, bookData, this.state.heroes, bookData.bookChancePerScreen); // a skill book card, about 1 in 15 screens
     // After a BOSS the squad also gets a free golden book (3 modifier pages), after the normal reward.
     const bossFloor = !!(this.dungeon.bosses && this.dungeon.bosses[this.floor]) && this.state.heroes.some((h) => h.alive);

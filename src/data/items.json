@@ -1555,24 +1555,25 @@
   },
   "soul_lantern": {
     "name": "Soul Lantern",
-    "rarity": "epic",
+    "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Every 8 enemies the squad defeats: +1% attack and max health per lantern for the rest of the run (up to +30% per lantern).",
+    "description": "Shows up only once per run. Every 8 enemies the squad defeats: +1% attack and max health for the rest of the run, with no limit.",
     "effects": [
       {
         "special": "soulLantern",
         "percent": 1
       }
     ],
-    "dropWeight": 90
+    "dropWeight": 90,
+    "oncePerRun": true
   },
   "phoenix_feather": {
     "name": "Phoenix Feather",
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Used up: when the holder would die, they stay at 1 health and heal 40% over 3s (+10% per feather left in the bag).",
+    "description": "Used up: when the holder would die, they stay at 1 health, are invulnerable for 1s and heal back up to 70% over 3s.",
     "effects": [
       {
         "special": "phoenixFeather",
@@ -1599,5 +1600,104 @@
       }
     ],
     "dropWeight": 100
+  },
+  "flame_spirit": {
+    "name": "Flame Spirit",
+    "rarity": "legendary",
+    "type": "onhit",
+    "scope": "self",
+    "description": "4% chance per copy on attack to conjure 3-5 slow dark fireballs that strike random enemies (80% dark each).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 4,
+        "label": "Flame Spirit!",
+        "silent": true,
+        "targets": "self",
+        "flameSpirit": true
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "dark"
+    ]
+  },
+  "spirit_axe": {
+    "name": "Spirit Axe",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "8% chance per copy when the holder is hit: a ghostly axe spins around them for 3s, hitting every nearby enemy for 35% every 0.5s.",
+    "effects": [
+      {
+        "special": "spiritAxe",
+        "percent": 8
+      }
+    ],
+    "dropWeight": 90
+  },
+  "heart_of_the_beast": {
+    "name": "Heart of the Beast",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "Regenerates 2% of max health per second in fights, and all healing the holder receives is 30% stronger (per copy).",
+    "effects": [
+      {
+        "special": "regen",
+        "percent": 2
+      },
+      {
+        "special": "healAmp",
+        "percent": 30
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "heal"
+    ]
+  },
+  "moonlight_twinblade": {
+    "name": "Moonlight Twinblade",
+    "rarity": "legendary",
+    "type": "onhit",
+    "scope": "self",
+    "description": "8% chance per copy on a ranged attack to throw a crescent of moonlight that hits its target 3 times (60% each, +20% per extra copy).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Moonlight!",
+        "silent": true,
+        "rangedOnly": true,
+        "targets": "self",
+        "moonlight": true
+      }
+    ],
+    "dropWeight": 100,
+    "needs": "ranged"
+  },
+  "ghastly_fire": {
+    "name": "Ghastly Fire",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "The holder's fire hits and burns also deal 20% of their damage as dark (per copy). Enemies burning from the holder attack 5% slower per burn stack (+2% per extra copy, max 75%).",
+    "effects": [
+      {
+        "special": "ghastly",
+        "percent": 20
+      },
+      {
+        "special": "ghastlySlow",
+        "percent": 5,
+        "perExtra": 2
+      }
+    ],
+    "dropWeight": 90,
+    "needs": "fire",
+    "provides": [
+      "dark"
+    ]
   }
 }

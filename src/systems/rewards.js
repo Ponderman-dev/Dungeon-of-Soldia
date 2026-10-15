@@ -44,8 +44,10 @@ function pickWeighted(list, weightOf, rng) {
 // it is skipped (the other rarities share its chance).
 // Very rarely (potionChance) one of the choices is replaced by the Shared Potion, which heals
 // the whole party. The potion is only offered when some living hero is hurt.
-export function rollChoices({ itemDefs, count, heroes, rules, floor = 1, potionChance = 0, rng = Math.random }) {
-  const pool = Object.values(itemDefs).filter((item) => item.kind !== 'potion' && heroes.some((h) => canReceive(h, item)));
+// `offered` (a Set kept for the run): items with `oncePerRun` (Soul Lantern) are never offered again once they were on a
+// card; rollChoices adds them to it.
+export function rollChoices({ itemDefs, count, heroes, rules, floor = 1, potionChance = 0, rng = Math.random, offered = null }) {
+  const pool = Object.values(itemDefs).filter((item) => item.kind !== 'potion' && heroes.some((h) => canReceive(h, item)) && !(item.oncePerRun && offered && offered.has(item.id)));
   const sources = squadSources(heroes, itemDefs);
   const odds = rarityOddsFor(floor, rules);
   const choices = [];
@@ -56,6 +58,7 @@ export function rollChoices({ itemDefs, count, heroes, rules, floor = 1, potionC
     const inRarity = pool.filter((item) => item.rarity === rarity);
     const item = inRarity[pickWeighted(inRarity, (it) => dropWeight(it, sources, rules), rng)];
     choices.push(item);
+    if (item.oncePerRun && offered) offered.add(item.id);
     pool.splice(pool.indexOf(item), 1);
   }
 

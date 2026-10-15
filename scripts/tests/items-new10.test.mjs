@@ -67,13 +67,49 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
 // Soul Lantern
 { const { s, es, k } = mk(); give(s, k, 'soul_lantern', 2); const a0 = k.stats.attack;
   for (let i = 0; i < 16; i++) s.soulLanternKill(); ok('Soul Lantern: every 8 kills +1% per lantern (16 kills, 2 lanterns = +4%)', k.lanternGain === 4 && near(k.stats.attack, a0 * 1.04 * 1, 0.02), `${k.lanternGain}`);
-  for (let i = 0; i < 1000; i++) s.soulLanternKill(); ok('...up to +30% per lantern (2 = +60%)', k.lanternGain === 60); }
+  for (let i = 0; i < 1000; i++) s.soulLanternKill(); ok('...no limit any more (1016 kills, 2 lanterns = +254%)', k.lanternGain === 254, `${k.lanternGain}`); }
+{ const { rollChoices } = await import('../../src/systems/rewards.js'); const { s } = mk(); const rw = r('rewards.json'); const offered = new Set(); let seen = 0;
+  const only = { soul_lantern: itemDefs.soul_lantern, whetstone: itemDefs.whetstone, padded_vest: itemDefs.padded_vest, lucky_coin: itemDefs.lucky_coin };
+  for (let i = 0; i < 200; i++) if (rollChoices({ itemDefs: only, rules: { ...rw, rarityOdds: [{ from: 1, odds: { legendary: 1, common: 1 } }] }, floor: 1, count: 2, heroes: s.heroes, offered }).some((x) => x.id === 'soul_lantern')) seen++;
+  ok('Soul Lantern is legendary and shows up only ONCE per run', itemDefs.soul_lantern.rarity === 'legendary' && seen === 1, `${seen}`); }
+
+// ---- the user's own items ----
+// Flame Spirit
+{ const { s, es, k } = mk(['knight', 'rogue', 'archer'], ['goblin', 'goblin'], () => 0); give(s, k, 'flame_spirit'); const ev = []; s.rollProcs(k, 'onAttack', ev, { target: es[0], hit: true, force: true }); s.rng = () => 0.99; // no more procs
+  const all = [...ev]; for (let t = 0; t < 2500; t += 50) all.push(...s.update(50));
+  const balls = all.filter((e) => e.type === 'projectile' && e.kind === 'darkbolt').length, hits = all.filter((e) => e.type === 'attack' && e.damageType === 'dark' && e.attacker === k).length;
+  ok('Flame Spirit: 3-5 dark fireballs fly one after another and each hits (80% dark)', balls >= 3 && balls <= 5 && hits === balls && all.filter((e) => e.itemId === 'flame_spirit').length === 1, `${balls} ${hits}`); }
+// Spirit Axe
+{ const { s, es, k } = mk(['knight', 'rogue', 'archer'], ['goblin', 'goblin'], () => 0); give(s, k, 'spirit_axe'); es.forEach((e, i) => { e.x = k.x + 40 * (i ? 1 : -1); e.y = k.y; }); s.onHeroHit(k, []);
+  ok('Spirit Axe: being hit can start the spin (3s)', k.axeLeft === 3000);
+  let hits = 0; for (let t = 0; t < 3000; t += 50) { const ev = []; s.tickSpiritAxe(k, 50, ev); hits += ev.filter((e) => e.type === 'attack').length; }
+  ok('...it hits every nearby enemy every 0.5s (2 enemies x 6 pulses)', hits === 12, `${hits}`); }
+// Heart of the Beast
+{ const { s, k } = mk(); give(s, k, 'heart_of_the_beast'); k.hp = 1; const got = s.healUnit(k, 50, [], { aura: false }); ok('Heart of the Beast: healing received +30%', got === 65, `${got}`);
+  s.enemies.forEach((e) => (e.timer = -1e9)); k.hp = 10; const before = k.hp; for (let t = 0; t < 1000; t += 50) s.update(50);
+  ok('...and about 2.6% max health per second regen (2% x 1.3)', Math.abs((k.hp - before) / k.maxHp - 0.026) < 0.005, `${((k.hp - before) / k.maxHp).toFixed(3)}`); }
+// Moonlight Twinblade
+{ const { s, es, h } = mk(['archer', 'knight', 'rogue'], ['goblin'], () => 0); const a = h[0]; give(s, a, 'moonlight_twinblade', 2); const ev = []; s.rollProcs(a, 'onAttack', ev, { target: es[0], hit: true, force: true });
+  const all = [...ev]; for (let t = 0; t < 1000; t += 50) all.push(...s.update(50)); const cres = all.filter((e) => e.type === 'attack' && e.attacker === a && e.result && e.result.amount > 0 && e.target === es[0] && !e.basic);
+  ok('Moonlight Twinblade: a crescent hits its target 3 times', all.some((e) => e.kind === 'moon') && cres.length >= 3, `${cres.length}`);
+  const { s: s2, es: e2, k: kn } = mk(['knight', 'archer', 'rogue'], ['goblin'], () => 0); give(s2, kn, 'moonlight_twinblade'); const ev2 = []; s2.rollProcs(kn, 'onAttack', ev2, { target: e2[0], hit: true });
+  ok('...ranged attacks only', !ev2.some((e) => e.kind === 'moon')); }
+// Ghastly Fire
+{ const { s, es, k } = mk(); give(s, k, 'ghastly_fire'); const ev = []; s.strike(k, es[0], ev, { damageType: 'fire' });
+  const fire = ev.find((e) => e.type === 'attack' && e.damageType === 'fire'), dark = ev.find((e) => e.type === 'attack' && e.damageType === 'dark');
+  ok('Ghastly Fire: a fire hit also deals 20% of it as dark', fire && dark && Math.abs(dark.result.amount - fire.result.amount * 0.2) <= 1, `${fire && fire.result.amount} ${dark && dark.result.amount}`);
+  for (let i = 0; i < 4; i++) s.applyStatus(es[0], { status: 'burn', durationMs: 60000, damageMultiplier: 0.5, damageType: 'fire' }, k, 'b' + i, []);
+  ok('...4 burn stacks = the enemy attacks 20% slower', s.ghastlySlow(es[0]) === 20);
+  let dark2 = 0; for (let t = 0; t < 1000; t += 50) for (const e of s.update(50)) if (e.type === 'dot' && e.damageType === 'dark' && e.unit === es[0]) dark2++;
+  ok('...burn ticks also hit as dark', dark2 > 0);
+  const { s: s3, k: k3 } = mk(); give(s3, k3, 'ghastly_fire', 3); ok('...3 copies: 60% dark, 9% slow per stack', k3.specials.ghastly === 60 && k3.specials.ghastlySlow === 9); }
 // Phoenix Feather
 { const { s, k } = mk(); give(s, k, 'phoenix_feather', 2); const ev = []; s.dealDamage(k, k.hp + 50, ev);
   const rb = k.statuses.find((x) => x.type === 'regenBoost');
   ok('Phoenix Feather: a killing blow leaves the holder at 1 health, one feather is used up', k.hp === 1 && k.alive && k.items.filter((i) => i === 'phoenix_feather').length === 1 && ev.some((e) => e.type === 'itemUsed'));
-  ok('...it heals 40% +10% per feather left (50%) over 3s', rb && near(rb.percentMaxHpPerSec * 3, 50, 0.01) && rb.total === 3000);
-  for (let t = 0; t < 3000; t += 50) s.update(50); ok('...the heal arrives over the 3s', k.hp > k.maxHp * 0.4, `${(k.hp / k.maxHp).toFixed(2)}`); }
+  ok('...it is invulnerable for 1s', k.statuses.some((x) => x.type === 'invulnerable' && x.total === 1000) && s.dealDamage(k, 9999, []).immune);
+  ok('...and climbs back to 70% over 3s', rb && rb.total === 3000);
+  for (let t = 0; t < 3100; t += 50) s.update(50); ok('...the heal arrives over the 3s (about 70%)', Math.abs(k.hp / k.maxHp - 0.7) < 0.03, `${(k.hp / k.maxHp).toFixed(2)}`); }
 // Iron Will Talisman
 { const dur = (n) => { const { s, es, k } = mk(); if (n) give(s, k, 'iron_will_talisman', n); s.applyStatus(k, { status: 'stun', durationMs: 1000 }, es[0], 't', []); return k.statuses.find((x) => x.type === 'stun').total; };
   ok('Iron Will: stuns 25% shorter, 2 copies 44%, 5 copies 76%', Math.abs(dur(1) - 750) < 1 && Math.abs(dur(2) - 562.5) < 1 && Math.abs(dur(5) - 237.3) < 1, `${dur(1)} ${dur(2)} ${dur(5)}`);

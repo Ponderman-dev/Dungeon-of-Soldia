@@ -45,7 +45,7 @@ function playRun(sq, itemId, copies) {
     }
     if (t >= TIMEOUT || s.allHeroesDead()) break;
     s.endFloor(); s.winHeal(rules.winHealPercent); s.clearStatuses();
-    let choices = rollChoices({ itemDefs, rules: rw, floor, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance });
+    let choices = rollChoices({ itemDefs, rules: rw, floor, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance, offered: (s.offeredOnce = s.offeredOnce || new Set()) });
     choices = maybeAddBook(choices, bookData, s.heroes, bookData.bookChancePerScreen);
     if (boss) useBook(s, 'golden');
     if (choices.length) {

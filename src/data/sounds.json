@@ -43,8 +43,9 @@
       "pitchJitter": 0.04
     },
     "itemGiven": {
-      "file": "kenney/handleCoins2",
-      "volume": 0.7
+      "file": "picked/itemGiven",
+      "volume": 0.7,
+      "source": "yours_page-forward-single-chime-1107.mp3"
     },
     "potion": {
       "file": "receive",
@@ -98,19 +99,14 @@
       "pitchJitter": 0.08,
       "minGapMs": 70,
       "file": "picked/hitFire",
-      "source": "hitFire_E.mp3"
+      "source": "yours_wizard-fire-woosh-1326.mp3"
     },
     "hitIce": {
-      "files": [
-        "kenney/impactGlass_light_000",
-        "kenney/impactGlass_light_001",
-        "kenney/impactGlass_light_002",
-        "kenney/impactGlass_light_003",
-        "kenney/impactGlass_light_004"
-      ],
       "volume": 0.3,
       "pitchJitter": 0.08,
-      "minGapMs": 70
+      "minGapMs": 70,
+      "file": "picked/hitIce",
+      "source": "yours_warehouse-metal-hit-3139.mp3"
     },
     "hitElectric": {
       "volume": 0.25,

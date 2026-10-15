@@ -518,8 +518,9 @@ export default class BattleState {
       sum.dust += sp.graveDust || 0;
       sum.crown += sp.necroCrownCap || 0;
       sum.crownKill = sum.crownKill || !!sp.necroCrownKill;
+      sum.spawnSpeed = Math.max(sum.spawnSpeed || 0, sp.necroCrownSpeed || 0); // does not grow with copies
     }
-    return { bone: sum.bone, weakCap: Math.min(4, sum.whistle) + Math.min(6, sum.crown), weakSpeed: sum.speed, dust: sum.dust, crownKill: sum.crownKill };
+    return { bone: sum.bone, weakCap: Math.min(4, sum.whistle) + Math.min(6, sum.crown), weakSpeed: sum.speed, dust: sum.dust, crownKill: sum.crownKill, spawnSpeed: sum.spawnSpeed || 0 };
   }
 
   sourceState(hero, key) {
@@ -538,7 +539,8 @@ export default class BattleState {
       if (hero.specials.fireHeart) {
         const amount = (hero.maxHp * hero.specials.fireHeart) / 100 * (1 + (hero.specials.shieldBonus || 0) / 100);
         hero.statuses = hero.statuses.filter((st) => st.key !== 'shield:fireheart');
-        hero.statuses.push({ key: 'shield:fireheart', type: 'shield', amount, maxAmount: amount, remaining: Infinity, total: Infinity, sourceUid: hero.uid, onBreak: null, regenPerSec: amount * 0.05, burns: true });
+        const nova = hero.specials.fireHeartNova ? { damageMultiplier: hero.specials.fireHeartNova / 100, damageType: 'fire' } : null; // breaks = fire nova
+        hero.statuses.push({ key: 'shield:fireheart', type: 'shield', amount, maxAmount: amount, remaining: Infinity, total: Infinity, sourceUid: hero.uid, onBreak: nova, regenPerSec: amount * 0.05, burns: true });
         events.push({ type: 'status', unit: hero, change: 'apply', status: hero.statuses[hero.statuses.length - 1] });
       }
       for (const src of hero.minionSources || []) {
@@ -577,7 +579,7 @@ export default class BattleState {
   // `fasterPerCopy` (Rat Cage): each extra copy of the item makes the next minion come that many % sooner.
   spawnDelay(sp, copies = 1) {
     const ms = sp.minMs + this.rng() * ((sp.maxMs ?? sp.minMs) - sp.minMs);
-    return ms / (1 + ((sp.fasterPerCopy || 0) * (copies - 1)) / 100);
+    return ms / (1 + ((sp.fasterPerCopy || 0) * (copies - 1)) / 100) / (1 + this.minionBoost().spawnSpeed / 100); // Necro Crown: +50%
   }
 
   // The shared cap of a hero's weak ITEM minions: combat.json itemWeakCap, plus `capPerCopy` for every extra copy
@@ -678,7 +680,7 @@ export default class BattleState {
   // A dying weak minion explodes when it has an explosion of its own (Mimic) and/or Grave Dust is out there: damage
   // to the enemies near it (item damage, nothing else triggers).
   explodeMinion(m, events) {
-    const own = m.def.explode ? m.def.explode.damageMultiplier * (m.copies || 1) : 0;
+    const own = m.def.explode ? m.def.explode.damageMultiplier * (1 + 0.25 * ((m.copies || 1) - 1)) : 0; // Mimic: +25% per extra chest
     const dust = m.greater ? 0 : this.minionBoost().dust * 2; // Grave Dust: 200% attack per copy, weak minions only
     const total = own + dust;
     if (total <= 0) return;
@@ -752,6 +754,7 @@ export default class BattleState {
       this.tickTaunting(hero);
       if (hero.floor.martyrCd > 0) hero.floor.martyrCd -= dt;
       hero.shareCd = Math.max(0, hero.shareCd - dt);
+      if (hero.soulCd > 0) hero.soulCd -= dt; // Grimoire fireball cooldown
       this.tickSpawner(hero, dt, events);
       for (const slot of hero.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - dt);
       this.tickCasting(hero, dt, events);
@@ -1257,12 +1260,9 @@ export default class BattleState {
       this.heatFromHit(target, opts.damageType || attacker.damageType, events); // Ignatius: fire heats him, ice cools him
     }
     if (!result.dodged) for (const [itemId, label] of this.bonusItems || []) events.push({ type: 'proc', unit: attacker, label, itemId, target });
-    // Tough Skin: the first hit the holder takes each floor deals much less.
-    if (!result.dodged && target.side === 'hero' && target.specials.toughSkin && !target.floor.toughUsed) {
-      target.floor.toughUsed = true;
-      const cut = Math.min(0.9, 1 - 0.4 * Math.pow(0.75, target.specials.toughSkin - 1));
-      result.amount = Math.max(1, Math.round(result.amount * (1 - cut)));
-      events.push({ type: 'proc', unit: target, label: 'Tough Skin!', itemId: 'tough_skin' });
+    // Tough Skin: EVERY hit the holder takes deals `toughSkin` less (2 per copy), never below 1. Silent (no icon pop).
+    if (!result.dodged && target.side === 'hero' && target.specials.toughSkin && result.amount > 1) {
+      result.amount = Math.max(1, Math.round(result.amount - target.specials.toughSkin));
     }
     let dealt = null;
     if (!result.dodged) {
@@ -1333,8 +1333,8 @@ export default class BattleState {
   }
 
   // Extra damage % from the ATTACKER's item specials for this hit.
-  //  - suckerPunch: the first BASIC attack on each enemy.   - fullVigor: while the attacker is at full health.
-  //  - brawlerMax: +2% per consecutive basic hit on the same target, up to the item's max (basic attacks only).
+  //  - suckerPunch: the first BASIC attack on each enemy.   - fullVigor: while the attacker is above 90% health.
+  //  - brawlerMax: +2% per basic hit in a row (any enemy), up to the item's max; lost on stun/freeze/fear.
   itemDamageBonus(attacker, target, opts) {
     const sp = attacker.specials;
     this.bonusItems = []; // items that boosted this hit (the scene shows them: Sucker Punch, Executioner's Axe)
@@ -1345,17 +1345,18 @@ export default class BattleState {
       attacker.firstHits.add(target.uid);
       if (sp.brawlerMax) {
         const st = attacker.streak;
-        const same = st.uid === target.uid || this.frenzied(attacker); // Frenzy: every hit counts as "the same target"
-        bonus += Math.min(sp.brawlerMax, same ? st.count * 2 : 0);
-        attacker.streak = { uid: target.uid, count: same ? st.count + 1 : 1 };
+        // A COMBO of the holder's basic hits on ANY enemy; lost when the holder is stunned, frozen or feared (applyStatus).
+        bonus += Math.min(sp.brawlerMax, st.count * 2);
+        attacker.streak = { uid: target.uid, count: st.count + 1 };
       }
     }
-    if (sp.fullVigor && attacker.hp >= attacker.maxHp) bonus += sp.fullVigor;
+    if (sp.fullVigor && attacker.hp >= attacker.maxHp * 0.9) bonus += sp.fullVigor; // Full Vigor: above 90% health
     // Bonuses against what the target is suffering from or how hurt it is.
     const kinds = new Set(target.statuses.filter((st) => this.statusDefs[st.type] && this.statusDefs[st.type].debuff).map((st) => st.type));
     if (sp.magmaCore && kinds.has('burn')) bonus += sp.magmaCore; // Magma Core
     if (sp.bloodChalice && kinds.has('bleed')) bonus += sp.bloodChalice; // Blood Chalice
     if (sp.shatterHammer && kinds.has('freeze')) bonus += sp.shatterHammer; // Shatter Hammer (the freeze is broken after the hit)
+    else if (sp.shatterChill && kinds.has('chill')) bonus += sp.shatterChill; // ...and a smaller bonus vs chilled enemies
     if (sp.exploiter && kinds.size >= 3) bonus += sp.exploiter; // Exploiter's Lens
     if (sp.executioner && target.hp < target.maxHp * 0.25) { bonus += sp.executioner; this.bonusItems.push(['executioners_axe', 'Execute!']); } // Executioner's Axe
     if (sp.hornDamage && this.has(target, 'taunt')) bonus += sp.hornDamage; // Provoker's Horn: taunted enemies take more
@@ -1402,11 +1403,16 @@ export default class BattleState {
         });
         landed = foe === enemy && !hit.dodged;
       }
-      if (proc.chain && foe) this.chainHit(hero, foe, proc.chain, events);
-      if (proc.tornado && foe) this.spawnTornado(hero, proc.tornado, foe, events); // a tornado also comes on a miss
+      const extra = (proc.copies || 1) - 1;
+      // Static Crystal: +`jumpsPerExtra` jumps per extra crystal.
+      if (proc.chain && foe) this.chainHit(hero, foe, proc.chain.jumpsPerExtra ? { ...proc.chain, jumps: proc.chain.jumps + proc.chain.jumpsPerExtra * extra } : proc.chain, events);
+      // Excalibur: tornadoes hit `damagePerExtraPercent` harder per extra copy. A tornado also comes on a miss.
+      if (proc.tornado && foe) this.spawnTornado(hero, proc.tornado.damagePerExtraPercent ? { ...proc.tornado, damageMultiplier: proc.tornado.damageMultiplier * (1 + (proc.tornado.damagePerExtraPercent * extra) / 100) } : proc.tornado, foe, events);
       for (const spec of proc.apply || []) {
-        // scalesWithCopies: the status gets stronger with every copy of the item held (Ember Charm's burn).
+        // scalesWithCopies: the status gets stronger with every copy of the item held; `damagePerExtraPercent`:
+        // +that % per extra copy (Ember Charm's burn +10% per extra charm).
         let real = spec.scalesWithCopies ? { ...spec, damageMultiplier: spec.damageMultiplier * (proc.copies || 1) } : spec;
+        if (spec.damagePerExtraPercent) real = { ...real, damageMultiplier: spec.damageMultiplier * (1 + (spec.damagePerExtraPercent * ((proc.copies || 1) - 1)) / 100) };
         if (spec.durationPerCopyMs) real = { ...real, durationMs: spec.durationMs + spec.durationPerCopyMs * ((proc.copies || 1) - 1) }; // Jolly Banner: longer with every extra copy
         for (const target of receivers(spec.to)) this.applyStatus(target, real, hero, `proc_${proc.itemId}`, events);
       }
@@ -1629,11 +1635,13 @@ export default class BattleState {
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
       const mine = (type) => lastStatuses.filter((st) => st.type === type && st.sourceUid === hero.uid);
-      // Plague Flask: HALF of the holder's poison stacks on the dead enemy spread to other enemies (+1 enemy per copy).
+      // Plague Flask: `plagueShare`% (15% per copy, can pass 100%) of the holder's poison stacks on the dead enemy spread
+      // to other enemies (+1 enemy per copy).
       const plague = hero.specials.plagueFlask || 0;
       const poison = mine('poison');
       if (plague > 0 && poison.length) {
-        const half = poison.slice(0, Math.ceil(poison.length / 2));
+        const count = Math.max(1, Math.round((poison.length * (hero.specials.plagueShare || 50)) / 100));
+        const half = Array.from({ length: count }, (_, i) => poison[i % poison.length]);
         const others = this.enemies.filter((e) => e.alive && e !== victim).sort((a, b) => this.distance(victim, a) - this.distance(victim, b)).slice(0, plague);
         if (others.length) events.push({ type: 'proc', unit: hero, label: 'Plague!', itemId: 'plague_flask', from: victim, to: others });
         for (const e of others) for (const st of half) this.addDotStack(e, st);
@@ -1695,6 +1703,7 @@ export default class BattleState {
       return;
     }
     if (target.def.heat) this.heatFromStatus(target, spec.status, events);
+    if (target.streak && ['stun', 'freeze', 'fear'].includes(spec.status)) target.streak = { uid: null, count: 0 }; // Brawler's Streak combo is lost
     const scale = info.control ? target.def.statusDurationScale ?? 1 : 1;
     // A shield with no durationMs lasts until it is broken.
     // Catalyst (Alchemist): debuffs on ENEMIES last longer.
@@ -1726,7 +1735,8 @@ export default class BattleState {
     const count = stacking ? spec.stacks || 1 : 1;
     let status;
     for (let i = 0; i < count; i++) {
-      status = stacking ? null : target.statuses.find((s) => s.key === key);
+      // `stackEach` (Hex Doll's Curse, Rusty Nails' Armor Break): every application is its own stack with its own timer.
+      status = stacking || spec.stackEach ? null : target.statuses.find((s) => s.key === key);
       if (!status) {
         status = { key, type: spec.status };
         target.statuses.push(status);
@@ -1762,7 +1772,8 @@ export default class BattleState {
         status.ignoresArmor = spec.ignoresArmor ?? !!info.ignoresArmor;
         // Damage-type items boost damage over time of that type too (e.g. +15% dark boosts poison).
         const bonus = ((source.damageBonus && source.damageBonus[status.damageType]) || 0) / 100;
-        status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus) * cat.dot * (1 + ((source.side === 'hero' && source.specials && source.specials.dotDamage) || 0) / 100)));
+        const magma = spec.status === 'burn' && source.side === 'hero' && source.specials ? source.specials.magmaBurn || 0 : 0; // Magma Core: burns tick harder
+        status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus) * cat.dot * (1 + ((source.side === 'hero' && source.specials && source.specials.dotDamage) || 0) / 100) * (1 + magma / 100)));
         if (!(spec.status in target.dotClocks)) target.dotClocks[spec.status] = 0; // first stack: start the tick clock
       }
     }
@@ -1894,7 +1905,7 @@ export default class BattleState {
     const slot = hero.skills[index];
     const skill = this.currentSpell(hero, index);
     const book = this.pageTotals(slot); // skill book pages: shorter cooldown / wind-up (Swift, Steady Hands, Hasty, Overcharge)
-    slot.cooldownLeft = skill.cooldownMs * (1 - Math.min(50, hero.specials.cooldown || 0) / 100) * (1 - Math.min(75, book.cooldown) / 100); // Hourglass
+    slot.cooldownLeft = skill.cooldownMs * (1 - Math.min(95, hero.specials.cooldown || 0) / 100) * (1 - Math.min(75, book.cooldown) / 100); // Hourglass
     const castMs = this.castTime(skill) * (1 - Math.min(75, book.windup) / 100) * book.windupMultiplier;
     if (castMs <= 0) {
       this.releaseSkill(hero, index, events);
@@ -2037,7 +2048,7 @@ export default class BattleState {
     if (!echo && chance > 0 && !skill.channel && this.rng() * 100 < chance) {
       events.push({ type: 'proc', unit: hero, label: 'Echo!', itemId: 'echo_rune' });
       const copies = hero.specials.echoCopies || 1;
-      this.releaseSkill(hero, index, events, { spell: skill, power: Math.min(1, 0.6 + 0.1 * (copies - 1)) });
+      this.releaseSkill(hero, index, events, { spell: skill, power: 0.6 + 0.1 * (copies - 1) });
     }
   }
 
@@ -2377,7 +2388,7 @@ export default class BattleState {
   overheal(unit, over, events) {
     const pct = unit.specials && unit.specials.overhealRing;
     if (!pct || unit.minion) return;
-    const cap = unit.maxHp * 0.25;
+    const cap = unit.maxHp * 0.25 * (unit.specials.overhealCopies || 1); // +25% max health per ring
     const add = Math.min(cap, over * (Math.min(100, pct) / 100) * (1 + (unit.specials.shieldBonus || 0) / 100));
     if (add < 1) return;
     let st = unit.statuses.find((x) => x.key === 'shield:overheal');
@@ -2393,12 +2404,18 @@ export default class BattleState {
   // (chance per copy, capped; its fireball is item damage: no lifesteal, no other effects).
   onHealed(unit, got, events) {
     const sp = unit.specials;
-    if (!sp || !sp.grimoireChance || unit.side !== 'hero' || unit.minion || !unit.alive) return;
-    const foes = this.enemies.filter((e) => e.alive);
-    if (!foes.length || this.rng() * 100 >= sp.grimoireChance) return;
+    if (!sp || !sp.soulEnergy || unit.side !== 'hero' || unit.minion || !unit.alive) return;
+    // Lost Cleric's Grimoire: healing received is stored as Soul Energy (100% per copy). At 10% of max health it
+    // bursts out as a green fireball dealing 250% of the stored energy (at most one every 0.1s).
+    unit.soul = (unit.soul || 0) + (got * sp.soulEnergy) / 100;
+    const foes = this.targetableEnemies();
+    if (!foes.length || unit.soul < unit.maxHp * 0.1 || (unit.soulCd || 0) > 0) return;
     const target = foes[Math.floor(this.rng() * foes.length)];
+    const damage = unit.soul * ((sp.soulDamage || 250) / 100);
+    unit.soul = 0;
+    unit.soulCd = 100;
     events.push({ type: 'proc', unit, label: 'Grimoire!', itemId: 'lost_clerics_grimoire', target });
-    this.strike(unit, target, events, { multiplier: sp.grimoireDamage / 100, damageType: 'fire', projectile: 'greenfire', item: true });
+    this.strike(unit, target, events, { multiplier: damage / Math.max(1, unit.stats.attack), damageType: 'fire', projectile: 'greenfire', item: true });
   }
 
   // All enemies in a chain order: from `first`, always to the nearest one not yet hit.
@@ -2520,8 +2537,8 @@ export default class BattleState {
     const healed = [];
     for (const h of this.heroes) {
       if (!h.alive) continue;
-      const bonus = (h.specials && h.specials.clearHeal) || 0;
-      const amount = Math.min(Math.round((h.maxHp * (percent + bonus)) / 100), h.maxHp - h.hp);
+      const bonus = (h.specials && h.specials.clearHealFlat) || 0; // Aid Kit: +8 health per kit (flat)
+      const amount = Math.min(Math.round((h.maxHp * percent) / 100 + bonus), h.maxHp - h.hp);
       h.hp += amount;
       healed.push({ unit: h, amount });
     }

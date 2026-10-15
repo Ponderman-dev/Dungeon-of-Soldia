@@ -37,8 +37,10 @@ ok('all 9 G4 items exist', ['executioners_axe', 'magma_core', 'shatter_hammer', 
   ok('...only from the holder', near(dmg(s, s.heroes[1], es[0]) / dmg(mk().s, mk().k, mk().es[0]) , 1, 0.2)); }
 { const tickRate = (n) => { const { s, es, k } = mk(); give(s, k, 'magma_core', n); es[0].hp = es[0].maxHp; s.applyStatus(es[0], { status: 'burn', durationMs: 60000, damageMultiplier: 0.001, damageType: 'fire' }, k, 'b', []); let ticks = 0; for (let t = 0; t < 5000; t += 20) ticks += s.update(20).filter((e) => e.type === 'dot').length; return ticks; };
   const base = tickRate(0), one = tickRate(1), five = tickRate(5);
-  ok('...burn ticks 30% faster', near(one / base, 1.3, 0.06), `${base} -> ${one}`);
-  ok('...and the speed bonus is capped at +100%', near(five / base, 2.0, 0.06), `${five / base}`); }
+  ok('...burn ticks 40% faster', near(one / base, 1.4, 0.06), `${base} -> ${one}`);
+  ok('...and the speed does NOT grow with more cores', near(five / base, 1.4, 0.06), `${five / base}`); }
+{ const burn = (n) => { const { s, es, k } = mk(); give(s, k, 'magma_core', n); s.applyStatus(es[0], { status: 'burn', durationMs: 3000, damageMultiplier: 1, damageType: 'fire' }, k, 'b', []); return es[0].statuses.find((x) => x.type === 'burn').damage; };
+  const b0 = burn(0); ok('...burn ticks +15% harder per core (3 cores = +45%)', near(burn(3) / b0, 1.45, 0.03), `${b0} ${burn(3)}`); }
 // Shatter Hammer
 { const { s, es, k } = mk(); give(s, k, 'shatter_hammer'); const clean = dmg(s, k, es[0]);
   s.applyStatus(es[0], { status: 'freeze', durationMs: 5000 }, k, 'f', []); const ev = []; const hit = s.strike(k, es[0], ev, {});
@@ -56,9 +58,13 @@ ok('all 9 G4 items exist', ['executioners_axe', 'magma_core', 'shatter_hammer', 
 { const { s, es, k } = mk(['goblin', 'goblin', 'goblin']); give(s, k, 'plague_flask');
   for (let i = 0; i < 5; i++) poison(s, es[0], k); const ev = []; es[0].hp = 1; s.strike(k, es[0], ev, {});
   const got = es.slice(1).map((e) => s.stacks(e, 'poison'));
-  ok('Plague Flask: half the poison stacks (3 of 5, rounded up) spread to ONE other enemy', got.filter((n) => n === 3).length === 1 && got.filter((n) => n === 0).length === 1, got.join()); }
+  ok('Plague Flask: 15% of the poison stacks (5 -> 1, at least 1) spread to ONE other enemy', got.filter((n) => n === 1).length === 1 && got.filter((n) => n === 0).length === 1, got.join()); }
+{ const { s, es, k } = mk(['goblin', 'goblin']); give(s, k, 'plague_flask', 4); for (let i = 0; i < 10; i++) poison(s, es[0], k); es[0].hp = 1; s.strike(k, es[0], [], {});
+  ok('...+15% per extra flask (4 flasks = 60%: 10 stacks -> 6)', s.stacks(es[1], 'poison') === 6, `${s.stacks(es[1], 'poison')}`); }
+{ const { s, es, k } = mk(['goblin', 'goblin']); give(s, k, 'plague_flask', 10); for (let i = 0; i < 4; i++) poison(s, es[0], k); es[0].hp = 1; s.strike(k, es[0], [], {});
+  ok('...can pass 100% (10 flasks = 150%: 4 stacks -> 6)', s.stacks(es[1], 'poison') === 6, `${s.stacks(es[1], 'poison')}`); }
 { const { s, es, k } = mk(['goblin', 'goblin', 'goblin']); give(s, k, 'plague_flask', 2); for (let i = 0; i < 4; i++) poison(s, es[0], k); es[0].hp = 1; s.strike(k, es[0], [], {});
-  ok('...+1 enemy per copy (2 copies: both others get 2 stacks)', es.slice(1).every((e) => s.stacks(e, 'poison') === 2)); }
+  ok('...+1 enemy per copy (2 copies: both others get 30% of 4 = 1 stack)', es.slice(1).every((e) => s.stacks(e, 'poison') === 1)); }
 { const { s, es, k } = mk(['goblin']); give(s, k, 'plague_flask'); for (let i = 0; i < 4; i++) poison(s, es[0], k); es[0].hp = 1; const ev = [];
   let threw = false; try { s.strike(k, es[0], ev, {}); } catch { threw = true; } ok('...with no other enemy nothing happens (no crash)', !threw); }
 { const { s, es, k, h } = mk(['goblin', 'goblin']); give(s, k, 'plague_flask'); for (let i = 0; i < 4; i++) poison(s, es[0], h[1]); es[0].hp = 1; s.strike(k, es[0], [], {});

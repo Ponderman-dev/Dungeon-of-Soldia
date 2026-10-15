@@ -22,7 +22,7 @@ const give = (s, u, id, n = 1) => { for (let i = 0; i < n; i++) s.giveItem(u.uid
 const basicHit = (s, a, t) => s.strike(a, t, [], { basic: true });
 
 // ================= G1: updated built items
-ok('Siege Cannon is legendary now, Feather Boots max 8, Bulwark Plate has no max stacks', itemDefs.siege_cannon.rarity === 'legendary' && itemDefs.feather_boots.maxStacks === 8 && itemDefs.bulwark_plate.maxStacks === undefined);
+ok('Siege Cannon is legendary, Feather Boots / Lucky Coin / Dice / Totem / Bulwark have no max stacks', itemDefs.siege_cannon.rarity === 'legendary' && ['feather_boots', 'lucky_coin', 'gamblers_dice', 'shield_totem', 'bulwark_plate'].every((id) => itemDefs[id].maxStacks === undefined));
 { const { s, es, k } = mk(); give(s, k, 'static_crystal'); k.stats.crit = 0;
   const ev = []; s.chainHit(k, es[0], { jumps: 2, damageMultiplier: 3, damageType: 'electric', apply: [{ status: 'shock', durationMs: 3000 }] }, ev);
   ok('Static Crystal data: its chain applies Shock', itemDefs.static_crystal.effects[0].chain.apply[0].status === 'shock'); }
@@ -48,7 +48,7 @@ ok('Siege Cannon is legendary now, Feather Boots max 8, Bulwark Plate has no max
 // Bandage Roll
 { const { s, es, k, h } = mk(['goblin', 'goblin']); give(s, k, 'bandage_roll', 2); k.baseStats.attack = 1e7; k.baseStats.health = 1e6; s.refreshStats(); k.hp = 100000; const maxHp = k.maxHp;
   const ev = []; s.strike(k, es[0], ev, { basic: true });
-  ok('Bandage Roll: the holder heals 3% max health on each kill (2 copies = 6%)', Math.abs(k.hp - (100000 + maxHp * 0.06)) < 5, `${k.hp}`);
+  ok('Bandage Roll: the holder heals 2% max health on each kill (2 copies = 4%)', Math.abs(k.hp - (100000 + maxHp * 0.04)) < 5, `${k.hp}`);
   const other = h[1]; give(s, other, 'bandage_roll'); other.hp = 100; k.hp = 100000;
   s.strike(k, es[1], [], { basic: true }); ok('...a kill by someone ELSE heals only the killer', true); }
 { const { s, es, k, h } = mk(['goblin']); give(s, k, 'bandage_roll'); k.hp = 100; es[0].hp = 1;
@@ -69,34 +69,35 @@ ok('Siege Cannon is legendary now, Feather Boots max 8, Bulwark Plate has no max
   ok('more copies do not make the heal bigger', k.specials.secondWind === 30); }
 // Full Vigor
 { const { s, es, k } = mk(['goblin']); give(s, k, 'full_vigor', 2); k.hp = k.maxHp;
-  const full = s.strike(k, es[0], [], {}).amount; k.hp = k.maxHp - 1; const hurt = s.strike(k, es[0], [], {}).amount;
-  ok('Full Vigor: +15% damage per copy at full health only (2 = +30%)', Math.abs(full / hurt - 1.3) < 0.05, `${full}/${hurt}`); }
+  const full = s.strike(k, es[0], [], {}).amount; k.hp = k.maxHp * 0.91; const high = s.strike(k, es[0], [], {}).amount; k.hp = k.maxHp * 0.89; const hurt = s.strike(k, es[0], [], {}).amount;
+  ok('Full Vigor: +15% damage per copy above 90% health (2 = +30%)', Math.abs(full / hurt - 1.3) < 0.05 && Math.abs(high / hurt - 1.3) < 0.05, `${full}/${high}/${hurt}`); }
 // Brawler's Streak
 { const { s, es, k } = mk(['goblin', 'goblin']); give(s, k, 'brawlers_streak');
   const hits = [0, 1, 2, 3, 4, 5, 6, 7].map(() => basicHit(s, k, es[0]).amount);
-  ok('Brawler\'s Streak: +2% per consecutive hit on the same target, max +10%', hits[1] / hits[0] > 1.015 && Math.abs(hits[7] / hits[0] - 1.1) < 0.04 && Math.abs(hits[6] / hits[0] - 1.1) < 0.04, hits.join());
-  const sw = basicHit(s, k, es[1]).amount; ok('...a new target resets the streak', Math.abs(sw / hits[0] - 1) < 0.04);
+  ok('Brawler\'s Streak: +2% per hit in a row, max +10%', hits[1] / hits[0] > 1.015 && Math.abs(hits[7] / hits[0] - 1.1) < 0.04 && Math.abs(hits[6] / hits[0] - 1.1) < 0.04, hits.join());
+  const sw = basicHit(s, k, es[1]).amount; ok('...switching to another enemy KEEPS the combo', Math.abs(sw / hits[0] - 1.1) < 0.04);
+  s.applyStatus(k, { status: 'stun', durationMs: 500 }, es[0], 'test', []); const after = basicHit(s, k, es[1]).amount; ok('...being stunned loses the combo', Math.abs(after / hits[0] - 1) < 0.04);
   const { s: s2, es: e2, k: k2 } = mk(['goblin']); give(s2, k2, 'brawlers_streak', 3);
   const h2 = Array.from({ length: 20 }, () => basicHit(s2, k2, e2[0]).amount); ok('...each extra copy raises the MAX (3 copies: +30%)', Math.abs(h2[19] / h2[0] - 1.3) < 0.05, `${h2[19] / h2[0]}`); }
 // Tough Skin
 { const { s, es, k } = mk(['goblin']); give(s, k, 'tough_skin'); k.hp = k.maxHp; es[0].stats.attack = 100; k.stats.defense = 0; k.stats.evasion = 0;
   const first = s.strike(es[0], k, [], {}).amount, second = s.strike(es[0], k, [], {}).amount;
-  ok('Tough Skin: the first hit each floor deals 60% less', Math.abs(first / second - 0.4) < 0.03, `${first}/${second}`);
-  s.spawnEnemies(['goblin'], 2); const again = s.strike(s.enemies[0], k, [], {}).amount;
-  ok('...it works again every floor', again < second * 0.8 || again <= first * 1.1); }
-{ const cuts = [1, 2, 3, 6, 10].map((n) => { const { s, es, k } = mk(['goblin']); give(s, k, 'tough_skin', n); es[0].stats.attack = 1000; k.stats.defense = 0; k.stats.evasion = 0; const f = s.strike(es[0], k, [], {}).amount; const sc = s.strike(es[0], k, [], {}).amount; return 1 - f / sc; });
-  ok('...more copies cut more: 60%, 70%, 78%... never above 90%', Math.abs(cuts[0] - 0.6) < 0.03 && Math.abs(cuts[1] - 0.7) < 0.03 && Math.abs(cuts[2] - 0.775) < 0.03 && cuts[3] <= 0.91 && cuts[4] <= 0.91 && cuts[4] >= cuts[3] - 0.01, cuts.map((c) => c.toFixed(2)).join()); }
+  const { s: s0, es: e0, k: k0 } = mk(['goblin']); e0[0].stats.attack = 100; k0.stats.defense = 0; k0.stats.evasion = 0; const plain = s0.strike(e0[0], k0, [], {}).amount;
+  ok('Tough Skin: EVERY hit deals 2 less (not only the first)', first === plain - 2 && second === plain - 2, `${plain} ${first} ${second}`); }
+{ const hit = (n, atk) => { const { s, es, k } = mk(['goblin']); if (n) give(s, k, 'tough_skin', n); es[0].stats.attack = atk; k.stats.defense = 0; k.stats.evasion = 0; return s.strike(es[0], k, [], {}).amount; };
+  const p = hit(0, 100); ok('...2 less PER COPY (5 copies = 10 less)', hit(5, 100) === p - 10);
+  ok('...a hit never drops below 1', hit(50, 3) === 1); }
 // Type charms
 { const { s, es, k } = mk(['goblin']); const fire = (u) => s.strike(u, es[0], [], { damageType: 'fire' }).amount; const base = fire(k); give(s, k, 'kindling', 2); const up = fire(k);
   ok('Kindling: +15% fire damage per copy', Math.abs(up / base - 1.3) < 0.04, `${base} -> ${up}`);
   give(s, k, 'frost_charm'); give(s, k, 'storm_charm'); give(s, k, 'shadow_charm');
   ok('Frost / Storm / Shadow Charm add ice / electric / dark damage', k.damageBonus.ice === 15 && k.damageBonus.electric === 15 && k.damageBonus.dark === 15); }
 { const { s, k } = mk(['goblin']); const r0 = k.stats.resist; give(s, k, 'mage_cloak', 2);
-  ok('Mage Cloak: +10 resist per copy', k.stats.resist === r0 + 20); }
+  ok('Mage Cloak: +12 resist per copy', k.stats.resist === r0 + 24); }
 // Hourglass
 { const { s, k } = mk(['goblin']); const cd = 8000; const sk = () => { k.skills[0].cooldownLeft = 0; s.castSkill(k.uid, 0); return k.skills[0].cooldownLeft; };
   const base = sk(); give(s, k, 'hourglass', 2); const two = sk(); give(s, k, 'hourglass', 20); const cap = sk();
-  ok('Hourglass: cooldowns 5% shorter per copy (2 = 10%), capped at 50%', Math.abs(two / base - 0.9) < 0.01 && Math.abs(cap / base - 0.5) < 0.01, `${base} ${two} ${cap}`); }
+  ok('Hourglass: each copy cuts 5% of what is left (2 = 9.75%, 22 = 67.6%, no hard stop)', Math.abs(two / base - 0.9025) < 0.01 && Math.abs(cap / base - Math.pow(0.95, 22)) < 0.01, `${base} ${two} ${cap}`); }
 // drop sources / needs
 { const { s, h } = mk(['goblin']); const mage = new BattleState({ heroDefs: ['mage', 'knight', 'rogue'].map((id) => noPerks(r('heroes.json')).concat(r('heroes.json').filter((x) => x.id === 'mage'))[0]), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
   void mage; }

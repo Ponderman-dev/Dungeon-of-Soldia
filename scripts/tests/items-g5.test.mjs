@@ -25,8 +25,8 @@ ok('all 8 G5 items exist', ['warding_charm', 'overheal_ring', 'spiked_aegis', 'p
 // Warding Charm
 { const { s, k } = mk(); s.applyStatus(k, { status: 'shield', amount: 100 }, k, 'a', []); const base = s.shieldAmount(k);
   give(s, k, 'warding_charm'); s.applyStatus(k, { status: 'shield', amount: 100 }, k, 'b', []);
-  ok('Warding Charm: shields the holder receives are 30% bigger', s.shieldAmount(k) - base === 130);
-  give(s, k, 'warding_charm'); s.applyStatus(k, { status: 'shield', amount: 100 }, k, 'c', []); ok('...+30% per copy (2 = +60%)', s.shieldAmount(k) - base - 130 === 160); }
+  ok('Warding Charm: shields the holder receives are 20% bigger', s.shieldAmount(k) - base === 120);
+  give(s, k, 'warding_charm'); s.applyStatus(k, { status: 'shield', amount: 100 }, k, 'c', []); ok('...+20% per copy (2 = +40%)', s.shieldAmount(k) - base - 120 === 140); }
 
 // Overheal Ring
 { const { s, k } = mk(); give(s, k, 'overheal_ring'); k.hp = k.maxHp - 100; const ev = []; s.healUnit(k, 600, ev, { aura: false });
@@ -56,7 +56,9 @@ ok('all 8 G5 items exist', ['warding_charm', 'overheal_ring', 'spiked_aegis', 'p
   ok('...taunted enemies take +15% damage from the holder', near(s.strike(k, es[0], [], {}).amount / clean, 1.15), ''); }
 { const { s, es, k } = mk(['goblin'], Math.random); give(s, k, 'provokers_horn'); s.rng = Math.random; let n = 0; const N = 8000;
   for (let i = 0; i < N; i++) { es[0].statuses = []; s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true }); if (es[0].statuses.some((x) => x.type === 'taunt')) n++; }
-  ok('...10% chance', Math.abs(n / N - 0.1) < 0.015, `${n / N}`); }
+  ok('...18% chance', Math.abs(n / N - 0.18) < 0.015, `${n / N}`); }
+{ const { s, k } = mk(['goblin']); give(s, k, 'provokers_horn', 3); const p = k.procs.filter((x) => x.itemId === 'provokers_horn');
+  ok('...more horns: still ONE 18% roll, taunt +0.3s per extra horn, +15% damage per horn', p.length === 1 && p[0].chance === 18 && k.specials.hornDamage === 45); }
 { const real = kitsV1(r('heroes.json')); const s2 = new BattleState({ heroDefs: ['knight', 'rogue', 'archer'].map((id) => ({ ...real.find((x) => x.id === id), perk: undefined })), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng: () => 0 });
   const e = s2.spawnEnemies(['goblin'], 1)[0]; s2.giveItem(s2.heroes[0].uid, 'provokers_horn');
   ok('the Knight adds the Horn to his own Taunt Wall (two taunt rolls)', s2.heroes[0].procs.filter((p) => p.apply && p.apply.some((a) => a.status === 'taunt')).length === 2); void e; }
@@ -88,7 +90,7 @@ ok('all 8 G5 items exist', ['warding_charm', 'overheal_ring', 'spiked_aegis', 'p
   ok('...the chance is 8%', Math.abs(n() - 0.08) < 0.015); }
 { const cd = (c) => { const { s } = mk(); return s.martyrCooldown(c); };
   ok('...more copies shorten the cooldown and the cost', cd(2) < cd(1) && cd(3) < cd(2)); const { s, es, h } = mk(['goblin'], () => 0); give(s, h[1], 'martyrs_shield', 3); const m0 = h[1].hp; hitMe(s, es[0], h[2], 0.0001);
-  ok('...(3 copies: the health cost is smaller)', m0 - h[1].hp < Math.round(h[1].maxHp * 0.03) && h[1].specials.martyr === 8); }
+  ok('...(3 copies: the health cost is smaller, chance 8% +4% per extra = 16%)', m0 - h[1].hp < Math.round(h[1].maxHp * 0.03) && h[1].specials.martyr === 16); }
 
 // Fire Heart
 { const { s, es, k } = mk(['goblin']); give(s, k, 'fire_heart'); s.startFloor();
@@ -104,16 +106,16 @@ ok('all 8 G5 items exist', ['warding_charm', 'overheal_ring', 'spiked_aegis', 'p
 
 // Lost Cleric's Grimoire
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'lost_clerics_grimoire', 2); k.hp = 1000; const hp0 = es[0].hp; const ev = [];
-  s.healUnit(k, 500, ev, { aura: false });
-  ok('Grimoire: a heal the holder receives can launch green fire at a random enemy (150% per copy)', hp0 - es[0].hp > 0 && ev.some((e) => e.type === 'projectile' && e.kind === 'greenfire') && near(hp0 - es[0].hp, k.stats.attack * 3, 0.05), `${hp0 - es[0].hp}`);
+  const got = s.healUnit(k, 500, ev, { aura: false });
+  ok('Grimoire: healing is stored as Soul Energy (100% per copy); at 10% max health it fires a green fireball of 250% of the energy', got >= k.maxHp * 0.05 && ev.some((e) => e.type === 'projectile' && e.kind === 'greenfire') && near(hp0 - es[0].hp, got * 2 * 2.5, 0.05) && k.soul === 0, `${hp0 - es[0].hp} vs ${got * 5}`);
   k.hp = k.maxHp; const hp1 = es[0].hp; s.healUnit(k, 500, [], { aura: false }); ok('...a heal at full health does not count', es[0].hp === hp1); }
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'lost_clerics_grimoire'); k.specials.lifesteal = 100; k.hp = 1000; const hp = k.hp;
   s.healUnit(k, 10, [], { aura: false }); ok('...the fireball does no lifesteal (item damage)', k.hp === hp + 10); }
-{ const ch = (n) => { const { s, k } = mk(['goblin']); give(s, k, 'lost_clerics_grimoire', n); return k.specials.grimoireChance; };
-  ok('...chance 10% per copy, capped at 50%', ch(1) === 10 && ch(3) === 30 && ch(9) === 50); }
-{ const { s, es, k } = mk(['goblin']); give(s, k, 'lost_clerics_grimoire'); k.specials.grimoireChance = 100; k.hp = 1;
-  const ev = []; for (let t = 0; t < 2200; t += 20) ev.push(...s.update(20));
-  k.specials.regen = 1; const e2 = []; for (let t = 0; t < 3100; t += 20) e2.push(...s.update(20));
-  ok('...regen counts as ONE heal per second (about 3 fireballs in 3s, not 150)', (() => { const n = e2.filter((e) => e.type === 'projectile' && e.kind === 'greenfire').length; return n >= 2 && n <= 4; })(), `${e2.filter((e) => e.kind === 'greenfire').length}`); }
+{ const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'lost_clerics_grimoire'); k.hp = 1; const hp0 = es[0].hp; const small = Math.floor(k.maxHp * 0.04);
+  const ev = []; s.healUnit(k, small, ev, { aura: false }); s.healUnit(k, small, ev, { aura: false });
+  ok('...small heals are stored until the energy reaches 10% (2 x 4%: no fireball yet)', es[0].hp === hp0 && Math.abs(k.soul - small * 2) < 1);
+  s.healUnit(k, small, ev, { aura: false }); ok('...the 3rd heal passes 10% and it fires', es[0].hp < hp0 && k.soul === 0);
+  s.healUnit(k, Math.floor(k.maxHp * 0.2), ev, { aura: false }); ok('...at most one fireball per 0.1s (the energy waits)', k.soul > 0 && ev.filter((e) => e.kind === 'greenfire').length === 1);
+  s.update(120); s.healUnit(k, 1, ev, { aura: false }); ok('...after 0.1s the stored energy fires', ev.filter((e) => e.kind === 'greenfire').length === 2); }
 { const { s, es, k, h } = mk(['goblin'], () => 0); give(s, k, 'lost_clerics_grimoire'); h[1].hp = 1; const hp0 = es[0].hp; s.healUnit(h[1], 100, [], { aura: false });
   ok('...a heal on ANOTHER hero does not count for the holder', es[0].hp === hp0); }

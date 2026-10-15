@@ -39,7 +39,10 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
       // One entry per copy, so every copy rolls its own chance. Only the holder's own attacks roll.
       // `unique` effects only count once however many copies the hero has (e.g. a freeze chance that doesn't stack).
       // `falloffRatio` on a proc shrinks its chance for extra copies (Serrated Edge: 10%, 8%, 6.4%...).
-      if (holder === hero && !(e.unique && procs.some((p) => p.unique && p.itemId === e.itemId))) procs.push({ ...e, chance: e.chance * factor, itemId: e.itemId, copies: holder.items.filter((i) => i === e.itemId).length });
+      // `chancePerExtra` (with `unique`): ONE roll whose chance grows with every extra copy (Hex Doll: 8%, 12%, 16%...).
+      const n = holder ? holder.items.filter((i) => i === e.itemId).length : 1;
+      const chance = e.chancePerExtra ? e.chance + e.chancePerExtra * (n - 1) : e.chance * factor;
+      if (holder === hero && !(e.unique && procs.some((p) => p.unique && p.itemId === e.itemId))) procs.push({ ...e, chance, itemId: e.itemId, copies: n });
     } else if (e.special) {
       // `unique`: the value does NOT grow with more copies (e.g. the Second Wind heal); `cap`: the total stops here.
       if (e.unique) specials[e.special] = e.percent;
@@ -64,8 +67,13 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
       const item = itemDefs[id];
       if (item.scope !== 'squad' && holder !== hero) continue;
       // Each extra copy of an item with a falloffRatio adds a bit less than the one before:
-      // the nth copy gives (effect x ratio^(n-1)).
-      for (const e of item.effects) apply({ ...e, itemId: id }, e.falloffRatio ? Math.pow(e.falloffRatio, index) : 1, holder);
+      // the nth copy gives (effect x ratio^(n-1)). `perExtra`: the first copy gives the effect's value, every
+      // extra copy gives `perExtra` instead (Blood Chalice: +20%, then +10% per extra chalice).
+      for (const e of item.effects) {
+        let factor = e.falloffRatio ? Math.pow(e.falloffRatio, index) : 1;
+        if (e.perExtra !== undefined && index > 0) factor = e.perExtra / (e.percent ?? e.flat);
+        apply({ ...e, itemId: id }, factor, holder);
+      }
     }
   }
   // Hero perks: every living hero's perk helps the whole party (a fallen hero's perk is lost).

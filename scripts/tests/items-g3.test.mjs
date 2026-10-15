@@ -28,7 +28,7 @@ const within = (v, t, tol) => Math.abs(v - t) <= tol;
 
 { const need = ['ember_charm', 'venom_fang', 'rusty_nails', 'serrated_edge', 'hex_doll', 'dread_bell', 'gag_rune', 'fire_arrows'];
   ok('all 8 G3 items exist with a description', need.every((id) => itemDefs[id] && itemDefs[id].description));
-  ok('rarities: commons Ember/Venom/Rusty, rares the rest', ['ember_charm', 'venom_fang', 'rusty_nails'].every((i) => itemDefs[i].rarity === 'common') && ['serrated_edge', 'hex_doll', 'dread_bell', 'gag_rune', 'fire_arrows'].every((i) => itemDefs[i].rarity === 'rare')); }
+  ok('rarities: commons Ember/Venom/Rusty, rares the rest', ['ember_charm', 'venom_fang', 'rusty_nails'].every((i) => itemDefs[i].rarity === 'common') && ['serrated_edge', 'hex_doll', 'dread_bell', 'fire_arrows'].every((i) => itemDefs[i].rarity === 'rare') && itemDefs.gag_rune.rarity === 'epic'); }
 
 // ---- the chance appliers
 ok('Ember Charm: 6% Burn per attack', within(rate('ember_charm', 1, 'burn'), 0.06, 0.012));
@@ -38,18 +38,28 @@ ok('Rusty Nails: 8% Armor Break', within(rate('rusty_nails', 1, 'armorBreak'), 0
 ok('Hex Doll: 8% Curse', within(rate('hex_doll', 1, 'curse'), 0.08, 0.014));
 ok('Dread Bell: 5% Fear', within(rate('dread_bell', 1, 'fear'), 0.05, 0.012));
 ok('Serrated Edge: 10% Bleed', within(rate('serrated_edge', 1, 'bleed'), 0.10, 0.015));
-ok('...2 copies: 10% + 8% (diminishing, 0.8x)', within(rate('serrated_edge', 2, 'bleed', 10000), 1 - 0.9 * 0.92, 0.015), `${rate('serrated_edge', 2, 'bleed', 10000)}`);
-{ const { s, k } = mk(); give(s, k, 'serrated_edge', 3); ok('...3 copies: 10%, 8%, 6.4%', [10, 8, 6.4].every((c, i) => Math.abs(k.procs[i].chance - c) < 0.001)); }
+ok('...2 copies: ONE roll of 15%', within(rate('serrated_edge', 2, 'bleed', 10000), 0.15, 0.015), `${rate('serrated_edge', 2, 'bleed', 10000)}`);
+{ const { s, k } = mk(); give(s, k, 'serrated_edge', 10); const p = k.procs.filter((x) => x.itemId === 'serrated_edge'); ok('...10 copies: one roll of 55%', p.length === 1 && p[0].chance === 55); }
+{ const ch = (id, n) => { const { s, k } = mk(); give(s, k, id, n); return k.procs.filter((x) => x.itemId === id).map((x) => x.chance).join(); };
+  ok('Hex Doll / Rusty Nails: one roll, 8% +4% per extra (3 = 16%)', ch('hex_doll', 3) === '16' && ch('rusty_nails', 3) === '16');
+  ok('Dread Bell: one roll, 5% +3% per extra (3 = 11%)', ch('dread_bell', 3) === '11'); }
 
 // stacking rules
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'venom_fang', 3);
   s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true });
   ok('every proc adds a Poison STACK (3 copies, all roll: 3 stacks)', s.stacks(es[0], 'poison') === 3); }
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'rusty_nails', 2); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true });
-  ok('Armor Break refreshes, it does not stack', es[0].statuses.filter((x) => x.type === 'armorBreak').length === 1); }
+  s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true });
+  ok('Armor Break STACKS with every proc hit (2 procs = 2 stacks = -30 defense)', es[0].statuses.filter((x) => x.type === 'armorBreak').length === 2);
+  s.tickStatuses(2600, []); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true }); s.tickStatuses(2600, []);
+  ok('...each stack has its own timer (5s): the first two ran out, the newest is still there', es[0].statuses.filter((x) => x.type === 'armorBreak').length === 1); }
+{ const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'hex_doll'); for (let i = 0; i < 4; i++) s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true });
+  ok('Curse stacks too (4 procs = 4 stacks)', es[0].statuses.filter((x) => x.type === 'curse').length === 4); }
+{ const dur = (n) => { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'dread_bell', n); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true }); return es[0].statuses.find((x) => x.type === 'fear').total; };
+  ok('Dread Bell: fear 1s, +0.2s per extra bell', dur(1) === 1000 && dur(3) === 1400, `${dur(1)} ${dur(3)}`); }
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'ember_charm'); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true }); const one = es[0].statuses.find((x) => x.type === 'burn').damage;
   const { s: s2, es: e2, k: k2 } = mk(['goblin'], () => 0); give(s2, k2, 'ember_charm', 2); s2.rollProcs(k2, 'onAttack', [], { target: e2[0], hit: true }); const two = e2[0].statuses.filter((x) => x.type === 'burn').map((x) => x.damage);
-  ok('Ember Charm: burn damage also grows per copy (2 copies: each stack twice as strong)', two.length === 2 && two.every((d) => d === one * 2), `${one} vs ${two}`); }
+  ok('Ember Charm: burn damage +10% per extra charm (2 copies: each stack 1.1x)', two.length === 2 && two.every((d) => Math.abs(d / one - 1.1) < 0.02), `${one} vs ${two}`); }
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'ember_charm'); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: false });
   ok('a missed attack applies nothing', es[0].statuses.length === 0); }
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'dread_bell'); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true });
@@ -78,10 +88,10 @@ ok('...2 copies: 10% + 8% (diminishing, 0.8x)', within(rate('serrated_edge', 2, 
 // Fire Arrows
 { const { s, es, k } = mk(['goblin'], () => 0.1, ['archer', 'knight', 'rogue']); const a = s.heroes[0]; give(s, a, 'fire_arrows');
   const ev = []; s.landAttack(a, es[0], ev); const fire = ev.filter((e) => e.type === 'attack' && e.damageType === 'fire');
-  ok('Fire Arrows: a ranged attack can add an extra fire hit (50% of attack)', fire.length === 1 && Math.abs(fire[0].result.amount - a.stats.attack * 0.5) < 3, `${fire[0] && fire[0].result.amount}`); }
+  ok('Fire Arrows: a ranged attack can add an extra fire hit (20% of attack)', fire.length === 1 && Math.abs(fire[0].result.amount - a.stats.attack * 0.2) < 3, `${fire[0] && fire[0].result.amount}`); }
 { const { s, es } = mk(['goblin'], () => 0.1, ['archer', 'knight', 'rogue']); const a = s.heroes[0]; give(s, a, 'fire_arrows', 3);
   const ev = []; s.landAttack(a, es[0], ev); const fire = ev.filter((e) => e.type === 'attack' && e.damageType === 'fire');
-  ok('...more copies: the chance stays 50% but the fire hit grows (3 copies = 150%)', fire.length === 1 && Math.abs(fire[0].result.amount - a.stats.attack * 1.5) < 5, `${fire[0] && fire[0].result.amount}`); }
+  ok('...more copies: the chance stays 50% but the fire hit grows (3 copies = 60%)', fire.length === 1 && Math.abs(fire[0].result.amount - a.stats.attack * 0.6) < 4, `${fire[0] && fire[0].result.amount}`); }
 { const { s, es } = mk(['goblin'], Math.random, ['archer', 'knight', 'rogue']); const a = s.heroes[0]; give(s, a, 'fire_arrows'); s.rng = Math.random; let n = 0; const N = 5000;
   for (let i = 0; i < N; i++) { const ev = []; s.landAttack(a, es[0], ev); if (ev.some((e) => e.damageType === 'fire')) n++; }
   ok('...50% of attacks', within(n / N, 0.5, 0.03)); }

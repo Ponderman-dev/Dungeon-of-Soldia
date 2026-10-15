@@ -16,7 +16,7 @@ const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker 
   const [e] = dummy(s); s.rng = () => 0; let ev = []; s.rollProcs(k, 'onAttack', ev, { target: e });
   ok('double hit strikes the target again', attacks(ev, k).length === 1 && ev.some((x) => x.type === 'proc'));
   s.rng = Math.random; let procs = 0, n = 0; const [t] = dummy(s); for (let i = 0; i < 100000; i++) { ev = []; s.rollProcs(k, 'onAttack', ev, { target: t }); n++; if (ev.some((x) => x.type === 'proc')) procs++; }
-  ok('double hit ~5%', Math.abs(procs / n - 0.05) < 0.005, `${(100 * procs / n).toFixed(2)}%`); }
+  ok('double hit ~8%', Math.abs(procs / n - 0.08) < 0.006, `${(100 * procs / n).toFixed(2)}%`); }
 // Fire Bombs: fire damage, 250%, projectile
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'fire_bombs'); const [e] = dummy(s); s.rng = () => 0.001; k.stats.crit = 0; const ev = []; s.rollProcs(k, 'onAttack', ev, { target: e });
   const a = attacks(ev, k)[0]; ok('bomb is fire, 250% of attack', a && a.damageType === 'fire' && a.result.amount === Math.round(k.stats.attack * 2.5), JSON.stringify(a && a.result));
@@ -67,7 +67,8 @@ const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker 
 // Aid Kit: heals % on clear, diminishing
 { const s = mk(); const k = s.heroes[0]; k.hp = 1; s.giveItem(k.uid, 'aid_kit'); const pct = (p) => { k.hp = 1; return s.winHeal(p).find((x) => x.unit === k).amount / k.maxHp * 100; };
   const one = pct(0); s.giveItem(k.uid, 'aid_kit'); const two = pct(0); s.giveItem(k.uid, 'aid_kit'); const three = pct(0);
-  ok('1 kit = 5%', Math.abs(one - 5) < 0.5, one.toFixed(1)); ok('2 kits = 5+4.25', Math.abs(two - 9.25) < 0.5, two.toFixed(1)); ok('3 kits add less each time', three - two < two - one, three.toFixed(1)); }
+  const hp = (n) => (n * k.maxHp) / 100;
+  ok('Aid Kit: 1 kit = +8 health (flat)', Math.abs(hp(one) - 8) < 0.6, hp(one).toFixed(1)); ok('...2 kits = 16, 3 kits = 24 (no shrink)', Math.abs(hp(two) - 16) < 0.6 && Math.abs(hp(three) - 24) < 0.6, `${hp(two).toFixed(1)} ${hp(three).toFixed(1)}`); }
 // Ranged heroes pick random enemies by default; melee heroes keep one opponent (front line); a tapped enemy is still focused
 { const s = mk(); const es = dummy(s, ['goblin', 'goblin', 'goblin']); const hit = new Set(); for (let i = 0; i < 200; i++) hit.add(s.pickTarget(s.heroes[3]).uid);
   ok('ranged default target is random', hit.size === 3);

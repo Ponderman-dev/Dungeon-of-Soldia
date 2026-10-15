@@ -10,8 +10,8 @@ let prev = base;
 for (let n = 1; n <= 10; n++) { s.giveItem(rogue.uid, 'lucky_coin'); rows.push(`${n}: +${(rogue.stats.crit - prev).toFixed(1)} -> ${(rogue.stats.crit - base).toFixed(1)}`); prev = rogue.stats.crit; }
 console.log(rows.join('\n'));
 console.log('base crit', base, 'final crit', rogue.stats.crit.toFixed(1), 'can take 11th:', canReceive(rogue, itemDefs.lucky_coin));
-const ok = Math.abs(rogue.stats.crit - base - 75) < 0.01 && !canReceive(rogue, itemDefs.lucky_coin);
-console.log(ok ? 'PASS: 10 coins = +75, stack limit 10' : 'FAIL');
+const ok = Math.abs(rogue.stats.crit - base - 100) < 0.01 && canReceive(rogue, itemDefs.lucky_coin) && rogue.specials.critDamage === 50;
+console.log(ok ? 'PASS: 10 coins = +100 crit and +50% crit damage, no stack limit' : 'FAIL');
 // preview shows the real (diminished) increment
 const k = s.heroes[0]; for (let i = 0; i < 5; i++) s.giveItem(k.uid, 'lucky_coin'); const before = k.stats.crit; const after = s.previewStats(k.uid, 'lucky_coin').stats.crit;
-console.log('preview 6th coin on Knight:', (after - before).toFixed(2), '(expect', (10 * Math.pow(0.934099, 5)).toFixed(2) + ')');
+console.log('preview 6th coin on Knight:', (after - before).toFixed(2), '(expect 10.00)', Math.abs(after - before - 10) < 0.01 ? 'PASS' : 'FAIL');

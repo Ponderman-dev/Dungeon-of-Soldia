@@ -32,7 +32,7 @@ ok('all 3 G6 items exist', ['conductors_baton', 'echo_rune', 'metronome'].every(
   ok('...and 25% longer (6s -> 7.5s)', near(b2.remaining / bd, 1.25), `${bd} -> ${b2.remaining}`); }
 { const val = (n) => { const { s, a } = mk(['knight', 'rogue', 'archer']); give(s, a, 'conductors_baton', n); cast(s, a, 'support'); return buff(a).mods[0].flat; };
   const one = val(1) / val(0), two = val(2) / val(0);
-  ok('...a second copy adds less (+25%, then +21.25%)', near(one, 1.25) && near(two, 1.4625), `${one} ${two}`); }
+  ok('...a second copy adds +8% (+25%, then +33%)', near(one, 1.25) && near(two, 1.33), `${one} ${two}`); }
 { const { s, a, h } = mk(['mage', 'knight', 'rogue']); give(s, a, 'conductors_baton'); cast(s, a, 'support');
   ok('...Arcane Ward: the shield is 25% bigger (and it lasts longer)', near(s.shieldAmount(a), a.stats.attack * 2.5 * 1.25, 0.03), `${s.shieldAmount(a)}`); }
 { const { s, a, h } = mk(['bard', 'knight', 'rogue']); give(s, a, 'conductors_baton'); h.forEach((x) => (x.hp = x.maxHp / 2)); cast(s, a, 'support');
@@ -53,9 +53,9 @@ ok('all 3 G6 items exist', ['conductors_baton', 'echo_rune', 'metronome'].every(
   for (let i = 0; i < N; i++) { a.skills[0].cooldownLeft = 0; if (cast(s, a, 'attack').some((e) => e.label === 'Echo!')) n++; }
   ok('...15% chance', Math.abs(n / N - 0.15) < 0.02, `${n / N}`); }
 { const ch = (n) => { const { s, a } = mk(['rogue', 'knight', 'archer']); give(s, a, 'echo_rune', n); return a.specials.echo; };
-  ok('...+15% per copy, capped at 60%', ch(1) === 15 && ch(3) === 45 && ch(6) === 60); }
+  ok('...more copies: closer and closer to 90%, no hard stop (1: 15%, 3: about 38%, 20: about 87%)', ch(1) === 15 && Math.abs(ch(3) - 37.9) < 0.5 && ch(20) > 85 && ch(20) < 90, `${ch(3)} ${ch(20)}`); }
 { const power = (n) => { const { s, a } = mk(['rogue', 'knight', 'archer'], ['goblin'], () => 0); give(s, a, 'echo_rune', n); const h = cast(s, a, 'attack').filter((e) => e.type === 'attack'); return h[1].result.amount / h[0].result.amount; };
-  ok('...more copies make the echo stronger, toward 100% (1: 60%, 3: 80%, 5+: 100%)', near(power(1), 0.6, 0.05) && near(power(3), 0.8, 0.05) && near(power(8), 1, 0.05), `${power(1)} ${power(3)} ${power(8)}`); }
+  ok('...more copies make the echo stronger, +10% each with no limit (1: 60%, 3: 80%, 8: 130%)', near(power(1), 0.6, 0.05) && near(power(3), 0.8, 0.05) && near(power(8), 1.3, 0.05), `${power(1)} ${power(3)} ${power(8)}`); }
 { const { s, a } = mk(['mage', 'knight', 'rogue'], ['goblin', 'goblin'], () => 0); give(s, a, 'echo_rune');
   const before = s.currentSpell(a, 0).name; const ev = cast(s, a, 'attack'); const after = s.currentSpell(a, 0).name;
   ok('the Mage\'s rotation moves forward only ONCE per cast, and the echo repeats the SAME spell', before === 'Fireball' && after === 'Frost Nova' && ev.filter((e) => e.type === 'cast').every((e) => e.skill.name === 'Fireball') && ev.filter((e) => e.type === 'cast').length === 2); }

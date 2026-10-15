@@ -45,11 +45,11 @@ function pickWeighted(list, weightOf, rng) {
 // Very rarely (potionChance) one of the choices is replaced by the Shared Potion, which heals
 // the whole party. The potion is only offered when some living hero is hurt.
 // `offered` (a Set kept for the run): items with `oncePerRun` (Soul Lantern) are never offered again once they were on a
-// card; rollChoices adds them to it.
-export function rollChoices({ itemDefs, count, heroes, rules, floor = 1, potionChance = 0, rng = Math.random, offered = null }) {
+// card; rollChoices adds them to it. `odds` (optional) replaces the floor's rarity odds (the Mimic's prize: rare/epic only).
+export function rollChoices({ itemDefs, count, heroes, rules, floor = 1, potionChance = 0, rng = Math.random, offered = null, odds: oddsOverride = null }) {
   const pool = Object.values(itemDefs).filter((item) => item.kind !== 'potion' && heroes.some((h) => canReceive(h, item)) && !(item.oncePerRun && offered && offered.has(item.id)));
   const sources = squadSources(heroes, itemDefs);
-  const odds = rarityOddsFor(floor, rules);
+  const odds = oddsOverride || rarityOddsFor(floor, rules);
   const choices = [];
   while (choices.length < count && pool.length) {
     const rarities = Object.keys(odds).filter((r) => odds[r] > 0 && pool.some((item) => item.rarity === r));

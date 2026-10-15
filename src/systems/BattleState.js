@@ -616,8 +616,12 @@ export default class BattleState {
   // spawn timers start over.
   startFloor(events = []) {
     this.hasStarted = true;
+    // Rest fountain blessing (rooms.json fountain): a regen buff on every living hero for the next few FIGHTS.
+    const bless = this.blessing && this.blessing.fights > 0 ? this.blessing : null;
+    if (bless) bless.fights--;
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
+      if (bless) this.applyStatus(hero, { status: 'regenBoost', durationMs: 1e9, percentMaxHpPerSec: bless.regenPercentPerSec }, hero, 'fountain', events);
       hero.sinceHit = 0; // Steady Aim starts counting again with every fight
       // Fire Heart: a fire shield at the start of every floor (20% max health per copy) that slowly regenerates and burns attackers.
       if (hero.specials.fireHeart) {
@@ -2763,6 +2767,12 @@ export default class BattleState {
   }
 
   // Heals every living hero by a % of their max health. Returns [{ unit, amount }].
+  // Rest fountain: the next `fights` fights start with a regen buff of `regenPercentPerSec` on every living hero.
+  // A second fountain replaces the first (it does not stack).
+  bless(regenPercentPerSec, fights) {
+    this.blessing = { regenPercentPerSec, fights };
+  }
+
   healHeroes(percent) {
     const healed = [];
     for (const h of this.heroes) {

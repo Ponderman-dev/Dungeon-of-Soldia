@@ -22,6 +22,7 @@ export default class DebugScene extends Phaser.Scene {
       .setInteractive()
       .on('pointerdown', () => {
         this.scene.stop('Reward');
+        this.scene.stop('Puzzle');
         this.scene.stop('Battle');
         this.scene.run('Squad'); // run, not start: start would also stop this debug scene
       });

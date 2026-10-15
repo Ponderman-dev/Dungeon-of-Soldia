@@ -38,6 +38,7 @@ import bookData from '../data/skillBooks.json';
 import { maybeAddBook } from '../systems/books.js';
 import { loadProgress, saveProgress, recordRun, unlockedIds } from '../systems/progress.js';
 import unlocks from '../data/unlocks.json';
+import { roomMethods } from './roomMethods.js';
 
 const DUNGEON_ID = 'A';
 const SLOT_Y = 720;
@@ -117,7 +118,7 @@ export default class BattleScene extends Phaser.Scene {
     this.showSlots(false, 0);
     this.layer = this.buildFloor(1, 0);
     this.floorText.setText('Floor 1');
-    this.enterHeroes(() => this.startFighting());
+    this.beginFloor(); // a fight, or a special room (roomMethods.js)
   }
 
   // The name labels under the heroes are hidden while the floor changes.
@@ -754,7 +755,10 @@ export default class BattleScene extends Phaser.Scene {
     // The door in the back wall: closed wooden doors that swing open when the floor is cleared.
     const door = new Door(this, container, DOOR_X, WALL_H);
 
-    const enemies = this.state.spawnEnemies(enemiesForFloor(this.dungeon, n), n);
+    // A special room (treasure, Mimic, fountain, dealer, puzzle) has props instead of enemies.
+    const kind = this.roomKindFor(n);
+    const room = kind ? this.buildRoom(kind, container) : null;
+    const enemies = this.state.spawnEnemies(room ? [] : enemiesForFloor(this.dungeon, n), n);
     enemies.forEach((unit, i) => {
       const x = (GAME_WIDTH * (i + 1)) / (enemies.length + 1);
       this.makeView(unit, x, ENEMY_Y, container);
@@ -763,6 +767,7 @@ export default class BattleScene extends Phaser.Scene {
     return {
       container,
       front,
+      room,
       setDoorOpen: (open) => (open ? door.open() : door.close()),
     };
   }
@@ -1778,25 +1783,27 @@ export default class BattleScene extends Phaser.Scene {
 
     this.time.delayedCall(T.clearPauseMs, () => {
       this.banner.setText('');
-      this.showReward(() => {
-        this.showSlots(false);
-        this.heroesWalkToDoor(() => {
-          this.removeFallenHeroes();
-          this.slideToNextFloor(() => this.enterHeroes(() => this.startFighting()));
-        });
-      });
+      this.showReward(() => this.goToNextFloor());
     });
   }
 
   // Shows the reward screen. When it is done, the hero gets the item and `next` runs.
   showReward(next) {
-    let choices = rollChoices({ itemDefs, rules: rewardRules, floor: this.floor, count: rewardRules.choices, heroes: this.state.heroes, potionChance: rewardRules.potionChance, offered: (this.state.offeredOnce = this.state.offeredOnce || new Set()) });
+    // A beaten Mimic (special room) gives a rare/epic pick instead of the normal reward.
+    const room = this.layer.room;
+    if (room && room.kind === 'mimic') return this.itemPick('MIMIC DEFEATED', next, room.rules.rewardOdds);
+    let choices = this.rollItems();
     choices = maybeAddBook(choices, bookData, this.state.heroes, bookData.bookChancePerScreen); // a skill book card, about 1 in 15 screens
     // After a BOSS the squad also gets a free golden book (3 modifier pages), after the normal reward.
     const bossFloor = !!(this.dungeon.bosses && this.dungeon.bosses[this.floor]) && this.state.heroes.some((h) => h.alive);
     const afterNormal = bossFloor ? () => this.openRewardSheet([bookData.cards.golden], next, 'BOSS DEFEATED: A GOLDEN BOOK') : next;
     if (!choices.length) return afterNormal();
     this.openRewardSheet(choices, afterNormal);
+  }
+
+  // 3 item cards for a reward sheet (odds = optional rarity odds instead of the floor's).
+  rollItems(odds = null) {
+    return rollChoices({ itemDefs, rules: rewardRules, floor: this.floor, count: rewardRules.choices, heroes: this.state.heroes, potionChance: odds ? 0 : rewardRules.potionChance, offered: (this.state.offeredOnce = this.state.offeredOnce || new Set()), odds });
   }
 
   // The reward sheet with these cards; `next` runs after the pick has been applied.
@@ -1862,3 +1869,5 @@ export default class BattleScene extends Phaser.Scene {
     this.time.delayedCall(combatRules.restartDelayMs, () => this.scene.start('Squad', { lastRun }));
   }
 }
+
+Object.assign(BattleScene.prototype, roomMethods); // special rooms (treasure, Mimic, fountain, dealer, puzzle)

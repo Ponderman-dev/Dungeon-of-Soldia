@@ -1,0 +1,46 @@
+{
+  "_about": "Special rooms (user's choice): from `fromFloor` on, a floor has `chance` to be a special room instead of a fight. Never a boss floor, never the floor right before a boss, never two rooms in a row. The floor number still goes up. `kinds` = which room, picked by `weight`. Rules: src/systems/rooms.js; the scene part: src/scenes/roomMethods.js; prop art: src/data/roomProps.json.",
+  "fromFloor": 4,
+  "chance": 0.25,
+  "kinds": {
+    "treasure": {
+      "weight": 30,
+      "name": "Treasure Room",
+      "hint": "Tap a chest to open it",
+      "twoChestChance": 0.4
+    },
+    "mimic": {
+      "weight": 15,
+      "name": "A Lone Chest",
+      "hint": "Tap the chest... if you dare",
+      "enemy": "mimic",
+      "rewardOdds": {
+        "common": 0,
+        "rare": 70,
+        "epic": 30,
+        "legendary": 0
+      }
+    },
+    "fountain": {
+      "weight": 20,
+      "name": "Rest Fountain",
+      "hint": "Tap the fountain to rest",
+      "healPercent": 50,
+      "regenPercentPerSec": 0.5,
+      "fights": 3
+    },
+    "dealer": {
+      "weight": 20,
+      "name": "Skill Dealer",
+      "hint": "Tap the dealer to see the pages",
+      "_pages": "what the dealer offers: skillBooks.json contents.dealer (2 stat + 3 modifier pages)"
+    },
+    "puzzle": {
+      "weight": 15,
+      "name": "Puzzle Room",
+      "hint": "Tap the stone tablet",
+      "size": 3,
+      "shuffleMoves": 80
+    }
+  }
+}

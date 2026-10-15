@@ -322,6 +322,15 @@
       "rarity": "legendary",
       "name": "Golden Skill Book",
       "description": "A boss's prize: choose 1 of 3 modifier pages for one hero's skill."
+    },
+    "dealer": {
+      "id": "skill_book",
+      "kind": "book",
+      "book": "dealer",
+      "type": "book",
+      "rarity": "epic",
+      "name": "Skill Dealer",
+      "description": "Choose 1 of 5 pages and put it on one hero's skill for the rest of the run."
     }
   },
   "contents": {
@@ -331,6 +340,10 @@
     },
     "golden": {
       "stat": 0,
+      "modifier": 3
+    },
+    "dealer": {
+      "stat": 2,
       "modifier": 3
     }
   }

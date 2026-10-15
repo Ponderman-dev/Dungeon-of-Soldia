@@ -185,11 +185,19 @@ export default class RewardScene extends Phaser.Scene {
     this.track(this.add.zone(bx + bw / 2, SHEET_TOP + 64, bw + 10, 44).setInteractive()).on('pointerdown', () => { sfx.play('tap'); onTap(); });
   }
 
+  // Page card sizes: normal, or COMPACT when a book shows more than 3 pages (the Skill Dealer's 5) so all fit.
+  pageLook() {
+    return this.compactPages
+      ? { iconW: 64, textX: 74, desc: 13, name: 17, label: 11, nameY: 25, descY: 49, minH: 80, iconScale: 2, gap: 10 }
+      : { iconW: ICON_W, textX: TEXT_X, desc: DESC_PX, name: 20, label: 12, nameY: 32, descY: 62, minH: 112, iconScale: 3, gap: 14 };
+  }
+
   pageHeight(page) {
-    const probe = this.add.text(0, 0, page.text, { fontFamily: FONT, fontSize: `${DESC_PX}px`, lineSpacing: 3, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
+    const L = this.pageLook();
+    const probe = this.add.text(0, 0, page.text, { fontFamily: FONT, fontSize: `${L.desc}px`, lineSpacing: 3, wordWrap: { width: CARD_W - L.textX - 16, useAdvancedWrap: true } });
     const h = probe.height;
     probe.destroy();
-    return Math.max(112, 62 + h + 16);
+    return Math.max(L.minH, L.descY + h + (this.compactPages ? 10 : 16));
   }
 
   // One page card: the book icon, STAT PAGE / its tag (Debuff, Heal...), its name and what it does.
@@ -197,20 +205,21 @@ export default class RewardScene extends Phaser.Scene {
     const card = this.track(this.add.container(x, y));
     const golden = this.chosen && this.chosen.book === 'golden';
     const rc = page.kind === 'stat' ? 0x7f9fe8 : 0xc8a0ff;
+    const L = this.pageLook();
     const g = this.add.graphics();
     const paint = (on) => {
       g.clear();
       g.fillStyle(0x000000, 0.3).fillRoundedRect(2, 4, CARD_W, h, 16);
       g.fillStyle(on ? 0x31254d : COLORS.panel, 1).fillRoundedRect(0, 0, CARD_W, h, 16);
-      g.fillStyle(rc, 0.12).fillRoundedRect(0, 0, ICON_W, h, { tl: 16, bl: 16, tr: 0, br: 0 });
+      g.fillStyle(rc, 0.12).fillRoundedRect(0, 0, L.iconW, h, { tl: 16, bl: 16, tr: 0, br: 0 });
       g.lineStyle(on ? 4 : 2, on ? COLORS.gold : rc, 1).strokeRoundedRect(0, 0, CARD_W, h, 16);
     };
     paint(lit);
     card.add(g);
-    card.add(this.add.image(ICON_W / 2, h / 2 - 8, itemIconKey(this, golden ? 'golden_book' : 'skill_book', golden ? 'legendary' : 'rare')).setScale(3));
-    card.add(this.add.text(TEXT_X, 14, page.kind === 'stat' ? 'STAT PAGE' : `MODIFIER · ${(page.tag || '').toUpperCase()}`, { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: hex(rc) }));
-    card.add(this.add.text(TEXT_X, 32, page.name, { fontFamily: FONT, fontSize: '20px', fontStyle: 'bold', color: INK }));
-    card.add(this.add.text(TEXT_X, 62, page.text, { fontFamily: FONT, fontSize: `${DESC_PX}px`, color: MUTE, lineSpacing: 3, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } }));
+    card.add(this.add.image(L.iconW / 2, h / 2 - (this.compactPages ? 0 : 8), itemIconKey(this, golden ? 'golden_book' : 'skill_book', golden ? 'legendary' : 'rare')).setScale(L.iconScale));
+    card.add(this.add.text(L.textX, this.compactPages ? 9 : 14, page.kind === 'stat' ? 'STAT PAGE' : `MODIFIER · ${(page.tag || '').toUpperCase()}`, { fontFamily: FONT, fontSize: `${L.label}px`, fontStyle: 'bold', color: hex(rc) }));
+    card.add(this.add.text(L.textX, L.nameY, page.name, { fontFamily: FONT, fontSize: `${L.name}px`, fontStyle: 'bold', color: INK }));
+    card.add(this.add.text(L.textX, L.descY, page.text, { fontFamily: FONT, fontSize: `${L.desc}px`, color: MUTE, lineSpacing: 3, wordWrap: { width: CARD_W - L.textX - 16, useAdvancedWrap: true } }));
     card.paint = paint;
     return card;
   }
@@ -219,9 +228,11 @@ export default class RewardScene extends Phaser.Scene {
     this.step = 'pages';
     this.clearStep();
     const pages = this.bookPages;
+    this.compactPages = pages.length > 3;
+    const gap = this.pageLook().gap;
     const heights = pages.map((p) => this.pageHeight(p));
-    const total = TITLE_H + 26 + heights.reduce((a, b) => a + b, 0) + 14 * (heights.length - 1);
-    const top = SHEET_TOP + Math.max(90, (GAME_HEIGHT - SHEET_TOP - total) / 2);
+    const total = TITLE_H + 26 + heights.reduce((a, b) => a + b, 0) + gap * (heights.length - 1);
+    const top = SHEET_TOP + Math.max(this.payload.choices.length > 1 ? 90 : 56, (GAME_HEIGHT - SHEET_TOP - total) / 2); // room for the Back pill
     if (this.payload.choices.length > 1) this.backButton(() => this.showPick());
     this.text(GAME_WIDTH / 2, top, 'Choose a page', 28, INK, true).setOrigin(0.5, 0);
     this.text(GAME_WIDTH / 2, top + 36, 'It stays on one skill for the rest of the run.', 13, MUTE).setOrigin(0.5, 0);
@@ -235,7 +246,7 @@ export default class RewardScene extends Phaser.Scene {
         this.busy = true;
         this.time.delayedCall(140, () => { this.busy = false; this.showSkillPick(page); });
       });
-      y += heights[i] + 14;
+      y += heights[i] + gap;
     });
   }
 

@@ -2572,5 +2572,85 @@
         ]
       }
     ]
+  },
+  "mimic": {
+    "name": "Mimic",
+    "damageType": "melee",
+    "flying": false,
+    "height": 10,
+    "weak": [
+      "fire"
+    ],
+    "resists": [],
+    "stats": {
+      "health": 900,
+      "attack": 16,
+      "defense": 15,
+      "resist": 10,
+      "attackEfficiency": 80
+    },
+    "parts": {
+      "body": {
+        "x": 0.5,
+        "y": -2.5,
+        "w": 13,
+        "h": 5,
+        "art": {
+          "palette": [
+            "0x5e3a1a",
+            "0x8a5a2b",
+            "0xc0303a",
+            "0xffffff",
+            "0xf2c544"
+          ],
+          "rows": [
+            "3232323232323",
+            "0111111111110",
+            "0111114111110",
+            "0111111111110",
+            ".00.......00."
+          ]
+        },
+        "anchor": [
+          6.5,
+          4.5
+        ],
+        "idle": {
+          "dy": -0.5,
+          "duration": 220
+        }
+      },
+      "head": {
+        "x": 0.5,
+        "y": -7.5,
+        "w": 13,
+        "h": 5,
+        "art": {
+          "palette": [
+            "0x5e3a1a",
+            "0x8a5a2b",
+            "0xf2c544",
+            "0xffffff"
+          ],
+          "rows": [
+            ".00000000000.",
+            "0111111111110",
+            "0111112111110",
+            "0111111111110",
+            "3030303030303"
+          ]
+        },
+        "anchor": [
+          1.5,
+          4.5
+        ],
+        "idle": {
+          "angle": -14,
+          "duration": 220
+        }
+      }
+    },
+    "drawScale": 6,
+    "xp": 60
   }
 }

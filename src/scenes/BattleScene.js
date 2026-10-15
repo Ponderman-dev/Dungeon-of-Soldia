@@ -160,11 +160,13 @@ export default class BattleScene extends Phaser.Scene {
       this.state.place(v.unit, v.ch.x, v.unit.side === 'hero' ? v.ch.y : v.groundY);
     }
     this.mode = 'fighting';
+    if (this.state.enemies.some((u) => u.def.boss)) sfx.play('bossIntro'); // a deep gong when a boss floor starts
     for (const e of this.state.startFloor()) this.showEvent(e); // floor-start minions rise (Necromancer)
   }
 
   // A minion rises from the ground: a dark puff, the figure grows up out of the floor, then its bars show.
   showMinion(unit) {
+    sfx.play('minionSummon');
     const v = this.makeView(unit, unit.x, unit.y);
     v.slotX = unit.x; // where a greater minion waits (it walks to the door and back with the squad)
     v.slotY = unit.y;
@@ -361,6 +363,7 @@ export default class BattleScene extends Phaser.Scene {
   // An item went off: its icon pops over the holder (instead of a text label) and its own effect plays
   // (src/data/itemFx.json says which; systems/itemFx.js draws it).
   itemProc(e, v) {
+    sfx.play('itemProc');
     this.iconPop(v, e.itemId);
     const spec = itemFxData[e.itemId];
     if (!spec || !spec.effect) return;
@@ -854,6 +857,8 @@ export default class BattleScene extends Phaser.Scene {
         const walked = tween.getValue() * total;
         ch.x = x;
         ch.y = y - Math.abs(Math.sin((walked / T.stepLenPx) * Math.PI)) * T.stepHeight; // the hop
+        const step = Math.floor(walked / T.stepLenPx);
+        if (step !== view.lastStep) { view.lastStep = step; if (step > 0 && ch.alpha > 0.3) sfx.play('step'); } // a footstep each landing
         ch.setScale(scaleAt(y));
         ch.setDepth(DEPTH.hero + y / 10000);
         if (fadeLastPx) ch.setAlpha(Phaser.Math.Clamp((total - walked) / fadeLastPx, 0, 1)); // fades out stepping through the door
@@ -1013,16 +1018,19 @@ export default class BattleScene extends Phaser.Scene {
       }
       if (e.result.invulnerable) {
         this.popText(t, 'Immune!', '#ffe08a', true);
+        sfx.play('block');
         return;
       }
       if (e.result.dodged) {
-        if (e.result.blocked) { this.popText(t, 'Blocked!', '#9fc4ff', true); this.addMoment('block', t, a); }
-        else { this.popText(t, 'Miss', '#aaaaaa'); this.addMoment('dodge', t, a); }
+        if (e.result.blocked) { this.popText(t, 'Blocked!', '#9fc4ff', true); this.addMoment('block', t, a); sfx.play('block'); }
+        else { this.popText(t, 'Miss', '#aaaaaa'); this.addMoment('dodge', t, a); sfx.play('miss'); }
         return;
       }
+      this.hitSound(e);
       this.setBar(t);
       this.drawChips(t); // the shield tag shows what is left
       if (e.result.absorbed > 0) {
+        sfx.play('shieldSoak');
         this.popText(t, `Shield -${e.result.absorbed}`, '#6fd0ff');
         this.addMoment('soak', t, a);
         if (e.result.fullyAbsorbed) return;
@@ -1046,6 +1054,7 @@ export default class BattleScene extends Phaser.Scene {
       this.showProjectile(this.views.get(e.from.uid), this.views.get(e.to.uid), e.kind);
     } else if (e.type === 'castStart' && e.boss) {
       // A boss winds up a move: its name in red over it, and a red bar fills (drawCastBars).
+      sfx.play('bossWarn');
       const bv = this.views.get(e.unit.uid);
       if (bv) { this.popText(bv, e.skill.name, '#ff7a6a', true); bv.ch.flash(0xff4a3a, 140); }
     } else if (e.type === 'castStart') {
@@ -1074,6 +1083,7 @@ export default class BattleScene extends Phaser.Scene {
       if (e.change === 'expire' && e.status.type === 'freeze' && v && !e.unit.statuses.some((st) => st.type === 'freeze')) {
         (this.iceBreaks = this.iceBreaks || []).push({ view: v, start: this.time.now }); // the ice breaks off
       }
+      if (e.change === 'apply' && (e.status.type === 'stun' || e.status.type === 'freeze')) sfx.play(e.status.type);
       if (e.change === 'apply' && e.status.type !== 'buff' && statusInfo[e.status.type].popup !== false) {
         this.popText(v, statusInfo[e.status.type].label + '!', statusInfo[e.status.type].color);
       }
@@ -1151,6 +1161,7 @@ export default class BattleScene extends Phaser.Scene {
       this.tweens.add({ targets: cloud, radius: e.radius || 80, alpha: 0, duration: 650, ease: 'Quad.easeOut', onComplete: () => cloud.destroy() });
       this.puff(c.x, c.y + 8, color, 8);
     } else if (e.type === 'shieldBreak') {
+      sfx.play('shieldBreak');
       const v = this.views.get(e.unit.uid);
       this.drawChips(v);
       this.setBar(v);
@@ -1225,6 +1236,7 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'death') {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
+      sfx.play(e.unit.side === 'enemy' || e.unit.minion ? 'enemyDeath' : 'heroFall');
       if (e.unit.side === 'enemy' || e.unit.minion) {
         v.ch.stopMove(); // it fades out where it fell
         v.ch.castCancel();
@@ -1453,6 +1465,14 @@ export default class BattleScene extends Phaser.Scene {
     }, ['skill', name]);
   }
 
+  // A hit's sound: one per damage type (sounds.json hitMelee, hitFire...), plus a crack on top for a crit.
+  hitSound(e) {
+    const type = e.damageType || e.attacker.damageType;
+    const cue = { melee: 'hitMelee', ranged: 'hitRanged', fire: 'hitFire', ice: 'hitIce', electric: 'hitElectric', dark: 'hitDark', holy: 'hitHoly' }[type] || 'hitMelee';
+    sfx.play(cue);
+    if (e.result.crit) sfx.play('crit');
+  }
+
   // ---- bosses (systems/bosses.js) -------------------------------------------------------------
   // Draws the boss moves. Returns false for events that are not boss events.
   showBossEvent(e) {
@@ -1486,6 +1506,7 @@ export default class BattleScene extends Phaser.Scene {
           return true;
         }
         if (v) v.ch.flash(0xff4a3a, 160);
+        sfx.play('bossMove');
         this.bossBanner(e.ability.name);
         for (const t of e.targets) this.ring(this.views.get(t.uid), 0xff4a3a);
         this.cameras.main.shake(120, 0.003);
@@ -1630,6 +1651,7 @@ export default class BattleScene extends Phaser.Scene {
   onWin() {
     this.mode = 'won';
     sfx.play('floorClear');
+    sfx.play('doorOpen');
     for (const e of this.state.endFloor()) this.showEvent(e); // weak minions vanish with the floor
     if (this.castBars) this.castBars.clear(); // a wind-up still going is dropped
     if (this.tauntLines) this.tauntLines.clear();

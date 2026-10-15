@@ -5,12 +5,13 @@
 import soundData from '../data/sounds.json';
 import { loadProgress, saveProgress } from '../systems/progress.js';
 
-const files = import.meta.glob('../assets/sounds/*/*.mp3', { eager: true, query: '?inline', import: 'default' });
+const files = import.meta.glob('../assets/sounds/**/*.mp3', { eager: true, query: '?inline', import: 'default' });
 
 let ctx = null;
 let master = null;
 const buffers = {};
 const lastPlayed = {};
+let voices = 0; // sounds playing right now (a busy fight never plays more than maxVoices at once)
 let muted = !!(loadProgress().settings || {}).muted;
 
 function audioContext() {
@@ -24,8 +25,9 @@ function audioContext() {
   return ctx;
 }
 
+// A file name is in the menu pack folder (sounds.json `pack`), unless it names its own folder ('kenney/chop').
 function fileUrl(name) {
-  return files[`../assets/sounds/${soundData.pack}/${name}.mp3`];
+  return files[`../assets/sounds/${name.includes('/') ? name : `${soundData.pack}/${name}`}.mp3`];
 }
 
 async function bufferFor(name) {
@@ -46,19 +48,24 @@ export async function play(cue) {
     const c = soundData.cues[cue];
     if (!c) return;
     const now = typeof performance !== 'undefined' ? performance.now() : 0;
-    if (lastPlayed[cue] && now - lastPlayed[cue] < (soundData.minGapMs || 0)) return; // the same sound many times at once = one
+    if (lastPlayed[cue] && now - lastPlayed[cue] < (c.minGapMs ?? soundData.minGapMs ?? 0)) return; // the same sound many times at once = one
+    if (voices >= (soundData.maxVoices || 8)) return;
     lastPlayed[cue] = now;
     const a = audioContext();
     if (!a) return;
     if (a.state === 'suspended') await a.resume();
-    const buf = await bufferFor(c.file);
+    // `files`: several takes of the same sound, one picked at random each time (50 hits never sound the same).
+    const file = c.files ? c.files[Math.floor(Math.random() * c.files.length)] : c.file;
+    const buf = await bufferFor(file);
     if (!buf) return;
     const src = a.createBufferSource();
     src.buffer = buf;
-    if (c.pitchJitter) src.playbackRate.value = 1 + (Math.random() * 2 - 1) * c.pitchJitter;
+    src.playbackRate.value = (c.pitch ?? 1) * (1 + (Math.random() * 2 - 1) * (c.pitchJitter || 0));
     const g = a.createGain();
     g.gain.value = c.volume ?? 1;
     src.connect(g).connect(master);
+    voices++;
+    src.onended = () => { voices = Math.max(0, voices - 1); };
     src.start();
   } catch {
     // ignore

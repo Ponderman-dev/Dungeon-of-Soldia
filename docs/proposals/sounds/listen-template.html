@@ -1,0 +1,140 @@
+<title>Soldia Sound Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one dark dungeon-ledger column; each moment is a row with a big round play key, like a sampler pad strip. Single dark look on purpose (matches the game). */
+:root {
+  color-scheme: dark;
+  --bg: #14101f; --panel: #1f1833; --panel2: #29203f; --line: #3a2f57;
+  --ink: #f3eefc; --soft: #cfc6e6; --mute: #a399c2;
+  --gold: #f2b632; --purple: #8b55d6; --green: #6dff8f;
+  --display: 'Pixelify Sans', 'Courier New', monospace;
+  --body: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--body); }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 28px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+h1, h2 { font-family: var(--display); margin: 0; text-wrap: balance; }
+h1 { font-size: 34px; line-height: 1.1; }
+h2 { font-size: 22px; }
+.eyebrow { font: 500 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin: 0 0 6px; }
+.lead { color: var(--soft); margin: 8px 0 0; max-width: 62ch; }
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn { font: 600 14px var(--body); color: var(--ink); background: var(--panel2); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; min-height: 40px; cursor: pointer; }
+.btn:hover, .btn:focus-visible { border-color: var(--gold); outline: none; }
+.btn.go { background: var(--purple); border-color: var(--purple); }
+section { display: grid; gap: 10px; }
+.sub { color: var(--mute); margin: 0; font-size: 14px; }
+.rows { display: grid; gap: 6px; }
+.row { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.key { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--gold); background: #18122a; color: var(--gold); font-size: 15px; cursor: pointer; }
+.key:hover, .key:focus-visible { background: var(--gold); color: #18122a; outline: none; }
+.key.on { background: var(--gold); color: #18122a; }
+.name { font-weight: 700; }
+.when { color: var(--mute); font-size: 13px; }
+.what { font: 500 12px var(--mono); color: var(--soft); text-align: right; }
+.what span { display: block; color: var(--mute); font-size: 11px; }
+.jtabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.jtabs button[aria-pressed="true"] { background: var(--purple); border-color: var(--purple); }
+.jgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
+.jgrid button { font: 500 13px var(--mono); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px; min-height: 44px; cursor: pointer; }
+.jgrid button:hover, .jgrid button:focus-visible { border-color: var(--gold); outline: none; }
+.jgrid button.on { border-color: var(--gold); color: var(--gold); }
+.note { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; color: var(--soft); font-size: 14px; }
+.note b { color: var(--ink); }
+@media (max-width: 520px) { .row { grid-template-columns: 48px minmax(0, 1fr); } .what { grid-column: 2; text-align: left; } }
+@media (prefers-reduced-motion: no-preference) { .key.on { transition: background .1s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Dungeon of Soldia · Kenney sounds, batch 1</p>
+    <h1>Sound board</h1>
+    <p class="lead">Every fight sound now in the game, played at the game's own volume and pitch. Tap ▶ a few times: most moments have several takes and pick one at random. Tell me which ones to swap, make louder or quieter.</p>
+  </header>
+  <div class="bar">
+    <button class="btn go" id="fight" type="button">▶ Play a short fight</button>
+    <span class="sub">A made-up 4-second fight: hits, a miss, a crit, a stun, a kill, the door.</span>
+  </div>
+  <div id="groups"></div>
+  <section aria-labelledby="jh">
+    <div>
+      <p class="eyebrow">Not in the game yet · pick some</p>
+      <h2 id="jh">Music jingles</h2>
+      <p class="sub">Kenney's short jingles in 5 styles (17 each). Good spots for them: a boss floor starting, a boss beaten, the squad defeated, a new hero unlocked. Tell me the style and numbers you like for each.</p>
+    </div>
+    <div class="jtabs" id="jtabs" role="group" aria-label="Jingle style"></div>
+    <div class="jgrid" id="jgrid"></div>
+  </section>
+  <div class="note"><b>Sounds from:</b> Kenney Impact Sounds, RPG Audio and Music Jingles (CC0, free for any use, no credit needed). Menu sounds stay the Organic pack you picked.</div>
+</div>
+
+<script>
+const DATA = __DATA__;
+const BLOBS = __BLOBS__;
+const JINGLES = __JINGLES__;
+let ctx = null, master = null;
+const bufs = {};
+function audio() {
+  if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); master = ctx.createGain(); master.gain.value = DATA.master; master.connect(ctx.destination); }
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+async function buffer(key, url) {
+  if (!bufs[key]) bufs[key] = fetch(url).then((r) => r.arrayBuffer()).then((b) => audio().decodeAudioData(b)).catch(() => null);
+  return bufs[key];
+}
+async function playFile(key, url, volume = 1, rate = 1) {
+  const a = audio();
+  const buf = await buffer(key, url);
+  if (!buf) return 0;
+  const s = a.createBufferSource(); s.buffer = buf; s.playbackRate.value = rate;
+  const g = a.createGain(); g.gain.value = volume;
+  s.connect(g).connect(master); s.start();
+  return buf.duration / rate;
+}
+const cues = {};
+function playCue(cue) {
+  const c = cues[cue];
+  const files = c.files || [c.file];
+  const f = files[Math.floor(Math.random() * files.length)];
+  const rate = (c.pitch ?? 1) * (1 + (Math.random() * 2 - 1) * (c.pitchJitter || 0));
+  return playFile(f, BLOBS[f], c.volume ?? 1, rate);
+}
+function flash(btn, ms) { btn.classList.add('on'); setTimeout(() => btn.classList.remove('on'), Math.max(150, ms * 1000)); }
+
+const groups = document.getElementById('groups');
+groups.style.display = 'grid'; groups.style.gap = '28px';
+for (const g of DATA.groups) {
+  const sec = document.createElement('section');
+  sec.innerHTML = `<div><h2>${g.name}</h2>${g.sub ? `<p class="sub">${g.sub}</p>` : ''}</div><div class="rows"></div>`;
+  const rows = sec.querySelector('.rows');
+  for (const r of g.rows) {
+    cues[r.cue] = r.c;
+    const takes = (r.c.files || [r.c.file]).length;
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<button class="key" type="button" aria-label="Play ${r.name}">▶</button><div><div class="name">${r.name}</div>${r.when ? `<div class="when">${r.when}</div>` : ''}</div><div class="what">${r.what}<span>${takes > 1 ? takes + ' takes · ' : ''}vol ${r.c.volume}${r.c.pitch ? ' · pitch ' + r.c.pitch : ''}</span></div>`;
+    const key = row.querySelector('.key');
+    key.addEventListener('click', async () => flash(key, await playCue(r.cue)));
+    rows.appendChild(row);
+  }
+  groups.appendChild(sec);
+}
+
+// A short made-up fight, to hear how the sounds sit together.
+const SCRIPT = [[0, 'hitMelee'], [300, 'hitRanged'], [650, 'hitMelee'], [900, 'miss'], [1200, 'hitFire'], [1450, 'itemProc'], [1500, 'hitIce'], [1800, 'hitMelee'], [1800, 'crit'], [2150, 'stun'], [2400, 'hitElectric'], [2700, 'block'], [2950, 'hitMelee'], [3150, 'enemyDeath'], [3500, 'doorOpen'], [3900, 'step'], [4150, 'step'], [4400, 'step']];
+document.getElementById('fight').addEventListener('click', () => { audio(); for (const [t, cue] of SCRIPT) setTimeout(() => playCue(cue), t); });
+
+// Jingles
+const STYLES = [['STEEL', 'Steel drum'], ['PIZZI', 'Pizzicato strings'], ['SAX', 'Sax'], ['HIT', 'Hit / drums'], ['NES', '8-bit']];
+let style = 'STEEL';
+function drawJ() {
+  document.getElementById('jtabs').innerHTML = STYLES.map(([k, l]) => `<button class="btn" type="button" data-s="${k}" aria-pressed="${k === style}">${l}</button>`).join('');
+  const keys = Object.keys(JINGLES).filter((k) => k.startsWith(`jingles_${style}`));
+  document.getElementById('jgrid').innerHTML = keys.map((k) => `<button type="button" data-j="${k}">▶ ${style} ${k.slice(-2)}</button>`).join('');
+}
+drawJ();
+document.getElementById('jtabs').addEventListener('click', (e) => { const b = e.target.closest('[data-s]'); if (b) { style = b.dataset.s; drawJ(); } });
+document.getElementById('jgrid').addEventListener('click', async (e) => { const b = e.target.closest('[data-j]'); if (b) flash(b, await playFile(b.dataset.j, JINGLES[b.dataset.j], 0.6)); });
+</script>

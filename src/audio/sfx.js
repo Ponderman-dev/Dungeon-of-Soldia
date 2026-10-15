@@ -30,14 +30,20 @@ function fileUrl(name) {
   return files[`../assets/sounds/${name.includes('/') ? name : `${soundData.pack}/${name}`}.mp3`];
 }
 
+// The packed sound files are data: URLs. They are unpacked here by hand, NOT with fetch(): the claude.ai
+// preview frame blocks fetch() (even of data: URLs), which left the game silent there.
+function bytesOf(url) {
+  const bin = atob(url.slice(url.indexOf(',') + 1));
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out.buffer;
+}
+
 async function bufferFor(name) {
   if (buffers[name]) return buffers[name];
   const url = fileUrl(name);
   if (!url || !ctx) return null;
-  buffers[name] = (async () => {
-    const res = await fetch(url);
-    return ctx.decodeAudioData(await res.arrayBuffer());
-  })().catch(() => null);
+  buffers[name] = ctx.decodeAudioData(bytesOf(url)).catch(() => null);
   return buffers[name];
 }
 

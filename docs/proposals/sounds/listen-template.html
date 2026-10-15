@@ -81,7 +81,13 @@ function audio() {
   return ctx;
 }
 async function buffer(key, url) {
-  if (!bufs[key]) bufs[key] = fetch(url).then((r) => r.arrayBuffer()).then((b) => audio().decodeAudioData(b)).catch(() => null);
+  // Unpack the data: URL by hand: the page's frame blocks fetch(), even of data: URLs.
+  if (!bufs[key]) bufs[key] = Promise.resolve().then(() => {
+    const bin = atob(url.slice(url.indexOf(',') + 1));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return audio().decodeAudioData(bytes.buffer);
+  }).catch(() => null);
   return bufs[key];
 }
 async function playFile(key, url, volume = 1, rate = 1) {

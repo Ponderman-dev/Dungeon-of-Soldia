@@ -73,3 +73,12 @@ Status: [built] = already in the code, [decided] = still to build.
 
 ## "Good" group (already grows well)
 - [decided] Whetstone: unchanged.
+- [decided] Sharp Edge, Eagle Eye, Kindling, Shadow Charm: unchanged.
+- [decided] Quick Gloves: +18% attack speed per pair (grows); double-hit chance 8% ONCE (does not grow).
+- [decided] Static Crystal: 5% chance per crystal (was 10%) and +1 jump per crystal (1 crystal = 3 jumps? -> read as:
+  base 2 jumps +1 per EXTRA crystal; confirm at build).
+- [decided] Fire Bombs: unchanged.
+- [decided] Chill Band: unchanged.
+- [decided] Ember Charm: chance as is (6% per charm); burn damage +10% per extra charm (check at build what
+  `scalesWithCopies` gives today and set it to +10% per copy).
+- [decided] Venom Fang, Thousand Cuts, Hunter's Sigil: unchanged.

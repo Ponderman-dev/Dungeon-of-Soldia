@@ -1,6 +1,6 @@
 {
   "_about": "Item effects (user's choice: each item's own effect AND its icon pops over the holder). When an item goes off (a proc event with its itemId) the item's icon pops over the holder; `effect` names an extra effect recipe in src/systems/itemFx.js. Items not listed only pop their icon (their hits already show the normal hit of their damage type). Projectile looks (bomb, lightning, greenfire) and thorns / lifesteal / tornado are drawn from their own events. iconPop: size and timing of the icon pop.",
-  "iconPop": { "scale": 3, "ms": 700, "riseCharPx": 4, "gapPx": 64 },
+  "iconPop": { "scale": 2, "ms": 700, "riseCharPx": 4, "gapPx": 44 },
   "war_banner": { "effect": "battleCry" },
   "jolly_banner": { "effect": "battleCry" },
   "shatter_hammer": { "effect": "shatter" },

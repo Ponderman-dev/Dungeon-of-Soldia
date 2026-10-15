@@ -36,6 +36,8 @@ section { display: grid; gap: 12px; }
 .picked { font: 500 12px var(--mono); color: var(--gold); }
 .opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
 .opt { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 8px; align-items: center; background: #18122a; border: 1px solid var(--line); border-radius: 10px; padding: 6px; }
+[hidden] { display: none !important; }
+.opt.yours .pad { border-color: var(--green); color: var(--green); }
 .opt.sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
 .pad { width: 40px; height: 40px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel2); color: var(--ink); font: 700 16px var(--display); cursor: pointer; }
 .pad:hover, .pad:focus-visible { border-color: var(--gold); outline: none; }
@@ -70,7 +72,7 @@ nav.jump a:hover, nav.jump a:focus-visible { border-color: var(--gold); color: v
   <header>
     <p class="eyebrow">Dungeon of Soldia · sounds, round 2</p>
     <h1>Sound board</h1>
-    <p class="lead">Every game sound now has 5 options. <b>A</b> is what the game plays now. <b>B to E</b> are deeper and heavier versions, made by layering two Kenney sounds, lowering the pitch and adding a little stone-room echo. Tap a pad to hear it, tap <b>Pick</b> on the one you like. You can also try a sound or music file from your own device.</p>
+    <p class="lead">Every game sound now has 5 options. <b>A</b> is what the game plays now. <b>B to E</b> are deeper and heavier versions, made by layering two Kenney sounds, lowering the pitch and adding a little stone-room echo. Tap a pad to hear it, tap <b>Pick</b> on the one you like. Options with a <b style="color:var(--green)">green letter</b> are the sounds you sent me (trimmed and levelled). You can also try a sound or music file from your own device.</p>
   </header>
 
   <div class="bar">
@@ -202,7 +204,7 @@ for (const g of DATA.groups) {
     card.innerHTML = `
       <div class="cardHead"><div><h3>${r.name}</h3><p class="when">${r.when}</p></div><span class="picked"></span></div>
       <div class="opts">${r.options.map((o) => `
-        <div class="opt" data-id="${o.id}">
+        <div class="opt${o.yours ? ' yours' : ''}" data-id="${o.id}">
           <button class="pad" type="button" aria-label="Play option ${o.id}: ${o.desc}">${o.id}</button>
           <div class="optText"><span>${o.desc}</span><button class="pick" type="button">Pick</button></div>
         </div>`).join('')}

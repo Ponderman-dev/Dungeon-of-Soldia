@@ -11,6 +11,7 @@ GROUPS = [
  ('Fighters', '', [('enemyDeath', 'Enemy or minion dies', 'Every kill'), ('heroFall', 'A hero falls', 'A hero dies'), ('minionSummon', 'Minion rises', 'Skeletons, item minions'), ('itemProc', 'Item goes off', 'With the item icon pop')]),
  ('Bosses', '', [('bossIntro', 'Boss floor starts', 'Floors 20, 40 ... 160'), ('bossWarn', 'Boss winds up a move', 'With the red bar'), ('bossMove', 'Boss move goes off', 'Cleaver Charge, Blizzard ...')]),
  ('Dungeon & rewards', '', [('doorOpen', 'Door opens', 'Floor cleared'), ('step', 'Footsteps', 'Heroes walking to the door'), ('itemGiven', 'Item given', 'Give on the reward sheet')]),
+ ('Run moments', 'Menu sounds today (Organic pack); your sounds as other options.', [('levelUp', 'Level up', 'A hero levels up'), ('potion', 'Potion', 'Shared Potion on the reward sheet'), ('defeat', 'Defeat', 'The whole squad falls')]),
 ]
 blobs = {}
 groups = []

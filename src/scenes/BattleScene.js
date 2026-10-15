@@ -79,6 +79,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   create() {
+    this.bannerRows = []; // skill banner rows in use (timers die with the scene, so start fresh)
     // The squad: from squad.json, or the one the TEST squad button picked (registry `squadIds`).
     const heroDefs = pickSquad(allHeroDefs, this.registry.get('squadIds') || squadIds);
     this.slotWidth = GAME_WIDTH / heroDefs.length;
@@ -1283,7 +1284,7 @@ export default class BattleScene extends Phaser.Scene {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
       if (v.lvl) v.lvl.setText(`Lv${e.unit.level}`);
-      this.popText(v, `Level up! Lv${e.unit.level}`, '#ffd24d', true);
+      this.popText(v, `LEVEL UP\nLv${e.unit.level}`, '#ffd24d', true, 15); // two short lines: three heroes levelling at once don't print over each other
     } else if (e.type === 'death') {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
@@ -1487,13 +1488,20 @@ export default class BattleScene extends Phaser.Scene {
       const ring = this.add.circle(c.x, c.y, 10).setStrokeStyle(4, color).setDepth(DEPTH.popup - 1);
       this.tweens.add({ targets: ring, radius: FX.ringRadius, alpha: 0, duration: FX.ringMs, ease: 'Quad.easeOut', onComplete: () => ring.destroy() });
     }
+    // Two skills at once: each banner takes its own row (the first free one), so names never print over each other.
+    this.bannerRows = this.bannerRows || [];
+    let row = 0;
+    while (this.bannerRows[row]) row++;
+    this.bannerRows[row] = true;
+    const by = FX.bannerY + row * 30;
     const banner = this.add
-      .text(GAME_WIDTH / 2, FX.bannerY, e.skill.name, { fontFamily: 'monospace', fontSize: '24px', fontStyle: 'bold', color: colorText, stroke: '#000000', strokeThickness: 5 })
+      .text(GAME_WIDTH / 2, by, e.skill.name, { fontFamily: 'monospace', fontSize: '24px', fontStyle: 'bold', color: colorText, stroke: '#000000', strokeThickness: 5 })
       .setOrigin(0.5)
       .setDepth(DEPTH.popup + 1)
       .setScale(0.5);
     this.tweens.add({ targets: banner, scale: 1, duration: 160, ease: 'Back.easeOut' });
-    this.tweens.add({ targets: banner, alpha: 0, y: FX.bannerY - 16, delay: FX.bannerMs * 0.6, duration: FX.bannerMs * 0.4, onComplete: () => banner.destroy() });
+    this.time.delayedCall(FX.bannerMs * 0.6, () => { this.bannerRows[row] = false; }); // the row is free once it starts to fade
+    this.tweens.add({ targets: banner, alpha: 0, y: by - 16, delay: FX.bannerMs * 0.6, duration: FX.bannerMs * 0.4, onComplete: () => banner.destroy() });
     // A skill that puts statuses on every enemy (Smoke Bomb) also shows a grey cloud on each of them.
     if (e.skill.applyEnemies && !own) for (const en of this.state.enemies) if (en.alive && this.views.get(en.uid)) this.puff(this.views.get(en.uid).ch.x, this.views.get(en.uid).ch.y, 0x9a9aa8, 6);
     if (attack) {
@@ -1715,6 +1723,7 @@ export default class BattleScene extends Phaser.Scene {
         color,
         stroke: '#000000',
         strokeThickness: 3,
+        align: 'center',
       })
       .setOrigin(0.5)
       .setDepth(DEPTH.popup);

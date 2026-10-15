@@ -5,10 +5,21 @@ import BattleState from '../../src/systems/BattleState.js';
 import { loadItems, canReceive } from '../../src/systems/items.js';
 import { rollChoices } from '../../src/systems/rewards.js';
 import { enemiesForFloor } from '../../src/systems/dungeon.js';
+import { maybeAddBook, rollBookPages, pageFit } from '../../src/systems/books.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const all = r('heroes.json'), enemyDefs = r('enemies.json'), rules = r('combat.json'), damageTypes = r('damageTypes.json'), leveling = r('leveling.json'), dungeon = r('dungeons.json').A;
-const itemDefs = loadItems(r('items.json')), skillDefs = r('skills.json'), rw = r('rewards.json'), minionDefs = r('minions.json'), statusDefs = r('statuses.json');
+const itemDefs = loadItems(r('items.json')), skillDefs = r('skills.json'), rw = r('rewards.json'), minionDefs = r('minions.json'), statusDefs = r('statuses.json'), bookData = r('skillBooks.json');
 const N = Number(process.argv[2] || 30), MAX = 150;
+// A skill book: a random page of the 3 on a random skill it fits (a full modifier slot = replace a random one).
+function useBook(s, book) {
+  const page = rollBookPages(bookData, book)[Math.floor(Math.random() * 3)];
+  const spots = [];
+  for (const h of s.heroes) h.skills.forEach((_, i) => { const fit = pageFit(h, i, page, rules.books); if (fit === 'ok' || fit === 'replace') spots.push([h, i, fit]); });
+  if (!spots.length) return;
+  const [h, i, fit] = spots[Math.floor(Math.random() * spots.length)];
+  const mods = (h.skills[i].pages || []).filter((p) => p.kind === 'modifier');
+  s.addPage(h.uid, i, page, fit === 'replace' ? Math.floor(Math.random() * mods.length) : null);
+}
 export function playRun(ids) {
   const heroDefs = ids.map((id) => all.find((h) => h.id === id));
   const s = new BattleState({ heroDefs, enemyDefs, itemDefs, skillDefs, minionDefs, statusDefs, rules, damageTypes, leveling });
@@ -29,10 +40,13 @@ export function playRun(ids) {
     if (s.allHeroesDead()) break;
     s.endFloor();
     s.winHeal(rules.winHealPercent); s.clearStatuses();
-    const choices = rollChoices({ itemDefs, rules: rw, floor, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance });
+    let choices = rollChoices({ itemDefs, rules: rw, floor, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance });
+    choices = maybeAddBook(choices, bookData, s.heroes, bookData.bookChancePerScreen);
+    if (dungeon.bosses && dungeon.bosses[floor]) useBook(s, 'golden'); // the free golden book after a boss
     if (choices.length) {
       const item = choices[Math.floor(Math.random() * choices.length)];
       if (item.kind === 'potion') s.healHeroes(item.healPercent);
+      else if (item.kind === 'book') useBook(s, item.book);
       else { const tg = s.heroes.filter((h) => h.alive && canReceive(h, item)); if (tg.length) { s.giveItem(tg[Math.floor(Math.random() * tg.length)].uid, item.id); given[item.id] = (given[item.id] || 0) + 1; } }
     }
   }

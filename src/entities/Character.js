@@ -277,6 +277,8 @@ export default class Character extends Phaser.GameObjects.Container {
   // What its statuses do to the whole sprite: tint = [colour, amount] (mixed over every pixel) and
   // ice = 0..1 (Freeze: how far up from the feet the sprite has turned to ice). See systems/statusFx.js.
   setStatusLook(tint, ice = 0) {
+    // Tint strength in 10% steps: every step is its own cached texture per part, finer steps only made more of them.
+    if (tint) { const amount = Math.round(tint[1] * 10) / 10; tint = amount > 0 ? [tint[0], amount] : null; }
     const look = tint || ice > 0 ? { tint, ice } : null;
     const sig = look ? `${tint ? tint.join('-') : ''}-${ice}` : '';
     if (sig === this.lookSig) return;

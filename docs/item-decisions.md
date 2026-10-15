@@ -80,7 +80,7 @@ Status: everything below is [built] (phase H). Tests: items-h.test.mjs + the upd
 - [built] Ember Charm: chance as is (6% per charm); burn damage +10% per extra charm (check at build what
   `scalesWithCopies` gives today and set it to +10% per copy).
 - [built] Venom Fang, Thousand Cuts, Hunter's Sigil: unchanged.
-- [built] Siege Cannon: NO attack bonus any more. +40% skill damage per cannon, +10% skill splash chance per cannon.
+- [built] Siege Cannon: NO attack bonus any more. +80% skill damage per cannon, +15% skill splash chance per cannon (raised from 40/10 after the bench: it was weak for a legendary).
 - [built] Bloodlust Mask: unchanged.
 - [built] Lost Cleric's Grimoire: NEW MECHANIC (user's idea, after a Risk of Rain 2 item): the holder stores 100% (+100% per
   extra copy) of the healing it receives as Soul Energy. When Soul Energy reaches 10% of the holder's max health it fires a

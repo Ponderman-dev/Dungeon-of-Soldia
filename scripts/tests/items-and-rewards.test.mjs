@@ -10,7 +10,7 @@ const mk = () => new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDef
 const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
 { const s = mk(); const k = s.heroes[0]; const atk = k.stats.attack; s.giveItem(k.uid, 'siege_cannon');
   ok('siege cannon: no attack bonus any more', Math.abs(k.stats.attack - atk) < 0.01, `${atk} -> ${k.stats.attack}`);
-  ok('skillDamage 40% and skillSplash 10% stored', k.specials.skillDamage === 40 && k.specials.skillSplash === 10); }
+  ok('skillDamage 80% and skillSplash 15% stored', k.specials.skillDamage === 80 && k.specials.skillSplash === 15); }
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'bulwark_plate'); ok('plate +35 def & thorns', k.stats.defense === 45 && k.specials.thorns === 25, `${k.stats.defense}`); s.giveItem(k.uid, 'bulwark_plate'); ok('...2 plates: +70 defense, reflect stays 25%', k.stats.defense === 80 && k.specials.thorns === 25); }
 { const s = mk(); const [e] = s.spawnEnemies(['goblin'], 1); const k = s.heroes[0]; s.giveItem(k.uid, 'bulwark_plate'); e.hp = 1000; e.maxHp = 1000; s.heroes.slice(1).forEach((h) => (h.alive = false)); // the goblin can only hit the Knight
   const hp0 = e.hp; k.stats.evasion = 0; let reflected = 0; for (let i = 0; i < 400; i++) for (const ev of s.update(50)) if (ev.type === 'thorns') reflected += ev.amount;

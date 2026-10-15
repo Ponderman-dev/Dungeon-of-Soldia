@@ -191,15 +191,15 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Skills deal 40% more damage. 10% chance a skill also hits nearby enemies.",
+    "description": "Skills deal 80% more damage. 15% chance a skill also hits nearby enemies.",
     "effects": [
       {
         "special": "skillDamage",
-        "percent": 40
+        "percent": 80
       },
       {
         "special": "skillSplash",
-        "percent": 10
+        "percent": 15
       }
     ]
   },

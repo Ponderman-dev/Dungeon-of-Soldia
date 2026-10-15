@@ -104,3 +104,25 @@ Status: everything below is [built] (phase H). Tests: items-h.test.mjs + the upd
 - Brawler's Streak: +2% per hit, max +10% per copy.
 
 ALL ITEMS BUILT.
+
+## Full-run check of defensive items (itemruns.mjs, 80 runs per number, front hero holds 0/1/3/8 copies; mean floor reached, base 26.9; differences under ~2 floors are noise)
+```
+padded_vest          0: 26.9 (base)   1: 28.3 (+1.4)   3: 29.2 (+2.3)   8: 33.0 (+6.1)
+mage_cloak           0: 26.9 (base)   1: 28.4 (+1.5)   3: 30.3 (+3.4)   8: 28.4 (+1.5)
+feather_boots        0: 26.9 (base)   1: 28.3 (+1.4)   3: 29.5 (+2.6)   8: 29.6 (+2.7)
+shield_totem         0: 26.9 (base)   1: 26.6 (-0.3)   3: 28.3 (+1.4)   8: 28.1 (+1.2)
+heart_charm          0: 26.9 (base)   1: 28.8 (+1.9)   3: 31.5 (+4.6)   8: 38.9 (+12.0)
+tough_skin           0: 26.9 (base)   1: 28.6 (+1.8)   3: 31.1 (+4.2)   8: 32.4 (+5.5)
+bulwark_plate        0: 26.9 (base)   1: 29.0 (+2.1)   3: 31.8 (+4.9)   8: 32.5 (+5.6)
+siege_cannon         0: 26.9 (base)   1: 30.0 (+3.1)   3: 28.7 (+1.8)   8: 30.3 (+3.4)
+overheal_ring        0: 26.9 (base)   1: 28.4 (+1.5)   3: 25.2 (-1.7)   8: 25.2 (-1.7)
+warding_charm        0: 26.9 (base)   1: 27.4 (+0.5)   3: 27.8 (+0.9)   8: 28.6 (+1.7)
+spite_mail           0: 26.9 (base)   1: 26.8 (-0.1)   3: 29.0 (+2.1)   8: 27.9 (+1.0)
+martyrs_shield       0: 26.9 (base)   1: 26.5 (-0.4)   3: 26.2 (-0.7)   8: 30.0 (+3.1)
+fire_heart           0: 26.9 (base)   1: 28.8 (+1.9)   3: 31.9 (+5.0)   8: 34.7 (+7.8)
+spiked_aegis         0: 26.9 (base)   1: 26.6 (-0.3)   3: 27.3 (+0.4)   8: 27.2 (+0.3)
+bandage_roll         0: 26.9 (base)   1: 26.4 (-0.5)   3: 26.8 (-0.1)   8: 26.9 (+0.0)
+aid_kit              0: 26.9 (base)   1: 27.6 (+0.7)   3: 28.6 (+1.7)   8: 29.1 (+2.2)
+second_wind_flask    0: 26.9 (base)   1: 27.9 (+1.0)   3: 28.6 (+1.7)   8: 28.7 (+1.8)
+```
+Overheal Ring re-checked with 180 runs: +0.1 (no harm, no gain in random squads).

@@ -177,3 +177,19 @@ Reading: summoning items add about +1.6 floors on average, matter most for the N
   left) over 3s.
 - Iron Will Talisman (common): +6 resist; stuns/freezes/webs/fears on the holder 25% shorter, each copy cuts 25% of what
   is left. Icons written by `scripts/art/new-item-icons.mjs` from the proposal page. Tests: `items-new10.test.mjs`.
+
+Full-run check of the 10 new items (itemruns.mjs, 60 runs per number, front hero holds them, base 26.8; under ~2 floors = noise):
+```
+spotters_lens        0: 26.8 (base)   1: 27.3 (+0.5)   3: 28.7 (+2.0)
+giantslayers_brand   0: 26.8 (base)   1: 26.2 (-0.6)   3: 28.5 (+1.8)
+catalyst_vial        0: 26.8 (base)   1: 27.4 (+0.6)   3: 27.6 (+0.9)
+scholars_bookmark    0: 26.8 (base)   1: 28.7 (+1.9)   3: 27.7 (+0.9)
+last_stand_banner    0: 26.8 (base)   1: 27.3 (+0.5)   3: 27.4 (+0.6)
+mirror_buckler       0: 26.8 (base)   1: 30.4 (+3.7)   3: 28.6 (+1.9)
+soul_lantern         0: 26.8 (base)   1: 28.4 (+1.6)   3: 34.5 (+7.8)
+phoenix_feather      0: 26.8 (base)   1: 27.5 (+0.7)   3: 28.6 (+1.8)
+iron_will_talisman   0: 26.8 (base)   1: 26.4 (-0.4)   3: 27.8 (+1.1)
+quiver_of_plenty     0: 26.8 (base)   1: 26.8 (+0.0)   3: 26.8 (+0.0)
+
+```
+Caveats: the front hero is always melee in this check (Quiver does nothing on melee), the bot only taps boss objects (Spotter's Lens rarely active), Giantslayer only matters on boss floors, Bookmark needs skill book pages.

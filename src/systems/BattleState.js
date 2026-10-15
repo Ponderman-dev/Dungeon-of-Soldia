@@ -493,7 +493,7 @@ export default class BattleState {
     if (hero.def.spawner) list.push({ key: 'hero', kind: 'weak', capGroup: 'hero', spec: hero.def.spawner, upkeep: false });
     const byItem = {};
     for (const src of itemSources) {
-      const g = (byItem[src.itemId] = byItem[src.itemId] || { key: src.itemId, kind: src.kind, minion: src.minion, spec: src.spec, onHit: !!src.onHit, copies: 0, upkeep: true });
+      const g = (byItem[src.itemId] = byItem[src.itemId] || { key: src.itemId, kind: src.kind, minion: src.minion, spec: src.spec, onHit: !!src.onHit, copies: 0, upkeep: !(src.spec && src.spec.upkeep === false) }); // Rat Cage: `upkeep: false`
       g.copies++;
     }
     // One source per item: a weak spawner has ONE shared timer and spawns `burst` (= copies) minions each time, all
@@ -544,7 +544,7 @@ export default class BattleState {
       for (const src of hero.minionSources || []) {
         const st = this.sourceState(hero, src.key);
         if (src.kind === 'weak' && !src.onHit) {
-          st.timer = this.spawnDelay(src.spec);
+          st.timer = this.spawnDelay(src.spec, src.copies);
           // Weak minions are there from the START of every fight (user's choice), then more come on the timer.
           for (let i = 0; i < (src.spec.atFloorStart ?? 1) * (src.burst || 1); i++) this.spawnMinion(hero, src, events);
         } else if (src.kind === 'greater' && st.wait <= 0 && !this.minions.some((m) => m.holderUid === hero.uid && m.sourceKey === src.key)) {
@@ -574,8 +574,18 @@ export default class BattleState {
     return events;
   }
 
-  spawnDelay(sp) {
-    return sp.minMs + this.rng() * ((sp.maxMs ?? sp.minMs) - sp.minMs);
+  // `fasterPerCopy` (Rat Cage): each extra copy of the item makes the next minion come that many % sooner.
+  spawnDelay(sp, copies = 1) {
+    const ms = sp.minMs + this.rng() * ((sp.maxMs ?? sp.minMs) - sp.minMs);
+    return ms / (1 + ((sp.fasterPerCopy || 0) * (copies - 1)) / 100);
+  }
+
+  // The shared cap of a hero's weak ITEM minions: combat.json itemWeakCap, plus `capPerCopy` for every extra copy
+  // of a spawner item that has it (Rat Cage: +1 rat per extra cage).
+  itemWeakCap(holder) {
+    let cap = this.rules.minions.itemWeakCap;
+    for (const src of holder.minionSources || []) if (src.kind === 'weak' && src.spec && src.spec.capPerCopy) cap += src.spec.capPerCopy * ((src.copies || 1) - 1);
+    return cap;
   }
 
   tickSpawner(hero, dt, events) {
@@ -585,7 +595,7 @@ export default class BattleState {
       const st = this.sourceState(hero, src.key);
       st.timer -= dt;
       if (st.timer > 0) continue;
-      st.timer += this.spawnDelay(src.spec);
+      st.timer += this.spawnDelay(src.spec, src.copies);
       for (let i = 0; i < (src.burst || 1); i++) this.spawnMinion(hero, src, events); // one more minion per copy of the item
     }
   }
@@ -598,7 +608,7 @@ export default class BattleState {
     if (src.kind === 'weak') {
       // Over the cap: the oldest weak minion of the same cap group (the hero's own, or all item minions) goes.
       const mine = this.minions.filter((m) => m.holderUid === holder.uid && m.capGroup === src.capGroup);
-      const cap = (src.capGroup === 'hero' ? src.spec.cap || 4 : this.rules.minions.itemWeakCap) + this.minionBoost().weakCap;
+      const cap = (src.capGroup === 'hero' ? src.spec.cap || 4 : this.itemWeakCap(holder)) + this.minionBoost().weakCap;
       if (mine.length >= cap) this.vanishMinion(mine[0], 'pushedOut', events);
     }
     const m = this.makeUnit({ id, ...def, stats: { ...def.stats } }, 'hero', 1);
@@ -608,9 +618,13 @@ export default class BattleState {
     m.sourceKey = src.key;
     m.capGroup = src.capGroup;
     m.upkeep = src.upkeep;
-    m.upkeepScale = (src.upkeepScale ?? 1) * (src.kind === 'weak' ? src.copies || 1 : 1); // every copy of a weak spawner item costs upkeep; a greater item once
+    m.upkeepScale = src.upkeepScale ?? 1; // an item costs its upkeep ONCE, however many copies (user's choice)
     m.rawStats = { ...def.stats }; // the stats before copies, boosters and growth (refreshMinionStats scales them)
     m.copies = src.copies || (src.key === 'mimic_chest' ? holder.specials.mimicCopies || 1 : 1);
+    if (src.spec && src.spec.copyStatBonus !== undefined) m.copyBonus = src.spec.copyStatBonus; // per item: Rat 0, Wisp 0.2, Imp 0.15
+    // Wisp Lantern: each extra copy lets the wisps' bolts jump to one more enemy (`chainPerCopy`).
+    const cpc = src.spec && src.spec.chainPerCopy;
+    if (cpc && m.copies > 1) m.chain = { jumps: cpc.jumps * (m.copies - 1), damageMultiplier: cpc.damageMultiplier, damageType: def.damageType, skipFirst: true };
     m.floors = 0;
     m.timer = 0;
     if (this.hasPositions(holder)) {
@@ -682,7 +696,7 @@ export default class BattleState {
   refreshMinionStats(m) {
     const raw = m.rawStats || m.baseStats;
     const boost = this.minionBoost();
-    const bonus = m.def.copyStatBonus ?? this.rules.minions.copyStatBonus ?? 0;
+    const bonus = m.copyBonus ?? m.def.copyStatBonus ?? this.rules.minions.copyStatBonus ?? 0;
     const growth = m.def.growthPerFloor ? 1 + Math.min(m.def.growthMax ?? 1, m.def.growthPerFloor * (m.floors || 0)) : 1;
     const scale = (1 + bonus * ((m.copies || 1) - 1)) * growth * (1 + boost.bone / 100);
     const ratio = m.maxHp > 0 ? m.hp / m.maxHp : 1;
@@ -835,8 +849,10 @@ export default class BattleState {
       if (f.counter.effect === 'heal' && this.fireHeal(f.holder, f.counter, events)) return;
     }
     const empower = fired.filter((f) => f.counter.effect === 'empower');
-    const hit = this.strike(unit, target, events, { basic: true });
-    if (!hit.dodged) this.addCombo(unit, target, 1, events); // Rogue: a combo point on this enemy
+    const metro = this.metronomeBeat(unit, target, events); // Metronome: every 4th basic attack of the holder hits harder
+    const hit = this.strike(unit, target, events, metro ? { basic: true, damagePercent: metro } : { basic: true });
+    if (!hit.dodged) this.addCombo(unit, target, 1, events);
+    if (unit.minion && unit.chain && !hit.dodged) this.chainHit(unit, target, unit.chain, events); // Wisp Lantern copies: the bolt jumps on // Rogue: a combo point on this enemy
     this.pierce(unit, target, hit, events); // Archer: a shot on a Marked enemy goes through to the one behind
     // Minion hits that put a status on the target (Imp burns, Gargoyle taunts).
     if (unit.minion && unit.def.onAttackApply && target.alive && !hit.dodged) {
@@ -852,13 +868,24 @@ export default class BattleState {
     // An empowered beat (Mage Spellweaver, Bard Rhythm): a free extra hit and debuffs on the target.
     for (const f of empower) {
       const c = f.counter;
-      // Metronome (on the counter's holder): the empowered beat hits harder.
       const el = f.element; // a counter with a `rotation` (Mage) cycles its elements: damage type + debuff of this beat
-      if (c.strike && target.alive) this.strike(unit, target, events, { multiplier: c.strike.damageMultiplier * (1 + ((f.holder.specials.metronome || 0) / 100)), damageType: el ? el.damageType : c.strike.damageType });
+      if (c.strike && target.alive) this.strike(unit, target, events, { multiplier: c.strike.damageMultiplier, damageType: el ? el.damageType : c.strike.damageType });
       if (target.alive && !hit.dodged) for (const spec of (el ? el.apply : c.apply) || []) this.applyStatus(target, spec, unit, `counter_${f.holder.uid}`, events);
     }
     this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, force: empower.some((f) => f.counter.forceProcs) });
     this.fireArrows(unit, target, events);
+  }
+
+  // Metronome: the holder counts its own basic attacks; every 4th (`metronomeEvery`) gets +`metronome`% damage
+  // (+50% per copy). The count is kept for the whole run. Returns the bonus for this attack (0 = none).
+  metronomeBeat(unit, target, events) {
+    const bonus = (unit.specials && unit.specials.metronome) || 0;
+    if (!bonus || unit.minion || unit.side !== 'hero') return 0;
+    unit.metroCount = (unit.metroCount || 0) + 1;
+    if (unit.metroCount < (unit.specials.metronomeEvery || 4)) return 0;
+    unit.metroCount = 0;
+    events.push({ type: 'proc', unit, label: 'Metronome!', itemId: 'metronome', target });
+    return bonus;
   }
 
   // Fire Arrows: ranged attacks have a 50% chance (it does not stack) for an extra fire hit; more copies hit harder.
@@ -1443,11 +1470,20 @@ export default class BattleState {
   }
 
   // A bolt hits `first`, then jumps `jumps` more times to the closest enemies not hit yet.
+  // `skipFirst`: `first` was already hit (a Wisp's own bolt), only the jumps deal damage.
   chainHit(hero, first, chain, events) {
     const hit = new Set([first]);
     let from = hero;
     let target = first;
     for (let jump = 0; target; jump++) {
+      if (jump === 0 && chain.skipFirst) {
+        if (chain.jumps < 1) break;
+        from = target;
+        const here0 = this.enemies.indexOf(from);
+        target = this.enemies.filter((e) => e.alive && !hit.has(e)).sort((a, b) => Math.abs(this.enemies.indexOf(a) - here0) - Math.abs(this.enemies.indexOf(b) - here0))[0];
+        if (target) hit.add(target);
+        continue;
+      }
       const res = this.strike(hero, target, events, { multiplier: chain.damageMultiplier, damageType: chain.damageType, projectile: 'lightning', from, item: true });
       if (!res.dodged && target.alive) for (const spec of chain.apply || []) this.applyStatus(target, spec, hero, 'chain', events); // Static Crystal: Shock on every enemy hit
       if (jump >= chain.jumps) break;

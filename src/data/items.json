@@ -1083,28 +1083,36 @@
     "rarity": "rare",
     "type": "skill",
     "scope": "self",
-    "description": "Empowered 4th-attack hits caused by the holder deal +50% damage.",
+    "description": "Every 4th basic attack of the holder deals +50% damage per copy.",
     "effects": [
       {
         "special": "metronome",
         "percent": 50
+      },
+      {
+        "special": "metronomeEvery",
+        "percent": 4,
+        "unique": true
       }
     ],
-    "dropWeight": 80,
-    "needs": "beat"
+    "dropWeight": 80
   },
   "rat_cage": {
     "name": "Rat Cage",
     "rarity": "common",
     "type": "minion",
     "scope": "self",
-    "description": "A Rat joins at the start of every fight, then another every 12s.",
+    "description": "A Rat joins at the start of every fight, then another every 12s. No upkeep. Each extra cage: +1 rat allowed, rats come 10% faster.",
     "effects": [
       {
         "minionSpawner": {
           "minion": "rat",
           "minMs": 12000,
-          "maxMs": 12000
+          "maxMs": 12000,
+          "upkeep": false,
+          "capPerCopy": 1,
+          "fasterPerCopy": 10,
+          "copyStatBonus": 0
         }
       }
     ],
@@ -1118,13 +1126,18 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "A flying Wisp (ranged shock) joins at the start of every fight, then another every 15s.",
+    "description": "A flying Wisp (ranged shock) joins at the start of every fight, then another every 15s. Each extra lantern: wisp bolts jump to 1 more enemy (50%), wisps +20% stronger.",
     "effects": [
       {
         "minionSpawner": {
           "minion": "wisp",
           "minMs": 15000,
-          "maxMs": 15000
+          "maxMs": 15000,
+          "copyStatBonus": 0.2,
+          "chainPerCopy": {
+            "jumps": 1,
+            "damageMultiplier": 0.5
+          }
         }
       }
     ],
@@ -1138,13 +1151,14 @@
     "rarity": "epic",
     "type": "minion",
     "scope": "self",
-    "description": "A fire Imp (its hits Burn) joins at the start of every fight, then another every 10s.",
+    "description": "A fire Imp (its hits Burn) joins at the start of every fight, then another every 10s. Each extra brazier: imps +15% stronger.",
     "effects": [
       {
         "minionSpawner": {
           "minion": "imp",
           "minMs": 10000,
-          "maxMs": 10000
+          "maxMs": 10000,
+          "copyStatBonus": 0.15
         }
       }
     ],

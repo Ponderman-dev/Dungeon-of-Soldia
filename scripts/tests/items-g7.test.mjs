@@ -58,3 +58,30 @@ ok('all 11 G7 items exist', ids.every((id) => itemDefs[id] && itemDefs[id].descr
   ok('...the next one comes after the normal 12s wait', spawned === 0, spawned);
   for (let t = 0; t < 1500; t += 50) spawned += s.update(50).filter((e) => e.type === 'minionSpawn').length;
   ok('...and then it does', spawned === 1, spawned); }
+
+// Stacking rework (phase H, user's picks): Rat Cage / Wisp Lantern / Fire Imp Brazier.
+{
+  const R = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
+  const all = R('heroes.json');
+  const mk2 = (id, n) => {
+    const s = new BattleState({ heroDefs: ['knight', 'rogue', 'archer'].map((x) => all.find((d) => d.id === x)), enemyDefs: R('enemies.json'), itemDefs: loadItems(R('items.json')), skillDefs: R('skills.json'), minionDefs: R('minions.json'), statusDefs: R('statuses.json'), rules: R('combat.json'), damageTypes: R('damageTypes.json'), leveling: R('leveling.json'), rng: () => 0.5 });
+    for (let i = 0; i < n; i++) s.giveItem(s.heroes[0].uid, id);
+    s.spawnEnemies(['goblin', 'goblin', 'goblin'], 1); s.placeLines(); s.startFloor();
+    return { s, h: s.heroes[0] };
+  };
+  const r1 = mk2('rat_cage', 1), r6 = mk2('rat_cage', 6);
+  ok('Rat Cage: no upkeep at all', r1.s.upkeepCount(r1.h) === 0 && r6.s.upkeepCount(r6.h) === 0);
+  ok('...6 cages = 6 rats at the start (cap 4 +1 per extra cage)', r6.s.minions.length === 6, `${r6.s.minions.length}`);
+  ok('...copies do NOT make rats stronger', r6.s.minions[0].maxHp === r1.s.minions[0].maxHp);
+  const src = (x) => x.h.minionSources.find((q) => q.key === 'rat_cage');
+  ok('...each extra cage: rats come 10% sooner (6 cages = 12s / 1.5)', Math.abs(r6.s.spawnDelay(src(r6).spec, 6) - 8000) < 1 && Math.abs(r1.s.spawnDelay(src(r1).spec, 1) - 12000) < 1);
+  const w1 = mk2('wisp_lantern', 1), w3 = mk2('wisp_lantern', 3);
+  ok('Wisp Lantern: upkeep once (3 lanterns = still half an upkeep)', w3.s.upkeepCount(w3.h) === 0.5);
+  ok('...+20% wisp stats per extra lantern', Math.abs(w3.s.minions[0].maxHp / w1.s.minions[0].maxHp - 1.4) < 0.1);
+  ok('...1 lantern: no chain; 3 lanterns: 2 jumps at 50%', !w1.s.minions[0].chain && w3.s.minions[0].chain.jumps === 2 && w3.s.minions[0].chain.damageMultiplier === 0.5);
+  { const w = w3.s.minions[0]; const es = w3.s.enemies; const ev = []; w3.s.landAttack(w, es[1], ev);
+    const hits = ev.filter((e) => e.type === 'attack' && e.result && !e.result.dodged);
+    ok('...a wisp bolt hits its target, then jumps to the 2 others', new Set(hits.map((e) => e.target)).size === 3, `${hits.length}`); }
+  const i1 = mk2('fire_imp_brazier', 1), i3 = mk2('fire_imp_brazier', 3);
+  ok('Fire Imp Brazier: upkeep once, +15% stats per extra brazier', i3.s.upkeepCount(i3.h) === 0.5 && Math.abs(i3.s.minions[0].maxHp / i1.s.minions[0].maxHp - 1.3) < 0.1);
+}

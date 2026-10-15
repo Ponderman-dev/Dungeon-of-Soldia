@@ -64,26 +64,13 @@ ok('all 3 G6 items exist', ['conductors_baton', 'echo_rune', 'metronome'].every(
 { const { s, a } = mk(['archer', 'knight', 'rogue'], ['goblin'], () => 0); give(s, a, 'echo_rune'); const ev = cast(s, a, 'attack');
   ok('channels (Rain of Arrows) do not echo', !ev.some((e) => e.label === 'Echo!')); }
 
-// Metronome
-{ const { s, a, es, h } = mk(['bard', 'knight', 'rogue']); give(s, a, 'metronome');
-  const beat = (u) => { const ev = []; for (let i = 0; i < 4; i++) { ev.length = 0; s.landAttack(u, es[0], ev); } return ev.filter((e) => e.type === 'attack' && !e.basic)[0]; };
-  const { s: s0, a: a0, es: e0 } = mk(['bard', 'knight', 'rogue']); const plain = (() => { const ev = []; for (let i = 0; i < 4; i++) { ev.length = 0; s0.landAttack(a0, e0[0], ev); } return ev.filter((e) => e.type === 'attack' && !e.basic)[0]; })();
-  const boosted = beat(a);
-  ok('Metronome: the empowered beat hits +50% harder', boosted && plain && near(boosted.result.amount / plain.result.amount, 1.5, 0.05), `${plain && plain.result.amount} -> ${boosted && boosted.result.amount}`); }
-{ const { s, a, es, h } = mk(['bard', 'knight', 'rogue']); give(s, a, 'metronome'); const beatBy = (u) => { const ev = []; for (let i = 0; i < 4; i++) { ev.length = 0; s.landAttack(i % 3 === 0 && false ? a : u, es[0], ev); } return ev; };
-  const k = h[1]; const attacks = [a, k, h[2], k]; let last = []; for (const u of attacks) { last = []; s.landAttack(u, es[0], last); }
-  const extra = last.find((e) => e.type === 'attack' && !e.basic);
-  const { s: s0, a: a0, es: e0, h: h0 } = mk(['bard', 'knight', 'rogue']); let l0 = []; for (const u of [a0, h0[1], h0[2], h0[1]]) { l0 = []; s0.landAttack(u, e0[0], l0); }
-  const plain = l0.find((e) => e.type === 'attack' && !e.basic); void beatBy;
-  ok('...on the Bard EVERY squad Rhythm beat counts, whoever lands it (here the Knight)', extra && near(extra.result.amount / plain.result.amount, 1.5, 0.05)); }
-{ const { s, a, es, h } = mk(['bard', 'knight', 'rogue']); give(s, h[1], 'metronome'); let last = []; for (const u of [a, h[1], h[2], h[1]]) { last = []; s.landAttack(u, es[0], last); }
-  const extra = last.find((e) => e.type === 'attack' && !e.basic);
-  const { s: s0, a: a0, es: e0, h: h0 } = mk(['bard', 'knight', 'rogue']); let l0 = []; for (const u of [a0, h0[1], h0[2], h0[1]]) { l0 = []; s0.landAttack(u, e0[0], l0); }
-  const plain = l0.find((e) => e.type === 'attack' && !e.basic);
-  ok('...held by someone else, it does not boost the Bard\'s beat', near(extra.result.amount / plain.result.amount, 1, 0.05)); }
-{ const m = (n) => { const { s, a } = mk(['mage', 'knight', 'rogue']); give(s, a, 'metronome', n); return a.specials.metronome; };
-  ok('...+50% per copy', m(1) === 50 && m(3) === 150); }
-{ const { s, a, es } = mk(['mage', 'knight', 'rogue']); give(s, a, 'metronome'); const ev = []; for (let i = 0; i < 4; i++) { ev.length = 0; s.landAttack(a, es[0], ev); }
-  const { s: s0, a: a0, es: e0 } = mk(['mage', 'knight', 'rogue']); const e2 = []; for (let i = 0; i < 4; i++) { e2.length = 0; s0.landAttack(a0, e0[0], e2); }
-  const x = ev.find((e) => e.type === 'attack' && !e.basic), y = e2.find((e) => e.type === 'attack' && !e.basic);
-  ok('works for the Mage\'s Spellweaver too (self counter)', near(x.result.amount / y.result.amount, 1.5, 0.05)); }
+// Metronome (reworked): its OWN counter, every 4th basic attack of the holder deals +50% per copy.
+{ const basics = (n) => { const { s, a, es } = mk(['knight', 'rogue', 'archer']); give(s, a, 'metronome', n); const out = [];
+    for (let i = 0; i < 8; i++) { const ev = []; s.landAttack(a, es[0], ev); out.push({ hit: ev.find((e) => e.type === 'attack' && e.basic), pop: ev.some((e) => e.type === 'proc' && e.itemId === 'metronome') }); }
+    return out; };
+  const one = basics(1), three = basics(3);
+  ok('Metronome: attacks 1-3 are normal, the 4th hits +50% and pops the icon', near(one[3].hit.result.amount / one[0].hit.result.amount, 1.5, 0.05) && one[3].pop && !one[0].pop && !one[2].pop, `${one[0].hit.result.amount} -> ${one[3].hit.result.amount}`);
+  ok('...and again on the 8th', one[7].pop && near(one[7].hit.result.amount / one[4].hit.result.amount, 1.5, 0.05));
+  ok('...+50% per copy (3 copies = +150%)', near(three[3].hit.result.amount / three[0].hit.result.amount, 2.5, 0.05));
+  const { s, a, es } = mk(['knight', 'rogue', 'archer']); const ev = []; for (let i = 0; i < 4; i++) s.landAttack(a, es[0], ev);
+  ok('...without it nothing happens', !ev.some((e) => e.itemId === 'metronome')); }

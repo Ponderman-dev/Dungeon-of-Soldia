@@ -87,7 +87,7 @@ const greaters = (s) => s.minions.filter((m) => m.greater);
   ok('...one shared timer and a shared cap of 4: after the next spawn 4', s.minions.length === 4);
   run(s, 1050);
   ok('...the cap holds (still 4, the oldest are pushed out)', s.minions.length === 4);
-  ok('...each copy of a weak spawner pays half an upkeep (2 copies = one full upkeep)', Math.abs(k.stats.attackEfficiency - (a0 + 1 * rules.minions.upkeepAttackSpeedPercent)) < 0.001, `${k.stats.attackEfficiency}`); }
+  ok('...a weak spawner item pays half an upkeep ONCE, however many copies', Math.abs(k.stats.attackEfficiency - (a0 + 0.5 * rules.minions.upkeepAttackSpeedPercent)) < 0.001, `${k.stats.attackEfficiency}`); }
 
 { const { s, h } = mk({ minion: 'skeleton', minMs: 1000, maxMs: 1000, cap: 4, atFloorStart: 1 }); const a0 = h[2].stats.attackEfficiency;
   s.startFloor();

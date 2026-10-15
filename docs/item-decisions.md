@@ -138,3 +138,18 @@ Overheal Ring re-checked with 180 runs: +0.1 (no harm, no gain in random squads)
 - Full-run check after round 2 (80 runs per number, mean floor, base ~27-29):
   Shield Totem +3.1 / +2.4 / +6.3 (1/3/8), Bandage Roll +2.7 / +2.4 / +8.0, Martyr's Shield +3.6 / +5.5 / +10.4,
   Second Wind Flask (80% below 20%) +1.5 / +2.8 / +4.0, Aid Kit +0.1 / +0.4 / +0.2 (still does almost nothing).
+
+## Runs WITH vs WITHOUT summoning items (nominions.mjs, all 120 squads x 4 runs, same dice)
+```
+90s, 120 squads x 4 runs, same dice for both
+NORMAL runs            mean 24.9  median 20  top10% 39  best 100  (480 runs)
+NO summoning items     mean 23.3  median 20  top10% 37  best 70  (480 runs)
+  bosses won (normal):  20: 232/289  40: 38/44  60: 3/5  80: 1/2  100: 0/1
+  bosses won (none):    20: 223/273  40: 18/34  60: 2/3
+with Necromancer   normal 22.8  none 19.8
+without Necromancer normal 25.9  none 24.7
+normal runs that picked 1+ summoning item: 410 (mean floor 26.3, avg 3.1 items); picked none: 70 (mean 17.2)
+same dice, without summoning items the run went: deeper 198, shallower 257, same 25
+
+```
+Reading: summoning items add about +1.6 floors on average, matter most for the Necromancer (+3) and the floor-40 Brood Mother (86% wins with, 53% without). Runs that never picked one (mean 17.2) are mostly runs that died early, so that number is not a fair comparison.

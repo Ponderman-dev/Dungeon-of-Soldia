@@ -1606,15 +1606,16 @@
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "4% chance per copy on attack to conjure 3-5 slow dark fireballs that strike random enemies (80% dark each).",
+    "description": "8% chance per copy on attack to conjure 3-5 slow dark fireballs that strike random enemies (300% dark each).",
     "effects": [
       {
         "proc": "onAttack",
-        "chance": 4,
+        "chance": 8,
         "label": "Flame Spirit!",
         "silent": true,
         "targets": "self",
-        "flameSpirit": true
+        "flameSpirit": true,
+        "damageMultiplier": 3
       }
     ],
     "dropWeight": 90,

@@ -182,8 +182,8 @@ export default class BattleState {
     if (hero.axeLeft <= 0) hero.axeLeft = 0;
   }
 
-  // Flame Spirit: launches 3-5 slow dark fireballs, one after another, at random enemies (80% dark each, item damage).
-  conjureSpirit(hero, events) {
+  // Flame Spirit: launches 3-5 slow dark fireballs, one after another, at random enemies (`damageMultiplier` each, 300%; item damage).
+  conjureSpirit(hero, events, mult = 0.8) {
     const n = 3 + Math.floor(this.rng() * 3);
     events.push({ type: 'proc', unit: hero, label: 'Flame Spirit!', itemId: 'flame_spirit' });
     for (let i = 0; i < n; i++) this.later(250 * i, (ev) => {
@@ -192,7 +192,7 @@ export default class BattleState {
       if (!foes.length) return;
       const t = foes[Math.floor(this.rng() * foes.length)];
       ev.push({ type: 'projectile', from: hero, to: t, kind: 'darkbolt' });
-      this.later(900, (ev2) => { if (t.alive && hero.alive) this.strike(hero, t, ev2, { multiplier: 0.8, damageType: 'dark', item: true }); });
+      this.later(900, (ev2) => { if (t.alive && hero.alive) this.strike(hero, t, ev2, { multiplier: mult, damageType: 'dark', item: true }); });
     });
   }
 
@@ -1542,7 +1542,7 @@ export default class BattleState {
       // Static Crystal: +`jumpsPerExtra` jumps per extra crystal.
       if (proc.chain && foe) this.chainHit(hero, foe, proc.chain.jumpsPerExtra ? { ...proc.chain, jumps: proc.chain.jumps + proc.chain.jumpsPerExtra * extra } : proc.chain, events);
       // Excalibur: tornadoes hit `damagePerExtraPercent` harder per extra copy. A tornado also comes on a miss.
-      if (proc.flameSpirit && foe) this.conjureSpirit(hero, events);
+      if (proc.flameSpirit && foe) this.conjureSpirit(hero, events, proc.damageMultiplier || 0.8);
       if (proc.moonlight && foe) this.moonCrescent(hero, foe, proc.copies || 1, events);
       if (proc.tornado && foe) this.spawnTornado(hero, proc.tornado.damagePerExtraPercent ? { ...proc.tornado, damageMultiplier: proc.tornado.damageMultiplier * (1 + (proc.tornado.damagePerExtraPercent * extra) / 100) } : proc.tornado, foe, events);
       for (const spec of proc.apply || []) {

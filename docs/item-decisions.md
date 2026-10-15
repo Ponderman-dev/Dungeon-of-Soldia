@@ -200,7 +200,7 @@ Caveats: the front hero is always melee in this check (Quiver does nothing on me
   the Set lives on BattleState `offeredOnce`), and NO limit (+1% attack and max health every 8 squad kills, forever).
 
 ## The user's own items (numbers are my first guesses, all in items.json)
-- [built] Flame Spirit (legendary, onhit): 4% per copy on attack: 3-5 slow dark fireballs (darkbolt shots, 0.25s apart,
+- [built] Flame Spirit (legendary, onhit): 8% per copy on attack (was 4%), 300% per fireball (was 80%) after the full-run check;: 3-5 slow dark fireballs (darkbolt shots, 0.25s apart,
   0.9s flight) at random enemies, 80% dark each (item damage). `conjureSpirit()`, delayed hits via `later()/tickDelays()`.
 - [built] Spirit Axe (epic): 8% per copy when the holder is hit: a ghostly axe spins around it for 3s, every 0.5s it hits
   every enemy within 110 px for 35% (item damage, 6 pulses). `trySpiritAxe()/tickSpiritAxe()`, effect `spiritAxe`.
@@ -221,3 +221,4 @@ ghastly_fire         0: 26.9 (base)   1: 27.8 (+0.9)   3: 30.2 (+3.3)
 soul_lantern         0: 26.9 (base)   1: 29.7 (+2.8)   3: 28.7 (+1.8)
 
 ```
+- Flame Spirit re-check (8%, 300%): 1 copy +3.7, 3 copies +7.3 floors (base 27.5).

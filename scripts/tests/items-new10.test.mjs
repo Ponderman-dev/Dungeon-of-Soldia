@@ -78,7 +78,7 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
 { const { s, es, k } = mk(['knight', 'rogue', 'archer'], ['goblin', 'goblin'], () => 0); give(s, k, 'flame_spirit'); const ev = []; s.rollProcs(k, 'onAttack', ev, { target: es[0], hit: true, force: true }); s.rng = () => 0.99; // no more procs
   const all = [...ev]; for (let t = 0; t < 2500; t += 50) all.push(...s.update(50));
   const balls = all.filter((e) => e.type === 'projectile' && e.kind === 'darkbolt').length, hits = all.filter((e) => e.type === 'attack' && e.damageType === 'dark' && e.attacker === k).length;
-  ok('Flame Spirit: 3-5 dark fireballs fly one after another and each hits (80% dark)', balls >= 3 && balls <= 5 && hits === balls && all.filter((e) => e.itemId === 'flame_spirit').length === 1, `${balls} ${hits}`); }
+  ok('Flame Spirit: 3-5 dark fireballs fly one after another and each hits (300% dark)', balls >= 3 && balls <= 5 && hits === balls && all.filter((e) => e.itemId === 'flame_spirit').length === 1, `${balls} ${hits}`); }
 // Spirit Axe
 { const { s, es, k } = mk(['knight', 'rogue', 'archer'], ['goblin', 'goblin'], () => 0); give(s, k, 'spirit_axe'); es.forEach((e, i) => { e.x = k.x + 40 * (i ? 1 : -1); e.y = k.y; }); s.onHeroHit(k, []);
   ok('Spirit Axe: being hit can start the spin (3s)', k.axeLeft === 3000);

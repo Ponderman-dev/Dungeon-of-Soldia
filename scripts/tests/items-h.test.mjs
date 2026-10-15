@@ -20,7 +20,7 @@ const near = (v, t, tol = 0.03) => Math.abs(v / t - 1) < tol;
 { const ev = (n) => { const { s, k } = mk(); const e0 = k.stats.evasion; give(s, k, 'feather_boots', n); return k.stats.evasion - e0; };
   ok('Feather Boots: +8, then a bit less per pair, closer to 70', ev(1) === 8 && ev(5) < 40 && ev(5) > 30 && ev(30) < 70 && ev(30) > 60, `${ev(5).toFixed(1)} ${ev(30).toFixed(1)}`); }
 { const bl = (n) => { const { s, k } = mk(); give(s, k, 'shield_totem', n); return k.specials.block; };
-  ok('Shield Totem: 10%, 6 = 47%, 20 = 88%', bl(1) === 10 && Math.abs(bl(6) - 46.9) < 0.2 && Math.abs(bl(20) - 87.8) < 0.2, `${bl(6)} ${bl(20)}`); }
+  ok('Shield Totem: 6%, 6 = 31%, 20 = 67% (towards 90%)', bl(1) === 6 && Math.abs(bl(6) - 30.5) < 0.2 && Math.abs(bl(20) - 67.4) < 0.2, `${bl(6)} ${bl(20)}`); }
 // Gambler's Dice: no max, +50% crit damage per die
 { const { s, k } = mk(); give(s, k, 'gamblers_dice', 5); ok('Gambler\'s Dice: 5 dice = +100 crit and +250% crit damage', k.specials.critDamage === 250); }
 // Overheal Ring: shield cap +25% per ring

@@ -68,7 +68,7 @@ const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker 
 { const s = mk(); const k = s.heroes[0]; k.hp = 1; s.giveItem(k.uid, 'aid_kit'); const pct = (p) => { k.hp = 1; return s.winHeal(p).find((x) => x.unit === k).amount / k.maxHp * 100; };
   const one = pct(0); s.giveItem(k.uid, 'aid_kit'); const two = pct(0); s.giveItem(k.uid, 'aid_kit'); const three = pct(0);
   const hp = (n) => (n * k.maxHp) / 100;
-  ok('Aid Kit: 1 kit = +8 health (flat)', Math.abs(hp(one) - 8) < 0.6, hp(one).toFixed(1)); ok('...2 kits = 16, 3 kits = 24 (no shrink)', Math.abs(hp(two) - 16) < 0.6 && Math.abs(hp(three) - 24) < 0.6, `${hp(two).toFixed(1)} ${hp(three).toFixed(1)}`); }
+  ok('Aid Kit: 1 kit = +20 health (flat)', Math.abs(hp(one) - 20) < 0.6, hp(one).toFixed(1)); ok('...2 kits = 40, 3 kits = 60 (no shrink)', Math.abs(hp(two) - 40) < 0.6 && Math.abs(hp(three) - 60) < 0.6, `${hp(two).toFixed(1)} ${hp(three).toFixed(1)}`); }
 // Ranged heroes pick random enemies by default; melee heroes keep one opponent (front line); a tapped enemy is still focused
 { const s = mk(); const es = dummy(s, ['goblin', 'goblin', 'goblin']); const hit = new Set(); for (let i = 0; i < 200; i++) hit.add(s.pickTarget(s.heroes[3]).uid);
   ok('ranged default target is random', hit.size === 3);

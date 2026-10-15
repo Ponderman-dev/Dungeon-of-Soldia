@@ -79,7 +79,7 @@ ok('all 8 G5 items exist', ['warding_charm', 'overheal_ring', 'spiked_aegis', 'p
 { const { s, es, k, h } = mk(['goblin'], () => 0); give(s, h[1], 'martyrs_shield'); const ally = h[2]; const hp0 = ally.hp, m0 = h[1].hp;
   const ev = hitMe(s, es[0], ally, 1000);
   ok('Martyr\'s Shield: the holder takes the hit instead of the ally', ally.hp === hp0 && h[1].hp < m0 && ev.some((e) => e.type === 'proc' && e.label === 'Martyr!'));
-  ok('...and pays a small health cost on top', m0 - h[1].hp > 1000 - 5, `${m0 - h[1].hp}`); }
+  ok('...with NO extra health cost (phase H), and the holder has +10 defense', m0 - h[1].hp <= 1000 && itemDefs.martyrs_shield.effects.some((e) => e.stat === 'defense' && e.flat === 10), `${m0 - h[1].hp}`); }
 { const { s, es, k, h } = mk(['goblin'], () => 0); give(s, h[1], 'martyrs_shield'); const ally = h[2];
   hitMe(s, es[0], ally, 100); const hp1 = ally.hp; hitMe(s, es[0], ally, 100);
   ok('...then a cooldown: the next hit lands on the ally', ally.hp < hp1);

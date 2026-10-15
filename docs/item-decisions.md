@@ -126,3 +126,11 @@ aid_kit              0: 26.9 (base)   1: 27.6 (+0.7)   3: 28.6 (+1.7)   8: 29.1 
 second_wind_flask    0: 26.9 (base)   1: 27.9 (+1.0)   3: 28.6 (+1.7)   8: 28.7 (+1.8)
 ```
 Overheal Ring re-checked with 180 runs: +0.1 (no harm, no gain in random squads).
+
+## Round 2 (after the full-run check)
+- [built] Shield Totem: 6% block per totem, more totems creep towards 90% (falloff 0.9333), NO recharge (blocks can come back to back).
+- [built] Aid Kit: +20 health per kit after each floor (was +8).
+- [built] Martyr's Shield: no more health cost; +10 defense per shield.
+- [built] Bandage Roll REWORK (user's idea): every 8s in a fight the holder throws 1-3 bandages (random) at the most hurt heroes,
+  each heals 5 FLAT health per roll (only the heal grows with copies). Drawn as a lobbed flask in bandage colour. `tickBandages()`.
+- Kept: Rat Cage (user: rats get Bone Charm / Overseer's Whistle stacks), Metronome.

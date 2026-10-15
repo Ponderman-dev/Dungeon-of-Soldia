@@ -755,6 +755,7 @@ export default class BattleState {
       if (hero.floor.martyrCd > 0) hero.floor.martyrCd -= dt;
       hero.shareCd = Math.max(0, hero.shareCd - dt);
       if (hero.soulCd > 0) hero.soulCd -= dt; // Grimoire fireball cooldown
+      this.tickBandages(hero, dt, events);
       this.tickSpawner(hero, dt, events);
       for (const slot of hero.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - dt);
       this.tickCasting(hero, dt, events);
@@ -889,6 +890,24 @@ export default class BattleState {
     unit.metroCount = 0;
     events.push({ type: 'proc', unit, label: 'Metronome!', itemId: 'metronome', target });
     return bonus;
+  }
+
+  // Bandage Roll: every `bandageTossEveryMs` (8s) of a fight the holder throws 1-3 bandages (random) at the most hurt
+  // living heroes (one each, most hurt first); each heals `bandageToss` FLAT health (5 per roll). Only hurt heroes get one.
+  tickBandages(hero, dt, events) {
+    const heal = hero.specials.bandageToss || 0;
+    if (!heal || !this.enemies.some((e) => e.alive)) return;
+    hero.bandageTimer = (hero.bandageTimer || 0) + dt;
+    if (hero.bandageTimer < (hero.specials.bandageTossEveryMs || 8000)) return;
+    hero.bandageTimer = 0;
+    const hurt = this.heroes.filter((h) => h.alive && h.hp < h.maxHp).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
+    const count = Math.min(hurt.length, 1 + Math.floor(this.rng() * 3));
+    if (!count) return;
+    events.push({ type: 'proc', unit: hero, label: 'Bandage!', itemId: 'bandage_roll' });
+    for (const ally of hurt.slice(0, count)) {
+      events.push({ type: 'flask', unit: hero, target: ally, flask: { color: '0xf2e6cc' } }); // drawn as a lobbed bandage
+      this.healUnit(ally, heal, events, { aura: false });
+    }
   }
 
   // Fire Arrows: ranged attacks have a 50% chance (it does not stack) for an extra fire hit; more copies hit harder.
@@ -1226,9 +1245,7 @@ export default class BattleState {
         target = martyr;
         events.push({ type: 'proc', unit: martyr, label: 'Martyr!', itemId: 'martyrs_shield' });
         const copies = martyr.specials.martyrCopies || 1;
-        martyr.floor.martyrCd = this.martyrCooldown(copies);
-        const cost = Math.max(1, Math.round(martyr.maxHp * 0.03 * Math.pow(0.8, copies - 1))); // health cost (placeholder numbers)
-        martyr.hp = Math.max(1, martyr.hp - cost);
+        martyr.floor.martyrCd = this.martyrCooldown(copies); // no health cost any more (phase H); the item gives defense instead
       }
     }
     // Opportunist (Rogue): more damage and crit against enemies that have any debuff.
@@ -1282,8 +1299,8 @@ export default class BattleState {
     if (dealt) this.breakEffects(target, dealt.broken, events);
     if (!result.dodged) this.afterItemHit(attacker, target, opts, events);
     if (!result.dodged && attacker.side === 'enemy' && target.side === 'hero') this.onHeroHit(target, events);
-    if (result.blocked) {
-      // A successful block sends the holder's Shield Totems on cooldown.
+    if (result.blocked && target.specials.blockCooldownMs) {
+      // A successful block sends the holder's Shield Totems on cooldown (only if the item has a `cooldownMs`; phase H: none).
       const spec = { status: 'blockCooldown', durationMs: target.specials.blockCooldownMs || 2500 };
       this.applyStatus(target, spec, target, 'totem', events);
     }

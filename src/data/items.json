@@ -138,13 +138,12 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "10% chance to block a hit (each totem blocks 10% of what is left). Recharges for 2.5s after a block.",
+    "description": "6% chance to block a hit (more totems: closer and closer to 90%). No recharge.",
     "effects": [
       {
         "special": "block",
-        "percent": 10,
-        "cooldownMs": 2500,
-        "falloffRatio": 0.9
+        "percent": 6,
+        "falloffRatio": 0.933333
       }
     ]
   },
@@ -364,11 +363,11 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Heals 8 health per kit when a floor is cleared.",
+    "description": "Heals 20 health per kit when a floor is cleared.",
     "effects": [
       {
         "special": "clearHealFlat",
-        "percent": 8
+        "percent": 20
       }
     ]
   },
@@ -398,12 +397,20 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Heals 2% max health on each kill the holder makes.",
+    "description": "Every 8s in a fight, throws 1-3 bandages at the most hurt heroes: each heals 5 health per roll.",
     "effects": [
       {
-        "special": "killHeal",
-        "percent": 2
+        "special": "bandageToss",
+        "percent": 5
+      },
+      {
+        "special": "bandageTossEveryMs",
+        "percent": 8000,
+        "unique": true
       }
+    ],
+    "provides": [
+      "heal"
     ]
   },
   "second_wind_flask": {
@@ -1019,8 +1026,12 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "8% chance (+4% per extra shield) when an enemy hits another hero to take the hit instead.",
+    "description": "+10 defense. 8% chance (+4% per extra shield) when an enemy hits another hero to take the hit instead.",
     "effects": [
+      {
+        "stat": "defense",
+        "flat": 10
+      },
       {
         "special": "martyr",
         "percent": 8,

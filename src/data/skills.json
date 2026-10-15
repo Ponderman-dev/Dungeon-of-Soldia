@@ -661,7 +661,7 @@
     "cooldownMs": 12000,
     "castMs": 600,
     "random": {
-      "count": 2,
+      "count": 3,
       "target": "ally",
       "pool": [
         {
@@ -698,9 +698,10 @@
             }
           ]
         }
-      ]
+      ],
+      "healsMostHurt": true
     },
-    "description": "Throws 2 random flasks at random teammates: heal, speed boost or shield."
+    "description": "Throws 3 random flasks at teammates: heal, speed boost or shield. Healing flasks always go to the most hurt heroes."
   },
   "knight_bash": {
     "name": "Shield Bash",

@@ -45,3 +45,12 @@ Read `CLAUDE.md` first, then this file. Every item decision of this phase is in 
 2. Enemy growth / difficulty curve (how deep a normal run should go).
 3. Drop odds (rarities, skill books, potion) with 87 items.
 4. Bosses rework (user: "later"); Morthul can stall weak squads forever (enrage timer suggested, not decided).
+
+## Session 2 (hero balance, round 1)
+- Moonlight Twinblade 18% per copy (user: higher chance). Same-dice runs x12: 1 copy +0, 3 copies +8.5 floors.
+- Review before (4 runs/squad): cleric 34.2, berserker 28.4, knight 27.5, rogue 27.2, samurai 24.9, mage 23.0,
+  bard 22.7, necromancer 22.2, archer 21.8, alchemist 20.1 (mean floor 25.2).
+- User picks: Alchemist = better Mystery Brew (3 flasks, heals go to the most hurt); Archer = easier Steady Aim
+  (1.5s, pierce on every shot); Necromancer = faster raising only (5-6s, cap 5, 2 at start); Cleric left alone.
+- Review after: cleric 36.2, rogue 32.2, berserker 31.0, knight 30.9, samurai 26.5, necromancer 25.3, mage 25.2,
+  bard 24.3, archer 24.2, alchemist 23.0 (mean 27.9). The weak three rose but stay at the bottom.

@@ -683,14 +683,15 @@
     },
     "passive": {
       "name": "Steady Aim",
-      "description": "While she has not been hit for 3s: +25% attack speed and +15 crit. Her shots on a Marked enemy pierce to the enemy next to it.",
+      "description": "While she has not been hit for 1.5s: +25% attack speed and +15 crit. Every basic shot pierces to the enemy next to it (60% damage).",
       "steadyAim": {
-        "afterMs": 3000,
+        "afterMs": 1500,
         "attackSpeedPercent": 25,
         "critFlat": 15,
         "pierce": {
           "radius": 140,
-          "damageMultiplier": 0.6
+          "damageMultiplier": 0.6,
+          "everyShot": true
         }
       }
     }
@@ -1270,13 +1271,13 @@
     },
     "passive": {
       "name": "Skeleton Summoner",
-      "description": "Raises a skeleton every 8-10s (up to 4); one rises at the start of every floor. They vanish when the floor ends.",
+      "description": "Raises a skeleton every 5-6s (up to 5); two rise at the start of every floor. They vanish when the floor ends.",
       "spawner": {
         "minion": "skeleton",
-        "minMs": 8000,
-        "maxMs": 10000,
-        "cap": 4,
-        "atFloorStart": 1
+        "minMs": 5000,
+        "maxMs": 6000,
+        "cap": 5,
+        "atFloorStart": 2
       }
     },
     "parts": {

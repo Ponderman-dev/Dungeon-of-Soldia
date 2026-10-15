@@ -1082,11 +1082,11 @@ export default class BattleState {
     events.push({ type: 'combo', unit: hero, target, points: hero.combo.points });
   }
 
-  // Archer's pierce (passive.steadyAim.pierce): a basic shot on a MARKED enemy also hits the closest other
-  // enemy within `radius` of it for `damageMultiplier`.
+  // Archer's pierce (passive.steadyAim.pierce): a basic shot on a MARKED enemy (on ANY enemy with
+  // `everyShot`) also hits the closest other enemy within `radius` of it for `damageMultiplier`.
   pierce(unit, target, hit, events) {
     const p = unit.def.passive && unit.def.passive.steadyAim && unit.def.passive.steadyAim.pierce;
-    if (!p || hit.dodged || !this.has(target, 'mark')) return;
+    if (!p || hit.dodged || (!p.everyShot && !this.has(target, 'mark'))) return;
     const others = this.enemies.filter((e) => e.alive && e !== target && (!this.hasPositions(e) || this.distance(e, target) <= p.radius));
     if (!others.length) return;
     const next = this.nearest(target, others);
@@ -2580,11 +2580,18 @@ export default class BattleState {
   // damageMultiplier, apply, heal } ] }`. Each flask picks a random living target and a random flask from the pool.
   throwFlasks(hero, skill, slotId, events) {
     const r = skill.random;
+    const healed = new Set();
     for (let i = 0; i < r.count; i++) {
       const side = r.target === 'enemy' ? this.enemies.filter((e) => e.alive) : this.heroes.filter((h) => h.alive);
       if (!side.length) return;
-      const target = side[Math.floor(this.rng() * side.length)];
       const flask = r.pool[Math.floor(this.rng() * r.pool.length)];
+      // `healsMostHurt`: a healing flask goes to the most hurt hero (lowest health %) not healed yet this cast.
+      let target = side[Math.floor(this.rng() * side.length)];
+      if (r.healsMostHurt && flask.heal) {
+        const open = side.filter((h) => !healed.has(h));
+        if (open.length) target = open.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a));
+        healed.add(target);
+      }
       events.push({ type: 'flask', unit: hero, target, flask });
       this.skillHit(hero, { damageType: flask.damageType, damageMultiplier: flask.damageMultiplier, apply: flask.apply, heal: flask.heal }, `${slotId}_${flask.name}`, target, events);
       // Enemy flasks splash a small area where they land (`splash: { radius, multiplier }`).

@@ -185,7 +185,11 @@ const T = ['knight', 'rogue'];
 { const { s, a, h } = mk(['alchemist', ...T]); h.forEach((x) => (x.hp = x.maxHp / 2)); const seen = new Set(); let total = 0;
   for (let i = 0; i < 60; i++) { a.skills[1].cooldownLeft = 0; const ev = cast(s, a, 'support'); const fl = ev.filter((e) => e.type === 'flask'); total += fl.length; fl.forEach((f) => { seen.add(f.flask.name); ok_(f); }); }
   function ok_(f) { if (!h.includes(f.target)) throw new Error('flask hit a non-hero'); }
-  ok('Mystery Brew: 2 random flasks at living HEROES: heal, speed boost or shield', total === 120 && seen.size === 3); }
+  ok('Mystery Brew: 3 random flasks at living HEROES: heal, speed boost or shield', total === 180 && seen.size === 3); }
+{ const { s, a, h } = mk(['alchemist', ...T], ['goblin'], () => 0); // rng 0: every flask is the heal flask
+  h[0].hp = h[0].maxHp * 0.9; h[1].hp = h[1].maxHp * 0.3; h[2].hp = h[2].maxHp * 0.6;
+  const order = cast(s, a, 'support').filter((e) => e.type === 'flask').map((f) => h.indexOf(f.target)).join();
+  ok('...healing flasks go to the most hurt heroes first, one each', order === '1,2,0', order); }
 { const { s, a, h } = mk(['alchemist', ...T], ['goblin'], () => 0); // rng 0 picks the first flask and the first hero
   h[0].hp = 1000; const ev = cast(s, a, 'support');
   ok('...the heal flask heals 22% of max health', h[0].hp > 1000 + h[0].maxHp * 0.2); }

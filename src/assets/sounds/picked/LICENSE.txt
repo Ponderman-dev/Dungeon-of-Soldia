@@ -1,0 +1,4 @@
+Sounds picked by the user on the sound board (docs/proposals/sounds, apply-picks.py).
+- Files whose sounds.json cue has `source: yours_...` come from Mixkit (mixkit.co), Mixkit Sound Effects Free License:
+  free to use in games and apps, no credit needed; the sounds may not be sold or shared as a sound pack on their own.
+- The other files are Kenney packs (CC0), layered / re-pitched with ffmpeg (make-options.py).

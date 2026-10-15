@@ -80,39 +80,25 @@
       "volume": 0.4
     },
     "hitMelee": {
-      "files": [
-        "kenney/impactPunch_medium_000",
-        "kenney/impactPunch_medium_001",
-        "kenney/impactPunch_medium_002",
-        "kenney/impactPunch_medium_003",
-        "kenney/impactPunch_medium_004"
-      ],
       "volume": 0.35,
       "pitchJitter": 0.08,
-      "minGapMs": 60
+      "minGapMs": 60,
+      "file": "picked/hitMelee",
+      "source": "yours_sword-strikes-armor-2765.mp3"
     },
     "hitRanged": {
-      "files": [
-        "kenney/impactWood_light_000",
-        "kenney/impactWood_light_001",
-        "kenney/impactWood_light_002",
-        "kenney/impactWood_light_003",
-        "kenney/impactWood_light_004"
-      ],
       "volume": 0.35,
       "pitchJitter": 0.08,
-      "minGapMs": 60
+      "minGapMs": 60,
+      "file": "picked/hitRanged",
+      "source": "hitRanged_C.mp3"
     },
     "hitFire": {
-      "files": [
-        "kenney/impactSoft_heavy_000",
-        "kenney/impactSoft_heavy_001",
-        "kenney/impactSoft_heavy_002"
-      ],
       "volume": 0.4,
-      "pitch": 0.9,
       "pitchJitter": 0.08,
-      "minGapMs": 70
+      "minGapMs": 70,
+      "file": "picked/hitFire",
+      "source": "hitFire_E.mp3"
     },
     "hitIce": {
       "files": [
@@ -127,53 +113,32 @@
       "minGapMs": 70
     },
     "hitElectric": {
-      "files": [
-        "kenney/impactMetal_light_000",
-        "kenney/impactMetal_light_001",
-        "kenney/impactMetal_light_002",
-        "kenney/impactMetal_light_003",
-        "kenney/impactMetal_light_004"
-      ],
       "volume": 0.25,
-      "pitch": 1.3,
       "pitchJitter": 0.1,
-      "minGapMs": 70
+      "minGapMs": 70,
+      "file": "picked/hitElectric",
+      "source": "yours_spring-metal-hit-2302.mp3"
     },
     "hitDark": {
-      "files": [
-        "kenney/impactSoft_medium_000",
-        "kenney/impactSoft_medium_001",
-        "kenney/impactSoft_medium_002",
-        "kenney/impactSoft_medium_003",
-        "kenney/impactSoft_medium_004"
-      ],
       "volume": 0.4,
-      "pitch": 0.7,
       "pitchJitter": 0.06,
-      "minGapMs": 70
+      "minGapMs": 70,
+      "file": "picked/hitDark",
+      "source": "yours_futuristic-bass-hit-2303.mp3"
     },
     "hitHoly": {
-      "files": [
-        "kenney/impactBell_heavy_000",
-        "kenney/impactBell_heavy_001",
-        "kenney/impactBell_heavy_002"
-      ],
       "volume": 0.2,
-      "pitch": 1.5,
       "pitchJitter": 0.05,
-      "minGapMs": 90
+      "minGapMs": 90,
+      "file": "picked/hitHoly",
+      "source": "yours_light-spell-873.mp3"
     },
     "crit": {
-      "files": [
-        "kenney/impactPunch_heavy_000",
-        "kenney/impactPunch_heavy_001",
-        "kenney/impactPunch_heavy_002",
-        "kenney/impactPunch_heavy_003",
-        "kenney/impactPunch_heavy_004"
-      ],
       "volume": 0.5,
       "pitchJitter": 0.06,
-      "minGapMs": 80
+      "minGapMs": 80,
+      "file": "picked/crit",
+      "source": "yours_sword-cutting-flesh-2788.mp3"
     },
     "miss": {
       "files": [
@@ -188,24 +153,18 @@
       "minGapMs": 90
     },
     "block": {
-      "files": [
-        "kenney/impactMetal_medium_000",
-        "kenney/impactMetal_medium_001",
-        "kenney/impactMetal_medium_002"
-      ],
       "volume": 0.4,
       "pitchJitter": 0.06,
-      "minGapMs": 90
+      "minGapMs": 90,
+      "file": "picked/block",
+      "source": "block_E.mp3"
     },
     "shieldSoak": {
-      "files": [
-        "kenney/impactGlass_medium_000",
-        "kenney/impactGlass_medium_001",
-        "kenney/impactGlass_medium_002"
-      ],
       "volume": 0.2,
       "pitchJitter": 0.08,
-      "minGapMs": 120
+      "minGapMs": 120,
+      "file": "picked/shieldSoak",
+      "source": "shieldSoak_E.mp3"
     },
     "shieldBreak": {
       "files": [
@@ -216,14 +175,10 @@
       "volume": 0.5
     },
     "stun": {
-      "files": [
-        "kenney/impactWood_heavy_000",
-        "kenney/impactWood_heavy_001",
-        "kenney/impactWood_heavy_002"
-      ],
       "volume": 0.4,
-      "pitch": 1.2,
-      "minGapMs": 120
+      "minGapMs": 120,
+      "file": "picked/stun",
+      "source": "yours_boxing-punch-2051.mp3"
     },
     "freeze": {
       "files": [
@@ -236,34 +191,27 @@
       "minGapMs": 120
     },
     "enemyDeath": {
-      "file": "kenney/dropLeather",
+      "file": "picked/enemyDeath",
       "volume": 0.45,
       "pitchJitter": 0.1,
-      "minGapMs": 80
+      "minGapMs": 80,
+      "source": "yours_body-impact-falling-into-the-sand-2498.mp3"
     },
     "heroFall": {
-      "files": [
-        "kenney/impactPlate_heavy_000",
-        "kenney/impactPlate_heavy_001",
-        "kenney/impactPlate_heavy_002"
-      ],
       "volume": 0.5,
-      "pitch": 0.7
+      "file": "picked/heroFall",
+      "source": "yours_falling-hit-on-gravel-756.mp3"
     },
     "doorOpen": {
       "file": "kenney/doorOpen_1",
       "volume": 0.5
     },
     "itemProc": {
-      "files": [
-        "kenney/impactTin_medium_000",
-        "kenney/impactTin_medium_001",
-        "kenney/impactTin_medium_002"
-      ],
       "volume": 0.2,
-      "pitch": 1.4,
       "pitchJitter": 0.06,
-      "minGapMs": 120
+      "minGapMs": 120,
+      "file": "picked/itemProc",
+      "source": "yours_fast-magic-game-spell-883.mp3"
     },
     "minionSummon": {
       "files": [
@@ -295,9 +243,9 @@
       "minGapMs": 200
     },
     "bossIntro": {
-      "file": "kenney/impactBell_heavy_000",
+      "file": "picked/bossIntro",
       "volume": 0.55,
-      "pitch": 0.45
+      "source": "bossIntro_B.mp3"
     },
     "step": {
       "files": [

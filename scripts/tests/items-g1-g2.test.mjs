@@ -60,17 +60,19 @@ ok('Siege Cannon is legendary, Feather Boots / Lucky Coin / Dice / Totem / Bulwa
   ok('...nobody hurt: no toss', !ev.length); }
 // Second Wind Flask
 { const { s, es, k } = mk(['goblin']); give(s, k, 'second_wind_flask', 2); k.hp = k.maxHp; const maxHp = k.maxHp;
-  k.hp = maxHp * 0.45; const ev = []; s.dealDamage(k, maxHp * 0.1, ev);
-  ok('Second Wind Flask: dropping below 40% uses ONE flask and heals 30%', ev.some((e) => e.type === 'itemUsed') && k.items.filter((i) => i === 'second_wind_flask').length === 1 && Math.abs(k.hp - (maxHp * 0.35 + maxHp * 0.3)) < 5, `${k.hp / maxHp}`);
-  const ev2 = []; k.hp = maxHp * 0.3; s.dealDamage(k, maxHp * 0.05, ev2);
+  k.hp = maxHp * 0.25; const ev0 = []; s.dealDamage(k, maxHp * 0.03, ev0);
+  ok('Second Wind Flask: nothing at 22% health (it waits for 20%)', !ev0.some((e) => e.type === 'itemUsed'));
+  k.hp = maxHp * 0.25; const ev = []; s.dealDamage(k, maxHp * 0.1, ev);
+  ok('Second Wind Flask: dropping below 20% uses ONE flask and heals 80%', ev.some((e) => e.type === 'itemUsed') && k.items.filter((i) => i === 'second_wind_flask').length === 1 && Math.abs(k.hp - Math.min(maxHp, maxHp * 0.15 + maxHp * 0.8)) < 5, `${k.hp / maxHp}`);
+  const ev2 = []; k.hp = maxHp * 0.15; s.dealDamage(k, maxHp * 0.05, ev2);
   ok('...only ONE use per floor', !ev2.some((e) => e.type === 'itemUsed') && k.items.length === 1);
-  s.spawnEnemies(['goblin'], 2); k.hp = maxHp * 0.3; const ev3 = []; s.dealDamage(k, maxHp * 0.05, ev3);
+  s.spawnEnemies(['goblin'], 2); k.hp = maxHp * 0.15; const ev3 = []; s.dealDamage(k, maxHp * 0.05, ev3);
   ok('...a new floor: the next flask can be used', ev3.some((e) => e.type === 'itemUsed') && k.items.length === 0);
   ok('...the LAST flask still heals a real number (it used to turn health into NaN)', Number.isFinite(k.hp) && k.hp > maxHp * 0.5, `${k.hp}`);
-  const ev4 = []; s.spawnEnemies(['goblin'], 3); k.hp = maxHp * 0.3; s.dealDamage(k, 10, ev4);
+  const ev4 = []; s.spawnEnemies(['goblin'], 3); k.hp = maxHp * 0.15; s.dealDamage(k, 10, ev4);
   ok('...no flask left, nothing happens', !ev4.some((e) => e.type === 'itemUsed')); }
 { const { s, es, k } = mk(['goblin']); give(s, k, 'second_wind_flask', 3);
-  ok('more copies do not make the heal bigger', k.specials.secondWind === 30); }
+  ok('more copies do not make the heal bigger', k.specials.secondWind === 80); }
 // Full Vigor
 { const { s, es, k } = mk(['goblin']); give(s, k, 'full_vigor', 2); k.hp = k.maxHp;
   const full = s.strike(k, es[0], [], {}).amount; k.hp = k.maxHp * 0.91; const high = s.strike(k, es[0], [], {}).amount; k.hp = k.maxHp * 0.89; const hurt = s.strike(k, es[0], [], {}).amount;

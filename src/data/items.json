@@ -418,13 +418,13 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Used up when the holder drops below 40% health: heals 30% (once per floor).",
+    "description": "Used up when the holder drops below 20% health: heals 80% (once per floor).",
     "effects": [
       {
         "special": "secondWind",
-        "percent": 30,
+        "percent": 80,
         "unique": true,
-        "below": 40
+        "below": 20
       }
     ],
     "dropWeight": 110

@@ -24,7 +24,14 @@ for g, sub, rows in GROUPS:
         out.append({'cue': cue, 'name': name, 'when': when, 'volume': c.get('volume', 1), 'jitter': c.get('pitchJitter', 0), 'options': opts[cue]})
     groups.append({'name': g, 'sub': sub, 'rows': out})
 jing = {f[:-4]: 'data:audio/mpeg;base64,' + base64.b64encode(open(f'{JING}/{f}', 'rb').read()).decode() for f in sorted(os.listdir(JING)) if f.endswith('.mp3')}
+lib = {}
+for v in opts.values():
+    for o in v:
+        if o.get('yours') and o['file'] not in lib:
+            lib[o['file']] = {'file': o['file'], 'name': o['desc'].replace('Yours: ', '')}
+            blobs[o['file']] = 'data:audio/mpeg;base64,' + base64.b64encode(open(f"{OPT}/{o['file']}", 'rb').read()).decode()
+library = sorted(lib.values(), key=lambda x: x['name'])
 html = open(HERE + '/board-template.html').read()
-html = html.replace('__DATA__', json.dumps({'groups': groups, 'master': snd['masterVolume']})).replace('__BLOBS__', json.dumps(blobs)).replace('__JINGLES__', json.dumps(jing))
+html = html.replace('__DATA__', json.dumps({'groups': groups, 'master': snd['masterVolume'], 'library': library})).replace('__BLOBS__', json.dumps(blobs)).replace('__JINGLES__', json.dumps(jing))
 open(OUT, 'w').write(html)
 print(len(html) // 1024, 'KB')

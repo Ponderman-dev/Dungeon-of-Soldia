@@ -47,6 +47,15 @@ section { display: grid; gap: 12px; }
 .pick { justify-self: start; font: 600 11px var(--mono); color: var(--mute); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; cursor: pointer; min-height: 24px; }
 .pick:hover, .pick:focus-visible { color: var(--ink); border-color: var(--gold); outline: none; }
 .opt.sel .pick { color: #18122a; background: var(--gold); border-color: var(--gold); }
+.browse { display: grid; grid-template-columns: auto 40px minmax(0, 1fr) 40px auto; gap: 6px; align-items: center; background: #18122a; border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; }
+.browse.sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+.browse .lbl { font: 600 11px var(--mono); color: var(--green); text-transform: uppercase; letter-spacing: .06em; }
+.browse .nav { height: 40px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel2); color: var(--ink); font-size: 14px; cursor: pointer; }
+.browse .cur { min-width: 0; height: 40px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel2); color: var(--ink); font: 600 13px var(--body); cursor: pointer; text-align: left; padding: 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.browse .cur.on { background: var(--gold); color: #18122a; }
+.browse .nav:hover, .browse .cur:hover, .browse button:focus-visible { border-color: var(--gold); outline: none; }
+.browse.sel .libPick { color: #18122a; background: var(--gold); border-color: var(--gold); }
+@media (max-width: 480px) { .browse { grid-template-columns: 40px minmax(0, 1fr) 40px; } .browse .lbl { grid-column: 1 / -1; } .browse .libPick { grid-column: 1 / -1; justify-self: start; } }
 .mine { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--mute); }
 .mine label { cursor: pointer; color: var(--soft); border: 1px dashed var(--line); border-radius: 999px; padding: 4px 12px; }
 .mine label:hover, .mine input:focus-visible + label { border-color: var(--gold); }
@@ -72,7 +81,7 @@ nav.jump a:hover, nav.jump a:focus-visible { border-color: var(--gold); color: v
   <header>
     <p class="eyebrow">Dungeon of Soldia · sounds, round 2</p>
     <h1>Sound board</h1>
-    <p class="lead">Every game sound now has 5 options. <b>A</b> is what the game plays now. <b>B to E</b> are deeper and heavier versions, made by layering two Kenney sounds, lowering the pitch and adding a little stone-room echo. Tap a pad to hear it, tap <b>Pick</b> on the one you like. Options with a <b style="color:var(--green)">green letter</b> are the sounds you sent me (trimmed and levelled). You can also try a sound or music file from your own device.</p>
+    <p class="lead">Every game sound now has 5 options. <b>A</b> is what the game plays now. <b>B to E</b> are deeper and heavier versions, made by layering two Kenney sounds, lowering the pitch and adding a little stone-room echo. Tap a pad to hear it, tap <b>Pick</b> on the one you like. Options with a <b style="color:var(--green)">green letter</b> are the sounds you sent me (trimmed and levelled). Under every sound, <b>All my sounds</b> lets you flip through ALL of your sounds with the arrows and pick any of them. You can also try a sound or music file from your own device.</p>
   </header>
 
   <div class="bar">
@@ -213,13 +222,25 @@ for (const g of DATA.groups) {
           <div class="optText"><span class="mineName">My file</span><button class="pick" type="button">Pick</button></div>
         </div>
       </div>
+      <div class="browse"><span class="lbl">All my sounds</span><button class="nav prev" type="button" aria-label="Previous sound">&#9664;</button><button class="cur" type="button"></button><button class="nav next" type="button" aria-label="Next sound">&#9654;</button><button class="pick libPick" type="button">Pick</button></div>
       <div class="mine"><input type="file" accept="audio/*" id="mine-${r.cue}"><label for="mine-${r.cue}">Try my own file</label><span>Plays here only, at the game's volume.</span></div>`;
     cards.appendChild(card);
   }
   groupsEl.appendChild(sec);
 }
+// "All my sounds": every one of the user's own sounds can be tried on every card (arrows flip through them).
+const LIB = DATA.library;
+const libIdx = {};
+const libName = (file) => (LIB.find((x) => x.file === file) || { name: file }).name;
+function libShow(card, play) {
+  const cue = card.dataset.cue, f = LIB[libIdx[cue] || 0];
+  const cur = card.querySelector('.browse .cur');
+  cur.textContent = `${(libIdx[cue] || 0) + 1}/${LIB.length}  ${f.name}`;
+  if (play) playBuf(optionBuf(f.file), cueByName[cue].volume).then((d) => flash(cur, d));
+}
 function playOption(cue, id) {
   const r = cueByName[cue];
+  if (id === 'lib') { const f = (picks[cue] || {}).file; return f ? playBuf(optionBuf(f), r.volume) : Promise.resolve(0); }
   if (id === 'mine') return mineBufs[cue] ? playBuf(mineBufs[cue].buf, r.volume) : Promise.resolve(0);
   const o = r.options.find((x) => x.id === id);
   return playBuf(optionBuf(o.file), r.volume, 1 + (Math.random() * 2 - 1) * (r.jitter || 0));
@@ -229,13 +250,28 @@ function drawPicks() {
   for (const card of document.querySelectorAll('.card')) {
     const p = picks[card.dataset.cue];
     for (const o of card.querySelectorAll('.opt')) o.classList.toggle('sel', !!p && p.pick === o.dataset.id);
-    card.querySelector('.picked').textContent = p ? `Picked: ${p.pick === 'mine' ? 'my file' + (p.file ? ' (' + p.file + ')' : '') : p.pick}` : 'Game now: A';
+    const browse = card.querySelector('.browse');
+    browse.classList.toggle('sel', !!p && p.pick === 'lib' && p.file === LIB[libIdx[card.dataset.cue] || 0].file);
+    card.querySelector('.picked').textContent = p ? `Picked: ${p.pick === 'mine' ? 'my file' + (p.file ? ' (' + p.file + ')' : '') : p.pick === 'lib' ? libName(p.file) : p.pick}` : 'Game now: A';
   }
 }
 groupsEl.addEventListener('click', async (e) => {
   const card = e.target.closest('.card');
   if (!card) return;
   const cue = card.dataset.cue, opt = e.target.closest('.opt');
+  if (e.target.closest('.browse')) {
+    const step = e.target.closest('.prev') ? -1 : e.target.closest('.next') ? 1 : 0;
+    if (step) { libIdx[cue] = ((libIdx[cue] || 0) + step + LIB.length) % LIB.length; libShow(card, true); drawPicks(); }
+    else if (e.target.closest('.cur')) libShow(card, true);
+    else if (e.target.closest('.libPick')) {
+      const file = LIB[libIdx[cue] || 0].file;
+      if (picks[cue] && picks[cue].pick === 'lib' && picks[cue].file === file) delete picks[cue];
+      else picks[cue] = { pick: 'lib', file };
+      drawPicks();
+      savePick(cue);
+    }
+    return;
+  }
   if (e.target.closest('.pad') && opt) flash(e.target.closest('.pad'), await playOption(cue, opt.dataset.id));
   if (e.target.closest('.pick') && opt) {
     const id = opt.dataset.id;
@@ -263,7 +299,7 @@ document.getElementById('fight').addEventListener('click', playFight);
 
 // Copy picks as text (to paste in chat if saving is not possible).
 document.getElementById('copy').addEventListener('click', async () => {
-  const text = Object.entries(cueByName).map(([cue, r]) => `${r.name}: ${picks[cue] ? (picks[cue].pick === 'mine' ? 'my file ' + (picks[cue].file || '') : picks[cue].pick) : 'A (no pick)'}`).join('\n');
+  const text = Object.entries(cueByName).map(([cue, r]) => `${r.name}: ${picks[cue] ? (picks[cue].pick === 'mine' ? 'my file ' + (picks[cue].file || '') : picks[cue].pick === 'lib' ? libName(picks[cue].file) : picks[cue].pick) : 'A (no pick)'}`).join('\n');
   try { await navigator.clipboard.writeText(text); setState('Picks copied. Paste them in chat.', true); }
   catch { setState('Copy was blocked here. Your picks are saved on the page anyway.'); }
 });
@@ -308,6 +344,14 @@ document.getElementById('jgrid').addEventListener('click', async (e) => { const 
 
 // ---------- start: local picks first, then the page's database (Claude reads it)
 localLoad();
+function libInit() {
+  for (const card of document.querySelectorAll('.card')) {
+    const p = picks[card.dataset.cue];
+    if (p && p.pick === 'lib') libIdx[card.dataset.cue] = Math.max(0, LIB.findIndex((x) => x.file === p.file));
+    libShow(card, false);
+  }
+}
+libInit();
 drawPicks();
 setState('Picks are saved on this device.');
 (async () => {
@@ -318,6 +362,7 @@ setState('Picks are saved on this device.');
     for (const d of snap.docs) { const v = d.data(); if (v && v.pick) picks[d.id] = { pick: v.pick, file: v.file || '' }; }
     for (const id of Object.keys(picks)) if (!snap.docs.some((d) => d.id === id)) delete picks[id];
     localSave();
+    libInit();
     drawPicks();
   }, () => setState('Could not read saved picks. Picks stay on this device.'));
 })();

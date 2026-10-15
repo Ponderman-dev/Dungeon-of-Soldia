@@ -89,3 +89,45 @@ import { rollBookPages, pageFit, maybeAddBook, pageOf } from '../../src/systems/
   h[1].alive = false; ok('...dead heroes cannot read', pageFit(h[1], 0, pageOf(data, 'swift'), lim) === 'dead');
   let seen = 0; for (let i = 0; i < 3000; i++) if (maybeAddBook([1, 2, 3], data, h, data.bookChancePerScreen).some((c) => c.kind === 'book')) seen++;
   ok('a book card shows up about 1 in 15 reward screens', seen > 140 && seen < 270, seen); }
+// The other 12 modifiers
+const withPage = (id, idx = 0, heroIds = ['knight', 'rogue', 'archer']) => { const m = mk(heroIds, 0); m.s.addPage(m.h[0].uid, idx, page(id)); return m; };
+{ const { s, es, h } = withPage('huntersInk'); s.castSkill(h[0].uid, 0);
+  ok("Hunter's Ink: the enemy hit is Marked", es.some((e) => e.statuses.some((x) => x.type === 'mark' && x.source === 'book_huntersInk' || x.type === 'mark'))); }
+{ const { s, h } = withPage('bloodPrice'); h[1].hp = 20000; h[2].hp = 30000; const k0 = h[0].hp;
+  s.castSkill(h[0].uid, 0);
+  ok('Blood Price: the 2 hurt allies heal 12%', h[1].hp >= 32000 && h[2].hp >= 42000, `${h[1].hp} ${h[2].hp}`);
+  ok('...and the caster pays 6% of its health', h[0].hp <= k0 - 5900, `${k0} -> ${h[0].hp}`); }
+{ const { s, h } = withPage('cyclone'); s.castSkill(h[0].uid, 0);
+  ok('Cyclone: a tornado spins up', s.tornados.length === 1);
+  ok('...and the cooldown is 30% longer', Math.abs(h[0].skills[0].cooldownLeft / s.skillDefs[h[0].skills[0].id].cooldownMs - 1.3) < 0.01); }
+{ const { s, es, h } = withPage('ricochet'); const before = es.map((e) => e.hp); const ev = s.castSkill(h[0].uid, 0);
+  ok('Ricochet: a second enemy is hit too', es.filter((e, i) => e.hp < before[i]).length === 2 && ev.some((e) => e.type === 'ricochet')); }
+{ const { s, es, h } = withPage('aftershock'); s.castSkill(h[0].uid, 0); const hp1 = es.map((e) => e.hp);
+  let ev = []; for (let i = 0; i < 22; i++) ev = ev.concat(s.update(50));
+  ok('Aftershock: 1s later the target is hit again', ev.some((e) => e.type === 'aftershock') && es.some((e, i) => e.hp < hp1[i])); }
+{ const { s, h } = withPage('titan'); s.refreshStats(); h[0].hp = h[0].maxHp; const mh = h[0].maxHp, atk = h[0].stats.attack; const ev = s.castSkill(h[0].uid, 0);
+  ok('Titan: +20% max health and attack while big', h[0].maxHp > mh * 1.15 && h[0].stats.attack > atk * 1.15 && ev.some((e) => e.type === 'grow'), `${mh}->${h[0].maxHp}`);
+  for (let i = 0; i < 80; i++) s.update(50);
+  ok('...and back to normal after 3s', Math.abs(h[0].maxHp - mh) <= 1 && h[0].hp <= h[0].maxHp); }
+{ const { s, h } = withPage('purify'); s.applyStatus(h[0], { status: 'weaken', durationMs: 9000 }, h[0], 'x', []); s.castSkill(h[0].uid, 0);
+  ok('Purify: the caster loses a debuff', !h[0].statuses.some((x) => x.type === 'weaken')); }
+{ const { s, es, h } = withPage('roar'); s.placeLines(); for (const e of es) { e.x = h[0].x + 50; e.y = h[0].y - 40; } s.castSkill(h[0].uid, 0);
+  ok('Roar: nearby enemies are taunted by the caster', es.every((e) => s.tauntedBy(e) === h[0])); }
+{ const { s, h } = withPage('gravecall'); for (let i = 0; i < 3; i++) { h[0].skills[0].cooldownLeft = 0; s.castSkill(h[0].uid, 0); }
+  ok('Gravecall: raises skeletons, at most 2 per hero', s.minions.filter((m) => m.alive !== false && m.holderUid === h[0].uid).length === 2); }
+{ const m = mk(['knight'], 0); m.s.rng = () => 0; m.s.addPage(m.h[0].uid, 1, page('concussive'));
+  const r2 = mk(['rogue'], 0); r2.s.rng = () => 0; r2.s.addPage(r2.h[0].uid, 0, page('concussive')); r2.s.castSkill(r2.h[0].uid, 0);
+  ok('Concussive: a hit can stun', r2.es.some((e) => e.statuses.some((x) => x.type === 'stun'))); }
+{ const a = mk(['knight'], 0), b = withPage('reckless', 0, ['knight']);
+  const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
+  ok('Reckless: +35% power and the caster is marked', Math.abs(d1 / d0 - 1.35) < 0.04 && b.h[0].statuses.some((x) => x.type === 'mark'), `${d0}->${d1}`); }
+{ const a = withPage('desperate', 0, ['knight']), b = withPage('desperate', 0, ['knight']); b.h[0].hp = b.h[0].maxHp * 0.3;
+  const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
+  ok('Desperate: +50% power under 40% health only', Math.abs(d1 / d0 - 1.5) < 0.05, `${d0}->${d1}`); }
+// Every page on every hero's skills: a whole fight runs without errors
+{ let crash = null;
+  for (const hid of heroes.map((x) => x.id)) for (const id of Object.keys(books)) for (const idx of [0, 1]) {
+    const m = mk([hid, 'knight', 'archer'], 0); m.s.placeLines(); m.s.addPage(m.h[0].uid, idx, page(id));
+    try { for (let t = 0; t < 4000; t += 50) { m.s.update(50); m.s.castSkill(m.h[0].uid, idx); } } catch (err) { crash = `${hid} ${id} ${idx}: ${err.stack.split('\n').slice(0, 2).join(' ')}`; break; }
+  }
+  ok('every page on every hero skill runs a fight without errors', !crash, crash); }

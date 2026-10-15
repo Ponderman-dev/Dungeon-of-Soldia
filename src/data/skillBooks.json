@@ -1,5 +1,5 @@
 {
-  "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. Pages still to come (book step 4): huntersInk, bloodPrice, cyclone, ricochet, aftershock, titan, purify, roar, gravecall, concussive, reckless, desperate.",
+  "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. More modifier fields: allyHeal {count, percentMaxHp} + selfCostPercent (Blood Price), tornado (Excalibur tornado spec, Cyclone), ricochet (share for a second target), aftershock {delayMs, power}, grow {scale, durationMs} (Titan look), purify (debuffs cleansed), roar {radius, taunt, self}, summon {minion, max}, onHitChance {chance, apply} (Concussive), desperate {belowPercent, power}.",
   "bookChancePerScreen": 0.0667,
   "pages": {
     "sharpen": {
@@ -137,6 +137,171 @@
       "text": "+40% skill power, but the wind-up is twice as long.",
       "power": 40,
       "windupMultiplier": 2
+    },
+    "huntersInk": {
+      "kind": "modifier",
+      "tag": "Debuff",
+      "name": "Hunter's Ink",
+      "text": "Every enemy the skill hits is Marked for 4s (+15% damage taken from everyone).",
+      "ink": [
+        {
+          "status": "mark",
+          "durationMs": 4000,
+          "damageTakenPercent": 15
+        }
+      ]
+    },
+    "bloodPrice": {
+      "kind": "modifier",
+      "tag": "Heal",
+      "name": "Blood Price",
+      "text": "Also heals the 2 most hurt allies for 12% of their max health, but costs the caster 6% of its health.",
+      "allyHeal": {
+        "count": 2,
+        "percentMaxHp": 12
+      },
+      "selfCostPercent": 6
+    },
+    "cyclone": {
+      "kind": "modifier",
+      "tag": "Area",
+      "name": "Cyclone",
+      "text": "A small tornado spins up on the target for 4s and drifts between enemies. Cooldown 30% longer.",
+      "tornado": {
+        "durationMs": 4000,
+        "tickMs": 500,
+        "damageMultiplier": 0.4,
+        "max": 3,
+        "hopEvery": 2
+      },
+      "cooldown": -30
+    },
+    "ricochet": {
+      "kind": "modifier",
+      "tag": "Area",
+      "name": "Ricochet",
+      "text": "A one-target skill also hits 1 more enemy at 50% (a heal or buff on one ally also reaches a second ally at 50%).",
+      "ricochet": 0.5
+    },
+    "aftershock": {
+      "kind": "modifier",
+      "tag": "Area",
+      "name": "Aftershock",
+      "text": "1 second later a second pulse hits the same targets for 35% (a heal pulses again at 35%).",
+      "aftershock": {
+        "delayMs": 1000,
+        "power": 0.35
+      }
+    },
+    "titan": {
+      "kind": "modifier",
+      "tag": "Self",
+      "name": "Titan",
+      "text": "The caster grows 30% bigger for 3s: +20% max health and attack, but 10 less evasion.",
+      "selfApply": [
+        {
+          "status": "buff",
+          "durationMs": 3000,
+          "mods": [
+            {
+              "stat": "health",
+              "percent": 20
+            },
+            {
+              "stat": "attack",
+              "percent": 20
+            },
+            {
+              "stat": "evasion",
+              "flat": -10
+            }
+          ]
+        }
+      ],
+      "grow": {
+        "scale": 1.3,
+        "durationMs": 3000
+      }
+    },
+    "purify": {
+      "kind": "modifier",
+      "tag": "Defense",
+      "name": "Purify",
+      "text": "Casting removes 1 debuff from the caster (a support skill cleans every ally it touches instead).",
+      "purify": 1
+    },
+    "roar": {
+      "kind": "modifier",
+      "tag": "Defense",
+      "name": "Roar",
+      "text": "Enemies near the caster are Taunted for 2s and the caster gets +10 defense for 2s. The caster takes those hits.",
+      "roar": {
+        "radius": 140,
+        "taunt": {
+          "status": "taunt",
+          "durationMs": 2000
+        },
+        "self": {
+          "status": "buff",
+          "durationMs": 2000,
+          "mods": [
+            {
+              "stat": "defense",
+              "flat": 10
+            }
+          ]
+        }
+      }
+    },
+    "gravecall": {
+      "kind": "modifier",
+      "tag": "Summon",
+      "name": "Gravecall",
+      "text": "Raises 1 weak skeleton next to the caster that fights until the floor ends. At most 2 page skeletons per hero.",
+      "summon": {
+        "minion": "skeleton",
+        "max": 2
+      }
+    },
+    "concussive": {
+      "kind": "modifier",
+      "tag": "Control",
+      "name": "Concussive",
+      "text": "Each hit has a 20% chance to Stun for 0.6s (bosses: half as long). Cooldown 15% longer.",
+      "onHitChance": {
+        "chance": 20,
+        "apply": [
+          {
+            "status": "stun",
+            "durationMs": 600
+          }
+        ]
+      },
+      "cooldown": -15
+    },
+    "reckless": {
+      "kind": "modifier",
+      "tag": "Risk",
+      "name": "Reckless",
+      "text": "+35% skill power, but for 4s after casting the caster takes 15% more damage.",
+      "power": 35,
+      "selfApply": [
+        {
+          "status": "mark",
+          "durationMs": 4000,
+          "damageTakenPercent": 15
+        }
+      ]
+    },
+    "desperate": {
+      "kind": "modifier",
+      "tag": "Risk",
+      "name": "Desperate",
+      "text": "+50% skill power while the caster is under 40% health.",
+      "desperate": {
+        "belowPercent": 40,
+        "power": 50
+      }
     }
   },
   "cards": {

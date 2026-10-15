@@ -1248,6 +1248,8 @@ export default class BattleScene extends Phaser.Scene {
       this.drawAllBars();
     } else if (e.type === 'combo') {
       // drawn every frame by drawHeroHud()
+    } else if (this.showBookEvent(e)) {
+      // skill book modifier moments (Titan, Roar, Ricochet, Aftershock)
     } else if (this.showBossEvent(e)) {
       // boss moves (systems/bosses.js): handled in showBossEvent()
     } else if (e.type === 'levelup') {
@@ -1494,6 +1496,33 @@ export default class BattleScene extends Phaser.Scene {
     const cue = { melee: 'hitMelee', ranged: 'hitRanged', fire: 'hitFire', ice: 'hitIce', electric: 'hitElectric', dark: 'hitDark', holy: 'hitHoly' }[type] || 'hitMelee';
     sfx.play(cue);
     if (e.result.crit) sfx.play('crit');
+  }
+
+  // Skill book modifier moments. Returns false for other events.
+  showBookEvent(e) {
+    const v = e.unit && this.views.get(e.unit.uid);
+    switch (e.type) {
+      case 'grow': {
+        if (!v) return true;
+        const base = charScale(e.unit.def);
+        const set = (k) => { if (v.ch.active) v.ch.setScale((Math.sign(v.ch.scaleX) || 1) * base * k, base * k); };
+        const g = { k: 1 };
+        this.tweens.add({ targets: g, k: e.scale, duration: 200, ease: 'Back.easeOut', onUpdate: () => set(g.k) });
+        this.tweens.add({ targets: g, k: 1, delay: e.durationMs, duration: 250, onUpdate: () => set(g.k) });
+        this.popText(v, 'Titan!', '#ffd24d', true);
+        return true;
+      }
+      case 'roar':
+        if (v) { this.popText(v, 'Roar!', '#ff7a6a', true); this.ring(v, 0xff7a6a); this.cameras.main.shake(90, 0.002); }
+        return true;
+      case 'ricochet':
+        this.ring(this.views.get(e.to.uid), 0xc8a0ff);
+        return true;
+      case 'aftershock':
+        for (const t of e.targets) this.ring(this.views.get(t.uid), 0xc8a0ff, 0.7);
+        return true;
+      default: return false;
+    }
   }
 
   // ---- bosses (systems/bosses.js) -------------------------------------------------------------

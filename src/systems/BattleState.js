@@ -540,6 +540,7 @@ export default class BattleState {
     // Excalibur tornadoes die out with the floor (they must not follow the squad to the next one).
     for (const t of this.tornados) events.push({ type: 'tornadoEnd', tornado: t });
     this.tornados = [];
+    this.bookTimers = []; // Aftershock pulses do not follow the squad to the next floor
     for (const m of [...this.minions]) {
       if (!m.greater) this.vanishMinion(m, 'floorEnd', events);
       else m.floors++; // a greater minion that survived the floor (Spirit Knight grows)
@@ -692,6 +693,7 @@ export default class BattleState {
     this.move(dt);
     for (const m of this.minions) if (m.healCd > 0) m.healCd -= dt; // Phoenix heal cooldown
     this.tickTornados(dt, events);
+    this.tickBookTimers(dt, events); // skill book Aftershock pulses
     this.tickBosses(dt, events); // boss moves, eggs, heat, revives... (bosses.js)
 
     // Health regenerates (Heart Charm) and skill cooldowns run down.
@@ -1884,7 +1886,9 @@ export default class BattleState {
     if (skill.kind === 'support' && hero.specials.baton) skill = this.scaleSupport(skill, 1 + hero.specials.baton / 100);
     // Skill book pages on this skill: power and duration (an echo is already scaled), modifiers (see bookCast / skillHit).
     const book = this.pageTotals(slot);
-    if (!echo && (book.power || book.duration)) skill = this.scaleSkill(skill, Math.max(0.1, 1 + book.power / 100), 1 + book.duration / 100);
+    const desp = book.mods.find((m) => m.desperate); // Desperate: more power while the caster is low
+    const power = book.power + (desp && (hero.hp / hero.maxHp) * 100 < desp.desperate.belowPercent ? desp.desperate.power : 0);
+    if (!echo && (power || book.duration)) skill = this.scaleSkill(skill, Math.max(0.1, 1 + power / 100), 1 + book.duration / 100);
     if (!this.targetsAllies(skill) && !this.enemies.some((e) => e.alive)) {
       events.push({ type: 'castCancel', unit: hero, skill, reason: 'noTarget' });
       return;
@@ -1910,7 +1914,7 @@ export default class BattleState {
     }
 
     events.push({ type: 'cast', unit: hero, skill, targets, zone });
-    if (!echo) this.bookCast(hero, skill, book.mods, events);
+    if (!echo) this.bookCast(hero, skill, book.mods, events, targets);
     this.castPages = book.mods.length ? { hero, mods: book.mods } : null; // on-hit modifiers (Inks, Siphon) for this cast's hits
     // Blood Pact: the skill costs the caster some of their own health.
     if (skill.selfCostPercent) {
@@ -1969,6 +1973,7 @@ export default class BattleState {
         for (const n of this.neighbours(target)) this.skillHit(hero, skill, slot.id, n, events, { multiplier: skill.splash.damageMultiplier, scale: echo ? echo.power : 1 });
       }
     }
+    if (!echo) this.bookAfterCast(hero, skill, slot.id, targets, book.mods, events);
     this.castPages = null;
     // Echo Rune: a skill sometimes casts a second time (the echo cannot echo, the Mage's rotation does not move again).
     // Channels (Rain of Arrows, Crescendo) do not echo.
@@ -2024,11 +2029,41 @@ export default class BattleState {
   // Modifiers that act once when the skill goes off: statuses on the caster / squad (Bulwark, Rally). A skill that
   // hits no enemy (a support skill) uses the page's support version: Inks go on the enemy nearest the caster,
   // Siphon heals the caster a % of max health.
-  bookCast(hero, skill, mods, events) {
+  bookCast(hero, skill, mods, events, targets = []) {
     const hitsEnemies = !!(skill.damageMultiplier || skill.channel || (skill.random && skill.random.target === 'enemy'));
     for (const m of mods) {
       for (const spec of m.selfApply || []) this.applyStatus(hero, spec, hero, `book_${m.id}`, events);
       for (const spec of m.squadApply || []) for (const u of this.squadUnits()) this.applyStatus(u, spec, hero, `book_${m.id}`, events);
+      if (m.grow) events.push({ type: 'grow', unit: hero, scale: m.grow.scale, durationMs: m.grow.durationMs }); // Titan (the scene makes the hero bigger)
+      // Blood Price: the most hurt allies heal, the caster pays (never below 1 health).
+      if (m.allyHeal) {
+        const allies = this.heroes.filter((h) => h.alive && h !== hero).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp).slice(0, m.allyHeal.count);
+        for (const a of allies) this.healUnit(a, Math.round((a.maxHp * m.allyHeal.percentMaxHp) / 100), events);
+      }
+      if (m.selfCostPercent) {
+        const cost = Math.round((hero.hp * m.selfCostPercent) / 100);
+        hero.hp = Math.max(1, hero.hp - cost);
+        events.push({ type: 'selfCost', unit: hero, amount: cost });
+      }
+      // Cyclone: a tornado on the skill's enemy target (or the enemy nearest the caster).
+      if (m.tornado) {
+        const e = targets.find((t) => t.side === 'enemy' && t.alive) || this.nearest(hero, this.targetableEnemies());
+        if (e) this.spawnTornado(hero, m.tornado, e, events);
+      }
+      // Purify: the caster loses a debuff (a support skill cleans every ally it touches).
+      if (m.purify) for (const u of hitsEnemies ? [hero] : [hero, ...targets.filter((t) => t.side === 'hero' && t !== hero)]) this.cleanse(u, m.purify, events);
+      // Roar: enemies near the caster must hit it for a moment; it gets some armor.
+      if (m.roar) {
+        for (const e of this.targetableEnemies().filter((x) => !this.hasPositions(hero) || !this.hasPositions(x) || this.distance(hero, x) <= m.roar.radius)) this.applyStatus(e, m.roar.taunt, hero, `book_${m.id}`, events);
+        this.applyStatus(hero, m.roar.self, hero, `book_${m.id}_self`, events);
+        events.push({ type: 'roar', unit: hero });
+      }
+      // Gravecall: a weak skeleton (at most `max` page skeletons per hero; the oldest goes).
+      if (m.summon) {
+        const mine = this.minions.filter((x) => x.holderUid === hero.uid && x.capGroup === 'book');
+        if (mine.length >= m.summon.max) this.vanishMinion(mine[0], 'pushedOut', events);
+        this.spawnMinion(hero, { kind: 'weak', key: `book_${m.id}`, capGroup: 'book', spec: { minion: m.summon.minion } }, events);
+      }
       if (hitsEnemies) continue;
       if (m.ink) {
         const e = this.nearest(hero, this.targetableEnemies());
@@ -2046,6 +2081,48 @@ export default class BattleState {
       const dealt = (result.amount || 0) - (result.absorbed || 0);
       if (m.siphonPercent && dealt > 0) this.healUnit(hero, Math.max(1, Math.round((dealt * m.siphonPercent) / 100)), events);
       if (m.ink && target.alive) for (const spec of m.ink) this.applyStatus(target, spec, hero, `book_${m.id}`, events);
+      if (m.onHitChance && target.alive && this.rng() * 100 < m.onHitChance.chance) for (const spec of m.onHitChance.apply) this.applyStatus(target, spec, hero, `book_${m.id}`, events);
+    }
+  }
+
+  // Modifiers after the skill's hits: Ricochet (one more target at a share), Aftershock (a later pulse, see tickBookTimers).
+  bookAfterCast(hero, skill, slotId, targets, mods, events) {
+    for (const m of mods) {
+      if (m.ricochet && targets.length === 1) {
+        const first = targets[0];
+        if (first.side === 'enemy' && skill.damageMultiplier) {
+          const other = this.nearest(first, this.targetableEnemies().filter((e) => e !== first));
+          if (other) {
+            events.push({ type: 'ricochet', unit: hero, from: first, to: other });
+            this.skillHit(hero, skill, `${slotId}_ricochet`, other, events, { multiplier: skill.damageMultiplier * m.ricochet });
+          }
+        } else if (first.side === 'hero') {
+          const other = this.heroes.filter((h) => h.alive && h !== first).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+          if (other) {
+            events.push({ type: 'ricochet', unit: hero, from: first, to: other });
+            this.skillHit(hero, this.scaleSkill(skill, m.ricochet, 1), `${slotId}_ricochet`, other, events);
+          }
+        }
+      }
+      if (m.aftershock && (skill.damageMultiplier || skill.heal)) {
+        (this.bookTimers = this.bookTimers || []).push({ left: m.aftershock.delayMs, hero, slotId, targets: [...targets], power: m.aftershock.power, skill: { damageType: skill.damageType, damageMultiplier: skill.damageMultiplier, heal: skill.heal } });
+      }
+    }
+  }
+
+  // Aftershock pulses: the same targets are hit (or healed) again for a share, with no statuses.
+  tickBookTimers(dt, events) {
+    if (!this.bookTimers || !this.bookTimers.length) return;
+    for (const t of [...this.bookTimers]) {
+      t.left -= dt;
+      if (t.left > 0) continue;
+      this.bookTimers.splice(this.bookTimers.indexOf(t), 1);
+      if (!t.hero.alive) continue;
+      const alive = t.targets.filter((u) => u.alive);
+      if (!alive.length) continue;
+      events.push({ type: 'aftershock', unit: t.hero, targets: alive });
+      const sk = { damageType: t.skill.damageType, damageMultiplier: t.skill.damageMultiplier ? t.skill.damageMultiplier * t.power : 0, heal: t.skill.heal ? { percentMaxHp: (t.skill.heal.percentMaxHp || 0) * t.power, attackMultiplier: (t.skill.heal.attackMultiplier || 0) * t.power } : null };
+      for (const u of alive) if ((u.side === 'enemy') === !!sk.damageMultiplier) this.skillHit(t.hero, sk, `${t.slotId}_after`, u, events);
     }
   }
 

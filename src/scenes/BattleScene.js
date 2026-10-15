@@ -34,6 +34,8 @@ import { enemiesForFloor } from '../systems/dungeon.js';
 import { pickSquad } from '../systems/party.js';
 import { loadItems } from '../systems/items.js';
 import { rollChoices } from '../systems/rewards.js';
+import bookData from '../data/skillBooks.json';
+import { maybeAddBook } from '../systems/books.js';
 import { loadProgress, saveProgress, recordRun, unlockedIds } from '../systems/progress.js';
 import unlocks from '../data/unlocks.json';
 
@@ -1700,20 +1702,32 @@ export default class BattleScene extends Phaser.Scene {
 
   // Shows the reward screen. When it is done, the hero gets the item and `next` runs.
   showReward(next) {
-    const choices = rollChoices({ itemDefs, rules: rewardRules, floor: this.floor, count: rewardRules.choices, heroes: this.state.heroes, potionChance: rewardRules.potionChance });
+    let choices = rollChoices({ itemDefs, rules: rewardRules, floor: this.floor, count: rewardRules.choices, heroes: this.state.heroes, potionChance: rewardRules.potionChance });
+    choices = maybeAddBook(choices, bookData, this.state.heroes, bookData.bookChancePerScreen); // a skill book card, about 1 in 15 screens
     if (!choices.length) return next();
     this.scene.launch('Reward', {
       state: this.state,
       choices,
       floor: this.floor,
-      onDone: (itemId, heroUid) => {
+      onDone: (itemId, heroUid, book) => {
         this.scene.stop('Reward');
         this.scene.resume();
-        this.applyReward(itemId, heroUid);
+        if (book) this.applyPage(heroUid, book);
+        else this.applyReward(itemId, heroUid);
         this.time.delayedCall(700, next); // a moment to see the new dot
       },
     });
     this.scene.pause();
+  }
+
+  // A skill book page goes on the chosen skill (BattleState.addPage); the hero shows it.
+  applyPage(heroUid, { page, index, replace }) {
+    const res = this.state.addPage(heroUid, index, page, replace);
+    const v = this.views.get(heroUid);
+    if (res.ok && v) {
+      this.popText(v, page.name, '#c8a0ff', true);
+      v.ch.flash(0xc8a0ff, 200);
+    }
   }
 
   // Applies the chosen reward: a potion heals every living hero; an item goes to the chosen hero.

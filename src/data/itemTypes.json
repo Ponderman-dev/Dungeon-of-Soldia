@@ -26,5 +26,9 @@
   "minion": {
     "label": "MINION",
     "color": "0x8a6a4a"
+  },
+  "book": {
+    "label": "BOOK",
+    "color": "0x7f9fe8"
   }
 }

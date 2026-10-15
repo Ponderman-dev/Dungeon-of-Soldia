@@ -76,3 +76,16 @@ ok('every page has a kind, name and text', Object.values(books).every((p) => ['s
   s.addPage(a.uid, 0, page('razorInk'));
   let crash = null; try { s.castSkill(a.uid, 0); for (let i = 0; i < 60; i++) s.update(50); } catch (err) { crash = err; }
   ok(`a ${wasRain} cast with an Ink runs without errors`, !crash, crash && crash.message); }
+// The reward side (systems/books.js)
+import { rollBookPages, pageFit, maybeAddBook, pageOf } from '../../src/systems/books.js';
+{ const data = r('skillBooks.json');
+  const blue = rollBookPages(data, 'blue'), gold = rollBookPages(data, 'golden');
+  ok('a blue book shows 2 stat pages + 1 modifier', blue.length === 3 && blue.filter((p) => p.kind === 'stat').length === 2 && new Set(blue.map((p) => p.id)).size === 3);
+  ok('a golden book shows 3 different modifiers', gold.length === 3 && gold.every((p) => p.kind === 'modifier') && new Set(gold.map((p) => p.id)).size === 3);
+  const { s, h } = mk(); const lim = r('combat.json').books;
+  ok('pageFit: ok on an empty skill', pageFit(h[0], 0, pageOf(data, 'rally'), lim) === 'ok');
+  s.addPage(h[0].uid, 0, pageOf(data, 'rally')); s.addPage(h[0].uid, 0, pageOf(data, 'siphon'));
+  ok('...duplicate / replace on a full skill', pageFit(h[0], 0, pageOf(data, 'rally'), lim) === 'duplicate' && pageFit(h[0], 0, pageOf(data, 'hasty'), lim) === 'replace');
+  h[1].alive = false; ok('...dead heroes cannot read', pageFit(h[1], 0, pageOf(data, 'swift'), lim) === 'dead');
+  let seen = 0; for (let i = 0; i < 3000; i++) if (maybeAddBook([1, 2, 3], data, h, data.bookChancePerScreen).some((c) => c.kind === 'book')) seen++;
+  ok('a book card shows up about 1 in 15 reward screens', seen > 140 && seen < 270, seen); }

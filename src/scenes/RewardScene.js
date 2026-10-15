@@ -6,6 +6,9 @@ import rarities from '../data/rarities.json';
 import { canReceive, countOf } from '../systems/items.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
 import * as sfx from '../audio/sfx.js';
+import bookData from '../data/skillBooks.json';
+import { rollBookPages, pageFit } from '../systems/books.js';
+import { SKILL_COLORS } from '../config.js';
 
 const COLORS = { sheet: 0x17112a, panel: 0x231b38, line: 0x3a2f57, purple: 0x8b55d6, gold: 0xf2b632, disabled: 0x3a3350 };
 const INK = '#f3eefc';
@@ -36,6 +39,7 @@ export default class RewardScene extends Phaser.Scene {
 
   create() {
     this.step = 'pick';
+    this.bookPages = null;
     this.chosen = null;
     this.selected = null;
     this.stepObjects = [];
@@ -113,7 +117,7 @@ export default class RewardScene extends Phaser.Scene {
     card.add(g);
     card.add(this.add.image(ICON_W / 2, h / 2 - 9, itemIconKey(this, item.id, item.rarity)).setScale(4));
     card.add(this.add.text(ICON_W / 2, h / 2 + 42, itemTypes[item.type].label, { fontFamily: FONT, fontSize: '10px', fontStyle: 'bold', color: MUTE }).setOrigin(0.5));
-    card.add(this.add.text(TEXT_X, 16, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : 'ITEM'}`, { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: hex(rc) }));
+    card.add(this.add.text(TEXT_X, 16, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : item.kind === 'book' ? 'BOOK' : 'ITEM'}`, { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: hex(rc) }));
     const name = this.add.text(TEXT_X, 34, item.name, { fontFamily: FONT, fontSize: '21px', fontStyle: 'bold', color: INK });
     for (let s = 20; name.width > CARD_W - TEXT_X - 16 && s >= 13; s--) name.setFontSize(s); // long names shrink to fit
     card.add(name);
@@ -157,7 +161,178 @@ export default class RewardScene extends Phaser.Scene {
     sfx.play('tap');
     this.chosen = item;
     if (item.kind === 'potion') return this.finish(item.id, null); // the potion heals the whole party: no hero to choose
+    if (item.kind === 'book') {
+      this.bookPages = this.bookPages || rollBookPages(bookData, item.book); // the same 3 pages if you go back and forth
+      return this.showPages();
+    }
     this.showAssign();
+  }
+
+  // ---- skill book: pick a page, then the hero's skill (then, on a full skill, which modifier it replaces) -------
+
+  // A small "Back" pill at the top right of the sheet.
+  backButton(onTap) {
+    const bw = 84;
+    const bx = GAME_WIDTH - PAD - bw;
+    const bb = this.track(this.add.graphics());
+    bb.fillStyle(COLORS.panel, 1).fillRoundedRect(bx, SHEET_TOP + 48, bw, 32, 16).lineStyle(2, COLORS.line, 1).strokeRoundedRect(bx, SHEET_TOP + 48, bw, 32, 16);
+    this.text(bx + bw / 2, SHEET_TOP + 64, '‹ Back', 14, INK, true).setOrigin(0.5);
+    this.track(this.add.zone(bx + bw / 2, SHEET_TOP + 64, bw + 10, 44).setInteractive()).on('pointerdown', () => { sfx.play('tap'); onTap(); });
+  }
+
+  pageHeight(page) {
+    const probe = this.add.text(0, 0, page.text, { fontFamily: FONT, fontSize: `${DESC_PX}px`, lineSpacing: 3, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
+    const h = probe.height;
+    probe.destroy();
+    return Math.max(112, 62 + h + 16);
+  }
+
+  // One page card: the book icon, STAT PAGE / its tag (Debuff, Heal...), its name and what it does.
+  drawPageCard(page, x, y, h, lit = false) {
+    const card = this.track(this.add.container(x, y));
+    const golden = this.chosen && this.chosen.book === 'golden';
+    const rc = page.kind === 'stat' ? 0x7f9fe8 : 0xc8a0ff;
+    const g = this.add.graphics();
+    const paint = (on) => {
+      g.clear();
+      g.fillStyle(0x000000, 0.3).fillRoundedRect(2, 4, CARD_W, h, 16);
+      g.fillStyle(on ? 0x31254d : COLORS.panel, 1).fillRoundedRect(0, 0, CARD_W, h, 16);
+      g.fillStyle(rc, 0.12).fillRoundedRect(0, 0, ICON_W, h, { tl: 16, bl: 16, tr: 0, br: 0 });
+      g.lineStyle(on ? 4 : 2, on ? COLORS.gold : rc, 1).strokeRoundedRect(0, 0, CARD_W, h, 16);
+    };
+    paint(lit);
+    card.add(g);
+    card.add(this.add.image(ICON_W / 2, h / 2 - 8, itemIconKey(this, golden ? 'golden_book' : 'skill_book', golden ? 'legendary' : 'rare')).setScale(3));
+    card.add(this.add.text(TEXT_X, 14, page.kind === 'stat' ? 'STAT PAGE' : `MODIFIER · ${(page.tag || '').toUpperCase()}`, { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: hex(rc) }));
+    card.add(this.add.text(TEXT_X, 32, page.name, { fontFamily: FONT, fontSize: '20px', fontStyle: 'bold', color: INK }));
+    card.add(this.add.text(TEXT_X, 62, page.text, { fontFamily: FONT, fontSize: `${DESC_PX}px`, color: MUTE, lineSpacing: 3, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } }));
+    card.paint = paint;
+    return card;
+  }
+
+  showPages() {
+    this.step = 'pages';
+    this.clearStep();
+    const pages = this.bookPages;
+    const heights = pages.map((p) => this.pageHeight(p));
+    const total = TITLE_H + 26 + heights.reduce((a, b) => a + b, 0) + 14 * (heights.length - 1);
+    const top = SHEET_TOP + Math.max(90, (GAME_HEIGHT - SHEET_TOP - total) / 2);
+    if (this.payload.choices.length > 1) this.backButton(() => this.showPick());
+    this.text(GAME_WIDTH / 2, top, 'Choose a page', 28, INK, true).setOrigin(0.5, 0);
+    this.text(GAME_WIDTH / 2, top + 36, 'It stays on one skill for the rest of the run.', 13, MUTE).setOrigin(0.5, 0);
+    let y = top + TITLE_H + 26;
+    pages.forEach((page, i) => {
+      const card = this.drawPageCard(page, PAD, y, heights[i]);
+      this.track(this.add.zone(PAD + CARD_W / 2, y + heights[i] / 2, CARD_W, heights[i]).setInteractive()).on('pointerdown', () => {
+        if (this.busy || this.closing) return;
+        card.paint(true);
+        sfx.play('tap');
+        this.busy = true;
+        this.time.delayedCall(140, () => { this.busy = false; this.showSkillPick(page); });
+      });
+      y += heights[i] + 14;
+    });
+  }
+
+  // Which hero's skill gets the page: every hero is a row with its two skill buttons (attack red, support green).
+  showSkillPick(page) {
+    this.step = 'skill';
+    this.clearStep();
+    this.pickedPage = page;
+    this.target = null;
+    this.backButton(() => this.showPages());
+    this.text(PAD, SHEET_TOP + 46, 'Which skill?', 26, INK, true);
+    const sum = this.text(PAD, SHEET_TOP + 86, `${page.name}: ${page.text}`, 13, MUTE, false, CARD_W);
+    const limits = this.payload.state.rules.books || {};
+    const skillDefs = this.payload.state.skillDefs;
+    const rowH = 124;
+    let y = SHEET_TOP + 96 + sum.height + 8;
+    this.skillButtons = [];
+    for (const hero of this.payload.state.heroes) {
+      const g = this.track(this.add.graphics());
+      g.fillStyle(COLORS.panel, 1).fillRoundedRect(PAD, y, CARD_W, rowH - 10, 16).lineStyle(2, COLORS.line, 1).strokeRoundedRect(PAD, y, CARD_W, rowH - 10, 16);
+      const ch = new Character(this, PAD + 34, y + 92, hero.def);
+      ch.setScale(2).setAlpha(hero.alive ? 1 : 0.35);
+      this.track(ch);
+      this.text(PAD + 70, y + 8, hero.name, 15, INK, true).setAlpha(hero.alive ? 1 : 0.5);
+      const bw = (CARD_W - 70 - 16) / 2;
+      hero.skills.forEach((slot, idx) => {
+        const bx = PAD + 70 + idx * (bw + 6);
+        const by = y + 32;
+        const fit = pageFit(hero, idx, page, limits);
+        const usable = fit === 'ok' || fit === 'replace';
+        const pages = slot.pages || [];
+        const stats = pages.filter((p) => p.kind === 'stat').length;
+        const mods = pages.filter((p) => p.kind === 'modifier').length;
+        const col = SKILL_COLORS[slot.kind] || SKILL_COLORS.attack;
+        const bg = this.track(this.add.graphics());
+        const btn = { bg, bx, by, bw, bh: 70, hero, idx, fit, col };
+        btn.paint = (on) => {
+          bg.clear();
+          bg.fillStyle(on ? 0x31254d : 0x1c1530, 1).fillRoundedRect(bx, by, bw, 70, 12);
+          bg.lineStyle(on ? 3 : 2, on ? COLORS.gold : usable ? col.ready : COLORS.line, usable ? 1 : 0.5).strokeRoundedRect(bx, by, bw, 70, 12);
+        };
+        btn.paint(false);
+        this.fitText(bx + 8, by + 6, skillDefs[slot.id].name, 13, usable ? INK : MUTE, bw - 16, 34, true);
+        const note = fit === 'dead' ? 'Fallen' : fit === 'full' ? 'Stat pages full' : fit === 'duplicate' ? 'Already has it' : fit === 'replace' ? 'Full: replaces one' : `${stats}/${limits.maxStatPages ?? 3} stats · ${mods}/${limits.modifierSlots ?? 2} mods`;
+        this.text(bx + 8, by + 50, note, 11, fit === 'replace' ? '#ffd9a0' : MUTE);
+        if (usable) this.track(this.add.zone(bx + bw / 2, by + 35, bw, 70).setInteractive()).on('pointerdown', () => this.selectSkill(btn));
+        this.skillButtons.push(btn);
+      });
+      y += rowH;
+    }
+    this.buttonGraphics = this.track(this.add.graphics());
+    this.buttonText = this.text(GAME_WIDTH / 2, GAME_HEIGHT - 46, 'Pick a skill', 18, '#ffffff', true).setOrigin(0.5);
+    this.drawBookButton();
+    this.track(this.add.zone(GAME_WIDTH / 2, GAME_HEIGHT - 46, CARD_W, 52).setInteractive()).on('pointerdown', () => this.confirmPage());
+  }
+
+  selectSkill(btn) {
+    sfx.play('tap');
+    this.target = btn;
+    for (const b of this.skillButtons) b.paint(b === btn);
+    this.drawBookButton();
+  }
+
+  drawBookButton() {
+    const g = this.buttonGraphics;
+    const t = this.target;
+    g.clear();
+    const y = GAME_HEIGHT - 72;
+    g.fillStyle(t ? 0x2f9a55 : COLORS.disabled, 1).fillRoundedRect(PAD, y, CARD_W, 52, 26);
+    if (t) g.lineStyle(2, COLORS.gold, 1).strokeRoundedRect(PAD, y, CARD_W, 52, 26);
+    const name = t && this.payload.state.skillDefs[t.hero.skills[t.idx].id].name;
+    this.buttonText.setText(t ? (t.fit === 'replace' ? 'Choose what it replaces' : `Write it into ${name}`) : 'Pick a skill').setColor(t ? '#ffffff' : '#8a82a8');
+    for (let s = 18; this.buttonText.width > CARD_W - 24 && s >= 12; s--) this.buttonText.setFontSize(s);
+  }
+
+  confirmPage() {
+    const t = this.target;
+    if (!t || this.closing) return;
+    if (t.fit === 'replace') return this.showReplace(t);
+    this.finish(this.chosen.id, t.hero.uid, { page: this.pickedPage, index: t.idx, replace: null });
+  }
+
+  // The skill already has its 2 modifiers: the new page replaces the one you tap.
+  showReplace(t) {
+    this.step = 'replace';
+    this.clearStep();
+    this.backButton(() => this.showSkillPick(this.pickedPage));
+    const skill = this.payload.state.skillDefs[t.hero.skills[t.idx].id];
+    this.text(PAD, SHEET_TOP + 46, 'Replace which page?', 26, INK, true);
+    const sub = this.text(PAD, SHEET_TOP + 86, `${skill.name} can hold 2 modifiers. ${this.pickedPage.name} takes the place of the one you tap.`, 13, MUTE, false, CARD_W);
+    let y = SHEET_TOP + 96 + sub.height + 10;
+    const mods = (t.hero.skills[t.idx].pages || []).filter((p) => p.kind === 'modifier');
+    mods.forEach((p, i) => {
+      const h = this.pageHeight(p);
+      const card = this.drawPageCard(p, PAD, y, h);
+      this.track(this.add.zone(PAD + CARD_W / 2, y + h / 2, CARD_W, h).setInteractive()).on('pointerdown', () => {
+        if (this.closing) return;
+        card.paint(true);
+        this.finish(this.chosen.id, t.hero.uid, { page: this.pickedPage, index: t.idx, replace: i });
+      });
+      y += h + 14;
+    });
   }
 
   // ---- step 2: choose who gets it ----------------------------------------------------
@@ -312,11 +487,12 @@ export default class RewardScene extends Phaser.Scene {
   }
 
   // The sheet slides back down, then the battle gets the result.
-  finish(itemId, heroUid) {
+  // `book` = { page, index, replace } when a skill book page was written into a skill.
+  finish(itemId, heroUid, book = null) {
     if (this.closing) return;
     this.closing = true;
     sfx.play(heroUid ? 'itemGiven' : 'potion');
     this.tweens.add({ targets: this.dim, fillAlpha: 0, duration: 260 });
-    this.tweens.add({ targets: this.sheet, y: GAME_HEIGHT, duration: 300, ease: 'Cubic.easeIn', onComplete: () => this.payload.onDone(itemId, heroUid) });
+    this.tweens.add({ targets: this.sheet, y: GAME_HEIGHT, duration: 300, ease: 'Cubic.easeIn', onComplete: () => this.payload.onDone(itemId, heroUid, book) });
   }
 }

@@ -1,0 +1,152 @@
+<title>Soldia: Ten New Items</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: a dungeon reward sheet — intro, then item cards in two columns (one on phones), answer box at the end.
+   Single dark look on purpose: it matches the game's dungeon screen. */
+:root {
+  --bg: #15111f;
+  --sheet: #1f1930;
+  --line: #3a3150;
+  --fg: #ece6f7;
+  --muted: #a99fbf;
+  --accent: #f2b632;
+  --common: #8f8aa3;
+  --rare: #3b8ee0;
+  --epic: #a45be6;
+  --legendary: #f2b632;
+  --display: "Pixelify Sans", "Courier New", monospace;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+header { display: grid; gap: 10px; }
+.eyebrow { font-family: var(--display); color: var(--accent); letter-spacing: .12em; font-size: 13px; text-transform: uppercase; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.05; margin: 0; text-wrap: balance; }
+header p { margin: 0; max-width: 66ch; color: var(--muted); }
+.tally { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.pill { font-family: var(--display); font-size: 12px; letter-spacing: .08em; padding: 3px 10px; border-radius: 999px; border: 1px solid currentColor; text-transform: uppercase; }
+.c-common { color: var(--common); } .c-rare { color: var(--rare); } .c-epic { color: var(--epic); } .c-legendary { color: var(--legendary); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 14px; }
+.card { background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 14px; align-items: start; }
+.card canvas { width: 80px; height: 80px; image-rendering: pixelated; display: block; }
+.num { font-family: var(--display); color: var(--muted); font-size: 13px; text-align: center; margin-top: 6px; }
+.body { min-width: 0; display: grid; gap: 6px; }
+.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+h2 { font-family: var(--display); font-weight: 700; font-size: 22px; margin: 0; line-height: 1.1; }
+.kind { font-size: 12px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.effect { margin: 0; }
+.meta { margin: 0; font-size: 13.5px; color: var(--muted); }
+.meta b { color: var(--fg); font-weight: 700; }
+.ask { background: var(--sheet); border: 1px solid var(--accent); border-radius: 10px; padding: 18px; display: grid; gap: 8px; }
+.ask h3 { font-family: var(--display); margin: 0; font-size: 20px; color: var(--accent); }
+.ask p { margin: 0; max-width: 70ch; }
+code { font-family: "Courier New", monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+@media (max-width: 420px) { .card { grid-template-columns: 64px minmax(0, 1fr); } .card canvas { width: 64px; height: 64px; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Proposal · items 73–82</div>
+    <h1>Ten new items for the reward pool</h1>
+    <p>Updated so every item grows with every copy (your stacking rule: no ceiling that wastes copies). Each one fills a gap the long simulation found: Archer and Alchemist squads end earliest, deaths snowball once one hero falls, bosses are a wall, and tapping enemies or reading skill books has few item payoffs. Numbers are first guesses and go in <code>items.json</code> like every other item.</p>
+    <div class="tally"><span class="pill c-common">1 common</span><span class="pill c-rare">4 rare</span><span class="pill c-epic">4 epic</span><span class="pill c-legendary">1 legendary</span></div>
+  </header>
+  <section class="grid" id="grid"></section>
+  <section class="ask">
+    <h3>Your pick</h3>
+    <p>Reply with the numbers you want, for example <code>all</code> or <code>1, 3, 6, 9</code>. Change any number or effect in plain words (e.g. "Phoenix Feather heals 60%"). I'll then build them one at a time with tests, item icons and their pop effect, like the other 72.</p>
+  </section>
+</div>
+
+<script>
+const PAL = { k: '#16101f', w: '#f3eefc', g: '#8f8aa3', s: '#c8cbd8', S: '#6a6e80', b: '#8a5a32', B: '#5a3820', y: '#f2b632', Y: '#fff0a8', r: '#e0453a', R: '#8a1f2a', o: '#ff8a3d', G: '#5ddf6a', d: '#2f7a3a', p: '#a45be6', P: '#d6a8ff', c: '#7fd8ff', C: '#3b8ee0', n: '#efe2c0' };
+const FRAMES = {
+  common: { edge: '#8f8aa3', fill: '#2a2438', hi: '#b3aec4' },
+  rare: { edge: '#3b8ee0', fill: '#182540', hi: '#8cc4ff' },
+  epic: { edge: '#a45be6', fill: '#2a1840', hi: '#d6a8ff', stud: '#f06ab4' },
+  legendary: { edge: '#f2b632', fill: '#3a2a12', hi: '#fff0a8', stud: '#ff5a4d' },
+};
+// Tiny pixel pen on a 16x16 grid.
+function pen() {
+  const g = Array.from({ length: 16 }, () => Array(16).fill(null));
+  const px = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && x < 16 && y >= 0 && y < 16) g[y][x] = c; };
+  const line = (x0, y0, x1, y1, c, t = 1) => { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) || 1; for (let i = 0; i <= n; i++) { const x = x0 + (x1 - x0) * i / n, y = y0 + (y1 - y0) * i / n; px(x, y, c); if (t > 1) px(x + 1, y, c); } };
+  const rect = (x0, y0, x1, y1, c) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) px(x, y, c); };
+  const disc = (cx, cy, r, c) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) if ((x - cx) ** 2 + (y - cy) ** 2 <= r * r + 0.5) px(x, y, c); };
+  const ring = (cx, cy, r, c) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const d = Math.hypot(x - cx, y - cy); if (d > r - 0.7 && d <= r + 0.5) px(x, y, c); } };
+  return { g, px, line, rect, disc, ring };
+}
+// Outline: every empty pixel next to a filled one becomes dark.
+function outline(g) {
+  const out = g.map((r) => r.slice());
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) if (!g[y][x] && [[1,0],[-1,0],[0,1],[0,-1]].some(([dx, dy]) => g[y + dy] && g[y + dy][x + dx] && g[y + dy][x + dx] !== 'k')) out[y][x] = 'k';
+  return out;
+}
+const ICONS = {
+  quiver(p) { p.line(3, 13, 9, 6, 'b', 2); p.line(4, 13, 10, 7, 'B'); p.rect(5, 10, 6, 11, 'y'); p.line(9, 6, 13, 2, 's'); p.line(10, 7, 14, 3, 's'); p.line(8, 6, 11, 2, 's'); p.px(13, 1, 'w'); p.px(14, 2, 'w'); p.px(11, 1, 'w'); p.px(12, 1, 'w'); p.px(14, 3, 'w'); },
+  lens(p) { p.disc(6, 6, 4, 'c'); p.ring(6, 6, 4, 's'); p.px(4, 4, 'w'); p.px(5, 4, 'w'); p.line(6, 4, 6, 8, 'r'); p.line(4, 6, 8, 6, 'r'); p.px(6, 6, 'c'); p.line(9, 9, 13, 13, 'b', 2); },
+  giant(p) { p.rect(9, 1, 14, 2, 'y'); p.px(9, 0, 'y'); p.px(11, 0, 'y'); p.px(14, 0, 'y'); p.px(12, 1, 'r'); p.line(2, 14, 10, 6, 's'); p.line(3, 14, 11, 6, 'S'); p.line(4, 8, 8, 12, 'y'); p.px(1, 15, 'b'); p.px(2, 15, 'b'); p.px(12, 7, 'R'); p.px(13, 9, 'r'); p.px(12, 11, 'R'); },
+  vial(p) { p.rect(7, 2, 9, 5, 'S'); p.rect(7, 1, 9, 1, 'b'); p.disc(8, 10, 4.3, 'S'); p.disc(8, 10, 3.4, 'p'); for (let x = 4; x < 13; x++) { if (p.g[8][x] === 'p') p.g[8][x] = 'G'; if (p.g[7][x] === 'p') p.g[7][x] = 'G'; if (p.g[9][x] === 'p') p.g[9][x] = 'o'; if (p.g[10][x] === 'p') p.g[10][x] = 'o'; } p.px(6, 8, 'w'); p.px(6, 9, 'w'); },
+  bookmark(p) { p.rect(1, 5, 7, 12, 'n'); p.rect(8, 5, 14, 12, 'n'); p.line(1, 13, 14, 13, 'b'); p.line(7, 5, 7, 12, 'B'); for (const y of [7, 9, 11]) { p.line(2, y, 5, y, 'g'); p.line(9, y, 12, y, 'g'); } p.rect(8, 2, 9, 13, 'r'); p.px(8, 14, 'r'); p.px(9, 15, 'r'); p.px(8, 15, 'R'); },
+  banner(p) { p.line(3, 1, 3, 15, 'b'); p.px(3, 0, 'y'); p.rect(4, 2, 13, 9, 'r'); for (let x = 4; x <= 13; x++) if (x % 3 === 1) p.px(x, 10, 'r'); else if (x % 3 === 2) { p.px(x, 10, 'r'); p.px(x, 11, 'R'); } p.line(4, 2, 13, 2, 'R'); p.px(8, 5, 'y'); p.px(9, 5, 'y'); p.px(8, 6, 'y'); p.px(9, 6, 'y'); p.px(7, 6, 'Y'); p.px(10, 5, 'Y'); },
+  buckler(p) { p.disc(8, 8, 6, 'S'); p.disc(8, 8, 4.6, 's'); p.line(5, 10, 10, 5, 'c'); p.line(6, 11, 11, 6, 'w'); p.disc(8, 8, 1, 'C'); },
+  lantern(p) { p.ring(8, 3, 2, 'S'); p.rect(5, 5, 11, 5, 'S'); p.rect(5, 13, 11, 13, 'S'); p.rect(5, 6, 5, 12, 'S'); p.rect(11, 6, 11, 12, 'S'); p.rect(6, 6, 10, 12, 'd'); p.px(8, 7, 'G'); p.rect(7, 8, 9, 10, 'G'); p.rect(7, 11, 9, 12, 'Y'); p.px(8, 9, 'w'); p.px(6, 9, 'G'); p.px(10, 10, 'G'); },
+  feather(p) { p.line(2, 14, 12, 3, 'y'); for (let i = 0; i < 9; i++) { const x = 4 + i, y = 12 - i; const w = i < 2 ? 1 : i > 6 ? 1 : 2; for (let k = 1; k <= w; k++) { p.px(x - k, y - k, i % 2 ? 'o' : 'r'); p.px(x + k, y + k, i % 2 ? 'r' : 'o'); } } p.px(13, 2, 'Y'); p.px(12, 2, 'o'); p.px(1, 15, 'Y'); },
+  talisman(p) { p.line(2, 1, 7, 7, 'g'); p.line(13, 1, 9, 7, 'g'); p.disc(8, 10, 3.6, 'S'); p.disc(8, 10, 2.6, 's'); p.rect(7, 9, 8, 10, 'C'); p.px(7, 9, 'c'); p.px(8, 7, 'g'); },
+};
+function drawIcon(canvas, name, rarity) {
+  const p = pen(); ICONS[name](p); const g = outline(p.g);
+  const f = FRAMES[rarity], ctx = canvas.getContext('2d');
+  canvas.width = 20; canvas.height = 20;
+  ctx.fillStyle = f.edge; ctx.fillRect(0, 0, 20, 20);
+  ctx.fillStyle = f.fill; ctx.fillRect(1, 1, 18, 18);
+  ctx.fillStyle = f.hi; ctx.fillRect(1, 1, 18, 1); ctx.fillRect(1, 1, 1, 18);
+  if (f.stud) { ctx.fillStyle = f.stud; for (const [x, y] of [[0, 0], [19, 0], [0, 19], [19, 19]]) ctx.fillRect(x, y, 1, 1); }
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) if (g[y][x]) { ctx.fillStyle = PAL[g[y][x]]; ctx.fillRect(x + 2, y + 2, 1, 1); }
+}
+const ITEMS = [
+  { icon: 'quiver', name: 'Quiver of Plenty', rarity: 'rare', kind: 'on hit',
+    effect: 'Ranged basic attacks: +15% chance per copy to shoot an extra arrow at a DIFFERENT enemy, full damage. Over 100% (7+ copies) the rest is the chance for a third arrow. Extra arrows can trigger on-hit items.',
+    why: 'Squads with the Archer end around floor 22, among the earliest. Only 2 items help ranged heroes today.', best: 'Archer, Alchemist, Wisp minions; stacks well with Fire Arrows.' },
+  { icon: 'lens', name: "Spotter's Lens", rarity: 'rare', kind: 'squad',
+    effect: 'The enemy you TAP takes +12% damage per copy from the whole squad while it stays focused (5 lenses: +60%).',
+    why: 'Tapping enemies is your main choice in a fight; this makes a good tap pay off.', best: 'Any squad. Strong on bosses and their objects (War Drum, egg sacs, the phylactery).' },
+  { icon: 'giant', name: "Giantslayer's Brand", rarity: 'epic', kind: 'special',
+    effect: '+30% damage to bosses per copy. While the holder lives, boss wind-ups take 20% longer per copy (5 copies: twice as long), so there is more time to interrupt them.',
+    why: 'Bosses are where strong runs end. A pick that does nothing on normal floors makes a real choice.', best: 'Knight (Shield Bash stun), Samurai, anyone with stun or knockback.' },
+  { icon: 'vial', name: 'Catalyst Vial', rarity: 'epic', kind: 'special',
+    effect: "Each DIFFERENT damage over time on an enemy (Bleed, Burn, Poison) makes the holder's ticks on it 15% stronger per copy (1 vial with all three: +45%, 4 vials: +180%).",
+    why: 'The Alchemist is the weakest hero in the simulation (squads end around floor 20). Damage over time builds have no reward for mixing kinds.', best: 'Alchemist, Rogue (Bleed), Ember Charm, Venom Fang, Serrated Edge.' },
+  { icon: 'bookmark', name: "Scholar's Bookmark", rarity: 'rare', kind: 'skill',
+    effect: "+4% skill damage per copy for every page on the holder's skills; modifier pages count double (+8%). 3 bookmarks and 6 pages: +72%.",
+    why: 'Links skill books to items: a hero who already reads gets more from every book.', best: 'Mage, Rogue (Eviscerate), any hero you pile pages on.' },
+  { icon: 'banner', name: 'Last Stand Banner', rarity: 'epic', kind: 'squad',
+    effect: 'When a hero falls, every survivor gets a shield of 20% max health and +30% attack for 8 seconds, both per copy. The holder feels 50% less of the morale penalty, and each extra copy cuts what is left by half again.',
+    why: 'Deaths snowball today: once one hero falls the run usually ends within a few floors. This gives a comeback moment.', best: 'Any squad; best on the hero most likely to be the last one standing.' },
+  { icon: 'buckler', name: 'Mirror Buckler', rarity: 'rare', kind: 'special',
+    effect: '+12% chance per copy that a RANGED or MAGIC hit on the holder bounces back at the attacker. The holder takes nothing. Past 60% the chance stops, and every extra copy makes the bounced hit 25% stronger instead.',
+    why: 'Bulwark Plate only answers melee. Skeleton Archers, Fire Imps, Cultists and boss spells have no counter item.', best: 'Knight with Challenge (he pulls the hits), Cleric, back-line heroes.' },
+  { icon: 'lantern', name: 'Soul Lantern', rarity: 'epic', kind: 'special',
+    effect: 'Every 8 enemies the squad defeats, the holder gains +1% attack and +1% max health PER LANTERN for the rest of the run. Each lantern raises the limit by +30% (1 lantern: up to +30%, 4 lanterns: +4% every 8 kills, up to +120%).',
+    why: 'A pick that grows with the run. Early picks matter more than late ones today; this one rewards going deep.', best: 'Your main damage hero, picked early.' },
+  { icon: 'feather', name: 'Phoenix Feather', rarity: 'legendary', kind: 'special · used up',
+    effect: 'When the holder would die, they stay at 1 health and heal 40% over 3 seconds instead; one feather is used up. Every feather is one more save, and each feather still in the bag makes the heal +10% bigger.',
+    why: 'Big boss hits (Cleaver Charge, Eruption, Shatter) wipe squads in one go. One second chance is a classic roguelike reward.', best: 'Your front-liner or the hero whose perk the squad needs most.' },
+  { icon: 'talisman', name: 'Iron Will Talisman', rarity: 'common', kind: 'stat',
+    effect: '+6 resist per copy. Stuns, freezes, webs and fears on the holder last 25% shorter; each extra copy cuts 25% of what is left (2 copies: 44%, 5: 76%, 10: 94%).',
+    why: 'Bosses lock heroes down (Web Spit, Ice Slam, Glass Prison), and so do Ghosts and Frost Wisps. Nothing helps against that today.', best: 'Any hero; most of all the one who casts the key skill.' },
+];
+const grid = document.getElementById('grid');
+const label = { common: 'Common', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' };
+ITEMS.forEach((it, i) => {
+  const card = document.createElement('article');
+  card.className = 'card';
+  card.innerHTML = `<div><canvas aria-label="${it.name} icon"></canvas><div class="num">#${i + 1}</div></div>
+    <div class="body"><div class="top"><h2>${it.name}</h2><span class="pill c-${it.rarity}">${label[it.rarity]}</span><span class="kind">${it.kind}</span></div>
+    <p class="effect">${it.effect}</p><p class="meta"><b>Why:</b> ${it.why}</p><p class="meta"><b>Best with:</b> ${it.best}</p></div>`;
+  grid.appendChild(card);
+  drawIcon(card.querySelector('canvas'), it.icon, it.rarity);
+});
+</script>

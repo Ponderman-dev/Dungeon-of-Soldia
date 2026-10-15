@@ -3,6 +3,7 @@
 Mobile auto-battler roguelike. Phaser 3 + Vite + plain JavaScript (ES modules, no TypeScript).
 Will be wrapped for Android later (Solana Seeker dApp Store).
 Full design: `docs/game-design-recap.md`. Read it before designing features.
+HANDOFF (latest session): read `docs/handoff-phase-h.md` first.
 BIG UPDATE in progress: `docs/big-update-plan.md` (plan + BUILD ORDER, phases A-H) and `docs/item-list.md` (all 72 items). Follow the build order one step at a time.
 
 ## About the user

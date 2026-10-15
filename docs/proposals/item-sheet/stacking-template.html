@@ -1,0 +1,89 @@
+<title>Soldia Item Stacking</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one column report — summary rule, then one section per problem group, each item a row with its bench bar. Single dark look like the game. */
+:root {
+  --bg: #15111f; --sheet: #1f1930; --line: #3a3150; --fg: #ece6f7; --muted: #a99fbf; --accent: #f2b632;
+  --bad: #ff6b5a; --warn: #f2b632; --ok: #5ddf6a; --info: #7fb8ff;
+  --common: #8f8aa3; --rare: #3b8ee0; --epic: #a45be6; --legendary: #f2b632;
+  --display: "Pixelify Sans", "Courier New", monospace; --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1020px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 26px; }
+.eyebrow { font-family: var(--display); color: var(--accent); letter-spacing: .12em; font-size: 13px; text-transform: uppercase; }
+h1 { font-family: var(--display); font-size: clamp(28px, 6vw, 42px); margin: 0; line-height: 1.05; text-wrap: balance; }
+header { display: grid; gap: 10px; }
+header p { margin: 0; max-width: 70ch; color: var(--muted); }
+.rule { border: 1px solid var(--accent); border-radius: 10px; padding: 14px 16px; background: var(--sheet); max-width: 70ch; }
+.rule b { color: var(--accent); }
+.counts { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-family: var(--display); font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid currentColor; }
+section { display: grid; gap: 10px; }
+h2 { font-family: var(--display); font-size: 22px; margin: 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.note { margin: 0; color: var(--muted); }
+.rows { display: grid; gap: 8px; }
+.row { background: var(--sheet); border: 1px solid var(--line); border-left: 4px solid var(--sev); border-radius: 8px; padding: 12px 14px; display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 8px 16px; }
+.row.compact { grid-template-columns: minmax(0, 1fr) 230px; padding: 8px 14px; }
+.name { font-family: var(--display); font-size: 17px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.rar { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.txt { margin: 4px 0 0; font-size: 14px; }
+.fix { margin: 4px 0 0; font-size: 14px; color: var(--ok); }
+.fix b { color: var(--fg); }
+.bench { display: grid; gap: 3px; align-content: start; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar { display: grid; grid-template-columns: 34px 1fr 46px; align-items: center; gap: 6px; }
+.track { height: 8px; background: var(--bg); border-radius: 4px; position: relative; overflow: hidden; }
+.fill { position: absolute; top: 0; bottom: 0; left: 0; background: var(--info); border-radius: 4px; }
+.fill.neg { background: var(--bad); }
+.legend { font-size: 12px; color: var(--muted); }
+code { font-family: "Courier New", monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+.ask { background: var(--sheet); border: 1px solid var(--accent); border-radius: 10px; padding: 16px; display: grid; gap: 8px; }
+.ask h3 { font-family: var(--display); margin: 0; color: var(--accent); font-size: 20px; }
+.ask p { margin: 0; max-width: 72ch; }
+@media (max-width: 640px) { .row, .row.compact { grid-template-columns: minmax(0, 1fr); } }
+</style>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Phase H · all 71 items, 1 to 20 copies</div>
+    <h1>How every item stacks</h1>
+    <p>I read how each item's numbers add up in the code, then measured it: one hero holds 1, 5, 10 or 20 copies, and a level-12 squad fights endless floor-18 waves without healing (80 fights per bar). The bar is how many more enemies the squad defeats than with no item. Bars are shaky for items that need a partner (a bleed item for Blood Chalice, shields for Warding Charm), so the code reading decides the group.</p>
+    <div class="rule"><b>Your rule:</b> every extra copy should add a real +5–10% (or more) of what the item does, and no ceiling should make later copies pointless.</div>
+    <div class="counts" id="counts"></div>
+  </header>
+  <div id="groups" style="display:grid;gap:26px"></div>
+  <section class="ask">
+    <h3>What I'd do next</h3>
+    <p>Apply every fix in green (all numbers stay in <code>items.json</code>), re-run this bench to confirm each one now grows every copy, and add a test that fails if any item stops growing before 20 copies. The red group first: Metronome does nothing today, and stacking Rat Cages actually makes the holder weaker. Reply "go", or name the fixes you want changed.</p>
+  </section>
+</div>
+<script>
+const GROUPS = __GROUPS__;
+const BENCH = __BENCH__;
+const NAMES = __NAMES__;
+const SEV = { broken: 'var(--bad)', capped: 'var(--warn)', flat: 'var(--warn)', niche: 'var(--info)', good: 'var(--ok)' };
+const counts = document.getElementById('counts');
+for (const g of GROUPS) { const c = document.createElement('span'); c.className = 'chip'; c.style.color = SEV[g.key]; c.textContent = `${g.items.length} ${g.key === 'broken' ? 'broken' : g.key === 'capped' ? 'capped' : g.key === 'flat' ? 'barely grow' : g.key === 'niche' ? 'build items' : 'good'}`; counts.appendChild(c); }
+const root = document.getElementById('groups');
+const max = Math.max(...Object.values(BENCH).map((b) => Math.abs(b[3])), 100);
+function bench(id) {
+  const b = BENCH[id]; if (!b) return '';
+  const lab = ['x1', 'x5', 'x10', 'x20'];
+  return `<div class="bench">${b.slice(0, 4).map((v, i) => `<div class="bar"><span>${lab[i]}</span><span class="track"><span class="fill${v < 0 ? ' neg' : ''}" style="width:${Math.min(100, (Math.abs(v) / max) * 100)}%"></span></span><span>${v > 0 ? '+' : ''}${v}%</span></div>`).join('')}<div class="legend">held by ${b[4]}</div></div>`;
+}
+for (const g of GROUPS) {
+  const s = document.createElement('section');
+  s.innerHTML = `<h2><span class="dot" style="background:${SEV[g.key]}"></span>${g.title} <span class="chip" style="color:${SEV[g.key]}">${g.items.length}</span></h2><p class="note">${g.note}</p><div class="rows"></div>`;
+  const rows = s.querySelector('.rows');
+  for (const [id, now, fix] of g.items) {
+    const [name, rarity] = NAMES[id];
+    const r = document.createElement('div');
+    r.className = 'row' + (now ? '' : ' compact');
+    r.style.setProperty('--sev', SEV[g.key]);
+    r.innerHTML = `<div><div class="name">${name} <span class="rar" style="color:var(--${rarity})">${rarity}</span></div>${now ? `<p class="txt">${now}</p>` : ''}${fix ? `<p class="fix"><b>Fix:</b> ${fix}</p>` : ''}</div>${bench(id)}`;
+    rows.appendChild(r);
+  }
+  root.appendChild(s);
+}
+</script>

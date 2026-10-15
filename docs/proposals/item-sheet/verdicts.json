@@ -1,0 +1,56 @@
+[
+ {"key":"broken","title":"Does nothing, or hurts with more copies","note":"Fix these first.","items":[
+  ["metronome","Boosts the 'every 4th attack' hit. No hero has that counter any more (it went in the hero rework), so it does nothing at 1 or 20 copies.","Make it its own counter: every 4th basic attack of the holder deals +50% damage per copy."],
+  ["rat_cage","Every copy adds upkeep (the holder loses 6% attack speed and 6% defense per copy) but all item minions share one cap of 4. At 10 copies the holder is -60%, at 20 copies -120%.","Upkeep counts once per item. Copies past the cap make the minions stronger: +25% health and attack per copy."],
+  ["wisp_lantern","Same as Rat Cage: upkeep grows with every copy, the minion cap does not.","Same fix as Rat Cage."],
+  ["fire_imp_brazier","Same as Rat Cage: upkeep grows with every copy, the minion cap does not.","Same fix as Rat Cage."]
+ ]},
+ {"key":"capped","title":"Stops growing: copies after a point are wasted","note":"This is the Soul Lantern problem you spotted.","items":[
+  ["hourglass","-5% cooldown per copy, stops at 50% (10 copies). Copies 11+ add nothing.","Keep the 50% stop (0 cooldown would break skills). After it, each copy gives +6% skill damage."],
+  ["echo_rune","Echo chance stops at 60% (4 copies); echo strength stops at 100% (5 copies). Copies 6+ add nothing.","Chance gets slowly closer to 90% instead of stopping. Echo strength keeps rising +10% per copy past 100%."],
+  ["overheal_ring","Converts 40% of overheal per copy, stops at 100% (3 copies). The shield cap stays 25% max health however many rings.","Shield cap +25% max health per ring."],
+  ["tough_skin","Only the first hit each floor. The cut goes 60%, 70%, 78%... and stops at 90% around copy 6.","Each copy also covers one more hit per floor (5 copies = the first 5 hits are cut)."],
+  ["necro_crown","Weak minion cap +2 per copy, stops at +6 (3 copies). The 'kill raises a skeleton' part never grows.","Past the cap, each copy gives every minion +15% health and attack."],
+  ["overseers_whistle","Minion cap +1 per copy stops at +4. The +15% attack speed keeps growing.","Fine after the cap thanks to the speed. Optional: past 4, +5% minion damage per copy."],
+  ["plague_flask","Spreads poison to +1 enemy per copy, but fights have at most 3-4 enemies. Copies 3+ do nothing.","Copies past 2: each spreads 25% more poison stacks."],
+  ["excalibur","Tornado chance shrinks per copy (x0.85) and there is a hard limit of 3 tornadoes at once.","Each copy past the first also makes tornadoes hit 20% harder. Raise the limit by 1 per 3 copies."],
+  ["lucky_coin","Max 10 copies (+75 crit). Crit stops at 100% anyway.","Remove the max. Crit above 100% turns into crit damage (+1% per point)."],
+  ["gamblers_dice","Max 3 copies.","Remove the max, same crit overflow rule as Lucky Coin."],
+  ["feather_boots","Max 8 copies (+64 evasion). Evasion stops at 70% anyway.","Remove the max. Evasion above 70 turns into a 'dodge and strike back' chance."],
+  ["shield_totem","Max 6 copies (60% block).","Remove the max. Copies past 6: block recharges 10% faster each."]
+ ]},
+ {"key":"flat","title":"Extra copies add almost nothing","note":"The first copy works; more copies barely change anything.","items":[
+  ["jolly_banner","The 5% chance never grows (it is 'unique'); copies only add +0.5s duration.","+3% chance per copy."],
+  ["martyrs_shield","The 8% step-in chance never grows; copies only shorten its cooldown.","+4% chance per copy."],
+  ["mimic_chest","The 10% pop-out chance never grows; copies only make the mimic stronger.","+5% chance per copy."],
+  ["second_wind_flask","The heal is always 30%; copies are only spare flasks (one per floor).","Each copy in the bag also adds +10% to the heal."],
+  ["hex_doll","Curse from the same hero only refreshes. After 2-3 copies it is always on, so more copies add nothing.","Copies make the curse deeper: -15 resist, then -3 more per extra copy."],
+  ["rusty_nails","Same as Hex Doll, with Armor Break.","Copies make the armor break deeper: -15 defense, then -3 more per copy."],
+  ["brawlers_streak","+2% per hit in a row, max +10% per copy. 20 copies would need 100 hits in a row on one enemy, which never happens.","+2% per hit PER COPY (the max still grows by 10% per copy)."],
+  ["serrated_edge","Chance shrinks per copy (x0.8): it never gets past about 50% total.","Shrink x0.9 instead (about 100% at 20 copies)."],
+  ["aid_kit","Heal shrinks per copy (x0.85): it never gets past about 33%.","Shrink x0.93 (about 55% at 20 copies)."],
+  ["conductors_baton","Shrinks per copy (x0.85).","Shrink x0.93."]
+ ]},
+ {"key":"niche","title":"Grows fine, but only shows in the right build","note":"The numbers add up every copy; they just need their partner (the bench can't show it). No change needed.","items":[
+  ["frost_charm","+15% ice damage per copy. Few things deal ice yet (Chill Band, Mage spells).",""],
+  ["storm_charm","+15% electric damage per copy. Needs Static Crystal, the Mage's lightning or Storm Sprites' kind of damage.",""],
+  ["magma_core","+25% vs burning per copy keeps growing; the faster-burn part stops at 4 copies.",""],
+  ["blood_chalice","+20% vs bleeding and +3% heal per copy. Needs bleed.",""],
+  ["shatter_hammer","+60% vs frozen per copy. Needs freeze.",""],
+  ["exploiters_lens","+30% vs 3+ debuffs per copy. Needs debuffs.",""],
+  ["warding_charm","+30% shield size per copy. Needs shields.",""],
+  ["spiked_aegis","+80% burst per copy when a shield breaks. Needs shields.",""],
+  ["gag_rune","+1s silence per copy. Only enemies with skills (bosses) care.",""],
+  ["dread_bell","5% fear chance per copy.",""],
+  ["bandage_roll","+3% heal per kill per copy.",""],
+  ["fire_heart","+20% max health shield per copy.",""],
+  ["heart_charm","+22% health and +0.5%/s regen per copy.",""],
+  ["padded_vest","+12 defense per copy (each point worth a bit less past 50).",""],
+  ["mage_cloak","+10 resist per copy.",""],
+  ["bulwark_plate","+30 defense and +25% reflect per copy.",""],
+  ["spite_mail","+30 defense and +25% reflect while taunting, per copy.",""]
+ ]},
+ {"key":"good","title":"Good: every copy adds a real chunk","note":"These already follow your rule.","items":[
+  ["whetstone","",""],["sharp_edge","",""],["eagle_eye","",""],["kindling","",""],["shadow_charm","",""],["quick_gloves","",""],["static_crystal","",""],["fire_bombs","",""],["chill_band","",""],["ember_charm","",""],["venom_fang","",""],["thousand_cuts","",""],["hunters_sigil","",""],["siege_cannon","",""],["bloodlust_mask","",""],["lost_clerics_grimoire","",""],["fire_arrows","",""],["sucker_punch_glove","",""],["full_vigor","",""],["executioners_axe","",""],["provokers_horn","",""],["war_banner","",""],["gargoyle_idol","",""],["spirit_knight_banner","",""],["phoenix_hatchling","",""],["bone_charm","",""],["grave_dust","",""],["frozen_thunderbolt","",""]
+ ]}
+]

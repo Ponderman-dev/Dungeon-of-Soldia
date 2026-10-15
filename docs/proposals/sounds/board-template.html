@@ -1,0 +1,322 @@
+<title>Soldia Sound Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one dark dungeon-ledger column; each game sound is a card with 5 option pads (A-E) + your own file, like a sampler strip. Single dark look on purpose (matches the game). */
+:root {
+  color-scheme: dark;
+  --bg: #14101f; --panel: #1f1833; --panel2: #29203f; --line: #3a2f57;
+  --ink: #f3eefc; --soft: #cfc6e6; --mute: #a399c2;
+  --gold: #f2b632; --purple: #8b55d6; --green: #6dff8f;
+  --display: 'Pixelify Sans', 'Courier New', monospace;
+  --body: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--body); }
+.wrap { max-width: 900px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 30px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; }
+h1 { font-size: 34px; line-height: 1.1; }
+h2 { font-size: 22px; }
+h3 { font-size: 17px; }
+p { margin: 0; }
+.eyebrow { font: 500 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+.lead { color: var(--soft); margin-top: 8px; max-width: 64ch; }
+.sub { color: var(--mute); font-size: 14px; max-width: 64ch; }
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn { font: 600 14px var(--body); color: var(--ink); background: var(--panel2); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; min-height: 40px; cursor: pointer; }
+.btn:hover, .btn:focus-visible { border-color: var(--gold); outline: none; }
+.btn.go { background: var(--purple); border-color: var(--purple); }
+.status { font: 500 12px var(--mono); color: var(--mute); }
+.status.ok { color: var(--green); }
+section { display: grid; gap: 12px; }
+.cards { display: grid; gap: 10px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+.cardHead { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; align-items: baseline; }
+.when { color: var(--mute); font-size: 13px; }
+.picked { font: 500 12px var(--mono); color: var(--gold); }
+.opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.opt { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 8px; align-items: center; background: #18122a; border: 1px solid var(--line); border-radius: 10px; padding: 6px; }
+.opt.sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+.pad { width: 40px; height: 40px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel2); color: var(--ink); font: 700 16px var(--display); cursor: pointer; }
+.pad:hover, .pad:focus-visible { border-color: var(--gold); outline: none; }
+.pad.on { background: var(--gold); color: #18122a; }
+.optText { min-width: 0; display: grid; gap: 2px; }
+.optText span { font-size: 12px; color: var(--soft); line-height: 1.25; }
+.pick { justify-self: start; font: 600 11px var(--mono); color: var(--mute); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; cursor: pointer; min-height: 24px; }
+.pick:hover, .pick:focus-visible { color: var(--ink); border-color: var(--gold); outline: none; }
+.opt.sel .pick { color: #18122a; background: var(--gold); border-color: var(--gold); }
+.mine { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--mute); }
+.mine label { cursor: pointer; color: var(--soft); border: 1px dashed var(--line); border-radius: 999px; padding: 4px 12px; }
+.mine label:hover, .mine input:focus-visible + label { border-color: var(--gold); }
+.mine input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.music { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+.music input[type=range] { width: 160px; accent-color: var(--gold); }
+.jtabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.jtabs button[aria-pressed="true"] { background: var(--purple); border-color: var(--purple); }
+.jgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
+.jgrid button { font: 500 13px var(--mono); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px; min-height: 44px; cursor: pointer; }
+.jgrid button:hover, .jgrid button:focus-visible { border-color: var(--gold); outline: none; }
+.jgrid button.on { border-color: var(--gold); color: var(--gold); }
+.tips { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.tips div { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; color: var(--soft); font-size: 14px; }
+.tips b { display: block; color: var(--ink); margin-bottom: 2px; }
+code { font: 500 12px var(--mono); color: var(--gold); }
+nav.jump { display: flex; flex-wrap: wrap; gap: 6px; }
+nav.jump a { font: 500 12px var(--mono); color: var(--soft); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
+nav.jump a:hover, nav.jump a:focus-visible { border-color: var(--gold); color: var(--ink); outline: none; }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Dungeon of Soldia · sounds, round 2</p>
+    <h1>Sound board</h1>
+    <p class="lead">Every game sound now has 5 options. <b>A</b> is what the game plays now. <b>B to E</b> are deeper and heavier versions, made by layering two Kenney sounds, lowering the pitch and adding a little stone-room echo. Tap a pad to hear it, tap <b>Pick</b> on the one you like. You can also try a sound or music file from your own device.</p>
+  </header>
+
+  <div class="bar">
+    <button class="btn go" id="fight" type="button">▶ Play a short fight with my picks</button>
+    <button class="btn" id="copy" type="button">Copy my picks</button>
+    <span class="status" id="saveState">Loading your picks</span>
+  </div>
+
+  <nav class="jump" id="jump" aria-label="Sound groups"></nav>
+  <div id="groups" style="display:grid;gap:30px"></div>
+
+  <section id="music" aria-labelledby="mh">
+    <div>
+      <p class="eyebrow">Try your own</p>
+      <h2 id="mh">Music</h2>
+      <p class="sub">Choose a music file from your device to hear it under the fight sounds. It plays only on this page (nothing is uploaded). When you find one you like, attach the file in our chat and I'll put it in the game.</p>
+    </div>
+    <div class="music">
+      <div class="bar">
+        <input type="file" id="musicFile" accept="audio/*" class="btn">
+      </div>
+      <div class="bar">
+        <button class="btn" id="musicPlay" type="button" disabled>▶ Play music</button>
+        <button class="btn" id="musicFight" type="button" disabled>▶ Music + short fight</button>
+        <label class="sub" for="musicVol">Music volume</label>
+        <input type="range" id="musicVol" min="0" max="1" step="0.05" value="0.35">
+      </div>
+      <p class="status" id="musicName">No music chosen.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="jh">
+    <div>
+      <p class="eyebrow">Not in the game yet</p>
+      <h2 id="jh">Kenney jingles</h2>
+      <p class="sub">Short music stings for a boss floor starting, a boss beaten, the squad defeated, a hero unlocked. Tell me the style and numbers you like.</p>
+    </div>
+    <div class="jtabs" id="jtabs" role="group" aria-label="Jingle style"></div>
+    <div class="jgrid" id="jgrid"></div>
+  </section>
+
+  <section aria-labelledby="gh">
+    <div>
+      <p class="eyebrow">Your 7 GB GDC bundle</p>
+      <h2 id="gh">Finding good sounds in a huge library</h2>
+    </div>
+    <div class="tips">
+      <div><b>Search by word, not by folder</b>On your computer, search the bundle for words like <code>sword</code>, <code>impact</code>, <code>whoosh</code>, <code>magic</code>, <code>fire</code>, <code>ice</code>, <code>zap</code>, <code>electric</code>, <code>coin</code>, <code>door</code>, <code>footstep</code>, <code>gong</code>, <code>monster</code>, <code>ui</code>.</div>
+      <div><b>Keep them short</b>Fight sounds should be under 1 second. Skip long ambience and music beds for now: they are big and we need few of them.</div>
+      <div><b>Try before sending</b>Use "Try my own" on any card above to hear a file in the right place, at the game's volume, next to the other options.</div>
+      <div><b>Send a small zip</b>Pick 3 to 10 files per moment, put them in a zip (under about 100 MB) and attach it in chat. I'll trim the silence, make them small and mono, match their loudness and add them as new options here.</div>
+      <div><b>Name them by moment</b>Rename files like <code>hitMelee - sword1.wav</code> so I know where each one goes. Big WAV files are fine.</div>
+      <div><b>Licence</b>The GDC bundle is royalty-free for games, no credit needed. Kenney is CC0. Both are fine for the Seeker store.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+const DATA = __DATA__;
+const BLOBS = __BLOBS__;
+const JINGLES = __JINGLES__;
+
+// ---------- audio
+let ctx = null, master = null;
+const bufs = {};
+function audio() {
+  if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); master = ctx.createGain(); master.gain.value = DATA.master; master.connect(ctx.destination); }
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+// Unpack data: URLs by hand: this page's frame blocks fetch(), even of data: URLs.
+function bytesOf(url) {
+  const bin = atob(url.slice(url.indexOf(',') + 1));
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out.buffer;
+}
+function bufferFrom(key, getBytes) {
+  if (!bufs[key]) bufs[key] = Promise.resolve().then(() => audio().decodeAudioData(getBytes())).catch(() => null);
+  return bufs[key];
+}
+async function playBuf(bufP, volume = 1, rate = 1, dest = null) {
+  const a = audio();
+  const buf = await bufP;
+  if (!buf) return 0;
+  const s = a.createBufferSource(); s.buffer = buf; s.playbackRate.value = rate;
+  const g = a.createGain(); g.gain.value = volume;
+  s.connect(g).connect(dest || master); s.start();
+  return buf.duration / rate;
+}
+const optionBuf = (file) => bufferFrom(file, () => bytesOf(BLOBS[file]));
+const mineBufs = {}; // cue -> {name, buf} from a file the viewer chose (only on this page)
+
+// ---------- picks (saved in the page's database so Claude can read them; this device only as a fallback)
+const picks = {};
+let db = null;
+const LOCAL = 'soldia-sound-picks';
+function localLoad() { try { Object.assign(picks, JSON.parse(localStorage.getItem(LOCAL) || '{}')); } catch {} }
+function localSave() { try { localStorage.setItem(LOCAL, JSON.stringify(picks)); } catch {} }
+const stateEl = document.getElementById('saveState');
+function setState(text, ok = false) { stateEl.textContent = text; stateEl.classList.toggle('ok', ok); }
+async function savePick(cue) {
+  localSave();
+  if (!db) { setState('Saved on this device only. Use "Copy my picks" and paste them in chat.'); return; }
+  try {
+    const p = picks[cue];
+    if (p) await db.collection('picks').doc(cue).set({ pick: p.pick, file: p.file || '', at: Date.now() });
+    else await db.collection('picks').doc(cue).delete();
+    setState('Picks saved. Claude can read them.', true);
+  } catch (e) { setState('Could not save to the page (' + (e && e.code || 'error') + '). Saved on this device.'); }
+}
+
+// ---------- cards
+const cueByName = {};
+const groupsEl = document.getElementById('groups');
+const jump = document.getElementById('jump');
+for (const g of DATA.groups) {
+  const sec = document.createElement('section');
+  const gid = 'g-' + g.name.toLowerCase().replace(/[^a-z]+/g, '-');
+  sec.id = gid;
+  sec.innerHTML = `<div><h2>${g.name}</h2>${g.sub ? `<p class="sub">${g.sub}</p>` : ''}</div><div class="cards"></div>`;
+  jump.insertAdjacentHTML('beforeend', `<a href="#${gid}">${g.name}</a>`);
+  const cards = sec.querySelector('.cards');
+  for (const r of g.rows) {
+    cueByName[r.cue] = r;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.cue = r.cue;
+    card.innerHTML = `
+      <div class="cardHead"><div><h3>${r.name}</h3><p class="when">${r.when}</p></div><span class="picked"></span></div>
+      <div class="opts">${r.options.map((o) => `
+        <div class="opt" data-id="${o.id}">
+          <button class="pad" type="button" aria-label="Play option ${o.id}: ${o.desc}">${o.id}</button>
+          <div class="optText"><span>${o.desc}</span><button class="pick" type="button">Pick</button></div>
+        </div>`).join('')}
+        <div class="opt mineOpt" data-id="mine" hidden>
+          <button class="pad" type="button" aria-label="Play my file">+</button>
+          <div class="optText"><span class="mineName">My file</span><button class="pick" type="button">Pick</button></div>
+        </div>
+      </div>
+      <div class="mine"><input type="file" accept="audio/*" id="mine-${r.cue}"><label for="mine-${r.cue}">Try my own file</label><span>Plays here only, at the game's volume.</span></div>`;
+    cards.appendChild(card);
+  }
+  groupsEl.appendChild(sec);
+}
+function playOption(cue, id) {
+  const r = cueByName[cue];
+  if (id === 'mine') return mineBufs[cue] ? playBuf(mineBufs[cue].buf, r.volume) : Promise.resolve(0);
+  const o = r.options.find((x) => x.id === id);
+  return playBuf(optionBuf(o.file), r.volume, 1 + (Math.random() * 2 - 1) * (r.jitter || 0));
+}
+const flash = (el, sec) => { el.classList.add('on'); setTimeout(() => el.classList.remove('on'), Math.max(150, sec * 1000)); };
+function drawPicks() {
+  for (const card of document.querySelectorAll('.card')) {
+    const p = picks[card.dataset.cue];
+    for (const o of card.querySelectorAll('.opt')) o.classList.toggle('sel', !!p && p.pick === o.dataset.id);
+    card.querySelector('.picked').textContent = p ? `Picked: ${p.pick === 'mine' ? 'my file' + (p.file ? ' (' + p.file + ')' : '') : p.pick}` : 'Game now: A';
+  }
+}
+groupsEl.addEventListener('click', async (e) => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  const cue = card.dataset.cue, opt = e.target.closest('.opt');
+  if (e.target.closest('.pad') && opt) flash(e.target.closest('.pad'), await playOption(cue, opt.dataset.id));
+  if (e.target.closest('.pick') && opt) {
+    const id = opt.dataset.id;
+    picks[cue] = picks[cue] && picks[cue].pick === id ? null : { pick: id, file: id === 'mine' ? (mineBufs[cue] || {}).name : '' };
+    if (!picks[cue]) delete picks[cue];
+    drawPicks();
+    savePick(cue);
+  }
+});
+groupsEl.addEventListener('change', (e) => {
+  const input = e.target.closest('input[type=file]');
+  if (!input || !input.files[0]) return;
+  const card = input.closest('.card'), cue = card.dataset.cue, f = input.files[0];
+  mineBufs[cue] = { name: f.name, buf: f.arrayBuffer().then((b) => audio().decodeAudioData(b)).catch(() => null) };
+  const mo = card.querySelector('.mineOpt');
+  mo.hidden = false;
+  mo.querySelector('.mineName').textContent = f.name;
+  playOption(cue, 'mine');
+});
+
+// A short made-up fight with the current picks (or A).
+const SCRIPT = [[0, 'hitMelee'], [300, 'hitRanged'], [650, 'hitMelee'], [900, 'miss'], [1200, 'hitFire'], [1450, 'itemProc'], [1500, 'hitIce'], [1800, 'hitMelee'], [1800, 'crit'], [2150, 'stun'], [2400, 'hitElectric'], [2700, 'block'], [2950, 'hitMelee'], [3150, 'enemyDeath'], [3500, 'doorOpen'], [3900, 'step'], [4150, 'step'], [4400, 'step']];
+function playFight() { audio(); for (const [t, cue] of SCRIPT) setTimeout(() => playOption(cue, (picks[cue] || {}).pick || 'A'), t); }
+document.getElementById('fight').addEventListener('click', playFight);
+
+// Copy picks as text (to paste in chat if saving is not possible).
+document.getElementById('copy').addEventListener('click', async () => {
+  const text = Object.entries(cueByName).map(([cue, r]) => `${r.name}: ${picks[cue] ? (picks[cue].pick === 'mine' ? 'my file ' + (picks[cue].file || '') : picks[cue].pick) : 'A (no pick)'}`).join('\n');
+  try { await navigator.clipboard.writeText(text); setState('Picks copied. Paste them in chat.', true); }
+  catch { setState('Copy was blocked here. Your picks are saved on the page anyway.'); }
+});
+
+// ---------- music
+let musicBuf = null, musicSrc = null, musicGain = null;
+const mName = document.getElementById('musicName'), mPlay = document.getElementById('musicPlay'), mFight = document.getElementById('musicFight'), mVol = document.getElementById('musicVol');
+document.getElementById('musicFile').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  stopMusic();
+  mName.textContent = 'Loading ' + f.name;
+  musicBuf = f.arrayBuffer().then((b) => audio().decodeAudioData(b)).then((b) => { mName.textContent = f.name + ' (' + Math.round(b.duration) + 's)'; return b; }).catch(() => { mName.textContent = 'This file could not be played. Try an mp3, ogg, wav or m4a.'; return null; });
+  mPlay.disabled = mFight.disabled = false;
+});
+function stopMusic() { if (musicSrc) { try { musicSrc.stop(); } catch {} musicSrc = null; } mPlay.textContent = '▶ Play music'; }
+async function startMusic() {
+  const a = audio(), buf = await musicBuf;
+  if (!buf) return;
+  stopMusic();
+  musicGain = musicGain || a.createGain();
+  musicGain.gain.value = Number(mVol.value);
+  musicGain.connect(a.destination);
+  musicSrc = a.createBufferSource(); musicSrc.buffer = buf; musicSrc.loop = true; musicSrc.connect(musicGain); musicSrc.start();
+  mPlay.textContent = '■ Stop music';
+}
+mPlay.addEventListener('click', () => (musicSrc ? stopMusic() : startMusic()));
+mFight.addEventListener('click', async () => { if (!musicSrc) await startMusic(); setTimeout(playFight, 600); });
+mVol.addEventListener('input', () => { if (musicGain) musicGain.gain.value = Number(mVol.value); });
+
+// ---------- jingles
+const STYLES = [['STEEL', 'Steel drum'], ['PIZZI', 'Pizzicato strings'], ['SAX', 'Sax'], ['HIT', 'Hit / drums'], ['NES', '8-bit']];
+let style = 'STEEL';
+function drawJ() {
+  document.getElementById('jtabs').innerHTML = STYLES.map(([k, l]) => `<button class="btn" type="button" data-s="${k}" aria-pressed="${k === style}">${l}</button>`).join('');
+  const keys = Object.keys(JINGLES).filter((k) => k.startsWith(`jingles_${style}`));
+  document.getElementById('jgrid').innerHTML = keys.map((k) => `<button type="button" data-j="${k}">▶ ${style} ${k.slice(-2)}</button>`).join('');
+}
+drawJ();
+document.getElementById('jtabs').addEventListener('click', (e) => { const b = e.target.closest('[data-s]'); if (b) { style = b.dataset.s; drawJ(); } });
+document.getElementById('jgrid').addEventListener('click', async (e) => { const b = e.target.closest('[data-j]'); if (b) flash(b, await playBuf(bufferFrom(b.dataset.j, () => bytesOf(JINGLES[b.dataset.j])), 0.6)); });
+
+// ---------- start: local picks first, then the page's database (Claude reads it)
+localLoad();
+drawPicks();
+setState('Picks are saved on this device.');
+(async () => {
+  try { db = await window.claude?.use?.('db'); } catch { db = null; }
+  if (!db) { setState('Picks are saved on this device only. Use "Copy my picks" to send them.'); return; }
+  setState('Picks are saved to this page.', true);
+  db.collection('picks').onSnapshot((snap) => {
+    for (const d of snap.docs) { const v = d.data(); if (v && v.pick) picks[d.id] = { pick: v.pick, file: v.file || '' }; }
+    for (const id of Object.keys(picks)) if (!snap.docs.some((d) => d.id === id)) delete picks[id];
+    localSave();
+    drawPicks();
+  }, () => setState('Could not read saved picks. Picks stay on this device.'));
+})();
+</script>

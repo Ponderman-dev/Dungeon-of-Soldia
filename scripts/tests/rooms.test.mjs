@@ -32,6 +32,15 @@ ok('a tile away from the gap does not', slide(solvedBoard(3), 3, 0) === null);
     const t = b.filter((x) => x); let inv = 0; for (let x = 0; x < t.length; x++) for (let y = x + 1; y < t.length; y++) if (t[x] > t[y]) inv++; if (inv % 2) bad++; }
   ok('shuffled boards are never solved and always solvable', bad === 0); }
 
+// Easy (user): every shuffled board can be solved within shuffleMoves slides (shortest path by search).
+{ const max = rooms.kinds.puzzle.shuffleMoves; let worst = 0;
+  const dist = (start) => { const goal = solvedBoard(3).join(); let frontier = [start], seen = new Set([start.join()]), d = 0;
+    while (frontier.length) { if (frontier.some((b) => b.join() === goal)) return d; const next = [];
+      for (const b of frontier) for (const i of neighbours(3, b.indexOf(0))) { const n = slide(b, 3, i); const k = n.join(); if (!seen.has(k)) { seen.add(k); next.push(n); } }
+      frontier = next; d++; } return Infinity; };
+  for (let i = 0; i < 100; i++) worst = Math.max(worst, dist(shuffleBoard(3, max)));
+  ok('puzzle is easy: solvable in ' + max + ' moves or fewer', worst <= max, 'hardest seen: ' + worst); }
+
 // Fountain blessing: the next 3 fights start with a regen buff
 { const s = mk(); s.heroes.forEach((h) => (h.hp = h.maxHp / 2)); s.healHeroes(rooms.kinds.fountain.healPercent);
   ok('fountain heals 50%', s.heroes.every((h) => h.hp === h.maxHp));

@@ -40,7 +40,8 @@
       "name": "Puzzle Room",
       "hint": "Tap the stone tablet",
       "size": 3,
-      "shuffleMoves": 80
+      "shuffleMoves": 8,
+      "_shuffle": "user: easy puzzle. The board is the solved one slid 8 times at random, so it is always solvable in 8 moves or fewer."
     }
   }
 }

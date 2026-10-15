@@ -1754,11 +1754,20 @@ export default class BattleScene extends Phaser.Scene {
   showReward(next) {
     let choices = rollChoices({ itemDefs, rules: rewardRules, floor: this.floor, count: rewardRules.choices, heroes: this.state.heroes, potionChance: rewardRules.potionChance });
     choices = maybeAddBook(choices, bookData, this.state.heroes, bookData.bookChancePerScreen); // a skill book card, about 1 in 15 screens
-    if (!choices.length) return next();
+    // After a BOSS the squad also gets a free golden book (3 modifier pages), after the normal reward.
+    const bossFloor = !!(this.dungeon.bosses && this.dungeon.bosses[this.floor]) && this.state.heroes.some((h) => h.alive);
+    const afterNormal = bossFloor ? () => this.openRewardSheet([bookData.cards.golden], next, 'BOSS DEFEATED: A GOLDEN BOOK') : next;
+    if (!choices.length) return afterNormal();
+    this.openRewardSheet(choices, afterNormal);
+  }
+
+  // The reward sheet with these cards; `next` runs after the pick has been applied.
+  openRewardSheet(choices, next, banner = null) {
     this.scene.launch('Reward', {
       state: this.state,
       choices,
       floor: this.floor,
+      banner,
       onDone: (itemId, heroUid, book) => {
         this.scene.stop('Reward');
         this.scene.resume();

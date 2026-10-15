@@ -55,11 +55,16 @@ export default class RewardScene extends Phaser.Scene {
     bg.lineStyle(2, COLORS.purple, 0.8).strokeRoundedRect(0, SHEET_TOP, GAME_WIDTH, GAME_HEIGHT - SHEET_TOP + 40, 24);
     bg.fillStyle(COLORS.line, 1).fillRoundedRect(GAME_WIDTH / 2 - 22, SHEET_TOP + 8, 44, 5, 3); // the little handle
     this.sheet.add(bg);
-    this.sheet.add(this.add.text(GAME_WIDTH / 2, SHEET_TOP + 24, `FLOOR ${this.payload.floor} CLEARED`, { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: '#f2b632' }).setOrigin(0.5, 0));
+    this.sheet.add(this.add.text(GAME_WIDTH / 2, SHEET_TOP + 24, this.payload.banner || `FLOOR ${this.payload.floor} CLEARED`, { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: '#f2b632' }).setOrigin(0.5, 0));
     this.tweens.add({ targets: this.sheet, y: 0, duration: 420, ease: 'Cubic.easeOut' });
     sfx.play('rewardUp');
 
-    this.showPick(true);
+    // A lone golden book (boss prize) opens straight on its pages.
+    if (this.payload.choices.length === 1 && this.payload.choices[0].kind === 'book') {
+      this.chosen = this.payload.choices[0];
+      this.bookPages = rollBookPages(bookData, this.chosen.book);
+      this.showPages();
+    } else this.showPick(true);
   }
 
   // ---- helpers -----------------------------------------------------------------------

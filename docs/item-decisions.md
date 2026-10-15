@@ -63,3 +63,13 @@ Status: [built] = already in the code, [decided] = still to build.
 - [decided] Gag Rune: unchanged, but rarity rare -> EPIC.
 - [decided] Dread Bell: ONE roll (copies add up instead of rolling separately): 5% chance, +3% per extra bell; fear lasts
   1s on the first bell, +0.2s per extra bell (was 1.5s).
+- [decided] Bandage Roll: +2% max health per kill per roll (was 3%).
+- [decided] Fire Heart: unchanged, PLUS when its shield breaks it explodes for 50% fire per heart on enemies.
+- [decided] Heart Charm: FLAT +40 max health per charm (was +22%) and +0.3% regen per second per charm (was 0.5%).
+- [decided] Padded Vest: unchanged.
+- [decided] Mage Cloak: +12 resist per cloak (was +10).
+- [decided] Bulwark Plate: +35 defense per plate (was 30); reflect 25% does NOT grow with copies (once).
+- [decided] Spite Mail: unchanged.
+
+## "Good" group (already grows well)
+- [decided] Whetstone: unchanged.

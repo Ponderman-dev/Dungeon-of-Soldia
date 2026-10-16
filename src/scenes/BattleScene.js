@@ -1411,7 +1411,7 @@ export default class BattleScene extends Phaser.Scene {
   showProjectile(from, to, kind) {
     if (!from || !to) return;
     if (kind === 'arrow') return this.shootArrow(from, to, 200); // Quiver of Plenty's extra arrow: a normal shot
-    // Fire Arrows: a flaming arrow (the fire shot of systems/hitFx.js) that flies on its own beside the normal one.
+    // Fire Arrows: a burning arrow (projectileFx 'firearrow', systems/hitFx.js) that flies on its own beside the normal one.
     if (kind === 'firearrow') {
       const a = this.fxPoint(from);
       let b = this.fxPoint(to);
@@ -1419,8 +1419,8 @@ export default class BattleScene extends Phaser.Scene {
       this.addFx(240, (q, now) => {
         if (to.ch.active) b = this.fxPoint(to);
         const head = { x: a.x + (b.x - a.x) * q, y: a.y + (b.y - a.y) * q };
-        return TUNE.paint('shot', 'fire', projectileFx('fire', a, head, now * TUNE.speed('shot', 'fire'), seed));
-      }, ['shot', 'fire']);
+        return TUNE.paint('shot', 'firearrow', projectileFx('firearrow', a, head, now * TUNE.speed('shot', 'firearrow'), seed));
+      }, ['shot', 'firearrow']);
       return;
     }
     const start = this.center(from);

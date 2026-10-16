@@ -3,7 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT } from '../config.js';
 import Character from '../entities/Character.js';
 import itemTypes from '../data/itemTypes.json';
 import rarities from '../data/rarities.json';
-import { canReceive, countOf } from '../systems/items.js';
+import { canReceive } from '../systems/items.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
 import * as sfx from '../audio/sfx.js';
 import bookData from '../data/skillBooks.json';
@@ -367,14 +367,11 @@ export default class RewardScene extends Phaser.Scene {
 
   // ---- step 2: choose who gets it ----------------------------------------------------
 
-  // The one line on a hero's row: what the item changes for THIS hero. A stat item shows its real numbers
-  // ("DEF 12 → 24", up to two stats); every other item shows how many copies the hero will have ("Copies 1 → 2").
+  // The line on a hero's row: what a STAT item changes for this hero, with real numbers ("DEF 12 → 24", up to
+  // two stats). Other items show nothing there (user: no copies line).
   changeLine(hero, item) {
     const stats = [...new Set(item.effects.filter((e) => e.stat).map((e) => e.stat))].slice(0, 2);
-    if (!stats.length) {
-      const n = countOf(hero, item.id);
-      return `Copies ${n} → ${n + 1}`;
-    }
+    if (!stats.length) return '';
     const after = this.payload.state.previewStats(hero.uid, item.id);
     return stats.map((st) => `${STAT_LABEL[st]} ${Math.round(hero.stats[st])} → ${Math.round(after.stats[st])}`).join('   ');
   }
@@ -410,7 +407,7 @@ export default class RewardScene extends Phaser.Scene {
       const name = this.text(PAD + 74, y + 14, hero.name, 17, INK, true).setAlpha(alpha);
       this.text(PAD + 74 + name.width + 8, y + 18, `Lv ${hero.level}`, 13, MUTE).setAlpha(alpha);
       const line = ok ? this.changeLine(hero, item) : hero.alive ? 'Can\'t take more' : 'Fallen';
-      this.text(GAME_WIDTH - PAD - 14, y + 16, line, 15, ok ? '#6dff8f' : MUTE, true).setOrigin(1, 0);
+      if (line) this.text(GAME_WIDTH - PAD - 14, y + 16, line, 15, ok ? '#6dff8f' : MUTE, true).setOrigin(1, 0);
 
       // Items this hero already has: the same small icons as under the skill squares in battle.
       this.drawIconRow(hero, PAD + 84, y + 64, CARD_W - 84 - 12, alpha);

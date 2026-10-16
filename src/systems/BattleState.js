@@ -2766,13 +2766,13 @@ export default class BattleState {
     return result;
   }
 
-  // Heals every living hero by a % of their max health. Returns [{ unit, amount }].
   // Rest fountain: the next `fights` fights start with a regen buff of `regenPercentPerSec` on every living hero.
   // A second fountain replaces the first (it does not stack).
   bless(regenPercentPerSec, fights) {
     this.blessing = { regenPercentPerSec, fights };
   }
 
+  // Heals every living hero by a % of their max health. Returns [{ unit, amount }].
   healHeroes(percent) {
     const healed = [];
     for (const h of this.heroes) {

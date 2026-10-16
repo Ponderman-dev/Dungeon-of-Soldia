@@ -27,7 +27,9 @@
       "hint": "Tap the fountain to rest",
       "healPercent": 50,
       "regenPercentPerSec": 0.5,
-      "fights": 3
+      "fights": 3,
+      "x": 92,
+      "_x": "the fountain stands at the side so the squad does not walk through it on the way to the door"
     },
     "dealer": {
       "weight": 20,

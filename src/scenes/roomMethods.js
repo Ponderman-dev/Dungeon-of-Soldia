@@ -36,7 +36,7 @@ export const roomMethods = {
     const rules = roomRules.kinds[kind];
     const room = { kind, rules, props: [], busy: false };
     const xs =
-      kind === 'treasure' ? (Math.random() < rules.twoChestChance ? [GAME_WIDTH / 3, (GAME_WIDTH * 2) / 3] : [GAME_WIDTH / 2]) : [GAME_WIDTH / 2];
+      kind === 'treasure' ? (Math.random() < rules.twoChestChance ? [GAME_WIDTH / 3, (GAME_WIDTH * 2) / 3] : [GAME_WIDTH / 2]) : [rules.x ?? GAME_WIDTH / 2];
     const def = { treasure: 'chest', mimic: 'chest', fountain: 'fountain', dealer: 'dealer', puzzle: 'tablet' }[kind];
     for (const x of xs) {
       const ch = new Character(this, x, PROP_Y, roomProps[def]);
@@ -83,7 +83,27 @@ export const roomMethods = {
       room.busy = false;
       if (room.props.every((p) => p.done)) this.leaveRoom();
     };
-    ({ treasure: () => this.openChest(prop, after), mimic: () => this.wakeMimic(prop), fountain: () => this.drinkFountain(prop), dealer: () => this.visitDealer(after), puzzle: () => this.startPuzzle(after) })[room.kind]();
+    ({ treasure: () => this.openChest(prop, () => this.vanishProp(prop, after)), mimic: () => this.wakeMimic(prop), fountain: () => this.drinkFountain(prop), dealer: () => this.visitDealer(() => this.stepAside(prop, after)), puzzle: () => this.startPuzzle(() => this.vanishProp(prop, after)) })[room.kind]();
+  },
+
+  // A used prop (an emptied chest, the solved tablet) sinks into the floor in a puff, so the squad does not walk
+  // through it on the way to the door.
+  vanishProp(prop, after) {
+    const ch = prop.ch;
+    this.puff(prop.x, PROP_Y - 12, 0x8a7a9a, 8);
+    this.tweens.add({ targets: ch, scaleY: 0.05, alpha: 0, duration: 320, ease: 'Back.easeIn', onComplete: () => ch.destroy() });
+    this.time.delayedCall(360, after);
+  },
+
+  // The dealer is done: he walks to the side wall (hopping like the heroes) and waits there, out of the way.
+  stepAside(prop, after) {
+    const ch = prop.ch;
+    const toX = prop.x < GAME_WIDTH / 2 ? GAME_WIDTH - 46 : 46;
+    ch.face(toX < ch.x ? -1 : 1);
+    const dist = Math.abs(toX - ch.x);
+    const hop = { t: 0 };
+    this.tweens.add({ targets: ch, x: toX, duration: (dist / 170) * 1000, ease: 'Linear' });
+    this.tweens.add({ targets: hop, t: 1, duration: (dist / 170) * 1000, onUpdate: () => (ch.y = PROP_Y - Math.abs(Math.sin(hop.t * Math.PI * 6)) * 6), onComplete: () => { ch.y = PROP_Y; ch.face(toX < GAME_WIDTH / 2 ? 1 : -1); after(); } });
   },
 
   // A normal item pick (1 of 3) on a sheet, then `after`.

@@ -3,7 +3,7 @@
   "chest": {
     "name": "Treasure Chest",
     "height": 10,
-    "drawScale": 6,
+    "drawScale": 4,
     "parts": {
       "body": {
         "x": 0.5,

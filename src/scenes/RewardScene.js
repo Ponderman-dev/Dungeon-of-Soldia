@@ -21,7 +21,6 @@ const TEXT_X = 112; // where a card's text starts (right of the icon)
 const ICON_W = 98; // the icon column
 const DESC_PX = 15; // description text size
 const TITLE_H = 54; // the step title above the cards
-const SPECIAL_LABEL = { block: 'BLOCK', regen: 'REGEN/s', thorns: 'THORNS', lifesteal: 'LIFESTEAL', skillDamage: 'SKILL DMG', critDamage: 'CRIT DMG', skillSplash: 'SPLASH', lifestealShare: 'SHARE', critDebuff: 'CRIT DEBUFF', clearHeal: 'CLEAR HEAL' };
 const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
 const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
 
@@ -100,9 +99,22 @@ export default class RewardScene extends Phaser.Scene {
   // How tall a card must be for its description (the card grows instead of the text spilling out).
   cardHeight(item) {
     const probe = this.add.text(0, 0, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, lineSpacing: 3, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
+    let h = probe.height;
+    probe.destroy();
+    if (item.perStack) h += this.perStackHeight(item) + 6;
+    return Math.max(136, 68 + h + 18);
+  }
+
+  // The small "Per stack: ..." line under an item's text (items.json `perStack`: what one more copy adds).
+  perStackStyle() {
+    return { fontFamily: FONT, fontSize: '13px', fontStyle: 'bold', color: '#b9a6f0', lineSpacing: 2, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } };
+  }
+
+  perStackHeight(item) {
+    const probe = this.add.text(0, 0, `Per stack: ${item.perStack}`, this.perStackStyle());
     const h = probe.height;
     probe.destroy();
-    return Math.max(136, 68 + h + 18);
+    return h;
   }
 
   // One reward card: icon in its rarity frame + type, rarity, name, description.
@@ -126,7 +138,9 @@ export default class RewardScene extends Phaser.Scene {
     const name = this.add.text(TEXT_X, 34, item.name, { fontFamily: FONT, fontSize: '21px', fontStyle: 'bold', color: INK });
     for (let s = 20; name.width > CARD_W - TEXT_X - 16 && s >= 13; s--) name.setFontSize(s); // long names shrink to fit
     card.add(name);
-    card.add(this.add.text(TEXT_X, 66, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, color: MUTE, lineSpacing: 3, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } }));
+    const desc = this.add.text(TEXT_X, 66, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, color: MUTE, lineSpacing: 3, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
+    card.add(desc);
+    if (item.perStack) card.add(this.add.text(TEXT_X, 66 + desc.height + 6, `Per stack: ${item.perStack}`, this.perStackStyle()));
     card.paint = paint;
     return card;
   }
@@ -353,93 +367,57 @@ export default class RewardScene extends Phaser.Scene {
 
   // ---- step 2: choose who gets it ----------------------------------------------------
 
-  // The lines under a hero: "ATK 18 > 22" for each stat the item touches.
-  previewLines(hero, item) {
-    const after = this.payload.state.previewStats(hero.uid, item.id);
-    const lines = [];
-    const seen = new Set();
-    for (const e of item.effects) {
-      if (e.proc) {
-        const copies = countOf(hero, item.id);
-        const name = (e.label || item.name).replace('!', '').toUpperCase();
-        if (e.unique) lines.push({ text: `${name} ${copies ? e.chance : 0}>${e.chance}%`, up: true }); // more copies do not add chance
-        else if (e.chance >= 100 && e.strike) lines.push({ text: `${name} ${copies * e.strike.damageMultiplier * 100}>${(copies + 1) * e.strike.damageMultiplier * 100}% ATK`, up: true });
-        else lines.push({ text: `${name} ${copies * e.chance}>${(copies + 1) * e.chance}%`, up: true });
-      } else if (e.special) {
-        const before = hero.specials[e.special] || 0;
-        const now = after.specials[e.special] || 0;
-        const round = (v) => Math.round(v * 10) / 10;
-        lines.push({ text: `${SPECIAL_LABEL[e.special] || e.special.replace(/([A-Z])/g, ' $1').toUpperCase()} ${round(before)}>${round(now)}%`, up: true });
-      } else if (e.damageBonus) {
-        const before = hero.damageBonus[e.damageBonus] || 0;
-        const now = after.damageBonus[e.damageBonus] || 0;
-        lines.push({ text: `${e.damageBonus.toUpperCase()} DMG ${before}>${now}%`, up: true });
-      } else if (e.stat && !seen.has(e.stat)) {
-        seen.add(e.stat);
-        const before = Math.round(hero.stats[e.stat]);
-        const now = Math.round(after.stats[e.stat]);
-        lines.push({ text: `${STAT_LABEL[e.stat]} ${before} > ${now}`, up: now >= before });
-      }
+  // The one line on a hero's row: what the item changes for THIS hero. A stat item shows its real numbers
+  // ("DEF 12 → 24", up to two stats); every other item shows how many copies the hero will have ("Copies 1 → 2").
+  changeLine(hero, item) {
+    const stats = [...new Set(item.effects.filter((e) => e.stat).map((e) => e.stat))].slice(0, 2);
+    if (!stats.length) {
+      const n = countOf(hero, item.id);
+      return `Copies ${n} → ${n + 1}`;
     }
-    return lines.slice(0, 3);
+    const after = this.payload.state.previewStats(hero.uid, item.id);
+    return stats.map((st) => `${STAT_LABEL[st]} ${Math.round(hero.stats[st])} → ${Math.round(after.stats[st])}`).join('   ');
   }
 
+  // "Who gets it?": the item card on top, then ONE ROW PER HERO (user's choice): picture, name + level, the items
+  // the hero already has, and one clear line of what changes. Tap a row, then Give.
   showAssign() {
     this.step = 'assign';
     this.clearStep();
     this.selected = null;
     const item = this.chosen;
     this.text(PAD, SHEET_TOP + 46, 'Who gets it?', 26, INK, true);
-    // Back to the 3 rewards (changed your mind).
-    const bw = 84;
-    const bx = GAME_WIDTH - PAD - bw;
-    const bb = this.track(this.add.graphics());
-    bb.fillStyle(COLORS.panel, 1).fillRoundedRect(bx, SHEET_TOP + 48, bw, 32, 16).lineStyle(2, COLORS.line, 1).strokeRoundedRect(bx, SHEET_TOP + 48, bw, 32, 16);
-    this.text(bx + bw / 2, SHEET_TOP + 64, '‹ Back', 14, INK, true).setOrigin(0.5);
-    this.track(this.add.zone(bx + bw / 2, SHEET_TOP + 64, bw + 10, 44).setInteractive()).on('pointerdown', () => { sfx.play('tap'); this.showPick(); });
+    this.backButton(() => this.showPick()); // back to the 3 rewards (changed your mind)
 
     const itemH = this.cardHeight(item);
     this.drawCard(item, PAD, SHEET_TOP + 94, itemH, true);
 
     this.heroGraphics = [];
-    const colW = (CARD_W - 12) / 2;
-    const cardH = 184;
-    const top = SHEET_TOP + 94 + itemH + 14;
-    const heroes = this.payload.state.heroes;
-    heroes.forEach((hero, i) => {
-      // Two cards per row; a lonely last card (3 heroes) sits in the middle.
-      const alone = i === heroes.length - 1 && heroes.length % 2 === 1;
-      const x = alone ? PAD + (colW + 12) / 2 : PAD + (i % 2) * (colW + 12);
-      const y = top + Math.floor(i / 2) * (cardH + 10);
+    const rowH = 92;
+    let y = SHEET_TOP + 94 + itemH + 16;
+    for (const [i, hero] of this.payload.state.heroes.entries()) {
       const ok = canReceive(hero, item);
       const g = this.track(this.add.graphics());
-      this.heroGraphics.push({ g, x, y, w: colW, h: cardH, hero });
+      this.heroGraphics.push({ g, x: PAD, y, w: CARD_W, h: rowH, hero });
       this.drawHeroCard(i, false);
+      const alpha = ok ? 1 : 0.45;
 
       // A small copy of the hero (same parts as in battle).
-      const ch = new Character(this, x + 34, y + 70, hero.def);
-      ch.setScale(2);
-      ch.setAlpha(ok ? 1 : 0.4);
+      const ch = new Character(this, PAD + 36, y + rowH - 16, hero.def);
+      ch.setScale(2.5).setAlpha(alpha);
       this.track(ch);
 
-      this.text(x + 66, y + 14, hero.name, 15, INK, true).setAlpha(ok ? 1 : 0.5);
-      this.text(x + 66, y + 34, `Lv ${hero.level}`, 12, MUTE).setAlpha(ok ? 1 : 0.5);
-
-      if (ok) {
-        let ly = y + 88;
-        for (const line of this.previewLines(hero, item)) {
-          const t = this.fitText(x + 10, ly, line.text, 12, line.up ? '#6dff8f' : '#ff8c8c', colW - 20, 30, true);
-          ly += t.height + 3;
-        }
-      } else {
-        this.text(x + 10, y + 90, hero.alive ? 'Max stacks' : 'Fallen', 13, MUTE, true);
-      }
+      const name = this.text(PAD + 74, y + 14, hero.name, 17, INK, true).setAlpha(alpha);
+      this.text(PAD + 74 + name.width + 8, y + 18, `Lv ${hero.level}`, 13, MUTE).setAlpha(alpha);
+      const line = ok ? this.changeLine(hero, item) : hero.alive ? 'Can\'t take more' : 'Fallen';
+      this.text(GAME_WIDTH - PAD - 14, y + 16, line, 15, ok ? '#6dff8f' : MUTE, true).setOrigin(1, 0);
 
       // Items this hero already has: the same small icons as under the skill squares in battle.
-      this.drawOwnedIcons(hero, x, y + cardH - 18, colW, ok ? 1 : 0.5);
+      this.drawIconRow(hero, PAD + 84, y + 64, CARD_W - 84 - 12, alpha);
 
-      if (ok) this.track(this.add.zone(x + colW / 2, y + cardH / 2, colW, cardH).setInteractive()).on('pointerdown', () => this.selectHero(i));
-    });
+      if (ok) this.track(this.add.zone(PAD + CARD_W / 2, y + rowH / 2, CARD_W, rowH).setInteractive()).on('pointerdown', () => this.selectHero(i));
+      y += rowH + 10;
+    }
 
     // The Give button at the bottom.
     this.buttonGraphics = this.track(this.add.graphics());
@@ -448,29 +426,24 @@ export default class RewardScene extends Phaser.Scene {
     this.track(this.add.zone(GAME_WIDTH / 2, GAME_HEIGHT - 46, CARD_W, 52).setInteractive()).on('pointerdown', () => this.confirm());
   }
 
-  // One framed icon per kind of item (a white number = copies), 7 per row, 2 rows,
-  // the rest as "+N". The bottom row sits at `bottomY`.
-  drawOwnedIcons(hero, x, bottomY, w, alpha) {
+  // One line of the hero's items (framed icons, a white number = copies), starting at x, centred on y; what does
+  // not fit in `w` becomes "+N". "No items yet" when empty.
+  drawIconRow(hero, x, y, w, alpha) {
     const counts = new Map();
     for (const id of hero.items) counts.set(id, (counts.get(id) || 0) + 1);
-    let kinds = [...counts.entries()];
-    const perRow = 7, gap = 22, maxShown = perRow * 2;
-    let more = 0;
-    if (kinds.length > maxShown) { more = kinds.length - (maxShown - 1); kinds = kinds.slice(0, maxShown - 1); }
-    const rows = Math.ceil((kinds.length + (more ? 1 : 0)) / perRow);
-    const left = x + (w - (perRow - 1) * gap) / 2;
-    const at = (i) => [left + (i % perRow) * gap, bottomY - (rows - 1 - Math.floor(i / perRow)) * gap];
+    const kinds = [...counts.entries()];
+    if (!kinds.length) return this.text(x - 10, y - 8, 'No items yet', 12, MUTE).setAlpha(alpha);
+    const gap = 23;
+    const fit = Math.floor(w / gap);
+    const shown = kinds.length > fit ? kinds.slice(0, fit - 1) : kinds;
     const style = { fontFamily: 'monospace', fontSize: '10px', fontStyle: 'bold', color: '#ffffff', stroke: '#000000', strokeThickness: 3 };
-    kinds.forEach(([id, count], i) => {
+    shown.forEach(([id, count], i) => {
       const def = this.payload.state.itemDefs[id];
-      const [ix, iy] = at(i);
-      this.track(this.add.image(ix, iy, itemIconKey(this, id, def.rarity)).setAlpha(alpha));
-      if (count > 1) this.track(this.add.text(ix + 11, iy + 11, String(count), style).setOrigin(1, 1).setAlpha(alpha));
+      const ix = x + i * gap;
+      this.track(this.add.image(ix, y, itemIconKey(this, id, def.rarity)).setAlpha(alpha));
+      if (count > 1) this.track(this.add.text(ix + 11, y + 11, String(count), style).setOrigin(1, 1).setAlpha(alpha));
     });
-    if (more) {
-      const [ix, iy] = at(kinds.length);
-      this.text(ix, iy, `+${more}`, 11, INK, true).setOrigin(0.5).setAlpha(alpha);
-    }
+    if (shown.length < kinds.length) this.text(x + shown.length * gap, y, `+${kinds.length - shown.length}`, 12, INK, true).setOrigin(0.5).setAlpha(alpha);
   }
 
   drawHeroCard(i, selected) {

@@ -1027,7 +1027,7 @@ export default class BattleState {
     const fa = unit.specials && unit.specials.fireArrows;
     if (fa && unit.damageType !== 'melee' && target.alive && this.rng() < 0.5) {
       events.push({ type: 'proc', unit, label: 'Fire Arrow!', itemId: 'fire_arrows', target });
-      this.strike(unit, target, events, { multiplier: fa / 100, damageType: 'fire', projectile: 'bomb', item: true });
+      this.strike(unit, target, events, { multiplier: fa / 100, damageType: 'fire', projectile: 'firearrow', item: true }); // a flaming arrow, not a bomb
     }
   }
 

@@ -1,17 +1,58 @@
 {
-  "_about": "Item effects (user's choice: each item's own effect AND its icon pops over the holder). When an item goes off (a proc event with its itemId) the item's icon pops over the holder; `effect` names an extra effect recipe in src/systems/itemFx.js. Items not listed only pop their icon (their hits already show the normal hit of their damage type). Projectile looks (bomb, lightning, greenfire) and thorns / lifesteal / tornado are drawn from their own events. iconPop: size and timing of the icon pop.",
-  "iconPop": { "scale": 2, "ms": 700, "riseCharPx": 4, "gapPx": 44 },
-  "war_banner": { "effect": "battleCry" },
-  "jolly_banner": { "effect": "battleCry" },
-  "shatter_hammer": { "effect": "shatter" },
-  "thousand_cuts": { "effect": "knifeBurst" },
-  "plague_flask": { "effect": "plague" },
-  "frozen_thunderbolt": { "effect": "thunderbolt" },
-  "spiked_aegis": { "effect": "aegisBlast" },
-  "bloodlust_mask": { "effect": "battleCry", "color": "0x6dff8f" },
-  "sucker_punch_glove": { "effect": "suckerPunch" },
-  "executioners_axe": { "effect": "executioner" },
-  "gamblers_dice": { "effect": "dice" },
-  "mimic_chest": { "effect": "mimic" },
-  "spirit_axe": { "effect": "spiritAxe" }
+  "_about": "Item effects (user's choice: each item's own effect AND its icon pops over the holder). When an item goes off (a proc event with its itemId) the item's icon pops over the holder; `effect` names an extra effect recipe in src/systems/itemFx.js. Items not listed only pop their icon (their hits already show the normal hit of their damage type). Projectile looks (bomb, lightning, greenfire) and thorns / lifesteal / tornado are drawn from their own events. iconPop: size and timing of the icon pop. noPop: true = this item does NOT pop its icon or play the proc sound (user: frequent simple procs: Fire Arrows, Quiver of Plenty, Metronome).",
+  "iconPop": {
+    "scale": 2,
+    "ms": 700,
+    "riseCharPx": 4,
+    "gapPx": 44
+  },
+  "war_banner": {
+    "effect": "battleCry"
+  },
+  "jolly_banner": {
+    "effect": "battleCry"
+  },
+  "shatter_hammer": {
+    "effect": "shatter"
+  },
+  "thousand_cuts": {
+    "effect": "knifeBurst"
+  },
+  "plague_flask": {
+    "effect": "plague"
+  },
+  "frozen_thunderbolt": {
+    "effect": "thunderbolt"
+  },
+  "spiked_aegis": {
+    "effect": "aegisBlast"
+  },
+  "bloodlust_mask": {
+    "effect": "battleCry",
+    "color": "0x6dff8f"
+  },
+  "sucker_punch_glove": {
+    "effect": "suckerPunch"
+  },
+  "executioners_axe": {
+    "effect": "executioner"
+  },
+  "gamblers_dice": {
+    "effect": "dice"
+  },
+  "mimic_chest": {
+    "effect": "mimic"
+  },
+  "spirit_axe": {
+    "effect": "spiritAxe"
+  },
+  "fire_arrows": {
+    "noPop": true
+  },
+  "quiver_of_plenty": {
+    "noPop": true
+  },
+  "metronome": {
+    "noPop": true
+  }
 }

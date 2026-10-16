@@ -117,7 +117,7 @@ export const roomMethods = {
   openChest(prop, after) {
     const lid = prop.ch.parts.head;
     this.tweens.add({ targets: lid, angle: -110, duration: 260, ease: 'Back.easeOut' });
-    sfx.play('doorOpen');
+    sfx.play('chestOpen');
     this.time.delayedCall(200, () => this.puff(prop.x, PROP_Y - 50, 0xf2c544, 10));
     this.time.delayedCall(520, () => this.itemPick('TREASURE CHEST', after));
   },
@@ -141,7 +141,7 @@ export const roomMethods = {
   // The squad drinks: every living hero heals and is blessed (regen for the next fights).
   drinkFountain(prop) {
     const rules = this.layer.room.rules;
-    sfx.play('potion');
+    sfx.play('fountain');
     this.tweens.add({ targets: prop.ch, alpha: 0.6, duration: 160, yoyo: true, repeat: 2 });
     for (const { unit, amount } of this.state.healHeroes(rules.healPercent)) {
       const v = this.views.get(unit.uid);

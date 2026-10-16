@@ -12,6 +12,9 @@ GROUPS = [
  ('Bosses', '', [('bossIntro', 'Boss floor starts', 'Floors 20, 40 ... 160'), ('bossWarn', 'Boss winds up a move', 'With the red bar'), ('bossMove', 'Boss move goes off', 'Cleaver Charge, Blizzard ...')]),
  ('Dungeon & rewards', '', [('doorOpen', 'Door opens', 'Floor cleared'), ('step', 'Footsteps', 'Heroes walking to the door'), ('itemGiven', 'Item given', 'Give on the reward sheet')]),
  ('Run moments', 'Menu sounds today (Organic pack); your sounds as other options.', [('levelUp', 'Level up', 'A hero levels up'), ('potion', 'Potion', 'Shared Potion on the reward sheet'), ('defeat', 'Defeat', 'The whole squad falls')]),
+ ('Skills', 'New row: no picks yet.', [('skillCast', 'Skill goes off', 'Every hero skill'), ('interrupted', 'Skill interrupted', 'Stunned or frozen during the wind-up')]),
+ ('Special rooms', 'New rows: chests, fountain, puzzle.', [('chestOpen', 'Chest opens', 'Treasure room'), ('fountain', 'Drink from the fountain', 'Rest fountain'), ('puzzleSlide', 'Puzzle tile slides', 'Puzzle room'), ('puzzleSolved', 'Puzzle solved', 'Puzzle room')]),
+ ('Menus', 'New rows: buttons and the reward sheet.', [('tap', 'Button tap', 'Every button'), ('rewardUp', 'Reward sheet slides up', 'After a floor'), ('rewardCard', 'Reward card appears', 'Each card rising in')]),
 ]
 blobs = {}
 groups = []
@@ -28,7 +31,7 @@ lib = {}
 for v in opts.values():
     for o in v:
         if o.get('yours') and o['file'] not in lib:
-            lib[o['file']] = {'file': o['file'], 'name': o['desc'].replace('Yours: ', '')}
+            lib[o['file']] = {'file': o['file'], 'name': o['desc'].replace('Yours: ', '').replace('New: ', 'New · ')}
             blobs[o['file']] = 'data:audio/mpeg;base64,' + base64.b64encode(open(f"{OPT}/{o['file']}", 'rb').read()).decode()
 library = sorted(lib.values(), key=lambda x: x['name'])
 html = open(HERE + '/board-template.html').read()

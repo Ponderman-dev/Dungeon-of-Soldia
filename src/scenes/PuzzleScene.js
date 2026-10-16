@@ -109,7 +109,7 @@ export default class PuzzleScene extends Phaser.Scene {
     this.board = next;
     this.moves++;
     this.moveText.setText(`Moves: ${this.moves}`);
-    sfx.play('tap');
+    sfx.play('puzzleSlide');
     const [x, y] = this.spot(this.board.indexOf(n));
     this.sliding = true;
     this.tweens.add({
@@ -128,7 +128,7 @@ export default class PuzzleScene extends Phaser.Scene {
   // Every tile glows, then the sheet goes down and the item pick comes.
   solved() {
     this.done = true;
-    sfx.play('floorClear');
+    sfx.play('puzzleSolved');
     Object.values(this.tiles).forEach((t, i) => this.time.delayedCall(i * 50, () => t.paint(true)));
     this.moveText.setText(`Solved in ${this.moves} moves!`).setColor('#f2b632');
     this.time.delayedCall(1000, () => this.finish(true));

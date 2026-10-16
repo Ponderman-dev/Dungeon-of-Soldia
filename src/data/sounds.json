@@ -243,6 +243,23 @@
       "minGapMs": 90,
       "file": "picked/step",
       "source": "step_E.mp3"
+    },
+    "chestOpen": {
+      "file": "picked/doorOpen",
+      "volume": 0.5
+    },
+    "fountain": {
+      "file": "picked/potion",
+      "volume": 0.7
+    },
+    "puzzleSlide": {
+      "file": "press",
+      "volume": 0.5,
+      "pitchJitter": 0.05
+    },
+    "puzzleSolved": {
+      "file": "achievement",
+      "volume": 0.7
     }
   },
   "maxVoices": 8

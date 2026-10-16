@@ -114,8 +114,14 @@ for pattern, maxs, cues in MAP:
         files += 1
         for cue in cues:
             opts = idx[cue] = [o for o in idx[cue] if o['file'] != out]
-            letter = chr(ord('A') + len(opts)) if len(opts) < 26 else f'Z{len(opts) - 25}'
-            opts.append({'id': letter, 'desc': f'New: {pretty(src)}', 'file': out, 'yours': True})
+            opts.append({'id': '?', 'desc': f'New: {pretty(src)}', 'file': out, 'yours': True})
             added += 1
+# Every option gets its own letter in board order (A..Z, then AA, AB...). The old options come first, so their letters
+# (and the user's saved picks) stay the same; running this script twice no longer gives new sounds one shared letter.
+label = lambda i: chr(65 + i) if i < 26 else chr(65 + i // 26 - 1) + chr(65 + i % 26)
+for opts in idx.values():
+    for i, o in enumerate(opts):
+        o['id'] = label(i)
+    assert len({o['id'] for o in opts}) == len(opts)
 json.dump(idx, open(f'{OPT}/options.json', 'w'), indent=1)
 print(added, 'options added from', files, 'files')

@@ -62,3 +62,14 @@ Read `CLAUDE.md` first, then this file. Every item decision of this phase is in 
   its own room; puzzle 3x3 no fail; dealer free.
 - Open: the balance bots don't play rooms yet (runs in the game are now a bit easier than the bot says: ~1 floor in 4
   has no fight and gives a reward). Room weights / chance not tuned. Prop art is rough (Studio can't edit props yet).
+
+## Session 2 (later): UI, items, sounds
+- Reward "Who gets it?" = hero rows (stat items show 'DEF 12 → 24', nothing else); all 87 item texts rewritten
+  short + 'Per stack' line. Rooms: chests smaller and vanish, dealer steps aside, fountain at the side, puzzle easy.
+- Fire Arrows = a real burning arrow; noPop (no icon pop / proc sound) for Fire Arrows, Quiver, Metronome and the
+  8 debuff procs.
+- SOUND = ON HOLD (user: KIV). Board round 5 has ~180 CC0 sounds from GitHub (add-packs.py). Pending: the user must
+  re-pick Melee hit (its saved pick 'T' came from the letter bug), then 'apply the sound picks'. Item pop sound is
+  still the Fast magic spell (same as Holy hit).
+- Next (agreed order): hero balance round 2 (Alchemist/Archer/Bard/Mage still bottom), enemy difficulty curve,
+  drop odds, bosses. The balance bots still don't play special rooms.

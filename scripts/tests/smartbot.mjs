@@ -151,7 +151,7 @@ export function playRun(squad, opts = {}) {
     takeReward(s, cards, opts, out.log);
   };
   let prevRoom = null;
-  for (let floor = 1; floor <= (opts.maxFloor || 170); floor++) {
+  for (let floor = 1; floor <= (opts.maxFloor || 400); floor++) {
     out.floor = floor;
     const room = opts.noRooms ? null : roomForFloor(DATA.rooms, dungeon, floor, prevRoom, rng);
     prevRoom = room;

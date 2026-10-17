@@ -45,6 +45,10 @@ canvas { image-rendering: pixelated; display: block; }
 .tag.type { color: var(--muted); }
 .tag.new { background: var(--accent); color: #1a1208; padding: 1px 6px; border-radius: 3px; }
 .desc { font-size: 14px; color: var(--fg); }
+.fight { display: flex; flex-direction: column; gap: 6px; }
+.fight canvas { width: 240px; max-width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); background: #1b1629; }
+.see { font-size: 13px; color: var(--muted); margin: 0; }
+.see b { color: var(--fg); font-weight: 600; }
 .per { font-size: 13px; color: var(--note); }
 label { font: 10px var(--display); color: var(--muted); letter-spacing: .06em; }
 textarea { width: 100%; min-height: 64px; resize: vertical; font: 14px/1.45 var(--body); color: var(--fg); background: #15101f; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
@@ -60,7 +64,7 @@ textarea::placeholder { color: #6e6385; }
 <div class="wrap">
   <header>
     <h1>Item Review</h1>
-    <p class="lede">Every item in the game with its icon exactly as the game draws it: big as on the reward card, small as under a hero in a fight. The 15 items marked NEW have never been reviewed. Write what you want changed in the box under an item; it saves by itself.</p>
+    <p class="lede">Every item in the game with its icon exactly as the game draws it (big as on the reward card, small as under a hero in a fight) and, under it, what it shows in a fight, played with the game's own effect code. The 15 items marked NEW have never been reviewed. Write what you want changed about the icon or the effect in the box under an item; it saves by itself.</p>
   </header>
   <div class="bar" role="toolbar" aria-label="Filter">
     <button class="chip" id="f-new" data-f="new" aria-pressed="true">New <span class="n"></span></button>
@@ -71,8 +75,14 @@ textarea::placeholder { color: #6e6385; }
   <main id="list"></main>
 </div>
 
+<script>/*FXBUNDLE*/</script>
 <script>
 const DATA = /*DATA*/null;
+// The game's effect stage (bundled from src/studio/fxStage.js): the same drawing code as the game and the Studio.
+const FX = window.SoldiaFx;
+const FXCAT = FX.catalog();
+const STAGE = new FX.FxStage();
+const SZ = 2; // screen pixels per character pixel on the little stages
 const notes = {}; // item id -> text (from the database, or typed here)
 let filter = 'new';
 let db = null;
@@ -95,9 +105,10 @@ function makeCard(it) {
   const r = DATA.rarities[it.rarity];
   const el = document.createElement('article');
   el.className = 'card ' + it.rarity;
-  el.innerHTML = `<div class="top"><div class="icons"><canvas class="big"></canvas><canvas class="small"></canvas><span class="cap">in a fight</span></div>
+  el.innerHTML = `<div class="top"><div class="icons"><canvas class="big"></canvas><canvas class="small"></canvas><span class="cap">battle size</span></div>
     <div class="info"><div class="nm"></div><div class="tags"><span class="tag rar"></span><span class="tag type"></span></div><div class="desc"></div><div class="per"></div></div></div>
-    <label for="note-${it.id}">WHAT TO TWEAK</label>
+    <div class="fight"><label>IN A FIGHT</label><canvas class="scene" width="240" height="120" role="img"></canvas><p class="see"></p></div>
+    <label for="note-${it.id}">WHAT TO TWEAK (icon or effect)</label>
     <textarea id="note-${it.id}" placeholder="e.g. make the blade brighter, the icon reads like a spoon…"></textarea>
     <div class="saved"></div>`;
   drawIcon(el.querySelector('canvas.big'), it.icon, 4);
@@ -116,7 +127,16 @@ function makeCard(it) {
   const save = () => { clearTimeout(timer); timer = null; saveNote(it, ta.value, saved); };
   ta.addEventListener('input', () => { notes[it.id] = ta.value; draft(it.id, ta.value); el.classList.toggle('has-note', !!ta.value.trim()); saved.textContent = 'Typing…'; saved.className = 'saved'; clearTimeout(timer); timer = setTimeout(save, 900); counts(); });
   ta.addEventListener('blur', () => { if (timer) save(); });
-  cards.set(it.id, { el, ta, saved, it });
+  // What it shows in a fight (played by the effect stage below).
+  const steps = [];
+  if (it.pop) steps.push({ kind: 'pop', ms: 900, label: 'its icon pops up' });
+  for (const [g, n] of it.fx) { const e = FXCAT.find((x) => x.group === g && x.name === n); if (e) steps.push({ kind: 'fx', e, ms: e.group === 'status' ? 2400 : FX.tuner.ms(g, n, e.ms), label: e.label }); }
+  const see = el.querySelector('.see');
+  const labels = [...new Set(steps.map((x) => x.label))];
+  if (!steps.length) see.textContent = 'Nothing to see: a quiet bonus with no effect of its own.';
+  else { see.append('Shows: '); labels.forEach((l, i) => { const b = document.createElement('b'); b.textContent = l; see.append(i ? ', ' : '', b); }); }
+  el.querySelector('canvas.scene').setAttribute('aria-label', see.textContent);
+  cards.set(it.id, { el, ta, saved, it, steps, cv: el.querySelector('canvas.scene'), t0: Math.random() * 2000 });
   return el;
 }
 
@@ -167,6 +187,41 @@ function render() {
   if (!any) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = 'No notes yet. Pick "New" or "All items" and write in the box under an item.'; main.append(p); }
 }
 
+// The icon pop, like the game: the framed icon jumps up over the Knight's head with a white ring, holds, floats up, fades.
+function drawPop(ctx, icon, q) {
+  const L = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const grow = Math.min(1, q / 0.18), s = Math.max(1, Math.round(SZ * (0.6 + 0.4 * grow)));
+  const n = icon.r.length, size = n * s;
+  const cx = 30 * SZ, top = (20 - 6 * Math.max(0, (q - 0.5) / 0.5)) * SZ - size;
+  ctx.globalAlpha = q > 0.75 ? Math.max(0, 1 - (q - 0.75) / 0.25) : 1;
+  icon.r.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === '.') return; ctx.fillStyle = icon.p[L.indexOf(ch)]; ctx.fillRect(cx - size / 2 + x * s, top + y * s, s, s); }));
+  if (q < 0.35) { ctx.globalAlpha = 1 - q / 0.35; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = SZ; ctx.beginPath(); ctx.arc(cx, top + size / 2, size * (0.5 + q * 1.6), 0, Math.PI * 2); ctx.stroke(); }
+  ctx.globalAlpha = 1;
+}
+
+// Plays one card's steps one after another in a loop (a short pause at the end), only while the card is on screen.
+const visible = new Set();
+const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((x) => (x.isIntersecting ? visible.add(x.target) : visible.delete(x.target))), { rootMargin: '100px' }) : null;
+function drawCard(c, now) {
+  const ctx = c.cv.getContext('2d');
+  if (!c.steps.length) { if (!c.drawnOnce) { STAGE.drawScene(ctx, null, 0, FX.tuner, SZ); c.drawnOnce = true; } return; }
+  const total = c.steps.reduce((n, x) => n + x.ms, 0) + 700;
+  let t = (now + c.t0) % total;
+  for (const step of c.steps) {
+    if (t < step.ms) {
+      if (step.kind === 'pop') STAGE.drawScene(ctx, null, 0, FX.tuner, SZ, (cx) => drawPop(cx, c.it.icon, t / step.ms));
+      else STAGE.drawScene(ctx, step.e, t, FX.tuner, SZ);
+      return;
+    }
+    t -= step.ms;
+  }
+  STAGE.drawScene(ctx, null, 0, FX.tuner, SZ); // the pause
+}
+function frame(now) {
+  for (const c of cards.values()) if ((!io || visible.has(c.cv)) && c.el.isConnected) { try { drawCard(c, now); } catch (e) { /* one broken effect never stops the page */ } }
+  requestAnimationFrame(frame);
+}
+
 for (const it of DATA.items) {
   makeCard(it);
   const d = readDraft(it.id);
@@ -179,6 +234,8 @@ document.querySelectorAll('.chip').forEach((b) => b.addEventListener('click', ()
 }));
 counts();
 render();
+for (const c of cards.values()) { if (io) io.observe(c.cv); }
+requestAnimationFrame(frame);
 
 // The notes database: everyone's notes for each item (collection `notes`, doc = item id).
 (async () => {

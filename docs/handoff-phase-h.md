@@ -3,6 +3,13 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
+## START HERE (session 5): build HERO KITS v3
+NEXT JOB: build the new hero kits the user picked in `docs/hero-kits-v3.md` (all 10 decided, open questions
+answered). One hero per step (kit + tests + review/dmgshare check + show the user), bottom four first:
+Alchemist, Bard, Archer, Mage; 2-3 heroes per session. Old v2 hero tests (heroes-v2.test.mjs) get replaced.
+Done in session 5: CLAUDE.md slimmed (notes in docs/systems/), round 5 sound picks applied, Moonlight +30%,
+rare item buffs (docs/item-decisions.md 'Session 5'), dmgshare.mjs, item tests on a frozen fixture.
+
 ## START HERE (session 4): item looks + item damage buff
 Latest branch: `ccr-a59eab7b-wefaf5` (everything pushed). Start a new session from it.
 

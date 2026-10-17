@@ -1,15 +1,65 @@
-# Handoff: phase H (tuning), items finished, heroes next
+# Handoff: phase H (tuning). Newest notes first (START HERE), older sessions below.
 
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
-## Branch and git (important)
-- Work branch: `claude/phase-h-tuning` (everything committed and pushed). CLAUDE.md's "Git workflow" line still names the
-  old scaffold branch: ignore it, use `claude/phase-h-tuning`.
-- In the last session the clone was shallow and its local branch was stale, so work happened on a local branch
-  `phase-h-remote` tracking `origin/claude/phase-h-tuning`, pushed with `git push origin HEAD:claude/phase-h-tuning`.
-  A fresh session should just check out `claude/phase-h-tuning`.
-- The user previews the game at https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr (republished after every step).
+## START HERE (session 3): enemies and difficulty
+Status: build order step 3 of 5 is next = ELITE ENEMIES. Steps 1-2 are done and published.
+
+### Branch, preview, tools
+- Last session's branch: `ccr-a7ab1d1c-m41597` (all pushed). A new session gets its own branch name from the
+  system prompt: start it from `origin/ccr-a7ab1d1c-m41597` (it has everything), never from the old
+  `claude/phase-h-tuning` (behind). CLAUDE.md's git line just says "the branch the session names".
+- Game preview: https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr (build:page + republish after each step).
+- Enemy proposal page (sprites + picks): https://claude.ai/artifact/AkX6DWTeCsYzU6oXb3QWFS
+  (source `docs/proposals/enemy-proposal.src.html`, built by `node docs/proposals/make-enemy-page.mjs <src> <out>`).
+- Difficulty check: `node scripts/tests/curve.mjs 3 smart` (~40s, all cores). Last result: median 34, mean 37,
+  p90 59; walls at 16-20 (Grukk) and 36-40 (Brood Mother); a few runs still go 100-400.
+- Browser checks: run vite from the SCRATCHPAD dir (it writes vite.log; the repo has a tracked vite.log, do not
+  dirty it), dev-only `?floor=N` (start on floor N) and `?room=<kind>`; playwright script pattern in the
+  scratchpad `crowd.mjs` (Squad > start Battle > wait for mode 'fighting' > screenshot).
+
+### What the user decided (all of it)
+- 2-10 enemies per floor, more deeper; FODDER that scale way lower; a random but DELICATE floor mix; difficulty
+  must scale properly but endless runs stay possible.
+- ELITES from FLOOR 10, rare at first (about 1 fight in 20 at 10, 1 in 3 by 40, ~60% at 60, 80% at 100+;
+  a 2nd elite in a fight: 15% from 60, 35% at 100+; never on boss floors or in rooms).
+- MONSTER HOUSE after floor 60: 5% chance per floor (about 1 in 20, sometimes 2 close together), never a boss floor
+  or the one before; huge banner "IT'S A MONSTER HOUSE!", 11-15 enemies ALL AT ONCE; prize = an epic reward pool
+  with a small legendary chance.
+- Enemy page picks: ALL 14 new enemies KEEP; all 5 elemental powers KEEP; traits KEEP Vampiric, Shielded, Thorny,
+  Splitting, Regenerating, Unstoppable, Explosive; DROP Hasted and Berserk. Elite rule + elite reward had no pick
+  = build them as written on the page.
+
+### Done
+1. FLOOR DIRECTOR (CLAUDE.md "FLOOR DIRECTOR"): threat budget per floor, tiers fodder 0.4 / normal 1 / strong 2,
+   shapes swarm/squad/heavy/mixed, swing, maxCount up to 10, enemy rows (`formation.js`), fodder scaling
+   (combat.json `enemyTiers`), `bigFightEase` removed. Tests `director.test.mjs`.
+2. NEW FODDER: Imp Swarmling 13+, Mushling 22+, Bone Rat 25+, Shade Wisp 35+ (`scripts/art/add-enemies.mjs <ids>`:
+   sprite from `docs/proposals/enemy-designs.mjs`, rules in its RULES table, adds the roster entry).
+
+### Next: step 3 ELITES (spec as approved)
+- Which enemies can be elite is NOT decided: suggest normal + strong only (never bosses, boss helpers, objects;
+  fodder probably not). Ask the user.
+- Stats x2 health, x1.35 attack, +10 defense and resist; drawn 1 pixel size bigger (drawScale +1), a glow in its
+  element colour, a small gold crown over its health bar; name like "Burning Vampiric Bandit"; x3 XP; after a
+  fight with an elite ONE of the 3 reward cards goes up a rarity.
+- ELEMENT (one): Burning = hits Burn, resists fire, weak ice; Frozen = Chill, resists ice, weak fire; Storm =
+  Shock + every 4th hit jumps to a 2nd hero, resists electric, weak ice; Cursed = Curse + heals 10% of damage,
+  resists dark, weak holy; Toxic = Poison + poison cloud on death, resists dark, weak fire. Its basic attack takes
+  the element's damage type (poison = dark).
+- TRAIT (one): Vampiric (heals 20% of damage dealt), Shielded (shield 30% max health, regrows after 6s unhit),
+  Thorny (reflects 20% melee), Splitting (dies into 2 small non-elite copies at 25% health), Regenerating (2%/s),
+  Unstoppable (control statuses half as long), Explosive (death burst of its element on nearby heroes).
+- Suggested build: odds + picks in dungeons.json `director.elites`; the director marks ids (e.g. returns
+  `{id, elite:{element, trait}}` or a parallel `ids.elites` list) so `spawnEnemies` can apply `makeElite()`;
+  reuse existing pieces: onHit status specs, onDeath bursts (Puffshroom), shields (`shield` status), thorns,
+  lifesteal, `statusDurationScale`, regen. Tests + smartbot (it must handle split spawns) + curve check.
+- Then step 4 MONSTER HOUSE, step 5 the 10 new enemies (rules on the proposal page; some need new code:
+  Shaman heal, Shieldbearer ally shield, Worm burrow, Acolyte raise, Golem enrage, Blink Imp teleport, Hound
+  howl, Banshee silence wind-up, Sentinel adaptive resist; Sapper bomb on death).
+- Later (agreed order): hero balance round 2 (Alchemist, Archer, Bard, Mage at the bottom), drop odds, bosses
+  rework. Sound is ON HOLD (see below).
 
 ## How we work with this user (phase H)
 - Item by item, 4 ideas each via the question tool; the user picks, often writes their own twist. Ask before design changes.
@@ -81,8 +131,7 @@ Read `CLAUDE.md` first, then this file. Every item decision of this phase is in 
 - Tested: enemies +30% hp / +45% atk per 3 floors (instead of +35 / +52.5) = median 38 (user's target ~40), BUT
   strong squads never die (fights at floor 300 last 3.6s). User: DON'T change growth yet; instead add NEW ENEMIES
   and maybe ELITE enemies to keep deep floors interesting. Endless runs should stay possible.
-- Enemy proposal page (10 new enemies + elites): https://claude.ai/artifact/AkX6DWTeCsYzU6oXb3QWFS (user has not
-  sent keep/drop picks yet).
+- Enemy proposal page (10 new enemies + elites): https://claude.ai/artifact/AkX6DWTeCsYzU6oXb3QWFS (picks in START HERE).
 - USER'S PLAN (after the page): 2-10 enemies per floor (more deeper), FODDER enemies that scale way lower, a
   random floor mix (true roguelike, but delicate), elites from floor 10 (rare at first), MONSTER HOUSE after
   floor 60 (5% per floor = about 1 in 20; "IT'S A MONSTER HOUSE!", 11-15 enemies ALL AT ONCE, prize = epic pool +

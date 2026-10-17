@@ -256,6 +256,7 @@ export default class BattleState {
       h.streak = { uid: null, count: 0 }; // Brawler's Streak
       h.pending = null; // attacks aimed at the last floor's enemies are gone
       h.foe = null;
+      h.order = null; // drag orders end with the floor
       h.casting = null;
     }
     this.floorNo = floor;
@@ -270,6 +271,24 @@ export default class BattleState {
   setFocus(uid) {
     const unit = this.enemies.find((e) => e.uid === uid);
     this.focusUid = unit && unit.alive ? uid : null;
+  }
+
+  // DRAG ORDER (user's sketch): drag from a hero to an enemy = ONLY that hero attacks that enemy (basic attacks and its
+  // one-target skills) until it dies; the squad's tap focus is untouched. Beats tap focus for that hero; taunt and
+  // charm still win. Cleared when the enemy dies or the floor ends. Returns true when it was set.
+  setOrder(heroUid, enemyUid) {
+    const hero = this.heroes.find((h) => h.uid === heroUid);
+    const enemy = this.enemies.find((e) => e.uid === enemyUid);
+    if (!hero || !hero.alive || !enemy || !enemy.alive || this.untargetable(enemy)) return false;
+    hero.order = enemy.uid;
+    if (hero.damageType === 'melee') hero.foe = enemy.uid;
+    return true;
+  }
+
+  // The enemy a hero was ordered to attack, if it is still there and can be hit.
+  orderOf(hero) {
+    if (!hero.order) return null;
+    return this.enemies.find((e) => e.uid === hero.order && e.alive && !this.untargetable(e)) || null;
   }
 
   get focusUnit() {
@@ -357,7 +376,9 @@ export default class BattleState {
     if (taunter) return taunter;
     const foes = (unit.side === 'hero' ? this.targetableEnemies() : this.defenders());
     if (!foes.length) return null;
-    if (unit.side === 'hero' && !unit.minion) { // minions ignore tap focus
+    if (unit.side === 'hero' && !unit.minion) { // minions ignore tap focus and orders
+      const order = this.orderOf(unit);
+      if (order) return this.setFoe(unit, order); // its own drag order beats the squad's tap focus
       const focus = foes.find((e) => e.uid === this.focusUid);
       if (focus) return this.setFoe(unit, focus);
     }
@@ -548,7 +569,10 @@ export default class BattleState {
     target.pending = null; // an attack it had started never lands
     target.casting = null;
     target.moving = false;
-    for (const u of this.allUnits()) if (u.foe === target.uid) u.foe = null;
+    for (const u of this.allUnits()) {
+      if (u.foe === target.uid) u.foe = null;
+      if (u.order === target.uid) u.order = null; // a drag order ends with its enemy
+    }
     this.retargetAttacksOn(target, events);
     if (this.focusUid === target.uid) this.focusUid = null;
     events.push({ type: 'death', unit: target });

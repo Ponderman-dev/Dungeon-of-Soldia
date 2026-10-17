@@ -84,6 +84,13 @@ export default class BattleScene extends Phaser.Scene {
 
   create() {
     this.bannerRows = []; // skill banner rows in use (timers die with the scene, so start fresh)
+    // Drawing layers made on first use: a new run (scene started again) must make new ones, the old ones were destroyed
+    // with the last run (bug: on a second run status effects, hits, elites, bombs... were drawn on dead layers).
+    for (const k of ['arrowG', 'bombG', 'bombTopG', 'castBars', 'crownG', 'eliteG', 'heroHud', 'hitG', 'orderG', 'statusG', 'tauntLines']) this[k] = null;
+    this.orderDrag = null;
+    this.orderInput = false; // the scene's input listeners are gone too
+    this.fxList = [];
+    this.iceBreaks = [];
     // The squad: from squad.json, or the one the TEST squad button picked (registry `squadIds`).
     const demo = import.meta.env.VITE_DEMO === 'house';
     const heroDefs = pickSquad(allHeroDefs, demo ? demoSquad.heroes.map((h) => h.id) : this.registry.get('squadIds') || squadIds); // the demo page always uses its saved squad
@@ -299,6 +306,7 @@ export default class BattleScene extends Phaser.Scene {
     }
     this.drawElites(now);
     this.drawBombs(now);
+    this.drawOrders();
     // Ice breaking off a fighter whose Freeze just ended.
     this.iceBreaks = (this.iceBreaks || []).filter((b) => now - b.start < 400 && b.view.ch.active);
     for (const b of this.iceBreaks) this.paintFx(g, b.view, iceBreak(b.view.box || bodyBox(b.view.unit.def.parts, b.view.unit.def.height), (now - b.start) / 400));
@@ -329,6 +337,80 @@ export default class BattleScene extends Phaser.Scene {
       const x0 = v.bg.x - BAR_WIDTH / 2 - 1 - 6 * P, y0 = v.bg.y - 2 * P;
       for (const [c, r, col] of crown) cg.fillStyle(col, v.bg.alpha).fillRect(x0 + c * P, y0 + r * P, P, P);
     }
+  }
+
+  // DRAG ORDERS (user's sketch): press a living hero during a fight and drag: a red arrow follows the finger and the
+  // enemy under it gets a ring; let go over an enemy = only that hero attacks it (BattleState.setOrder). Letting go
+  // anywhere else does nothing. Tap-to-focus on enemies is unchanged.
+  startOrderDrag(view, pointer) {
+    if (this.mode !== 'fighting' || !view.unit.alive) return;
+    this.orderDrag = { view, x: pointer.worldX, y: pointer.worldY };
+    if (!this.orderInput) {
+      this.orderInput = true;
+      this.input.on('pointermove', (p) => { if (this.orderDrag) { this.orderDrag.x = p.worldX; this.orderDrag.y = p.worldY; } });
+      this.input.on('pointerup', (p) => this.endOrderDrag(p));
+      this.input.on('gameout', () => { this.orderDrag = null; });
+    }
+  }
+
+  // The enemy under a point (the nearest living, hittable one within its body), or null.
+  enemyAt(x, y) {
+    let best = null, bestD = Infinity;
+    for (const v of this.views.values()) {
+      const u = v.unit;
+      if (u.side !== 'enemy' || !u.alive || this.state.untargetable(u)) continue;
+      const c = this.center(v);
+      const reach = Math.max(40, (bodyBox(u.def.parts, u.def.height).hw + 6) * charScale(u.def));
+      const d = Math.hypot(c.x - x, c.y - y);
+      if (d < reach && d < bestD) { best = v; bestD = d; }
+    }
+    return best;
+  }
+
+  endOrderDrag(p) {
+    const drag = this.orderDrag;
+    this.orderDrag = null;
+    if (!drag || this.mode !== 'fighting') return;
+    // The enemy under the finger, or the one that was lit up a moment ago (small enemies walk; fingers are big).
+    const lit = drag.over && drag.over.unit.alive && this.views.get(drag.over.unit.uid) === drag.over ? drag.over : null;
+    const target = this.enemyAt(p.worldX, p.worldY) || lit;
+    if (!target || !this.state.setOrder(drag.view.unit.uid, target.unit.uid)) return;
+    sfx.play('tap');
+    this.ring(target, 0xffa040);
+    this.popText(drag.view, 'On it!', '#ffa040');
+  }
+
+  // Every frame: the drag arrow (while dragging), and for every hero with an order a thin orange ring under its
+  // target and a small one under the hero itself (so you can see who has an order).
+  drawOrders() {
+    if (!this.orderG) this.orderG = this.add.graphics().setDepth(DEPTH.marker + 0.5);
+    if (!this.arrowG) this.arrowG = this.add.graphics().setDepth(DEPTH.popup - 0.5);
+    const g = this.orderG, a = this.arrowG;
+    g.clear();
+    a.clear();
+    const foot = (v) => ({ x: v.ch.x, y: v.ch.y + v.ch.hopOffset + (v.groundY - v.ch.homeY) + 6 });
+    for (const h of this.state.heroes) {
+      const t = h.alive && this.state.orderOf(h);
+      const hv = this.views.get(h.uid), tv = t && this.views.get(t.uid);
+      if (!hv || !tv) continue;
+      const tf = foot(tv), hf = { x: hv.ch.x, y: hv.ch.y + 4 };
+      g.lineStyle(2, 0xffa040, 0.9).strokeEllipse(tf.x, tf.y, 54, 14);
+      g.lineStyle(2, 0xffa040, 0.6).strokeEllipse(hf.x, hf.y, 34, 9);
+    }
+    const d = this.orderDrag;
+    if (!d || !d.view.unit.alive || this.mode !== 'fighting') { if (d) this.orderDrag = null; return; }
+    const from = this.center(d.view);
+    const over = this.enemyAt(d.x, d.y);
+    d.over = over || (d.over && Math.hypot(this.center(d.over).x - d.x, this.center(d.over).y - d.y) < 70 ? d.over : null); // stays lit a little while the finger slips off
+    const to = over ? this.center(over) : { x: d.x, y: d.y };
+    const ang = Math.atan2(to.y - from.y, to.x - from.x), len = Math.hypot(to.x - from.x, to.y - from.y);
+    if (len < 12) return; // a tap, not a drag yet
+    a.lineStyle(6, 0x1a1020, 0.8).lineBetween(from.x, from.y, to.x - Math.cos(ang) * 10, to.y - Math.sin(ang) * 10);
+    a.lineStyle(3, 0xff4d4d, 1).lineBetween(from.x, from.y, to.x - Math.cos(ang) * 10, to.y - Math.sin(ang) * 10);
+    const head = (k, w) => [to.x - Math.cos(ang) * k + Math.cos(ang + Math.PI / 2) * w, to.y - Math.sin(ang) * k + Math.sin(ang + Math.PI / 2) * w];
+    const [l1, l2] = head(16, 9), [r1, r2] = head(16, -9);
+    a.fillStyle(0xff4d4d, 1).fillTriangle(to.x, to.y, l1, l2, r1, r2);
+    if (over) { const f = foot(over); a.lineStyle(3, 0xff4d4d, 1).strokeEllipse(f.x, f.y, 62, 16); }
   }
 
   // Kobold Sapper bombs (BattleState.bombs): a red danger ring on the floor that fills up, and a black pixel bomb with a
@@ -816,6 +898,12 @@ export default class BattleScene extends Phaser.Scene {
       const w = Math.max(32, bodyBox(unit.def.parts, h).hw * 2 + 6); // big bosses are wider
       ch.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h - 2, w, h + 4), Phaser.Geom.Rectangle.Contains);
       ch.on('pointerdown', () => this.state.setFocus(unit.uid));
+    }
+    if (unit.side === 'hero' && !unit.minion) {
+      // Press a hero and drag to an enemy: only that hero attacks it (drag orders, see startOrderDrag).
+      const h = unit.def.height;
+      ch.setInteractive(new Phaser.Geom.Rectangle(-18, -h - 4, 36, h + 8), Phaser.Geom.Rectangle.Contains);
+      ch.on('pointerdown', (pointer) => this.startOrderDrag(view, pointer));
     }
     if (parent) parent.add([ch, bg, fill, shieldFill, view.chipBox]);
     return view;

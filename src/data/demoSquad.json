@@ -1,0 +1,167 @@
+{
+ "_about": "Made by scripts/tests/make-demo-squad.mjs (smart player, seed 5): the squad as it was after floor 60.",
+ "floor": 61,
+ "heroes": [
+  {
+   "id": "knight",
+   "level": 23,
+   "items": [
+    "shield_totem",
+    "padded_vest",
+    "padded_vest",
+    "phoenix_feather",
+    "bandage_roll",
+    "mirror_buckler",
+    "padded_vest",
+    "overheal_ring",
+    "shield_totem",
+    "aid_kit",
+    "fire_heart",
+    "spirit_axe",
+    "provokers_horn",
+    "war_banner",
+    "phoenix_feather",
+    "heart_of_the_beast",
+    "giantslayers_brand",
+    "martyrs_shield",
+    "overheal_ring",
+    "provokers_horn",
+    "spite_mail",
+    "spiked_aegis",
+    "spite_mail",
+    "iron_will_talisman",
+    "shield_totem",
+    "last_stand_banner"
+   ],
+   "pages": [
+    [],
+    []
+   ]
+  },
+  {
+   "id": "berserker",
+   "level": 23,
+   "items": [
+    "chill_band",
+    "quick_gloves",
+    "bloodlust_mask",
+    "bloodlust_mask",
+    "magma_core",
+    "sharp_edge",
+    "bloodlust_mask",
+    "gag_rune",
+    "hex_doll",
+    "catalyst_vial",
+    "hex_doll",
+    "bloodlust_mask",
+    "magma_core"
+   ],
+   "pages": [
+    [
+     {
+      "id": "ricochet",
+      "kind": "modifier",
+      "tag": "Area",
+      "name": "Ricochet",
+      "text": "A one-target skill also hits 1 more enemy at 50% (a heal or buff on one ally also reaches a second ally at 50%).",
+      "ricochet": 0.5
+     },
+     {
+      "id": "siphon",
+      "kind": "modifier",
+      "tag": "Heal",
+      "name": "Siphon",
+      "text": "15% of the damage it deals heals the caster (support skill: heals the caster 5% of max health).",
+      "siphonPercent": 15,
+      "supportHealPercent": 5
+     },
+     {
+      "id": "swift",
+      "kind": "stat",
+      "name": "Swift",
+      "text": "Cooldown 8% shorter.",
+      "cooldown": 8
+     },
+     {
+      "id": "sharpen",
+      "kind": "stat",
+      "name": "Sharpen",
+      "text": "+8% skill power (damage, healing, shield or buff size).",
+      "power": 8
+     },
+     {
+      "id": "swift",
+      "kind": "stat",
+      "name": "Swift",
+      "text": "Cooldown 8% shorter.",
+      "cooldown": 8
+     }
+    ],
+    []
+   ]
+  },
+  {
+   "id": "necromancer",
+   "level": 23,
+   "items": [
+    "rat_cage",
+    "scholars_bookmark",
+    "conductors_baton",
+    "gargoyle_idol",
+    "grave_dust",
+    "wisp_lantern",
+    "necro_crown",
+    "gargoyle_idol",
+    "mimic_chest",
+    "spirit_knight_banner",
+    "bone_charm",
+    "conductors_baton",
+    "scholars_bookmark",
+    "overseers_whistle",
+    "mimic_chest"
+   ],
+   "pages": [
+    [
+     {
+      "id": "venomInk",
+      "kind": "modifier",
+      "tag": "Debuff",
+      "name": "Venom Ink",
+      "text": "Every enemy the skill hits also gets 2 stacks of Poison.",
+      "ink": [
+       {
+        "status": "poison",
+        "stacks": 2,
+        "durationMs": 5000,
+        "damageMultiplier": 0.2,
+        "damageType": "dark"
+       }
+      ]
+     },
+     {
+      "id": "sharpen",
+      "kind": "stat",
+      "name": "Sharpen",
+      "text": "+8% skill power (damage, healing, shield or buff size).",
+      "power": 8
+     },
+     {
+      "id": "huntersInk",
+      "kind": "modifier",
+      "tag": "Debuff",
+      "name": "Hunter's Ink",
+      "text": "Every enemy the skill hits is Marked for 4s (+15% damage taken from everyone).",
+      "ink": [
+       {
+        "status": "mark",
+        "durationMs": 4000,
+        "damageTakenPercent": 15
+       }
+      ]
+     }
+    ],
+    []
+   ]
+  }
+ ]
+}

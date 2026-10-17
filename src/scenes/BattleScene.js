@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, SKILL_COLORS } from '../config.js';
 import allHeroDefs from '../data/heroes.json';
 import squadIds from '../data/squad.json';
+import demoSquad from '../data/demoSquad.json'; // the Monster House demo page's squad
 import enemyDefs from '../data/enemies.json';
 import minionDefs from '../data/minions.json';
 import dungeons from '../data/dungeons.json';
@@ -70,8 +71,6 @@ const SKILL_H = 44;
 // How big one character pixel is on screen (bosses use finer pixels: `drawScale` in enemies.json).
 const charScale = (def) => def.drawScale ?? CHAR_SCALE;
 
-const DEMO_LEVEL = Number(import.meta.env.VITE_DEMO_LEVEL || 20); // ...and its squad starts at this level
-const DEMO_ROSTER_FLOOR = 70; // the Monster House demo page picks its enemies like floor 70
 const DEPTH = { floor: 0, slot: 1, marker: 2, hero: 5, heroBar: 6, doorFront: 7, popup: 10, hud: 20 };
 
 // The battle screen: enemies at the top, the squad (3 heroes) at the bottom, everyone auto-attacks.
@@ -86,7 +85,8 @@ export default class BattleScene extends Phaser.Scene {
   create() {
     this.bannerRows = []; // skill banner rows in use (timers die with the scene, so start fresh)
     // The squad: from squad.json, or the one the TEST squad button picked (registry `squadIds`).
-    const heroDefs = pickSquad(allHeroDefs, this.registry.get('squadIds') || squadIds);
+    const demo = import.meta.env.VITE_DEMO === 'house';
+    const heroDefs = pickSquad(allHeroDefs, demo ? demoSquad.heroes.map((h) => h.id) : this.registry.get('squadIds') || squadIds); // the demo page always uses its saved squad
     this.slotWidth = GAME_WIDTH / heroDefs.length;
     this.dungeon = dungeons[DUNGEON_ID];
     for (const problem of validateDungeon(this.dungeon, enemyDefs)) console.error('Dungeon data:', problem);
@@ -108,9 +108,15 @@ export default class BattleScene extends Phaser.Scene {
       damageTypes,
       leveling,
     });
-    // The Monster House demo page: the squad starts at a higher level, like heroes deep into a run.
-    if (import.meta.env.VITE_DEMO === 'house') {
-      for (const h of this.state.heroes) while (h.level < DEMO_LEVEL) this.state.levelUp(h);
+    // The Monster House demo page: the squad exactly as the smart player had it after floor 60 (src/data/demoSquad.json,
+    // made by scripts/tests/make-demo-squad.mjs): its levels, items and skill pages.
+    if (demo) {
+      this.state.heroes.forEach((h, i) => {
+        const saved = demoSquad.heroes[i];
+        while (h.level < saved.level) this.state.levelUp(h);
+        for (const id of saved.items) this.state.giveItem(h.uid, id);
+        saved.pages.forEach((pages, k) => { for (const page of pages) this.state.addPage(h.uid, k, page); });
+      });
       for (const h of this.state.heroes) h.hp = h.maxHp;
     }
 
@@ -129,6 +135,7 @@ export default class BattleScene extends Phaser.Scene {
     // Dev server only: ?floor=N starts the run on floor N (browser checks of deep floors).
     const startAt = import.meta.env.DEV && Number(new URLSearchParams(location.search).get('floor'));
     if (startAt > 1) this.floor = startAt;
+    if (demo) this.floor = demoSquad.floor;
     this.layer = this.buildFloor(this.floor, 0);
     this.floorText.setText(`Floor ${this.floor}`);
     this.beginFloor(); // a fight, or a special room (roomMethods.js)
@@ -819,12 +826,12 @@ export default class BattleScene extends Phaser.Scene {
     const lineUp = room ? [] : enemiesForFloor(this.dungeon, n, Math.random, this.director, enemyDefs);
     // Dev server only: `?house=1` makes every directed fight a Monster House.
     const devHouse = import.meta.env.DEV && new URLSearchParams(location.search).get('house') && n >= this.dungeon.director.fromFloor;
-    // The MONSTER HOUSE DEMO page (`npm run build:house-demo`, VITE_DEMO=house): EVERY floor is a Monster House with
-    // the enemies of floor `demoRosterFloor` (deep ones, elites too), but as strong as the floor you are really on.
+    // The MONSTER HOUSE DEMO page (`npm run build:house-demo`, VITE_DEMO=house): it starts on floor 61 with a real squad
+    // (demoSquad.json) and EVERY fight floor is a Monster House (boss floors stay boss fights).
     const demo = import.meta.env.VITE_DEMO === 'house';
     if ((devHouse || demo) && !room && !lineUp.monsterHouse && !(this.dungeon.bosses || {})[n]) {
       const always = { ...this.dungeon, director: { ...this.dungeon.director, monsterHouse: { ...this.dungeon.director.monsterHouse, fromFloor: 0, chance: 100 } }, bosses: {} };
-      const house = monsterHouse(always, demo ? DEMO_ROSTER_FLOOR : n, Math.random, enemyDefs);
+      const house = monsterHouse(always, n, Math.random, enemyDefs);
       lineUp.splice(0, lineUp.length, ...house);
       Object.assign(lineUp, { monsterHouse: true, elites: house.elites, shape: house.shape });
     }

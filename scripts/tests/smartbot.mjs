@@ -118,7 +118,7 @@ export function takeReward(s, cards, opts, log) {
 }
 
 // One fight to the end. Returns { won, ms }.
-function fight(s, stats, floor) {
+export function fight(s, stats, floor) {
   s.placeLines(); s.startFloor();
   let t = 0;
   while (!s.allEnemiesDead() && !s.allHeroesDead() && t < 300000) {
@@ -184,6 +184,7 @@ export function playRun(squad, opts = {}) {
     reward();
     if (boss) takeReward(s, [DATA.bookData.cards.golden], opts, out.log);
   }
+  out.state = s; // the fight state at the end (make-demo-squad.mjs saves its heroes)
   out.levels = s.heroes.map((h) => h.level);
   out.items = s.heroes.map((h) => h.items.length);
   return out;

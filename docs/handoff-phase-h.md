@@ -45,7 +45,7 @@ Status: steps 1-4 DONE (ELITES and MONSTER HOUSE, see CLAUDE.md). User: keep eli
    (0% reach 100, was 2%). Brood Mother win rate 78% (was 87%). NOT tuned yet: ask the user if that is the wanted
    feel (knobs: director.elites chance points, combat.json elites multipliers / element chances).
 
-4. MONSTER HOUSE (built, session 3): as written in the user's plan (see CLAUDE.md MONSTER HOUSE). The 5% rolls
+4. MONSTER HOUSE (built, session 3; user after the demo: legendary 10% -> 4%, fodder weights 2/1.4/0.25 -> 1/1.6/0.4; with that only 38% of 74 real squads at floor 61 survive one (was ~90%), user to judge in the demo): as written in the user's plan (see CLAUDE.md MONSTER HOUSE). The 5% rolls
    on fight floors only (rooms are decided first). Smart player 3/squad: median 29, mean 31.7 (same as elites only);
    the Monster House killed 7 of the ~18 runs that got past floor 60 (3rd top killer). Not tuned.
 

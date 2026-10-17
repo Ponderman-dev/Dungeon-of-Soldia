@@ -8,6 +8,8 @@ import unlocks from '../data/unlocks.json';
 import dungeons from '../data/dungeons.json';
 import combatRules from '../data/combat.json';
 import defaultSquad from '../data/squad.json';
+import demoSquad from '../data/demoSquad.json'; // the Monster House demo page's saved squad
+const DEMO = import.meta.env.VITE_DEMO === 'house';
 import { perkMods } from '../systems/party.js';
 import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
@@ -48,7 +50,7 @@ export default class SquadScene extends Phaser.Scene {
   create() {
     this.progress = loadProgress();
     this.newIds = newHeroes(heroDefs, this.progress, unlocks);
-    const last = this.registry.get('squadIds') || this.progress.lastSquad || defaultSquad;
+    const last = DEMO ? demoSquad.heroes.map((h) => h.id) : this.registry.get('squadIds') || this.progress.lastSquad || defaultSquad; // the demo page: its saved squad
     this.slots = slotsFrom(last, this.openIds());
     this.scroll = 0;
     this.panel = null;
@@ -178,11 +180,12 @@ export default class SquadScene extends Phaser.Scene {
   // ---- state ---------------------------------------------------------------------------------
 
   openIds() {
+    if (DEMO) return heroDefs.map((h) => h.id); // the demo page: every hero open (its saved squad may hold locked ones)
     return unlockedIds(heroDefs, this.progress, unlocks);
   }
 
   unlocked(id) {
-    return isUnlocked(id, this.progress, unlocks);
+    return DEMO || isUnlocked(id, this.progress, unlocks);
   }
 
   need() {

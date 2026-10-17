@@ -268,13 +268,13 @@
           15
         ],
         "tiers": {
-          "fodder": 2,
-          "normal": 1.4,
-          "strong": 0.25
+          "fodder": 1,
+          "normal": 1.6,
+          "strong": 0.4
         },
         "rewardOdds": {
-          "epic": 90,
-          "legendary": 10
+          "epic": 96,
+          "legendary": 4
         }
       }
     }

@@ -95,8 +95,8 @@ Decided by the user one hero at a time (feel, passive, attack, support). Numbers
 - Support BETTER BREW: Mystery Brew throws 4 flasks, cooldown 12s -> 9s, healing flasks heal 30%.
 
 ## Open questions for the build
-- Cleric passive: does the +attack/+speed buff go to the HEALED ally (as written by the user) or to the Cleric?
-- Bard: with no always-on song, how long does a chosen March/Ballad last (until switched?).
-- Samurai skill name clashes with the Thousand Cuts item.
+- ANSWERED: the Cleric's +attack/+speed buff (after she heals someone else) goes to HERSELF.
+- ANSWERED: Bard: a song (March/Ballad from Change Song) plays only 5s.
+- ANSWERED: Samurai: rename the SKILL (the Thousand Cuts item keeps its name).
 - Every hero's numbers are first guesses; check each with review.mjs / dmgshare.mjs after building.
 - Build order suggestion: one hero per step (kit + tests + bot check), weakest first.

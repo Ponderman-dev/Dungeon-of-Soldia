@@ -1,10 +1,10 @@
 // Shield Totem (phase H): 6% block per totem, more totems creep towards 90%, NO recharge (blocks can come back to back).
 import fs from 'fs';
-import { noPerks } from './util.mjs';
+import { noPerks, frozenItems } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems } from '../../src/systems/items.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
-const itemDefs = loadItems(r('items.json'));
+const itemDefs = loadItems(frozenItems());
 const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
 const mk = (n) => { const s = new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
   const k = s.heroes[0]; s.heroes.slice(1).forEach((h) => (h.alive = false)); for (let i = 0; i < n; i++) s.giveItem(k.uid, 'shield_totem'); return { s, k }; };

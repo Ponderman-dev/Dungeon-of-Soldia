@@ -1,11 +1,11 @@
 // Phase G3: debuff appliers (real items.json).
 import fs from 'fs';
-import { noPerks, kitsV1 } from './util.mjs';
+import { noPerks, kitsV1, frozenItems } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems } from '../../src/systems/items.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
-const itemDefs = loadItems(r('items.json')), rules = { ...r('combat.json'), skillWindUp: { defaultCastMs: 0 } };
+const itemDefs = loadItems(frozenItems()), rules = { ...r('combat.json'), skillWindUp: { defaultCastMs: 0 } };
 const mk = (enemyIds = ['goblin'], rng = () => 0.99, heroIds = null) => {
   const real = kitsV1(r('heroes.json'));
   const defs = heroIds ? heroIds.map((id) => ({ ...real.find((x) => x.id === id), perk: undefined })) : noPerks(real).slice(0, 3);

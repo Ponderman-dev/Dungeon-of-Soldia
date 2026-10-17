@@ -24,6 +24,9 @@ and suggest a fresh session per task.
 - **Small steps:** one step at a time, then stop and tell the user how to see it.
 - **After every change:** `npm test`, a full-run check when balance is touched, commit, push, `npm run build:page`,
   republish the preview (below).
+- **Tests vs tuning:** item mechanic tests use a frozen copy (`scripts/tests/fixtures/items-frozen.json`, `frozenItems()`
+  in util.mjs), so changing item NUMBERS in items.json needs no test edits. Copy an item into the fixture only when it
+  is new or its effect shape changes. New tests: check the mechanic, read numbers from the data, don't retype them.
 - **Docs:** when you change a system, update its `docs/systems/*.md` file (not this file). Add a one-line pointer
   below only for a NEW system.
 

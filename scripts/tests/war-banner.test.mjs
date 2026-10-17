@@ -1,9 +1,9 @@
 import fs from 'fs';
-import { noPerks } from './util.mjs';
+import { noPerks, frozenItems } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems } from '../../src/systems/items.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
-const itemDefs = loadItems(r('items.json'));
+const itemDefs = loadItems(frozenItems());
 const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
 const mk = () => new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: { ...r('combat.json'), morale: {} }, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
 // proc rate: ~8% of the holder's attacks

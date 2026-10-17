@@ -2,10 +2,10 @@
 import fs from 'fs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems } from '../../src/systems/items.js';
-import { noPerks } from './util.mjs';
+import { noPerks, frozenItems } from './util.mjs';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
-const itemDefs = loadItems(r('items.json'));
+const itemDefs = loadItems(frozenItems());
 const mk = (enemyIds = ['goblin'], rng = () => 0.5) => {
   const s = new BattleState({ heroDefs: noPerks(r('heroes.json')).slice(0, 3), enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });
   const es = s.spawnEnemies(enemyIds, 1);

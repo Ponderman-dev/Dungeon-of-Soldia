@@ -16,3 +16,8 @@ export const noPerks = (defs) => defs.filter((h) => TEST_SKILLS[h.id]).map((h) =
 import fs from 'fs';
 const V1 = JSON.parse(fs.readFileSync(new URL('./fixtures/heroes-v1-kits.json', import.meta.url), 'utf8'));
 export const kitsV1 = (defs) => defs.map((h) => (V1[h.id] ? { ...h, passive: V1[h.id].passive, skills: V1[h.id].skills } : h));
+
+// Item MECHANIC tests use a FROZEN copy of items.json (fixtures/items-frozen.json, taken in session 5), so tuning
+// item numbers in src/data/items.json never breaks them. Copy an item into the fixture only when it is NEW or its
+// effect SHAPE changes (then test the new mechanic). Data checks (icons, texts, drop odds) read the real file.
+export const frozenItems = () => JSON.parse(fs.readFileSync(new URL('./fixtures/items-frozen.json', import.meta.url), 'utf8'));

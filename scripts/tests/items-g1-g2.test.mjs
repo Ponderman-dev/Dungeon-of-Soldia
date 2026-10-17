@@ -1,12 +1,12 @@
 // Phase G1 (updated built items) and G2 (simple commons). Item defs are the REAL ones from items.json.
 import fs from 'fs';
-import { noPerks } from './util.mjs';
+import { noPerks, frozenItems } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems, canReceive } from '../../src/systems/items.js';
 import { squadSources, dropWeight } from '../../src/systems/rewards.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
-const itemDefs = loadItems(r('items.json')), rules = { ...r('combat.json'), skillWindUp: { defaultCastMs: 0 } };
+const itemDefs = loadItems(frozenItems()), rules = { ...r('combat.json'), skillWindUp: { defaultCastMs: 0 } };
 const mk = (enemyIds = ['goblin'], rng = () => 0.99) => { // rng .99: no crits, no dodges, no chance effects
   const s = new BattleState({ heroDefs: noPerks(r('heroes.json')).slice(0, 3), enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });
   const es = s.spawnEnemies(enemyIds, 1);

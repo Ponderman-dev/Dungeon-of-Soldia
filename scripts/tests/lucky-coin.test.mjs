@@ -1,9 +1,9 @@
 import fs from 'fs';
-import { noPerks } from './util.mjs';
+import { noPerks, frozenItems } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems, canReceive } from '../../src/systems/items.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
-const itemDefs = loadItems(r('items.json'));
+const itemDefs = loadItems(frozenItems());
 const s = new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
 const rogue = s.heroes[2]; const base = rogue.stats.crit; const rows = [];
 let prev = base;

@@ -8,7 +8,7 @@ const floor = Number(process.argv[2] || 61);
 const squads = process.argv[3] ? [process.argv[3].split(',')] : allSquads(); // a given squad, or any squad
 for (let seed = 1; seed <= 2000; seed++) {
   const squad = squads[seed % squads.length];
-  const out = playRun(squad, { rng: seeded(seed), maxFloor: floor - 1 });
+  const out = playRun(squad, { rng: seeded(seed), maxFloor: floor - 1, keepState: true });
   const s = out.state;
   if (out.deaths.length || !s.heroes.every((h) => h.alive)) continue;
   const heroes = s.heroes.map((h) => ({ id: h.def.id, level: h.level, items: h.items, pages: h.skills.map((k) => k.pages || []) }));

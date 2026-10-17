@@ -10,6 +10,8 @@
 //       summon: { id, count, max, near }, swap: 'partnerId', daggers: { count, damageMultiplier, apply },
 //       channel: { intervalMs, ticks, target, damageMultiplier, damageType, apply, drain: { percentMaxHp } },
 //       clones: { statPercent }, shatterClones: { multiplier } }
+//     minor: true = a normal enemy's small move (a popup, no red banner); needsHurt: waits until an enemy is hurt;
+//     target also 'lowestAlly' (most hurt enemy) / 'otherAllies'; shield: { percentOwnHp, durationMs } on the target
 //   aura: { ids, attackSpeedPercent }        other enemies with these ids attack faster while it lives (War Drum)
 //   hatch: { afterMs, into, count }          it turns into enemies after a while (Egg Sac)
 //   plates: { count, cutPercent, plateHpPercent, fireMultiplier }   armor plates: less damage until broken (Frost Warden)
@@ -126,6 +128,8 @@ export const bossMethods = {
     if (this.isStunned(u) || this.has(u, 'fear')) return;
     for (const ab of u.abilities) {
       const a = ab.def;
+      // A heal with nobody hurt waits (it stays ready).
+      if (a.needsHurt && !this.enemies.some((e) => e.alive && !e.def.object && e.hp < e.maxHp)) { if (ab.timer > 0) ab.timer -= dt; continue; }
       let ready = false;
       if (a.hpBelow !== undefined) ready = !ab.done && (u.hp / u.maxHp) * 100 < a.hpBelow;
       else {
@@ -168,6 +172,11 @@ export const bossMethods = {
       case 'meleeNear': return all.filter((h) => h.damageType === 'melee' && (!this.hasPositions(h) || dist(h) <= (radius || 100)));
       case 'self': return [u];
       case 'allies': return this.enemies.filter((e) => e.alive);
+      case 'otherAllies': return this.enemies.filter((e) => e.alive && e !== u && !e.def.object); // Lava Hound's howl
+      case 'lowestAlly': { // the most hurt enemy (by health %): Goblin Shaman heals, Shieldbearer shields
+        const live = this.enemies.filter((e) => e.alive && !e.def.object && !this.untargetable(e));
+        return live.length ? [live.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a))] : [];
+      }
       default: return [];
     }
   },
@@ -180,13 +189,15 @@ export const bossMethods = {
       return;
     }
     const targets = this.abilityTargets(u, a.target, a.radius);
-    events.push({ type: 'bossAbility', unit: u, ability: a, targets });
+    events.push({ type: 'bossAbility', unit: u, ability: a, targets, minor: !!a.minor });
     for (const t of targets) {
       if (!t.alive) continue;
       if (a.damageMultiplier) this.strike(u, t, events, { multiplier: a.damageMultiplier, damageType: a.damageType, ability: true });
       if (!t.alive) continue;
       for (const spec of a.apply || []) this.applyStatus(t, spec, u, `boss_${a.id}`, events);
       if (a.healAllies) this.healUnit(t, (t.maxHp * a.healAllies) / 100, events, { aura: false });
+      // Shieldbearer: a shield of `percentOwnHp` of ITS OWN max health on the target (the same move refills it).
+      if (a.shield) this.applyStatus(t, { status: 'shield', amount: Math.round((u.maxHp * a.shield.percentOwnHp) / 100), durationMs: a.shield.durationMs }, u, `ability_${a.id}`, events);
     }
     if (a.summon) {
       const have = this.enemies.filter((e) => e.alive && e.def.id === a.summon.id).length;

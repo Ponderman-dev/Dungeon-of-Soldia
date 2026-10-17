@@ -298,6 +298,7 @@ export default class BattleScene extends Phaser.Scene {
       this.paintFx(g, v, look.draws);
     }
     this.drawElites(now);
+    this.drawBombs(now);
     // Ice breaking off a fighter whose Freeze just ended.
     this.iceBreaks = (this.iceBreaks || []).filter((b) => now - b.start < 400 && b.view.ch.active);
     for (const b of this.iceBreaks) this.paintFx(g, b.view, iceBreak(b.view.box || bodyBox(b.view.unit.def.parts, b.view.unit.def.height), (now - b.start) / 400));
@@ -323,6 +324,30 @@ export default class BattleScene extends Phaser.Scene {
       const P = 2; // crown pixel size
       const x0 = v.bg.x - BAR_WIDTH / 2 - 1 - 6 * P, y0 = v.bg.y - 2 * P;
       for (const [c, r, col] of crown) cg.fillStyle(col, v.bg.alpha).fillRect(x0 + c * P, y0 + r * P, P, P);
+    }
+  }
+
+  // Kobold Sapper bombs (BattleState.bombs): a red danger ring on the floor that fills up, and a black pixel bomb with a
+  // spark on its fuse that blinks faster as it gets close. The blast itself is the `deathBurst` event.
+  drawBombs(now) {
+    if (!this.bombG) this.bombG = this.add.graphics().setDepth(DEPTH.hero - 0.002); // the ring: on the floor, behind fighters
+    if (!this.bombTopG) this.bombTopG = this.add.graphics().setDepth(DEPTH.heroBar - 0.06); // the bomb: in front of them
+    const g = this.bombG, top = this.bombTopG;
+    g.clear();
+    top.clear();
+    const P = CHAR_SCALE;
+    for (const b of this.state.bombs || []) {
+      const p = 1 - b.remaining / b.total; // 0 when dropped, 1 when it goes off
+      g.lineStyle(2, 0xff4a3a, 0.35 + 0.4 * p).strokeEllipse(b.x, b.y, b.radius * 2, b.radius * 1.4);
+      g.fillStyle(0xff4a3a, 0.08 + 0.16 * p).fillEllipse(b.x, b.y, b.radius * 2 * p, b.radius * 1.4 * p);
+      const x = Math.round(b.x / P) * P, y = Math.round((b.y - 4) / P) * P;
+      const rows = ['..ooo..', '.oxhxo.', 'oxhxxxo', 'oxxxxxo', 'oxxxxxo', '.oxxxo.', '..ooo..'];
+      const col = { o: 0x0a0610, x: 0x3e3e4e, h: 0x9a9ab4 };
+      rows.forEach((r, ry) => [...r].forEach((c, rx) => { if (c !== '.') top.fillStyle(col[c], 1).fillRect(x + (rx - 3) * P, y + (ry - 7) * P, P, P); }));
+      top.fillStyle(0x9a6b3a, 1).fillRect(x + 1 * P, y - 8 * P, P, P).fillRect(x + 2 * P, y - 9 * P, P, P); // the fuse
+      const blink = Math.sin(now / (120 - 90 * p)) > 0; // the spark blinks faster near the end
+      top.fillStyle(blink ? 0xffffff : 0xffe066, 1).fillRect(x + 3 * P, y - 10 * P, P, P);
+      if (blink) top.fillStyle(0xff7a2a, 1).fillRect(x + 4 * P, y - 10 * P, P, P).fillRect(x + 3 * P, y - 11 * P, P, P).fillRect(x + 2 * P, y - 10 * P, P, P);
     }
   }
 
@@ -1689,6 +1714,15 @@ export default class BattleScene extends Phaser.Scene {
         this.cameras.main.shake(160, 0.004);
         return true;
       case 'bossAbility': {
+        if (e.minor) {
+          // A normal enemy's small move (Shaman's Mend, Shieldbearer's Guard, Golem's Enrage, Hound's Howl): its name pops
+          // up over it and a ring in the move's colour bursts on each target. No banner, no shake.
+          const a = e.ability;
+          const color = a.healAllies ? 0x6dff8f : a.shield ? 0x6fd0ff : 0xff8a3a;
+          if (v) { this.popText(v, a.name, `#${color.toString(16).padStart(6, '0')}`); v.ch.flash(color, 140); }
+          for (const t of e.targets) this.ring(this.views.get(t.uid), color, 0.8);
+          return true;
+        }
         if (e.quiet) {
           for (const t of e.targets) { const tv = this.views.get(t.uid); if (tv && v) this.showProjectile(v, tv, 'lightning'); }
           return true;

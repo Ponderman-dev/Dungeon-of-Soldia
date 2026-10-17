@@ -2897,5 +2897,500 @@
         }
       }
     }
+  },
+  "sapper": {
+    "name": "Kobold Sapper",
+    "damageType": "melee",
+    "weak": [
+      "ice"
+    ],
+    "resists": [],
+    "xp": 12,
+    "stats": {
+      "health": 150,
+      "attack": 5,
+      "defense": 0,
+      "evasion": 5,
+      "attackEfficiency": 125
+    },
+    "onDeath": {
+      "delayMs": 1500,
+      "radius": 75,
+      "color": "#ff7a3d",
+      "damageMultiplier": 2.5,
+      "damageType": "fire"
+    },
+    "flying": false,
+    "height": 12,
+    "parts": {
+      "body": {
+        "x": 0,
+        "y": -6,
+        "w": 12,
+        "h": 12,
+        "art": {
+          "palette": [
+            "0x1a1020",
+            "0xb8642a",
+            "0xe0904a",
+            "0xffe066",
+            "0x5a4030"
+          ],
+          "rows": [
+            "..0000......",
+            ".011110.....",
+            "01131110000.",
+            "011111111110",
+            ".0111111220.",
+            "..0111100...",
+            "..044440....",
+            ".04444440...",
+            ".04444440...",
+            "..044440....",
+            "..01..10....",
+            ".011..110..."
+          ]
+        },
+        "anchor": [
+          6,
+          6
+        ],
+        "idle": {
+          "dy": -1,
+          "duration": 520
+        }
+      },
+      "weapon": {
+        "x": 5.5,
+        "y": -11,
+        "w": 6,
+        "h": 6,
+        "art": {
+          "palette": [
+            "0x1a1020",
+            "0x3a3a4a",
+            "0x8a8aa0",
+            "0xff6a2a",
+            "0xffe066"
+          ],
+          "rows": [
+            "....43",
+            "...0..",
+            ".0000.",
+            "011110",
+            "021110",
+            ".0000."
+          ]
+        },
+        "anchor": [
+          2.5,
+          5
+        ],
+        "idle": {
+          "angle": 8,
+          "duration": 650
+        }
+      }
+    }
+  },
+  "shaman": {
+    "name": "Goblin Shaman",
+    "damageType": "dark",
+    "weak": [
+      "physical"
+    ],
+    "resists": [],
+    "xp": 18,
+    "stats": {
+      "health": 150,
+      "attack": 5,
+      "defense": 0,
+      "resist": 10,
+      "attackEfficiency": 80
+    },
+    "abilities": [
+      {
+        "id": "shaman_mend",
+        "name": "Mend",
+        "minor": true,
+        "everyMs": 6000,
+        "firstMs": 3000,
+        "target": "lowestAlly",
+        "healAllies": 15,
+        "needsHurt": true
+      }
+    ],
+    "flying": false,
+    "height": 14,
+    "parts": {
+      "body": {
+        "x": 0,
+        "y": -7,
+        "w": 12,
+        "h": 14,
+        "art": {
+          "palette": [
+            "0x1a1020",
+            "0x7fae3a",
+            "0x55782a",
+            "0xe8e0c8",
+            "0x7a3a8a",
+            "0xa04ab0"
+          ],
+          "rows": [
+            "...3.3.3....",
+            "..3333333...",
+            "11.11111.11.",
+            ".111111111..",
+            "..1011101...",
+            "..1112211...",
+            "...11111....",
+            "..4444444...",
+            ".445454444..",
+            ".44444444...",
+            ".44544444...",
+            "..444444....",
+            "..11..11....",
+            ".111..111..."
+          ]
+        },
+        "anchor": [
+          6,
+          7
+        ],
+        "idle": {
+          "dy": -1,
+          "duration": 520
+        }
+      },
+      "weapon": {
+        "x": 6,
+        "y": -11,
+        "w": 3,
+        "h": 14,
+        "art": {
+          "palette": [
+            "0xa0ff70",
+            "0x8b5a2b",
+            "0x60c040"
+          ],
+          "rows": [
+            ".0.",
+            "020",
+            ".0.",
+            ".1.",
+            ".1.",
+            ".1.",
+            ".1.",
+            ".1.",
+            ".1.",
+            ".1.",
+            ".1.",
+            ".1.",
+            ".1.",
+            ".1."
+          ]
+        },
+        "anchor": [
+          1.5,
+          9
+        ],
+        "idle": {
+          "angle": 8,
+          "duration": 650
+        }
+      }
+    }
+  },
+  "shieldbearer": {
+    "name": "Shieldbearer",
+    "damageType": "melee",
+    "weak": [
+      "electric"
+    ],
+    "resists": [
+      "physical"
+    ],
+    "xp": 20,
+    "stats": {
+      "health": 260,
+      "attack": 6,
+      "defense": 6,
+      "attackEfficiency": 80
+    },
+    "abilities": [
+      {
+        "id": "bearer_guard",
+        "name": "Guard",
+        "minor": true,
+        "everyMs": 8000,
+        "firstMs": 2000,
+        "target": "lowestAlly",
+        "shield": {
+          "percentOwnHp": 20,
+          "durationMs": 8000
+        }
+      }
+    ],
+    "flying": false,
+    "height": 18,
+    "parts": {
+      "body": {
+        "x": 0,
+        "y": -9,
+        "w": 12,
+        "h": 18,
+        "art": {
+          "palette": [
+            "0x1a1020",
+            "0x8a8fa0",
+            "0xc0c6d4",
+            "0x5a5f70",
+            "0xe0b040",
+            "0x2a2f40"
+          ],
+          "rows": [
+            "...0000.....",
+            "..022220....",
+            "..021120....",
+            "..055550....",
+            "..011110....",
+            ".00000000...",
+            "0111111110..",
+            "0122222210..",
+            "0111441110..",
+            "0111111110..",
+            "0133333310..",
+            ".01111110...",
+            ".01111110...",
+            "..011110....",
+            "..01..10....",
+            "..01..10....",
+            ".001..100...",
+            ".000..000..."
+          ]
+        },
+        "anchor": [
+          6,
+          9
+        ],
+        "idle": {
+          "dy": -1,
+          "duration": 520
+        }
+      },
+      "weapon": {
+        "x": 5,
+        "y": -8,
+        "w": 8,
+        "h": 12,
+        "art": {
+          "palette": [
+            "0x1a1020",
+            "0xc0c6d4",
+            "0x8a8fa0",
+            "0xe0b040"
+          ],
+          "rows": [
+            "00000000",
+            "01111110",
+            "01222210",
+            "01233210",
+            "01233210",
+            "01222210",
+            "01222210",
+            "01222210",
+            "01222210",
+            ".012210.",
+            "..0110..",
+            "...00..."
+          ]
+        },
+        "anchor": [
+          4,
+          6
+        ],
+        "idle": {
+          "angle": 8,
+          "duration": 650
+        }
+      }
+    }
+  },
+  "golem": {
+    "name": "Stone Golem",
+    "tier": "strong",
+    "damageType": "melee",
+    "weak": [
+      "electric"
+    ],
+    "resists": [
+      "physical"
+    ],
+    "xp": 40,
+    "stats": {
+      "health": 700,
+      "attack": 16,
+      "defense": 10,
+      "attackEfficiency": 45
+    },
+    "abilities": [
+      {
+        "id": "golem_enrage",
+        "name": "Enrage!",
+        "minor": true,
+        "hpBelow": 50,
+        "target": "self",
+        "apply": [
+          {
+            "status": "buff",
+            "durationMs": 600000,
+            "mods": [
+              {
+                "stat": "attackEfficiency",
+                "percent": 50
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "flying": false,
+    "height": 20,
+    "parts": {
+      "body": {
+        "x": 0,
+        "y": -10,
+        "w": 19,
+        "h": 20,
+        "art": {
+          "palette": [
+            "0x1a1020",
+            "0x7d7466",
+            "0xa69c8c",
+            "0x55504a",
+            "0x60c0ff"
+          ],
+          "rows": [
+            "......0000000......",
+            ".....022222220.....",
+            ".....014111410.....",
+            ".....011111110.....",
+            "...00003333300000..",
+            "..0222211111112220.",
+            ".022111111111111220",
+            ".011110111111011110",
+            ".011110122221011110",
+            ".011110111111011110",
+            ".033330111111033330",
+            ".022220133331022220",
+            ".011110111111011110",
+            "..0000011111100000.",
+            "......0111111......",
+            ".....011100111.....",
+            ".....011100111.....",
+            ".....022200222.....",
+            "....0333300333300..",
+            "....0000000000000.."
+          ]
+        },
+        "anchor": [
+          9.5,
+          10
+        ],
+        "idle": {
+          "dy": -1,
+          "duration": 520
+        }
+      }
+    }
+  },
+  "hound": {
+    "name": "Lava Hound",
+    "damageType": "melee",
+    "weak": [
+      "ice"
+    ],
+    "resists": [
+      "fire"
+    ],
+    "xp": 24,
+    "stats": {
+      "health": 220,
+      "attack": 7,
+      "defense": 2,
+      "evasion": 10,
+      "attackEfficiency": 150
+    },
+    "onHit": [
+      {
+        "status": "burn",
+        "chance": 30,
+        "durationMs": 3000,
+        "damageMultiplier": 0.2,
+        "damageType": "fire"
+      }
+    ],
+    "abilities": [
+      {
+        "id": "hound_howl",
+        "name": "Howl!",
+        "minor": true,
+        "hpBelow": 30,
+        "target": "otherAllies",
+        "apply": [
+          {
+            "status": "buff",
+            "durationMs": 5000,
+            "mods": [
+              {
+                "stat": "attackEfficiency",
+                "percent": 25
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "flying": false,
+    "height": 11,
+    "parts": {
+      "body": {
+        "x": 0,
+        "y": -5.5,
+        "w": 17,
+        "h": 11,
+        "art": {
+          "palette": [
+            "0x1a1020",
+            "0x6a4038",
+            "0x2a1a1a",
+            "0xff7a2a",
+            "0xffe066"
+          ],
+          "rows": [
+            ".0.0.............",
+            "01010............",
+            "011110........33.",
+            "0141110.......030",
+            "01111100000000030",
+            ".002111311311110.",
+            "...0111111111110.",
+            "...0113113113110.",
+            "...0111111111110.",
+            "...01.01...01.01.",
+            "..00.00...00.00.."
+          ]
+        },
+        "anchor": [
+          8.5,
+          5.5
+        ],
+        "idle": {
+          "dy": -1,
+          "duration": 520
+        }
+      }
+    }
   }
 }

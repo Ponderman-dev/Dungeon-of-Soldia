@@ -19,6 +19,23 @@ const RULES = {
   mushling: { from: 22, tier: 'fodder', damageType: 'melee', weak: ['fire'], resists: [], xp: 9,
     stats: { health: 170, attack: 3, defense: 2, attackEfficiency: 80 },
     onDeath: { radius: 60, color: '#6de07a', apply: [{ status: 'poison', durationMs: 3000, damageMultiplier: 0.15, damageType: 'dark' }] } },
+  // ---- the 10 new enemies, batch 1 (step 5)
+  sapper: { from: 5, until: 35, damageType: 'melee', weak: ['ice'], resists: [], xp: 12,
+    stats: { health: 150, attack: 5, defense: 0, evasion: 5, attackEfficiency: 125 },
+    onDeath: { delayMs: 1500, radius: 75, color: '#ff7a3d', damageMultiplier: 2.5, damageType: 'fire' } },
+  shaman: { from: 12, until: 50, damageType: 'dark', weak: ['physical'], resists: [], xp: 18,
+    stats: { health: 150, attack: 5, defense: 0, resist: 10, attackEfficiency: 80 },
+    abilities: [{ id: 'shaman_mend', name: 'Mend', minor: true, everyMs: 6000, firstMs: 3000, target: 'lowestAlly', healAllies: 15, needsHurt: true }] },
+  shieldbearer: { from: 20, damageType: 'melee', weak: ['electric'], resists: ['physical'], xp: 20,
+    stats: { health: 260, attack: 6, defense: 6, attackEfficiency: 80 },
+    abilities: [{ id: 'bearer_guard', name: 'Guard', minor: true, everyMs: 8000, firstMs: 2000, target: 'lowestAlly', shield: { percentOwnHp: 20, durationMs: 8000 } }] },
+  golem: { from: 46, max: 1, tier: 'strong', damageType: 'melee', weak: ['electric'], resists: ['physical'], xp: 40,
+    stats: { health: 700, attack: 16, defense: 10, attackEfficiency: 45 },
+    abilities: [{ id: 'golem_enrage', name: 'Enrage!', minor: true, hpBelow: 50, target: 'self', apply: [{ status: 'buff', durationMs: 600000, mods: [{ stat: 'attackEfficiency', percent: 50 }] }] }] },
+  hound: { from: 58, damageType: 'melee', weak: ['ice'], resists: ['fire'], xp: 24,
+    stats: { health: 220, attack: 7, defense: 2, evasion: 10, attackEfficiency: 150 },
+    onHit: [{ status: 'burn', chance: 30, durationMs: 3000, damageMultiplier: 0.2, damageType: 'fire' }],
+    abilities: [{ id: 'hound_howl', name: 'Howl!', minor: true, hpBelow: 30, target: 'otherAllies', apply: [{ status: 'buff', durationMs: 5000, mods: [{ stat: 'attackEfficiency', percent: 25 }] }] }] },
 };
 
 const ids = process.argv.slice(2);
@@ -28,11 +45,11 @@ for (const id of ids) {
   const design = designs.find((d) => d.id === id);
   const rule = RULES[id];
   if (!design || !rule) throw new Error('unknown enemy ' + id);
-  const { from, ...rest } = rule;
+  const { from, until, max, ...rest } = rule;
   const look = toGame(design);
   E[id] = { name: look.name, ...rest, flying: !!look.flying, ...look };
   D.A.roster = D.A.roster.filter((e) => e.id !== id);
-  D.A.roster.push({ id, from });
+  D.A.roster.push({ id, from, ...(until !== undefined && { until }), ...(max !== undefined && { max }) });
 }
 D.A.roster.sort((a, b) => a.from - b.from);
 write('enemies', E);

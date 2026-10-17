@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>New Enemies & Elites</title>
+<style>
+:root{--bg:#f6f3fb;--card:#fff;--ink:#1d1830;--soft:#6b6385;--line:#ddd5ee;--accent:#7b4fd0;--keep:#2e9d5b;--chg:#c98a12;--drop:#c94040;--chip:#efe9fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#120e1d;--card:#1c1630;--ink:#f1ecfb;--soft:#a79fc4;--line:#342a52;--accent:#a57cf0;--keep:#4cc47d;--chg:#e4a92e;--drop:#e66a6a;--chip:#2a2244}}
+:root[data-theme="dark"]{--bg:#120e1d;--card:#1c1630;--ink:#f1ecfb;--soft:#a79fc4;--line:#342a52;--accent:#a57cf0;--keep:#4cc47d;--chg:#e4a92e;--drop:#e66a6a;--chip:#2a2244}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:24px 16px 120px}
+h1{font-size:26px;margin:0 0 6px}h2{font-size:20px;margin:36px 0 8px}
+p.lead{color:var(--soft);margin:0 0 16px}
+.timeline{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.timeline span{background:var(--chip);border-radius:999px;padding:2px 10px;font-size:13px}
+.timeline b{color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.card.keep{border-color:var(--keep)}.card.change{border-color:var(--chg)}.card.drop{border-color:var(--drop);opacity:.6}
+.head{display:flex;align-items:center;gap:10px}
+.sw{width:30px;height:30px;border-radius:6px;flex:none;border:2px solid rgba(0,0,0,.35);image-rendering:pixelated}
+.name{font-weight:700;font-size:16px}
+.floors{font-size:12px;color:var(--soft)}
+.tags{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font-size:12px;background:var(--chip);border-radius:6px;padding:1px 7px}
+.what{margin:0}
+.spr{display:block;margin:4px auto 0;image-rendering:pixelated;max-width:100%}
+.lineup{background:#241c38;border-radius:14px;padding:8px;overflow-x:auto}
+.lineup canvas{display:block;image-rendering:pixelated}
+.beat{margin:0;font-size:13px;color:var(--soft)}
+.btns{display:flex;gap:6px;margin-top:auto;padding-top:6px}
+.btns button{flex:1;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:7px 0;font:inherit;font-size:13px;cursor:pointer}
+.btns button[data-v=keep].on{background:var(--keep);color:#fff;border-color:var(--keep)}
+.btns button[data-v=change].on{background:var(--chg);color:#fff;border-color:var(--chg)}
+.btns button[data-v=drop].on{background:var(--drop);color:#fff;border-color:var(--drop)}
+textarea.note{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:6px;font:inherit;font-size:13px;resize:vertical;display:none}
+.card.change textarea.note{display:block}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.box ul{margin:6px 0;padding-left:20px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 16px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.bar button{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 18px;font:inherit;font-weight:600;cursor:pointer}
+.bar small{color:var(--soft)}
+#out{width:100%;max-width:860px;min-height:90px;display:none;margin:0 auto;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:8px;font:13px monospace}
+</style>
+</head>
+<body>
+<main>
+<h1>New enemies & elites</h1>
+<p class="lead">Ideas only, nothing is in the game yet. Tap <b>Keep</b>, <b>Change</b> (write what to change) or <b>Drop</b> on every card, then tap <b>Copy my choices</b> at the bottom and paste it in chat.</p>
+
+<div class="box">
+<b>Why:</b> today the last new enemy shows up on floor 34, so floors 35 to 400 feel the same. These 10 enemies are spread over the whole run, and elites spice up everything from floor 25 on. Enemy growth stays as it is.
+<div class="timeline" id="tl"></div>
+</div>
+
+<h2>Size check</h2>
+<p class="lead">Everyone at real game size, standing on the floor. Left: a Goblin and the Knight for comparison. Fodder are drawn smaller in the game (like the Slime, Bat and Rat now).</p>
+<div class="lineup"><canvas id="lineup"></canvas></div>
+
+<h2>New fodder (step 2)</h2>
+<p class="lead">Small and weak, they come in crowds on deeper floors, next to Slime, Bat and Cave Rat.</p>
+<div class="grid" id="fodder"></div>
+
+<h2>10 new enemies</h2>
+<p class="lead">Each one asks the player to do something different (kill it first, spread out, use a damage type...). Numbers will be tuned with the smart-player test.</p>
+<div class="grid" id="enemies"></div>
+
+<h2>Elite enemies</h2>
+<p class="lead">An elite is a normal enemy that is bigger, tougher, glows in an element colour and has ONE random extra trait. Its name shows as e.g. <i>"Burning Vampiric Bandit"</i>.</p>
+<div class="grid" id="elite"></div>
+
+<h2>Elemental powers (one per elite)</h2>
+<div class="grid" id="elements"></div>
+
+<h2>Extra traits (one random per elite)</h2>
+<div class="grid" id="traits"></div>
+
+<h2>How often elites appear</h2>
+<div class="box">
+<table>
+<tr><th>Floors</th><th>Chance a fight has an elite</th><th>Two elites?</th></tr>
+<tr><td>1 - 24</td><td>never</td><td>-</td></tr>
+<tr><td>25</td><td>10%</td><td>-</td></tr>
+<tr><td>40</td><td>about 30%</td><td>-</td></tr>
+<tr><td>60</td><td>60% (common)</td><td>from 60: 15%</td></tr>
+<tr><td>100+</td><td>80%</td><td>35%</td></tr>
+</table>
+<p class="beat" style="margin-top:8px">Never on boss floors, never in special rooms. The chance grows smoothly between the rows. Mixed with the 10 new enemies this keeps deep floors fresh, so endless runs stay possible but never boring.</p>
+</div>
+<div class="grid" id="odds" style="margin-top:12px"></div>
+</main>
+<div class="bar"><button id="copy">Copy my choices</button><small id="count"></small></div>
+<textarea id="out" readonly></textarea>
+<script>
+const FODDER=[
+ {id:'swarmling',name:'Imp Swarmling',floors:'floors 13+',color:'#d9452b',tags:['fodder','melee','fire','weak: ice'],what:'A tiny fire imp. Comes in groups, burns a little.',beat:'Area skills clear them.'},
+ {id:'boneRat',name:'Bone Rat',floors:'floors 25+',color:'#e8e0c8',tags:['fodder','melee','fast','weak: holy'],what:'A skeleton rat. Very fast bites, falls apart in one or two hits.',beat:'Anything kills it, just do not let a pack nibble your back line.'},
+ {id:'shadeWisp',name:'Shade Wisp',floors:'floors 35+',color:'#6a3fb0',tags:['fodder','dark','flying','weak: holy'],what:'A small dark flame that floats. Melee heroes miss it more (it flies).',beat:'Ranged heroes and area skills.'},
+ {id:'mushling',name:'Mushling',floors:'floors 22+',color:'#d04a4a',tags:['fodder','melee','weak: fire'],what:'A baby Puffshroom. When it dies it puffs a tiny poison cloud.',beat:'Kill them away from your heroes or ignore the small poison.'}
+];
+const ENEMIES=[
+ {id:'sapper',name:'Kobold Sapper',floors:'floors 5 - 35',color:'#c96b2c',tags:['melee','fire','weak: ice'],what:'Small and quick. When it dies it drops a lit bomb that explodes after 1.5s, hitting heroes close to it with fire.',beat:'Kill it with ranged attacks, or let melee heroes step back (they do it on their own).'},
+ {id:'shaman',name:'Goblin Shaman',floors:'floors 12 - 50',color:'#5aa04a',tags:['ranged','dark','healer','weak: physical'],what:'Stays at the back. Every 6s it heals the most hurt enemy for 15% of its health.',beat:'Tap it to focus it first.'},
+ {id:'shieldbearer',name:'Shieldbearer',floors:'floors 20+',color:'#8a8fa0',tags:['melee','protector','resists physical','weak: electric'],what:'Every 8s it puts a shield (20% of its health) on the weakest enemy. Tough to cut through.',beat:'Magic damage, or kill it before the others.'},
+ {id:'worm',name:'Cave Worm',floors:'floors 38+',color:'#b07a5a',tags:['melee','burrows','weak: fire'],what:'Every 8s it digs underground (can\'t be hit for 1.5s) and pops up under a random hero, stunning it for 0.8s.',beat:'Burst it while it is up; hits in the air are wasted.'},
+ {id:'acolyte',name:'Bone Acolyte',floors:'floors 42+',color:'#9a86c0',tags:['ranged','dark','raises dead','weak: holy'],what:'The first time an enemy dies near it, it raises that enemy as a skeleton (once per acolyte).',beat:'Kill the acolyte first, or kill the others fast in one go.'},
+ {id:'golem',name:'Stone Golem',floors:'floors 46+',color:'#7d7466',tags:['melee','very slow','huge health','resists physical','weak: electric'],what:'Slow, hits very hard. Under 50% health it ENRAGES: +50% attack speed.',beat:'Save skills to burst it from 50% to 0.'},
+ {id:'blinkimp',name:'Blink Imp',floors:'floors 52+',color:'#d04a8a',tags:['melee','teleports','weak: ice'],what:'Every 5s it blinks next to the hero with the LOWEST health and stabs it.',beat:'Tank heroes can\'t hold it: kill it quickly, keep the back line healthy.'},
+ {id:'hound',name:'Lava Hound',floors:'floors 58+',color:'#e0502a',tags:['melee','fire','fast','weak: ice'],what:'Fast attacker that burns. At 30% health it howls: every other enemy gets +25% attack speed for 5s.',beat:'Freeze or stun it before the howl, or finish it in one burst.'},
+ {id:'banshee',name:'Banshee',floors:'floors 65+',color:'#8fd0d8',tags:['ranged','dark','flying','weak: holy'],what:'Every 10s it screams (a red wind-up bar shows): all heroes are SILENCED for 1.5s (no skills).',beat:'Stun it during the wind-up to stop the scream, or cast skills right before it.'},
+ {id:'sentinel',name:'Crystal Sentinel',floors:'floors 75+',color:'#6fb7ff',tags:['melee','adapts'],what:'Each element that hits it makes it resist that element for 4s (shown by its colour). It is weak to everything else.',beat:'Mix damage types: squads with several elements shine.'}
+];
+const ELITE=[{id:'elite-core',name:'The elite rule',color:'#f2b632',tags:['from floor 25'],what:'Any normal enemy can be elite (not bosses, not boss helpers). It is drawn 1 pixel size bigger with a glow in its element colour and a small gold crown over its health bar. Stats: x2 health, x1.35 attack, +10 defense and resist.',beat:'Its basic attack takes its element\'s damage type.'},
+ {id:'elite-reward',name:'Elite reward',color:'#f2b632',tags:['reward'],what:'An elite gives x3 XP, and after a fight with an elite ONE of the 3 reward cards is bumped up a rarity (common becomes rare, and so on).',beat:'So elites feel worth it, not just a nuisance.'}];
+const ELEMENTS=[
+ {id:'el-fire',name:'Burning (fire)',color:'#ff7a2a',tags:['resists fire','weak: ice'],what:'Its hits Burn (stacking fire damage over time).',beat:''},
+ {id:'el-ice',name:'Frozen (ice)',color:'#8fd6ff',tags:['resists ice','weak: fire'],what:'Its hits add Chill (5 stacks = the hero is frozen 1.5s).',beat:''},
+ {id:'el-lightning',name:'Storm (lightning)',color:'#ffe14a',tags:['resists electric','weak: ice'],what:'Its hits Shock, and every 4th hit jumps to a second hero.',beat:''},
+ {id:'el-dark',name:'Cursed (dark)',color:'#9a5ad8',tags:['resists dark','weak: holy'],what:'Its hits Curse (-15 resist) and heal it for 10% of the damage.',beat:''},
+ {id:'el-poison',name:'Toxic (poison)',color:'#6ad04a',tags:['resists dark','weak: fire'],what:'Its hits Poison, and it leaves a poison cloud when it dies.',beat:''}];
+const TRAITS=[
+ {id:'tr-vampiric',name:'Vampiric',color:'#b0283a',tags:[],what:'Heals 20% of the damage it deals.'},
+ {id:'tr-hasted',name:'Hasted',color:'#e8e8e8',tags:[],what:'+40% attack speed and walks faster.'},
+ {id:'tr-shielded',name:'Shielded',color:'#5aa0ff',tags:[],what:'Starts with a shield of 30% of its health. It grows back if it is not hit for 6s.'},
+ {id:'tr-thorny',name:'Thorny',color:'#7aa04a',tags:[],what:'Reflects 20% of melee damage back.'},
+ {id:'tr-splitting',name:'Splitting',color:'#d0a0ff',tags:[],what:'When it dies it splits into 2 small copies with 25% health (not elite).'},
+ {id:'tr-regen',name:'Regenerating',color:'#4cc47d',tags:[],what:'Heals 2% of its health every second.'},
+ {id:'tr-berserk',name:'Berserk',color:'#e04a2a',tags:[],what:'Under 50% health: +50% attack.'},
+ {id:'tr-unstoppable',name:'Unstoppable',color:'#c0a060',tags:[],what:'Stun, freeze, fear and knockback last only half as long.'},
+ {id:'tr-explosive',name:'Explosive',color:'#ffb000',tags:[],what:'Explodes when it dies: its element\'s damage to heroes close to it.'}];
+const ODDS=[{id:'elite-odds',name:'The odds table above',color:'#7b4fd0',tags:['frequency'],what:'Elites start at floor 25 (10%), are common by 60, and later fights can have two.'}];
+
+const SPRITES=/*SPRITES*/{};
+const ANIM=[];
+function hex(c){return '#'+c.slice(2).padStart(6,'0')}
+function drawSprite(ctx,sp,fx,fy,px,t){ // fx,fy = feet on the canvas; px = screen pixels per art pixel
+ const bob=Math.round((Math.sin(t/520*Math.PI)*0.5+0.5))*-1;
+ const hover=sp.flying?(sp.hover||0)+Math.round(Math.sin(t/400)*2):0;
+ ctx.globalAlpha=sp.alpha||1;
+ for(const name of ['body','head','weapon']){const p=sp.parts[name];if(!p)continue;
+  const x0=p.x-p.w/2,y0=p.y-p.h/2+bob-hover;
+  p.art.rows.forEach((row,r)=>{for(let c=0;c<row.length;c++){const ch=row[c];if(ch==='.')continue;ctx.fillStyle=hex(p.art.palette[+ch]);ctx.fillRect(Math.round(fx+(x0+c)*px),Math.round(fy+(y0+r)*px),px,px)}})}
+ ctx.globalAlpha=1;
+}
+function sizeCanvas(cv,sp,px){let top=0,l=0,rt=0;for(const p of Object.values(sp.parts)){top=Math.min(top,p.y-p.h/2);l=Math.min(l,p.x-p.w/2);rt=Math.max(rt,p.x+p.w/2)}
+ const hov=sp.flying?(sp.hover||0)+3:0;cv.width=Math.ceil((rt-l+2)*px);cv.height=Math.ceil((-top+hov+3)*px);cv.fx=(-l+1)*px;cv.fy=cv.height-px}
+
+const picks={};
+try{Object.assign(picks,JSON.parse(localStorage.getItem('soldia-enemy-picks')||'{}'))}catch(e){}
+function save(){try{localStorage.setItem('soldia-enemy-picks',JSON.stringify(picks))}catch(e){}count()}
+function card(d,host){
+ const c=document.createElement('div');c.className='card';
+ c.innerHTML=`<div class="head"><div class="sw" style="background:${d.color}"></div><div><div class="name"></div>${d.floors?'<div class="floors"></div>':''}</div></div>${SPRITES[d.id]?'<canvas class="spr"></canvas>':''}<div class="tags"></div><p class="what"></p>${d.beat?'<p class="beat"></p>':''}<div class="btns"><button data-v="keep">Keep</button><button data-v="change">Change</button><button data-v="drop">Drop</button></div><textarea class="note" rows="2" placeholder="What should change?"></textarea>`;
+ c.querySelector('.name').textContent=d.name;
+ if(d.floors)c.querySelector('.floors').textContent=d.floors;
+ const t=c.querySelector('.tags');(d.tags||[]).forEach(x=>{const s=document.createElement('span');s.className='tag';s.textContent=x;t.appendChild(s)});
+ c.querySelector('.what').textContent=d.what;
+ if(d.beat)c.querySelector('.beat').textContent=(d.floors?'How to beat it: ':'')+d.beat;
+ const note=c.querySelector('.note');
+ const cv=c.querySelector('.spr');if(cv)ANIM.push({cv,sp:SPRITES[d.id],scale:6});
+ const paint=()=>{const p=picks[d.id]||{};c.className='card '+(p.v||'');c.querySelectorAll('.btns button').forEach(b=>b.classList.toggle('on',b.dataset.v===p.v));note.value=p.note||''};
+ c.querySelectorAll('.btns button').forEach(b=>b.onclick=()=>{const p=picks[d.id]||{};p.v=p.v===b.dataset.v?undefined:b.dataset.v;picks[d.id]=p;paint();save()});
+ note.oninput=()=>{(picks[d.id]=picks[d.id]||{}).note=note.value;save()};
+ paint();host.appendChild(c);
+}
+const ALL=[...FODDER,...ENEMIES,...ELITE,...ELEMENTS,...TRAITS,...ODDS];
+FODDER.forEach(d=>card(d,document.getElementById('fodder')));
+ENEMIES.forEach(d=>card(d,document.getElementById('enemies')));
+ELITE.forEach(d=>card(d,document.getElementById('elite')));
+ELEMENTS.forEach(d=>card(d,document.getElementById('elements')));
+TRAITS.forEach(d=>card(d,document.getElementById('traits')));
+ODDS.forEach(d=>card(d,document.getElementById('odds')));
+const tl=document.getElementById('tl');
+[['5','Sapper'],['12','Shaman'],['20','Shieldbearer'],['25','ELITES'],['38','Worm'],['42','Acolyte'],['46','Golem'],['52','Blink Imp'],['58','Lava Hound'],['65','Banshee'],['75','Sentinel']].forEach(([f,n])=>{const s=document.createElement('span');s.innerHTML='<b></b> ';s.firstChild.textContent=f;s.append(n);tl.appendChild(s)});
+// the line-up: Goblin, Knight, then every new enemy at game size (3 px per art pixel, fodder 2)
+const LINE=['goblin','knight',...FODDER.map(d=>d.id),...ENEMIES.map(d=>d.id)].filter(id=>SPRITES[id]);
+function frame(t){
+ for(const a of ANIM){if(a.cv.fx===undefined)sizeCanvas(a.cv,a.sp,a.scale);const ctx=a.cv.getContext('2d');ctx.clearRect(0,0,a.cv.width,a.cv.height);drawSprite(ctx,a.sp,a.cv.fx,a.cv.fy,a.scale,t)}
+ const lc=document.getElementById('lineup');const lx=lc.getContext('2d');
+ const spots=[];let x=12;for(const id of LINE){const sp=SPRITES[id];const px=sp.fodder?2:3;let l=0,r=0;for(const p of Object.values(sp.parts)){l=Math.min(l,p.x-p.w/2);r=Math.max(r,p.x+p.w/2)}spots.push([id,x-l*px,px]);x+=(r-l)*px+16}
+ if(lc.width!==x){lc.width=x;lc.height=110}
+ lx.fillStyle='#241c38';lx.fillRect(0,0,lc.width,lc.height);lx.fillStyle='#3a2f57';lx.fillRect(0,96,lc.width,14);
+ for(const [id,fx,px] of spots)drawSprite(lx,SPRITES[id],fx,96,px,t);
+ requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+function count(){const n=ALL.filter(d=>picks[d.id]&&picks[d.id].v).length;document.getElementById('count').textContent=`${n} of ${ALL.length} cards decided`}
+count();
+document.getElementById('copy').onclick=()=>{
+ const lines=ALL.map(d=>{const p=picks[d.id]||{};return `${d.name}: ${p.v?p.v.toUpperCase():'(no choice)'}${p.v==='change'&&p.note?' - '+p.note.trim():''}`});
+ const txt='Enemy proposal choices:\n'+lines.join('\n');
+ const out=document.getElementById('out');out.value=txt;out.style.display='block';out.select();
+ try{navigator.clipboard.writeText(txt).then(()=>document.getElementById('copy').textContent='Copied!')}catch(e){try{document.execCommand('copy')}catch(_){}}
+};
+</script>
+</body>
+</html>

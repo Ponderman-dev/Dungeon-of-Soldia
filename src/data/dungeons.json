@@ -268,9 +268,9 @@
           15
         ],
         "tiers": {
-          "fodder": 1,
-          "normal": 1.6,
-          "strong": 0.4
+          "fodder": 2,
+          "normal": 1.4,
+          "strong": 0.25
         },
         "rewardOdds": {
           "epic": 96,

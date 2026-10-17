@@ -39,7 +39,7 @@ const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker 
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'static_crystal'); const es = dummy(s, ['goblin', 'goblin', 'goblin', 'bat']); s.rng = () => 0.001; k.stats.crit = 0;
   const ev = []; s.rollProcs(k, 'onAttack', ev, { target: es[1] }); const a = attacks(ev, k);
   ok('chain hits 3 different enemies', a.length === 3 && new Set(a.map((x) => x.target)).size === 3, `${a.length}`);
-  ok('each bolt 300% electric', a.every((x) => x.damageType === 'electric' && x.result.amount === Math.round(k.stats.attack * 3)));
+  ok('each bolt 420% electric', a.every((x) => x.damageType === 'electric' && x.result.amount === Math.round(k.stats.attack * 4.2)));
   ok('lightning projectiles drawn', ev.filter((x) => x.kind === 'lightning').length === 3);
   const s2 = mk(); const k2 = s2.heroes[0]; s2.giveItem(k2.uid, 'static_crystal'); const e2 = dummy(s2, ['goblin']); s2.rng = () => 0.001; const ev2 = []; s2.rollProcs(k2, 'onAttack', ev2, { target: e2[0] });
   ok('lone enemy: only one bolt', attacks(ev2, k2).length === 1); }

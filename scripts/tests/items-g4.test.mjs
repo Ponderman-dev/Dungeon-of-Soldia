@@ -33,7 +33,7 @@ ok('all 9 G4 items exist', ['executioners_axe', 'magma_core', 'shatter_hammer', 
   ok('...extra copies add a little less each (30 + 28.5 + 27 = +85.5%)', near(x / base, 1.855, 0.04), `${x / base}`); }
 // Magma Core
 { const { s, es, k } = mk(); give(s, k, 'magma_core'); const clean = dmg(s, k, es[0]); burn(s, es[0], k); const hot = dmg(s, k, es[0]);
-  ok('Magma Core: burning enemies take +25% damage from the holder', near(hot / clean, 1.25), `${clean} -> ${hot}`);
+  ok('Magma Core: burning enemies take +35% damage from the holder', near(hot / clean, 1.35), `${clean} -> ${hot}`);
   ok('...only from the holder', near(dmg(s, s.heroes[1], es[0]) / dmg(mk().s, mk().k, mk().es[0]) , 1, 0.2)); }
 { const tickRate = (n) => { const { s, es, k } = mk(); give(s, k, 'magma_core', n); es[0].hp = es[0].maxHp; s.applyStatus(es[0], { status: 'burn', durationMs: 60000, damageMultiplier: 0.001, damageType: 'fire' }, k, 'b', []); let ticks = 0; for (let t = 0; t < 5000; t += 20) ticks += s.update(20).filter((e) => e.type === 'dot').length; return ticks; };
   const base = tickRate(0), one = tickRate(1), five = tickRate(5);
@@ -44,14 +44,14 @@ ok('all 9 G4 items exist', ['executioners_axe', 'magma_core', 'shatter_hammer', 
 // Shatter Hammer
 { const { s, es, k } = mk(); give(s, k, 'shatter_hammer'); const clean = dmg(s, k, es[0]);
   s.applyStatus(es[0], { status: 'freeze', durationMs: 5000 }, k, 'f', []); const ev = []; const hit = s.strike(k, es[0], ev, {});
-  ok('Shatter Hammer: +60% damage on a frozen enemy', near(hit.amount / clean, 1.6), `${clean} -> ${hit.amount}`);
+  ok('Shatter Hammer: +85% damage on a frozen enemy', near(hit.amount / clean, 1.85), `${clean} -> ${hit.amount}`);
   ok('...and the hit breaks the freeze', !es[0].statuses.some((x) => x.type === 'freeze') && ev.some((e) => e.type === 'proc' && e.label === 'Shatter!'));
   const again = dmg(s, k, es[0]); ok('...so the next hit is normal damage', near(again / clean, 1)); }
 { const { s, es, k } = mk(); give(s, k, 'shatter_hammer'); give(s, k, 'chill_band'); for (let i = 0; i < 5; i++) s.applyStatus(es[0], { status: 'chill', durationMs: 5000 }, k, 'c', []);
   ok('(Chill reaching 5 stacks freezes, so Chill sources feed it)', es[0].statuses.some((x) => x.type === 'freeze')); }
 // Blood Chalice
 { const { s, es, k } = mk(['goblin', 'goblin']); give(s, k, 'blood_chalice'); const clean = dmg(s, k, es[0]); bleed(s, es[0], k);
-  ok('Blood Chalice: bleeding enemies take +20% damage', near(dmg(s, k, es[0]) / clean, 1.2));
+  ok('Blood Chalice: bleeding enemies take +28% damage', near(dmg(s, k, es[0]) / clean, 1.28));
   k.hp = 1000; es[0].hp = 1; s.strike(k, es[0], [], {}); ok('...killing a BLEEDING enemy heals the holder 3%', Math.abs(k.hp - (1000 + k.maxHp * 0.03)) < 5, `${k.hp}`);
   k.hp = 1000; es[1].hp = 1; s.strike(k, es[1], [], {}); ok('...killing a non-bleeding one does not', k.hp === 1000); }
 // Plague Flask
@@ -72,16 +72,16 @@ ok('all 9 G4 items exist', ['executioners_axe', 'magma_core', 'shatter_hammer', 
 // Exploiter's Lens
 { const { s, es, k } = mk(); give(s, k, 'exploiters_lens'); const clean = dmg(s, k, es[0]);
   burn(s, es[0], k); bleed(s, es[0], k); ok('Exploiter\'s Lens: nothing with only 2 different debuffs', near(dmg(s, k, es[0]) / clean, 1));
-  poison(s, es[0], k); ok('...+30% with 3 different debuffs', near(dmg(s, k, es[0]) / clean, 1.3));
-  poison(s, es[0], k); poison(s, es[0], k); ok('...extra stacks of the same kind do not count', near(dmg(s, k, es[0]) / clean, 1.3)); }
+  poison(s, es[0], k); ok('...+42% with 3 different debuffs', near(dmg(s, k, es[0]) / clean, 1.42));
+  poison(s, es[0], k); poison(s, es[0], k); ok('...extra stacks of the same kind do not count', near(dmg(s, k, es[0]) / clean, 1.42)); }
 // Hunter's Sigil
 { const { s, es, k, h } = mk(['goblin', 'goblin']); give(s, k, 'hunters_sigil'); const before = dmg(s, h[1], es[0]);
   const first = []; s.strike(k, es[0], first, {});
-  ok('Hunter\'s Sigil: the first hit on an enemy Marks it', es[0].statuses.some((x) => x.type === 'mark' && x.damageTakenPercent === 10));
-  const after = dmg(s, h[1], es[0]); ok('...the whole squad hits it +10% harder', near(after / before, 1.1), `${before} -> ${after}`);
+  ok('Hunter\'s Sigil: the first hit on an enemy Marks it', es[0].statuses.some((x) => x.type === 'mark' && x.damageTakenPercent === 14));
+  const after = dmg(s, h[1], es[0]); ok('...the whole squad hits it +14% harder', near(after / before, 1.14), `${before} -> ${after}`);
   ok('...the other enemy is not marked yet', !es[1].statuses.some((x) => x.type === 'mark')); s.strike(k, es[1], [], {}); ok('...but is after the holder hits it', es[1].statuses.some((x) => x.type === 'mark')); }
 { const { s, es, k } = mk(['goblin']); give(s, k, 'hunters_sigil', 3); s.strike(k, es[0], [], {}); const m = es[0].statuses.find((x) => x.type === 'mark');
-  ok('...3 copies: +30% and the mark lasts longer', m.damageTakenPercent === 30 && m.remaining === 10000, `${m.damageTakenPercent} ${m.remaining}`);
+  ok('...3 copies: +42% and the mark lasts longer', m.damageTakenPercent === 42 && m.remaining === 10000, `${m.damageTakenPercent} ${m.remaining}`);
   const marks = es[0].statuses.filter((x) => x.type === 'mark').length; s.strike(k, es[0], [], {}); ok('...only one mark per enemy (it is not marked again)', es[0].statuses.filter((x) => x.type === 'mark').length === marks); }
 // Thousand Cuts
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'thousand_cuts'); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true });

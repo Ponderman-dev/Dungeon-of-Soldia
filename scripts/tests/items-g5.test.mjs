@@ -40,7 +40,7 @@ ok('all 8 G5 items exist', ['warding_charm', 'overheal_ring', 'spiked_aegis', 'p
 // Spiked Aegis
 { const { s, es, k } = mk(['goblin', 'goblin']); give(s, k, 'spiked_aegis'); s.applyStatus(k, { status: 'shield', amount: 50, durationMs: 9000 }, k, 'sh', []);
   const hp0 = es.map((e) => e.hp); hitMe(s, es[0], k, 5000);
-  ok('Spiked Aegis: a shield BROKEN by damage explodes on all enemies (80% attack)', es.every((e, i) => near(hp0[i] - e.hp, k.stats.attack * 0.8, 0.05)), `${hp0[0] - es[0].hp}`); }
+  ok('Spiked Aegis: a shield BROKEN by damage explodes on all enemies (110% attack)', es.every((e, i) => near(hp0[i] - e.hp, k.stats.attack * 1.1, 0.05)), `${hp0[0] - es[0].hp}`); }
 { const { s, es, k } = mk(['goblin']); give(s, k, 'spiked_aegis'); s.applyStatus(k, { status: 'shield', amount: 50, durationMs: 500 }, k, 'sh', []);
   const hp0 = es[0].hp; for (let t = 0; t < 700; t += 50) s.update(50);
   ok('...a shield that just runs out does NOT explode', es[0].hp === hp0); }
@@ -107,7 +107,7 @@ ok('all 8 G5 items exist', ['warding_charm', 'overheal_ring', 'spiked_aegis', 'p
 // Lost Cleric's Grimoire
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'lost_clerics_grimoire', 2); k.hp = 1000; const hp0 = es[0].hp; const ev = [];
   const got = s.healUnit(k, 500, ev, { aura: false });
-  ok('Grimoire: healing is stored as Soul Energy (100% per copy); at 10% max health it fires a green fireball of 250% of the energy', got >= k.maxHp * 0.05 && ev.some((e) => e.type === 'projectile' && e.kind === 'greenfire') && near(hp0 - es[0].hp, got * 2 * 2.5, 0.05) && k.soul === 0, `${hp0 - es[0].hp} vs ${got * 5}`);
+  ok('Grimoire: healing is stored as Soul Energy (100% per copy); at 10% max health it fires a green fireball of 350% of the energy', got >= k.maxHp * 0.05 && ev.some((e) => e.type === 'projectile' && e.kind === 'greenfire') && near(hp0 - es[0].hp, got * 2 * 3.5, 0.05) && k.soul === 0, `${hp0 - es[0].hp} vs ${got * 7}`);
   k.hp = k.maxHp; const hp1 = es[0].hp; s.healUnit(k, 500, [], { aura: false }); ok('...a heal at full health does not count', es[0].hp === hp1); }
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'lost_clerics_grimoire'); k.specials.lifesteal = 100; k.hp = 1000; const hp = k.hp;
   s.healUnit(k, 10, [], { aura: false }); ok('...the fireball does no lifesteal (item damage)', k.hp === hp + 10); }

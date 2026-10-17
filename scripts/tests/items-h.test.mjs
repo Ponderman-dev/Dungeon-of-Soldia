@@ -22,7 +22,7 @@ const near = (v, t, tol = 0.03) => Math.abs(v / t - 1) < tol;
 { const bl = (n) => { const { s, k } = mk(); give(s, k, 'shield_totem', n); return k.specials.block; };
   ok('Shield Totem: 6%, 6 = 31%, 20 = 67% (towards 90%)', bl(1) === 6 && Math.abs(bl(6) - 30.5) < 0.2 && Math.abs(bl(20) - 67.4) < 0.2, `${bl(6)} ${bl(20)}`); }
 // Gambler's Dice: no max, +50% crit damage per die
-{ const { s, k } = mk(); give(s, k, 'gamblers_dice', 5); ok('Gambler\'s Dice: 5 dice = +100 crit and +250% crit damage', k.specials.critDamage === 250); }
+{ const { s, k } = mk(); give(s, k, 'gamblers_dice', 5); ok('Gambler\'s Dice: 5 dice = +100 crit and +350% crit damage', k.specials.critDamage === 350); }
 // Overheal Ring: shield cap +25% per ring
 { const cap = (n) => { const { s, k } = mk(); give(s, k, 'overheal_ring', n); k.hp = k.maxHp; s.healUnit(k, k.maxHp * 10, [], { aura: false }); return s.shieldAmount(k) / k.maxHp; };
   ok('Overheal Ring: shield cap 25% max health per ring (1 = 25%, 4 = 100%)', near(cap(1), 0.25) && near(cap(4), 1), `${cap(1)} ${cap(4)}`); }
@@ -35,19 +35,19 @@ const near = (v, t, tol = 0.03) => Math.abs(v / t - 1) < tol;
 { const { s, k } = mk(); give(s, k, 'excalibur', 3); const p = k.procs.filter((x) => x.itemId === 'excalibur');
   ok('Excalibur: every copy rolls its own 8%', p.length === 3 && p.every((x) => x.chance === 8));
   const ev = []; s.rollProcs(k, 'onAttack', ev, { target: s.enemies[0], hit: true, force: true });
-  ok('...3 copies: tornadoes hit +40% harder', s.tornados.length && near(s.tornados[0].spec.damageMultiplier, 0.6 * 1.4), `${s.tornados[0] && s.tornados[0].spec.damageMultiplier}`); }
+  ok('...3 copies: tornadoes hit +40% harder', s.tornados.length && near(s.tornados[0].spec.damageMultiplier, 0.85 * 1.4), `${s.tornados[0] && s.tornados[0].spec.damageMultiplier}`); }
 // Jolly Banner: one roll, 5% +3% per extra
 { const { s, k } = mk(); give(s, k, 'jolly_banner', 3); const p = k.procs.filter((x) => x.itemId === 'jolly_banner'); ok('Jolly Banner: 3 banners = one 11% roll', p.length === 1 && p[0].chance === 11); }
 // Mimic Chest: 10% +3% per extra
 { const { s, k } = mk(); give(s, k, 'mimic_chest', 3); ok('Mimic Chest: 3 chests = 16%', k.specials.mimic === 16); }
 // Blood Chalice: +20%, then +10% per extra
-{ const { s, k } = mk(); give(s, k, 'blood_chalice', 3); ok('Blood Chalice: 3 chalices = +40% vs bleeding', k.specials.bloodChalice === 40); }
+{ const { s, k } = mk(); give(s, k, 'blood_chalice', 3); ok('Blood Chalice: 3 chalices = +56% vs bleeding', k.specials.bloodChalice === 56); }
 // Conductor's Baton: +25%, then +8% per extra
 { const { s, k } = mk(); give(s, k, 'conductors_baton', 3); ok('Conductor\'s Baton: 3 batons = +41%', k.specials.baton === 41); }
 // Shatter Hammer: +10% vs chilled (not frozen)
 { const { s, es, k } = mk(); const base = s.strike(k, es[0], [], {}).amount; give(s, k, 'shatter_hammer', 2);
   s.applyStatus(es[0], { status: 'chill', durationMs: 5000 }, k, 'c', []); const chilled = s.strike(k, es[0], [], {}).amount;
-  ok('Shatter Hammer: +10% per hammer vs chilled enemies (2 = +20%)', near(chilled / base, 1.2), `${base} ${chilled}`); }
+  ok('Shatter Hammer: +14% per hammer vs chilled enemies (2 = +28%)', near(chilled / base, 1.28), `${base} ${chilled}`); }
 // Quick Gloves: double hit 8% once
 { const { s, k } = mk(); give(s, k, 'quick_gloves', 4); const p = k.procs.filter((x) => x.itemId === 'quick_gloves'); ok('Quick Gloves: 4 pairs = still one 8% double-hit roll', p.length === 1 && p[0].chance === 8); }
 // Static Crystal: 5% per crystal, 2 jumps +1 per extra
@@ -57,6 +57,6 @@ const near = (v, t, tol = 0.03) => Math.abs(v / t - 1) < tol;
   const hit = new Set(ev.filter((e) => e.type === 'attack' && e.damageType === 'electric').map((e) => e.target)); ok('...3 crystals: 4 jumps (5 enemies hit)', hit.size === 5, `${hit.size}`); }
 // Fire Heart: the shield breaks into a fire nova
 { const { s, es, k } = mk(); give(s, k, 'fire_heart', 2); s.startFloor(); const st = k.statuses.find((x) => x.key === 'shield:fireheart');
-  ok('Fire Heart: the shield explodes when broken (50% fire per heart)', st && st.onBreak && st.onBreak.damageMultiplier === 1 && st.onBreak.damageType === 'fire'); }
+  ok('Fire Heart: the shield explodes when broken (70% fire per heart)', st && st.onBreak && near(st.onBreak.damageMultiplier, 1.4) && st.onBreak.damageType === 'fire'); }
 // Siege Cannon / Gag Rune / Heart Charm data
 ok('Gag Rune is epic now', itemDefs.gag_rune.rarity === 'epic');

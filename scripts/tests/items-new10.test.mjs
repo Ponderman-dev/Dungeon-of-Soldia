@@ -36,7 +36,7 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
   ok('Spotter\'s Lens: the TAPPED enemy takes +12% per copy from the whole squad (another hero holds it)', near(unfocused, base) && near(focused / base, 1.24), `${base} ${unfocused} ${focused}`); }
 // Giantslayer's Brand
 { const { s, es, k } = mk(); const base = s.strike(k, es[0], [], {}).amount; es[0].def = { ...es[0].def, boss: true }; give(s, k, 'giantslayers_brand', 2); const vsBoss = s.strike(k, es[0], [], {}).amount;
-  ok('Giantslayer: +30% per copy vs bosses', near(vsBoss / base, 1.6), `${base} ${vsBoss}`);
+  ok('Giantslayer: +42% per copy vs bosses', near(vsBoss / base, 1.84), `${base} ${vsBoss}`);
   const sp = s.heroes.reduce((n, h) => n + (h.specials.bossWindup || 0), 0); ok('...boss wind-ups 20% longer per copy while the holder lives', sp === 40); }
 { const wind = (n) => { const { s, k } = mk(['knight', 'rogue', 'archer'], ['grukk']); if (n) give(s, k, 'giantslayers_brand', n); const boss = s.enemies.find((e) => e.def.boss);
     const ab = boss.def.abilities.find((a) => a.castMs); s.startAbility(boss, ab, []); return [boss.bossCast.total, ab.castMs]; };
@@ -47,7 +47,7 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
     for (const kd of kinds) s.applyStatus(e, specs[kd], k, 't', []);
     let dmg = 0; for (let t = 0; t < 1000; t += 50) for (const ev of s.update(50)) if (ev.type === 'dot' && ev.unit === e && ev.status === 'poison') dmg += ev.amount; return dmg; };
   const plain = tick(0, ['poison']), one = tick(1, ['poison']), three = tick(1, ['bleed', 'burn', 'poison']), four = tick(4, ['bleed', 'burn', 'poison']);
-  ok('Catalyst Vial: 1 vial + 1 kind = +15%; 3 kinds = +45%; 4 vials with 3 kinds = +180%', near(one / plain, 1.15, 0.06) && near(three / plain, 1.45, 0.06) && near(four / plain, 2.8, 0.06), `${plain} ${one} ${three} ${four}`); }
+  ok('Catalyst Vial: 1 vial + 1 kind = +21%; 3 kinds = +63%; 4 vials with 3 kinds = +252%', near(one / plain, 1.21, 0.06) && near(three / plain, 1.63, 0.06) && near(four / plain, 3.52, 0.06), `${plain} ${one} ${three} ${four}`); }
 // Scholar's Bookmark
 { const { s, k } = mk(); give(s, k, 'scholars_bookmark', 3); k.skills[0].pages = [{ kind: 'stat' }, { kind: 'stat' }, { kind: 'modifier' }]; k.skills[1].pages = [{ kind: 'modifier' }];
   ok('Scholar\'s Bookmark: 3 copies x (2 stat + 2 modifier x2 = 6 pages) = +72% skill damage', s.bookmarkBonus(k) === 72, `${s.bookmarkBonus(k)}`); }
@@ -97,12 +97,12 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
 // Ghastly Fire
 { const { s, es, k } = mk(); give(s, k, 'ghastly_fire'); const ev = []; s.strike(k, es[0], ev, { damageType: 'fire' });
   const fire = ev.find((e) => e.type === 'attack' && e.damageType === 'fire'), dark = ev.find((e) => e.type === 'attack' && e.damageType === 'dark');
-  ok('Ghastly Fire: a fire hit also deals 20% of it as dark', fire && dark && Math.abs(dark.result.amount - fire.result.amount * 0.2) <= 1, `${fire && fire.result.amount} ${dark && dark.result.amount}`);
+  ok('Ghastly Fire: a fire hit also deals 28% of it as dark', fire && dark && Math.abs(dark.result.amount - fire.result.amount * 0.28) <= 1, `${fire && fire.result.amount} ${dark && dark.result.amount}`);
   for (let i = 0; i < 4; i++) s.applyStatus(es[0], { status: 'burn', durationMs: 60000, damageMultiplier: 0.5, damageType: 'fire' }, k, 'b' + i, []);
   ok('...4 burn stacks = the enemy attacks 20% slower', s.ghastlySlow(es[0]) === 20);
   let dark2 = 0; for (let t = 0; t < 1000; t += 50) for (const e of s.update(50)) if (e.type === 'dot' && e.damageType === 'dark' && e.unit === es[0]) dark2++;
   ok('...burn ticks also hit as dark', dark2 > 0);
-  const { s: s3, k: k3 } = mk(); give(s3, k3, 'ghastly_fire', 3); ok('...3 copies: 60% dark, 9% slow per stack', k3.specials.ghastly === 60 && k3.specials.ghastlySlow === 9); }
+  const { s: s3, k: k3 } = mk(); give(s3, k3, 'ghastly_fire', 3); ok('...3 copies: 84% dark, 9% slow per stack', k3.specials.ghastly === 84 && k3.specials.ghastlySlow === 9); }
 // Phoenix Feather
 { const { s, k } = mk(); give(s, k, 'phoenix_feather', 2); const ev = []; s.dealDamage(k, k.hp + 50, ev);
   const rb = k.statuses.find((x) => x.type === 'regenBoost');

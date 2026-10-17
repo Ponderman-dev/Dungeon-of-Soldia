@@ -3,7 +3,34 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
-## START HERE (session 3): enemies and difficulty
+## START HERE (session 4): item looks + item damage buff
+Latest branch: `ccr-a59eab7b-wefaf5` (everything pushed). Start a new session from it.
+
+FIRST JOB NEXT SESSION (user: 'sessions are getting more expensive, need to solve that before continuing'):
+CLAUDE.md is ~93 KB (~23k tokens) and is loaded into EVERY turn, so it is the main cost. Agreed direction (ask the
+user before doing it): shrink CLAUDE.md to the essentials (about the user, rules, commands, preview urls, layout,
+a 1-line pointer per system) and move the long per-feature notes into `docs/systems/*.md` (read only when that
+system is worked on). Also: start fresh sessions per task instead of one long one.
+
+Done in session 4 (after session 3 below):
+- ITEM NOTES round 1 applied (the user's 12 notes on the item review page; see CLAUDE.md "ITEM NOTES round 1").
+  Review page, Studio and game republished. The new-item-fx proposal page picks are NOT applied yet (its Flame
+  Spirit / Soul Lantern / Ghastly Fire options are mostly replaced by the notes).
+- EPIC + LEGENDARY DAMAGE BUFF (user: 'legendaries lack firepower', approved list, ~+40%): Flame Spirit 300 -> 500%,
+  Moonlight hits 60 -> 85% (proc `hitMultiplier` in items.json), Excalibur tornado 0.6 -> 0.85, Grimoire 250 -> 350%,
+  Frozen Thunderbolt 50 -> 70, Fire Heart nova 50 -> 70, Siege Cannon +80 -> +110% skills, Gambler's Dice crit dmg
+  +50 -> +70, Bloodlust Mask +30 -> +42% attack speed; epics Static Crystal 300 -> 420%, Spirit Axe 35 -> 50%
+  (`spiritAxeDamage` special), Spiked Aegis 80 -> 110, Thousand Cuts bleed 0.3 -> 0.42 + knives 60 -> 85, Shatter
+  Hammer 60/10 -> 85/14, Magma Core 25 -> 35, Blood Chalice 20(+10) -> 28(+14), Exploiter 30 -> 42, Hunter's Sigil
+  10 -> 14 (copies now counted from hero.items), Giantslayer 30 -> 42, Catalyst 15 -> 21, Ghastly 20 -> 28.
+  Smart player 4/squad, same dice: mean 32.6 -> 32.9, median 30 -> 30, alive at 50: 9 -> 11%, Brood Mother win
+  80 -> 87%, fights at floors 41-60 25-40% shorter. User: 'we can stick with this'.
+- NOT buffed (no damage): defense/heal/minion/utility items. Commons and rares NOT looked at yet (user: 'start
+  with epic and legendary'). Possible next: the same for rares/commons, and a per-item bench (itemruns.mjs).
+- Then the old agreed order: hero balance round 2 (Alchemist, Archer, Bard, Mage at the bottom), drop odds,
+  bosses rework.
+
+## Session 3: enemies and difficulty
 Status: steps 1-4 DONE (ELITES and MONSTER HOUSE, see CLAUDE.md). User: keep elites as they are; Monster House 'good for now' (fodder mix 2/1.4/0.25, legendary 4%). Step 5 BATCH 1 done (Sapper, Shaman, Shieldbearer, Golem, Hound; see CLAUDE.md). BATCH 2 done too (Worm, Acolyte, Blink Imp, Banshee, Sentinel): the enemy plan (steps 1-5) is COMPLETE. Next (agreed order): hero balance round 2 (Alchemist, Archer, Bard, Mage at the bottom), drop odds, bosses rework.
 
 ### Branch, preview, tools

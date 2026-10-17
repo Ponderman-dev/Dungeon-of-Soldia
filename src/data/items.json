@@ -201,29 +201,29 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Skills deal +80% damage. 15% chance a skill also hits nearby enemies.",
+    "description": "Skills deal +110% damage. 15% chance a skill also hits nearby enemies.",
     "effects": [
       {
         "special": "skillDamage",
-        "percent": 80
+        "percent": 110
       },
       {
         "special": "skillSplash",
         "percent": 15
       }
     ],
-    "perStack": "+80% skill damage, +15% splash chance"
+    "perStack": "+110% skill damage, +15% splash chance"
   },
   "bloodlust_mask": {
     "name": "Bloodlust Mask",
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "+30% attack speed. Heals 5% of damage dealt; 10% chance to share it with the squad.",
+    "description": "+42% attack speed. Heals 5% of damage dealt; 10% chance to share it with the squad.",
     "effects": [
       {
         "stat": "attackEfficiency",
-        "percent": 30
+        "percent": 42
       },
       {
         "special": "lifesteal",
@@ -235,14 +235,14 @@
         "cooldownMs": 3000
       }
     ],
-    "perStack": "+30% attack speed, +5% lifesteal"
+    "perStack": "+42% attack speed, +5% lifesteal"
   },
   "gamblers_dice": {
     "name": "Gambler's Dice",
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "+20 crit chance. Crits deal +50% and add a random debuff.",
+    "description": "+20 crit chance. Crits deal +70% and add a random debuff.",
     "effects": [
       {
         "stat": "crit",
@@ -250,7 +250,7 @@
       },
       {
         "special": "critDamage",
-        "percent": 50
+        "percent": 70
       },
       {
         "special": "critDebuff",
@@ -280,7 +280,7 @@
     "provides": [
       "cc"
     ],
-    "perStack": "+20 crit, +50% crit damage"
+    "perStack": "+20 crit, +70% crit damage"
   },
   "fire_bombs": {
     "name": "Fire Bombs",
@@ -350,7 +350,7 @@
     "rarity": "epic",
     "type": "onhit",
     "scope": "self",
-    "description": "5% on attack: lightning for 300% that jumps to 2 more enemies and Shocks them.",
+    "description": "5% on attack: lightning for 420% that jumps to 2 more enemies and Shocks them.",
     "effects": [
       {
         "proc": "onAttack",
@@ -358,7 +358,7 @@
         "label": "Lightning!",
         "chain": {
           "jumps": 2,
-          "damageMultiplier": 3,
+          "damageMultiplier": 4.2,
           "damageType": "electric",
           "apply": [
             {
@@ -812,11 +812,11 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "+25% damage to burning enemies. Burns tick 40% faster.",
+    "description": "+35% damage to burning enemies. Burns tick 40% faster.",
     "effects": [
       {
         "special": "magmaCore",
-        "percent": 25
+        "percent": 35
       },
       {
         "special": "burnSpeed",
@@ -830,39 +830,39 @@
     ],
     "dropWeight": 90,
     "needs": "burn",
-    "perStack": "+25% damage, +15% burn damage"
+    "perStack": "+35% damage, +15% burn damage"
   },
   "shatter_hammer": {
     "name": "Shatter Hammer",
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "+60% damage to frozen enemies (breaks the freeze), +10% to chilled ones.",
+    "description": "+85% damage to frozen enemies (breaks the freeze), +14% to chilled ones.",
     "effects": [
       {
         "special": "shatterHammer",
-        "percent": 60
+        "percent": 85
       },
       {
         "special": "shatterChill",
-        "percent": 10
+        "percent": 14
       }
     ],
     "dropWeight": 90,
     "needs": "freeze",
-    "perStack": "+60% / +10%"
+    "perStack": "+85% / +14%"
   },
   "blood_chalice": {
     "name": "Blood Chalice",
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "+20% damage to bleeding enemies. Killing one heals 3%.",
+    "description": "+28% damage to bleeding enemies. Killing one heals 3%.",
     "effects": [
       {
         "special": "bloodChalice",
-        "percent": 20,
-        "perExtra": 10
+        "percent": 28,
+        "perExtra": 14
       },
       {
         "special": "chaliceHeal",
@@ -871,7 +871,7 @@
     ],
     "dropWeight": 90,
     "needs": "bleed",
-    "perStack": "+10% damage, +3% heal"
+    "perStack": "+14% damage, +3% heal"
   },
   "plague_flask": {
     "name": "Plague Flask",
@@ -898,29 +898,29 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "+30% damage to enemies with 3 or more different debuffs.",
+    "description": "+42% damage to enemies with 3 or more different debuffs.",
     "effects": [
       {
         "special": "exploiter",
-        "percent": 30
+        "percent": 42
       }
     ],
     "dropWeight": 80,
-    "perStack": "+30% damage"
+    "perStack": "+42% damage"
   },
   "hunters_sigil": {
     "name": "Hunter's Sigil",
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "The first hit on each enemy Marks it: +10% damage from the squad.",
+    "description": "The first hit on each enemy Marks it: +14% damage from the squad.",
     "effects": [
       {
         "special": "hunterSigil",
-        "percent": 10
+        "percent": 14
       }
     ],
-    "perStack": "+10% damage, longer Mark"
+    "perStack": "+14% damage, longer Mark"
   },
   "thousand_cuts": {
     "name": "Thousand Cuts",
@@ -939,7 +939,7 @@
           {
             "status": "bleed",
             "durationMs": 4000,
-            "damageMultiplier": 0.3
+            "damageMultiplier": 0.42
           }
         ]
       },
@@ -949,7 +949,7 @@
       },
       {
         "special": "knifeBurst",
-        "percent": 60
+        "percent": 85
       }
     ],
     "provides": [
@@ -966,7 +966,7 @@
     "effects": [
       {
         "special": "frozenThunderbolt",
-        "percent": 50
+        "percent": 70
       }
     ],
     "dropWeight": 70,
@@ -1027,7 +1027,7 @@
     "effects": [
       {
         "special": "spikedAegis",
-        "percent": 80
+        "percent": 110
       }
     ],
     "dropWeight": 80,
@@ -1123,7 +1123,7 @@
       },
       {
         "special": "fireHeartNova",
-        "percent": 50
+        "percent": 70
       }
     ],
     "provides": [
@@ -1137,7 +1137,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Healing on this hero is stored; at 10% of max health it bursts out as a green fireball (250%).",
+    "description": "Healing on this hero is stored; at 10% of max health it bursts out as a green fireball (350%).",
     "effects": [
       {
         "special": "soulEnergy",
@@ -1145,7 +1145,7 @@
       },
       {
         "special": "soulDamage",
-        "percent": 250,
+        "percent": 350,
         "unique": true
       }
     ],
@@ -1510,7 +1510,7 @@
         "tornado": {
           "durationMs": 5000,
           "tickMs": 500,
-          "damageMultiplier": 0.6,
+          "damageMultiplier": 0.85,
           "max": 3,
           "hopEvery": 2,
           "damagePerExtraPercent": 20
@@ -1557,11 +1557,11 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "+30% damage to bosses. Boss wind-ups take 20% longer.",
+    "description": "+42% damage to bosses. Boss wind-ups take 20% longer.",
     "effects": [
       {
         "special": "bossDamage",
-        "percent": 30
+        "percent": 42
       },
       {
         "special": "bossWindup",
@@ -1569,22 +1569,22 @@
       }
     ],
     "dropWeight": 90,
-    "perStack": "+30% damage, +20% wind-up"
+    "perStack": "+42% damage, +20% wind-up"
   },
   "catalyst_vial": {
     "name": "Catalyst Vial",
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "Each different damage over time on an enemy makes this hero's ticks 15% stronger.",
+    "description": "Each different damage over time on an enemy makes this hero's ticks 21% stronger.",
     "effects": [
       {
         "special": "dotMix",
-        "percent": 15
+        "percent": 21
       }
     ],
     "dropWeight": 90,
-    "perStack": "+15%"
+    "perStack": "+21%"
   },
   "scholars_bookmark": {
     "name": "Scholar's Bookmark",
@@ -1686,7 +1686,7 @@
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "8% on attack: 3-5 dark fireballs strike random enemies (300% each).",
+    "description": "8% on attack: 3-5 dark fireballs strike random enemies (500% each).",
     "effects": [
       {
         "proc": "onAttack",
@@ -1695,7 +1695,7 @@
         "silent": true,
         "targets": "self",
         "flameSpirit": true,
-        "damageMultiplier": 3
+        "damageMultiplier": 5
       }
     ],
     "dropWeight": 90,
@@ -1714,6 +1714,11 @@
       {
         "special": "spiritAxe",
         "percent": 8
+      },
+      {
+        "special": "spiritAxeDamage",
+        "percent": 50,
+        "unique": true
       }
     ],
     "dropWeight": 90,
@@ -1746,7 +1751,7 @@
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "18% on attack: a moon crescent hits the enemy 3 times (60% each).",
+    "description": "18% on attack: a moon crescent hits the enemy 3 times (85% each).",
     "effects": [
       {
         "proc": "onAttack",
@@ -1754,7 +1759,8 @@
         "label": "Moonlight!",
         "silent": true,
         "targets": "self",
-        "moonlight": true
+        "moonlight": true,
+        "hitMultiplier": 0.85
       }
     ],
     "dropWeight": 100,
@@ -1765,11 +1771,11 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "Fire hits and burns from this hero also deal 20% as dark. Burning enemies attack 5% slower.",
+    "description": "Fire hits and burns from this hero also deal 28% as dark. Burning enemies attack 5% slower.",
     "effects": [
       {
         "special": "ghastly",
-        "percent": 20
+        "percent": 28
       },
       {
         "special": "ghastlySlow",
@@ -1782,6 +1788,6 @@
     "provides": [
       "dark"
     ],
-    "perStack": "+20% dark, +2% slow"
+    "perStack": "+28% dark, +2% slow"
   }
 }

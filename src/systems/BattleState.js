@@ -166,7 +166,7 @@ export default class BattleState {
   }
 
   // Spirit Axe: `spiritAxe`% (8 per copy) when the holder is hit: a ghostly axe spins around it for 3s, hitting every
-  // enemy within `spiritAxeRadius` (110 px) every 0.5s for 35% of the holder's attack (item damage). One spin at a time.
+  // enemy within `spiritAxeRadius` (110 px) every 0.5s for `spiritAxeDamage`% (items.json) of the holder's attack (item damage). One spin at a time.
   trySpiritAxe(target, events) {
     const ch = (target.specials && target.specials.spiritAxe) || 0;
     if (!ch || target.minion || !target.alive || (target.axeLeft || 0) > 0 || this.rng() * 100 >= ch) return;
@@ -182,7 +182,7 @@ export default class BattleState {
     while (hero.axeTick <= 0 && hero.axeLeft > 0) { // a pulse at once, then every 0.5s: 6 pulses in 3s
       hero.axeTick += 500;
       const near = this.targetableEnemies().filter((e) => !this.hasPositions(hero) || !this.hasPositions(e) || Math.hypot(e.x - hero.x, e.y - hero.y) <= 110);
-      for (const e of near) this.strike(hero, e, events, { multiplier: 0.35, damageType: 'melee', item: true });
+      for (const e of near) this.strike(hero, e, events, { multiplier: (hero.specials.spiritAxeDamage || 35) / 100, damageType: 'melee', item: true });
     }
     if (hero.axeLeft <= 0) hero.axeLeft = 0;
   }
@@ -202,10 +202,10 @@ export default class BattleState {
   }
 
   // Moonlight Twinblade: a crescent flies at the enemy and hits it 3 times (60% each, +20% per extra copy, item damage).
-  moonCrescent(hero, foe, copies, events) {
+  moonCrescent(hero, foe, copies, events, hit = 0.6) {
     events.push({ type: 'proc', unit: hero, label: 'Moonlight!', itemId: 'moonlight_twinblade', target: foe });
     events.push({ type: 'projectile', from: hero, to: foe, kind: 'moon' });
-    const mult = 0.6 * (1 + 0.2 * (copies - 1));
+    const mult = hit * (1 + 0.2 * (copies - 1)); // `hitMultiplier` of the proc in items.json
     for (let i = 0; i < 3; i++) this.later(300 + 120 * i, (ev) => { if (foe.alive && hero.alive) this.strike(hero, foe, ev, { multiplier: mult, damageType: 'ranged', item: true }); });
   }
 
@@ -1529,7 +1529,7 @@ export default class BattleState {
     }
     if (sp.hunterSigil && !attacker.sigilHits.has(target.uid) && target.side === 'enemy') {
       attacker.sigilHits.add(target.uid);
-      const copies = sp.hunterSigil / 10;
+      const copies = Math.max(1, attacker.items.filter((id) => id === 'hunters_sigil').length);
       this.applyStatus(target, { status: 'mark', durationMs: 5000 + 2500 * (copies - 1), damageTakenPercent: sp.hunterSigil }, attacker, `sigil_${attacker.uid}`, events);
     }
     if (sp.frozenThunderbolt && (opts.damageType || attacker.damageType) === 'electric' && !opts.burst) {
@@ -1620,7 +1620,7 @@ export default class BattleState {
       if (proc.chain && foe) this.chainHit(hero, foe, proc.chain.jumpsPerExtra ? { ...proc.chain, jumps: proc.chain.jumps + proc.chain.jumpsPerExtra * extra } : proc.chain, events);
       // Excalibur: tornadoes hit `damagePerExtraPercent` harder per extra copy. A tornado also comes on a miss.
       if (proc.flameSpirit && foe) this.conjureSpirit(hero, events, proc.damageMultiplier || 0.8);
-      if (proc.moonlight && foe) this.moonCrescent(hero, foe, proc.copies || 1, events);
+      if (proc.moonlight && foe) this.moonCrescent(hero, foe, proc.copies || 1, events, proc.hitMultiplier);
       if (proc.tornado && foe) this.spawnTornado(hero, proc.tornado.damagePerExtraPercent ? { ...proc.tornado, damageMultiplier: proc.tornado.damageMultiplier * (1 + (proc.tornado.damagePerExtraPercent * extra) / 100) } : proc.tornado, foe, events);
       for (const spec of proc.apply || []) {
         // scalesWithCopies: the status gets stronger with every copy of the item held; `damagePerExtraPercent`:

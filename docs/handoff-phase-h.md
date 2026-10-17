@@ -73,3 +73,11 @@ Read `CLAUDE.md` first, then this file. Every item decision of this phase is in 
   still the Fast magic spell (same as Holy hit).
 - Next (agreed order): hero balance round 2 (Alchemist/Archer/Bard/Mage still bottom), enemy difficulty curve,
   drop odds, bosses. The balance bots still don't play special rooms.
+
+## Session 2: difficulty curve (smart player)
+- New tools: scripts/tests/smartbot.mjs (smart drafting player) + curve.mjs (all cores). Runs go to floor 400.
+- Today (smart, 5/squad): median floor 31, mean 36; almost no deaths before 15, wall at 16-20 (Grukk), steady
+  losses 21-40, squads past ~50 snowball.
+- Tested: enemies +30% hp / +45% atk per 3 floors (instead of +35 / +52.5) = median 38 (user's target ~40), BUT
+  strong squads never die (fights at floor 300 last 3.6s). User: DON'T change growth yet; instead add NEW ENEMIES
+  and maybe ELITE enemies to keep deep floors interesting. Endless runs should stay possible.

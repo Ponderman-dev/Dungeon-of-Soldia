@@ -1029,6 +1029,7 @@ export default class BattleState {
     if (!hit.dodged) this.addCombo(unit, target, 1, events);
     if (unit.minion && unit.chain && !hit.dodged) this.chainHit(unit, target, unit.chain, events); // Wisp Lantern copies: the bolt jumps on // Rogue: a combo point on this enemy
     this.pierce(unit, target, hit, events); // Archer: a shot on a Marked enemy goes through to the one behind
+    this.lobbedShot(unit, target, hit, events); // Alchemist: the flask splashes and poisons
     // Minion hits that put a status on the target (Imp burns, Gargoyle taunts).
     if (unit.minion && unit.def.onAttackApply && target.alive && !hit.dodged) {
       for (const spec of unit.def.onAttackApply) this.applyStatus(target, spec, unit, `minion_${unit.def.id}`, events);
@@ -1188,6 +1189,20 @@ export default class BattleState {
     const next = this.nearest(target, others);
     events.push({ type: 'proc', unit, label: 'Pierce!' });
     this.strike(unit, next, events, { multiplier: p.damageMultiplier, projectile: 'knife', from: target });
+  }
+
+  // Alchemist's LOBBED SHOTS (passive.lobbed): his basic attack is a flask. It poisons the target (`apply`) and
+  // splashes `splashMultiplier` on every other enemy within `splashRadius` of it, poisoning them too.
+  lobbedShot(unit, target, hit, events) {
+    const L = unit.def.passive && unit.def.passive.lobbed;
+    if (!L || hit.dodged) return;
+    const near = this.enemies.filter((e) => e.alive && e !== target && this.hasPositions(e) && this.hasPositions(target) && this.distance(e, target) <= L.splashRadius);
+    const poison = (e) => { for (const spec of L.apply || []) if (e.alive) this.applyStatus(e, spec, unit, 'passive_lobbed', events); };
+    poison(target);
+    for (const e of near) {
+      const h = this.strike(unit, e, events, { multiplier: L.splashMultiplier });
+      if (!h.dodged) poison(e);
+    }
   }
 
   // Bard's SONGS (passive.songs): the song he plays helps the squad while he lives.
@@ -2866,6 +2881,8 @@ export default class BattleState {
     if (hero.lanternGain) upkeep.push({ stat: 'attack', percent: hero.lanternGain }, { stat: 'health', percent: hero.lanternGain }); // Soul Lantern
     const sa = hero.def.passive && hero.def.passive.steadyAim;
     if (sa && hero.steady) upkeep.push({ stat: 'attackEfficiency', percent: sa.attackSpeedPercent }, { stat: 'crit', flat: sa.critFlat });
+    const lob = hero.def.passive && hero.def.passive.lobbed;
+    if (lob && lob.attackSpeedPercent) upkeep.push({ stat: 'attackEfficiency', percent: lob.attackSpeedPercent }); // Alchemist: slower flasks
     // Bard's March: the whole squad attacks faster while he plays it (Conductor's Baton makes it stronger).
     for (const b of this.bards()) if (b.song === 'march') upkeep.push({ stat: 'attackEfficiency', percent: b.def.passive.songs.march.attackSpeedPercent * (1 + ((b.specials && b.specials.baton) || 0) / 100) });
     return upkeep;

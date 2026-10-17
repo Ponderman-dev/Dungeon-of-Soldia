@@ -3,6 +3,12 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
+## START HERE (session 6): HERO KITS v3, Alchemist done
+DONE: Alchemist (Mad Bomber; details docs/systems/heroes.md 'HERO KITS v3'). NEXT: Bard, then Archer, Mage, then the rest.
+New hero tests go in `scripts/tests/heroes-v3.test.mjs`; move that hero's old block out of heroes-v2.test.mjs.
+Pattern: NEW skill ids for changed skills (e.g. `alch_barrage`) so the v1-fixture tests keep the old ones.
+Check: `node scripts/tests/review.mjs 3 all` (~1 min) 'hero avg floor' line, before vs after.
+
 ## START HERE (session 5): build HERO KITS v3
 NEXT JOB: build the new hero kits the user picked in `docs/hero-kits-v3.md` (all 10 decided, open questions
 answered). One hero per step (kit + tests + review/dmgshare check + show the user), bottom four first:

@@ -16,3 +16,10 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
     - **Bard** SONGS (`passive.songs`, `hero.song` 'march' | 'ballad'): MARCH = squad +15% attack speed (`statUpkeep()`), BALLAD = squad +0.6% health/s (`songRegen()`); Conductor's Baton scales them. DISCORD (area circle 120 at the target: 40% + CHARM 2.5s = the enemy attacks the nearest OTHER enemy, `pickTarget()`; status `charm`, control + debuff). CHANGE SONG (`songSwitch`: toggles, burst = Ballad heal 8% / March +30% attack speed 3s). Rhythm counter removed.
     - Scene: `drawHeroHud()` = Rage bar under the Berserker's health bar (gold in Frenzy), combo pips under the Rogue's target, a note right of the Bard's bar (gold March / green Ballad); popups Intercept!, Steam!/Shatter!/Overload!, March!/Ballad!, Counter!, Frenzy!, Pierce!. Cast effects `shieldBash`, `challenge`, `bloodPact`, `eviscerate`, `changeSong` in skillFx.js. New status icons: guarded, charm, element.
   - New skill pieces (all data-driven in skills.json): `channel`, `random`, `rotation`, `debuffedMultiplier`, `bonusVs`, `doubleIf`, `healShare`, `heal`, `splash`, `chain`, `onKill`, `leap`, `projectile` kinds (knife, rain, note, crescent, fireball, darkbolt, holybolt), `target` 'lowestAlly', support skills can target an `enemy`.
+  - **HERO KITS v3 (docs/hero-kits-v3.md, being built one hero at a time; tests `heroes-v3.test.mjs`, real data):**
+    - **Alchemist** MAD BOMBER (built session 6): LOBBED SHOTS (`passive.lobbed`, replaces Catalyst): his basic attack is a
+      flask (`lobbedShot()`): poisons the target (`apply`, poison only) and splashes `splashMultiplier` 40% on enemies within
+      `splashRadius` 70px, poisoning them too; `attackSpeedPercent` -25 via `statUpkeep()`. Scene `lobFlask()` draws the
+      green flask lob instead of an arrow. Skills `alch_barrage` (Flask Barrage, 5 flasks) and `alch_brew` (Mystery Brew,
+      4 flasks, 9s, heal 30%); the old `flask_barrage` / `mystery_brew` / `catalyst()` stay for the v1 fixture tests.
+      review.mjs 3 all: avg floor 24.3 (last) -> 28.8 (5th of 10).

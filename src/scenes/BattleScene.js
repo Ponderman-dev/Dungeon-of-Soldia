@@ -1263,7 +1263,9 @@ export default class BattleScene extends Phaser.Scene {
       if (!a || !t) return;
       a.lookAt = e.target; // it turns to face what it attacks
       // Melee: it already walked up (the fight rules move it), now it swings. Ranged: an arrow.
-      if (e.attacker.damageType !== 'melee') this.shootArrow(a, t, e.hitInMs);
+      const lob = e.attacker.def.passive && e.attacker.def.passive.lobbed;
+      if (lob) this.lobFlask(a, t, e.hitInMs, Number(lob.color)); // Alchemist: his shots are flasks
+      else if (e.attacker.damageType !== 'melee') this.shootArrow(a, t, e.hitInMs);
       else a.ch.swing(e.hitInMs);
     } else if (e.type === 'attackRetarget') {
       // Its target died while the arrow was flying: the arrow bends towards the new target.
@@ -1618,6 +1620,16 @@ export default class BattleScene extends Phaser.Scene {
     this.addFx(SHOT_MS.flask, (q, now) => { if (to.ch.active) b = this.fxPoint(to); return shotFx('flask', q, a, b, now, seed, color); }, ['shot', 'flask']);
   }
 
+
+  // Alchemist's basic attack (Lobbed Shots): the flask recipe lobs over in the first half, so it runs twice the
+  // flight time and lands as the hit does.
+  lobFlask(from, to, hitInMs, color) {
+    const a = this.fxPoint(from);
+    let b = this.fxPoint(to);
+    const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
+    this.addFx(Math.max(200, hitInMs * 2), (q, now) => { if (to.ch.active) b = this.fxPoint(to); return shotFx('flask', q, a, b, now, seed, color); }, ['shot', 'flask']);
+    from.ch.lunge(to.ch.x, to.ch.y);
+  }
 
   showProjectile(from, to, kind) {
     if (!from || !to) return;

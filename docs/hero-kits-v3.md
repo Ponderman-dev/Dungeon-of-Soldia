@@ -87,7 +87,7 @@ Decided by the user one hero at a time (feel, passive, attack, support). Numbers
   Ballad boosts healing items +25%. (Note: the passive no longer plays a song all the time; how March/Ballad
   last is decided when built, e.g. the chosen song stays until switched.)
 
-## Alchemist: MAD BOMBER
+## Alchemist: MAD BOMBER (BUILT session 6, see docs/systems/heroes.md)
 - Feel: explosions everywhere, big area flasks, splash on everything. Loves area and fire items.
 - Passive LOBBED SHOTS (user's version, replaces Catalyst): his basic attacks are flasks that splash 40% on
   enemies nearby and apply POISON only; in exchange he attacks slower (e.g. -25% attack speed; set when built).

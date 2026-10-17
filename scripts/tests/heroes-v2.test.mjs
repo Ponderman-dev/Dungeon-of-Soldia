@@ -126,8 +126,3 @@ const skillOf = (u, kind) => u.skills.findIndex((x) => x.kind === kind);
   ok('Discord: enemies are Charmed', es.every((e) => e.statuses.some((x) => x.type === 'charm')));
   ok('...a charmed enemy attacks another ENEMY', s.pickTarget(es[0]).side === 'enemy'); }
 
-// ---- Alchemist
-{ const { s, es, h } = mk(['alchemist'], ['goblin', 'goblin', 'goblin'], Math.random, true); const al = h[0];
-  for (const e of es) { e.x = 195; e.y = 340; } const ev = s.castSkill(al.uid, skillOf(al, 'attack'));
-  const hits = ev.filter((e) => e.type === 'attack').length;
-  ok('Alchemist: flasks splash the enemies next to where they land', hits > 3, hits); }

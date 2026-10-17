@@ -1582,12 +1582,12 @@
   {
     "id": "alchemist",
     "name": "Alchemist",
-    "role": "Debuffer",
-    "summary": "Makes every debuff last longer and hurt more.",
+    "role": "Bomber",
+    "summary": "Mad bomber: every shot is a splashing poison flask.",
     "tips": [
-      "Catalyst: enemy debuffs last 30% longer and damage over time hits 30% harder.",
-      "Flask Barrage throws 3 random flasks (fire, ice or poison).",
-      "Mystery Brew gives two random heroes a heal, speed or a shield."
+      "Lobbed Shots: his attacks are flasks that splash 40% on nearby enemies and poison them all, but he attacks 25% slower.",
+      "Flask Barrage throws 5 random flasks (fire, ice or poison) that splash.",
+      "Mystery Brew throws 4 flasks at heroes: a 30% heal, speed or a shield."
     ],
     "damageType": "ranged",
     "height": 23,
@@ -1608,8 +1608,8 @@
       "crit": 0.2
     },
     "skills": {
-      "attack": "flask_barrage",
-      "support": "mystery_brew"
+      "attack": "alch_barrage",
+      "support": "alch_brew"
     },
     "perk": {
       "name": "Volatile Mix",
@@ -1622,11 +1622,20 @@
       ]
     },
     "passive": {
-      "name": "Catalyst",
-      "description": "While he lives, debuffs on enemies last 30% longer and damage over time hits 30% harder.",
-      "catalyst": {
-        "durationPercent": 30,
-        "dotPercent": 30
+      "name": "Lobbed Shots",
+      "description": "His basic attacks are flasks: they splash 40% on enemies near the target and poison every enemy they hit. In exchange he attacks 25% slower.",
+      "lobbed": {
+        "splashRadius": 70,
+        "splashMultiplier": 0.4,
+        "attackSpeedPercent": -25,
+        "color": "0x6bd16a",
+        "apply": [
+          {
+            "status": "poison",
+            "durationMs": 4000,
+            "damageMultiplier": 0.25
+          }
+        ]
       }
     },
     "parts": {

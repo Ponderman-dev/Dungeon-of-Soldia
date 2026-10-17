@@ -703,6 +703,112 @@
     },
     "description": "Throws 3 random flasks at teammates: heal, speed boost or shield. Healing flasks always go to the most hurt heroes."
   },
+  "alch_barrage": {
+    "name": "Flask Barrage",
+    "short": "FB",
+    "kind": "attack",
+    "cooldownMs": 10000,
+    "castMs": 700,
+    "random": {
+      "count": 5,
+      "target": "enemy",
+      "pool": [
+        {
+          "name": "Fire Flask",
+          "color": "0xff7a3d",
+          "damageType": "fire",
+          "damageMultiplier": 0.9,
+          "apply": [
+            {
+              "status": "burn",
+              "durationMs": 4000,
+              "damageMultiplier": 0.35
+            }
+          ]
+        },
+        {
+          "name": "Ice Flask",
+          "color": "0x7fd8ff",
+          "damageType": "ice",
+          "damageMultiplier": 0.9,
+          "apply": [
+            {
+              "status": "chill",
+              "durationMs": 6000,
+              "stacks": 2
+            }
+          ]
+        },
+        {
+          "name": "Poison Cloud",
+          "color": "0x6bd16a",
+          "damageType": "dark",
+          "damageMultiplier": 0.6,
+          "apply": [
+            {
+              "status": "poison",
+              "durationMs": 6000,
+              "damageMultiplier": 0.4
+            }
+          ]
+        }
+      ],
+      "splash": {
+        "radius": 70,
+        "multiplier": 0.5
+      }
+    },
+    "description": "Throws 5 random flasks (fire, ice or poison) at random enemies; each splashes the enemies next to where it lands."
+  },
+  "alch_brew": {
+    "name": "Mystery Brew",
+    "short": "MB",
+    "kind": "support",
+    "cooldownMs": 9000,
+    "castMs": 600,
+    "random": {
+      "count": 4,
+      "target": "ally",
+      "pool": [
+        {
+          "name": "Healing Flask",
+          "color": "0x6dff8f",
+          "heal": {
+            "percentMaxHp": 30
+          }
+        },
+        {
+          "name": "Speed Flask",
+          "color": "0xffe94d",
+          "apply": [
+            {
+              "status": "buff",
+              "durationMs": 5000,
+              "mods": [
+                {
+                  "stat": "attackEfficiency",
+                  "percent": 40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Shield Flask",
+          "color": "0x6fd0ff",
+          "apply": [
+            {
+              "status": "shield",
+              "percentMaxHp": 25,
+              "durationMs": 5000
+            }
+          ]
+        }
+      ],
+      "healsMostHurt": true
+    },
+    "description": "Throws 4 random flasks at teammates: heal (30%), speed boost or shield. Healing flasks always go to the most hurt heroes."
+  },
   "knight_bash": {
     "name": "Shield Bash",
     "short": "SB",

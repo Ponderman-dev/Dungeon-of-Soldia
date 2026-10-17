@@ -161,5 +161,165 @@
       "xpScale": 0.5,
       "drawScale": 2
     }
+  },
+  "elites": {
+    "_about": "Elite enemies (BattleState.makeElite; which floors/how often: dungeons.json director.elites). An elite = health x healthMultiplier, attack x attackMultiplier, +defense/+resist, drawn drawScaleBonus pixel size bigger, XP x xpMultiplier, ONE element + ONE trait (random, equal odds). Element: its hits use damageType (it still walks/shoots like before), onHit statuses, resists/weak added (and removed from the other list), lifesteal %, jumpEvery = every Nth hit also jumps to a second hero (jump.damageMultiplier), onDeath = a cloud like the Puffshroom. Trait: lifesteal %, shieldPercent (of max health, regrows after regrowMs without being hit), thorns % (melee hits), split (dies into count non-elite copies with hpPercent of its max health each, drawn 1 smaller), regenPercentPerSec, statusDurationScale (control statuses), burst (on death: damageMultiplier x its attack as its element's damage on heroes/minions within radius + the element's onHit statuses).",
+    "healthMultiplier": 2,
+    "attackMultiplier": 1.35,
+    "defenseFlat": 10,
+    "resistFlat": 10,
+    "xpMultiplier": 3,
+    "drawScaleBonus": 1,
+    "rewardBump": 1,
+    "elements": {
+      "burning": {
+        "name": "Burning",
+        "color": "#ff7a3d",
+        "damageType": "fire",
+        "resists": [
+          "fire"
+        ],
+        "weak": [
+          "ice"
+        ],
+        "onHit": [
+          {
+            "status": "burn",
+            "chance": 35,
+            "durationMs": 3000,
+            "damageMultiplier": 0.2,
+            "damageType": "fire"
+          }
+        ]
+      },
+      "frozen": {
+        "name": "Frozen",
+        "color": "#7fd8ff",
+        "damageType": "ice",
+        "resists": [
+          "ice"
+        ],
+        "weak": [
+          "fire"
+        ],
+        "onHit": [
+          {
+            "status": "chill",
+            "chance": 50,
+            "durationMs": 4000
+          }
+        ]
+      },
+      "storm": {
+        "name": "Storm",
+        "color": "#ffe94d",
+        "damageType": "electric",
+        "resists": [
+          "electric"
+        ],
+        "weak": [
+          "ice"
+        ],
+        "onHit": [
+          {
+            "status": "shock",
+            "chance": 30,
+            "durationMs": 2500
+          }
+        ],
+        "jumpEvery": 4,
+        "jump": {
+          "damageMultiplier": 0.7
+        }
+      },
+      "cursed": {
+        "name": "Cursed",
+        "color": "#b07cff",
+        "damageType": "dark",
+        "resists": [
+          "dark"
+        ],
+        "weak": [
+          "holy"
+        ],
+        "onHit": [
+          {
+            "status": "curse",
+            "chance": 35,
+            "durationMs": 4000
+          }
+        ],
+        "lifesteal": 10
+      },
+      "toxic": {
+        "name": "Toxic",
+        "color": "#6de07a",
+        "damageType": "dark",
+        "resists": [
+          "dark"
+        ],
+        "weak": [
+          "fire"
+        ],
+        "onHit": [
+          {
+            "status": "poison",
+            "chance": 35,
+            "durationMs": 4000,
+            "damageMultiplier": 0.25,
+            "damageType": "dark"
+          }
+        ],
+        "onDeath": {
+          "radius": 100,
+          "color": "#6de07a",
+          "apply": [
+            {
+              "status": "poison",
+              "durationMs": 5000,
+              "damageMultiplier": 0.3,
+              "damageType": "dark"
+            }
+          ]
+        }
+      }
+    },
+    "traits": {
+      "vampiric": {
+        "name": "Vampiric",
+        "lifesteal": 20
+      },
+      "shielded": {
+        "name": "Shielded",
+        "shieldPercent": 30,
+        "regrowMs": 6000
+      },
+      "thorny": {
+        "name": "Thorny",
+        "thorns": 20
+      },
+      "splitting": {
+        "name": "Splitting",
+        "split": {
+          "count": 2,
+          "hpPercent": 25
+        }
+      },
+      "regenerating": {
+        "name": "Regenerating",
+        "regenPercentPerSec": 2
+      },
+      "unstoppable": {
+        "name": "Unstoppable",
+        "statusDurationScale": 0.5
+      },
+      "explosive": {
+        "name": "Explosive",
+        "burst": {
+          "radius": 100,
+          "damageMultiplier": 1.2
+        }
+      }
+    }
   }
 }

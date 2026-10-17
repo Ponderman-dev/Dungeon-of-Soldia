@@ -146,7 +146,7 @@ export function playRun(squad, opts = {}) {
   const dungeon = opts.dungeon || DATA.dungeon;
   const out = { floor: 1, log: [], bosses: {}, rooms: {}, deaths: [], fightMs: {} };
   const reward = (count = DATA.rw.choices, odds = null) => {
-    let cards = rollChoices({ itemDefs: DATA.itemDefs, rules: DATA.rw, floor: out.floor, count, heroes: s.heroes, potionChance: odds ? 0 : DATA.rw.potionChance, offered: s.offeredOnce, rng, odds });
+    let cards = rollChoices({ itemDefs: DATA.itemDefs, rules: DATA.rw, floor: out.floor, count, heroes: s.heroes, potionChance: odds ? 0 : DATA.rw.potionChance, offered: s.offeredOnce, rng, odds, bump: !odds && s.floorHadElite ? DATA.rules.elites.rewardBump : 0 });
     if (!odds) cards = maybeAddBook(cards, DATA.bookData, s.heroes, DATA.bookData.bookChancePerScreen, rng);
     takeReward(s, cards, opts, out.log);
   };

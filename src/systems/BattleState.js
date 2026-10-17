@@ -1,4 +1,5 @@
 import { bossMethods } from './bosses.js';
+import { eliteMethods } from './elites.js';
 import { computeDamage, computeDotDamage } from './combat.js';
 import { xpForNextLevel, statsAtLevel } from './leveling.js';
 import { computeHeroStats } from './items.js';
@@ -259,6 +260,8 @@ export default class BattleState {
     this.floorNo = floor;
     this.hasStarted = false;
     this.enemies = ids.map((id) => this.makeUnit(this.enemyDefs[id], 'enemy', floor));
+    for (const i of ids.elites || []) if (this.enemies[i]) this.makeElite(this.enemies[i]); // the director's elites (elites.js)
+    this.floorHadElite = this.enemies.some((e) => e.elite); // one reward card a rarity higher after this fight
     return this.enemies;
   }
 
@@ -538,7 +541,8 @@ export default class BattleState {
       if (!target.xpless) this.awardXp(target, events);
       if (!target.def.object) this.soulLanternKill();
       this.onKill(killer, target, events, lastStatuses);
-      if (target.def.onDeath) this.deathBurst(target, target.def.onDeath, events);
+      for (const spec of [].concat(target.def.onDeath || [])) this.deathBurst(target, spec, events); // a list: a Toxic elite Puffshroom has two
+      if (target.elite) this.eliteDeath(target, events); // Explosive bursts, Splitting falls apart (elites.js)
     }
     else {
       this.lastStand(target, events); // Last Stand Banner: the survivors rally
@@ -826,6 +830,7 @@ export default class BattleState {
     this.tickDelays(dt, events); // Flame Spirit / Moonlight Twinblade hits on their way
     this.tickBookTimers(dt, events); // skill book Aftershock pulses
     this.tickBosses(dt, events); // boss moves, eggs, heat, revives... (bosses.js)
+    this.tickElites(dt, events); // elite regen and shields (elites.js)
 
     // Health regenerates (Heart Charm) and skill cooldowns run down.
     for (const hero of this.heroes) {
@@ -951,7 +956,8 @@ export default class BattleState {
     }
     const empower = fired.filter((f) => f.counter.effect === 'empower');
     const metro = this.metronomeBeat(unit, target, events); // Metronome: every 4th basic attack of the holder hits harder
-    const hit = this.strike(unit, target, events, metro ? { basic: true, damagePercent: metro } : { basic: true });
+    const hit = this.strike(unit, target, events, metro ? { basic: true, damagePercent: metro } : unit.hitType ? { basic: true, damageType: unit.hitType } : { basic: true }); // an elite hits with its element
+    if (unit.elite) this.eliteAfterAttack(unit, target, hit, events); // Storm: every 4th hit jumps
     if (!hit.dodged) this.addCombo(unit, target, 1, events);
     if (unit.minion && unit.chain && !hit.dodged) this.chainHit(unit, target, unit.chain, events); // Wisp Lantern copies: the bolt jumps on // Rogue: a combo point on this enemy
     this.pierce(unit, target, hit, events); // Archer: a shot on a Marked enemy goes through to the one behind
@@ -1651,7 +1657,7 @@ export default class BattleState {
   afterHit(attacker, target, amount, events, result = {}) {
     const lifesteal = (attacker.specials && attacker.specials.lifesteal) || 0;
     if (lifesteal > 0 && attacker.alive) {
-      const base = Math.max(1, Math.round(((amount * lifesteal) / 100) * this.regenAura().factor)); // the Cleric's aura makes item heals stronger
+      const base = Math.max(1, Math.round(((amount * lifesteal) / 100) * (attacker.side === 'hero' ? this.regenAura().factor : 1))); // the Cleric's aura makes item heals stronger (not an elite's)
       if (this.healUnit(attacker, base, events, { aura: false }) > 0) {
         events.push({ type: 'lifesteal', unit: attacker, from: target }); // drawn as drops flying back
         if (attacker.def.passive && attacker.def.passive.rage) this.gainRage(attacker, attacker.def.passive.rage.perHitDealt, events); // lifesteal fills Rage twice as fast
@@ -1691,6 +1697,7 @@ export default class BattleState {
   // Returns { lost (health lost), absorbed (taken by shields), immune, broken }.
   dealDamage(target, amount, events = null) {
     if (this.has(target, 'invulnerable')) return { lost: 0, absorbed: 0, immune: true, broken: [] };
+    if (target.elite && amount > 0) target.elite.unhit = 0; // a Shielded elite's shield only regrows while it is left alone
     let left = amount;
     let absorbed = 0;
     let burnShield = false;
@@ -2819,4 +2826,4 @@ export default class BattleState {
 }
 
 // Boss rules live in bosses.js (abilities, objects, plates, heat, twins, phylactery, clones, sky phase).
-Object.assign(BattleState.prototype, bossMethods);
+Object.assign(BattleState.prototype, bossMethods, eliteMethods);

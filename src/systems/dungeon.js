@@ -92,7 +92,32 @@ export function directFloor(dungeon, n, rng = Math.random, memory = {}, enemyDef
   memory.lastSwing = swing;
   const ids = picked.map((e) => e.id);
   ids.shape = shapeName;
+  ids.elites = pickElites(D.elites, n, picked, rng);
   return ids;
+}
+
+// ELITES (director `elites`): which enemies of this fight are elite, as indexes into the list (BattleState
+// spawnEnemies turns them into elites). `chance` = % that the fight has one, `second` = % for a second one, both
+// read off [floor, %] points (pointValue). Only enemies of the `tiers` listed can be elite (not fodder).
+export function pickElites(E, n, picked, rng = Math.random) {
+  if (!E || n < E.fromFloor) return [];
+  const open = picked.map((e, i) => (E.tiers.includes(e.tier) ? i : -1)).filter((i) => i >= 0);
+  const out = [];
+  if (!open.length || rng() * 100 >= pointValue(E.chance, n)) return out;
+  out.push(open.splice(Math.floor(rng() * open.length), 1)[0]);
+  if (open.length && rng() * 100 < pointValue(E.second || [], n)) out.push(open.splice(Math.floor(rng() * open.length), 1)[0]);
+  return out;
+}
+
+// A value read off [x, value] points with straight lines between them: 0 before the first point, the last
+// value after the last point.
+export function pointValue(points, x) {
+  if (!points.length || x < points[0][0]) return 0;
+  for (let i = 1; i < points.length; i++) {
+    const [x0, v0] = points[i - 1], [x1, v1] = points[i];
+    if (x <= x1) return v0 + ((v1 - v0) * (x - x0)) / (x1 - x0);
+  }
+  return points[points.length - 1][1];
 }
 
 function pickWeighted(list, weightOf, rng) {

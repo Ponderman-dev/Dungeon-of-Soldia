@@ -222,6 +222,42 @@
             "strong": 0.5
           }
         }
+      },
+      "elites": {
+        "_about": "Elites (BattleState.makeElite, rules in combat.json elites): from fromFloor a normal floor's fight can have an elite. chance / second = [floor, %] points, straight lines between them (before the first point: none, after the last: the last value). Only enemies of these tiers can be elite.",
+        "fromFloor": 10,
+        "tiers": [
+          "normal",
+          "strong"
+        ],
+        "chance": [
+          [
+            10,
+            5
+          ],
+          [
+            40,
+            33
+          ],
+          [
+            60,
+            60
+          ],
+          [
+            100,
+            80
+          ]
+        ],
+        "second": [
+          [
+            60,
+            15
+          ],
+          [
+            100,
+            35
+          ]
+        ]
       }
     }
   }

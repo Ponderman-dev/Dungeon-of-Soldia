@@ -4,11 +4,11 @@ Read `CLAUDE.md` first, then this file. Every item decision of this phase is in 
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
 ## START HERE (session 3): enemies and difficulty
-Status: build order step 3 of 5 is next = ELITE ENEMIES. Steps 1-2 are done and published.
+Status: steps 1-3 DONE (step 3 = ELITES, see CLAUDE.md "ELITES"). Next = step 4 MONSTER HOUSE.
 
 ### Branch, preview, tools
-- Last session's branch: `ccr-a7ab1d1c-m41597` (all pushed). A new session gets its own branch name from the
-  system prompt: start it from `origin/ccr-a7ab1d1c-m41597` (it has everything), never from the old
+- Latest branch: `ccr-a59eab7b-wefaf5` (session 3, elites; all pushed). A new session gets its own branch name from the
+  system prompt: start it from `origin/ccr-a59eab7b-wefaf5` (it has everything), never from the old
   `claude/phase-h-tuning` (behind). CLAUDE.md's git line just says "the branch the session names".
 - Game preview: https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr (build:page + republish after each step).
 - Enemy proposal page (sprites + picks): https://claude.ai/artifact/AkX6DWTeCsYzU6oXb3QWFS
@@ -38,7 +38,13 @@ Status: build order step 3 of 5 is next = ELITE ENEMIES. Steps 1-2 are done and 
 2. NEW FODDER: Imp Swarmling 13+, Mushling 22+, Bone Rat 25+, Shade Wisp 35+ (`scripts/art/add-enemies.mjs <ids>`:
    sprite from `docs/proposals/enemy-designs.mjs`, rules in its RULES table, adds the roster entry).
 
-### Next: step 3 ELITES (spec as approved)
+3. ELITES (built, session 3): user picked normal + strong enemies only. Everything else as written on the page
+   (see CLAUDE.md ELITES). Smart player 3/squad: with elites median 29, mean 31.8, p90 50, max 135; same code with
+   elites off median 34, mean 37.1, p90 59, max 400. So elites cost ~5 floors and stop the 100-400 snowball runs
+   (0% reach 100, was 2%). Brood Mother win rate 78% (was 87%). NOT tuned yet: ask the user if that is the wanted
+   feel (knobs: director.elites chance points, combat.json elites multipliers / element chances).
+
+### Step 3 ELITES spec (as approved, built)
 - Which enemies can be elite is NOT decided: suggest normal + strong only (never bosses, boss helpers, objects;
   fodder probably not). Ask the user.
 - Stats x2 health, x1.35 attack, +10 defense and resist; drawn 1 pixel size bigger (drawScale +1), a glow in its

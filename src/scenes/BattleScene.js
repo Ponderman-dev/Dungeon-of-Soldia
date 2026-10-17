@@ -27,6 +27,7 @@ import { makeTuner } from '../systems/fxTune.js';
 import statusIcons from '../data/statusIcons.json';
 import { iconList, iconLayout, ICON_PX } from '../systems/statusIcons.js';
 import { statusLook, iceBreak, bodyBox } from '../systems/statusFx.js';
+import { eliteGlow, crownPixels } from '../systems/eliteFx.js';
 import { projectileFx, impactFx, critFx, IMPACT_MS, CRIT_MS, MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, deathPuffFx } from '../systems/hitFx.js';
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon, validateHeroSkills, validateDamageTypes } from '../systems/validate.js';
@@ -178,6 +179,7 @@ export default class BattleScene extends Phaser.Scene {
       this.state.place(v.unit, v.ch.x, v.unit.side === 'hero' ? v.ch.y : v.groundY);
     }
     this.mode = 'fighting';
+    for (const v of this.views.values()) if (v.unit.elite && v.unit.alive) this.eliteName(v); // "Burning Vampiric Bandit"
     if (this.state.enemies.some((u) => u.def.boss)) sfx.play('bossIntro'); // a deep gong when a boss floor starts
     for (const e of this.state.startFloor()) this.showEvent(e); // floor-start minions rise (Necromancer)
   }
@@ -280,9 +282,50 @@ export default class BattleScene extends Phaser.Scene {
       this.nudge(v, look.dx * Math.abs(v.ch.scaleY));
       this.paintFx(g, v, look.draws);
     }
+    this.drawElites(now);
     // Ice breaking off a fighter whose Freeze just ended.
     this.iceBreaks = (this.iceBreaks || []).filter((b) => now - b.start < 400 && b.view.ch.active);
     for (const b of this.iceBreaks) this.paintFx(g, b.view, iceBreak(b.view.box || bodyBox(b.view.unit.def.parts, b.view.unit.def.height), (now - b.start) / 400));
+  }
+
+  // ELITES (systems/eliteFx.js): a glow in the element colour, drawn BEHIND every fighter (a halo on the floor and
+  // motes rising along the body), and a small gold crown just left of the health bar. Only once the enemy has left
+  // its floor container (the fight has started).
+  drawElites(now) {
+    if (!this.eliteG) this.eliteG = this.add.graphics().setDepth(DEPTH.hero - 0.001);
+    if (!this.crownG) this.crownG = this.add.graphics().setDepth(DEPTH.heroBar);
+    const g = this.eliteG, cg = this.crownG;
+    g.clear();
+    cg.clear();
+    const crown = (this.crown = this.crown || crownPixels());
+    for (const v of this.views.values()) {
+      const u = v.unit;
+      if (!u.elite || !u.alive || !v.ch.active || v.ch.parentContainer) continue;
+      if (!v.box) v.box = bodyBox(u.def.parts, u.def.height);
+      const color = (u.elite.colorInt ??= Phaser.Display.Color.HexStringToColor(u.elite.color).color);
+      this.paintFx(g, v, eliteGlow(v.box, color, now + u.uid * 97));
+      if (!v.bg.visible) continue;
+      const P = 2; // crown pixel size
+      const x0 = v.bg.x - BAR_WIDTH / 2 - 1 - 6 * P, y0 = v.bg.y - 2 * P;
+      for (const [c, r, col] of crown) cg.fillStyle(col, v.bg.alpha).fillRect(x0 + c * P, y0 + r * P, P, P);
+    }
+  }
+
+  // An elite's name pops up over it when the fight starts ("Burning Vampiric" / "Bandit"), in its element colour.
+  eliteName(v) {
+    const u = v.unit;
+    const base = u.def.eliteOf ? u.def.eliteOf.name : '';
+    const head = base && u.name.endsWith(base) ? u.name.slice(0, -base.length).trim() : u.name;
+    const y = v.ch.y - u.def.height * charScale(u.def) - 30;
+    const t = this.add
+      .text(v.ch.x, y, base ? `${head}\n${base}` : head, { fontFamily: 'monospace', fontSize: '13px', fontStyle: 'bold', color: u.elite.color, stroke: '#000000', strokeThickness: 3, align: 'center' })
+      .setOrigin(0.5, 1)
+      .setDepth(DEPTH.popup);
+    t.x = Phaser.Math.Clamp(t.x, t.width / 2 + 4, GAME_WIDTH - t.width / 2 - 4);
+    t.setScale(0.6);
+    this.tweens.add({ targets: t, scale: 1, duration: 220, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: t, y: y - 16, alpha: 0, delay: 1900, duration: 600, onComplete: () => t.destroy() });
+    this.ring(v, Phaser.Display.Color.HexStringToColor(u.elite.color).color);
   }
 
   // HITS (systems/hitFx.js): shots in the air (arrow, fire bolt, ice shard, lightning, dark orb, holy mote)
@@ -765,7 +808,13 @@ export default class BattleScene extends Phaser.Scene {
     // A special room (treasure, Mimic, fountain, dealer, puzzle) has props instead of enemies.
     const kind = this.roomKindFor(n);
     const room = kind ? this.buildRoom(kind, container) : null;
-    const enemies = this.state.spawnEnemies(room ? [] : enemiesForFloor(this.dungeon, n, Math.random, this.director, enemyDefs), n);
+    const lineUp = room ? [] : enemiesForFloor(this.dungeon, n, Math.random, this.director, enemyDefs);
+    // Dev server only: `?elite=1` makes the first normal/strong enemy of every directed fight an elite (browser checks).
+    if (import.meta.env.DEV && new URLSearchParams(location.search).get('elite') && lineUp.elites && !lineUp.elites.length) {
+      const i = lineUp.findIndex((id) => (enemyDefs[id].tier || 'normal') !== 'fodder');
+      if (i >= 0) lineUp.elites = [i];
+    }
+    const enemies = this.state.spawnEnemies(lineUp, n);
     const L = combatRules.movement.layout;
     const spots = enemySpots(enemies, { width: GAME_WIDTH, y: ENEMY_Y, perRow: L.enemyPerRow, rowGap: L.enemyRowGap });
     enemies.forEach((unit, i) => this.makeView(unit, spots[i].x, spots[i].y, container));
@@ -1223,6 +1272,7 @@ export default class BattleScene extends Phaser.Scene {
       const cloud = this.add.circle(c.x, c.y, 10, color, 0.45).setDepth(DEPTH.popup - 2);
       this.tweens.add({ targets: cloud, radius: e.radius || 80, alpha: 0, duration: 650, ease: 'Quad.easeOut', onComplete: () => cloud.destroy() });
       this.puff(c.x, c.y + 8, color, 8);
+      if (e.explosive) this.cameras.main.shake(120, 0.004); // an Explosive elite
     } else if (e.type === 'shieldBreak') {
       sfx.play('shieldBreak');
       const v = this.views.get(e.unit.uid);
@@ -1363,7 +1413,7 @@ export default class BattleScene extends Phaser.Scene {
     // The shot itself is drawn in pixels by drawHitFx() (its look per damage type: systems/hitFx.js);
     // this empty container only carries its position along the flight.
     const arrow = this.add.container(from.x, from.y);
-    arrow.kind = a.unit.damageType;
+    arrow.kind = a.unit.hitType || a.unit.damageType; // an elite archer shoots its element
     a.arrow = arrow;
     this.flyArrow(a, arrow, t, hitInMs);
     a.ch.lunge(t.ch.x, t.ch.y); // a small recoil-like jab as it shoots
@@ -1810,7 +1860,7 @@ export default class BattleScene extends Phaser.Scene {
     // A beaten Mimic (special room) gives a rare/epic pick instead of the normal reward.
     const room = this.layer.room;
     if (room && room.kind === 'mimic') return this.itemPick('MIMIC DEFEATED', next, room.rules.rewardOdds);
-    let choices = this.rollItems();
+    let choices = this.rollItems(null, this.state.floorHadElite ? combatRules.elites.rewardBump : 0); // an elite: one card a rarity higher
     choices = maybeAddBook(choices, bookData, this.state.heroes, bookData.bookChancePerScreen); // a skill book card, about 1 in 15 screens
     // After a BOSS the squad also gets a free golden book (3 modifier pages), after the normal reward.
     const bossFloor = !!(this.dungeon.bosses && this.dungeon.bosses[this.floor]) && this.state.heroes.some((h) => h.alive);
@@ -1820,8 +1870,8 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // 3 item cards for a reward sheet (odds = optional rarity odds instead of the floor's).
-  rollItems(odds = null) {
-    return rollChoices({ itemDefs, rules: rewardRules, floor: this.floor, count: rewardRules.choices, heroes: this.state.heroes, potionChance: odds ? 0 : rewardRules.potionChance, offered: (this.state.offeredOnce = this.state.offeredOnce || new Set()), odds });
+  rollItems(odds = null, bump = 0) {
+    return rollChoices({ itemDefs, rules: rewardRules, floor: this.floor, count: rewardRules.choices, heroes: this.state.heroes, potionChance: odds ? 0 : rewardRules.potionChance, offered: (this.state.offeredOnce = this.state.offeredOnce || new Set()), odds, bump });
   }
 
   // The reward sheet with these cards; `next` runs after the pick has been applied.

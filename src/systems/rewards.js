@@ -46,15 +46,21 @@ function pickWeighted(list, weightOf, rng) {
 // the whole party. The potion is only offered when some living hero is hurt.
 // `offered` (a Set kept for the run): items with `oncePerRun` (Soul Lantern) are never offered again once they were on a
 // card; rollChoices adds them to it. `odds` (optional) replaces the floor's rarity odds (the Mimic's prize: rare/epic only).
-export function rollChoices({ itemDefs, count, heroes, rules, floor = 1, potionChance = 0, rng = Math.random, offered = null, odds: oddsOverride = null }) {
+// `bump` (after a fight with an elite): that many random cards roll their rarity one step higher (common > rare > epic >
+// legendary; a legendary stays legendary; a step with nothing left in the pool is skipped).
+export function rollChoices({ itemDefs, count, heroes, rules, floor = 1, potionChance = 0, rng = Math.random, offered = null, odds: oddsOverride = null, bump = 0 }) {
   const pool = Object.values(itemDefs).filter((item) => item.kind !== 'potion' && heroes.some((h) => canReceive(h, item)) && !(item.oncePerRun && offered && offered.has(item.id)));
   const sources = squadSources(heroes, itemDefs);
   const odds = oddsOverride || rarityOddsFor(floor, rules);
   const choices = [];
+  const order = Object.keys(odds);
+  const bumped = new Set();
+  while (bumped.size < Math.min(bump, count)) bumped.add(Math.floor(rng() * count));
   while (choices.length < count && pool.length) {
     const rarities = Object.keys(odds).filter((r) => odds[r] > 0 && pool.some((item) => item.rarity === r));
     if (!rarities.length) break;
-    const rarity = rarities[pickWeighted(rarities, (r) => odds[r], rng)];
+    let rarity = rarities[pickWeighted(rarities, (r) => odds[r], rng)];
+    if (bumped.has(choices.length)) rarity = order.slice(order.indexOf(rarity) + 1).find((r) => pool.some((item) => item.rarity === r)) || rarity;
     const inRarity = pool.filter((item) => item.rarity === rarity);
     const item = inRarity[pickWeighted(inRarity, (it) => dropWeight(it, sources, rules), rng)];
     choices.push(item);

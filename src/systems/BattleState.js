@@ -2193,7 +2193,8 @@ export default class BattleState {
     const desp = book.mods.find((m) => m.desperate); // Desperate: more power while the caster is low
     const power = book.power + (desp && (hero.hp / hero.maxHp) * 100 < desp.desperate.belowPercent ? desp.desperate.power : 0);
     if (!echo && (power || book.duration)) skill = this.scaleSkill(skill, Math.max(0.1, 1 + power / 100), 1 + book.duration / 100);
-    if (!this.targetsAllies(skill) && !this.enemies.some((e) => e.alive)) {
+    // Nothing to hit: no living enemy, or every one left can't be hit right now (Morthul as dust, Vharox in the sky).
+    if (!this.targetsAllies(skill) && !this.targetableEnemies().length) {
       events.push({ type: 'castCancel', unit: hero, skill, reason: 'noTarget' });
       return;
     }
@@ -2207,6 +2208,11 @@ export default class BattleState {
     else if (skill.target === 'lowestAlly') targets = [this.lowestHealthPercent()];
     else if (skill.target === 'allEnemies') ({ targets, zone } = this.areaHit(hero, skill)); // an `area` skill hits only who stands in it
     else targets = [this.pickTarget(hero)];
+    targets = targets.filter(Boolean); // a pick can come back empty (no target left): never hit "nobody"
+    if (!skill.random && !targets.length) {
+      events.push({ type: 'castCancel', unit: hero, skill, reason: 'noTarget' });
+      return;
+    }
     if (skill.chain && targets[0]) targets = this.chainOrder(targets[0]); // Chain Lightning: through ALL enemies, nearest next
     const splash = (hero.specials && hero.specials.skillSplash) || 0; // Siege Cannon: % chance to hit the neighbours too
     if (skill.target === 'enemy' && skill.damageMultiplier && splash > 0 && this.rng() * 100 < splash) {

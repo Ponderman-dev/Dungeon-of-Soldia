@@ -206,7 +206,7 @@ Caveats: the front hero is always melee in this check (Quiver does nothing on me
   every enemy within 110 px for 35% (item damage, 6 pulses). `trySpiritAxe()/tickSpiritAxe()`, effect `spiritAxe`.
 - [built] Heart of the Beast (legendary): +2% max health regen per second (fights) and +30% healing received, per copy
   (`healAmp` in healUnit and regen).
-- [built] Moonlight Twinblade (legendary, onhit; user: works on ANY attack, melee or ranged, the crescent's damage is ranged): 18% per copy on any attack (was 8%, user: higher chance; full runs 12x: 1 copy +0, 3 copies +8.5 floors): a moonlight
+- [built] Moonlight Twinblade (legendary, onhit; user: works on ANY attack, melee or ranged, the crescent's damage is ranged): 18% per copy on any attack (was 8%, user: higher chance; full runs 12x: 1 copy +0, 3 copies +8.5 floors): a moonlight SESSION 5: hits 85% -> 110% each (user: +30% damage).
   crescent (projectile `moon`) hits its target 3 times for 60% each, +20% per extra copy. The ranged twin of Excalibur.
 - [built] Ghastly Fire (epic, needs fire): the holder's fire hits and burns also deal 20% (per copy) of their damage as
   dark; enemies burning from the holder attack 5% slower per burn stack (+2% per extra copy), max 75% (`ghastlySlow()`).

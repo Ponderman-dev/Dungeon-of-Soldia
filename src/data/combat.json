@@ -18,7 +18,7 @@
     "attackStepFloors": 3
   },
   "restartDelayMs": 3000,
-  "meleeVsFlyingMissPercent": 40,
+  "meleeVsFlyingMissPercent": 15,
   "attackTiming": {
     "hero": {
       "swingMs": 220,

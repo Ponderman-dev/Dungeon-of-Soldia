@@ -27,7 +27,7 @@ All numbers below go in JSON/config so they are easy to tune.
 - **Resist:** same curve as defense, for MAGICAL damage. Heroes have 7 stats in use (mana is off).
 - **Weak/resist per enemy:** each enemy lists `weak` and `resists` damage types in JSON (weak = +50% damage, resists = -50%). A list can also name a whole category ("physical", "magical").
 - **Damage-type bonuses** (e.g. +15% dark) also boost damage over time of that type (the bonus is baked into the DoT when it is applied). `validateDamageTypes()` checks every damage type named in the JSON (run at start, and in `damage-types.test.mjs`).
-- **Melee vs ranged:** melee attacks CAN hit flying enemies but miss 40% of the time (`meleeVsFlyingMissPercent` in combat.json). Ranged has no penalty. No formation rules yet.
+- **Melee vs ranged:** melee attacks CAN hit flying enemies but miss 15% of the time (`meleeVsFlyingMissPercent` in combat.json; user: was 40%, it made fights drag on). Ranged has no penalty. No formation rules yet.
 - **Evasion:** % chance to fully dodge a hit of any type, capped at 70% (`caps.evasion`).
 - **Crit:** % chance to deal 2x damage, capped at 100% (`caps.crit`).
 - **Attack efficiency:** attack speed. 100 = 1 attack per second.

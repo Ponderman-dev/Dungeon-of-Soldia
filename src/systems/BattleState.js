@@ -662,19 +662,20 @@ export default class BattleState {
   // Squad-wide minion boosters (Bone Charm, Overseer's Whistle, Grave Dust, Necro Crown): they reach EVERY minion
   // whoever holds them, and cost no upkeep. Caps: Whistle +4 weak cap in total, Necro Crown +6.
   minionBoost() {
-    const sum = { bone: 0, whistle: 0, speed: 0, dust: 0, crown: 0, crownKill: false };
+    const sum = { bone: 0, whistle: 0, speed: 0, whistleHp: 0, dust: 0, crown: 0, crownKill: false };
     for (const h of this.heroes) {
       if (!h.alive) continue;
       const sp = h.specials;
       sum.bone += sp.boneCharm || 0;
       sum.whistle += sp.whistleCap || 0;
       sum.speed += sp.whistleSpeed || 0;
+      sum.whistleHp += sp.whistleHealth || 0;
       sum.dust += sp.graveDust || 0;
       sum.crown += sp.necroCrownCap || 0;
       sum.crownKill = sum.crownKill || !!sp.necroCrownKill;
       sum.spawnSpeed = Math.max(sum.spawnSpeed || 0, sp.necroCrownSpeed || 0); // does not grow with copies
     }
-    return { bone: sum.bone, weakCap: Math.min(4, sum.whistle) + Math.min(6, sum.crown), weakSpeed: sum.speed, dust: sum.dust, crownKill: sum.crownKill, spawnSpeed: sum.spawnSpeed || 0 };
+    return { bone: sum.bone, weakCap: Math.min(4, sum.whistle) + Math.min(6, sum.crown), weakSpeed: sum.speed, weakHealth: sum.whistleHp, dust: sum.dust, crownKill: sum.crownKill, spawnSpeed: sum.spawnSpeed || 0 };
   }
 
   sourceState(hero, key) {
@@ -693,6 +694,8 @@ export default class BattleState {
       if (!hero.alive) continue;
       if (bless) this.applyStatus(hero, { status: 'regenBoost', durationMs: 1e9, percentMaxHpPerSec: bless.regenPercentPerSec }, hero, 'fountain', events);
       hero.sinceHit = 0; // Steady Aim starts counting again with every fight
+      hero.wardTimer = 0;
+      this.wardShield(hero, events); // Warding Charm
       // Fire Heart: a fire shield at the start of every floor (20% max health per copy) that slowly regenerates and burns attackers.
       if (hero.specials.fireHeart) {
         const amount = (hero.maxHp * hero.specials.fireHeart) / 100 * (1 + (hero.specials.shieldBonus || 0) / 100);
@@ -841,7 +844,7 @@ export default class BattleState {
   // to the enemies near it (item damage, nothing else triggers).
   explodeMinion(m, events) {
     const own = m.def.explode ? m.def.explode.damageMultiplier * (1 + 0.25 * ((m.copies || 1) - 1)) : 0; // Mimic: +25% per extra chest
-    const dust = m.greater ? 0 : this.minionBoost().dust * 2; // Grave Dust: 200% attack per copy, weak minions only
+    const dust = m.greater ? 0 : this.minionBoost().dust / 100; // Grave Dust: `graveDust`% attack per copy (400), weak minions only
     const total = own + dust;
     if (total <= 0) return;
     const radius = (m.def.explode && m.def.explode.radius) || 120;
@@ -849,6 +852,7 @@ export default class BattleState {
     for (const e of this.enemies.filter((x) => x.alive)) {
       if (this.hasPositions(m) && this.hasPositions(e) && Math.hypot(e.x - m.x, e.y - m.y) > radius * 1.6) continue;
       this.strike(m, e, events, { multiplier: total, damageType: 'fire', item: true });
+      if (dust > 0 && e.alive) this.applyStatus(e, { status: 'poison', durationMs: 5000, damageMultiplier: 0.3 }, m, 'graveDust', events); // Grave Dust also poisons
     }
   }
 
@@ -862,7 +866,8 @@ export default class BattleState {
     const growth = m.def.growthPerFloor ? 1 + Math.min(m.def.growthMax ?? 1, m.def.growthPerFloor * (m.floors || 0)) : 1;
     const scale = (1 + bonus * ((m.copies || 1) - 1)) * growth * (1 + boost.bone / 100);
     const ratio = m.maxHp > 0 ? m.hp / m.maxHp : 1;
-    m.maxHp = Math.max(1, Math.round(raw.health * scale));
+    const hpScale = m.greater ? 1 : 1 + (boost.weakHealth || 0) / 100; // Overseer's Whistle: weak minions are tougher
+    m.maxHp = Math.max(1, Math.round(raw.health * scale * hpScale));
     m.hp = Math.min(m.maxHp, Math.round(m.maxHp * ratio));
     m.baseStats = { ...raw, health: m.maxHp, attack: Math.round(raw.attack * scale) };
     if (!m.greater) m.baseStats.attackEfficiency = raw.attackEfficiency * (1 + boost.weakSpeed / 100);
@@ -919,6 +924,7 @@ export default class BattleState {
       if (hero.soulCd > 0) hero.soulCd -= dt; // Grimoire fireball cooldown
       if (hero.triageCd > 0) hero.triageCd -= dt; // Aid Kit triage cooldown
       this.tickBandages(hero, dt, events);
+      this.tickWard(hero, dt, events);
       this.tickSpiritAxe(hero, dt, events);
       this.tickSpawner(hero, dt, events);
       for (const slot of hero.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - dt);
@@ -1092,6 +1098,20 @@ export default class BattleState {
       events.push({ type: 'flask', unit: hero, target: ally, flask: { color: '0xf2e6cc' } }); // drawn as a lobbed bandage
       this.healUnit(ally, heal, events, { aura: false });
     }
+  }
+
+  // Warding Charm: a shield of `wardPulse`% max health (8, does not grow with copies; Warding Charm's own shield bonus
+  // makes it bigger) at the start of every fight and again every `wardPulseEveryMs` (10s) while enemies live; it refills.
+  wardShield(hero, events) {
+    if (!hero.specials.wardPulse) return;
+    this.applyStatus(hero, { status: 'shield', percentMaxHp: hero.specials.wardPulse }, hero, 'warding', events);
+  }
+  tickWard(hero, dt, events) {
+    if (!hero.specials.wardPulse || !this.enemies.some((e) => e.alive)) return;
+    hero.wardTimer = (hero.wardTimer || 0) + dt;
+    if (hero.wardTimer < (hero.specials.wardPulseEveryMs || 10000)) return;
+    hero.wardTimer = 0;
+    this.wardShield(hero, events);
   }
 
   // Fire Arrows: ranged attacks have a 50% chance (it does not stack) for an extra fire hit; more copies hit harder.
@@ -1569,7 +1589,7 @@ export default class BattleState {
     if (sp.exploiter && kinds.size >= 3) bonus += sp.exploiter; // Exploiter's Lens
     if (sp.executioner && target.hp < target.maxHp * 0.25) { bonus += sp.executioner; this.bonusItems.push(['executioners_axe', 'Execute!']); } // Executioner's Axe
     if (sp.hornDamage && this.has(target, 'taunt')) bonus += sp.hornDamage; // Provoker's Horn: taunted enemies take more
-    if (sp.spotter && this.focusUid === target.uid) bonus += sp.spotter; // Spotter's Lens: the TAPPED enemy takes more from the squad
+    if (sp.spotter && (this.focusUid === target.uid || this.heroes.some((h) => h.alive && h.order === target.uid))) bonus += sp.spotter; // Spotter's Lens: the TAPPED (or drag-ordered) enemy takes more from the squad
     if (sp.bossDamage && target.def.boss) bonus += sp.bossDamage; // Giantslayer's Brand
     return bonus;
   }

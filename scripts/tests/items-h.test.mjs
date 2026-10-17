@@ -42,8 +42,8 @@ const near = (v, t, tol = 0.03) => Math.abs(v / t - 1) < tol;
 { const { s, k } = mk(); give(s, k, 'mimic_chest', 3); ok('Mimic Chest: 3 chests = 16%', k.specials.mimic === 16); }
 // Blood Chalice: +20%, then +10% per extra
 { const { s, k } = mk(); give(s, k, 'blood_chalice', 3); ok('Blood Chalice: 3 chalices = +56% vs bleeding', k.specials.bloodChalice === 56); }
-// Conductor's Baton: +25%, then +8% per extra
-{ const { s, k } = mk(); give(s, k, 'conductors_baton', 3); ok('Conductor\'s Baton: 3 batons = +41%', k.specials.baton === 41); }
+// Conductor's Baton: +25%, then +15% per extra
+{ const { s, k } = mk(); give(s, k, 'conductors_baton', 3); ok('Conductor\'s Baton: 3 batons = +55%', k.specials.baton === 55); }
 // Shatter Hammer: +10% vs chilled (not frozen)
 { const { s, es, k } = mk(); const base = s.strike(k, es[0], [], {}).amount; give(s, k, 'shatter_hammer', 2);
   s.applyStatus(es[0], { status: 'chill', durationMs: 5000 }, k, 'c', []); const chilled = s.strike(k, es[0], [], {}).amount;

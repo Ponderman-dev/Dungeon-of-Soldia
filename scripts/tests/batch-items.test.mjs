@@ -19,7 +19,7 @@ const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker 
   ok('double hit ~8%', Math.abs(procs / n - 0.08) < 0.006, `${(100 * procs / n).toFixed(2)}%`); }
 // Fire Bombs: fire damage, 250%, projectile
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'fire_bombs'); const [e] = dummy(s); s.rng = () => 0.001; k.stats.crit = 0; const ev = []; s.rollProcs(k, 'onAttack', ev, { target: e });
-  const a = attacks(ev, k)[0]; ok('bomb is fire, 250% of attack', a && a.damageType === 'fire' && a.result.amount === Math.round(k.stats.attack * 2.5), JSON.stringify(a && a.result));
+  const a = attacks(ev, k)[0]; ok('bomb is fire, 300% of attack', a && a.damageType === 'fire' && a.result.amount === Math.round(k.stats.attack * 3), JSON.stringify(a && a.result));
   ok('bomb draws a projectile', ev.some((x) => x.type === 'projectile' && x.kind === 'bomb')); }
 // Chill Band: every attack adds a 10% ice hit per band (stacks) AND 1 Chill stack (does not grow with more bands); 5 Chill = Freeze
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'chill_band'); const [e] = dummy(s); s.rng = () => 0.001; k.stats.crit = 0;

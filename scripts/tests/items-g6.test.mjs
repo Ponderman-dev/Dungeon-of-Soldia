@@ -32,7 +32,7 @@ ok('all 3 G6 items exist', ['conductors_baton', 'echo_rune', 'metronome'].every(
   ok('...and 25% longer (6s -> 7.5s)', near(b2.remaining / bd, 1.25), `${bd} -> ${b2.remaining}`); }
 { const val = (n) => { const { s, a } = mk(['knight', 'rogue', 'archer']); give(s, a, 'conductors_baton', n); cast(s, a, 'support'); return buff(a).mods[0].flat; };
   const one = val(1) / val(0), two = val(2) / val(0);
-  ok('...a second copy adds +8% (+25%, then +33%)', near(one, 1.25) && near(two, 1.33), `${one} ${two}`); }
+  ok('...a second copy adds +15% (+25%, then +40%)', near(one, 1.25) && near(two, 1.4), `${one} ${two}`); }
 { const { s, a, h } = mk(['mage', 'knight', 'rogue']); give(s, a, 'conductors_baton'); cast(s, a, 'support');
   ok('...Arcane Ward: the shield is 25% bigger (and it lasts longer)', near(s.shieldAmount(a), a.stats.attack * 2.5 * 1.25, 0.03), `${s.shieldAmount(a)}`); }
 { const { s, a, h } = mk(['bard', 'knight', 'rogue']); give(s, a, 'conductors_baton'); h.forEach((x) => (x.hp = x.maxHp / 2)); cast(s, a, 'support');

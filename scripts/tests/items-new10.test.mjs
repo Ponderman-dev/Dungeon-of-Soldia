@@ -33,7 +33,10 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
 // Spotter's Lens
 { const { s, es, h } = mk(['knight', 'rogue', 'archer'], ['goblin', 'goblin']); const base = s.strike(h[1], es[0], [], {}).amount; give(s, h[0], 'spotters_lens', 2);
   const unfocused = s.strike(h[1], es[0], [], {}).amount; s.setFocus(es[0].uid); const focused = s.strike(h[1], es[0], [], {}).amount;
-  ok('Spotter\'s Lens: the TAPPED enemy takes +12% per copy from the whole squad (another hero holds it)', near(unfocused, base) && near(focused / base, 1.24), `${base} ${unfocused} ${focused}`); }
+  ok('Spotter\'s Lens: the TAPPED enemy takes +20% per copy from the whole squad (another hero holds it)', near(unfocused, base) && near(focused / base, 1.4), `${base} ${unfocused} ${focused}`); }
+{ const { s, es, h } = mk(['knight', 'rogue', 'archer'], ['goblin', 'goblin']); const base = s.strike(h[1], es[0], [], {}).amount; give(s, h[0], 'spotters_lens');
+  s.setOrder(h[2].uid, es[0].uid); const ordered = s.strike(h[1], es[0], [], {}).amount, other = s.strike(h[1], es[1], [], {}).amount;
+  ok('...a drag-ordered enemy counts too (+20% from the whole squad, other enemies not)', near(ordered / base, 1.2) && near(other, base), `${base} ${ordered} ${other}`); }
 // Giantslayer's Brand
 { const { s, es, k } = mk(); const base = s.strike(k, es[0], [], {}).amount; es[0].def = { ...es[0].def, boss: true }; give(s, k, 'giantslayers_brand', 2); const vsBoss = s.strike(k, es[0], [], {}).amount;
   ok('Giantslayer: +42% per copy vs bosses', near(vsBoss / base, 1.84), `${base} ${vsBoss}`);
@@ -50,7 +53,7 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
   ok('Catalyst Vial: 1 vial + 1 kind = +21%; 3 kinds = +63%; 4 vials with 3 kinds = +252%', near(one / plain, 1.21, 0.06) && near(three / plain, 1.63, 0.06) && near(four / plain, 3.52, 0.06), `${plain} ${one} ${three} ${four}`); }
 // Scholar's Bookmark
 { const { s, k } = mk(); give(s, k, 'scholars_bookmark', 3); k.skills[0].pages = [{ kind: 'stat' }, { kind: 'stat' }, { kind: 'modifier' }]; k.skills[1].pages = [{ kind: 'modifier' }];
-  ok('Scholar\'s Bookmark: 3 copies x (2 stat + 2 modifier x2 = 6 pages) = +72% skill damage', s.bookmarkBonus(k) === 72, `${s.bookmarkBonus(k)}`); }
+  ok('Scholar\'s Bookmark: 3 copies x (2 stat + 2 modifier x2 = 6 pages) = +144% skill damage', s.bookmarkBonus(k) === 144, `${s.bookmarkBonus(k)}`); }
 // Last Stand Banner
 { const { s, h } = mk(); give(s, h[0], 'last_stand_banner', 2); const ev = []; h[2].hp = 0; s.killUnit(h[2], ev);
   const sh = h[1].statuses.find((x) => x.type === 'shield'), bf = h[1].statuses.find((x) => x.type === 'buff');

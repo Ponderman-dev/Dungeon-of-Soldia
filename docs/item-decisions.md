@@ -222,3 +222,12 @@ soul_lantern         0: 26.9 (base)   1: 29.7 (+2.8)   3: 28.7 (+1.8)
 
 ```
 - Flame Spirit re-check (8%, 300%): 1 copy +3.7, 3 copies +7.3 floors (base 27.5).
+
+## Session 5: rare item buffs (user: 'let's try these numbers')
+Full-run test (itemruns.mjs 3/squad, copies 0/1/3) showed these rares adding ~0 floors; buffed:
+- Warding Charm: NEW shield of 8% max health at every fight start and every 10s (`wardPulse`, unique; its own +20% shield bonus applies), shields +20% kept.
+- Scholar's Bookmark +4% -> +8% skill damage per page. Overseer's Whistle: weak minions also +25% health per whistle (`whistleHealth`).
+- Grave Dust explosion 200% -> 400% of the minion's attack per copy (`graveDust` percent now IS the %), and it Poisons (5s, 0.3x).
+- Fire Bombs 5% -> 8%, 250% -> 300%. Conductor's Baton extra copies +8% -> +15%. Spotter's Lens +12% -> +20%, also on drag-ordered enemies.
+- Fire Arrows extra hit 20% -> 35%. Quiver of Plenty 15% -> 25%.
+Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Horn, Wisp Lantern, Mirror Buckler. Tests: `rares-s5.test.mjs`.

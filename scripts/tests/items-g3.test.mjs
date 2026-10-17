@@ -88,10 +88,10 @@ ok('...2 copies: ONE roll of 15%', within(rate('serrated_edge', 2, 'bleed', 1000
 // Fire Arrows
 { const { s, es, k } = mk(['goblin'], () => 0.1, ['archer', 'knight', 'rogue']); const a = s.heroes[0]; give(s, a, 'fire_arrows');
   const ev = []; s.landAttack(a, es[0], ev); const fire = ev.filter((e) => e.type === 'attack' && e.damageType === 'fire');
-  ok('Fire Arrows: a ranged attack can add an extra fire hit (20% of attack)', fire.length === 1 && Math.abs(fire[0].result.amount - a.stats.attack * 0.2) < 3, `${fire[0] && fire[0].result.amount}`); }
+  ok('Fire Arrows: a ranged attack can add an extra fire hit (35% of attack)', fire.length === 1 && Math.abs(fire[0].result.amount - a.stats.attack * 0.35) < 3, `${fire[0] && fire[0].result.amount}`); }
 { const { s, es } = mk(['goblin'], () => 0.1, ['archer', 'knight', 'rogue']); const a = s.heroes[0]; give(s, a, 'fire_arrows', 3);
   const ev = []; s.landAttack(a, es[0], ev); const fire = ev.filter((e) => e.type === 'attack' && e.damageType === 'fire');
-  ok('...more copies: the chance stays 50% but the fire hit grows (3 copies = 60%)', fire.length === 1 && Math.abs(fire[0].result.amount - a.stats.attack * 0.6) < 4, `${fire[0] && fire[0].result.amount}`); }
+  ok('...more copies: the chance stays 50% but the fire hit grows (3 copies = 105%)', fire.length === 1 && Math.abs(fire[0].result.amount - a.stats.attack * 1.05) < 5, `${fire[0] && fire[0].result.amount}`); }
 { const { s, es } = mk(['goblin'], Math.random, ['archer', 'knight', 'rogue']); const a = s.heroes[0]; give(s, a, 'fire_arrows'); s.rng = Math.random; let n = 0; const N = 5000;
   for (let i = 0; i < N; i++) { const ev = []; s.landAttack(a, es[0], ev); if (ev.some((e) => e.damageType === 'fire')) n++; }
   ok('...50% of attacks', within(n / N, 0.5, 0.03)); }

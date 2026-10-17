@@ -287,14 +287,14 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "5% on attack: throw a bomb for 250% fire damage.",
+    "description": "8% on attack: throw a bomb for 300% fire damage.",
     "effects": [
       {
         "proc": "onAttack",
-        "chance": 5,
+        "chance": 8,
         "label": "Bomb!",
         "strike": {
-          "damageMultiplier": 2.5,
+          "damageMultiplier": 3,
           "damageType": "fire",
           "projectile": "bomb"
         }
@@ -303,7 +303,7 @@
     "provides": [
       "fire"
     ],
-    "perStack": "+5% chance"
+    "perStack": "+8% chance"
   },
   "chill_band": {
     "dropWeight": 80,
@@ -778,11 +778,11 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "Ranged attacks: 50% chance of an extra fire hit for 20% damage.",
+    "description": "Ranged attacks: 50% chance of an extra fire hit for 35% damage.",
     "effects": [
       {
         "special": "fireArrows",
-        "percent": 20
+        "percent": 35
       }
     ],
     "needs": "ranged",
@@ -790,7 +790,7 @@
       "fire",
       "burn"
     ],
-    "perStack": "+20% fire hit damage"
+    "perStack": "+35% fire hit damage"
   },
   "executioners_axe": {
     "name": "Executioner's Axe",
@@ -983,11 +983,16 @@
     "rarity": "rare",
     "type": "stat",
     "scope": "self",
-    "description": "Shields on this hero are 20% bigger.",
+    "description": "Shield of 8% max health at the start of every fight and every 10s. Shields on this hero are 20% bigger.",
     "effects": [
       {
         "special": "shieldBonus",
         "percent": 20
+      },
+      {
+        "special": "wardPulse",
+        "percent": 8,
+        "unique": true
       }
     ],
     "dropWeight": 80,
@@ -1166,10 +1171,10 @@
       {
         "special": "baton",
         "percent": 25,
-        "perExtra": 8
+        "perExtra": 15
       }
     ],
-    "perStack": "+8%"
+    "perStack": "+15%"
   },
   "echo_rune": {
     "name": "Echo Rune",
@@ -1389,7 +1394,7 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "+1 weak minion allowed. Weak minions attack 15% faster.",
+    "description": "+1 weak minion allowed. Weak minions attack 15% faster and have 25% more health.",
     "effects": [
       {
         "special": "whistleCap",
@@ -1399,27 +1404,31 @@
       {
         "special": "whistleSpeed",
         "percent": 15
+      },
+      {
+        "special": "whistleHealth",
+        "percent": 25
       }
     ],
     "dropWeight": 70,
     "needs": "minion",
-    "perStack": "+1 minion (max +4), +15% speed"
+    "perStack": "+1 minion (max +4), +15% speed, +25% health"
   },
   "grave_dust": {
     "name": "Grave Dust",
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "Weak minions explode when they die.",
+    "description": "Weak minions explode when they die (400% of their attack) and Poison the enemies hit.",
     "effects": [
       {
         "special": "graveDust",
-        "percent": 1
+        "percent": 400
       }
     ],
     "dropWeight": 70,
     "needs": "minion",
-    "perStack": "bigger explosion"
+    "perStack": "+400% explosion"
   },
   "necro_crown": {
     "name": "Necro Crown",
@@ -1526,31 +1535,31 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "Ranged attacks: 15% chance to shoot an extra arrow at another enemy.",
+    "description": "Ranged attacks: 25% chance to shoot an extra arrow at another enemy.",
     "effects": [
       {
         "special": "extraArrow",
-        "percent": 15
+        "percent": 25
       }
     ],
     "dropWeight": 90,
     "needs": "ranged",
-    "perStack": "+15% chance"
+    "perStack": "+25% chance"
   },
   "spotters_lens": {
     "name": "Spotter's Lens",
     "rarity": "rare",
     "type": "squad",
     "scope": "squad",
-    "description": "The enemy you tap takes +12% damage from the squad.",
+    "description": "The enemy you tap (or order a hero onto) takes +20% damage from the squad.",
     "effects": [
       {
         "special": "spotter",
-        "percent": 12
+        "percent": 20
       }
     ],
     "dropWeight": 90,
-    "perStack": "+12% damage"
+    "perStack": "+20% damage"
   },
   "giantslayers_brand": {
     "name": "Giantslayer's Brand",
@@ -1591,15 +1600,15 @@
     "rarity": "rare",
     "type": "skill",
     "scope": "self",
-    "description": "+4% skill damage for every page on this hero's skills (modifier pages count twice).",
+    "description": "+8% skill damage for every page on this hero's skills (modifier pages count twice).",
     "effects": [
       {
         "special": "bookmark",
-        "percent": 4
+        "percent": 8
       }
     ],
     "dropWeight": 80,
-    "perStack": "+4% per page"
+    "perStack": "+8% per page"
   },
   "last_stand_banner": {
     "name": "Last Stand Banner",

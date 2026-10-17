@@ -31,7 +31,7 @@ import { eliteGlow, crownPixels } from '../systems/eliteFx.js';
 import { projectileFx, impactFx, critFx, IMPACT_MS, CRIT_MS, MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, deathPuffFx } from '../systems/hitFx.js';
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon, validateHeroSkills, validateDamageTypes } from '../systems/validate.js';
-import { enemiesForFloor } from '../systems/dungeon.js';
+import { enemiesForFloor, monsterHouse } from '../systems/dungeon.js';
 import { enemySpots } from '../systems/formation.js';
 import { pickSquad } from '../systems/party.js';
 import { loadItems } from '../systems/items.js';
@@ -179,7 +179,8 @@ export default class BattleScene extends Phaser.Scene {
       this.state.place(v.unit, v.ch.x, v.unit.side === 'hero' ? v.ch.y : v.groundY);
     }
     this.mode = 'fighting';
-    for (const v of this.views.values()) if (v.unit.elite && v.unit.alive) this.eliteName(v); // "Burning Vampiric Bandit"
+    if (this.state.monsterHouse) this.monsterHouseBanner();
+    else for (const v of this.views.values()) if (v.unit.elite && v.unit.alive) this.eliteName(v); // "Burning Vampiric Bandit"
     if (this.state.enemies.some((u) => u.def.boss)) sfx.play('bossIntro'); // a deep gong when a boss floor starts
     for (const e of this.state.startFloor()) this.showEvent(e); // floor-start minions rise (Necromancer)
   }
@@ -809,6 +810,12 @@ export default class BattleScene extends Phaser.Scene {
     const kind = this.roomKindFor(n);
     const room = kind ? this.buildRoom(kind, container) : null;
     const lineUp = room ? [] : enemiesForFloor(this.dungeon, n, Math.random, this.director, enemyDefs);
+    // Dev server only: `?house=1` makes every directed fight a Monster House.
+    if (import.meta.env.DEV && new URLSearchParams(location.search).get('house') && !room && n >= this.dungeon.director.fromFloor && !lineUp.monsterHouse && !(this.dungeon.bosses || {})[n]) {
+      const house = monsterHouse({ ...this.dungeon, director: { ...this.dungeon.director, monsterHouse: { ...this.dungeon.director.monsterHouse, fromFloor: 0, chance: 100 } }, bosses: {} }, n, Math.random, enemyDefs);
+      lineUp.splice(0, lineUp.length, ...house);
+      Object.assign(lineUp, { monsterHouse: true, elites: house.elites, shape: house.shape });
+    }
     // Dev server only: `?elite=1` makes the first normal/strong enemy of every directed fight an elite (browser checks).
     if (import.meta.env.DEV && new URLSearchParams(location.search).get('elite') && lineUp.elites && !lineUp.elites.length) {
       const i = lineUp.findIndex((id) => (enemyDefs[id].tier || 'normal') !== 'fodder');
@@ -1739,6 +1746,25 @@ export default class BattleScene extends Phaser.Scene {
     this.tweens.add({ targets: r, scale: 3, alpha: 0, duration: 420, ease: 'Quad.easeOut', onComplete: () => r.destroy() });
   }
 
+  // "IT'S A MONSTER HOUSE!": huge, it slams in with a shake and a red flash, wobbles, then fades. Then the elites' names.
+  monsterHouseBanner() {
+    sfx.play('bossIntro');
+    this.cameras.main.flash(180, 120, 20, 20);
+    this.cameras.main.shake(320, 0.008);
+    const y = 300;
+    const style = { fontFamily: 'monospace', fontStyle: 'bold', stroke: '#000000', strokeThickness: 7, align: 'center' };
+    const top = this.add.text(GAME_WIDTH / 2, y - 30, "IT'S A", { ...style, fontSize: '24px', color: '#ffd24d' }).setOrigin(0.5).setDepth(DEPTH.popup + 2);
+    const big = this.add.text(GAME_WIDTH / 2, y + 8, 'MONSTER HOUSE!', { ...style, fontSize: '34px', color: '#ff4a3a' }).setOrigin(0.5).setDepth(DEPTH.popup + 2);
+    if (big.width > GAME_WIDTH - 12) big.setFontSize(Math.floor((34 * (GAME_WIDTH - 12)) / big.width));
+    for (const [t, d] of [[top, 0], [big, 90]]) {
+      t.setScale(2.6).setAlpha(0);
+      this.tweens.add({ targets: t, scale: 1, alpha: 1, delay: d, duration: 260, ease: 'Back.easeOut' });
+      this.tweens.add({ targets: t, angle: { from: -3, to: 3 }, delay: d + 260, duration: 140, yoyo: true, repeat: 4 });
+      this.tweens.add({ targets: t, alpha: 0, y: t.y - 24, delay: 1900 + d, duration: 450, onComplete: () => t.destroy() });
+    }
+    this.time.delayedCall(2300, () => { for (const v of this.views.values()) if (v.unit.elite && v.unit.alive) this.eliteName(v); });
+  }
+
   // A boss move's name, big and red, in the middle of the screen.
   bossBanner(text) {
     const b = this.add
@@ -1860,6 +1886,8 @@ export default class BattleScene extends Phaser.Scene {
     // A beaten Mimic (special room) gives a rare/epic pick instead of the normal reward.
     const room = this.layer.room;
     if (room && room.kind === 'mimic') return this.itemPick('MIMIC DEFEATED', next, room.rules.rewardOdds);
+    // A cleared Monster House: a pick from the epic pool with a small legendary chance (an elite there still bumps a card).
+    if (this.state.monsterHouse) return this.itemPick('MONSTER HOUSE CLEARED', next, this.dungeon.director.monsterHouse.rewardOdds, this.state.floorHadElite ? combatRules.elites.rewardBump : 0);
     let choices = this.rollItems(null, this.state.floorHadElite ? combatRules.elites.rewardBump : 0); // an elite: one card a rarity higher
     choices = maybeAddBook(choices, bookData, this.state.heroes, bookData.bookChancePerScreen); // a skill book card, about 1 in 15 screens
     // After a BOSS the squad also gets a free golden book (3 modifier pages), after the normal reward.

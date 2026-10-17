@@ -107,8 +107,8 @@ export const roomMethods = {
   },
 
   // A normal item pick (1 of 3) on a sheet, then `after`.
-  itemPick(banner, after, odds = null) {
-    const choices = this.rollItems(odds);
+  itemPick(banner, after, odds = null, bump = 0) {
+    const choices = this.rollItems(odds, bump);
     if (!choices.length) return after();
     this.openRewardSheet(choices, after, banner);
   },

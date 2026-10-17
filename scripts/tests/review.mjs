@@ -57,7 +57,7 @@ function playRun(sq) {
     if (s.allHeroesDead()) { const k = boss ? 'BOSS ' + boss[0] : line.join('+'); stats.killers[k] = (stats.killers[k] || 0) + 1; break; }
     if (boss) stats.bossWin[floor] = (stats.bossWin[floor] || 0) + 1;
     s.endFloor(); s.winHeal(rules.winHealPercent); s.clearStatuses();
-    let choices = rollChoices({ itemDefs, rules: rw, floor, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance, offered: (s.offeredOnce = s.offeredOnce || new Set()), bump: s.floorHadElite ? rules.elites.rewardBump : 0 });
+    let choices = rollChoices({ itemDefs, rules: rw, floor, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance, offered: (s.offeredOnce = s.offeredOnce || new Set()), bump: s.floorHadElite ? rules.elites.rewardBump : 0, odds: s.monsterHouse ? dungeon.director.monsterHouse.rewardOdds : null });
     choices = maybeAddBook(choices, bookData, s.heroes, bookData.bookChancePerScreen);
     if (boss) useBook(s, 'golden');
     if (choices.length) {

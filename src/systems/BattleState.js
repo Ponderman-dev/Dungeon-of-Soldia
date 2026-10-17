@@ -262,6 +262,7 @@ export default class BattleState {
     this.enemies = ids.map((id) => this.makeUnit(this.enemyDefs[id], 'enemy', floor));
     for (const i of ids.elites || []) if (this.enemies[i]) this.makeElite(this.enemies[i]); // the director's elites (elites.js)
     this.floorHadElite = this.enemies.some((e) => e.elite); // one reward card a rarity higher after this fight
+    this.monsterHouse = !!ids.monsterHouse; // a Monster House floor (dungeon.js): banner + its own prize
     return this.enemies;
   }
 

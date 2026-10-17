@@ -16,7 +16,7 @@ for (let n = 4; n <= 120; n++) {
     const ids = enemiesForFloor(A, n, rng);
     const allowed = rosterFor(A, n).map((e) => e.id);
     if (ids.some((id) => !allowed.includes(id))) bad.push(n);
-    if (ids.length < A.director.minCount || ids.length > 10) bad.push('count' + n);
+    if (!ids.monsterHouse && (ids.length < A.director.minCount || ids.length > 10)) bad.push('count' + n);
   }
 }
 ok('random floors only use enemies unlocked for that floor, with a sane count (the director decides how many)', bad.length === 0, bad.slice(0, 5).join());

@@ -8,7 +8,7 @@
 // `enemyDefs` are passed on to it.
 export function enemiesForFloor(dungeon, n, rng = Math.random, memory = {}, enemyDefs = null) {
   if (dungeon.bosses && dungeon.bosses[n]) return dungeon.bosses[n]; // a boss floor (every 20 floors)
-  if (dungeon.director && n >= dungeon.director.fromFloor) return directFloor(dungeon, n, rng, memory, enemyDefs);
+  if (dungeon.director && n >= dungeon.director.fromFloor) return monsterHouse(dungeon, n, rng, enemyDefs) || directFloor(dungeon, n, rng, memory, enemyDefs);
   const entry = [...dungeon.floors].reverse().find((f) => f.floor <= n) || dungeon.floors[0];
   const pick = entry.every && (n - entry.floor) % entry.every !== 0 ? entry.otherwise : entry.enemies;
   return typeof pick === 'number' ? randomEnemies(dungeon, n, pick, rng) : pick;
@@ -93,6 +93,33 @@ export function directFloor(dungeon, n, rng = Math.random, memory = {}, enemyDef
   const ids = picked.map((e) => e.id);
   ids.shape = shapeName;
   ids.elites = pickElites(D.elites, n, picked, rng);
+  return ids;
+}
+
+// MONSTER HOUSE (director `monsterHouse`, user's choice): from `fromFloor` a fight floor is a Monster House with
+// `chance` % (never a boss floor or the floor before a boss): `count` [least, most] enemies all at once, picked by
+// `tiers` weights from the floor's roster. Returns null when this floor is a normal fight. The list has
+// `monsterHouse: true` (BattleState notes it: banner, special prize) and `elites` like any directed fight.
+export function monsterHouse(dungeon, n, rng = Math.random, enemyDefs = null) {
+  const M = dungeon.director && dungeon.director.monsterHouse;
+  const bosses = dungeon.bosses || {};
+  if (!M || n < M.fromFloor || bosses[n] || bosses[n + 1] || rng() * 100 >= M.chance) return null;
+  const tierOf = (e) => e.tier || (enemyDefs && enemyDefs[e.id] && enemyDefs[e.id].tier) || 'normal';
+  const pool = rosterFor(dungeon, n).map((e) => ({ ...e, tier: tierOf(e) }));
+  const [least, most] = M.count;
+  const count = least + Math.floor(rng() * (most - least + 1));
+  const picked = [];
+  while (picked.length < count) {
+    const open = pool.filter((e) => M.tiers[e.tier] && (e.max === undefined || picked.filter((p) => p.id === e.id).length < e.max));
+    if (!open.length) break;
+    const tiers = [...new Set(open.map((e) => e.tier))];
+    const tier = pickWeighted(tiers, (t) => M.tiers[t], rng);
+    picked.push(pickWeighted(open.filter((e) => e.tier === tier), (e) => e.weight ?? 100, rng));
+  }
+  const ids = picked.map((e) => e.id);
+  ids.shape = 'monsterHouse';
+  ids.monsterHouse = true;
+  ids.elites = pickElites(dungeon.director.elites, n, picked, rng);
   return ids;
 }
 

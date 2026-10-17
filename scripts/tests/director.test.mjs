@@ -23,6 +23,7 @@ for (let run = 0; run < 30; run++) {
     if (A.bosses[n]) continue;
     const before = mem.lastSwing ?? 0;
     const ids = enemiesForFloor(A, n, rng, mem, defs);
+    if (ids.monsterHouse) continue; // a Monster House has its own rules (monster-house.test.mjs)
     shapes[ids.shape] = (shapes[ids.shape] || 0) + 1;
     if (ids.shape === lastShape) repeats++;
     lastShape = ids.shape;

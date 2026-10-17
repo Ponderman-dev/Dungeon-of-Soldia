@@ -258,6 +258,24 @@
             35
           ]
         ]
+      },
+      "monsterHouse": {
+        "_about": "MONSTER HOUSE (dungeon.js monsterHouse): from fromFloor every fight floor has chance % to be one (never a boss floor or the floor before a boss). count = [least, most] enemies, ALL in the fight at once, picked by tier weights from the floor's roster (roster max still holds); elites roll as usual. The prize is a pick with rewardOdds instead of the normal reward.",
+        "fromFloor": 61,
+        "chance": 5,
+        "count": [
+          11,
+          15
+        ],
+        "tiers": {
+          "fodder": 2,
+          "normal": 1.4,
+          "strong": 0.25
+        },
+        "rewardOdds": {
+          "epic": 90,
+          "legendary": 10
+        }
       }
     }
   }

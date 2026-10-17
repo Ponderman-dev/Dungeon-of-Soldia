@@ -4,7 +4,7 @@ Read `CLAUDE.md` first, then this file. Every item decision of this phase is in 
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
 ## START HERE (session 3): enemies and difficulty
-Status: steps 1-3 DONE (step 3 = ELITES, see CLAUDE.md "ELITES"). Next = step 4 MONSTER HOUSE.
+Status: steps 1-4 DONE (ELITES and MONSTER HOUSE, see CLAUDE.md). User: keep elites as they are. Next = step 5, the 10 new enemies.
 
 ### Branch, preview, tools
 - Latest branch: `ccr-a59eab7b-wefaf5` (session 3, elites; all pushed). A new session gets its own branch name from the
@@ -43,6 +43,10 @@ Status: steps 1-3 DONE (step 3 = ELITES, see CLAUDE.md "ELITES"). Next = step 4 
    elites off median 34, mean 37.1, p90 59, max 400. So elites cost ~5 floors and stop the 100-400 snowball runs
    (0% reach 100, was 2%). Brood Mother win rate 78% (was 87%). NOT tuned yet: ask the user if that is the wanted
    feel (knobs: director.elites chance points, combat.json elites multipliers / element chances).
+
+4. MONSTER HOUSE (built, session 3): as written in the user's plan (see CLAUDE.md MONSTER HOUSE). The 5% rolls
+   on fight floors only (rooms are decided first). Smart player 3/squad: median 29, mean 31.7 (same as elites only);
+   the Monster House killed 7 of the ~18 runs that got past floor 60 (3rd top killer). Not tuned.
 
 ### Step 3 ELITES spec (as approved, built)
 - Which enemies can be elite is NOT decided: suggest normal + strong only (never bosses, boss helpers, objects;

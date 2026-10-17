@@ -146,7 +146,7 @@ export function playRun(squad, opts = {}) {
   const dungeon = opts.dungeon || DATA.dungeon;
   const out = { floor: 1, log: [], bosses: {}, rooms: {}, deaths: [], fightMs: {} };
   const reward = (count = DATA.rw.choices, odds = null) => {
-    let cards = rollChoices({ itemDefs: DATA.itemDefs, rules: DATA.rw, floor: out.floor, count, heroes: s.heroes, potionChance: odds ? 0 : DATA.rw.potionChance, offered: s.offeredOnce, rng, odds, bump: !odds && s.floorHadElite ? DATA.rules.elites.rewardBump : 0 });
+    let cards = rollChoices({ itemDefs: DATA.itemDefs, rules: DATA.rw, floor: out.floor, count, heroes: s.heroes, potionChance: odds ? 0 : DATA.rw.potionChance, offered: s.offeredOnce, rng, odds, bump: (!odds || s.monsterHouse) && s.floorHadElite ? DATA.rules.elites.rewardBump : 0 });
     if (!odds) cards = maybeAddBook(cards, DATA.bookData, s.heroes, DATA.bookData.bookChancePerScreen, rng);
     takeReward(s, cards, opts, out.log);
   };
@@ -178,8 +178,9 @@ export function playRun(squad, opts = {}) {
     out.fightMs[floor] = res.ms;
     const boss = dungeon.bosses && dungeon.bosses[floor];
     if (boss) out.bosses[floor] = res.won;
-    if (!res.won) { out.deaths.push(boss ? 'BOSS ' + boss[0] : line.join('+')); break; }
+    if (!res.won) { out.deaths.push(boss ? 'BOSS ' + boss[0] : line.monsterHouse ? 'MONSTER HOUSE' : line.join('+')); break; }
     s.endFloor(); s.winHeal(rules.winHealPercent); s.clearStatuses();
+    if (s.monsterHouse) { out.houses = (out.houses || 0) + 1; reward(DATA.rw.choices, dungeon.director.monsterHouse.rewardOdds); continue; } // its own prize
     reward();
     if (boss) takeReward(s, [DATA.bookData.cards.golden], opts, out.log);
   }

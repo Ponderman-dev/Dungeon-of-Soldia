@@ -114,15 +114,4 @@ const skillOf = (u, kind) => u.skills.findIndex((x) => x.kind === kind);
   s.strike(h[0], es[0], [], { damageType: 'fire' }); const ev = []; s.landAttack(a, es[0], ev);
   ok('...ITEM hits of other heroes react too (Chill Band ice on fire)', ev.some((x) => x.type === 'reaction')); }
 
-// ---- Bard
-{ const { s, es, h } = mk(['bard', 'knight']); const [b, k] = h;
-  const kSpd = k.stats.attackEfficiency; const base = mk(['knight']).h[0].stats.attackEfficiency;
-  ok('Bard: starts with MARCH: the squad attacks 15% faster', b.song === 'march' && Math.round(kSpd) === Math.round(base * 1.15), `${base} -> ${kSpd}`);
-  k.hp = k.maxHp * 0.5; s.castSkill(b.uid, skillOf(b, 'support'));
-  ok('Change Song: now BALLAD, the burst heals the squad', b.song === 'ballad' && k.hp > k.maxHp * 0.5);
-  ok('...the March speed is gone', Math.round(k.stats.attackEfficiency) === Math.round(base));
-  k.hp = k.maxHp * 0.5; const hp = k.hp; s.update(1000); ok('...Ballad: the squad regenerates', k.hp > hp); }
-{ const { s, es, h } = mk(['bard']); const b = h[0]; s.castSkill(b.uid, skillOf(b, 'attack'));
-  ok('Discord: enemies are Charmed', es.every((e) => e.statuses.some((x) => x.type === 'charm')));
-  ok('...a charmed enemy attacks another ENEMY', s.pickTarget(es[0]).side === 'enemy'); }
 

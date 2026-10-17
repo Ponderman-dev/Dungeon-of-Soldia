@@ -127,7 +127,9 @@ export default class BattleState {
       combo: { uid: null, points: 0 }, // Rogue: combo points on one enemy
       iaidoHits: 0, // Samurai: hits taken (every Nth is parried)
       interceptCd: 0, // Knight: ms until Intercept can save someone again
-      song: (def.passive && def.passive.songs && def.passive.songs.start) || null, // Bard: the song he plays
+      song: (def.passive && def.passive.songs && def.passive.songs.start) || null, // Bard: the song he plays (null = none)
+      nextSong: (def.passive && def.passive.songs && def.passive.songs.first) || null, // Bard v3: the song Change Song plays next
+      songLeft: 0, // Bard v3: ms the song still plays (songs.durationMs)
       alive: true,
       damageType: def.damageType,
       flying: !!def.flying,
@@ -924,6 +926,8 @@ export default class BattleState {
       if (hero.soulCd > 0) hero.soulCd -= dt; // Grimoire fireball cooldown
       if (hero.triageCd > 0) hero.triageCd -= dt; // Aid Kit triage cooldown
       this.tickBandages(hero, dt, events);
+      this.tickSong(hero, dt, events);
+      this.tickLute(hero, dt, events);
       this.tickWard(hero, dt, events);
       this.tickSpiritAxe(hero, dt, events);
       this.tickSpawner(hero, dt, events);
@@ -1217,9 +1221,14 @@ export default class BattleState {
   }
 
   // Change Song: switches the song and plays a short burst of the new one (a squad heal or a speed buff).
+  // Bard v3 (`songs.first` + `durationMs`): plays `nextSong` for durationMs, the next cast plays the other one.
   switchSong(bard, events) {
     const songs = bard.def.passive.songs;
-    bard.song = bard.song === 'march' ? 'ballad' : 'march';
+    if (songs.durationMs) {
+      bard.song = bard.nextSong || 'march';
+      bard.nextSong = bard.song === 'march' ? 'ballad' : 'march';
+      bard.songLeft = songs.durationMs;
+    } else bard.song = bard.song === 'march' ? 'ballad' : 'march';
     const burst = songs[bard.song].burst || {};
     events.push({ type: 'song', unit: bard, song: bard.song });
     for (const u of this.squadUnits()) {
@@ -1227,6 +1236,54 @@ export default class BattleState {
       if (burst.mods) this.applyStatus(u, { status: 'buff', durationMs: burst.durationMs, mods: burst.mods }, bard, 'song_burst', events);
     }
     this.refreshStats();
+  }
+
+  // Bard v3: a song plays only `songs.durationMs`, then stops (no song until the next Change Song).
+  tickSong(hero, dt, events) {
+    if (!hero.song || !hero.songLeft) return;
+    hero.songLeft -= dt;
+    if (hero.songLeft > 0) return;
+    hero.songLeft = 0;
+    hero.song = null;
+    events.push({ type: 'song', unit: hero, song: null });
+    this.refreshStats();
+  }
+
+  // MARCH (`songs.march.procChancePercent`): item procs of the squad are likelier while it plays.
+  marchProcs() {
+    let p = 0;
+    for (const b of this.bards()) if (b.song === 'march') p += b.def.passive.songs.march.procChancePercent || 0;
+    return 1 + p / 100;
+  }
+
+  // BALLAD (`songs.ballad.healPercent`): item healing (heals, lifesteal, item regen) is stronger while it plays.
+  balladHeal() {
+    let p = 0;
+    for (const b of this.bards()) if (b.song === 'ballad') p += b.def.passive.songs.ballad.healPercent || 0;
+    return 1 + p / 100;
+  }
+
+  // Bard's HYMN (`passive.hymn.squadItemMultiplier`): squad items (items.json type 'squad') work this much
+  // stronger while he lives (computeHeroStats scales their effects).
+  squadItemMult() {
+    let m = 1;
+    for (const h of this.heroes) if (h.alive && h.def.passive && h.def.passive.hymn) m *= h.def.passive.hymn.squadItemMultiplier;
+    return m;
+  }
+
+  // Bard's LUTE (`passive.lute`): every `everyMs` of a floor's fight he plays a random boost for the whole squad.
+  tickLute(hero, dt, events) {
+    const L = hero.def.passive && hero.def.passive.lute;
+    if (!L) return;
+    hero.floor.lute = (hero.floor.lute || 0) + dt;
+    if (hero.floor.lute < L.everyMs) return;
+    hero.floor.lute -= L.everyMs;
+    const boost = L.boosts[Math.floor(this.rng() * L.boosts.length)];
+    events.push({ type: 'lute', unit: hero, boost: boost.name, color: boost.color });
+    for (const u of this.squadUnits()) {
+      if (boost.mods) this.applyStatus(u, { status: 'buff', durationMs: L.durationMs, mods: boost.mods }, hero, 'lute', events);
+      if (boost.regenPercentPerSec) this.applyStatus(u, { status: 'regenBoost', durationMs: L.durationMs, percentMaxHpPerSec: boost.regenPercentPerSec }, hero, 'lute', events);
+    }
   }
 
   // Mage's REACTIONS (passive.reactions, while the Mage lives): a fire / ice / electric hit leaves that element
@@ -1286,7 +1343,7 @@ export default class BattleState {
       base += a.baseRegenPercentPerSec;
       mult += a.healMultiplierPercent;
     }
-    return { base, factor: 1 + mult / 100 };
+    return { base, factor: (1 + mult / 100) * this.balladHeal() }; // Bard's Ballad: item heals stronger too
   }
 
   // Alchemist: while he lives, debuffs on enemies last longer and damage over time hits harder.
@@ -1620,7 +1677,8 @@ export default class BattleState {
     if (hero.side !== 'hero' || !hero.alive) return;
     for (const proc of [...hero.procs]) {
       const debuffs = (proc.apply || []).some((sp) => (sp.to === 'target' || (!sp.to && proc.targets === 'target')) && this.statusDefs[sp.status] && this.statusDefs[sp.status].debuff);
-      const chance = debuffs ? this.debuffChance(hero, proc.chance) : proc.chance; // Opportunist: his debuffs are likelier
+      const base = String(proc.itemId).startsWith('passive_') ? proc.chance : proc.chance * this.marchProcs(); // Bard's March: item procs likelier
+      const chance = debuffs ? this.debuffChance(hero, base) : base; // Opportunist: his debuffs are likelier
       if (proc.meleeOnly && hero.damageType !== 'melee') continue; // Thousand Cuts: melee hits only
       if (proc.rangedOnly && hero.damageType === 'melee') continue; // Moonlight Twinblade: ranged attacks only
       if (proc.proc !== trigger || (!ctx.force && this.rng() * 100 >= chance)) continue; // ctx.force: every proc goes off
@@ -2860,7 +2918,7 @@ export default class BattleState {
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
       const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
-      const { stats, damageBonus, specials, procs, minionSources } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale, this.statUpkeep(hero));
+      const { stats, damageBonus, specials, procs, minionSources } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale, this.statUpkeep(hero), this.squadItemMult());
       hero.minionSources = this.buildSources(hero, minionSources);
       const hpDelta = stats.health - hero.maxHp;
       hero.stats = stats;
@@ -2929,7 +2987,7 @@ export default class BattleState {
     const hero = this.heroes.find((h) => h.uid === heroUid);
     hero.items.push(itemId);
     const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
-    const result = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale, this.statUpkeep(hero)); // same state bonuses as now, so before > after compares like with like
+    const result = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale, this.statUpkeep(hero), this.squadItemMult()); // same state bonuses as now, so before > after compares like with like
     hero.items.pop();
     return result;
   }

@@ -906,7 +906,7 @@
       "at": "target",
       "radius": 120
     },
-    "cooldownMs": 13000,
+    "cooldownMs": 8000,
     "castMs": 600,
     "damageMultiplier": 0.4,
     "projectile": "note",
@@ -926,6 +926,6 @@
     "cooldownMs": 10000,
     "castMs": 400,
     "songSwitch": true,
-    "description": "Switches between MARCH (squad attacks 15% faster) and BALLAD (squad regenerates 0.6% health/s). Switching plays a burst: a quick heal or a speed rush."
+    "description": "Plays a song for 5s, March and Ballad in turn. MARCH: squad attacks 15% faster and item procs are 25% likelier. BALLAD: squad regenerates 0.6% health/s and item heals are 25% stronger. Each starts with a burst: a speed rush or a quick heal."
   }
 }

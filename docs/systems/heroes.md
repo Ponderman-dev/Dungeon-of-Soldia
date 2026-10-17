@@ -23,3 +23,13 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       green flask lob instead of an arrow. Skills `alch_barrage` (Flask Barrage, 5 POISON flasks only, 90% + poison each; user: no random debuffs) and `alch_brew` (Mystery Brew,
       4 flasks, 9s, heal 30%); the old `flask_barrage` / `mystery_brew` / `catalyst()` stay for the v1 fixture tests. FLASKS ONE BY ONE (user): `random.intervalMs` 250 = the first flask flies at once, the next every 0.25s (`hero.casting.flasks`, `tickCasting()` -> `throwFlask()`); the hero is busy until the last one, a stun stops the rest (like a channel), no Echo. Without `intervalMs` all flasks go at once (old skills). Sound cue `flaskBreak` (Kenney glass, pitch 1.6) when a flask lands, skill flasks and his basic lobs.
       review.mjs 3 all: avg floor 24.3 (last) -> 28.8 (5th of 10); after poison-only Barrage 27.1 (7th, within noise).
+    - **Bard** BATTLE HYMN (built session 6): `passive.hymn.squadItemMultiplier` 1.35 = squad items (items.json `type: 'squad'`:
+      War Banner, Jolly Banner, Spotter's Lens, Last Stand Banner) x1.35 while he lives (`squadItemMult()` -> 7th arg of
+      `computeHeroStats()`, which multiplies those items' effect factor: proc chances, specials, Last Stand shield/attack).
+      LUTE (`passive.lute`): every `everyMs` 10s of a floor's fight (`hero.floor.lute`, `tickLute()`) a random boost for the
+      squad for 5s: Attack +20% / Speed +20% / Defense+Resist +30% / Regen 1.5%/s (`lute` event: name popup + ring per hero).
+      SONGS v3 (`songs.first` + `durationMs` 5000): no song at the start; Change Song plays March, then Ballad, in turn, each
+      for 5s (`hero.nextSong`, `songLeft`, `tickSong()`; `song` event with song null when it stops). MARCH also makes squad
+      ITEM procs `procChancePercent` 25% likelier (`marchProcs()` in `rollProcs`, not passive procs); BALLAD makes item heals
+      `healPercent` 25% stronger (`balladHeal()` inside `regenAura().factor`, the same factor the Cleric's aura uses).
+      DISCORD cooldown 13 -> 8s. review.mjs 3 all (x2): avg floor ~25 -> 27.1 / 25.8.

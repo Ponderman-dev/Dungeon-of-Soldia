@@ -77,7 +77,7 @@ Decided by the user one hero at a time (feel, passive, attack, support). Numbers
 - Support BONE SACRIFICE (replaces Bone Ward): sacrifices skeletons to shield the squad (bigger per skeleton);
   with Grave Dust they explode on the way.
 
-## Bard: BATTLE HYMN
+## Bard: BATTLE HYMN (BUILT session 6, see docs/systems/heroes.md)
 - Feel: pure support; his songs and buffs make the squad stronger, little damage of his own. Loves squad items.
 - Passive (user's version, replaces Songs): SQUAD ITEM MULTIPLIER x1.35 (squad-wide item effects are 35% stronger
   while he lives); and every 10s from the start of a floor he plays the lute: a RANDOM boost for the whole team

@@ -19,7 +19,8 @@ export function canReceive(unit, item) {
 //   - the hero's own items (while the hero is alive)
 //   - squad items held by any LIVING hero
 // Items on a dead hero stop working. `percent` is a % of the level stat; `flat` adds points.
-export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules = {}, extraMods = []) {
+// `squadMult` (Bard's Hymn): squad items (type 'squad') work this much stronger.
+export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules = {}, extraMods = [], squadMult = 1) {
   const stats = { ...levelStats };
   const damageBonus = {};
   const specials = {}; // thorns, lifesteal, skillDamage, critDamage, regen (all in %)
@@ -72,6 +73,7 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
       for (const e of item.effects) {
         let factor = e.falloffRatio ? Math.pow(e.falloffRatio, index) : 1;
         if (e.perExtra !== undefined && index > 0) factor = e.perExtra / (e.percent ?? e.flat);
+        if (item.type === 'squad') factor *= squadMult;
         apply({ ...e, itemId: id }, factor, holder);
       }
     }

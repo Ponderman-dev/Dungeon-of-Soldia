@@ -1401,11 +1401,12 @@
     "id": "bard",
     "name": "Bard",
     "role": "Support",
-    "summary": "Plays songs for the squad and turns enemies on each other.",
+    "summary": "Pure support: makes squad items stronger and plays boosts for the team.",
     "tips": [
-      "March when you are winning, Ballad when the squad is hurt.",
-      "Discord charms a group: they hit each other for 2.5s.",
-      "War Banner and fast heroes love the March."
+      "Battle Hymn: squad items (War Banner, Jolly Banner, Spotter's Lens, Last Stand Banner) work 35% stronger while he lives.",
+      "Every 10s of a fight his lute gives the squad a random boost: attack, speed, defense or regen.",
+      "Change Song plays March (faster attacks, item procs +25%) or Ballad (regen, item heals +25%) for 5s; they take turns.",
+      "Discord charms a group: they hit each other for 2.5s."
     ],
     "damageType": "ranged",
     "height": 23,
@@ -1440,12 +1441,62 @@
       ]
     },
     "passive": {
-      "name": "Songs",
-      "description": "Always plays a song for the squad: MARCH (+15% attack speed) or BALLAD (+0.6% health per second). Conductor's Baton makes his songs stronger.",
+      "name": "Battle Hymn",
+      "description": "Squad items work 35% stronger while he lives. Every 10s of a fight he plays the lute: a random boost for the whole squad for 5s (attack, speed, defense or regen).",
+      "hymn": {
+        "squadItemMultiplier": 1.35
+      },
+      "lute": {
+        "everyMs": 10000,
+        "durationMs": 5000,
+        "boosts": [
+          {
+            "name": "Lute: Attack",
+            "color": "0xff6b4a",
+            "mods": [
+              {
+                "stat": "attack",
+                "percent": 20
+              }
+            ]
+          },
+          {
+            "name": "Lute: Speed",
+            "color": "0xffe94d",
+            "mods": [
+              {
+                "stat": "attackEfficiency",
+                "percent": 20
+              }
+            ]
+          },
+          {
+            "name": "Lute: Defense",
+            "color": "0x6fb8ff",
+            "mods": [
+              {
+                "stat": "defense",
+                "percent": 30
+              },
+              {
+                "stat": "resist",
+                "percent": 30
+              }
+            ]
+          },
+          {
+            "name": "Lute: Regen",
+            "color": "0x6dff8f",
+            "regenPercentPerSec": 1.5
+          }
+        ]
+      },
       "songs": {
-        "start": "march",
+        "first": "march",
+        "durationMs": 5000,
         "march": {
           "attackSpeedPercent": 15,
+          "procChancePercent": 25,
           "burst": {
             "durationMs": 3000,
             "mods": [
@@ -1458,6 +1509,7 @@
         },
         "ballad": {
           "regenPercentPerSec": 0.6,
+          "healPercent": 25,
           "burst": {
             "healPercent": 8
           }

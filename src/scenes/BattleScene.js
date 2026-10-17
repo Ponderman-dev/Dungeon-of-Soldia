@@ -1493,8 +1493,13 @@ export default class BattleScene extends Phaser.Scene {
       if (v && look) { this.popText(v, look[0], look[1], true); v.ch.flash(Number('0x' + look[1].slice(1)), 140); }
     } else if (e.type === 'song') {
       const v = this.views.get(e.unit.uid);
-      if (v) this.popText(v, e.song === 'ballad' ? 'Ballad!' : 'March!', e.song === 'ballad' ? '#6dff8f' : '#ffb84d', true);
+      if (v && e.song) this.popText(v, e.song === 'ballad' ? 'Ballad!' : 'March!', e.song === 'ballad' ? '#6dff8f' : '#ffb84d', true); // song: null = it stopped
       this.drawAllBars();
+    } else if (e.type === 'lute') {
+      // Bard's lute: the boost's name over him, a ring in its colour on every hero.
+      const v = this.views.get(e.unit.uid), col = Number(e.color);
+      if (v) this.popText(v, `${e.boost}!`, '#' + col.toString(16).padStart(6, '0'), true);
+      for (const h of this.state.heroes) { const hv = this.views.get(h.uid); if (h.alive && hv) this.ring(hv, col); }
     } else if (e.type === 'combo') {
       // drawn every frame by drawHeroHud()
     } else if (this.showBookEvent(e)) {

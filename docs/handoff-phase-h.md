@@ -162,7 +162,7 @@ Status: steps 1-4 DONE (ELITES and MONSTER HOUSE, see CLAUDE.md). User: keep eli
   short + 'Per stack' line. Rooms: chests smaller and vanish, dealer steps aside, fountain at the side, puzzle easy.
 - Fire Arrows = a real burning arrow; noPop (no icon pop / proc sound) for Fire Arrows, Quiver, Metronome and the
   8 debuff procs.
-- SOUND = ON HOLD (user: KIV). Board round 5 has ~180 CC0 sounds from GitHub (add-packs.py). Pending: the user must
+- SOUND = ON HOLD (user: KIV). Board round 5 has ~180 CC0 sounds from GitHub (add-packs.py). DONE session 5: Melee re-picked and round 5 picks applied. Was: the user must
   re-pick Melee hit (its saved pick 'T' came from the letter bug), then 'apply the sound picks'. Item pop sound is
   still the Fast magic spell (same as Holy hit).
 - Next (agreed order): hero balance round 2 (Alchemist/Archer/Bard/Mage still bottom), enemy difficulty curve,

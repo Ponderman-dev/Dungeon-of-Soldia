@@ -87,14 +87,14 @@
       "pitchJitter": 0.08,
       "minGapMs": 60,
       "file": "picked/hitMelee",
-      "source": "yours_sword-strikes-armor-2765.mp3"
+      "source": "new_micro-pack-organic-wooshes-slash.mp3"
     },
     "hitRanged": {
       "volume": 0.35,
       "pitchJitter": 0.08,
       "minGapMs": 60,
       "file": "picked/hitRanged",
-      "source": "hitRanged_C.mp3"
+      "source": "new_75-cc0-breaking-falling-hit-sfx-bfh1-wood-hit-03.mp3"
     },
     "hitFire": {
       "volume": 0.4,
@@ -108,7 +108,7 @@
       "pitchJitter": 0.08,
       "minGapMs": 70,
       "file": "picked/hitIce",
-      "source": "yours_warehouse-metal-hit-3139.mp3"
+      "source": "new_75-cc0-breaking-falling-hit-sfx-bfh1-glass-hit-02.mp3"
     },
     "hitElectric": {
       "volume": 0.25,

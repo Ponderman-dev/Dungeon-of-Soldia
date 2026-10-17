@@ -316,7 +316,11 @@ export default class BattleScene extends Phaser.Scene {
     const crown = (this.crown = this.crown || crownPixels());
     for (const v of this.views.values()) {
       const u = v.unit;
-      if (!u.elite || !u.alive || !v.ch.active || v.ch.parentContainer) continue;
+      if (u.adapt && u.alive && v.ch.active && !v.ch.parentContainer) { // Crystal Sentinel: a glow in the colour of what it resists
+        if (!v.box) v.box = bodyBox(u.def.parts, u.def.height);
+        this.paintFx(g, v, eliteGlow(v.box, Phaser.Display.Color.HexStringToColor(damageTypes[u.adapt.type].color).color, now + u.uid * 97));
+      }
+      if (!u.elite || !u.alive || u.burrowed || !v.ch.active || v.ch.parentContainer) continue;
       if (!v.box) v.box = bodyBox(u.def.parts, u.def.height);
       const color = (u.elite.colorInt ??= Phaser.Display.Color.HexStringToColor(u.elite.color).color);
       this.paintFx(g, v, eliteGlow(v.box, color, now + u.uid * 97));
@@ -1692,6 +1696,33 @@ export default class BattleScene extends Phaser.Scene {
     const v = e.unit && this.views.get(e.unit.uid);
     switch (e.type) {
       case 'enemySpawn': this.showEnemySpawn(e.unit); return true;
+      // ---- the new enemies, batch 2 ----
+      case 'burrow': // Cave Worm digs in: a dirt puff, it sinks into the floor (its bars fade with it)
+        if (!v) return true;
+        this.puff(v.ch.x, v.ch.y, 0x8a6a4a, 9);
+        this.tweens.add({ targets: v.ch, alpha: 0, duration: 260 });
+        return true;
+      case 'surface': // ...and bursts out next to a hero
+        if (!v) return true;
+        this.time.delayedCall(20, () => { // after followPositions has moved it to its new spot
+          this.puff(v.ch.x, v.ch.y, 0x8a6a4a, 12);
+          this.tweens.add({ targets: v.ch, alpha: e.unit.def.alpha ?? 1, duration: 120 });
+          this.cameras.main.shake(90, 0.003);
+        });
+        return true;
+      case 'blink': { // Blink Imp: a purple flash where it was and where it lands
+        const c1 = this.add.circle(e.from.x, e.from.y - 20, 14, 0xd04a8a, 0.7).setDepth(DEPTH.popup - 1);
+        this.tweens.add({ targets: c1, scale: 0.1, alpha: 0, duration: 260, onComplete: () => c1.destroy() });
+        this.puff(e.from.x, e.from.y, 0xd04a8a, 6);
+        this.time.delayedCall(20, () => { if (v) { this.ring(v, 0xd04a8a); this.puff(v.ch.x, v.ch.y, 0xd04a8a, 6); } });
+        return true;
+      }
+      case 'raiseDead': // Bone Acolyte: a green-black puff where the enemy fell, a popup over the acolyte
+        if (v) this.popText(v, 'Rise!', '#9fe07a', true);
+        return true;
+      case 'adapt': // Crystal Sentinel: says what it resists now (its glow in that colour is drawn in drawElites)
+        if (v && e.damageType) this.popText(v, `Resists ${e.damageType}!`, damageTypes[e.damageType].color);
+        return true;
       case 'revive':
         this.removeView(e.unit.uid); // its old figure may still be fading
         this.showEnemySpawn(e.unit, 0xffd24d);

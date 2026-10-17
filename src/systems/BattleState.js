@@ -447,7 +447,7 @@ export default class BattleState {
         if (u.knock.remaining <= 0) u.knock = null;
         continue;
       }
-      if (this.isStunned(u) || u.pending || u.casting || u.bossCast || u.def.object || u.dust) continue; // frozen in place, busy, or an object
+      if (this.isStunned(u) || u.pending || u.casting || u.bossCast || u.def.object || u.dust || u.burrowed) continue; // frozen in place, busy, an object, underground
       let goal = null;
       // A lit bomb nearby (Kobold Sapper): heroes and minions walk out of its blast first.
       const bomb = u.side === 'hero' && (this.bombs || []).find((b) => Math.hypot(u.x - b.x, u.y - b.y) < b.radius + 12);
@@ -564,6 +564,7 @@ export default class BattleState {
       this.onKill(killer, target, events, lastStatuses);
       for (const spec of [].concat(target.def.onDeath || [])) this.deathBurst(target, spec, events); // a list: a Toxic elite Puffshroom has two
       if (target.elite) this.eliteDeath(target, events); // Explosive bursts, Splitting falls apart (elites.js)
+      this.acolyteRaise(target, events); // a Bone Acolyte nearby raises it (bosses.js)
     }
     else {
       this.lastStand(target, events); // Last Stand Banner: the survivors rally
@@ -1455,6 +1456,7 @@ export default class BattleState {
         if (dealt.lost === 0) result.fullyAbsorbed = true;
       }
     }
+    if (!result.dodged && target.def.adapt && target.alive && target.hp > 0) this.adaptTo(target, opts.damageType || attacker.hitType || attacker.damageType, events); // Crystal Sentinel
     if (opts.projectile) events.push({ type: 'projectile', from: opts.from || attacker, to: target, kind: opts.projectile });
     events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic });
     if (dealt) this.breakEffects(target, dealt.broken, events);

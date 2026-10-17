@@ -36,6 +36,22 @@ const RULES = {
     stats: { health: 220, attack: 7, defense: 2, evasion: 10, attackEfficiency: 150 },
     onHit: [{ status: 'burn', chance: 30, durationMs: 3000, damageMultiplier: 0.2, damageType: 'fire' }],
     abilities: [{ id: 'hound_howl', name: 'Howl!', minor: true, hpBelow: 30, target: 'otherAllies', apply: [{ status: 'buff', durationMs: 5000, mods: [{ stat: 'attackEfficiency', percent: 25 }] }] }] },
+  // ---- batch 2
+  worm: { from: 38, damageType: 'melee', weak: ['fire'], resists: [], xp: 26,
+    stats: { health: 300, attack: 8, defense: 4, attackEfficiency: 80 },
+    abilities: [{ id: 'worm_burrow', name: 'Burrow', minor: true, everyMs: 8000, firstMs: 4000, target: 'self', burrow: { ms: 1500, stunMs: 800, damageMultiplier: 1 } }] },
+  acolyte: { from: 42, damageType: 'dark', weak: ['holy'], resists: ['dark'], xp: 24,
+    stats: { health: 200, attack: 6, defense: 0, resist: 15, attackEfficiency: 80 },
+    raise: { radius: 180, into: 'risen_skeleton' } },
+  blinkimp: { from: 52, damageType: 'melee', weak: ['ice'], resists: [], xp: 24,
+    stats: { health: 200, attack: 8, defense: 0, evasion: 15, attackEfficiency: 110 },
+    abilities: [{ id: 'imp_blink', name: 'Blink', minor: true, everyMs: 5000, firstMs: 2500, target: 'lowestHero', blink: true, damageMultiplier: 1.3 }] },
+  banshee: { from: 65, damageType: 'dark', weak: ['holy'], resists: [], xp: 28,
+    stats: { health: 220, attack: 7, defense: 0, resist: 10, evasion: 15, attackEfficiency: 90 },
+    abilities: [{ id: 'banshee_wail', name: 'Wail', minor: true, everyMs: 10000, firstMs: 5000, castMs: 1500, target: 'allHeroes', apply: [{ status: 'silence', durationMs: 1500 }] }] },
+  sentinel: { from: 75, damageType: 'melee', weak: [], resists: [], xp: 32,
+    stats: { health: 450, attack: 10, defense: 10, resist: 10, attackEfficiency: 80 },
+    adapt: { ms: 4000 } },
 };
 
 const ids = process.argv.slice(2);

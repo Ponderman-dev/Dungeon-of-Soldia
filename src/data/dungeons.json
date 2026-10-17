@@ -136,13 +136,33 @@
         "from": 35
       },
       {
+        "id": "worm",
+        "from": 38
+      },
+      {
+        "id": "acolyte",
+        "from": 42
+      },
+      {
         "id": "golem",
         "from": 46,
         "max": 1
       },
       {
+        "id": "blinkimp",
+        "from": 52
+      },
+      {
         "id": "hound",
         "from": 58
+      },
+      {
+        "id": "banshee",
+        "from": 65
+      },
+      {
+        "id": "sentinel",
+        "from": 75
       }
     ],
     "bosses": {

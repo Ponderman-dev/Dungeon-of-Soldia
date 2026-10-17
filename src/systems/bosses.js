@@ -12,6 +12,9 @@
 //       clones: { statPercent }, shatterClones: { multiplier } }
 //     minor: true = a normal enemy's small move (a popup, no red banner); needsHurt: waits until an enemy is hurt;
 //     target also 'lowestAlly' (most hurt enemy) / 'otherAllies'; shield: { percentOwnHp, durationMs } on the target
+//     burrow: { ms, stunMs, damageMultiplier } (Cave Worm), blink: true (Blink Imp: appears next to its target first)
+//   raise: { radius, into }                  Bone Acolyte: the first enemy dying near it comes back as `into`
+//   adapt: { ms }                            Crystal Sentinel: resists the last damage type that hit it, weak to the rest
 //   aura: { ids, attackSpeedPercent }        other enemies with these ids attack faster while it lives (War Drum)
 //   hatch: { afterMs, into, count }          it turns into enemies after a while (Egg Sac)
 //   plates: { count, cutPercent, plateHpPercent, fireMultiplier }   armor plates: less damage until broken (Frost Warden)
@@ -42,7 +45,7 @@ export const bossMethods = {
 
   // Can heroes aim at it? (Morthul's dust and Vharox in the sky cannot be hit.)
   untargetable(u) {
-    return !!(u.dust || (u.statuses && u.statuses.some((s) => s.type === 'airborne')));
+    return !!(u.dust || u.burrowed || (u.statuses && u.statuses.some((s) => s.type === 'airborne'))); // Cave Worm underground
   },
 
   // Enemies that heroes can hit right now.
@@ -92,8 +95,74 @@ export const bossMethods = {
       if (u.reviveTimer > 0) this.tickRevive(u, dt, events);
       if (d.sky) this.tickSky(u, dt, events);
       if (d.mirror) this.checkMirror(u, events);
+      if (u.burrowed) this.tickBurrow(u, dt, events);
+      if (u.adapt) this.tickAdapt(u, dt, events);
       if (u.abilities && u.abilities.length) this.tickAbilities(u, dt, events);
     }
+  },
+
+  // ---- the new enemies (step 5, batch 2) --------------------------------------------------------
+  // Cave Worm (ability `burrow: { ms, stunMs, damageMultiplier }`): underground it can't be hit or attack; then it pops
+  // up under a random hero (or minion), hits it and stuns it.
+  startBurrow(u, spec, events) {
+    u.burrowed = { remaining: spec.ms, spec };
+    u.pending = null;
+    for (const x of this.allUnits()) if (x.foe === u.uid) x.foe = null;
+    if (this.focusUid === u.uid) this.focusUid = null;
+    events.push({ type: 'burrow', unit: u });
+  },
+
+  tickBurrow(u, dt, events) {
+    u.burrowed.remaining -= dt;
+    if (u.burrowed.remaining > 0) return;
+    const spec = u.burrowed.spec;
+    u.burrowed = null;
+    const pool = this.defenders();
+    const t = pool[Math.floor(this.rng() * pool.length)];
+    if (t && this.hasPositions(t) && this.hasPositions(u)) {
+      const L = this.rules.movement.layout;
+      u.x = Math.min(L.width - L.marginX, Math.max(L.marginX, t.x + (this.rng() < 0.5 ? -1 : 1) * 30));
+      u.y = Math.max(L.enemyY + L.topMarginY, t.y - 20);
+    }
+    events.push({ type: 'surface', unit: u, target: t || null });
+    if (!t) return;
+    u.foe = t.uid;
+    if (spec.damageMultiplier) this.strike(u, t, events, { multiplier: spec.damageMultiplier, ability: true });
+    if (t.alive && spec.stunMs) this.applyStatus(t, { status: 'stun', durationMs: spec.stunMs }, u, 'worm_surface', events);
+  },
+
+  // Bone Acolyte (`raise: { radius, into }`): the FIRST enemy that dies near it comes back as `into` (once per acolyte).
+  acolyteRaise(victim, events) {
+    if (victim.def.object || victim.def.boss || victim.def.raise) return;
+    for (const a of this.enemies) {
+      const r = a.def.raise;
+      if (!r || !a.alive || a.raised || a === victim) continue;
+      if (this.hasPositions(a) && this.hasPositions(victim) && Math.hypot(a.x - victim.x, a.y - victim.y) > r.radius) continue;
+      a.raised = true;
+      const risen = this.spawnEnemyUnit(r.into, victim, events, 10);
+      events.push({ type: 'raiseDead', unit: a, from: victim, risen });
+      return;
+    }
+  },
+
+  // Crystal Sentinel (`adapt: { ms }`): a hit of a damage type makes it resist THAT type for `ms` and be weak to every
+  // other type meanwhile. Before its first hit (and after it wears off) it is plain.
+  adaptTo(u, type, events) {
+    const ms = u.def.adapt.ms;
+    if (u.adapt && u.adapt.type === type) { u.adapt.remaining = ms; return; }
+    u.adapt = { type, remaining: ms };
+    u.resists = [type];
+    u.weak = Object.keys(this.damageTypes).filter((t) => t !== type && !t.startsWith('_'));
+    events.push({ type: 'adapt', unit: u, damageType: type });
+  },
+
+  tickAdapt(u, dt, events) {
+    u.adapt.remaining -= dt;
+    if (u.adapt.remaining > 0) return;
+    u.adapt = null;
+    u.resists = u.def.resists || [];
+    u.weak = u.def.weak || [];
+    events.push({ type: 'adapt', unit: u, damageType: null });
   },
 
   // Interrupted: a stun, freeze, fear or knockback during a wind-up (or a channel) stops it.
@@ -188,7 +257,17 @@ export const bossMethods = {
       events.push({ type: 'bossAbility', unit: u, ability: a, targets: [] });
       return;
     }
+    if (a.burrow) return this.startBurrow(u, a.burrow, events); // Cave Worm
     const targets = this.abilityTargets(u, a.target, a.radius);
+    // Blink Imp: it appears next to its target first (then the hit below).
+    if (a.blink && targets[0] && this.hasPositions(u) && this.hasPositions(targets[0])) {
+      const t = targets[0], L = this.rules.movement.layout;
+      const from = { x: u.x, y: u.y };
+      u.x = Math.min(L.width - L.marginX, Math.max(L.marginX, t.x + (t.x > L.width / 2 ? -34 : 34)));
+      u.y = Math.max(L.enemyY + L.topMarginY, t.y - 10);
+      u.foe = t.uid;
+      events.push({ type: 'blink', unit: u, from, target: t });
+    }
     events.push({ type: 'bossAbility', unit: u, ability: a, targets, minor: !!a.minor });
     for (const t of targets) {
       if (!t.alive) continue;

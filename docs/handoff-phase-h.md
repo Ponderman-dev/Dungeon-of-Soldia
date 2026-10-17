@@ -4,7 +4,7 @@ Read `CLAUDE.md` first, then this file. Every item decision of this phase is in 
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
 ## START HERE (session 3): enemies and difficulty
-Status: steps 1-4 DONE (ELITES and MONSTER HOUSE, see CLAUDE.md). User: keep elites as they are; Monster House 'good for now' (fodder mix 2/1.4/0.25, legendary 4%). Step 5 BATCH 1 done (Sapper, Shaman, Shieldbearer, Golem, Hound; see CLAUDE.md). Next = BATCH 2: Cave Worm (burrow), Bone Acolyte (raise), Blink Imp (teleport), Banshee (silence wind-up), Crystal Sentinel (adaptive resist).
+Status: steps 1-4 DONE (ELITES and MONSTER HOUSE, see CLAUDE.md). User: keep elites as they are; Monster House 'good for now' (fodder mix 2/1.4/0.25, legendary 4%). Step 5 BATCH 1 done (Sapper, Shaman, Shieldbearer, Golem, Hound; see CLAUDE.md). BATCH 2 done too (Worm, Acolyte, Blink Imp, Banshee, Sentinel): the enemy plan (steps 1-5) is COMPLETE. Next (agreed order): hero balance round 2 (Alchemist, Archer, Bard, Mage at the bottom), drop odds, bosses rework.
 
 ### Branch, preview, tools
 - Latest branch: `ccr-a59eab7b-wefaf5` (session 3, elites; all pushed). A new session gets its own branch name from the

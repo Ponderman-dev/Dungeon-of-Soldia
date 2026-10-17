@@ -2657,5 +2657,245 @@
     },
     "drawScale": 6,
     "xp": 60
+  },
+  "swarmling": {
+    "name": "Imp Swarmling",
+    "tier": "fodder",
+    "damageType": "melee",
+    "weak": [
+      "ice"
+    ],
+    "resists": [
+      "fire"
+    ],
+    "xp": 10,
+    "stats": {
+      "health": 130,
+      "attack": 5,
+      "defense": 0,
+      "attackEfficiency": 110
+    },
+    "onHit": [
+      {
+        "status": "burn",
+        "chance": 15,
+        "durationMs": 2000,
+        "damageMultiplier": 0.2,
+        "damageType": "fire"
+      }
+    ],
+    "flying": false,
+    "height": 9,
+    "parts": {
+      "body": {
+        "x": 0,
+        "y": -4.5,
+        "w": 9,
+        "h": 9,
+        "art": {
+          "palette": [
+            "0x1a1020",
+            "0xd9452b",
+            "0xffe066",
+            "0xff9a2e"
+          ],
+          "rows": [
+            "0.......0",
+            "00.....00",
+            ".0111110.",
+            "011111110",
+            "012111210",
+            "011100110",
+            ".0133310.",
+            "..01110..",
+            ".01...10."
+          ]
+        },
+        "anchor": [
+          4.5,
+          4.5
+        ],
+        "idle": {
+          "dy": -1,
+          "duration": 520
+        }
+      }
+    }
+  },
+  "boneRat": {
+    "name": "Bone Rat",
+    "tier": "fodder",
+    "damageType": "melee",
+    "weak": [
+      "holy"
+    ],
+    "resists": [],
+    "xp": 8,
+    "stats": {
+      "health": 100,
+      "attack": 4,
+      "defense": 0,
+      "evasion": 10,
+      "attackEfficiency": 160
+    },
+    "flying": false,
+    "height": 6,
+    "parts": {
+      "body": {
+        "x": 0,
+        "y": -3,
+        "w": 16,
+        "h": 6,
+        "art": {
+          "palette": [
+            "0x1a1020",
+            "0xe8e0c8",
+            "0xb8ae96",
+            "0xff5050"
+          ],
+          "rows": [
+            ".0.0............",
+            "01010.000000....",
+            "0111101212120...",
+            "03111012121200.0",
+            ".0000.0111110.0.",
+            "......0.0.0.00.."
+          ]
+        },
+        "anchor": [
+          8,
+          3
+        ],
+        "idle": {
+          "dy": -1,
+          "duration": 520
+        }
+      }
+    }
+  },
+  "shadeWisp": {
+    "name": "Shade Wisp",
+    "tier": "fodder",
+    "damageType": "dark",
+    "weak": [
+      "holy"
+    ],
+    "resists": [
+      "dark"
+    ],
+    "xp": 10,
+    "stats": {
+      "health": 110,
+      "attack": 5,
+      "defense": 0,
+      "resist": 10,
+      "evasion": 15,
+      "attackEfficiency": 100
+    },
+    "flying": true,
+    "height": 11,
+    "hover": 24,
+    "parts": {
+      "body": {
+        "x": 0,
+        "y": -5.5,
+        "w": 9,
+        "h": 11,
+        "art": {
+          "palette": [
+            "0x1a1020",
+            "0x6a3fb0",
+            "0x9b6ae0",
+            "0xe070ff"
+          ],
+          "rows": [
+            "...0.....",
+            "..010....",
+            ".01210...",
+            ".012210..",
+            "01222210.",
+            "01323310.",
+            "01222210.",
+            ".011110..",
+            "..0110...",
+            "...010...",
+            "....0...."
+          ]
+        },
+        "anchor": [
+          4.5,
+          5.5
+        ],
+        "idle": {
+          "dy": -1,
+          "duration": 520
+        }
+      }
+    }
+  },
+  "mushling": {
+    "name": "Mushling",
+    "tier": "fodder",
+    "damageType": "melee",
+    "weak": [
+      "fire"
+    ],
+    "resists": [],
+    "xp": 9,
+    "stats": {
+      "health": 170,
+      "attack": 3,
+      "defense": 2,
+      "attackEfficiency": 80
+    },
+    "onDeath": {
+      "radius": 60,
+      "color": "#6de07a",
+      "apply": [
+        {
+          "status": "poison",
+          "durationMs": 3000,
+          "damageMultiplier": 0.15,
+          "damageType": "dark"
+        }
+      ]
+    },
+    "flying": false,
+    "height": 9,
+    "parts": {
+      "body": {
+        "x": 0,
+        "y": -4.5,
+        "w": 9,
+        "h": 9,
+        "art": {
+          "palette": [
+            "0x1a1020",
+            "0xd04a4a",
+            "0xf0e0d0",
+            "0xe8d8b0"
+          ],
+          "rows": [
+            "..00000..",
+            ".0121210.",
+            "012111210",
+            "011121110",
+            "000000000",
+            "..03330..",
+            "..00300..",
+            "..03330..",
+            ".00...00."
+          ]
+        },
+        "anchor": [
+          4.5,
+          4.5
+        ],
+        "idle": {
+          "dy": -1,
+          "duration": 520
+        }
+      }
+    }
   }
 }

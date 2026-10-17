@@ -62,3 +62,10 @@ const fifteen = enemySpots(fake(15, 5), { width: 390, y: 340, perRow: L.enemyPer
 const ys = [...new Set(fifteen.map((p) => p.y))].sort((a, b) => a - b);
 ok('15 enemies stand in 3 rows of 5', ys.length === 3 && ys.every((y) => fifteen.filter((p) => p.y === y).length === 5), ys.join());
 ok('ranged enemies stand in the back row (highest up)', fifteen.slice(0, 5).every((p) => p.y === ys[0]));
+
+// The new fodder (step 2): in the roster from their floor, tier fodder, with a sprite.
+const NEW_FODDER = { swarmling: 13, mushling: 22, boneRat: 25, shadeWisp: 35 };
+ok('the 4 new fodder exist, are fodder and join the roster on their floor', Object.entries(NEW_FODDER).every(([id, f]) => defs[id] && defs[id].tier === 'fodder' && defs[id].parts.body.art && A.roster.find((e) => e.id === id)?.from === f));
+const seen = new Set();
+for (let k = 0; k < 400; k++) directFloor(A, 60, rng, {}, defs).forEach((id) => seen.add(id));
+ok('deep swarms use the new fodder too', Object.keys(NEW_FODDER).every((id) => seen.has(id)), [...seen].join());

@@ -88,4 +88,7 @@ Read `CLAUDE.md` first, then this file. Every item decision of this phase is in 
   floor 60 (5% per floor = about 1 in 20; "IT'S A MONSTER HOUSE!", 11-15 enemies ALL AT ONCE, prize = epic pool +
   small legendary chance). Fodder: Slime/Bat/Rat become fodder AND new fodder enemies.
 - Build order: 1 floor director (DONE: budget, tiers, shapes, rows; see CLAUDE.md FLOOR DIRECTOR),
-  2 new fodder enemies, 3 elites (element + 1 random trait), 4 Monster House, 5 the 10 new enemies (after picks).
+  2 new fodder enemies (DONE: Imp Swarmling, Mushling, Bone Rat, Shade Wisp), 3 elites (element + 1 random trait), 4 Monster House, 5 the 10 new enemies (after picks).
+- User's picks on the enemy page: ALL 14 enemies KEEP (4 fodder + 10), all 5 elemental powers KEEP, traits KEEP
+  Vampiric, Shielded, Thorny, Splitting, Regenerating, Unstoppable, Explosive; DROP Hasted and Berserk. Odds table
+  kept, but elites start at FLOOR 10 (user's earlier answer). Elite rule/reward: no pick = build as written.

@@ -77,6 +77,10 @@
         "from": 13
       },
       {
+        "id": "swarmling",
+        "from": 13
+      },
+      {
         "id": "orcBrute",
         "from": 16,
         "max": 1
@@ -90,7 +94,15 @@
         "from": 22
       },
       {
+        "id": "mushling",
+        "from": 22
+      },
+      {
         "id": "beetle",
+        "from": 25
+      },
+      {
+        "id": "boneRat",
         "from": 25
       },
       {
@@ -104,6 +116,10 @@
       {
         "id": "ghost",
         "from": 34
+      },
+      {
+        "id": "shadeWisp",
+        "from": 35
       }
     ],
     "bosses": {

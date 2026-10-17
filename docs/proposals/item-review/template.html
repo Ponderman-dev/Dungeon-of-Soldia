@@ -1,0 +1,201 @@
+<title>Soldia Item Review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a dungeon-dark review sheet. Sticky filter bar, then cards in a grid: new items first, then by rarity.
+   One deliberate dark look (the game's own palette), so no light theme. */
+:root {
+  --bg: #120e1c; --panel: #1c1629; --panel2: #231b34; --line: #2e2542; --fg: #ece5f7; --muted: #a79cbd;
+  --accent: #f2b544; --note: #c9a8ff; --ok: #7fe0a0; --warn: #ff8a6a;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; display: flex; flex-direction: column; gap: 22px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 5vw, 38px); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+.lede { color: var(--muted); max-width: 64ch; margin: 6px 0 0; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { font: 600 13px var(--body); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--panel2); border-color: var(--accent); color: var(--accent); }
+.chip:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chip .n { color: var(--muted); font-weight: 500; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.status { margin-left: auto; font-size: 13px; color: var(--muted); }
+.status.bad { color: var(--warn); }
+section { display: flex; flex-direction: column; gap: 12px; }
+h2 { font-family: var(--display); font-size: 18px; margin: 8px 0 0; letter-spacing: .04em; display: flex; align-items: center; gap: 10px; }
+h2 .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+h2 .n { color: var(--muted); font-size: 13px; font-family: var(--body); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+@media (max-width: 420px) { .grid { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card.has-note { border-color: #4a3a6e; }
+.top { display: flex; gap: 14px; align-items: flex-start; }
+.icons { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
+canvas { image-rendering: pixelated; display: block; }
+.icons .small { opacity: .95; }
+.icons .cap { font: 10px var(--display); color: var(--muted); letter-spacing: .04em; }
+.info { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.nm { font-weight: 600; font-size: 16px; line-height: 1.25; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tag { font: 10px var(--display); letter-spacing: .06em; text-transform: uppercase; }
+.tag.type { color: var(--muted); }
+.tag.new { background: var(--accent); color: #1a1208; padding: 1px 6px; border-radius: 3px; }
+.desc { font-size: 14px; color: var(--fg); }
+.per { font-size: 13px; color: var(--note); }
+label { font: 10px var(--display); color: var(--muted); letter-spacing: .06em; }
+textarea { width: 100%; min-height: 64px; resize: vertical; font: 14px/1.45 var(--body); color: var(--fg); background: #15101f; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+textarea::placeholder { color: #6e6385; }
+.saved { font-size: 12px; color: var(--muted); min-height: 1em; }
+.saved.ok { color: var(--ok); }
+.saved.bad { color: var(--warn); }
+.empty { color: var(--muted); padding: 24px 0; }
+@media (prefers-reduced-motion: no-preference) { .legendary canvas.big { animation: glint 2.4s ease-in-out infinite; } }
+@keyframes glint { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.15) drop-shadow(0 0 6px rgba(242,182,50,.5)); } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Item Review</h1>
+    <p class="lede">Every item in the game with its icon exactly as the game draws it: big as on the reward card, small as under a hero in a fight. The 15 items marked NEW have never been reviewed. Write what you want changed in the box under an item; it saves by itself.</p>
+  </header>
+  <div class="bar" role="toolbar" aria-label="Filter">
+    <button class="chip" id="f-new" data-f="new" aria-pressed="true">New <span class="n"></span></button>
+    <button class="chip" id="f-all" data-f="all" aria-pressed="false">All items <span class="n"></span></button>
+    <button class="chip" id="f-notes" data-f="notes" aria-pressed="false">With notes <span class="n"></span></button>
+    <span class="status" id="status" aria-live="polite">Connecting…</span>
+  </div>
+  <main id="list"></main>
+</div>
+
+<script>
+const DATA = /*DATA*/null;
+const notes = {}; // item id -> text (from the database, or typed here)
+let filter = 'new';
+let db = null;
+
+// One framed icon onto a canvas, `s` screen pixels per icon pixel.
+function drawIcon(cv, icon, s) {
+  const n = icon.r.length;
+  cv.width = n * s; cv.height = n * s;
+  const g = cv.getContext('2d');
+  const L = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  icon.r.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === '.') return;
+    g.fillStyle = icon.p[L.indexOf(ch)];
+    g.fillRect(x * s, y * s, s, s);
+  }));
+}
+
+const cards = new Map(); // id -> { el, ta, saved }
+function makeCard(it) {
+  const r = DATA.rarities[it.rarity];
+  const el = document.createElement('article');
+  el.className = 'card ' + it.rarity;
+  el.innerHTML = `<div class="top"><div class="icons"><canvas class="big"></canvas><canvas class="small"></canvas><span class="cap">in a fight</span></div>
+    <div class="info"><div class="nm"></div><div class="tags"><span class="tag rar"></span><span class="tag type"></span></div><div class="desc"></div><div class="per"></div></div></div>
+    <label for="note-${it.id}">WHAT TO TWEAK</label>
+    <textarea id="note-${it.id}" placeholder="e.g. make the blade brighter, the icon reads like a spoon…"></textarea>
+    <div class="saved"></div>`;
+  drawIcon(el.querySelector('canvas.big'), it.icon, 4);
+  drawIcon(el.querySelector('canvas.small'), it.icon, 1);
+  el.querySelector('.nm').textContent = it.name;
+  const rt = el.querySelector('.tag.rar');
+  rt.textContent = r.label; rt.style.color = r.color;
+  el.querySelector('.tag.type').textContent = it.type;
+  if (it.isNew) { const t = document.createElement('span'); t.className = 'tag new'; t.textContent = 'NEW'; el.querySelector('.tags').prepend(t); }
+  el.querySelector('.desc').textContent = it.desc;
+  const per = el.querySelector('.per');
+  if (it.perStack) per.textContent = 'Per stack: ' + it.perStack; else per.hidden = true;
+  const ta = el.querySelector('textarea');
+  const saved = el.querySelector('.saved');
+  let timer = null;
+  const save = () => { clearTimeout(timer); timer = null; saveNote(it, ta.value, saved); };
+  ta.addEventListener('input', () => { notes[it.id] = ta.value; draft(it.id, ta.value); el.classList.toggle('has-note', !!ta.value.trim()); saved.textContent = 'Typing…'; saved.className = 'saved'; clearTimeout(timer); timer = setTimeout(save, 900); counts(); });
+  ta.addEventListener('blur', () => { if (timer) save(); });
+  cards.set(it.id, { el, ta, saved, it });
+  return el;
+}
+
+// Drafts stay in this browser too, so nothing typed is lost if the database is not reachable.
+function draft(id, text) { try { localStorage.setItem('soldia-item-note-' + id, text); } catch (e) {} }
+function readDraft(id) { try { return localStorage.getItem('soldia-item-note-' + id); } catch (e) { return null; } }
+
+async function saveNote(it, text, saved) {
+  if (!db) { saved.textContent = 'Kept in this browser only (not saved online)'; saved.className = 'saved bad'; return; }
+  try {
+    const ref = db.collection('notes').doc(it.id);
+    if (text.trim()) await ref.set({ note: text, name: it.name, updatedAt: new Date().toISOString() });
+    else await ref.delete();
+    saved.textContent = text.trim() ? 'Saved' : 'Note removed';
+    saved.className = 'saved ok';
+  } catch (e) {
+    saved.textContent = 'Could not save: ' + (e && e.message ? e.message : 'try again');
+    saved.className = 'saved bad';
+  }
+}
+
+function counts() {
+  const n = (f) => DATA.items.filter((it) => show(it, f)).length;
+  for (const f of ['new', 'all', 'notes']) document.querySelector(`#f-${f} .n`).textContent = n(f);
+}
+function show(it, f) { return f === 'all' || (f === 'new' && it.isNew) || (f === 'notes' && (notes[it.id] || '').trim()); }
+
+function render() {
+  const main = document.getElementById('list');
+  main.innerHTML = '';
+  const groups = filter === 'new'
+    ? [['New items', null, DATA.items.filter((it) => it.isNew)]]
+    : Object.keys(DATA.rarities).map((r) => [DATA.rarities[r].label[0] + DATA.rarities[r].label.slice(1).toLowerCase(), DATA.rarities[r].color, DATA.items.filter((it) => it.rarity === r && show(it, filter))]);
+  let any = false;
+  for (const [title, color, items] of groups) {
+    if (!items.length) continue;
+    any = true;
+    const sec = document.createElement('section');
+    const h = document.createElement('h2');
+    if (color) { const d = document.createElement('span'); d.className = 'dot'; d.style.background = color; h.append(d); }
+    h.append(title + ' ');
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = items.length + (items.length === 1 ? ' item' : ' items'); h.append(n);
+    const grid = document.createElement('div'); grid.className = 'grid';
+    for (const it of items) grid.append(cards.get(it.id).el);
+    sec.append(h, grid);
+    main.append(sec);
+  }
+  if (!any) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = 'No notes yet. Pick "New" or "All items" and write in the box under an item.'; main.append(p); }
+}
+
+for (const it of DATA.items) {
+  makeCard(it);
+  const d = readDraft(it.id);
+  if (d) { notes[it.id] = d; cards.get(it.id).ta.value = d; cards.get(it.id).el.classList.toggle('has-note', !!d.trim()); }
+}
+document.querySelectorAll('.chip').forEach((b) => b.addEventListener('click', () => {
+  filter = b.dataset.f;
+  document.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  render();
+}));
+counts();
+render();
+
+// The notes database: everyone's notes for each item (collection `notes`, doc = item id).
+(async () => {
+  const status = document.getElementById('status');
+  db = window.claude ? await window.claude.use('db') : null;
+  if (!db) { status.textContent = 'Notes stay in this browser (sign in to claude.ai to save them)'; status.classList.add('bad'); return; }
+  status.textContent = 'Notes save automatically';
+  db.collection('notes').onSnapshot((snap) => {
+    for (const d of snap.docs) {
+      const c = cards.get(d.id);
+      const text = (d.data() || {}).note || '';
+      if (!c || document.activeElement === c.ta) continue; // never overwrite what is being typed
+      notes[d.id] = text; c.ta.value = text; draft(d.id, text);
+      c.el.classList.toggle('has-note', !!text.trim());
+    }
+    counts();
+    if (filter === 'notes') render();
+  }, () => { status.textContent = 'Could not load saved notes'; status.classList.add('bad'); });
+})();
+</script>

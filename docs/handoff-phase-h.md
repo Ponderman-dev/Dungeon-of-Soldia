@@ -12,6 +12,7 @@ Status: steps 1-4 DONE (ELITES and MONSTER HOUSE, see CLAUDE.md). User: keep eli
   `claude/phase-h-tuning` (behind). CLAUDE.md's git line just says "the branch the session names".
 - Game preview: https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr (build:page + republish after each step).
 - Session 3 late: user lowered meleeVsFlyingMissPercent 40 -> 15 (fights felt draggy). Bot check: fight length barely changed (it was not the main drag in the bot); floors 25-45: only-flying-left 5% of fight time, ONE enemy left 24%; tanky last enemies Orc Brute / Shieldbearer (~5.5s alone), Beetle (4.3s), Frost Wisp most often last (3.1s).
+- ITEM REVIEW page (user: review the new items' look, a note box per item): https://claude.ai/artifact/S7cbuLJoStsdi5hpg2SBef (same url as the old icon page). Notes = ArtifactData `list` collection `notes`. Builder: docs/proposals/item-review/make-item-review.mjs.
 - Monster House demo: https://claude.ai/artifact/4vMvwYLs9sUHr5KcxZ75aH (`npm run build:house-demo`, copy house-demo-page.html to the scratchpad as monster-house-demo.html, republish).
 - Enemy proposal page (sprites + picks): https://claude.ai/artifact/AkX6DWTeCsYzU6oXb3QWFS
   (source `docs/proposals/enemy-proposal.src.html`, built by `node docs/proposals/make-enemy-page.mjs <src> <out>`).

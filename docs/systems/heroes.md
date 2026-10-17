@@ -21,5 +21,5 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       flask (`lobbedShot()`): poisons the target (`apply`, poison only) and splashes `splashMultiplier` 40% on enemies within
       `splashRadius` 70px, poisoning them too; `attackSpeedPercent` -25 via `statUpkeep()`. Scene `lobFlask()` draws the
       green flask lob instead of an arrow. Skills `alch_barrage` (Flask Barrage, 5 POISON flasks only, 90% + poison each; user: no random debuffs) and `alch_brew` (Mystery Brew,
-      4 flasks, 9s, heal 30%); the old `flask_barrage` / `mystery_brew` / `catalyst()` stay for the v1 fixture tests.
+      4 flasks, 9s, heal 30%); the old `flask_barrage` / `mystery_brew` / `catalyst()` stay for the v1 fixture tests. FLASKS ONE BY ONE (user): `random.intervalMs` 250 = the first flask flies at once, the next every 0.25s (`hero.casting.flasks`, `tickCasting()` -> `throwFlask()`); the hero is busy until the last one, a stun stops the rest (like a channel), no Echo. Without `intervalMs` all flasks go at once (old skills). Sound cue `flaskBreak` (Kenney glass, pitch 1.6) when a flask lands, skill flasks and his basic lobs.
       review.mjs 3 all: avg floor 24.3 (last) -> 28.8 (5th of 10); after poison-only Barrage 27.1 (7th, within noise).

@@ -2287,6 +2287,20 @@ export default class BattleState {
       if (c.channel.wave >= c.channel.waves.length) hero.casting = null;
       return;
     }
+    if (c.flasks) {
+      // Flasks thrown one after another (`random.intervalMs`, Alchemist).
+      const f = c.flasks;
+      f.timer -= dt;
+      while (f.timer <= 0 && f.left > 0) {
+        this.castPages = f.book.length ? { hero, mods: f.book } : null;
+        const thrown = this.throwFlask(hero, f.skill, f.slotId, f.healed, events);
+        this.castPages = null;
+        f.left = thrown ? f.left - 1 : 0;
+        f.timer += f.skill.random.intervalMs;
+      }
+      if (f.left <= 0) hero.casting = null;
+      return;
+    }
     if (c.remaining > 0) return;
     const { index } = c;
     hero.casting = null;
@@ -2358,6 +2372,16 @@ export default class BattleState {
       this.castPages = null;
       return;
     }
+    if (skill.random && skill.random.intervalMs && !echo) {
+      // Flasks one after another: the first goes now, the rest every `intervalMs`; the hero is busy until the last.
+      const r = skill.random;
+      const flasks = { skill, slotId: slot.id, healed: new Set(), left: r.count, timer: 0, book: book.mods };
+      const ms = Math.max(1, (r.count - 1) * r.intervalMs);
+      hero.casting = { index, remaining: ms, total: ms, flasks };
+      this.castPages = null;
+      this.tickCasting(hero, 0, events);
+      return;
+    }
     if (skill.random) {
       this.throwFlasks(hero, skill, slot.id, events);
       this.castPages = null;
@@ -2398,9 +2422,9 @@ export default class BattleState {
     if (!echo) this.bookAfterCast(hero, skill, slot.id, targets, book.mods, events);
     this.castPages = null;
     // Echo Rune: a skill sometimes casts a second time (the echo cannot echo, the Mage's rotation does not move again).
-    // Channels (Rain of Arrows, Crescendo) do not echo.
+    // Channels (Rain of Arrows, Crescendo) and flasks thrown one by one do not echo.
     const chance = hero.specials.echo || 0;
-    if (!echo && chance > 0 && !skill.channel && this.rng() * 100 < chance) {
+    if (!echo && chance > 0 && !skill.channel && !(skill.random && skill.random.intervalMs) && this.rng() * 100 < chance) {
       events.push({ type: 'proc', unit: hero, label: 'Echo!', itemId: 'echo_rune' });
       const copies = hero.specials.echoCopies || 1;
       this.releaseSkill(hero, index, events, { spell: skill, power: 0.6 + 0.1 * (copies - 1) });
@@ -2700,29 +2724,34 @@ export default class BattleState {
 
   // Alchemist flasks: `random: { count, target: 'enemy' | 'ally', pool: [ { name, color, damageType,
   // damageMultiplier, apply, heal } ] }`. Each flask picks a random living target and a random flask from the pool.
+  // With `intervalMs` they go one after another (tickCasting), else all at once.
   throwFlasks(hero, skill, slotId, events) {
-    const r = skill.random;
     const healed = new Set();
-    for (let i = 0; i < r.count; i++) {
-      const side = r.target === 'enemy' ? this.enemies.filter((e) => e.alive) : this.heroes.filter((h) => h.alive);
-      if (!side.length) return;
-      const flask = r.pool[Math.floor(this.rng() * r.pool.length)];
-      // `healsMostHurt`: a healing flask goes to the most hurt hero (lowest health %) not healed yet this cast.
-      let target = side[Math.floor(this.rng() * side.length)];
-      if (r.healsMostHurt && flask.heal) {
-        const open = side.filter((h) => !healed.has(h));
-        if (open.length) target = open.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a));
-        healed.add(target);
-      }
-      events.push({ type: 'flask', unit: hero, target, flask });
-      this.skillHit(hero, { damageType: flask.damageType, damageMultiplier: flask.damageMultiplier, apply: flask.apply, heal: flask.heal }, `${slotId}_${flask.name}`, target, events);
-      // Enemy flasks splash a small area where they land (`splash: { radius, multiplier }`).
-      if (r.target === 'enemy' && r.splash) {
-        for (const e of this.enemies.filter((x) => x.alive && x !== target && this.hasPositions(x) && this.hasPositions(target) && this.distance(x, target) <= r.splash.radius)) {
-          this.skillHit(hero, { damageType: flask.damageType, damageMultiplier: flask.damageMultiplier * r.splash.multiplier, apply: flask.apply }, `${slotId}_${flask.name}_splash`, e, events);
-        }
+    for (let i = 0; i < skill.random.count; i++) if (!this.throwFlask(hero, skill, slotId, healed, events)) return;
+  }
+
+  // One flask. Returns false when there is nobody left to throw at.
+  throwFlask(hero, skill, slotId, healed, events) {
+    const r = skill.random;
+    const side = r.target === 'enemy' ? this.enemies.filter((e) => e.alive) : this.heroes.filter((h) => h.alive);
+    if (!side.length) return false;
+    const flask = r.pool[Math.floor(this.rng() * r.pool.length)];
+    // `healsMostHurt`: a healing flask goes to the most hurt hero (lowest health %) not healed yet this cast.
+    let target = side[Math.floor(this.rng() * side.length)];
+    if (r.healsMostHurt && flask.heal) {
+      const open = side.filter((h) => !healed.has(h));
+      if (open.length) target = open.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a));
+      healed.add(target);
+    }
+    events.push({ type: 'flask', unit: hero, target, flask });
+    this.skillHit(hero, { damageType: flask.damageType, damageMultiplier: flask.damageMultiplier, apply: flask.apply, heal: flask.heal }, `${slotId}_${flask.name}`, target, events);
+    // Enemy flasks splash a small area where they land (`splash: { radius, multiplier }`).
+    if (r.target === 'enemy' && r.splash) {
+      for (const e of this.enemies.filter((x) => x.alive && x !== target && this.hasPositions(x) && this.hasPositions(target) && this.distance(x, target) <= r.splash.radius)) {
+        this.skillHit(hero, { damageType: flask.damageType, damageMultiplier: flask.damageMultiplier * r.splash.multiplier, apply: flask.apply }, `${slotId}_${flask.name}_splash`, e, events);
       }
     }
+    return true;
   }
 
   // How much a heal of `spec` { percentMaxHp, attackMultiplier } gives `target` from `healer`.

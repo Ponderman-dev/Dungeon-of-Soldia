@@ -711,6 +711,7 @@
     "castMs": 700,
     "random": {
       "count": 5,
+      "intervalMs": 250,
       "target": "enemy",
       "pool": [
         {
@@ -742,6 +743,7 @@
     "castMs": 600,
     "random": {
       "count": 4,
+      "intervalMs": 250,
       "target": "ally",
       "pool": [
         {

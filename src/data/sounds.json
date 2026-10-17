@@ -260,6 +260,17 @@
     "puzzleSolved": {
       "file": "achievement",
       "volume": 0.7
+    },
+    "flaskBreak": {
+      "files": [
+        "kenney/impactGlass_heavy_000",
+        "kenney/impactGlass_heavy_001",
+        "kenney/impactGlass_heavy_002"
+      ],
+      "volume": 0.35,
+      "pitch": 1.6,
+      "pitchJitter": 0.1,
+      "minGapMs": 60
     }
   },
   "maxVoices": 8

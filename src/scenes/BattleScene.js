@@ -1618,6 +1618,7 @@ export default class BattleScene extends Phaser.Scene {
     let b = this.fxPoint(to);
     const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
     this.addFx(SHOT_MS.flask, (q, now) => { if (to.ch.active) b = this.fxPoint(to); return shotFx('flask', q, a, b, now, seed, color); }, ['shot', 'flask']);
+    this.time.delayedCall(SHOT_MS.flask / 2, () => sfx.play('flaskBreak')); // the glass breaks as it lands (half-way)
   }
 
 
@@ -1628,6 +1629,7 @@ export default class BattleScene extends Phaser.Scene {
     let b = this.fxPoint(to);
     const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
     this.addFx(Math.max(200, hitInMs * 2), (q, now) => { if (to.ch.active) b = this.fxPoint(to); return shotFx('flask', q, a, b, now, seed, color); }, ['shot', 'flask']);
+    this.time.delayedCall(Math.max(100, hitInMs), () => sfx.play('flaskBreak'));
     from.ch.lunge(to.ch.x, to.ch.y);
   }
 

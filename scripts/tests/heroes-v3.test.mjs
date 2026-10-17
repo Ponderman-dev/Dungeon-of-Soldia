@@ -32,10 +32,16 @@ const hits = (ev, attacker) => ev.filter((e) => e.type === 'attack' && e.attacke
   const base = hero('alchemist').stats.attackEfficiency;
   ok('...in exchange he attacks slower', Math.abs(a.stats.attackEfficiency - base * (1 + L.attackSpeedPercent / 100)) < 1, `${a.stats.attackEfficiency} vs ${base}`); }
 { const { s, es, a } = mk(['alchemist']); const n = skills[hero('alchemist').skills.attack].random.count;
-  const ev = cast(s, a, 'attack'); const fl = ev.filter((e) => e.type === 'flask');
-  ok(`Big Barrage: Flask Barrage throws ${n} flasks at enemies`, n === 5 && fl.length === n && fl.every((f) => es.includes(f.target)));
+  const gap = skills[hero('alchemist').skills.attack].random.intervalMs;
+  const first = cast(s, a, 'attack').filter((e) => e.type === 'flask');
+  const later = []; let busy = true; for (let t = 0; t < gap * n + 100; t += 10) { later.push(...s.update(10).filter((e) => e.type === 'flask' && e.unit === a).map(() => t)); if (busy === true && !a.casting) busy = t; }
+  const fl = [...first, ...later];
+  ok('...one at a time: the first flies at once, the next every ' + gap + 'ms', first.length === 1 && later.length === n - 1 && later.every((t, i) => i === 0 || t - later[i - 1] >= gap - 20), later.join());
+  ok(`Big Barrage: Flask Barrage throws ${n} flasks at enemies`, n === 5 && fl.length === n);
+  ok('...he is busy throwing until the last flask is out', typeof busy === 'number' && busy >= gap * (n - 1) - 20 && busy <= gap * (n - 1) + 30, busy);
   ok('...poison flasks only: enemies end up poisoned, no other debuff', es.some((e) => e.statuses.some((x) => x.type === 'poison')) && es.every((e) => e.statuses.every((x) => x.type === 'poison'))); }
 { const sk = skills[hero('alchemist').skills.support]; const { s, a, h } = mk(['alchemist', 'knight', 'rogue'], ['goblin'], () => 0); // rng 0: heal flasks
-  h.forEach((x) => (x.hp = x.maxHp / 2)); const ev = cast(s, a, 'support'); const fl = ev.filter((e) => e.type === 'flask');
+  h.forEach((x) => (x.hp = x.maxHp / 2)); const ev = cast(s, a, 'support'); for (let t = 0; t < 2000; t += 10) ev.push(...s.update(10)); const fl = ev.filter((e) => e.type === 'flask');
   ok(`Better Brew: Mystery Brew throws ${sk.random.count} flasks, cooldown ${sk.cooldownMs / 1000}s`, sk.random.count === 4 && sk.cooldownMs === 9000 && fl.length === 4 && fl.every((f) => h.includes(f.target)));
-  ok(`...healing flasks heal ${sk.random.pool[0].heal.percentMaxHp}%`, h.every((x) => x.hp >= x.maxHp * (0.5 + sk.random.pool[0].heal.percentMaxHp / 100) - 2), h.map((x) => (x.hp / x.maxHp).toFixed(2)).join()); }
+  const heals = ev.filter((e) => e.type === 'heal').slice(0, 3).map((e) => e.amount / e.unit.maxHp);
+  ok(`...healing flasks heal ${sk.random.pool[0].heal.percentMaxHp}%`, heals.length === 3 && heals.every((x) => Math.abs(x - sk.random.pool[0].heal.percentMaxHp / 100) < 0.01), heals.map((x) => x.toFixed(2)).join()); }

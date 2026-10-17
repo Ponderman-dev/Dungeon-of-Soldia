@@ -100,3 +100,18 @@ Decided by the user one hero at a time (feel, passive, attack, support). Numbers
 - ANSWERED: Samurai: rename the SKILL (the Thousand Cuts item keeps its name).
 - Every hero's numbers are first guesses; check each with review.mjs / dmgshare.mjs after building.
 - Build order suggestion: one hero per step (kit + tests + bot check), weakest first.
+
+## Guardrails round (session 5, user's answers; these OVERRIDE the hero sections above)
+- ON-HIT HOOK only for ARCHER, ROGUE and BERSERKER (their skills/passives roll on-hit items). SAMURAI leans on
+  CRIT DAMAGE instead: his counter-cuts use his crit damage but do NOT roll items twice. CLERIC leans on HEAL
+  items: Holy Nova does NOT proc on-hit items; it grows with her healing (heal items).
+- BARD x1.35 boosts SQUAD-WIDE items only (War Banner, Spotter's Lens, Jolly Banner, Last Stand Banner...).
+- CLERIC Holy Nova: MODEST damage (e.g. 60% around the healed ally); her power stays in healing. Aim: equal to the
+  other heroes, not above.
+- KNIGHT: keeps DEFENSE BASH (100% attack + 300% defense + stun). Grudge loses the '25% of defense to attack'
+  part and keeps only 'reflected hits charge the next Shield Bash (+10% each)'.
+- ALCHEMIST: basic flasks stay POISON only (splash 40%, slower attacks), as the user wrote.
+- SAMURAI attack = ONE PERFECT CUT on one enemy (e.g. 500%, sure crit); if the cut KILLS, the cooldown is cut by
+  60%. Needs a new name (the Thousand Cuts item keeps its name).
+- ROGUE Multistrike cooldown starts at 7s (tune later).
+- BERSERKER Bloodthirst LINGERS 3s after he heals above 50%, so lifesteal does not switch it off at once.

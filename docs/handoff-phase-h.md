@@ -6,6 +6,9 @@ Read `CLAUDE.md` first, then this file. Every item decision of this phase is in 
 ## START HERE (session 4): item looks + item damage buff
 Latest branch: `ccr-a59eab7b-wefaf5` (everything pushed). Start a new session from it.
 
+DONE (session 5, 2026-10-17): CLAUDE.md slimmed from ~93 KB to ~6 KB. The long per-feature notes moved
+word for word into `docs/systems/*.md` (index in CLAUDE.md). Update those files, not CLAUDE.md, when a system changes.
+Old note kept for history:
 FIRST JOB NEXT SESSION (user: 'sessions are getting more expensive, need to solve that before continuing'):
 CLAUDE.md is ~93 KB (~23k tokens) and is loaded into EVERY turn, so it is the main cost. Agreed direction (ask the
 user before doing it): shrink CLAUDE.md to the essentials (about the user, rules, commands, preview urls, layout,

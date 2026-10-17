@@ -1,6 +1,7 @@
 // Item effects (systems/itemFx.js + data/itemFx.json): each item its own effect, and the icon pops.
 import fs from 'fs';
 import * as fx from '../../src/systems/itemFx.js';
+import * as hit from '../../src/systems/hitFx.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const items = r('items.json'), data = r('itemFx.json');
@@ -8,7 +9,7 @@ const listed = Object.keys(data).filter((k) => !k.startsWith('_') && k !== 'icon
 ok('itemFx.json only names real items', listed.every((id) => items[id]), listed.filter((id) => !items[id]).join());
 const withFx = listed.filter((id) => data[id].effect); // an entry may only switch the icon pop off (noPop)
 ok('every named effect exists', withFx.every((id) => fx.ITEM_MS[data[id].effect] > 0), withFx.filter((id) => !fx.ITEM_MS[data[id].effect]).join());
-ok('noPop entries are only switches', listed.filter((id) => !data[id].effect).every((id) => data[id].noPop === true));
+ok('entries without an effect are only switches (noPop) or a popup text', listed.filter((id) => !data[id].effect).every((id) => data[id].noPop === true || typeof data[id].text === 'string'));
 ok('every item has an icon to pop', Object.keys(items).filter((k) => !k.startsWith('_')).every((id) => r('itemIcons.json')[id]));
 const clean = (d) => Array.isArray(d) && d.every((p) => p.length === 6 && p.every((v) => typeof v === 'number' && !Number.isNaN(v)));
 const a = { x: 20, y: 40 }, b = { x: 70, y: 38 }, u = { x: 70, y: 50, top: 28, mid: 39, bot: 50, hw: 6 };
@@ -17,6 +18,7 @@ const calls = {
   battleCry: (q, t) => [...fx.battleCryFx(q, u), ...fx.speedLinesFx(q, u, t)], shatter: (q) => fx.shatterFx(q, u), knifeBurst: (q) => fx.knifeBurstFx(q, u.x, u.mid),
   plague: (q) => fx.plagueFx(q, a, b), suckerPunch: (q) => fx.suckerPunchFx(q, u, -1), executioner: (q) => fx.executionerFx(q, u), dice: (q, t) => fx.diceFx(q, u, t), mimic: (q, t) => fx.mimicFx(q, 60, 50, t), thunderbolt: (q) => fx.thunderboltFx(q, u), aegisBlast: (q) => fx.aegisBlastFx(q, u), thorns: (q) => fx.thornsFx(q, u), lifesteal: (q) => fx.lifestealFx(q, a, b),
   spiritAxe: (q, t) => fx.spiritAxeFx(q, u, t), moon: (q, t) => fx.moonFx(q, a, b, t, 3),
+  spiritfire: (q, t) => fx.spiritFireFx(q, a, b, t, 3), soulLantern: (q, t) => fx.soulLanternFx(q, u, t), ghastlyFire: (q, t) => fx.ghastlyDraws(hit.impactFx('fire', q, { ...u, side: -1 }, t, 1, a).draws, u),
 };
 ok('every effect has a recipe here', fx.ITEM_FX.every((k) => calls[k]), fx.ITEM_FX.filter((k) => !calls[k]).join());
 const bad = [];

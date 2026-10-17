@@ -76,5 +76,8 @@
   },
   "provokers_horn": {
     "noPop": true
+  },
+  "mirror_buckler": {
+    "text": "Reflected!"
   }
 }

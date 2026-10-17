@@ -12,10 +12,10 @@ import { castFx, shotFx, CAST_MS, SHOT_MS, CAST_FX, SHOT_FX } from '../systems/s
 
 export const W = 120, H = 60; // the stage in character pixels
 export const GROUPS = [['status', 'Status effects'], ['hit', 'Hits'], ['shot', 'Shots'], ['item', 'Item effects'], ['skill', 'Skill effects']];
-const HERO_STATUSES = ['buff', 'regenBoost', 'shield', 'invulnerable', 'parry'];
+const HERO_STATUSES = ['buff', 'regenBoost', 'shield', 'invulnerable', 'parry', 'beastRegen', 'fireShield'];
 const nice = (s) => s.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
 export const hex = (n) => '#' + n.toString(16).padStart(6, '0');
-const HERO_ITEM_FX = ['battleCry', 'aegisBlast', 'thorns', 'mimic', 'spiritAxe']; // item effects drawn on the hero
+const HERO_ITEM_FX = ['battleCry', 'aegisBlast', 'thorns', 'mimic', 'spiritAxe', 'soulLantern']; // item effects drawn on the hero
 
 // Every effect the game has, with how to play it on the stage.
 export function catalog() {
@@ -91,7 +91,8 @@ export class FxStage {
         battleCry: () => [...itemFx.battleCryFx(q, H0), ...itemFx.speedLinesFx(q, H0, t)], shatter: () => itemFx.shatterFx(q, E0), knifeBurst: () => itemFx.knifeBurstFx(q, E0.x, E0.mid),
         plague: () => itemFx.plagueFx(q, b, at(E1)), thunderbolt: () => itemFx.thunderboltFx(q, E0), aegisBlast: () => itemFx.aegisBlastFx(q, H0), thorns: () => itemFx.thornsFx(q, H0),
         lifesteal: () => itemFx.lifestealFx(q, b, at(H0)), suckerPunch: () => itemFx.suckerPunchFx(q, E0, -1), executioner: () => itemFx.executionerFx(q, E0), dice: () => itemFx.diceFx(q, E0, t),
-        mimic: () => itemFx.mimicFx(q, H0.x + H0.hw + 6, H0.y, t), spiritAxe: () => itemFx.spiritAxeFx(q, H0, t), moon: () => itemFx.moonFx(q, a, b, t, 3), tornado: () => itemFx.tornadoFx(E0.x + Math.sin(t / 500) * 12, E0.y, t * tune.speed(g, n)),
+        mimic: () => itemFx.mimicFx(q, H0.x + H0.hw + 6, H0.y, t), spiritAxe: () => itemFx.spiritAxeFx(q, H0, t), moon: () => itemFx.moonFx(q, a, b, t, 3), spiritfire: () => itemFx.spiritFireFx(q, a, b, t, 3), soulLantern: () => itemFx.soulLanternFx(q, H0, t),
+        ghastlyFire: () => itemFx.ghastlyDraws(impactFx('fire', q, { ...E0, side: -1 }, t, 1, at(H0)).draws, E0), tornado: () => itemFx.tornadoFx(E0.x + Math.sin(t / 500) * 12, E0.y, t * tune.speed(g, n)),
       };
       return { draws: map[n] ? tq(map[n]()) : [], on: e.on || 'enemy' };
     }

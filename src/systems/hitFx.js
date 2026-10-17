@@ -157,11 +157,15 @@ export function dodgeFx(q, u) {
   return { draws: g.out, dx };
 }
 // Block / parry: a bright shield shape flashes on the side that was hit, sparks fly back.
+// (user: bigger) a tall shield shape, a white flash ring and a wide spray of sparks.
 export function blockFx(q, u) {
   const g = pen();
-  const fx = u.x + u.side * (u.hw + 2);
-  if (q > 0 && q < 1) for (let y = -6; y <= 5; y++) { const w = y < 2 ? 2 : y < 4 ? 1 : 0; for (let k = 0; k <= w; k++) g.px(fx + u.side * k, u.mid + y, k === 0 ? C.white : C.shield, 1 - q); }
-  burst(g, fx + u.side, u.mid, 8, [C.shield, C.white], q, 9, 2);
+  const fx = u.x + u.side * (u.hw + 3);
+  if (q > 0 && q < 1) {
+    for (let y = -10; y <= 9; y++) { const w = y < 3 ? 4 : y < 6 ? 3 : y < 8 ? 2 : 1; for (let k = 0; k <= w; k++) g.px(fx + u.side * k, u.mid + y, k === 0 ? C.white : k === w ? 0x3a8ad0 : C.shield, 1 - q); }
+    const r = ph(q, 0, 0.6); if (r < 1) g.ring(fx + u.side * 2, u.mid, 4 + r * 10, C.white, 1 - r, (4 + r * 10) * 1.2);
+  }
+  burst(g, fx + u.side * 2, u.mid, 14, [C.shield, C.white, C.gold2], q, 16, 2);
   return g.out;
 }
 // A shield soaks a hit: the bubble lights up, a white ripple where it was hit.

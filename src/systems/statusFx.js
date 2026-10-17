@@ -156,6 +156,20 @@ const LOOPS = {
   regenBoost(g, u, t) {
     for (let i = 0; i < 3; i++) { const q = (t / 1600 + i / 3) % 1; const x = (i - 1) * 6, y = -4 - q * 22; for (const [a, b] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) g.px(x + a, y + b, C.heal, 1 - q); }
   },
+  // Heart of the Beast: the hero's regen shows as ORANGE plus signs (it replaces the green ones).
+  beastRegen(g, u, t) {
+    for (let i = 0; i < 3; i++) { const q = (t / 1600 + i / 3) % 1; const x = (i - 1) * 6, y = -4 - q * 22; for (const [a, b] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) g.px(x + a, y + b, i % 2 ? C.fire2 : C.fire, 1 - q); }
+  },
+  // Fire Heart's shield: a RED bubble with flames licking up around it.
+  fireShield(g, u, t) {
+    const R = u.hw + 7, RY = (u.bot - u.top) / 2 + 4; g.ring(0, u.mid, R, C.red, 0.55, RY);
+    const a = t / 300; for (let k = 0; k < 5; k++) g.px(Math.cos(a - k * 0.12) * R, u.mid + Math.sin(a - k * 0.12) * RY, C.fire2, 1 - k / 5);
+    for (let i = 0; i < 8; i++) {
+      const ang = (i / 8) * Math.PI * 2 + t / 900; const x = Math.cos(ang) * R, y = u.mid + Math.sin(ang) * RY;
+      flame(g, Math.round(x), Math.round(y), 2 + Math.round((Math.sin(t / 90 + i * 1.7) + 1) * 1.2), t, i + 3);
+    }
+    for (let i = 0; i < 4; i++) { const q = (t / 800 + i / 4) % 1; g.px((rnd(i + 9) - 0.5) * R * 2, u.top - 2 - q * 10, C.fire2, 1 - q); }
+  },
   shield(g, u, t) {
     const R = u.hw + 7, RY = (u.bot - u.top) / 2 + 4; g.ring(0, u.mid, R, C.shield, 0.45, RY);
     const a = t / 300; for (let k = 0; k < 5; k++) g.px(Math.cos(a - k * 0.12) * R, u.mid + Math.sin(a - k * 0.12) * RY, C.white, 1 - k / 5);

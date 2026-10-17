@@ -296,6 +296,14 @@ export default class BattleScene extends Phaser.Scene {
         k.stacks += 1;
         k.age = Math.min(k.age, age);
       }
+      if (kinds.shield && u.statuses.some((st) => st.key === 'shield:fireheart')) { // Fire Heart: a red, fiery shield
+        kinds.fireShield = kinds.shield;
+        if (!u.statuses.some((st) => st.type === 'shield' && st.key !== 'shield:fireheart')) delete kinds.shield;
+      }
+      if (u.side === 'hero' && u.specials && u.specials.healAmp && this.state.enemies.some((en) => en.alive)) { // Heart of the Beast: orange regen wins
+        kinds.beastRegen = kinds.regenBoost || { stacks: 1, age: 1e9 };
+        delete kinds.regenBoost;
+      }
       if (!v.box) v.box = bodyBox(u.def.parts, u.def.height);
       let look;
       try { look = statusLook(kinds, v.box, now + (u.uid % 7) * 137, TUNE); } // each fighter a little out of step
@@ -505,6 +513,7 @@ export default class BattleScene extends Phaser.Scene {
         continue;
       }
       const out = impactFx(h.type, q, u, now, h.seed, h.attacker && h.attacker.ch.active ? at(h.attacker) : null);
+      if (h.ghastly) { draw(TUNE.paint('item', 'ghastlyFire', itemFx.ghastlyDraws(out.draws, u))); continue; } // Ghastly Fire: the fire hit, bigger and purple
       paint(h.type, out.draws);
       if (out.tint && (!v.hitTint || out.tint[1] > v.hitTint[1])) v.hitTint = [TUNE.color('hit', h.type, out.tint[0]), out.tint[1]];
       this.nudge(v, out.dx * S);
@@ -569,6 +578,7 @@ export default class BattleScene extends Phaser.Scene {
       sfx.play('itemProc');
       this.iconPop(v, e.itemId);
     }
+    if (spec && spec.text) this.popText(v, spec.text, spec.textColor || '#cfe8ff'); // e.g. Mirror Buckler: 'Reflected!'
     if (!spec || !spec.effect) return;
     const ms = itemFx.ITEM_MS[spec.effect];
     const tag = ['item', spec.effect];
@@ -675,7 +685,8 @@ export default class BattleScene extends Phaser.Scene {
     const type = IMPACT_MS[e.damageType] ? e.damageType : IMPACT_MS[e.attacker.damageType] ? e.attacker.damageType : 'melee';
     const side = a && a.ch.x < t.ch.x ? -1 : 1;
     const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
-    (this.impacts = this.impacts || []).push({ type, start: this.time.now, ms: TUNE.ms('hit', type, IMPACT_MS[type]), view: t, attacker: a, side, seed });
+    const ghastly = type === 'fire' && e.attacker.side === 'hero' && !e.attacker.minion && e.attacker.specials && e.attacker.specials.ghastly > 0;
+    (this.impacts = this.impacts || []).push({ type, start: this.time.now, ms: TUNE.ms('hit', type, IMPACT_MS[type]), view: t, attacker: a, side, seed, ghastly });
     if (e.result.crit) {
       this.impacts.push({ crit: true, start: this.time.now, ms: TUNE.ms('hit', 'crit', CRIT_MS), view: t, attacker: a, side, seed });
       this.cameras.main.shake(90, 0.003); // a tiny shake for crits
@@ -1293,7 +1304,7 @@ export default class BattleScene extends Phaser.Scene {
       }
       const { amount, crit, mult } = e.result;
       const mark = mult > 1 ? '!' : mult < 1 ? '…' : '';
-      if (!e.skill && t) this.addImpact(e, a, t); // the hit's own look, per damage type (systems/hitFx.js)
+      if (!e.skill && t && !e.ghastly) this.addImpact(e, a, t); // the hit's own look, per damage type (systems/hitFx.js)
       if (e.skill) {
         // A skill hit: flashes in the skill colour and shows a big coloured number that pops.
         t.ch.flash(Phaser.Display.Color.HexStringToColor(FX.attackColor).color, FX.flashMs);
@@ -1424,6 +1435,9 @@ export default class BattleScene extends Phaser.Scene {
       this.popText(v, 'Shield broken!', '#6fd0ff', true);
       this.addMoment('shieldBreak', v);
       this.cameras.main.shake(90, 0.003);
+    } else if (e.type === 'soulFeed') { // Soul Lantern: every kill, glowing green lines swirl round the holder
+      const hv = this.views.get(e.unit.uid);
+      if (hv) this.addFx(itemFx.ITEM_MS.soulLantern, (q, now) => (hv.ch.active ? itemFx.soulLanternFx(q, this.fxBody(hv), now) : []), ['item', 'soulLantern']);
     } else if (e.type === 'proc') {
       const v = this.views.get(e.unit.uid);
       if (e.itemId && itemDefs[e.itemId]) this.itemProc(e, v); // an item: its icon pops + its own effect
@@ -1632,11 +1646,11 @@ export default class BattleScene extends Phaser.Scene {
     }
     // Pixel looks from systems/itemFx.js: Fire Bombs' bomb, lightning bolts (Static Crystal, Chain Lightning),
     // the Grimoire's green ghost fire. They aim at where the target is NOW.
-    if (kind === 'bomb' || kind === 'lightning' || kind === 'greenfire' || kind === 'moon') {
+    if (kind === 'bomb' || kind === 'lightning' || kind === 'greenfire' || kind === 'moon' || kind === 'spiritfire') {
       const a = this.fxPoint(from);
       let b = this.fxPoint(to);
       const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
-      const fn = { bomb: itemFx.bombFx, lightning: itemFx.lightningFx, greenfire: itemFx.greenfireFx, moon: itemFx.moonFx }[kind];
+      const fn = { bomb: itemFx.bombFx, lightning: itemFx.lightningFx, greenfire: itemFx.greenfireFx, moon: itemFx.moonFx, spiritfire: itemFx.spiritFireFx }[kind];
       this.addFx(itemFx.ITEM_MS[kind], (q, now) => { if (to.ch.active) b = this.fxPoint(to); return fn(q, a, b, now, seed); }, ['item', kind]);
       return;
     }

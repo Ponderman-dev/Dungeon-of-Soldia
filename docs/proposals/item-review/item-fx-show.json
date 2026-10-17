@@ -287,7 +287,7 @@
  "fire_heart": [
   [
    "status",
-   "shield"
+   "fireShield"
   ],
   [
    "hit",
@@ -366,12 +366,8 @@
  ],
  "flame_spirit": [
   [
-   "shot",
-   "darkbolt"
-  ],
-  [
-   "shot",
-   "darkbolt"
+   "item",
+   "spiritfire"
   ]
  ],
  "spirit_axe": [
@@ -383,7 +379,7 @@
  "heart_of_the_beast": [
   [
    "status",
-   "regenBoost"
+   "beastRegen"
   ],
   [
    "hit",
@@ -398,12 +394,14 @@
  ],
  "ghastly_fire": [
   [
-   "hit",
-   "fire"
-  ],
+   "item",
+   "ghastlyFire"
+  ]
+ ],
+ "soul_lantern": [
   [
-   "hit",
-   "dark"
+   "item",
+   "soulLantern"
   ]
  ]
 }

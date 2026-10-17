@@ -8,10 +8,11 @@ const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const ph = (q, a, b) => clamp((q - a) / (b - a));
 const easeOut = (p) => 1 - (1 - p) * (1 - p);
 const easeInOut = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
+const lerp = (a, b, p) => a + (b - a) * p;
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const BOMB = 0x4a4a5a, KNIFE = 0xe4e8f0, HILT = 0x6b4a2a, BANNER = 0xf2d03a, GREEN = 0x3aa84a, GREEN2 = 0xc8ffd0;
 
-export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 700, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 3000, moon: 380 };
+export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 3000, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340 };
 export const ITEM_FX = Object.keys(ITEM_MS);
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -59,20 +60,36 @@ export function lightningFx(q, a, b, t, seed = 0) {
   return g.out;
 }
 // Lost Cleric's Grimoire: a green ghost-fire ball flies at the enemy and bursts in green flames.
+// (user: bigger) a big ball with a pale core, flickering flame tongues on top and a trail of green embers.
 export function greenfireFx(q, a, b) {
   const g = pen();
-  const p = ph(q, 0, 0.5);
-  if (p > 0 && p < 1) { const [x, y] = fly(a, b, p, 10); g.disc(x, y, 2, GREEN); g.px(x, y, GREEN2); }
-  const e = ph(q, 0.5, 1);
-  if (e > 0 && e < 1) g.ring(b.x, b.y, 2 + e * 8, C.poison, 1 - e);
-  burst(g, b.x, b.y, 8, [C.poison, GREEN2], e, 9, 5);
+  const p = ph(q, 0, 0.55);
+  if (p > 0 && p < 1) {
+    for (let k = 1; k <= 5; k++) { const [tx, ty] = fly(a, b, Math.max(0, p - k * 0.05), 10); g.disc(tx, ty, Math.max(0.8, 5 - k * 0.8), GREEN, 0.55 - k * 0.09); }
+    const [x, y] = fly(a, b, p, 10);
+    g.disc(x, y, 8, GREEN, 0.25); g.disc(x, y, 6, GREEN); g.disc(x, y, 4.2, C.poison); g.disc(x - 1, y - 1, 2, GREEN2);
+    for (let i = -4; i <= 4; i++) { const h = 3 + Math.round(rnd(i + Math.round(q * 20)) * 5); for (let j = 1; j <= h; j++) g.px(x + i, y - 5 - j, j === h ? GREEN2 : C.poison, 1 - j / (h + 1)); }
+  }
+  const e = ph(q, 0.55, 1);
+  if (e > 0 && e < 1) { g.disc(b.x, b.y, 7 * (1 - e), GREEN2, 1 - e); g.ring(b.x, b.y, 4 + e * 17, C.poison, 1 - e); g.ring(b.x, b.y, 2 + e * 11, GREEN2, (1 - e) * 0.7); }
+  burst(g, b.x, b.y, 18, [C.poison, GREEN2, GREEN], e, 15, 5, -0.3);
   return g.out;
 }
-// War Banner battle cry: a shout ring ripples out from the holder over the squad (colour can change).
+// War Banner battle cry (user: look like a SHOUT): sound waves burst out of the holder's head to both sides, three
+// arcs one after another, with short shout rays above; then a faint ring rolls over the squad (colour can change).
 export function battleCryFx(q, holder, color = BANNER) {
   const g = pen();
-  const p = ph(q, 0, 0.9);
-  if (p > 0 && p < 1) g.ring(holder.x, holder.mid, 3 + p * 30, color, 1 - p, 2 + p * 20);
+  const hx = holder.x, hy = holder.top + 3;
+  for (let k = 0; k < 3; k++) {
+    const p = ph(q, k * 0.14, 0.55 + k * 0.14);
+    if (p <= 0 || p >= 1) continue;
+    const r = 4 + easeOut(p) * 16;
+    for (const side of [-1, 1]) for (let i = -5; i <= 5; i++) { const a = (i / 5) * 0.9; g.px(hx + side * Math.cos(a) * r, hy + Math.sin(a) * r, i === 0 ? C.white : color, (1 - p) * (1 - Math.abs(i) * 0.08)); }
+  }
+  const rays = ph(q, 0, 0.4);
+  if (rays > 0 && rays < 1) for (let i = -2; i <= 2; i++) { const a = -Math.PI / 2 + i * 0.4; g.line(hx + Math.cos(a) * 5, hy + Math.sin(a) * 5, hx + Math.cos(a) * (8 + rays * 5), hy + Math.sin(a) * (8 + rays * 5), color, 1 - rays); }
+  const p = ph(q, 0.3, 1);
+  if (p > 0 && p < 1) g.ring(holder.x, holder.mid, 6 + p * 30, color, (1 - p) * 0.4, 3 + p * 18);
   return g.out;
 }
 // ... and each hero it reaches gets speed lines for a moment (in its own colour).
@@ -109,26 +126,41 @@ export function plagueFx(q, a, b) {
   return g.out;
 }
 // Frozen Thunderbolt: a frost ring spreads from the target to its neighbours, with ice sparks.
+// (user: add static) short electric crackles flicker inside the frost ring.
 export function thunderboltFx(q, u) {
   const g = pen();
-  if (q > 0 && q < 1) g.ring(u.x, u.mid, 2 + q * 18, C.ice, 1 - q, 1 + q * 10);
-  burst(g, u.x, u.mid, 10, [C.ice, C.white], q, 16, 3);
+  if (q > 0 && q < 1) {
+    g.ring(u.x, u.mid, 2 + q * 18, C.ice, 1 - q, 1 + q * 10);
+    const flick = Math.floor(q * 14);
+    for (let k = 0; k < 4; k++) {
+      if ((flick + k) % 2) continue;
+      const a = rnd(flick * 7 + k) * Math.PI * 2, r = 3 + q * 14 * (0.5 + rnd(k + flick) * 0.5);
+      const x = u.x + Math.cos(a) * r, y = u.mid + Math.sin(a) * r * 0.6;
+      bolt(g, { x, y }, { x: x + Math.cos(a + 1) * 4, y: y + Math.sin(a + 1) * 3 }, C.elec, flick * 3 + k, 3, 1.5);
+    }
+  }
+  burst(g, u.x, u.mid, 10, [C.ice, C.white, C.elec], q, 16, 3);
   return g.out;
 }
 // Spiked Aegis: the broken shield bursts into big spikes all around the holder.
 export function aegisBlastFx(q, u) { const g = pen(); spikes(g, u, q, 1.6); burst(g, u.x, u.mid, 10, [C.grey, C.shield], q, 14, 4); return g.out; }
-// Spirit Axe: a ghostly green axe circles the holder (u = its body) for the whole spin, leaving a faint trail ring.
+// Spirit Axe (user: spin flat on the screen, so you see it hit): a big ghostly green axe whirls around the holder like a
+// wheel (a full circle in the screen plane, wide enough to reach the enemies it hits), its blade leading, with a
+// fading trail of past positions and sparks at the blade tip.
 export function spiritAxeFx(q, u, t) {
   const g = pen();
   const fade = q < 0.08 ? q / 0.08 : q > 0.9 ? (1 - q) / 0.1 : 1;
-  const rx = 16, ry = 6, cy = u.mid + 4;
-  for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2; g.px(u.x + Math.cos(a) * rx, cy + Math.sin(a) * ry, C.poison, 0.18 * fade); }
-  for (let k = 0; k < 3; k++) {
-    const a = t / 90 - k * 0.35; const x = u.x + Math.cos(a) * rx, y = cy + Math.sin(a) * ry;
-    const al = fade * (k ? 0.35 / k : 1);
-    // handle towards the holder, a crescent blade on the outside
-    g.line(x, y, x - Math.cos(a) * 5, y - Math.sin(a) * 2, C.heal, al * 0.8);
-    for (let j = -2; j <= 2; j++) g.px(x + Math.cos(a) * 1 - Math.sin(a) * j, y + Math.sin(a) * 1 + Math.cos(a) * j * 0.6, k ? C.poison : C.white, al);
+  const cx = u.x, cy = u.mid, R = 24, RY = 15; // R = sweep radius (character px), flattened a little for the floor view
+  const spin = t / 120;
+  for (let k = 7; k >= 0; k--) { // the trail: older positions fade
+    const a = spin - k * 0.13; const x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * RY;
+    if (k) { g.px(x, y, C.poison, fade * (0.5 - k * 0.06)); g.px(x, y + 1, C.heal, fade * (0.3 - k * 0.04)); continue; }
+    // the axe: handle from near the holder out to the head, a wide crescent blade on the leading side
+    const ux = Math.cos(a), uy = Math.sin(a) * (RY / R);
+    g.line(cx + ux * 8, cy + uy * 8, x, y, C.heal, fade * 0.85);
+    const tx = -Math.sin(a), ty = Math.cos(a) * (RY / R); // the way it is turning
+    for (let j = -3; j <= 3; j++) for (let w = 0; w <= 2 - Math.floor(Math.abs(j) / 2); w++) g.px(x + ux * j + tx * w, y + uy * j + ty * w, w === 2 - Math.floor(Math.abs(j) / 2) ? C.white : C.poison, fade);
+    burst(g, x + tx * 3, y + ty * 3, 3, [C.white, C.heal], (t % 200) / 200, 4, Math.floor(t / 200));
   }
   return g.out;
 }
@@ -138,11 +170,60 @@ export function moonFx(q, a, b, t, seed) {
   if (q >= 1) return g.out;
   const p = easeInOut(Math.min(1, q * 1.15));
   const [x, y] = fly(a, b, p, 3);
-  const spin = t / 40 + seed;
-  for (let i = -4; i <= 4; i++) { const ang = spin + i * 0.28; const r = 5 - Math.abs(i) * 0.25; g.px(x + Math.cos(ang) * r, y + Math.sin(ang) * r * 0.7, Math.abs(i) < 2 ? C.white : C.ice, 1 - Math.abs(i) * 0.08); }
-  for (let k = 1; k <= 3; k++) { const [tx, ty] = fly(a, b, Math.max(0, p - k * 0.06), 3); g.px(tx, ty, C.ice2, 0.5 / k); }
+  const spin = t / 45 + seed;
+  // (user: way bigger) a wide crescent, three pixels thick, white edge, with a glowing trail
+  for (let i = -9; i <= 9; i++) {
+    const ang = spin + i * 0.17; const thick = 3 - Math.floor(Math.abs(i) / 4);
+    for (let w = 0; w < thick; w++) { const r = 12 - w; g.px(x + Math.cos(ang) * r, y + Math.sin(ang) * r * 0.75, w === 0 ? C.white : Math.abs(i) < 5 ? C.ice2 : C.ice, 1 - Math.abs(i) * 0.04); }
+  }
+  for (let k = 1; k <= 5; k++) { const [tx, ty] = fly(a, b, Math.max(0, p - k * 0.05), 3); g.disc(tx, ty, Math.max(0.6, 2.5 - k * 0.4), C.ice2, 0.45 / k); }
   return g.out;
 }
+// Flame Spirit (user: way bigger and darker, slow and swaying, like a spirit going to haunt its enemy): a big dark-
+// purple fireball drifts from a to b in a slow wavy line, flames streaming back off it, a faint face of two pale eyes,
+// then it bursts in dark flames. Its hit lands when it arrives (BattleState waits 900ms).
+const SPIRIT_DEEP = 0x2a1040; // the spirit's darkest purple
+export function spiritFireFx(q, a, b, t, seed = 0) {
+  const g = pen();
+  const p = ph(q, 0, 0.85);
+  if (p > 0 && p < 1) {
+    const e = p * p * (3 - 2 * p); // slow start and end
+    const sway = Math.sin(p * Math.PI * 3 + seed) * 6 * Math.sin(p * Math.PI);
+    const x = lerp(a.x, b.x, e), y = lerp(a.y, b.y, e) - Math.sin(p * Math.PI) * 10 + sway;
+    for (let k = 1; k <= 6; k++) { const pk = Math.max(0, p - k * 0.035); const ek = pk * pk * (3 - 2 * pk); const sk = Math.sin(pk * Math.PI * 3 + seed) * 6 * Math.sin(pk * Math.PI);
+      g.disc(lerp(a.x, b.x, ek), lerp(a.y, b.y, ek) - Math.sin(pk * Math.PI) * 10 + sk, Math.max(1, 7 - k * 0.9), k < 3 ? C.dark2 : SPIRIT_DEEP, 0.8 - k * 0.1); }
+    g.disc(x, y, 10, SPIRIT_DEEP, 0.35); g.disc(x, y, 8, SPIRIT_DEEP); g.disc(x, y, 6.5, C.dark2); g.disc(x, y + 1, 4, C.dark); g.disc(x, y + 1, 1.8, 0xc8a0ff);
+    for (let i = -6; i <= 6; i++) { const h = 3 + Math.round(rnd(i + Math.floor(t / 90)) * 6) - Math.round(Math.abs(i) / 2); for (let j = 1; j <= h; j++) g.px(x + i + Math.round(Math.sin(t / 110 + i + j * 0.4) * (j / 3)), y - 7 - j, j === h ? C.dark : j > h / 2 ? C.dark2 : SPIRIT_DEEP, 1 - j / (h + 1)); }
+    for (const ex of [-3, 2]) { g.rect(x + ex, y - 3, 2, 2, C.white); g.px(x + ex, y - 1, 0xc8a0ff, 0.7); } // two pale, haunting eyes
+  }
+  const e = ph(q, 0.85, 1);
+  if (e > 0 && e < 1) { g.disc(b.x, b.y, 9 * (1 - e), SPIRIT_DEEP, 1 - e); g.ring(b.x, b.y, 5 + e * 14, C.dark, 1 - e); g.ring(b.x, b.y, 3 + e * 9, C.dark2, 1 - e); burst(g, b.x, b.y, 16, [C.dark, C.dark2, 0xe0c8ff], e, 16, seed, -0.4); }
+  return g.out;
+}
+// Soul Lantern (user: glowy green lines around the hero): when a kill feeds it, glowing green lines swirl up and
+// around the holder's body, then fade.
+export function soulLanternFx(q, u, t) {
+  const g = pen();
+  const H = u.bot - u.top;
+  for (let k = 0; k < 3; k++) {
+    const p = ph(q, k * 0.12, 0.7 + k * 0.1); if (p <= 0 || p >= 1) continue;
+    for (let i = 0; i < 14; i++) {
+      const s = p - i * 0.02; if (s <= 0) continue;
+      const a = s * Math.PI * 3 + k * 2.1; const y = u.bot - s * (H + 6);
+      const x = u.x + Math.cos(a) * (u.hw + 3), al = Math.min(1, 1.6 * (1 - p)) * (1 - i * 0.07);
+      g.rect(x - 1, y - 1, 3, 3, C.heal, al * 0.3); // the glow
+      g.rect(x, y, 2, 1, i === 0 ? C.white : i < 4 ? GREEN2 : C.heal, al);
+    }
+  }
+  return g.out;
+}
+// Ghastly Fire (user: ONE bigger purple fire hit instead of fire + dark): the normal fire impact, made 1.5x as big
+// around the body's middle and recoloured to purple ghost fire.
+const GHASTLY = { [C.fire]: C.dark, [C.fire2]: 0xe0c8ff, [C.white]: 0xf4ecff, 0xff7a3d: C.dark, 0xffd24d: 0xc8a0ff, 0xff9a2e: C.dark };
+export function ghastlyDraws(draws, u, k = 1.5) {
+  return draws.map(([x, y, w, h, c, a]) => [Math.round(u.x + (x - u.x) * k), Math.round(u.mid + (y - u.mid) * k), Math.ceil(w * k), Math.ceil(h * k), GHASTLY[c] ?? (c === C.white ? 0xf4ecff : C.dark2), a]);
+}
+
 // Bulwark Plate thorns: grey spikes jab out around the holder when it is hit.
 export function thornsFx(q, u) { const g = pen(); spikes(g, u, q, 1); return g.out; }
 // Lifesteal: red drops pull out of the enemy (a) and curve back into the hero (b).

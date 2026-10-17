@@ -196,7 +196,7 @@ export default class BattleState {
       const foes = this.targetableEnemies();
       if (!foes.length) return;
       const t = foes[Math.floor(this.rng() * foes.length)];
-      ev.push({ type: 'projectile', from: hero, to: t, kind: 'darkbolt' });
+      ev.push({ type: 'projectile', from: hero, to: t, kind: 'spiritfire' }); // a big dark fireball that sways slowly to its target
       this.later(900, (ev2) => { if (t.alive && hero.alive) this.strike(hero, t, ev2, { multiplier: mult, damageType: 'dark', item: true }); });
     });
   }
@@ -584,7 +584,7 @@ export default class BattleState {
       if (target.def.reformFor) this.phylacteryBroken(target, events); // Morthul's crystal broke: he dies for good
       if (target.def.link) this.linkDeath(target, events); // Rask & Vesh: the other one enrages
       if (!target.xpless) this.awardXp(target, events);
-      if (!target.def.object) this.soulLanternKill();
+      if (!target.def.object) this.soulLanternKill(events);
       this.onKill(killer, target, events, lastStatuses);
       for (const spec of [].concat(target.def.onDeath || [])) this.deathBurst(target, spec, events); // a list: a Toxic elite Puffshroom has two
       if (target.elite) this.eliteDeath(target, events); // Explosive bursts, Splitting falls apart (elites.js)
@@ -1482,7 +1482,7 @@ export default class BattleState {
     }
     if (!result.dodged && target.def.adapt && target.alive && target.hp > 0) this.adaptTo(target, opts.damageType || attacker.hitType || attacker.damageType, events); // Crystal Sentinel
     if (opts.projectile) events.push({ type: 'projectile', from: opts.from || attacker, to: target, kind: opts.projectile });
-    events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic });
+    events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic, ghastly: !!opts.ghastly });
     if (dealt) this.breakEffects(target, dealt.broken, events);
     if (!result.dodged) this.afterItemHit(attacker, target, opts, events);
     // Ghastly Fire: the holder's fire hits also deal `ghastly`% (20 per copy) of the damage as DARK (it triggers nothing).
@@ -1806,13 +1806,16 @@ export default class BattleState {
 
   // Soul Lantern: every `lanternEvery` (8) enemies the squad defeats, each holder gains +1% attack and max health per
   // lantern for the rest of the run, with NO limit (`hero.lanternGain`, used in statUpkeep()).
-  soulLanternKill() {
+  // Every kill feeds the lantern (`soulFeed` event: green lines swirl round the holder); every 8th pops its icon.
+  soulLanternKill(events = []) {
     let changed = false;
     for (const h of this.heroes) {
       const n = h.alive && h.specials ? h.specials.soulLantern || 0 : 0;
       if (!n) continue;
       h.lanternKills = (h.lanternKills || 0) + 1;
+      events.push({ type: 'soulFeed', unit: h });
       if (h.lanternKills % 8 !== 0) continue;
+      events.push({ type: 'proc', unit: h, label: 'Soul Lantern!', itemId: 'soul_lantern' });
       const before = h.lanternGain || 0;
       h.lanternGain = before + n; // no limit (user's choice: legendary, offered at most once per run)
       if (h.lanternGain !== before) changed = true;

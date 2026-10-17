@@ -31,6 +31,7 @@ import { projectileFx, impactFx, critFx, IMPACT_MS, CRIT_MS, MOMENT_MS, dodgeFx,
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon, validateHeroSkills, validateDamageTypes } from '../systems/validate.js';
 import { enemiesForFloor } from '../systems/dungeon.js';
+import { enemySpots } from '../systems/formation.js';
 import { pickSquad } from '../systems/party.js';
 import { loadItems } from '../systems/items.js';
 import { rollChoices } from '../systems/rewards.js';
@@ -90,6 +91,7 @@ export default class BattleScene extends Phaser.Scene {
     for (const problem of validateDamageTypes({ heroDefs, enemyDefs, skillDefs, itemDefs }, damageTypes)) console.error('Damage types:', problem);
 
     this.floor = 1;
+    this.director = {}; // the floor director's memory (last shape and swing, dungeon.js directFloor)
     this.mode = 'entering'; // 'entering' | 'fighting' | 'won' | 'lost'
     this.views = new Map(); // unit uid -> { unit, ch, bg, fill, groundY, ... }
     this.state = new BattleState({
@@ -116,8 +118,11 @@ export default class BattleScene extends Phaser.Scene {
     this.focusMarker = this.add.ellipse(0, 0, 70, 18).setStrokeStyle(2, 0xff4d4d).setVisible(false).setDepth(DEPTH.marker);
 
     this.showSlots(false, 0);
-    this.layer = this.buildFloor(1, 0);
-    this.floorText.setText('Floor 1');
+    // Dev server only: ?floor=N starts the run on floor N (browser checks of deep floors).
+    const startAt = import.meta.env.DEV && Number(new URLSearchParams(location.search).get('floor'));
+    if (startAt > 1) this.floor = startAt;
+    this.layer = this.buildFloor(this.floor, 0);
+    this.floorText.setText(`Floor ${this.floor}`);
     this.beginFloor(); // a fight, or a special room (roomMethods.js)
   }
 
@@ -760,11 +765,10 @@ export default class BattleScene extends Phaser.Scene {
     // A special room (treasure, Mimic, fountain, dealer, puzzle) has props instead of enemies.
     const kind = this.roomKindFor(n);
     const room = kind ? this.buildRoom(kind, container) : null;
-    const enemies = this.state.spawnEnemies(room ? [] : enemiesForFloor(this.dungeon, n), n);
-    enemies.forEach((unit, i) => {
-      const x = (GAME_WIDTH * (i + 1)) / (enemies.length + 1);
-      this.makeView(unit, x, ENEMY_Y, container);
-    });
+    const enemies = this.state.spawnEnemies(room ? [] : enemiesForFloor(this.dungeon, n, Math.random, this.director, enemyDefs), n);
+    const L = combatRules.movement.layout;
+    const spots = enemySpots(enemies, { width: GAME_WIDTH, y: ENEMY_Y, perRow: L.enemyPerRow, rowGap: L.enemyRowGap });
+    enemies.forEach((unit, i) => this.makeView(unit, spots[i].x, spots[i].y, container));
 
     return {
       container,

@@ -4,6 +4,7 @@ import { xpForNextLevel, statsAtLevel } from './leveling.js';
 import { computeHeroStats } from './items.js';
 import { moraleTier } from './party.js';
 import { partArt, artSize } from './pixelArt.js';
+import { enemySpots } from './formation.js';
 
 // Every hero has one attack skill and one support skill, in this order (index 0 and 1).
 export const SKILL_SLOTS = ['attack', 'support'];
@@ -56,23 +57,25 @@ export default class BattleState {
     this.refreshStats(); // perks count from the start
   }
 
-  makeUnit(def, side, floor, fightSize = 1) {
+  makeUnit(def, side, floor) {
     const stats = { defense: 0, resist: 0, evasion: 0, crit: 0, attackEfficiency: 100, ...def.stats };
     delete stats.mana; // mana is switched off for now (skills run on cooldown only)
+    let xpScale = 1;
     if (side === 'enemy' && !def.noFloorScaling) {
       const s = this.rules.floorScaling;
+      // A tier (combat.json enemyTiers, e.g. fodder): weaker, grows slower, smaller, less XP.
+      const tier = def.tier && this.rules.enemyTiers && this.rules.enemyTiers[def.tier];
+      const tiered = tier && floor >= tier.fromFloor;
+      const growth = tiered ? tier.growthShare ?? 1 : 1;
       // Health and attack grow in steps: +perStep every stepFloors floors.
       const hpSteps = Math.floor((floor - 1) / s.hpStepFloors);
-      stats.health = Math.round(stats.health * (1 + s.hpPerStep * hpSteps));
+      stats.health = Math.round(stats.health * (1 + s.hpPerStep * growth * hpSteps) * (tiered ? tier.hpScale ?? 1 : 1));
       const atkSteps = Math.floor((floor - 1) / s.attackStepFloors);
-      stats.attack = Math.round(stats.attack * (1 + s.attackPerStep * atkSteps));
+      stats.attack = Math.round(stats.attack * (1 + s.attackPerStep * growth * atkSteps) * (tiered ? tier.attackScale ?? 1 : 1));
       stats.attackEfficiency *= this.rules.enemyAttackSpeedMultiplier ?? 1; // global enemy slowdown
-      // Fights with 4+ enemies start a bit weaker and ramp up, so floor 21 isn't a cliff.
-      const ease = this.rules.bigFightEase;
-      if (ease && fightSize >= ease.minEnemies && floor >= ease.fromFloor) {
-        const scale = ease.startScale + (1 - ease.startScale) * Math.min(1, (floor - ease.fromFloor) / ease.rampFloors);
-        stats.health = Math.round(stats.health * scale);
-        stats.attack = Math.round(stats.attack * scale);
+      if (tiered) {
+        xpScale = tier.xpScale ?? 1;
+        if (tier.drawScale) def = { ...def, drawScale: tier.drawScale };
       }
     }
     const unit = {
@@ -107,6 +110,7 @@ export default class BattleState {
       sinceHit: 0, // ms since the unit last lost health (Archer's Steady Aim)
       steady: false, // Steady Aim is active
       floor: {}, // flags that reset every floor
+      xpScale, // fodder give less XP (enemyTiers)
       firstHits: new Set(),
       sigilHits: new Set(),
       streak: { uid: null, count: 0 },
@@ -254,7 +258,7 @@ export default class BattleState {
     }
     this.floorNo = floor;
     this.hasStarted = false;
-    this.enemies = ids.map((id) => this.makeUnit(this.enemyDefs[id], 'enemy', floor, ids.length));
+    this.enemies = ids.map((id) => this.makeUnit(this.enemyDefs[id], 'enemy', floor));
     return this.enemies;
   }
 
@@ -297,9 +301,9 @@ export default class BattleState {
   // the bottom, enemies in a row at the top, spread evenly. Used by tests and the balance bot.
   placeLines() {
     const L = this.rules.movement.layout;
-    for (const [line, y] of [[this.heroes, L.heroY], [this.enemies, L.enemyY]]) {
-      line.forEach((u, i) => this.place(u, (L.width * (i + 0.5)) / line.length, y));
-    }
+    this.heroes.forEach((u, i) => this.place(u, (L.width * (i + 0.5)) / this.heroes.length, L.heroY));
+    const spots = enemySpots(this.enemies, { width: L.width, y: L.enemyY, perRow: L.enemyPerRow, rowGap: L.enemyRowGap, spread: 'lane' });
+    this.enemies.forEach((u, i) => this.place(u, spots[i].x, spots[i].y));
   }
 
   hasPositions(unit) {
@@ -2694,7 +2698,7 @@ export default class BattleState {
     this.kills = (this.kills || 0) + 1; // enemies killed in this run (saved with the run's results)
     const living = this.heroes.filter((h) => h.alive);
     if (!living.length) return;
-    const share = (enemy.def.xp || 0) / living.length;
+    const share = ((enemy.def.xp || 0) * (enemy.xpScale ?? 1)) / living.length;
     for (const hero of living) {
       hero.xp += share;
       while (hero.xp >= xpForNextLevel(hero.level, this.leveling)) {

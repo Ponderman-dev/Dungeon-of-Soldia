@@ -16,11 +16,10 @@ for (let n = 4; n <= 120; n++) {
     const ids = enemiesForFloor(A, n, rng);
     const allowed = rosterFor(A, n).map((e) => e.id);
     if (ids.some((id) => !allowed.includes(id))) bad.push(n);
-    const want = n >= 32 && (n - 32) % 5 === 0 ? 4 : 3;
-    if (ids.length !== want) bad.push('count' + n);
+    if (ids.length < A.director.minCount || ids.length > 10) bad.push('count' + n);
   }
 }
-ok('random floors only use enemies unlocked for that floor, with the right count', bad.length === 0, bad.slice(0, 5).join());
+ok('random floors only use enemies unlocked for that floor, with a sane count (the director decides how many)', bad.length === 0, bad.slice(0, 5).join());
 ok('an enemy past its `until` floor is gone', !rosterFor(A, 100).some((e) => e.until !== undefined && e.until < 100));
 const D = { roster: [{ id: 'a', from: 1, max: 1 }, { id: 'b', from: 1 }] };
 let capped = true;

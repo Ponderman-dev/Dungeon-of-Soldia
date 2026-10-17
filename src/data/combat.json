@@ -83,7 +83,9 @@
       "heroY": 720,
       "enemyY": 340,
       "marginX": 22,
-      "topMarginY": -40
+      "topMarginY": -40,
+      "enemyPerRow": 5,
+      "enemyRowGap": 70
     }
   },
   "attackMotion": {
@@ -103,12 +105,6 @@
   "manaRegenPerSec": 2,
   "winManaPercent": 20,
   "enemyAttackSpeedMultiplier": 0.65,
-  "bigFightEase": {
-    "minEnemies": 4,
-    "fromFloor": 32,
-    "startScale": 0.87,
-    "rampFloors": 8
-  },
   "morale": {
     "incomplete": {
       "tint": "#8a3fe0",
@@ -153,6 +149,17 @@
           "flat": -8
         }
       ]
+    }
+  },
+  "enemyTiers": {
+    "_about": "Fodder (enemies.json tier) from fromFloor: health/attack x hpScale/attackScale, floor growth x growthShare (so they stay fodder deep down), XP x xpScale, drawn at drawScale (smaller).",
+    "fodder": {
+      "fromFloor": 4,
+      "hpScale": 0.45,
+      "attackScale": 0.6,
+      "growthShare": 0.35,
+      "xpScale": 0.5,
+      "drawScale": 2
     }
   }
 }

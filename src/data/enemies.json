@@ -1,6 +1,7 @@
 {
   "slime": {
     "name": "Slime",
+    "tier": "fodder",
     "damageType": "melee",
     "flying": false,
     "height": 9,
@@ -139,6 +140,7 @@
   },
   "bat": {
     "name": "Bat",
+    "tier": "fodder",
     "damageType": "melee",
     "flying": true,
     "hover": 34,
@@ -191,6 +193,7 @@
   },
   "rat": {
     "name": "Cave Rat",
+    "tier": "fodder",
     "damageType": "melee",
     "weak": [],
     "resists": [],
@@ -555,6 +558,7 @@
   },
   "orcBrute": {
     "name": "Orc Brute",
+    "tier": "strong",
     "damageType": "melee",
     "weak": [
       "magical"
@@ -788,6 +792,7 @@
   },
   "beetle": {
     "name": "Armored Beetle",
+    "tier": "strong",
     "damageType": "melee",
     "weak": [
       "magical"

@@ -26,7 +26,7 @@ export function playRun(ids) {
   const given = {};
   let floor = 1;
   for (; floor <= MAX; floor++) {
-    s.spawnEnemies(enemiesForFloor(dungeon, floor), floor);
+    s.spawnEnemies(enemiesForFloor(dungeon, floor, Math.random, (s.director ||= {}), enemyDefs), floor);
     s.placeLines();
     s.startFloor();
     let t = 0;

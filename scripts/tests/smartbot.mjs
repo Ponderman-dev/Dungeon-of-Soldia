@@ -172,7 +172,7 @@ export function playRun(squad, opts = {}) {
       }
       continue;
     }
-    const line = enemiesForFloor(dungeon, floor, rng);
+    const line = enemiesForFloor(dungeon, floor, rng, (out.director ||= {}), opts.enemyDefs || DATA.enemyDefs);
     s.spawnEnemies(line, floor);
     const res = fight(s, out, floor);
     out.fightMs[floor] = res.ms;

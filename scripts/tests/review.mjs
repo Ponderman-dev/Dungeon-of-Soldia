@@ -34,7 +34,7 @@ function playRun(sq) {
   const owned = new Set();
   let floor = 1;
   for (; floor <= MAX; floor++) {
-    const line = enemiesForFloor(dungeon, floor);
+    const line = enemiesForFloor(dungeon, floor, Math.random, (s.director ||= {}), enemyDefs);
     s.spawnEnemies(line, floor); s.placeLines(); s.startFloor();
     const boss = dungeon.bosses && dungeon.bosses[floor];
     if (boss) stats.bossTry[floor] = (stats.bossTry[floor] || 0) + 1;

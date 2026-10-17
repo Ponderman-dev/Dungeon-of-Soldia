@@ -81,3 +81,11 @@ Read `CLAUDE.md` first, then this file. Every item decision of this phase is in 
 - Tested: enemies +30% hp / +45% atk per 3 floors (instead of +35 / +52.5) = median 38 (user's target ~40), BUT
   strong squads never die (fights at floor 300 last 3.6s). User: DON'T change growth yet; instead add NEW ENEMIES
   and maybe ELITE enemies to keep deep floors interesting. Endless runs should stay possible.
+- Enemy proposal page (10 new enemies + elites): https://claude.ai/artifact/AkX6DWTeCsYzU6oXb3QWFS (user has not
+  sent keep/drop picks yet).
+- USER'S PLAN (after the page): 2-10 enemies per floor (more deeper), FODDER enemies that scale way lower, a
+  random floor mix (true roguelike, but delicate), elites from floor 10 (rare at first), MONSTER HOUSE after
+  floor 60 (5% per floor = about 1 in 20; "IT'S A MONSTER HOUSE!", 11-15 enemies ALL AT ONCE, prize = epic pool +
+  small legendary chance). Fodder: Slime/Bat/Rat become fodder AND new fodder enemies.
+- Build order: 1 floor director (DONE: budget, tiers, shapes, rows; see CLAUDE.md FLOOR DIRECTOR),
+  2 new fodder enemies, 3 elites (element + 1 random trait), 4 Monster House, 5 the 10 new enemies (after picks).

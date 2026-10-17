@@ -45,8 +45,7 @@
     "roster": [
       {
         "id": "slime",
-        "from": 1,
-        "until": 18
+        "from": 1
       },
       {
         "id": "goblin",
@@ -55,13 +54,11 @@
       },
       {
         "id": "bat",
-        "from": 2,
-        "until": 24
+        "from": 2
       },
       {
         "id": "rat",
-        "from": 4,
-        "until": 30
+        "from": 4
       },
       {
         "id": "skeletonArcher",
@@ -137,6 +134,79 @@
         "vharox"
       ]
     },
-    "_bosses": "A boss every 20 floors (user's choice). bosses: floor -> the fight (bosses.js reads their abilities from enemies.json)."
+    "_bosses": "A boss every 20 floors (user's choice). bosses: floor -> the fight (bosses.js reads their abilities from enemies.json).",
+    "director": {
+      "_about": "The floor director (dungeon.js directFloor): from fromFloor every normal floor spends a threat budget on roster enemies; cost per tier (enemies.json tier, missing = normal). shapes = tier weights (first = bought first); never the same shape twice in a row; swing = budget +-; maxCount = [floor, most enemies] pairs.",
+      "fromFloor": 4,
+      "costs": {
+        "fodder": 0.4,
+        "normal": 1,
+        "strong": 2
+      },
+      "budget": {
+        "base": 3,
+        "perFloor": 0.04,
+        "startFloor": 4
+      },
+      "swing": 0.15,
+      "minCount": 2,
+      "maxCount": [
+        [
+          4,
+          4
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          20,
+          6
+        ],
+        [
+          30,
+          7
+        ],
+        [
+          40,
+          8
+        ],
+        [
+          50,
+          10
+        ]
+      ],
+      "shapes": {
+        "swarm": {
+          "weight": 25,
+          "tiers": {
+            "fodder": 4,
+            "normal": 1
+          }
+        },
+        "squad": {
+          "weight": 30,
+          "tiers": {
+            "normal": 1
+          }
+        },
+        "heavy": {
+          "weight": 20,
+          "first": "strong",
+          "tiers": {
+            "fodder": 3,
+            "normal": 1
+          }
+        },
+        "mixed": {
+          "weight": 25,
+          "tiers": {
+            "fodder": 1,
+            "normal": 2,
+            "strong": 0.5
+          }
+        }
+      }
+    }
   }
 }

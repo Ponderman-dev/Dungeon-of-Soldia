@@ -714,36 +714,10 @@
       "target": "enemy",
       "pool": [
         {
-          "name": "Fire Flask",
-          "color": "0xff7a3d",
-          "damageType": "fire",
-          "damageMultiplier": 0.9,
-          "apply": [
-            {
-              "status": "burn",
-              "durationMs": 4000,
-              "damageMultiplier": 0.35
-            }
-          ]
-        },
-        {
-          "name": "Ice Flask",
-          "color": "0x7fd8ff",
-          "damageType": "ice",
-          "damageMultiplier": 0.9,
-          "apply": [
-            {
-              "status": "chill",
-              "durationMs": 6000,
-              "stacks": 2
-            }
-          ]
-        },
-        {
-          "name": "Poison Cloud",
+          "name": "Poison Flask",
           "color": "0x6bd16a",
           "damageType": "dark",
-          "damageMultiplier": 0.6,
+          "damageMultiplier": 0.9,
           "apply": [
             {
               "status": "poison",
@@ -758,7 +732,7 @@
         "multiplier": 0.5
       }
     },
-    "description": "Throws 5 random flasks (fire, ice or poison) at random enemies; each splashes the enemies next to where it lands."
+    "description": "Throws 5 poison flasks at random enemies; each splashes and poisons the enemies next to where it lands."
   },
   "alch_brew": {
     "name": "Mystery Brew",

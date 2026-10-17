@@ -20,6 +20,6 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
     - **Alchemist** MAD BOMBER (built session 6): LOBBED SHOTS (`passive.lobbed`, replaces Catalyst): his basic attack is a
       flask (`lobbedShot()`): poisons the target (`apply`, poison only) and splashes `splashMultiplier` 40% on enemies within
       `splashRadius` 70px, poisoning them too; `attackSpeedPercent` -25 via `statUpkeep()`. Scene `lobFlask()` draws the
-      green flask lob instead of an arrow. Skills `alch_barrage` (Flask Barrage, 5 flasks) and `alch_brew` (Mystery Brew,
+      green flask lob instead of an arrow. Skills `alch_barrage` (Flask Barrage, 5 POISON flasks only, 90% + poison each; user: no random debuffs) and `alch_brew` (Mystery Brew,
       4 flasks, 9s, heal 30%); the old `flask_barrage` / `mystery_brew` / `catalyst()` stay for the v1 fixture tests.
-      review.mjs 3 all: avg floor 24.3 (last) -> 28.8 (5th of 10).
+      review.mjs 3 all: avg floor 24.3 (last) -> 28.8 (5th of 10); after poison-only Barrage 27.1 (7th, within noise).

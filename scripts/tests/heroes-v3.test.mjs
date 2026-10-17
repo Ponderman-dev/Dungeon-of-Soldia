@@ -33,7 +33,8 @@ const hits = (ev, attacker) => ev.filter((e) => e.type === 'attack' && e.attacke
   ok('...in exchange he attacks slower', Math.abs(a.stats.attackEfficiency - base * (1 + L.attackSpeedPercent / 100)) < 1, `${a.stats.attackEfficiency} vs ${base}`); }
 { const { s, es, a } = mk(['alchemist']); const n = skills[hero('alchemist').skills.attack].random.count;
   const ev = cast(s, a, 'attack'); const fl = ev.filter((e) => e.type === 'flask');
-  ok(`Big Barrage: Flask Barrage throws ${n} flasks at enemies`, n === 5 && fl.length === n && fl.every((f) => es.includes(f.target))); }
+  ok(`Big Barrage: Flask Barrage throws ${n} flasks at enemies`, n === 5 && fl.length === n && fl.every((f) => es.includes(f.target)));
+  ok('...poison flasks only: enemies end up poisoned, no other debuff', es.some((e) => e.statuses.some((x) => x.type === 'poison')) && es.every((e) => e.statuses.every((x) => x.type === 'poison'))); }
 { const sk = skills[hero('alchemist').skills.support]; const { s, a, h } = mk(['alchemist', 'knight', 'rogue'], ['goblin'], () => 0); // rng 0: heal flasks
   h.forEach((x) => (x.hp = x.maxHp / 2)); const ev = cast(s, a, 'support'); const fl = ev.filter((e) => e.type === 'flask');
   ok(`Better Brew: Mystery Brew throws ${sk.random.count} flasks, cooldown ${sk.cooldownMs / 1000}s`, sk.random.count === 4 && sk.cooldownMs === 9000 && fl.length === 4 && fl.every((f) => h.includes(f.target)));

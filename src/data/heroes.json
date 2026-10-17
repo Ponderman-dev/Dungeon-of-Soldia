@@ -1586,7 +1586,7 @@
     "summary": "Mad bomber: every shot is a splashing poison flask.",
     "tips": [
       "Lobbed Shots: his attacks are flasks that splash 40% on nearby enemies and poison them all, but he attacks 25% slower.",
-      "Flask Barrage throws 5 random flasks (fire, ice or poison) that splash.",
+      "Flask Barrage throws 5 poison flasks that splash and poison.",
       "Mystery Brew throws 4 flasks at heroes: a 30% heal, speed or a shield."
     ],
     "damageType": "ranged",

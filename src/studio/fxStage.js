@@ -57,6 +57,11 @@ export class FxStage {
     const at = (u) => ({ x: u.x, y: u.mid });
     const g = e.group, n = e.name;
     const tq = (fn) => tune.paint(g, n, fn);
+    // A proposed effect (proposal pages): e.fn(q, t, { hero, foe, foe2 }) returns { draws, tint?, on? } or draws.
+    if (e.fn) {
+      const o = e.fn(q, t, { hero: H0, foe: E0, foe2: E1 });
+      return Array.isArray(o) ? { draws: o, on: e.on || 'enemy' } : { on: e.on || 'enemy', ...o };
+    }
     if (g === 'status') {
       const u = e.on === 'hero' ? H0 : E0;
       const look = statusLook({ [n]: { stacks: 3, age: t % 2400 } }, { ...u, x: 0, y: 0, top: u.top - u.y, mid: u.mid - u.y, bot: u.bot - u.y }, t, tune);

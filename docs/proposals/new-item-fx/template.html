@@ -1,0 +1,207 @@
+<title>Soldia New Item Effects</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: the item review's dungeon-dark look. One section per item: header (icon, name, when it plays), then three
+   live scenes side by side (Now / A / B) with a Pick button each, then a note. One deliberate dark look. */
+:root {
+  --bg: #120e1c; --panel: #1c1629; --panel2: #231b34; --line: #2e2542; --fg: #ece5f7; --muted: #a79cbd;
+  --accent: #f2b544; --ok: #7fe0a0; --warn: #ff8a6a;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1100px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; display: flex; flex-direction: column; gap: 20px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(24px, 5vw, 36px); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+.lede { color: var(--muted); max-width: 66ch; margin: 6px 0 0; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 14px; }
+.bar .count { font-variant-numeric: tabular-nums; }
+.bar .status { margin-left: auto; color: var(--muted); font-size: 13px; }
+.bar .status.bad { color: var(--warn); }
+.item { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.ihead { display: flex; gap: 14px; align-items: center; min-width: 0; }
+.ihead canvas { image-rendering: pixelated; flex: none; }
+.ihead .txt { min-width: 0; }
+.ihead .nm { font-weight: 600; font-size: 17px; }
+.ihead .rar { font: 10px var(--display); letter-spacing: .06em; }
+.ihead .desc { font-size: 14px; color: var(--muted); }
+.ihead .when { font-size: 13px; color: var(--accent); }
+.opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .opts { grid-template-columns: 1fr; } }
+.opt { background: var(--panel2); border: 2px solid var(--line); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.opt.picked { border-color: var(--accent); }
+.opt .ttl { display: flex; align-items: baseline; gap: 8px; }
+.opt .ltr { font: 700 13px var(--display); color: var(--accent); }
+.opt .on { font-weight: 600; }
+.opt canvas.scene { width: 100%; max-width: 360px; height: auto; image-rendering: pixelated; border-radius: 6px; border: 1px solid var(--line); background: #1b1629; }
+.opt p { margin: 0; font-size: 13px; color: var(--muted); }
+.pick { align-self: flex-start; font: 600 13px var(--body); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; margin-top: auto; }
+.pick[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #1a1208; }
+.pick:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+label { font: 10px var(--display); color: var(--muted); letter-spacing: .06em; }
+textarea { width: 100%; min-height: 56px; resize: vertical; font: 14px/1.45 var(--body); color: var(--fg); background: #15101f; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+textarea::placeholder { color: #6e6385; }
+.saved { font-size: 12px; color: var(--muted); min-height: 1em; }
+.saved.ok { color: var(--ok); } .saved.bad { color: var(--warn); }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>New Item Effects</h1>
+    <p class="lede">The 13 new items that have no effect of their own yet. For each: what it shows <b>now</b>, and two new effects drawn the same way as the game's. They all play live with the game's own effect code, on the Knight against a Goblin. Tap <b>Pick</b> under the one you like and write anything you'd change in the box. It saves by itself.</p>
+  </header>
+  <div class="bar"><span class="count" id="count"></span><span class="status" id="status" aria-live="polite">Connecting…</span></div>
+  <main id="list" style="display:flex;flex-direction:column;gap:16px"></main>
+</div>
+
+<script>/*FXBUNDLE*/</script>
+<script>
+const ITEMS = /*DATA*/null;
+const FX = window.SoldiaFx;
+const CAT = FX.catalog();
+const STAGE = new FX.FxStage();
+const SZ = 3; // game size on the stages
+const L = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const picks = {}; // item id -> { pick, note }
+let db = null;
+
+function drawIcon(cv, icon, s) {
+  const n = icon.r.length; cv.width = n * s; cv.height = n * s;
+  const g = cv.getContext('2d');
+  icon.r.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') { g.fillStyle = icon.p[L.indexOf(ch)]; g.fillRect(x * s, y * s, s, s); } }));
+}
+// The icon pop, like the game: it jumps up over the Knight with a white ring, holds, floats up and fades.
+function drawPop(ctx, icon, q) {
+  const grow = Math.min(1, q / 0.18), s = Math.max(1, Math.round(2 * (0.6 + 0.4 * grow)));
+  const n = icon.r.length, size = n * s, cx = 30 * SZ, top = (20 - 6 * Math.max(0, (q - 0.5) / 0.5)) * SZ - size;
+  ctx.globalAlpha = q > 0.75 ? Math.max(0, 1 - (q - 0.75) / 0.25) : 1;
+  icon.r.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') { ctx.fillStyle = icon.p[L.indexOf(ch)]; ctx.fillRect(cx - size / 2 + x * s, top + y * s, s, s); } }));
+  if (q < 0.35) { ctx.globalAlpha = 1 - q / 0.35; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, top + size / 2, size * (0.5 + q * 1.6), 0, Math.PI * 2); ctx.stroke(); }
+  ctx.globalAlpha = 1;
+}
+
+const scenes = []; // { cv, steps, it, t0 }
+function stepsFor(it, opt) {
+  const steps = [];
+  if (it.pop) steps.push({ kind: 'pop', ms: 900 });
+  if (!opt) for (const [g, n] of it.now) { const e = CAT.find((x) => x.group === g && x.name === n); if (e) steps.push({ kind: 'fx', e, ms: e.group === 'status' ? 2400 : FX.tuner.ms(g, n, e.ms) }); }
+  else {
+    const p = FX.proposals.find((x) => x.item === it.id).options.find((o) => o.id === opt.id);
+    const e = { group: 'proposal', name: it.id + '-' + opt.id, fn: p.fn, on: p.on, ms: p.ms };
+    steps.push({ kind: 'fx', e, ms: p.ms }, { kind: 'fx', e, ms: p.ms }); // twice, so it is easy to watch
+  }
+  return steps;
+}
+function nowText(it) {
+  const labels = it.now.map(([g, n]) => (CAT.find((x) => x.group === g && x.name === n) || {}).label).filter(Boolean);
+  const parts = [];
+  if (it.pop) parts.push('its icon pops up');
+  if (labels.length) parts.push(labels.join(', '));
+  return parts.length ? 'Today: ' + parts.join(', then ') + '.' : 'Today: nothing at all.';
+}
+
+function makeItem(it) {
+  const sec = document.createElement('section'); sec.className = 'item'; sec.id = it.id;
+  const head = document.createElement('div'); head.className = 'ihead';
+  const ic = document.createElement('canvas'); drawIcon(ic, it.icon, 3);
+  const txt = document.createElement('div'); txt.className = 'txt';
+  const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = it.name;
+  const rar = document.createElement('div'); rar.className = 'rar'; rar.textContent = it.rarityLabel; rar.style.color = it.rarityColor;
+  const ds = document.createElement('div'); ds.className = 'desc'; ds.textContent = it.desc;
+  const wh = document.createElement('div'); wh.className = 'when'; wh.textContent = 'Plays when: ' + it.when;
+  txt.append(nm, rar, ds, wh); head.append(ic, txt);
+  const opts = document.createElement('div'); opts.className = 'opts';
+  const tiles = [{ id: 'now', name: 'Keep as now', desc: nowText(it), letter: 'NOW' }, ...it.options.map((o) => ({ ...o, letter: o.id }))];
+  const buttons = [];
+  for (const o of tiles) {
+    const box = document.createElement('div'); box.className = 'opt'; box.dataset.pick = o.id;
+    const ttl = document.createElement('div'); ttl.className = 'ttl';
+    const l = document.createElement('span'); l.className = 'ltr'; l.textContent = o.letter;
+    const n = document.createElement('span'); n.className = 'on'; n.textContent = o.name;
+    ttl.append(l, n);
+    const cv = document.createElement('canvas'); cv.className = 'scene'; cv.width = FX.W * SZ; cv.height = FX.H * SZ; cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', o.name + ': ' + o.desc);
+    const p = document.createElement('p'); p.textContent = o.desc;
+    const b = document.createElement('button'); b.className = 'pick'; b.textContent = 'Pick'; b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', () => choose(it, o.id));
+    buttons.push([o.id, b, box]);
+    box.append(ttl, cv, p, b); opts.append(box);
+    scenes.push({ cv, it, steps: stepsFor(it, o.id === 'now' ? null : o), t0: Math.random() * 1500 });
+  }
+  const lab = document.createElement('label'); lab.htmlFor = 'note-' + it.id; lab.textContent = 'NOTE (what to change, or your own idea)';
+  const ta = document.createElement('textarea'); ta.id = 'note-' + it.id; ta.placeholder = 'e.g. option B, but the wings should be blue…';
+  const saved = document.createElement('div'); saved.className = 'saved';
+  let timer = null;
+  ta.addEventListener('input', () => { saved.textContent = 'Typing…'; saved.className = 'saved'; clearTimeout(timer); timer = setTimeout(() => save(it, { note: ta.value }), 900); });
+  ta.addEventListener('blur', () => { if (timer) { clearTimeout(timer); timer = null; save(it, { note: ta.value }); } });
+  sec.append(head, opts, lab, ta, saved);
+  it.ui = { buttons, ta, saved };
+  return sec;
+}
+
+function showPick(it) {
+  const pick = (picks[it.id] || {}).pick;
+  for (const [id, b, box] of it.ui.buttons) { const on = id === pick; b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Picked' : 'Pick'; box.classList.toggle('picked', on); }
+}
+function counts() { const n = ITEMS.filter((it) => (picks[it.id] || {}).pick).length; document.getElementById('count').textContent = `${n} of ${ITEMS.length} picked`; }
+function choose(it, id) { save(it, { pick: (picks[it.id] || {}).pick === id ? null : id }); }
+
+function local(id, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem('soldia-fxpick-' + id) || 'null'); localStorage.setItem('soldia-fxpick-' + id, JSON.stringify(v)); } catch (e) { return null; } }
+async function save(it, patch) {
+  const cur = { pick: null, note: '', ...(picks[it.id] || {}), ...patch };
+  picks[it.id] = cur; local(it.id, cur); showPick(it); counts();
+  const s = it.ui.saved;
+  if (!db) { s.textContent = 'Kept in this browser only (not saved online)'; s.className = 'saved bad'; return; }
+  try {
+    const ref = db.collection('picks').doc(it.id);
+    if (!cur.pick && !cur.note.trim()) await ref.delete();
+    else await ref.set({ pick: cur.pick, note: cur.note, name: it.name, updatedAt: new Date().toISOString() });
+    s.textContent = 'Saved'; s.className = 'saved ok';
+  } catch (e) { s.textContent = 'Could not save: ' + (e && e.message ? e.message : 'try again'); s.className = 'saved bad'; }
+}
+
+const main = document.getElementById('list');
+for (const it of ITEMS) {
+  main.append(makeItem(it));
+  const l = local(it.id); if (l) { picks[it.id] = l; it.ui.ta.value = l.note || ''; showPick(it); }
+}
+counts();
+
+// Draw every scene that is on screen.
+const visible = new Set();
+const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((x) => (x.isIntersecting ? visible.add(x.target) : visible.delete(x.target))), { rootMargin: '100px' }) : null;
+for (const sc of scenes) if (io) io.observe(sc.cv);
+function drawScene(sc, now) {
+  const ctx = sc.cv.getContext('2d');
+  const total = sc.steps.reduce((n, x) => n + x.ms, 0) + 700;
+  let t = (now + sc.t0) % total;
+  for (const step of sc.steps) {
+    if (t < step.ms) { if (step.kind === 'pop') STAGE.drawScene(ctx, null, 0, FX.tuner, SZ, (c) => drawPop(c, sc.it.icon, t / step.ms)); else STAGE.drawScene(ctx, step.e, t, FX.tuner, SZ); return; }
+    t -= step.ms;
+  }
+  STAGE.drawScene(ctx, null, 0, FX.tuner, SZ);
+}
+function frame(now) { for (const sc of scenes) if (!io || visible.has(sc.cv)) { try { drawScene(sc, now); } catch (e) { /* never stop the page */ } } requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+
+// Picks and notes are saved in the page's database (collection `picks`, doc = item id).
+(async () => {
+  const status = document.getElementById('status');
+  db = window.claude ? await window.claude.use('db') : null;
+  if (!db) { status.textContent = 'Picks stay in this browser (sign in to claude.ai to save them)'; status.classList.add('bad'); return; }
+  status.textContent = 'Picks and notes save automatically';
+  db.collection('picks').onSnapshot((snap) => {
+    for (const d of snap.docs) {
+      const it = ITEMS.find((x) => x.id === d.id); if (!it) continue;
+      const v = d.data() || {};
+      picks[it.id] = { pick: v.pick || null, note: v.note || '' }; local(it.id, picks[it.id]);
+      if (document.activeElement !== it.ui.ta) it.ui.ta.value = v.note || '';
+      showPick(it);
+    }
+    counts();
+  }, () => { status.textContent = 'Could not load saved picks'; status.classList.add('bad'); });
+})();
+</script>

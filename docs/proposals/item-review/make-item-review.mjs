@@ -29,25 +29,8 @@ function packGrid(grid) {
   return { p: pal, r: rows };
 }
 
-// What each item plays after its icon pop, as [group, name] effects of the effect stage (src/studio/fxStage.js).
-const FX = {
-  lucky_coin: [['hit', 'crit']], feather_boots: [['hit', 'dodge']], heart_charm: [['status', 'regenBoost']],
-  war_banner: [['item', 'battleCry']], shield_totem: [['hit', 'block']], quick_gloves: [['hit', 'melee'], ['hit', 'melee']],
-  bulwark_plate: [['item', 'thorns']], bloodlust_mask: [['item', 'lifesteal'], ['item', 'battleCry']], gamblers_dice: [['hit', 'crit'], ['item', 'dice']],
-  fire_bombs: [['item', 'bomb']], chill_band: [['hit', 'ice'], ['status', 'chill']], static_crystal: [['item', 'lightning'], ['status', 'shock']],
-  aid_kit: [['hit', 'heal']], sucker_punch_glove: [['item', 'suckerPunch']], bandage_roll: [['hit', 'heal']], second_wind_flask: [['hit', 'heal']],
-  kindling: [['hit', 'fire']], frost_charm: [['hit', 'ice']], storm_charm: [['hit', 'electric']], shadow_charm: [['hit', 'dark']],
-  ember_charm: [['status', 'burn']], venom_fang: [['status', 'poison']], rusty_nails: [['status', 'armorBreak']], serrated_edge: [['status', 'bleed']],
-  hex_doll: [['status', 'curse']], dread_bell: [['status', 'fear']], gag_rune: [['status', 'silence']], fire_arrows: [['shot', 'firearrow'], ['hit', 'fire']],
-  executioners_axe: [['item', 'executioner']], magma_core: [['status', 'burn']], shatter_hammer: [['item', 'shatter']], blood_chalice: [['status', 'bleed']],
-  plague_flask: [['item', 'plague']], hunters_sigil: [['status', 'mark']], thousand_cuts: [['status', 'bleed'], ['item', 'knifeBurst']],
-  frozen_thunderbolt: [['item', 'thunderbolt']], warding_charm: [['status', 'shield']], overheal_ring: [['status', 'shield']], spiked_aegis: [['item', 'aegisBlast']],
-  provokers_horn: [['status', 'taunt']], spite_mail: [['status', 'taunt'], ['item', 'thorns']], martyrs_shield: [['hit', 'block']], fire_heart: [['status', 'shield'], ['hit', 'fire']],
-  lost_clerics_grimoire: [['item', 'greenfire']], metronome: [['hit', 'melee']], mimic_chest: [['item', 'mimic']], jolly_banner: [['item', 'battleCry'], ['status', 'buff']],
-  excalibur: [['item', 'tornado']], quiver_of_plenty: [['shot', 'ranged'], ['hit', 'ranged']], last_stand_banner: [['status', 'shield'], ['status', 'buff']],
-  mirror_buckler: [['hit', 'dark']], phoenix_feather: [['status', 'invulnerable'], ['hit', 'heal']], flame_spirit: [['shot', 'darkbolt'], ['shot', 'darkbolt']],
-  spirit_axe: [['item', 'spiritAxe']], heart_of_the_beast: [['status', 'regenBoost'], ['hit', 'heal']], moonlight_twinblade: [['item', 'moon']], ghastly_fire: [['hit', 'fire'], ['hit', 'dark']],
-};
+// What each item plays after its icon pop (item-fx-show.json).
+const FX = JSON.parse(fs.readFileSync(new URL('./item-fx-show.json', import.meta.url), 'utf8'));
 // Which items pop their icon in a fight: every itemId the fight rules put on a proc event, the non-silent procs and the
 // damage bonuses that show (Sucker Punch, Executioner), minus the noPop ones (itemFx.json).
 const rulesSrc = fs.readFileSync(new URL('../../../src/systems/BattleState.js', import.meta.url), 'utf8');

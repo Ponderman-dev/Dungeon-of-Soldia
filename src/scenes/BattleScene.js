@@ -70,6 +70,8 @@ const SKILL_H = 44;
 // How big one character pixel is on screen (bosses use finer pixels: `drawScale` in enemies.json).
 const charScale = (def) => def.drawScale ?? CHAR_SCALE;
 
+const DEMO_LEVEL = Number(import.meta.env.VITE_DEMO_LEVEL || 20); // ...and its squad starts at this level
+const DEMO_ROSTER_FLOOR = 70; // the Monster House demo page picks its enemies like floor 70
 const DEPTH = { floor: 0, slot: 1, marker: 2, hero: 5, heroBar: 6, doorFront: 7, popup: 10, hud: 20 };
 
 // The battle screen: enemies at the top, the squad (3 heroes) at the bottom, everyone auto-attacks.
@@ -106,6 +108,11 @@ export default class BattleScene extends Phaser.Scene {
       damageTypes,
       leveling,
     });
+    // The Monster House demo page: the squad starts at a higher level, like heroes deep into a run.
+    if (import.meta.env.VITE_DEMO === 'house') {
+      for (const h of this.state.heroes) while (h.level < DEMO_LEVEL) this.state.levelUp(h);
+      for (const h of this.state.heroes) h.hp = h.maxHp;
+    }
 
     this.drawHeroSlots();
     this.floorText = this.add
@@ -811,8 +818,13 @@ export default class BattleScene extends Phaser.Scene {
     const room = kind ? this.buildRoom(kind, container) : null;
     const lineUp = room ? [] : enemiesForFloor(this.dungeon, n, Math.random, this.director, enemyDefs);
     // Dev server only: `?house=1` makes every directed fight a Monster House.
-    if (import.meta.env.DEV && new URLSearchParams(location.search).get('house') && !room && n >= this.dungeon.director.fromFloor && !lineUp.monsterHouse && !(this.dungeon.bosses || {})[n]) {
-      const house = monsterHouse({ ...this.dungeon, director: { ...this.dungeon.director, monsterHouse: { ...this.dungeon.director.monsterHouse, fromFloor: 0, chance: 100 } }, bosses: {} }, n, Math.random, enemyDefs);
+    const devHouse = import.meta.env.DEV && new URLSearchParams(location.search).get('house') && n >= this.dungeon.director.fromFloor;
+    // The MONSTER HOUSE DEMO page (`npm run build:house-demo`, VITE_DEMO=house): EVERY floor is a Monster House with
+    // the enemies of floor `demoRosterFloor` (deep ones, elites too), but as strong as the floor you are really on.
+    const demo = import.meta.env.VITE_DEMO === 'house';
+    if ((devHouse || demo) && !room && !lineUp.monsterHouse && !(this.dungeon.bosses || {})[n]) {
+      const always = { ...this.dungeon, director: { ...this.dungeon.director, monsterHouse: { ...this.dungeon.director.monsterHouse, fromFloor: 0, chance: 100 } }, bosses: {} };
+      const house = monsterHouse(always, demo ? DEMO_ROSTER_FLOOR : n, Math.random, enemyDefs);
       lineUp.splice(0, lineUp.length, ...house);
       Object.assign(lineUp, { monsterHouse: true, elites: house.elites, shape: house.shape });
     }

@@ -11,6 +11,7 @@ Status: steps 1-4 DONE (ELITES and MONSTER HOUSE, see CLAUDE.md). User: keep eli
   system prompt: start it from `origin/ccr-a59eab7b-wefaf5` (it has everything), never from the old
   `claude/phase-h-tuning` (behind). CLAUDE.md's git line just says "the branch the session names".
 - Game preview: https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr (build:page + republish after each step).
+- Monster House demo: https://claude.ai/artifact/4vMvwYLs9sUHr5KcxZ75aH (`npm run build:house-demo`, copy house-demo-page.html to the scratchpad as monster-house-demo.html, republish).
 - Enemy proposal page (sprites + picks): https://claude.ai/artifact/AkX6DWTeCsYzU6oXb3QWFS
   (source `docs/proposals/enemy-proposal.src.html`, built by `node docs/proposals/make-enemy-page.mjs <src> <out>`).
 - Difficulty check: `node scripts/tests/curve.mjs 3 smart` (~40s, all cores). Last result: median 34, mean 37,

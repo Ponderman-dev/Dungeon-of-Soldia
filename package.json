@@ -10,7 +10,8 @@
     "build:page": "vite build && node scripts/make-page.mjs dist-page.html",
     "test": "node scripts/tests/run-all.mjs",
     "sim": "node scripts/tests/sim.mjs skills rewards",
-    "build:studio": "vite build --config vite.studio.config.js && node scripts/make-page.mjs studio-page.html dist-studio/studio.html"
+    "build:studio": "vite build --config vite.studio.config.js && node scripts/make-page.mjs studio-page.html dist-studio/studio.html",
+    "build:house-demo": "VITE_DEMO=house vite build --outDir dist-demo && node scripts/make-page.mjs house-demo-page.html dist-demo/index.html && sed -i 's#<title>Dungeon of Soldia</title>#<title>Monster House Demo</title>#' house-demo-page.html"
   },
   "dependencies": {
     "phaser": "^4.2.1",

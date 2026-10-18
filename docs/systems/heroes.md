@@ -72,3 +72,10 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       ONE-ENEMY channel (skill `target: 'enemy'` + `channel` = every wave hits `ch.aimUid`, the next target if it died):
       5 waves of 50% every 120ms, `waveApply` Bleed, `waveOnHit` = on-hit items each hit; 7s cooldown. Smoke Bomb kept.
       review.mjs 3 all (x2): avg floor ~30 -> 28.9 / 31.7 (still 2nd).
+    - **Samurai** ONE-STRIKE MASTER (built session 6; USER KEPT the wide Wind Cutter slash instead of the design's one perfect
+      cut): IAIDO v3 (`passive.iaido`): every 3rd hit parried; parried/blocked/dodged hits get a 120% counter-cut with
+      `counterCrit` = sure crit (his crit damage), on-hit items roll once (not twice); `evasionFlat` +10 (statUpkeep).
+      WIND CUTTER v3 (`wind_cutter3`, old `wind_cutter` stays): band slash 250%, `sureCrit` (skillHit +100 crit), no Armor
+      Break, `killCooldownCutPercent` 60 = a kill cuts the cooldown (popup 'Perfect Cut!'). COUNTER STANCE (`counter_stance`,
+      replaces Focus Stance): 4s `parry` only (no next-attack crit); while it is on, counterCut() ignores reach and throws
+      the hit back (crescent projectile when far). review.mjs 3 all (x2): avg floor ~27 -> 30.0 / 29.8 (3rd-4th).

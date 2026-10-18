@@ -23,5 +23,7 @@
   "mage_ward": "arcaneWard",
   "brawl_leap": "savageLeap",
   "blood_feast": "bloodPact",
-  "multistrike": "eviscerate"
+  "multistrike": "eviscerate",
+  "wind_cutter3": "windCutter",
+  "counter_stance": "focusStance"
 }

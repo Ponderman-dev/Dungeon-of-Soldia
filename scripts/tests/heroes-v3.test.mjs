@@ -202,3 +202,24 @@ const DF = hero('rogue').passive, MS = skills[hero('rogue').skills.attack];
 { const { s, es, a } = mk(['rogue'], ['goblin'], () => 0); s.giveItem(a.uid, 'fire_bombs');
   const ev = [...cast(s, a, 'attack')]; for (let t = 0; t < 700; t += 20) ev.push(...s.update(20));
   ok('...and rolls his on-hit items every hit', ev.filter((e) => e.type === 'proc' && e.itemId === 'fire_bombs').length >= MS.channel.waves.length); }
+
+// ================= SAMURAI: ONE-STRIKE MASTER (user kept the wide Wind Cutter slash)
+const IA = hero('samurai').passive.iaido, WC = skills[hero('samurai').skills.attack];
+{ const { s, es, a } = mk(['samurai'], ['goblin'], () => 0.5); es[0].x = a.x; es[0].y = a.y - 30; a.stats.crit = 0;
+  for (let i = 0; i < IA.every - 1; i++) s.strike(es[0], a, [], { basic: true });
+  const ev = []; s.strike(es[0], a, ev, { basic: true }); const cut = hits(ev, a).find((e) => e.target === es[0]);
+  ok(`Iaido: the ${IA.every}rd hit is parried and countered with a SURE crit (even with 0 crit)`, cut && cut.result.crit, cut && cut.result.amount); }
+{ const { s, a } = mk(['samurai']); s.refreshStats(); const base = hero('samurai').stats.evasion;
+  ok(`...+${IA.evasionFlat} evasion built in`, a.stats.evasion === base + IA.evasionFlat, a.stats.evasion); }
+{ const { s, es, a } = mk(['samurai'], ['goblin', 'goblin', 'goblin']); es.forEach((e, n) => { e.x = 120 + n * 60; e.y = es[0].y; }); es[2].y += 200; a.stats.crit = 0; s.focusUid = es[0].uid;
+  const ev = cast(s, a, 'attack'); const sk = hits(ev, a).filter((e) => e.skill);
+  ok(`Wind Cutter: ${WC.damageMultiplier * 100}% to every enemy in the row (not the far one)`, sk.length === 2 && !sk.some((e) => e.target === es[2]), sk.length);
+  ok('...and it ALWAYS crits', sk.every((e) => e.result.crit)); }
+{ const { s, es, a } = mk(['samurai'], ['goblin', 'goblin']); es.forEach((e, n) => { e.x = 120 + n * 60; e.y = es[0].y; }); s.focusUid = es[0].uid;
+  cast(s, a, 'attack'); const plain = a.skills[0].cooldownLeft;
+  const k = mk(['samurai'], ['goblin', 'goblin']); k.es.forEach((e, n) => { e.x = 120 + n * 60; e.y = k.es[0].y; e.hp = 1; }); k.s.focusUid = k.es[0].uid;
+  const ev = cast(k.s, k.a, 'attack');
+  ok(`...a kill cuts its cooldown by ${WC.killCooldownCutPercent}%`, Math.abs(k.a.skills[0].cooldownLeft - plain * (1 - WC.killCooldownCutPercent / 100)) < 1 && ev.some((e) => e.label === 'Perfect Cut!'), `${plain} -> ${k.a.skills[0].cooldownLeft}`); }
+{ const { s, es, a } = mk(['samurai'], ['skeletonArcher']); const e = es[0]; e.x = a.x; e.y = a.y - 400; a.stats.crit = 0; cast(s, a, 'support');
+  const ev = []; const res = s.strike(e, a, ev, { basic: true }); const back = hits(ev, a).find((x) => x.target === e);
+  ok('Counter Stance: hits on him are parried and THROWN BACK, even from far away, as a sure crit', res.parried && back && back.result.crit); }

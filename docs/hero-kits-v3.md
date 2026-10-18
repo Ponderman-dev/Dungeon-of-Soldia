@@ -38,7 +38,7 @@ Decided by the user one hero at a time (feel, passive, attack, support). Numbers
   on-hit items on each enemy hit.
 - Support HUNTER'S MARK: unchanged (+25% damage taken 6s).
 
-## Samurai: ONE-STRIKE MASTER
+## Samurai: ONE-STRIKE MASTER (BUILT session 6 with the wide Wind Cutter slash, user's pick; see docs/systems/heroes.md)
 - Feel: few, perfect, deadly cuts. Loves crit, crit damage and evasion items.
 - Passive IAIDO + CRIT COUNTERS (user's version): every 3rd hit on him is parried; parried / blocked / dodged hits
   get a counter-cut that uses his CRIT DAMAGE and rolls on-hit items twice; PLUS extra evasion built in

@@ -1380,9 +1380,12 @@ export default class BattleState {
   counterCut(samurai, attacker, events) {
     const ia = this.iaido(samurai);
     if (!ia || !samurai.alive || !attacker.alive || this.isStunned(samurai)) return;
-    if (this.hasPositions(samurai) && this.hasPositions(attacker) && !this.inReach(samurai, attacker)) return; // too far to cut back
+    // Counter Stance (`parry` status): the parried hit is THROWN BACK, whatever the distance.
+    const stance = this.has(samurai, 'parry');
+    if (!stance && this.hasPositions(samurai) && this.hasPositions(attacker) && !this.inReach(samurai, attacker)) return; // too far to cut back
     events.push({ type: 'proc', unit: samurai, label: 'Counter!' });
-    const res = this.strike(samurai, attacker, events, { multiplier: ia.counterMultiplier, counter: true });
+    // v3 `counterCrit`: the counter-cut is a sure crit, so it uses his CRIT DAMAGE.
+    const res = this.strike(samurai, attacker, events, { multiplier: ia.counterMultiplier, counter: true, critBonus: ia.counterCrit ? 100 : 0, ...(stance && !this.inReach(samurai, attacker) ? { projectile: 'crescent' } : {}) });
     this.rollProcs(samurai, 'onAttack', events, { target: attacker, hit: !res.dodged });
   }
 
@@ -2569,6 +2572,11 @@ export default class BattleState {
         for (const n of this.neighbours(target)) this.skillHit(hero, skill, slot.id, n, events, { multiplier: skill.splash.damageMultiplier, scale: echo ? echo.power : 1 });
       }
     }
+    // Wind Cutter v3 (`killCooldownCutPercent`): if the cast killed an enemy, its cooldown is cut.
+    if (skill.killCooldownCutPercent && !echo && targets.some((t) => !t.alive)) {
+      slot.cooldownLeft *= 1 - skill.killCooldownCutPercent / 100;
+      events.push({ type: 'proc', unit: hero, label: 'Perfect Cut!' });
+    }
     if (!echo) this.bookAfterCast(hero, skill, slot.id, targets, book.mods, events);
     this.castPages = null;
     // Echo Rune: a skill sometimes casts a second time (the echo cannot echo, the Mage's rotation does not move again).
@@ -2796,7 +2804,7 @@ export default class BattleState {
       result = this.strike(hero, target, events, {
         multiplier: mult,
         damageType: skill.damageType,
-        critBonus: opts.critBonus || 0,
+        critBonus: (opts.critBonus || 0) + (skill.sureCrit ? 100 : 0), // Wind Cutter v3: always crits
         ignoreArmor: !!skill.ignoresArmor,
         skill,
         projectile: skill.chain ? 'lightning' : skill.projectile,
@@ -3081,6 +3089,8 @@ export default class BattleState {
     const sa = hero.def.passive && hero.def.passive.steadyAim;
     if (sa && hero.steady) upkeep.push({ stat: 'attackEfficiency', percent: sa.attackSpeedPercent }, { stat: 'crit', flat: sa.critFlat });
     if (hero.thirst) upkeep.push({ stat: 'attack', percent: hero.def.passive.bloodthirst.attackPercent }); // Berserker's Bloodthirst
+    const iai = hero.def.passive && hero.def.passive.iaido;
+    if (iai && iai.evasionFlat) upkeep.push({ stat: 'evasion', flat: iai.evasionFlat }); // Samurai v3: built-in evasion
     const lob = hero.def.passive && hero.def.passive.lobbed;
     if (lob && lob.attackSpeedPercent) upkeep.push({ stat: 'attackEfficiency', percent: lob.attackSpeedPercent }); // Alchemist: slower flasks
     // Bard's March: the whole squad attacks faster while he plays it (Conductor's Baton makes it stronger).

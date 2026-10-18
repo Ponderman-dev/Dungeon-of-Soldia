@@ -387,6 +387,39 @@
     ],
     "description": "4s stance: hits against him are parried (no damage) and his next attack is a guaranteed crit."
   },
+  "wind_cutter3": {
+    "name": "Wind Cutter",
+    "short": "WI",
+    "kind": "attack",
+    "target": "allEnemies",
+    "damageType": "ranged",
+    "cooldownMs": 9000,
+    "castMs": 700,
+    "damageMultiplier": 2.5,
+    "projectile": "crescent",
+    "description": "A wide crescent slash across the field: 250% to every enemy in the same row as his target, ALWAYS a crit (his crit damage). If it kills, its cooldown is cut by 60%. He stays in his slot.",
+    "area": {
+      "shape": "band",
+      "halfHeight": 55
+    },
+    "sureCrit": true,
+    "killCooldownCutPercent": 60
+  },
+  "counter_stance": {
+    "name": "Counter Stance",
+    "short": "CS",
+    "kind": "support",
+    "target": "self",
+    "cooldownMs": 13000,
+    "castMs": 400,
+    "apply": [
+      {
+        "status": "parry",
+        "durationMs": 4000
+      }
+    ],
+    "description": "4s stance: every hit on him is parried and thrown back at the attacker as a counter-cut that always crits, even from far away."
+  },
   "elemental_rotation": {
     "name": "Elemental Rotation",
     "short": "EL",

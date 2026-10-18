@@ -691,11 +691,11 @@
     "id": "samurai",
     "name": "Samurai",
     "role": "Duelist",
-    "summary": "Parries and answers every blow.",
+    "summary": "Few, perfect, deadly cuts: his counters and Wind Cutter always crit.",
     "tips": [
-      "Focus Stance parries everything for 4s: every hit becomes a counter.",
-      "Shield Totem blocks also counter-cut.",
-      "Wind Cutter breaks the armor of a whole row."
+      "Iaido: every 3rd hit on him is parried; parried, blocked or dodged hits get a counter-cut that ALWAYS crits.",
+      "Wind Cutter: a wide slash across the row for 250%, always a crit; a kill cuts its cooldown by 60%.",
+      "Crit damage and evasion items love him. Counter Stance throws every hit back, even from far away."
     ],
     "damageType": "melee",
     "height": 23,
@@ -716,8 +716,8 @@
       "crit": 0.4
     },
     "skills": {
-      "attack": "wind_cutter",
-      "support": "focus_stance"
+      "attack": "wind_cutter3",
+      "support": "counter_stance"
     },
     "perk": {
       "name": "Bushido",
@@ -731,10 +731,12 @@
     },
     "passive": {
       "name": "Iaido",
-      "description": "Every 3rd hit he takes is parried. A parried, blocked or dodged hit is answered with an instant 120% counter-cut (on-hit items can go off).",
+      "description": "Every 3rd hit he takes is parried. A parried, blocked or dodged hit is answered with a 120% counter-cut that always crits (his crit damage). +10 evasion.",
       "iaido": {
         "every": 3,
-        "counterMultiplier": 1.2
+        "counterMultiplier": 1.2,
+        "counterCrit": true,
+        "evasionFlat": 10
       }
     },
     "parts": {

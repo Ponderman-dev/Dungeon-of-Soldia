@@ -729,6 +729,8 @@ export default class BattleState {
     this.tornados = [];
     this.bookTimers = []; // Aftershock pulses do not follow the squad to the next floor
     this.delays = []; // nor do fireballs / crescents still on their way
+    for (const b of this.bombs || []) events.push({ type: 'bombFizzle', bomb: b }); // a Sapper bomb still lit when the floor is won goes out
+    this.bombs = [];
     for (const h of this.heroes) h.axeLeft = 0;
     for (const m of [...this.minions]) {
       if (!m.greater) this.vanishMinion(m, 'floorEnd', events);

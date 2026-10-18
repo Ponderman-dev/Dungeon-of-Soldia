@@ -1486,6 +1486,8 @@ export default class BattleScene extends Phaser.Scene {
       const g = this.add.container(at ? at.ch.x : GAME_WIDTH / 2, at ? at.ch.y : SLOT_Y - 200).setDepth(DEPTH.popup - 2);
       this.tornadoViews.set(e.tornado.id, { g, t: e.tornado });
       this.puff(g.x, g.y, 0xcfe8ff, 4);
+    } else if (e.type === 'bombFizzle') {
+      this.puff(e.bomb.x, e.bomb.y, 0x4a4a52, 4); // a Sapper bomb goes out with the floor: a little grey smoke
     } else if (e.type === 'tornadoEnd') {
       const tv = this.tornadoViews && this.tornadoViews.get(e.tornado.id);
       if (tv) {

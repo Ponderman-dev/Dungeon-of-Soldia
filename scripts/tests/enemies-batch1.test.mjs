@@ -88,6 +88,11 @@ ok('the Golem is strong and at most one per fight', defs.golem.tier === 'strong'
   const e5 = run(t.s, 1600);
   ok('...and burns whoever is still inside (fire)', e5.some((e) => e.type === 'attack' && e.damageType === 'fire') && t.h.some((x, i) => x.hp < before[i]));
   void hp0;
+  // The last enemy is a Sapper: its bomb must not stay on the floor after the win (user bug).
+  const w = mk(['sapper']);
+  const ew = []; w.s.killUnit(w.es[0], ew);
+  const end = w.s.endFloor([]);
+  ok('...a bomb still lit when the floor is won goes out with the floor', w.s.bombs.length === 0 && end.some((e) => e.type === 'bombFizzle'));
 }
 {
   let err = null;

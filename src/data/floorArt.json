@@ -36,13 +36,25 @@
     "dirt": ["0x3a2b1f", "0x33251a", "0x433222", "0x2c2016"],
     "dirtPatches": 6,
     "dirtRadius": [9, 22],
-    "grass": ["0x3d6a28", "0x4e8232", "0x2e5220", "0x5f9638"],
+    "grass": ["0x3f4f33", "0x4a5c3b", "0x34422b", "0x56674a"],
     "grassTufts": 95,
-    "moss": ["0x2b4a22", "0x35592a"],
+    "moss": ["0x2f3b2a", "0x37442f"],
     "mossSpecks": 260,
     "pebbles": 90,
     "pebble": ["0x5a5650", "0x4a4640"],
     "wallShadow": 10,
     "edgeShade": 22
+  },
+  "door": {
+    "_about": "The door in the back wall (entities/Door.js): a stone arch (blocks, a lighter keystone), a dark wooden door of planks with two iron bands and rivets and a ring handle. Open = a black doorway.",
+    "stone": "0x4c4954",
+    "stoneLight": "0x625e6a",
+    "mortar": "0x1c1a20",
+    "hole": "0x000000",
+    "wood": "0x4a3324",
+    "woodDark": "0x2c1d14",
+    "woodLight": "0x5c4130",
+    "iron": "0x3c3b42",
+    "rivet": "0x8a8794"
   }
 }

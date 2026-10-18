@@ -3,6 +3,26 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
+## START HERE (session 11): SKILL LOOKS, demo page hero by hero. NEXT = Archer
+Demo page: https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN (source docs/proposals/skill-fx/, build
+`node docs/proposals/skill-fx/make.mjs <scratchpad>/soldia-skill-fx.html`, republish to the SAME url, omit capabilities).
+User's notes: ArtifactData `list` collection `notes`, docs `look:<skillId>` = {verdict ok/change, text}.
+WORKFLOW (user's rule): demo ONLY, one hero at a time; when EVERY hero is approved, build them all into the game in one go.
+STATUS: approved = Knight (defense_bash, challenge), Rogue (multistrike, smoke_bomb), Berserker (brawl_leap, blood_feast),
+bone_sacrifice. Waiting for the user's look: death_coil3 (round 2 hit), holy_nova, sanctuary. TODO: Archer, Mage, Bard,
+Samurai, Alchemist (read each kit in skills.json first).
+HOW TO ADD A HERO: recipes in docs/proposals/skill-fx/heroes.js (RECIPES, same format as src/systems/skillFx.js, +
+CAST_MS_NEW) and a SPECS entry (now = today's game look; new = charge, recipe, move dash/leap/hop, hit shake/stop,
+number/heal, ally/minions/squadTargets); a row in template.html's list + its hero prefix; check frames with
+`check-frames.mjs` (contact sheet) and LOOK at it before publishing.
+USER'S STYLE RULES (learned): calm, never interrupt the flow (no screen flash / speed lines over everything); REAL things,
+never abstract geometric rings/squares/diamonds; skill name = CAPITALS floating over the hero (done in game); attack
+skills want aggressive movement + a small shake; hits must be BRIGHT and BIG enough to read; beams short; enemies jitter
+when hit hard. Hero colours: combat.json skillFx.name.heroColors.
+IN THE GAME ALREADY: Knight + Rogue looks (Rogue's stronger enemy shake and Knight's 3x shield print are in the code but
+the game page was not rebuilt after them). When building the rest: move recipes into skillFx.js, wire charge/dash/wave in
+combat.json (+ new: leap slam/land point, tremble, ally/minion recipes), tests, build:page, republish the game.
+
 ## START HERE (session 10d): DEMO-ONLY mode, hero by hero (user: 'once all demo approved then we implement to the game')
 Demo page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN: Knight (in game), Rogue (in game; user wants MORE enemy
 shake on Multistrike: combat.json skillFx.wave.multistrike targetShake* raised, game page not rebuilt yet), Berserker

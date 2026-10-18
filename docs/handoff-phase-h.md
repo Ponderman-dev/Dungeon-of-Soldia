@@ -9,7 +9,9 @@ per-screen changes with the user: reward, battle, hero select, and THE PUZZLE (u
 PUZZLE: user wants the 1-8 slide puzzle GONE. Demo page with 6 playable ideas (Mimic Shuffle, Rune Lock, Light the
 Braziers, Mirror Beam, Ice Slide, Picture Puzzle = swap pieces): https://claude.ai/artifact/HdFydkPMrAzb2W2um8mWrn.
 DONE (session 6): user kept Mimic, Runes, Beam, Ice, Picture (not Braziers); all 5 built (docs/systems/floors-rooms.md).
-NEXT: per-screen changes with the user: reward, battle, hero select.
+Puzzles centred (user). NEXT: the user reviews every screen on the SCREEN REVIEW page
+https://claude.ai/artifact/UR98Jn7UBts1xrvEZw97qP (84 items: layout, animations, sounds); read the notes with ArtifactData
+`list` collection `notes` and work through the CHANGE ones, screen by screen.
 
 ## START HERE (session 6, latest): INTERFACE STYLE
 User: 'let's do interfaces', picked 'ONE LOOK FOR EVERYTHING' (a shared pixel-art UI style for all screens). Proposal page

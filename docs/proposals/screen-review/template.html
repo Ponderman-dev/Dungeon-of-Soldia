@@ -1,0 +1,137 @@
+<title>Soldia Screen Review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: sticky tabs (one per screen); each tab = Layout (stills), Animations (clips), Sounds; every item has OK / CHANGE + a note. */
+:root {
+  color-scheme: dark;
+  --bg: #07070b; --win: #000; --line: #fff; --fg: #fff; --muted: #b4b4c4; --gold: #ffd84a; --red: #ff7a5a; --green: #6ee07a;
+  --pixel: 'Press Start 2P', ui-monospace, monospace;
+  --body: 'IBM Plex Sans', system-ui, sans-serif;
+}
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--body); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1100px; margin: 0 auto; padding-block: 22px 60px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
+h1 { font: 20px/1.4 var(--pixel); margin: 0; text-wrap: balance; }
+h2 { font: 12px/1.5 var(--pixel); margin: 0; color: var(--gold); }
+h3 { font: 600 16px/1.3 var(--body); margin: 0; }
+.lede { color: var(--muted); max-width: 70ch; margin: 8px 0 0; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bar .progress { margin-left: auto; font: 8px var(--pixel); color: var(--muted); }
+button { font: 8px/1 var(--pixel); color: var(--fg); background: #000; cursor: pointer; padding: 11px 13px; border: 2px solid var(--line); }
+button:focus-visible, textarea:focus-visible, video:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+button.on { background: var(--line); color: #000; }
+.v-ok.on { background: var(--green); border-color: var(--green); color: #000; }
+.v-change.on { background: var(--red); border-color: var(--red); color: #000; }
+.win { background: var(--win); border: 2px solid var(--line); box-shadow: inset 0 0 0 2px #000;
+  clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 2px, calc(100% - 2px) 2px, calc(100% - 2px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 2px), 2px calc(100% - 2px), 2px calc(100% - 4px), 0 calc(100% - 4px)); }
+section.group { display: grid; gap: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.item { padding: 12px; display: grid; gap: 8px; align-content: start; }
+.item .media { display: block; width: 100%; max-width: 230px; justify-self: center; aspect-ratio: 390 / 844; background: #111; image-rendering: pixelated; }
+.item p { margin: 0; color: var(--muted); font-size: 14px; }
+.verdict { display: flex; gap: 6px; }
+textarea { width: 100%; box-sizing: border-box; min-height: 54px; resize: vertical; background: #0b0b10; color: var(--fg); border: 1px solid #555; padding: 8px; font: 14px/1.4 var(--body); }
+.saved { font: 8px var(--pixel); color: var(--muted); min-height: 1em; }
+.item.ok { border-color: var(--green); } .item.change { border-color: var(--red); }
+.sounds { display: grid; gap: 10px; }
+.sound { padding: 10px 12px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; align-items: center; }
+.sound .play { width: 44px; height: 44px; padding: 0; font-size: 12px; }
+.sound .meta { min-width: 0; }
+.sound .name { font: 8px/1.6 var(--pixel); color: var(--gold); }
+.sound .rest { grid-column: 1 / -1; display: grid; gap: 6px; }
+@media (min-width: 720px) { .sound { grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.4fr); } .sound .rest { grid-column: auto; } }
+[hidden] { display: none !important; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Screen Review</h1>
+    <p class="lede">Every screen of the game as it is now: the layout, each animation (recorded from the real game, no sound) and every sound (press play). Mark each one OK or CHANGE and write what you want different. Everything is saved for Claude.</p>
+  </header>
+  <nav class="bar" aria-label="Screens" id="tabs"><span class="progress" id="progress"></span></nav>
+  <main id="main"></main>
+</div>
+
+<script>
+/*DATA*/
+const notes = {}; // id -> { verdict, text }
+let store = null;
+const total = SECTIONS.reduce((n, s) => n + s.stills.length + s.clips.length + s.sounds.length, 0);
+const progress = () => { const done = Object.values(notes).filter((n) => n.verdict).length; document.getElementById('progress').textContent = `${done} / ${total} REVIEWED`; };
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+// The OK / CHANGE buttons and the note box of one item (saved on tap / when the box loses focus).
+function reviewBox(id, card) {
+  const wrap = el('div', 'review');
+  const v = el('div', 'verdict');
+  const ok = el('button', 'v-ok', 'OK'); ok.type = 'button';
+  const ch = el('button', 'v-change', 'CHANGE'); ch.type = 'button';
+  v.append(ok, ch);
+  const ta = el('textarea'); ta.id = 'note-' + id.replace(/[^a-z0-9]/gi, '-'); ta.placeholder = 'What should change?'; ta.setAttribute('aria-label', 'Note');
+  const saved = el('div', 'saved');
+  wrap.append(v, ta, saved);
+  const paint = () => { const n = notes[id] || {}; ok.classList.toggle('on', n.verdict === 'ok'); ch.classList.toggle('on', n.verdict === 'change'); card.classList.toggle('ok', n.verdict === 'ok'); card.classList.toggle('change', n.verdict === 'change'); if (document.activeElement !== ta) ta.value = n.text || ''; };
+  const save = async () => {
+    progress(); paint();
+    if (!store) { saved.textContent = 'NOT SAVED IN THIS VIEW'; return; }
+    try { await store.doc(id).set({ ...notes[id], updatedAt: new Date().toISOString() }); saved.textContent = 'SAVED'; } catch { saved.textContent = 'COULD NOT SAVE, TRY AGAIN'; }
+  };
+  ok.onclick = () => { notes[id] = { ...(notes[id] || {}), verdict: notes[id]?.verdict === 'ok' ? null : 'ok' }; save(); };
+  ch.onclick = () => { notes[id] = { ...(notes[id] || {}), verdict: notes[id]?.verdict === 'change' ? null : 'change' }; save(); };
+  ta.onchange = () => { notes[id] = { ...(notes[id] || {}), text: ta.value, verdict: notes[id]?.verdict || (ta.value.trim() ? 'change' : null) }; save(); };
+  card.paint = paint;
+  return wrap;
+}
+
+const main = document.getElementById('main');
+const tabs = document.getElementById('tabs');
+const panes = {};
+SECTIONS.forEach((s, i) => {
+  const b = el('button', i === 0 ? 'on' : '', s.name.toUpperCase()); b.type = 'button'; b.dataset.s = s.id;
+  b.onclick = () => { for (const x of tabs.querySelectorAll('button')) x.classList.toggle('on', x === b); for (const [k, p] of Object.entries(panes)) p.hidden = k !== s.id; try { localStorage.setItem('review-tab', s.id); } catch {} window.scrollTo({ top: 0 }); };
+  tabs.insertBefore(b, document.getElementById('progress'));
+  const pane = el('div'); pane.style.cssText = 'display:grid;gap:26px'; pane.hidden = i !== 0; panes[s.id] = pane; main.appendChild(pane);
+
+  const lay = el('section', 'group', `<h2>${esc(s.name)}: layout</h2>`); const lg = el('div', 'grid'); lay.appendChild(lg);
+  for (const [id, title] of s.stills) {
+    const card = el('article', 'item win'); card.dataset.id = 'still:' + id;
+    card.innerHTML = `<img class="media" src="stills/${id}.png" alt="${esc(title)}" loading="lazy"><h3>${esc(title)}</h3>`;
+    card.appendChild(reviewBox('still:' + id, card)); lg.appendChild(card);
+  }
+  const an = el('section', 'group', `<h2>${esc(s.name)}: animations</h2>`); const ag = el('div', 'grid'); an.appendChild(ag);
+  for (const [id, title, desc] of s.clips) {
+    const card = el('article', 'item win'); card.dataset.id = 'clip:' + id;
+    card.innerHTML = `<video class="media" muted loop playsinline controls preload="metadata" aria-label="${esc(title)}"><source src="clips/${id}.mp4" type="video/mp4"><source src="clips/${id}.webm" type="video/webm"></video><h3>${esc(title)}</h3><p>${esc(desc)}</p>`;
+    card.appendChild(reviewBox('clip:' + id, card)); ag.appendChild(card);
+  }
+  const so = el('section', 'group', `<h2>${esc(s.name)}: sounds</h2>`); const sg = el('div', 'sounds'); so.appendChild(sg);
+  for (const [cue, when] of s.sounds) {
+    const card = el('article', 'sound win'); card.dataset.id = 'sound:' + cue;
+    const play = el('button', 'play', '&#9654;'); play.type = 'button'; play.setAttribute('aria-label', 'Play ' + cue);
+    play.onclick = () => { try { const a = new Audio(`sounds/${cue}.mp3`); a.play().catch(() => {}); } catch {} };
+    const meta = el('div', 'meta', `<div class="name">${esc(cue)}</div><div>${esc(when)}</div>`);
+    const rest = el('div', 'rest'); rest.appendChild(reviewBox('sound:' + cue, card));
+    card.append(play, meta, rest); sg.appendChild(card);
+  }
+  pane.append(lay, an, so);
+});
+try { const t = localStorage.getItem('review-tab'); const b = t && tabs.querySelector(`[data-s="${t}"]`); if (b) b.click(); } catch {}
+progress();
+// Clips play while on screen, pause when scrolled away (saves the phone's battery).
+const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) e.target.play().catch(() => {}); else e.target.pause(); }), { threshold: 0.4 });
+document.querySelectorAll('video').forEach((v) => io.observe(v));
+
+(async () => {
+  const db = await (window.claude ? claude.use('db') : null);
+  if (!db) { document.querySelectorAll('.saved').forEach((s) => (s.textContent = 'NOT SAVED IN THIS VIEW')); return; }
+  store = db.collection('notes');
+  store.onSnapshot((snap) => {
+    for (const d of snap.docs) notes[d.id] = d.data();
+    document.querySelectorAll('[data-id]').forEach((c) => c.paint && c.paint());
+    progress();
+  });
+})();
+</script>

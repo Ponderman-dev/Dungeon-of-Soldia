@@ -72,20 +72,6 @@ const skillOf = (u, kind) => u.skills.findIndex((x) => x.kind === kind);
   const ev = []; s.landAttack(ro, es[0], ev);
   ok('...a debuff item proc adds an extra combo point', ro.combo.points === 2, ro.combo.points); }
 
-// ---- Archer
-{ const { s, es, h } = mk(['archer']); const a = h[0]; es[0].stats.defense = 50; s.focusUid = es[0].uid;
-  const d0 = s.castSkill(a.uid, skillOf(a, 'attack')).find((e) => e.type === 'attack').result.amount;
-  ok('Archer: Headshot ignores defense (about 300% of attack)', Math.abs(d0 - a.stats.attack * 3) <= 2, `${d0} vs ${a.stats.attack * 3}`);
-  a.skills[skillOf(a, 'attack')].cooldownLeft = 0; s.applyStatus(es[0], { status: 'mark', durationMs: 6000, damageTakenPercent: 25 }, a, 'test', []);
-  const d1 = s.castSkill(a.uid, skillOf(a, 'attack')).find((e) => e.type === 'attack').result.amount;
-  ok('...DOUBLE on a Marked enemy (x2, plus the mark)', d1 > d0 * 2.3, `${d0} -> ${d1}`); }
-{ const { s, es, h } = mk(['archer'], ['goblin', 'goblin'], () => 0); const a = h[0]; s.giveItem(a.uid, 'fire_bombs');
-  const ev = s.castSkill(a.uid, skillOf(a, 'attack'));
-  ok('...Headshot sets off on-hit items', ev.some((e) => e.type === 'proc' && e.itemId === 'fire_bombs')); }
-{ const { s, es, h } = mk(['archer']); const a = h[0]; s.applyStatus(es[0], { status: 'mark', durationMs: 6000 }, a, 't', []); const hp1 = es[1].hp;
-  const ev = []; s.landAttack(a, es[0], ev);
-  ok('...her shots on a Marked enemy pierce to the next one', es[1].hp < hp1 || es[2].hp < 100000); }
-
 // ---- Samurai
 { const { s, es, h } = mk(['samurai'], ['goblin'], () => 0.99); const sa = h[0]; const e = es[0];
   const res = []; for (let i = 0; i < 6; i++) res.push(s.strike(e, sa, [], { basic: true }));

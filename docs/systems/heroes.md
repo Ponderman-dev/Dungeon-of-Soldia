@@ -33,3 +33,12 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       ITEM procs `procChancePercent` 25% likelier (`marchProcs()` in `rollProcs`, not passive procs); BALLAD makes item heals
       `healPercent` 25% stronger (`balladHeal()` inside `regenAura().factor`, the same factor the Cleric's aura uses).
       DISCORD cooldown 13 -> 8s. review.mjs 3 all (x2): avg floor ~25 -> 27.1 / 25.8.
+    - **Archer** VOLLEY GUNNER (built session 6): Steady Aim + pierce REMOVED from her (the `steadyAim` code stays, unused by
+      real heroes). VOLLEY (`passive.volley`, `volley()` at the end of landAttack): every `every` 4th basic shot also fires at
+      `arrows`-1 = 2 other enemies (nearest to her target), +`perQuiver` 1 per Quiver of Plenty; each arrow is a full strike
+      that rolls her on-hit items + Fire Arrows; count `hero.volleyCount` kept for the run. ARROW RAIN (`arrow_rain`, replaces
+      Headshot; `headshot` stays in skills.json): channel 6 waves of 60% every 333ms on a circle 110 that follows her target,
+      cooldown 10s, `waveOnHit` = every wave rolls her on-hit items + Fire Arrows on each enemy hit (in `fireWave()`).
+      Balance: review.mjs 3 all avg floor ~25 (old kit) -> ~24.3, still LAST; her share of squad damage 46% -> ~29% (lost
+      the 60% pierce on every shot and Steady Aim). Tried: volley 4 arrows, every 3rd, rain 70%: little change in review
+      (runs end at the floor-20 boss, where volley has no 2nd target). Asked the user which lever to pull.

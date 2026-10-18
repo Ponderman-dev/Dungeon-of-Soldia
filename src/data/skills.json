@@ -896,6 +896,34 @@
     "projectile": "knife",
     "description": "One aimed shot: 300% damage that ignores defense, DOUBLE on a Marked enemy. Counts as an attack for on-hit items."
   },
+  "arrow_rain": {
+    "name": "Arrow Rain",
+    "short": "AR",
+    "kind": "attack",
+    "target": "allEnemies",
+    "damageType": "ranged",
+    "cooldownMs": 10000,
+    "castMs": 500,
+    "channel": {
+      "intervalMs": 333,
+      "waves": [
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6
+      ]
+    },
+    "waveOnHit": true,
+    "projectile": "rain",
+    "area": {
+      "shape": "circle",
+      "at": "target",
+      "radius": 110
+    },
+    "description": "Arrows fall on an area around her target for 2s: 6 waves of 60% damage, and every wave sets off her on-hit items on each enemy it hits. She is busy while it rains."
+  },
   "discord": {
     "name": "Discord",
     "short": "DC",

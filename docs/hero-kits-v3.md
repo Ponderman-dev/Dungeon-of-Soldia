@@ -29,7 +29,7 @@ Decided by the user one hero at a time (feel, passive, attack, support). Numbers
   Bleed and rolls his on-hit items (more hits = more procs). 5s cooldown.
 - Support SMOKE BOMB: unchanged (squad +30 evasion 4s, all enemies Blinded).
 
-## Archer: VOLLEY GUNNER
+## Archer: VOLLEY GUNNER (BUILT session 6, needs a buff, see docs/systems/heroes.md)
 - Feel: many arrows at many enemies, every arrow rolls her items. Loves on-hit, arrow and attack speed items
   (Quiver of Plenty, Fire Arrows, Static Crystal).
 - Passive VOLLEY (replaces Steady Aim): every 5th shot fires at 3 enemies; each arrow rolls her on-hit items.

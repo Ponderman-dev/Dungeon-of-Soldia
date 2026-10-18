@@ -523,12 +523,13 @@
   {
     "id": "archer",
     "name": "Archer",
-    "role": "Marksman",
-    "summary": "Marks a target, then deletes it with a Headshot.",
+    "role": "Volley Gunner",
+    "summary": "Arrows at many enemies; every arrow sets off her on-hit items.",
     "tips": [
-      "Hunter's Mark first, then Headshot: double damage.",
-      "Headshot ignores defense: great on armored enemies.",
-      "Keep her safe: being hit turns off Steady Aim."
+      "Volley: every 4th shot fires at 3 enemies; Quiver of Plenty adds an arrow to each volley.",
+      "Every arrow rolls her on-hit items: Fire Arrows, Static Crystal and friends love her.",
+      "Arrow Rain: 6 waves of arrows on an area; each wave sets off her on-hit items.",
+      "Hunter's Mark: the marked enemy takes +25% damage from everyone."
     ],
     "damageType": "ranged",
     "height": 23,
@@ -668,7 +669,7 @@
       "evasion": 0.4
     },
     "skills": {
-      "attack": "headshot",
+      "attack": "arrow_rain",
       "support": "hunters_mark"
     },
     "perk": {
@@ -682,17 +683,13 @@
       ]
     },
     "passive": {
-      "name": "Steady Aim",
-      "description": "While she has not been hit for 1.5s: +25% attack speed and +15 crit. Every basic shot pierces to the enemy next to it (60% damage).",
-      "steadyAim": {
-        "afterMs": 1500,
-        "attackSpeedPercent": 25,
-        "critFlat": 15,
-        "pierce": {
-          "radius": 140,
-          "damageMultiplier": 0.6,
-          "everyShot": true
-        }
+      "name": "Volley",
+      "description": "Every 4th shot also fires at the 2 enemies nearest to her target (+1 per Quiver of Plenty). Every arrow sets off her on-hit items.",
+      "volley": {
+        "every": 4,
+        "arrows": 3,
+        "perQuiver": 1,
+        "damageMultiplier": 1
       }
     }
   },

@@ -88,3 +88,25 @@ const run = (s, ms) => { const ev = []; for (let t = 0; t < ms; t += 20) ev.push
 { const { s, es, h } = mk(['bard']); const b = h[0]; es.forEach((e, n) => { e.x = 165 + n * 30; e.y = es[0].y; }); s.castSkill(b.uid, b.skills.findIndex((x) => x.kind === 'attack'));
   ok(`Discord: ${skills.discord.cooldownMs / 1000}s cooldown, enemies are Charmed`, skills.discord.cooldownMs === 8000 && es.every((e) => e.statuses.some((x) => x.type === 'charm')));
   ok('...a charmed enemy attacks another ENEMY', s.pickTarget(es[0]).side === 'enemy'); }
+
+// ================= ARCHER: VOLLEY GUNNER
+const V = hero('archer').passive.volley;
+{ const { s, es, a } = mk(['archer'], ['goblin', 'goblin', 'goblin', 'goblin']);
+  const shots = []; for (let i = 0; i < V.every; i++) { const ev = []; s.landAttack(a, es[0], ev); shots.push(new Set(hits(ev, a).map((e) => e.target)).size); }
+  ok(`Volley: shots 1-${V.every - 1} hit one enemy, shot ${V.every} hits ${V.arrows}`, shots.slice(0, -1).every((n) => n === 1) && shots[V.every - 1] === V.arrows, shots.join());
+  const ev = []; s.landAttack(a, es[0], ev); ok('...then the count starts over', new Set(hits(ev, a).map((e) => e.target)).size === 1); }
+{ const { s, es, a } = mk(['archer'], ['goblin', 'goblin', 'goblin', 'goblin', 'goblin']); s.giveItem(a.uid, 'quiver_of_plenty'); s.giveItem(a.uid, 'quiver_of_plenty');
+  a.specials.extraArrow = 0; a.volleyCount = V.every - 1; const ev = []; s.landAttack(a, es[0], ev);
+  ok(`...each Quiver of Plenty adds ${V.perQuiver} arrow to the volley`, new Set(hits(ev, a).map((e) => e.target)).size === V.arrows + 2 * V.perQuiver); }
+{ const { s, es, a } = mk(['archer'], ['goblin', 'goblin', 'goblin'], () => 0); s.giveItem(a.uid, 'fire_bombs');
+  a.volleyCount = V.every - 1; const ev = []; s.landAttack(a, es[0], ev);
+  ok('...every volley arrow rolls her on-hit items', ev.filter((e) => e.type === 'proc' && e.itemId === 'fire_bombs').length === V.arrows); }
+{ const R = skills[hero('archer').skills.attack]; const { s, es, a } = mk(['archer']); es.forEach((e, n) => { e.x = 165 + n * 30; e.y = es[0].y; });
+  const ev = [...cast(s, a, 'attack')]; for (let t = 0; t < 2500; t += 20) ev.push(...s.update(20));
+  const waves = ev.filter((e) => e.type === 'wave' && e.unit === a);
+  const per = es.map((e) => ev.filter((x) => x.type === 'attack' && x.attacker === a && x.skill && x.target === e).length);
+  ok(`Arrow Rain: ${R.channel.waves.length} waves of ${R.channel.waves[0] * 100}% on every enemy in the area`, waves.length === R.channel.waves.length && per.every((n) => n === R.channel.waves.length), per.join()); }
+{ const { s, es, a } = mk(['archer'], ['goblin', 'goblin'], () => 0); es.forEach((e, n) => { e.x = 165 + n * 30; e.y = es[0].y; }); s.giveItem(a.uid, 'fire_bombs');
+  const ev = [...cast(s, a, 'attack')]; for (let t = 0; t < 2500; t += 20) ev.push(...s.update(20));
+  const procs = ev.filter((e) => e.type === 'proc' && e.itemId === 'fire_bombs' && e.unit === a).length;
+  ok('...every wave rolls her on-hit items on each enemy hit', procs >= skills.arrow_rain.channel.waves.length * 2, procs); }

@@ -1055,6 +1055,31 @@ export default class BattleState {
     this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, force: empower.some((f) => f.counter.forceProcs) });
     this.fireArrows(unit, target, events);
     this.extraArrows(unit, target, events);
+    this.volley(unit, target, events); // Archer: every Nth shot fires at more enemies
+  }
+
+  // Archer's VOLLEY (passive.volley): every `every`th basic shot also fires at `arrows`-1 other enemies (the nearest
+  // to her target), +`perQuiver` per Quiver of Plenty she holds. Each arrow is a full shot that rolls her on-hit items
+  // (and Fire Arrows). The count is kept for the whole run.
+  volley(unit, target, events) {
+    const V = unit.def.passive && unit.def.passive.volley;
+    if (!V || unit.side !== 'hero') return;
+    unit.volleyCount = (unit.volleyCount || 0) + 1;
+    if (unit.volleyCount < V.every) return;
+    unit.volleyCount = 0;
+    const quivers = unit.items.filter((i) => i === 'quiver_of_plenty').length;
+    let n = V.arrows - 1 + quivers * (V.perQuiver || 0);
+    const others = this.targetableEnemies().filter((e) => e !== target);
+    if (!others.length) return;
+    events.push({ type: 'proc', unit, label: 'Volley!', target });
+    const from = target.alive ? target : others[0];
+    others.sort((a, b) => (this.hasPositions(a) ? this.distance(a, from) - this.distance(b, from) : 0));
+    for (const e of others) {
+      if (n-- <= 0) break;
+      const res = this.strike(unit, e, events, { multiplier: V.damageMultiplier, projectile: 'arrow' });
+      this.rollProcs(unit, 'onAttack', events, { target: e, hit: !res.dodged });
+      this.fireArrows(unit, e, events);
+    }
   }
 
   // Quiver of Plenty: a RANGED basic attack of the holder has `extraArrow`% (15 per copy) to shoot one more arrow at a
@@ -2737,6 +2762,11 @@ export default class BattleState {
     for (const t of targets) {
       const res = this.skillHit(hero, { ...ch.skill, apply: null, onCrit: ch.skill.onCrit }, ch.slotId, t, events, { multiplier: mult });
       if (res && !res.dodged && t.alive) for (const spec of ch.skill.waveApply || []) if (this.rng() * 100 < (spec.chance ?? 100)) this.applyStatus(t, spec, hero, ch.slotId, events);
+      // Arrow Rain (`waveOnHit`): every wave rolls the caster's on-hit items (and Fire Arrows) on each enemy it hits.
+      if (ch.skill.waveOnHit && res && t.alive) {
+        this.rollProcs(hero, 'onAttack', events, { target: t, hit: !res.dodged });
+        this.fireArrows(hero, t, events);
+      }
     }
     this.castPages = null;
     ch.wave++;

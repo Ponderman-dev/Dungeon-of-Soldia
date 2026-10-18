@@ -107,6 +107,27 @@ section { display: grid; gap: 16px; }
 .arcane .panel { box-shadow: inset var(--px) var(--px) 0 var(--u-hi), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 var(--u-lo), 0 0 0 var(--px) #000, 0 0 14px #7a5cc944; }
 .arcane .btn { box-shadow: inset 0 calc(-1 * var(--px) * 2) 0 var(--u-btn-lo), inset 0 var(--px) 0 var(--u-btn-hi), 0 0 12px #b9a0ff55; }
 
+/* D: Classic RPG Window (user's note: black menus with white strokes, early console RPG style) */
+.quest { --u-bg: #000; --u-panel: #000; --u-hi: #000; --u-lo: #000; --u-border: #fff; --u-border-dark: #fff;
+  --u-floor: #0b0b12; --u-floorline: #16161f; --u-text: #fff; --u-muted: #fff; --u-trim: #fff; --u-accent: #ffd84a;
+  --u-hp: #5ee05e; --u-foe: #ff5050; --u-hpbg: #000; --u-iconbg: #000;
+  --u-atk: #000; --u-atk-edge: #fff; --u-sup: #000; --u-sup-edge: #fff;
+  --u-btn: #000; --u-btn-edge: #fff; --u-btn-lo: #000; --u-btn-hi: #000; --u-btn-text: #fff; }
+.quest .floor, .quest .lv, .quest .rar, .quest .nm, .quest .btn, .quest .sk { font-family: 'Press Start 2P', monospace; }
+/* the window: a white 2px line, a black 2px gap, chunky stepped corners */
+.quest .panel, .quest .btn, .quest .sk, .quest .card .ico { border: 2px solid #fff; box-shadow: inset 0 0 0 2px #000; clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 2px, calc(100% - 2px) 2px, calc(100% - 2px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 2px), 2px calc(100% - 2px), 2px calc(100% - 4px), 0 calc(100% - 4px)); }
+.quest .sk.atk { color: #ff7a5a; } .quest .sk.sup { color: #6ee07a; }
+.quest .sk.cd::after { background: #000c; }
+.quest .card .rar { color: #ffd84a; }
+.quest .card .ps { color: #ffd84a; }
+.quest .hp { border-color: #fff; }
+.quest .btn .cur { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: middle; }
+.cur { display: none; }
+.quest .btn.sel .cur { display: inline-block; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .quest .btn.sel .cur { animation: none; } }
+.quest .btn.ghost { border-color: #fff; color: #fff; }
+
 /* ---------- fonts ---------- */
 .fonts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
 .spec { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; align-content: start; }
@@ -114,7 +135,8 @@ section { display: grid; gap: 16px; }
 .spec .demo canvas, .screen canvas { image-rendering: pixelated; display: block; }
 .screen [data-tx] { -webkit-font-smoothing: none; font-smooth: never; }
 .btn .bmp { display: inline-block; vertical-align: middle; }
-.btn { display: grid; place-items: center; }
+.btn { display: flex; justify-content: center; align-items: center; }
+.cur svg { width: 10px; height: 10px; display: block; shape-rendering: crispEdges; }
 .spec .big { font-size: 1.4em; line-height: 1.1; color: #e3b553; }
 .spec .small { font-size: .95em; line-height: 1.3; }
 .spec .nums { font-size: .95em; color: #ff9a6b; }
@@ -165,6 +187,9 @@ textarea { width: 100%; box-sizing: border-box; min-height: 90px; background: va
 /*SPRITES*/
 /*SHOTS*/
 const LOOKS = [
+  { id: 'quest', name: 'D · Classic RPG Window (your note)', swatch: ['#000000', '#ffffff', '#ffd84a', '#ff7a5a', '#6ee07a'],
+    text: 'Black windows with a white pixel line and stepped corners, white text and a blinking ▶ cursor on the chosen button, like the menus of the first console RPGs. Shown here with your font pick, Press Start 2P.',
+    bullets: ['Every menu, card and button is the same black window, so the whole game reads as one.', 'Colour only where it means something: gold for item rarity and stacks, red/green icons for attack/support skills, health bars.', 'The fight art stays colourful; the windows frame it without competing.'] },
   { id: 'stone', name: 'A · Torchlit Stone', swatch: ['#3a3442', '#5d5569', '#e3b553', '#c98b2a', '#efe6d2'],
     text: 'Grey dungeon stone with bevelled pixel edges and gold trim, like carved slabs lit by torches. Fits the dungeon walls already in the game.',
     bullets: ['Panels look raised (light top-left edge, dark bottom-right).', 'Gold for titles and important numbers.', 'Warm amber main button, like a torch.'] },
@@ -177,11 +202,11 @@ const LOOKS = [
 ];
 const FONTS = [
   { id: 'soldia', name: 'Soldia 5x7 (custom)', note: 'Hand-made for the game: every letter on a 5x7 grid, like old arcade and handheld games. Perfectly even and crisp, upper and lower case, easy to tweak letter by letter later.' },
-  { id: 'press', name: 'Press Start 2P', css: "'Press Start 2P', monospace", sizes: { title: 16, name: 16, body: 8, small: 8 }, note: 'The famous 8-bit arcade font on an 8x8 grid, capitals and lower case. Very chunky: long item text needs the small size.' },
-  { id: 'silkscreen', name: 'Silkscreen', css: "'Silkscreen', monospace", sizes: { title: 16, name: 16, body: 16, small: 8 }, note: 'Classic small pixel capitals (no lower case). Sharp and even, but everything is in capitals.' },
+  { id: 'press', name: 'Press Start 2P', css: "'Press Start 2P', monospace", sizes: { title: 16, name: 16, body: 8, small: 8, btn: 16 }, note: 'The famous 8-bit arcade font on an 8x8 grid, capitals and lower case. Very chunky: long item text needs the small size.' },
+  { id: 'silkscreen', name: 'Silkscreen', css: "'Silkscreen', monospace", sizes: { title: 16, name: 16, body: 16, small: 8, btn: 16 }, note: 'Classic small pixel capitals (no lower case). Sharp and even, but everything is in capitals.' },
 ];
 // Every text in the mocks has a role: how big it is drawn (Soldia scale or css size), wrapped or not, capitals or not.
-const ROLES = { floor: ['title', 2, false, true], nm: ['name', 2, false, false], ds: ['body', 2, true, false], ps: ['body', 2, true, false], rar: ['small', 2, false, true], btn: ['small', 2, false, true], lv: ['small', 1, false, false] };
+const ROLES = { floor: ['title', 2, false, true], nm: ['name', 2, false, false], ds: ['body', 2, true, false], ps: ['body', 2, true, false], rar: ['small', 2, false, true], btn: ['btn', 2, false, true], lv: ['small', 1, false, false] };
 function applyFont(id) {
   const F = FONTS.find((f) => f.id === id) || FONTS[0];
   document.querySelectorAll('.screen [data-tx]').forEach((el) => {
@@ -211,6 +236,7 @@ const GLYPH = {
   heart: ['.11..11.', '11111111', '11111111', '11111111', '.111111.', '..1111..', '...11...', '........'],
   arrow: ['1.......', '.1......', '..1...1.', '...1.11.', '....11..', '...111..', '..1.....', '........'],
   eye: ['........', '..1111..', '.1....1.', '1..11..1', '1..11..1', '.1....1.', '..1111..', '........'],
+  cursor: ['1.......', '11......', '111.....', '1111....', '111.....', '11......', '1.......', '........'],
 };
 const glyph = (name) => {
   const rows = GLYPH[name]; let r = '';
@@ -232,7 +258,7 @@ function mock(cls) {
     </div>
     <div class="card panel"><div class="ico"><img src="${SPR.i_eagle_eye}" alt=""></div>
       <div><div class="rar" data-tx="rar">Common item</div><div class="nm" data-tx="nm">Eagle Eye</div><div class="ds" data-tx="ds">+15% ranged damage.</div><div class="ps" data-tx="ps">Per stack: +15% ranged damage</div></div></div>
-    <div class="btn"><span data-tx="btn">Begin descent</span></div>
+    <div class="btn sel"><span class="cur">${glyph('cursor')}</span><span data-tx="btn">Begin descent</span></div>
     <div class="row2"><div class="btn ghost"><span data-tx="btn">Random</span></div><div class="btn ghost"><span data-tx="btn">Back</span></div></div>
   </div></div>`;
 }

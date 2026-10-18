@@ -22,6 +22,7 @@ import floorArt from '../data/floorArt.json';
 import * as sfx from '../audio/sfx.js';
 import { statusIconKey } from '../entities/statusIconTexture.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
+import { skillIconKey } from '../entities/skillIconTexture.js';
 import itemFxData from '../data/itemFx.json';
 import * as itemFx from '../systems/itemFx.js';
 import skillFxData from '../data/skillFx.json';
@@ -175,7 +176,7 @@ export default class BattleScene extends Phaser.Scene {
       const v = this.views.get(h.uid);
       // A fallen hero's labels stay dim and have no skill squares.
       this.tweens.add({ targets: v.dots, alpha: show ? (h.alive ? 1 : 0.3) : 0, duration }); // the item icons under the skills
-      const buttons = v.skillButtons.flatMap((b) => [b.g, b.code, b.cd]);
+      const buttons = [...v.skillButtons.flatMap((b) => [b.g, b.code, b.cd]), ...(v.passiveIcon ? [v.passiveIcon] : [])];
       this.tweens.add({ targets: buttons, alpha: show && h.alive ? 1 : 0, duration });
     }
   }
@@ -915,22 +916,24 @@ export default class BattleScene extends Phaser.Scene {
       const cx = this.slotWidth * i + this.slotWidth / 2;
       const view = this.makeView(unit, cx, SLOT_Y);
       // The hero's items: small item icons under the skill squares (drawDots).
-      view.dots = this.add.container(cx, SKILL_Y + SKILL_H / 2 + 14).setDepth(DEPTH.slot);
+      view.dots = this.add.container(cx - 2, SKILL_Y + SKILL_H / 2 + 14).setDepth(DEPTH.slot); // under the passive + skill squares
       view.slotX = cx;
       view.ch.setDepth(DEPTH.hero);
       for (const part of [view.bg, view.fill]) part.setDepth(DEPTH.heroBar);
       view.chipBox.setDepth(DEPTH.heroBar);
 
       // The two skill squares under the hero: tap to cast. Left = attack skill (red), right = support skill (green).
+      // Each shows the skill's pixel icon (skillIcons.json); a skill without one shows its 2 letters.
       view.skillButtons = unit.skills.map((slot, j) => {
-        const x = cx + (j === 0 ? -22 : 22);
+        const x = cx + (j === 0 ? -12 : 32); // a little right of centre: the passive icon sits on the left
         const textStyle = uiStyle('normal', UI.text);
+        const iconKey = skillIconKey(this, slot.id);
         const button = {
           x: x - SKILL_W / 2,
           y: SKILL_Y - SKILL_H / 2,
           g: this.add.graphics().setDepth(3),
-          code: this.add.text(x, SKILL_Y, skillDefs[slot.id].short, textStyle).setOrigin(0.5).setDepth(4),
-          cd: this.add.text(x, SKILL_Y, '', { ...textStyle, color: UI.dim }).setOrigin(0.5).setDepth(5),
+          code: iconKey ? this.add.image(x, SKILL_Y, iconKey).setScale(2).setDepth(4) : this.add.text(x, SKILL_Y, skillDefs[slot.id].short, textStyle).setOrigin(0.5).setDepth(4),
+          cd: this.add.text(x, SKILL_Y, '', { ...textStyle, color: UI.text, stroke: '#000000', strokeThickness: 4 }).setOrigin(0.5).setDepth(5),
         };
         this.add
           .zone(x, SKILL_Y, SKILL_W + 6, SKILL_H + 6)
@@ -939,7 +942,29 @@ export default class BattleScene extends Phaser.Scene {
           .on('pointerdown', () => this.castFromUI(unit.uid, j));
         return button;
       });
+      // The hero's passive: a small gold-framed icon left of the skill squares; tap it to read what it does.
+      const pKey = skillIconKey(this, `passive_${unit.def.id}`, true);
+      if (pKey) {
+        const px = cx - 12 - SKILL_W / 2 - 13;
+        view.passiveIcon = this.add.image(px, SKILL_Y, pKey).setDepth(4);
+        this.add.zone(px, SKILL_Y, 26, 30).setInteractive().setDepth(6).on('pointerdown', () => this.showPassive(view));
+      }
     });
+  }
+
+  // A tap on a passive icon: its name and what it does, in a small black window over the squad for a few seconds.
+  showPassive(view) {
+    const p = view.unit.def.passive;
+    if (!p) return;
+    sfx.play('tap');
+    if (this.passiveTip) this.passiveTip.destroy();
+    const t = this.add.text(GAME_WIDTH / 2, 0, `${p.name}\n${p.description}`, { fontFamily: UI.font, fontSize: '8px', color: UI.text, lineSpacing: 5, align: 'left', wordWrap: { width: GAME_WIDTH - 52, useAdvancedWrap: true } }).setOrigin(0.5, 1);
+    const y = SKILL_Y - SKILL_H / 2 - 92;
+    t.setY(y);
+    const g = drawWindow(this.add.graphics(), GAME_WIDTH / 2 - t.width / 2 - 12, y - t.height - 12, t.width + 24, t.height + 24, { line: 0xf2b632 });
+    this.passiveTip = this.add.container(0, 0, [g, t]).setDepth(DEPTH.hud + 1);
+    const tip = this.passiveTip;
+    this.time.delayedCall(3500, () => { if (tip.active) this.tweens.add({ targets: tip, alpha: 0, duration: 250, onComplete: () => tip.destroy() }); });
   }
 
   // Taps on a skill square.
@@ -960,21 +985,28 @@ export default class BattleScene extends Phaser.Scene {
       view.skillButtons.forEach((b, j) => {
         const slot = hero.skills[j];
         const skill = skillDefs[slot.id];
-        b.code.setText(this.state.currentSpell(hero, j).short); // a rotation skill shows its NEXT spell
+        const spell = this.state.currentSpell(hero, j);
+        if (b.code.setText) b.code.setText(spell.short); // (no icon) a rotation skill shows its NEXT spell's letters
         const ready = this.mode === 'fighting' && this.state.canCast(hero, j);
         const g = b.g;
         g.clear();
-        // A black window: white line when it can be cast, grey while it cools down (a grey fill drains from the top).
-        const kindColor = slot.kind === 'attack' ? UI.red : UI.green; // the letters say attack (red) or support (green)
-        drawWindow(g, b.x, b.y, SKILL_W, SKILL_H, { line: ready ? UI.line : 0x4a4a5a, alpha: hero.alive ? 1 : 0.5 });
+        // A black window: its line is red (attack) or green (support) when it can be cast, grey while it cools down
+        // (a grey fill drains from the top). The Mage's rotation always shows the NEXT spell's element (user).
+        const kindColor = slot.kind === 'attack' ? UI.red : UI.green;
+        const element = skill.rotation && damageTypes[spell.damageType] ? Phaser.Display.Color.HexStringToColor(damageTypes[spell.damageType].color).color : null;
+        const line = element ?? (ready ? SKILL_COLORS[slot.kind].ready : 0x4a4a5a);
+        drawWindow(g, b.x, b.y, SKILL_W, SKILL_H, { line, alpha: hero.alive ? 1 : 0.5 });
         if (slot.cooldownLeft > 0) {
           const frac = slot.cooldownLeft / skill.cooldownMs;
           g.fillStyle(0x2a2a36, 1).fillRect(b.x + 4, b.y + 4, SKILL_W - 8, Math.round((SKILL_H - 8) * frac));
         }
         this.drawPageMarks(g, b, slot, hero.alive);
         b.cd.setText(slot.cooldownLeft > 0 ? String(Math.ceil(slot.cooldownLeft / 1000)) : '');
-        b.code.setColor(ready ? kindColor : UI.dim);
-        b.code.setVisible(slot.cooldownLeft <= 0); // the cooldown number takes the letters' place
+        if (b.code.setColor) {
+          b.code.setColor(ready ? kindColor : UI.dim);
+          b.code.setVisible(slot.cooldownLeft <= 0); // the cooldown number takes the letters' place
+        } else if (ready && hero.alive) b.code.clearTint();
+        else b.code.setTint(hero.alive ? 0x5a5a66 : 0x2a2a30); // the icon darkens while it cools down (the number shows on it)
       });
     }
   }
@@ -1646,6 +1678,7 @@ export default class BattleScene extends Phaser.Scene {
         v.ch.die(); // death clip if it has one, then it stops moving
         v.ch.setAlpha(0.25);
         v.skillButtons.forEach((b) => [b.g, b.code, b.cd].forEach((o) => o.setAlpha(0)));
+        if (v.passiveIcon) v.passiveIcon.setAlpha(0);
         v.bg.setAlpha(0.4);
         v.fill.setAlpha(0.4);
         if (v.lvl) v.lvl.setAlpha(0.4);

@@ -346,5 +346,53 @@
       "stat": 2,
       "modifier": 3
     }
+  },
+  "pageColors": {
+    "_about": "The skill book picture on a page card is recoloured by page type (user, skill icons page): stat pages blue, each modifier tag its own colour. [mid, light, dark] replace the blue book's palette entries 1, 2 and 5 (itemIcons.json skill_book). The golden boss book keeps its gold.",
+    "stat": [
+      "0x3f63c8",
+      "0x7f9fe8",
+      "0x24306a"
+    ],
+    "Debuff": [
+      "0x7a3fb8",
+      "0xb88ae8",
+      "0x3a1c5a"
+    ],
+    "Heal": [
+      "0x2f9a55",
+      "0x7ee09a",
+      "0x17482a"
+    ],
+    "Defense": [
+      "0x6a6e80",
+      "0xc8cbd8",
+      "0x34363f"
+    ],
+    "Team": [
+      "0x1f9a9a",
+      "0x7fe0e0",
+      "0x0e4848"
+    ],
+    "Tempo": [
+      "0xc8b020",
+      "0xf8e878",
+      "0x605010"
+    ],
+    "Risk": [
+      "0xb8302a",
+      "0xf07a6a",
+      "0x5a1414"
+    ],
+    "Area": [
+      "0xd06a20",
+      "0xffb070",
+      "0x6a3210"
+    ],
+    "Self": [
+      "0xc0408a",
+      "0xf090c8",
+      "0x5a1a40"
+    ]
   }
 }

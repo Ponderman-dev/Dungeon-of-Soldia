@@ -10,9 +10,9 @@ type (stat blue, Debuff purple, Heal green, Defense steel, Team teal, Tempo yell
 Review page: https://claude.ai/artifact/66p6zRjp6S78Gg9rAk6YSs (ArtifactData `list` collection `notes`; ids `icon:<skillId>`,
 `icon:passive_<heroId>`, `book:<tag>`). Icons: `src/data/skillIcons.json`, drawn by `scripts/art/skill-icons.mjs` (pixel pen,
 one recipe per icon: edit the recipe, re-run, rebuild the page with `node docs/proposals/skill-icons/make.mjs <out.html>`).
-NEXT: read the notes, redraw the CHANGE ones, then build them into the game (skill buttons in BattleScene show the icon
-instead of the 2 letters; passive icon somewhere visible, e.g. the hero card / hero HUD; book colours in skillBooks.json and
-the reward page cards). Ask the user where the passive icon should show in fights.
+BUILT into the game (session 8, docs/systems/skills.md 'SKILL ICONS'): fight buttons, passive icon + tap tooltip, hero card,
+book colours; the user's one note (Mage rotation border = next element) done. NEXT: ask the user what's next (ideas: hero balance
+pass, drop odds, bosses rework).
 Also new this session: TEST tools panel (gold 'TEST: tools' button), floorArt.js, room decorations (roomProps.json decor).
 
 ## START HERE (session 7): SCREEN REVIEW NOTES, working through them

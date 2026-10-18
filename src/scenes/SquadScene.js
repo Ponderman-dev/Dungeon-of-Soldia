@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, UI } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, SKILL_COLORS, UI } from '../config.js';
 import { drawWindow, drawCursor } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
+import { skillIconKey } from '../entities/skillIconTexture.js';
 import floorArt from '../data/floorArt.json';
 import { floorTextureKey, FLOOR_PIXEL } from '../entities/floorTexture.js';
 import heroDefs from '../data/heroes.json';
@@ -390,28 +391,38 @@ export default class SquadScene extends Phaser.Scene {
     const perk = perkMods({ def, level: 1 }).map((m) => `${m.percent !== undefined ? `+${m.percent}%` : `+${m.flat}`} ${STAT_SHORT[m.stat] || ({ skillDamage: 'skill dmg', regen: 'HP/s', dotDamage: 'DoT dmg' })[m.special] || m.special}`).join(', ');
     text(GAME_WIDTH / 2, Y + 230, `${def.summary || ''}  Team: ${perk}`, 12, MUTE, false, W - 48).setOrigin(0.5, 0).setAlign('center');
 
-    // Passive, attack skill, support skill: a coloured badge + name + what it does.
+    // Passive, attack skill, support skill: its pixel icon (skillIcons.json; passive in a gold frame, skills in a
+    // red / green window like the fight buttons) + name + what it does. No icon: the old coloured letter badge.
     let y = Y + 280;
-    const row = (badge, color, name, extra, body) => {
-      g.fillStyle(color, 1).fillRect(X + 16, y, 22, 22); // a square coloured badge: P passive, A attack, S support
-      text(X + 27, y + 12, badge, 8, '#000000', true).setOrigin(0.5);
-      const n = text(X + 48, y + 3, name, 14, INK, true, W - 64);
-      const b = text(X + 48, n.y + n.height + 8, extra ? `${extra}. ${body}` : body, 12, '#d0d0dc', false, W - 64);
-      y = b.y + b.height + 16;
+    const row = (iconId, badge, color, name, extra, body) => {
+      const key = skillIconKey(this, iconId, badge === 'P');
+      if (key && badge === 'P') put(this.add.image(X + 16, y, key).setOrigin(0).setScale(2));
+      else if (key) {
+        drawWindow(g, X + 16, y, 40, 40, { line: color });
+        put(this.add.image(X + 36, y + 20, key).setScale(2));
+      } else {
+        g.fillStyle(color, 1).fillRect(X + 16, y, 22, 22); // a square coloured badge: P passive, A attack, S support
+        text(X + 27, y + 12, badge, 8, '#000000', true).setOrigin(0.5);
+      }
+      const tx = key ? X + 66 : X + 48;
+      const n = text(tx, y + 3, name, 14, INK, true, W - (tx - X) - 16);
+      const b = text(tx, n.y + n.height + 8, extra ? `${extra}. ${body}` : body, 12, '#d0d0dc', false, W - (tx - X) - 16);
+      y = Math.max(b.y + b.height, key ? y + 40 : 0) + 16;
     };
     const atk = skillDefs[def.skills.attack];
     const sup = skillDefs[def.skills.support];
-    row('P', 0xffd84a, def.passive.name, '', def.passive.description);
-    row('A', 0xff7a5a, atk.name, `Cooldown ${atk.cooldownMs / 1000}s`, atk.description);
-    row('S', 0x6ee07a, sup.name, `Cooldown ${sup.cooldownMs / 1000}s`, sup.description);
+    row(`passive_${def.id}`, 'P', 0xffd84a, def.passive.name, '', def.passive.description);
+    row(def.skills.attack, 'A', SKILL_COLORS.attack.ready, atk.name, `Cooldown ${atk.cooldownMs / 1000}s`, atk.description);
+    row(def.skills.support, 'S', SKILL_COLORS.support.ready, sup.name, `Cooldown ${sup.cooldownMs / 1000}s`, sup.description);
     // One tip is enough here.
-    if (def.tips && def.tips.length) {
-      g.fillStyle(0xffffff, 1).fillRect(X + 16, y - 6, W - 32, 2); // a white pixel rule
-      text(X + 16, y + 6, `Tip: ${def.tips[0]}`, 12, UI.gold, false, W - 32);
-    }
-
     // The button at the bottom.
     const by = Y + H - 64;
+    if (def.tips && def.tips.length) {
+      const tip = text(X + 16, y + 6, `Tip: ${def.tips[0]}`, 12, UI.gold, false, W - 32);
+      // Only when it fits above the button (and the unlock line of a locked hero); a long card skips it.
+      if (tip.y + tip.height > by - (open ? 10 : 34)) tip.destroy();
+      else g.fillStyle(0xffffff, 1).fillRect(X + 16, y - 6, W - 32, 2); // a white pixel rule
+    }
     let label;
     let action = null;
     if (!open) {

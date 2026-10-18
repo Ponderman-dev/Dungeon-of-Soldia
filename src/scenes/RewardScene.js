@@ -6,6 +6,7 @@ import itemTypes from '../data/itemTypes.json';
 import rarities from '../data/rarities.json';
 import { canReceive } from '../systems/items.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
+import { bookPageIconKey } from '../entities/skillIconTexture.js';
 import { FRAMED_SIZE } from '../systems/itemIcons.js';
 import * as sfx from '../audio/sfx.js';
 import bookData from '../data/skillBooks.json';
@@ -270,7 +271,7 @@ export default class RewardScene extends Phaser.Scene {
     };
     paint(lit);
     card.add(g);
-    card.add(this.add.image(L.iconW / 2, h / 2 - (this.compactPages ? 0 : 8), itemIconKey(this, golden ? 'golden_book' : 'skill_book', golden ? 'legendary' : 'rare')).setScale(L.iconScale));
+    card.add(this.add.image(L.iconW / 2, h / 2 - (this.compactPages ? 0 : 8), bookPageIconKey(this, page, golden)).setScale(L.iconScale)); // the book's colour = the page type
     card.add(this.add.text(L.textX, this.compactPages ? 9 : 14, page.kind === 'stat' ? 'STAT PAGE' : `MODIFIER - ${(page.tag || '').toUpperCase()}`, { fontFamily: FONT, fontSize: `${L.label}px`, color: hex(rc) }));
     card.add(this.add.text(L.textX, L.nameY, page.name, { fontFamily: FONT, fontSize: `${L.name}px`, color: INK }));
     card.add(this.add.text(L.textX, L.descY, page.text, { fontFamily: FONT, fontSize: `${L.desc}px`, color: MUTE, lineSpacing: 4, wordWrap: { width: CARD_W - L.textX - 16, useAdvancedWrap: true } }));

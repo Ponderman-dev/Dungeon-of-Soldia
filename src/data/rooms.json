@@ -35,7 +35,9 @@
       "weight": 20,
       "name": "Skill Dealer",
       "hint": "Tap the dealer to see the pages",
-      "_pages": "what the dealer offers: skillBooks.json contents.dealer (2 stat + 3 modifier pages)"
+      "_pages": "what the dealer offers: skillBooks.json contents.dealer (2 stat + 3 modifier pages)",
+      "x": 110,
+      "_x": "the dealer stands a bit left of the middle (user: not at the edge) so the squad walks straight to the door; he stays there"
     },
     "puzzle": {
       "weight": 15,

@@ -18,7 +18,7 @@ NEXT, still to do (user's words in quotes):
 - TEST TOOLS panel added (user asked): gold "TEST: tools" button = jump to any floor / pick its room / give any item / level up / heal (docs/systems/balance-tools.md).
 - 5 ART: hero select door (DONE session 8: big entrance Door { big: true }) "very big door, like an entrance to a dungeon, very intimidating"; between floors (DONE session 8: stone arch + wooden door, black when open, rattle/swing/bounce/dust open animation) "the door
   opens should have better animation and the door open it should look black"; fight floor (DONE session 8: floorArt.js flagstones/dirt/grass/pillars, docs/systems/floors-rooms.md) "more natural looking floor,
-  dirt and grass, an old dungeon, pillars on the wall"; fountain room (DONE session 8: decorateRoom, roomProps.json decor) "more decorations"; Skill Dealer room "shelves of
+  dirt and grass, an old dungeon, pillars on the wall"; fountain room (DONE session 8: decorateRoom, roomProps.json decor) "more decorations"; Skill Dealer room (DONE session 8) "shelves of
   book visuals, stack of books, a rug, other decorations; the merchant moves to the left just a bit (not to the edge)
   so the heroes go straight to the door without being blocked by anything".
 - 6 SOUNDS (sound was ON HOLD; workflow in docs/systems/sound.md; sound sites blocked, GitHub CC0 packs worked):

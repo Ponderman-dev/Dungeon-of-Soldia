@@ -4,7 +4,7 @@
 //   look 'new' = the proposed 3 beats in the Knight's colour/shape language (steel blue, squares):
 //     CHARGE (aura + particles gather during the wind-up), RELEASE (flash, camera kick/zoom, speed lines, hit-stop),
 //     IMPACT (big square shockwave, debris, a floor mark that lingers)
-//   name 'A' = a CUT-IN BAR (dark band slides across: skill icon + name in the hero colour, never scaled)
+//   name 'A' = a CUT-IN BAR (user: no), kept only so the code still runs
 //   name 'B' = a FLOATING NAME (fixed pixel size over the hero, slides up and fades, never scaled)
 // Everything is drawn in CHARACTER pixels (1 = 3 screen px), like src/systems/skillFx.js; the page only picks what to play.
 import heroes from '../../../src/data/heroes.json';
@@ -103,8 +103,8 @@ const DASH = 80; // ms from release to contact (Defense Bash)
 function plan(skillId, look) {
   const cast = SKILLS[skillId].castMs;
   if (look === 'now') return { cast, impact: cast, stopMs: skillId === 'defense_bash' ? FX.hitStopMs : 0, end: cast + 1500 };
-  if (skillId === 'defense_bash') return { cast, impact: cast + DASH, stopMs: 140, end: cast + DASH + 2000 };
-  return { cast, impact: cast + 130, stopMs: 90, end: cast + 130 + 3300 };
+  if (skillId === 'defense_bash') return { cast, impact: cast + DASH, stopMs: 80, end: cast + DASH + 1700 };
+  return { cast, impact: cast + 130, stopMs: 40, end: cast + 130 + 3300 };
 }
 export function loopMs(skillId, look) { const p = plan(skillId, look); return p.end + p.stopMs + 500; }
 
@@ -237,7 +237,9 @@ export class Demo {
     }
   }
 
-  // ---- NEW: Defense Bash ------------------------------------------------------------------------
+  // ---- NEW: Defense Bash (calm version, user: 'impact too flashy, don't interrupt the flow') ---------
+  // No screen flash, no speed lines, a tiny camera nudge, a short freeze, one small square ring + diamond, a few chips,
+  // and a small floor mark that fades within a second.
   newBash(st, et, P, T) {
     const h = st.hero, K = KNIGHT;
     const H0 = body(this.hero), E0 = body(this.foe);
@@ -245,103 +247,81 @@ export class Demo {
     this.charge(st, et, P);
     const since = et - P.cast;
     if (since >= 0) {
-      // RELEASE: white flash then a blue wash, the camera kicks in towards the hit, speed lines, he dashes in.
-      st.flash = since < 70 ? [0xffffff, 0.55 * (1 - since / 70)] : since < 220 ? [K.deep, 0.22 * (1 - (since - 70) / 150)] : null;
-      const kick = since < 60 ? easeOut(since / 60) : 1 - easeOut3(ph(since, 60 + P.stopMs * 0, 420));
-      st.cam = { ...st.cam, zoom: 1 + 0.1 * kick, fx: (H0.x + E0.x) / 2 * Z, fy: E0.mid * Z, kx: 8 * kick, ky: 0 };
-      if (since < 260) st.lines = { kind: 'side', a: since < 200 ? 0.8 : 0.8 * (1 - (since - 200) / 60) };
-      const dash = since < DASH ? easeOut(since / DASH) : 1 - easeOut(ph(since, DASH + 260, DASH + 560));
+      const kick = since < 60 ? easeOut(since / 60) : 1 - easeOut3(ph(since, 60, 300));
+      st.cam = { ...st.cam, zoom: 1 + 0.03 * kick, fx: (H0.x + E0.x) / 2 * Z, fy: E0.mid * Z, kx: 2 * kick, ky: 0 };
+      const dash = since < DASH ? easeOut(since / DASH) : 1 - easeOut(ph(since, DASH + 200, DASH + 480));
       h.dx = -2 + (contactDx + 2) * dash; h.dy = since < DASH ? -1 : 0;
-      if (since < DASH + 200) h.ghosts = [0.35, 0.65].map((k) => ({ dx: -2 + (contactDx + 2) * (since < DASH ? easeOut(since / DASH) * k : k), dy: 0, tint: [K.deep, 0.7], alpha: 0.45 * (1 - ph(since, DASH, DASH + 200)) }));
-      h.tint = since < 90 ? [K.light, 0.55] : null;
+      if (since < DASH + 120) h.ghosts = [{ dx: -2 + (contactDx + 2) * (since < DASH ? easeOut(since / DASH) * 0.5 : 0.5), dy: 0, tint: [K.deep, 0.7], alpha: 0.3 * (1 - ph(since, DASH, DASH + 120)) }];
+      h.tint = since < 80 ? [K.light, 0.4] : null;
     }
     const hit = et - P.impact;
     if (hit >= 0 || T >= P.impact) {
-      if (T >= P.impact && T < P.impact + P.stopMs + 220) st.cam.shake = 5 * (1 - (T - P.impact) / (P.stopMs + 220));
+      if (T >= P.impact && T < P.impact + P.stopMs + 120) st.cam.shake = 2 * (1 - (T - P.impact) / (P.stopMs + 120));
       const px = E0.x - E0.hw, py = E0.mid; // the contact point
       const g = st.over, u = st.under;
-      // the enemy: white, then knocked back and squashed a little
-      st.foe.tint = hit < 70 ? [0xffffff, 0.85] : hit < 160 ? [K.light, 0.4] : null;
-      st.foe.dx = hit < 60 ? 0 : 7 * (1 - easeOut(ph(hit, 60, 520))) * easeOut(ph(hit, 0, 90));
+      st.foe.tint = hit < 60 ? [0xffffff, 0.7] : null;
+      st.foe.dx = hit < 40 ? 0 : 4 * (1 - easeOut(ph(hit, 40, 360))) * easeOut(ph(hit, 0, 80));
       st.foe.hp = 18;
-      // core block of light, then three square shockwaves (square, diamond, square)
-      if (hit < 90) { const s = Math.round(4 - hit / 30); g.rect(px - s, py - s, 2 * s + 1, 2 * s + 1, K.white, 1); }
-      [[0, 'sq', K.white], [45, 'dia', K.light], [95, 'sq', K.mid]].forEach(([d, kind, col], k) => {
-        const p = ph(hit, d, d + 380); if (p <= 0 || p >= 1) return;
-        const r = 4 + 30 * easeOut3(p), a = 1 - p * p;
-        if (kind === 'sq') sqRing(g, px, py, r, r * 0.8, col, a, k === 0 ? 2 : 1); else diamond(g, px, py, r * 1.15, r, col, a, 2);
+      if (hit < 60) g.rect(px - 1, py - 1, 3, 3, K.white, 1);
+      [[0, 'sq', K.white], [40, 'dia', K.mid]].forEach(([d, kind, col]) => {
+        const p = ph(hit, d, d + 280); if (p <= 0 || p >= 1) return;
+        const r = 3 + 13 * easeOut3(p), a = (1 - p) * 0.9;
+        if (kind === 'sq') sqRing(g, px, py, r, r * 0.8, col, a); else diamond(g, px, py, r * 1.15, r, col, a);
       });
-      // straight rays (the 4 sides and 4 corners of a square)
-      const rp = ph(hit, 0, 170);
-      if (rp > 0 && rp < 1) for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2, r0 = 6 + 12 * rp, r1 = r0 + (i % 2 ? 6 : 12); g.line(px + Math.cos(a) * r0, py + Math.sin(a) * r0, px + Math.cos(a) * r1, py + Math.sin(a) * r1, i % 2 ? K.light : K.white, 1 - rp); }
-      // square debris chunks flying out (mostly away from him), falling
-      for (let i = 0; i < 14; i++) {
-        const p = ph(hit, 0, 520 + rnd(i) * 200); if (p <= 0 || p >= 1) continue;
-        const a = -Math.PI / 2 + (rnd(i * 3) - 0.35) * 2.6, d = (14 + rnd(i * 7) * 22) * easeOut(p);
-        const x = px + Math.cos(a) * d, y = py + Math.sin(a) * d * 0.8 + p * p * 18, s = i % 3 === 0 ? 2 : 1;
-        g.rect(x, y, s, s, [K.light, K.mid, K.deep, C.grey][i % 4], 1 - p * 0.7);
+      for (let i = 0; i < 6; i++) {
+        const p = ph(hit, 0, 380 + rnd(i) * 120); if (p <= 0 || p >= 1) continue;
+        const a = -Math.PI / 2 + (rnd(i * 3) - 0.3) * 2.4, d = (6 + rnd(i * 7) * 10) * easeOut(p);
+        g.px(px + Math.cos(a) * d, py + Math.sin(a) * d * 0.8 + p * p * 10, [K.light, K.mid, K.deep][i % 3], 1 - p);
       }
-      // the floor mark: a cracked steel plate under the enemy that lingers, then fades
-      const fm = 1 - ph(hit, 1300, 1900);
+      const fm = 1 - ph(hit, 700, 1100);
       if (fm > 0) {
-        const fx = E0.x, fy = E0.y + 1, grow = easeOut(ph(hit, 0, 120));
-        u.rect(fx - 9 * grow, fy - 2, 18 * grow + 1, 5, K.dark, 0.55 * fm);
-        sqRing(u, fx, fy, 10 * grow, 3, K.deep, 0.9 * fm);
-        if (grow >= 1) for (const [x0, y0, x1, y1] of [[-10, -3, -14, -5], [10, 3, 15, 5], [10, -3, 13, -5], [-10, 3, -13, 5], [-4, 3, -6, 6], [5, -3, 7, -5]]) u.line(fx + x0, fy + y0, fx + x1, fy + y1, K.deep, 0.8 * fm);
-        u.rect(fx - 2, fy - 1, 5, 3, K.mid, 0.5 * fm * (0.6 + 0.4 * Math.sin(et / 90)));
+        const fx = E0.x, fy = E0.y + 1, grow = easeOut(ph(hit, 0, 100));
+        sqRing(u, fx, fy, 7 * grow, 2, K.deep, 0.6 * fm);
+        if (grow >= 1) for (const [x0, y0, x1, y1] of [[-7, -2, -10, -3], [7, 2, 10, 3]]) u.line(fx + x0, fy + y0, fx + x1, fy + y1, K.deep, 0.5 * fm);
       }
       this.number(st, '128', E0, hit, true);
-      if (hit > 80 && hit < 1900) for (let i = 0; i < 3; i++) { const a = et / 150 + (i * Math.PI * 2) / 3; g.px(E0.x + st.foe.dx + Math.cos(a) * 5, E0.top - 2 + Math.sin(a) * 2, STAR, 1); }
+      if (hit > 60 && hit < 1600) for (let i = 0; i < 3; i++) { const a = et / 150 + (i * Math.PI * 2) / 3; g.px(E0.x + st.foe.dx + Math.cos(a) * 5, E0.top - 2 + Math.sin(a) * 2, STAR, 1); }
     }
   }
 
-  // ---- NEW: Challenge ---------------------------------------------------------------------------
+  // ---- NEW: Challenge (calm version) ------------------------------------------------------------
+  // A small hop, one diamond ring rolls out to the edge of the taunt area, the area stays faint on the floor while the
+  // taunt lasts, a red "!" over each taunted enemy (they step towards him), steel corner plates for the +30 defense.
   newChallenge(st, et, P, T) {
     const h = st.hero, K = KNIGHT;
     const H0 = body(this.hero);
     this.charge(st, et, P);
     const since = et - P.cast;
     if (since >= 0) {
-      st.flash = since < 60 ? [0xffffff, 0.4 * (1 - since / 60)] : since < 200 ? [K.deep, 0.18 * (1 - (since - 60) / 140)] : null;
-      const z = since < 130 ? easeOut(since / 130) : 1 - easeOut3(ph(since, 130, 520));
-      st.cam = { ...st.cam, zoom: 1 + 0.08 * z, fx: H0.x * Z, fy: H0.mid * Z };
-      if (since < 300) st.lines = { kind: 'focus', x: H0.x * Z, y: H0.mid * Z, a: since < 220 ? 0.75 : 0.75 * (1 - (since - 220) / 80) };
-      h.dy = since < 130 ? -6 * Math.sin((since / 130) * Math.PI / 2) : -6 * (1 - easeOut(ph(since, 130, 175)));
+      const z = since < 130 ? easeOut(since / 130) : 1 - easeOut3(ph(since, 130, 400));
+      st.cam = { ...st.cam, zoom: 1 + 0.025 * z, fx: H0.x * Z, fy: H0.mid * Z };
+      h.dy = since < 130 ? -4 * Math.sin((since / 130) * Math.PI / 2) : -4 * (1 - easeOut(ph(since, 130, 170)));
       h.dx = 0;
-      h.tint = since < 90 ? [K.light, 0.55] : null;
+      h.tint = since < 80 ? [K.light, 0.4] : null;
     }
     const hit = et - P.impact;
     if (hit >= 0) {
-      if (T >= P.impact && T < P.impact + P.stopMs + 200) st.cam.shake = 3.5 * (1 - (T - P.impact) / (P.stopMs + 200));
+      if (T >= P.impact && T < P.impact + P.stopMs + 100) st.cam.shake = 1.5 * (1 - (T - P.impact) / (P.stopMs + 100));
       const g = st.over, u = st.under, fx = H0.x, fy = H0.y;
-      // landing: a big diamond shockwave rolls over the floor to the edge of the taunt zone (150 px = 50)
       const R = skills.challenge.area.radius / Z;
-      [[0, K.white, 2], [70, K.mid, 1]].forEach(([d, col, th]) => { const p = ph(hit, d, d + 460); if (p > 0 && p < 1) diamond(u, fx, fy, 4 + R * easeOut3(p), (4 + R * easeOut3(p)) * 0.38, col, 1 - p * p, th); });
-      const sp = ph(hit, 0, 260); if (sp > 0 && sp < 1) sqRing(g, fx, H0.mid, 6 + 18 * easeOut(sp), 6 + 18 * easeOut(sp), K.light, 1 - sp, 2);
-      // the taunt zone stays on the floor while the taunt lasts (3s), dotted inner edge, fades out
+      const p = ph(hit, 0, 420); if (p > 0 && p < 1) diamond(u, fx, fy, 4 + R * easeOut3(p), (4 + R * easeOut3(p)) * 0.38, K.mid, 0.8 * (1 - p * p));
       const life = skills.challenge.apply[0].durationMs;
-      const zf = ph(hit, 0, 160) * (1 - ph(hit, life - 400, life));
-      if (zf > 0) { diamond(u, fx, fy, R, R * 0.38, K.deep, 0.75 * zf, 1); diamond(u, fx, fy, R - 4, (R - 4) * 0.38, K.dark, 0.6 * zf, 1, true); }
-      // every enemy inside: a red "!" drops in, a red flash, a red line yanks it one step towards him
+      const zf = ph(hit, 200, 400) * (1 - ph(hit, life - 400, life));
+      if (zf > 0) diamond(u, fx, fy, R, R * 0.38, K.deep, 0.35 * zf, 1, true);
       [[this.foe, st.foe], [this.foe2, st.foe2]].forEach(([a, s], i) => {
-        const e = body(a); const d = 60 + i * 50;
-        const p = ph(hit, d, d + 200);
-        s.dx = -4 * easeOut(p); s.tint = hit > d && hit < d + 140 ? [RED, 0.5] : null;
-        if (hit > d && hit < d + 200) { const lp = (hit - d) / 200; for (let x = fx + 6; x < e.x - e.hw; x += 3) g.px(x, e.mid + Math.round(((x - fx) * (e.mid - H0.mid)) / (e.x - fx)) - 1, RED, 1 - lp); }
-        if (hit > d && hit < life) { const drop = Math.round(6 * (1 - easeOut3(ph(hit, d, d + 140)))); bigBang(g, e.x + s.dx, e.top - 12 - drop, 7, RED); }
+        const e = body(a); const d = 80 + i * 60;
+        s.dx = -3 * easeOut(ph(hit, d, d + 200)); s.tint = hit > d && hit < d + 100 ? [RED, 0.4] : null;
+        if (hit > d && hit < life) { const drop = Math.round(4 * (1 - easeOut3(ph(hit, d, d + 140)))); bigBang(g, e.x + s.dx, e.top - 12 - drop, 7, RED); }
       });
-      // +30 defense: four steel corner plates slam onto him and stay (faint pulse) while the buff lasts
       const bp = easeOut3(ph(hit, 40, 220)), bf = 1 - ph(hit, life - 400, life);
       if (bp > 0 && bf > 0) {
-        const pad = 2 + 10 * (1 - bp), a = bf * (0.75 + 0.25 * Math.sin(et / 120));
+        const pad = 2 + 6 * (1 - bp), a = bf * 0.8;
         const x0 = H0.x - H0.hw - pad, x1 = H0.x + H0.hw + pad, y0 = H0.top - pad + st.hero.dy, y1 = H0.bot + pad - 1 + st.hero.dy;
         for (const [x, y, sx, sy] of [[x0, y0, 1, 1], [x1, y0, -1, 1], [x0, y1, 1, -1], [x1, y1, -1, -1]]) {
-          g.rect(sx > 0 ? x : x - 3, y, 4, 1, K.light, a); g.rect(x, sy > 0 ? y : y - 3, 1, 4, K.light, a);
-          g.px(x + sx, y + sy, K.deep, a);
+          g.rect(sx > 0 ? x : x - 2, y, 3, 1, K.light, a); g.rect(x, sy > 0 ? y : y - 2, 1, 3, K.light, a);
         }
-        st.hero.tint = st.hero.tint || [K.mid, 0.18 * bf];
       }
-      if (hit < 900) st.numbers.push({ text: '+30 DEF', x: (H0.x + H0.hw + 16) * Z, y: H0.mid * Z - Math.round(ph(hit, 100, 900) * 24), size: 14, color: KNIGHT.text, alpha: 1 - ph(hit, 600, 900) });
+      if (hit < 900) st.numbers.push({ text: '+30 DEF', x: (H0.x + H0.hw + 22) * Z, y: H0.mid * Z - Math.round(ph(hit, 100, 900) * 24), size: 14, color: KNIGHT.text, alpha: 1 - ph(hit, 600, 900) });
     }
   }
 
@@ -352,7 +332,7 @@ export class Demo {
     h.dy = 1; h.dx = -Math.round(2 * easeOut(p));
     h.aura = { a: 0.35 + 0.65 * p, t: et };
     const u = body(this.hero, h.dx, h.dy);
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 8; i++) {
       const s = (p * 1.7 + i / 12) % 1, a = rnd(i * 13) * Math.PI * 2, r = 22 * (1 - easeOut(s));
       st.over.rect(u.x + Math.cos(a) * r, u.mid + Math.sin(a) * r * 0.8, i % 3 ? 1 : 2, i % 3 ? 1 : 2, i % 2 ? K.light : K.mid, s * 0.9);
     }

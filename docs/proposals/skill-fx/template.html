@@ -60,7 +60,7 @@ ul.ideas li b { color: var(--fg); font-weight: 600; }
 <div class="wrap">
   <header>
     <h1>Skill Effects: Knight sample</h1>
-    <p class="lede">Your note: skills are not powerful or eye-catching enough, and the skill name text is messy and stretchy. Here are the Knight's two skills drawn the new way, in a slice of the real fight screen at game size. Tap any scene to replay it from the start. Use <b>Slow</b> to see each beat.</p>
+    <p class="lede">Your note: skills are not powerful or eye-catching enough, and the skill name text is messy and stretchy. Here are the Knight's two skills drawn the new way (version 2, calmer), in a slice of the real fight screen at game size. Tap any scene to replay it from the start. Use <b>Slow</b> to see each beat.</p>
   </header>
   <div class="bar">
     <div class="seg" role="group" aria-label="Speed"><button id="sp1" aria-pressed="true">Normal</button><button id="sp4" aria-pressed="false">Slow x4</button></div>
@@ -68,28 +68,24 @@ ul.ideas li b { color: var(--fg); font-weight: 600; }
   </div>
 
   <section class="win" id="sec-name">
-    <h2>1. The skill name</h2>
-    <p>Today the name shows twice (small over the hero at the wind-up, then a big banner that grows from half size). Both new styles show it once, at a fixed pixel size, and never stretch it. Both scenes play the new look; pick the name style you like.</p>
-    <div class="pair" id="names"></div>
-    <label for="note-name">NOTE ON THE NAME</label>
-    <textarea id="note-name" placeholder="e.g. A, but the band should be thinner…"></textarea>
-    <div class="saved" id="saved-name"></div>
+    <h2>Skill name: B, floating name</h2>
+    <p>Your pick: no cut-in bar. The name floats over the hero once, at one fixed size, slides up a little, stays, then fades. It never stretches.</p>
   </section>
 
   <section class="win">
-    <h2>2. The skill look: 3 beats</h2>
+    <h2>The skill look: 3 beats</h2>
     <div class="beats">
       <div class="beat"><b>CHARGE</b>During the wind-up his outline lights up steel blue, square specks get pulled in, a square glows under his feet.</div>
-      <div class="beat"><b>RELEASE</b>White flash, the camera kicks in, speed lines, a longer freeze on the hit.</div>
-      <div class="beat"><b>IMPACT</b>A big square shockwave in his colour, debris, and a mark left on the floor that fades slowly.</div>
+      <div class="beat"><b>RELEASE</b>He lights up and dashes or jumps, the camera nudges in a little, a short freeze on the hit.</div>
+      <div class="beat"><b>IMPACT</b>A small square ring in his colour, a few chips, a small floor mark that fades fast.</div>
     </div>
-    <p>Each hero gets a colour and a shape. The Knight is <b style="color:var(--steel)">steel blue + squares</b>. The left scene is today's game, the right scene is the new look (with name style A until you pick one above).</p>
+    <p>Version 2, calmer (your note: the impact was too flashy and broke the flow). Same three beats, but no screen flash, no speed lines, a tiny camera nudge, a short freeze, a smaller shockwave and a floor mark that fades within a second. The Knight is still <b style="color:var(--steel)">steel blue + squares</b>. Left: today's game. Right: the new look.</p>
   </section>
 
   <div id="looks" style="display:flex;flex-direction:column;gap:22px"></div>
 
   <section class="win">
-    <h2>3. Next heroes (ideas)</h2>
+    <h2>Next heroes (ideas)</h2>
     <ul class="ideas">
       <li><b>Berserker</b>: red, splatter shapes and jagged cracks.</li>
       <li><b>Rogue</b>: cyan, thin fast streaks and slashes.</li>
@@ -144,23 +140,7 @@ function wireText(docId, ta, saved) {
   ta.addEventListener('blur', () => { if (timer) { clearTimeout(timer); timer = null; save(docId, { text: ta.value }, saved); } });
 }
 
-// 1. name styles
-const BOTH = (name) => [{ skill: 'defense_bash', look: 'new', name }, { skill: 'challenge', look: 'new', name }];
-const nameTiles = {};
-const namesEl = document.getElementById('names');
-for (const [k, title, desc] of [
-  ['A', 'Cut-in bar', 'A black band with white edges slides across the top: the skill icon and its name in the hero colour, then it slides away. Big and clear, like a fighting game.'],
-  ['B', 'Floating name', 'The name floats over the hero at one fixed size: it slides up a little, stays, then fades. Quieter, and it shows WHO cast it.'],
-]) {
-  const t = tile(k, title, desc, makeScene(BOTH(k), 'Name style ' + k));
-  const b = document.createElement('button'); b.className = 'btn pk'; b.textContent = 'Pick ' + k; b.setAttribute('aria-pressed', 'false');
-  b.addEventListener('click', () => { const cur = (notes.name || {}).pick; save('name', { pick: cur === k ? null : k }, document.getElementById('saved-name')); });
-  const btns = document.createElement('div'); btns.className = 'btns'; btns.append(b); t.append(btns);
-  nameTiles[k] = { t, b }; namesEl.append(t);
-}
-wireText('name', document.getElementById('note-name'), document.getElementById('saved-name'));
 wireText('general', document.getElementById('note-general'), document.getElementById('saved-general'));
-function pickedName() { return (notes.name || {}).pick || 'A'; }
 
 // 2. the look per skill: today vs new
 const lookUi = {};
@@ -173,10 +153,10 @@ for (const [id, about] of [
   const h = document.createElement('h2'); h.textContent = SD.SKILLS[id].name;
   const p = document.createElement('p'); p.textContent = about;
   const pair = document.createElement('div'); pair.className = 'pair';
-  const newSeq = [{ skill: id, look: 'new', name: 'A' }];
+  const newSeq = [{ skill: id, look: 'new', name: 'B' }];
   pair.append(
     tile('NOW', 'Today in the game', 'The name pops up twice, small orange effect, short shake.', makeScene([{ skill: id, look: 'now', name: 'now' }], SD.SKILLS[id].name + ' today')),
-    tile('NEW', 'Charge, release, impact', 'Same skill, same timing (0.5s wind-up), new look.', makeScene(newSeq, SD.SKILLS[id].name + ' new look')),
+    tile('NEW', 'Charge, release, impact', 'Same skill, same timing (0.5s wind-up), calmer new look.', makeScene(newSeq, SD.SKILLS[id].name + ' new look')),
   );
   const btns = document.createElement('div'); btns.className = 'btns';
   const ok = document.createElement('button'); ok.className = 'btn ok'; ok.textContent = 'OK'; ok.setAttribute('aria-pressed', 'false');
@@ -191,17 +171,14 @@ for (const [id, about] of [
 }
 
 function render() {
-  const pk = (notes.name || {}).pick;
-  for (const [k, { t, b }] of Object.entries(nameTiles)) { const on = pk === k; b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Picked ' + k : 'Pick ' + k; t.classList.toggle('picked', on); }
   for (const [id, u] of Object.entries(lookUi)) {
     const v = (notes['look:' + id] || {}).verdict;
     u.ok.setAttribute('aria-pressed', String(v === 'ok')); u.chg.setAttribute('aria-pressed', String(v === 'change'));
-    u.newSeq[0].name = pickedName();
   }
 }
 function fillTexts() {
   const set = (id, docId) => { const ta = document.getElementById(id); if (ta && document.activeElement !== ta) ta.value = (notes[docId] || {}).text || ''; };
-  set('note-name', 'name'); set('note-general', 'general');
+  set('note-general', 'general');
   for (const id of Object.keys(lookUi)) set('note-look-' + id, 'look:' + id);
 }
 

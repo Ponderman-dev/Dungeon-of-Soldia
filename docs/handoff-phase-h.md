@@ -5,8 +5,11 @@ Read `CLAUDE.md` first, then this file. Every item decision of this phase is in 
 
 ## START HERE (session 10): SKILL EFFECTS DEMO waiting for the user's picks
 Demo page (session 9): https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN (source `docs/proposals/skill-fx/`, see
-docs/proposals/README.md). Read the picks with ArtifactData `list` collection `notes` (`name` = A cut-in bar / B floating
-name, `look:defense_bash`, `look:challenge` = ok/change + text, `general`). NEXT: build the picked name style in
+docs/proposals/README.md). USER PICKED (session 9): name style B FLOATING NAME (no cut-in bar); the charge -> release -> impact sequence is good,
+but impact was 'too super flashy, don't interrupt the flow' -> page v2 is the CALM version (no screen flash, no speed
+lines, camera nudge 3%, hit-stop 80ms, small square ring + diamond r~16, 6 chips, floor mark fades in ~1s). Read any
+later notes with ArtifactData `list` collection `notes` (`look:defense_bash`, `look:challenge` ok/change + text,
+`general`). NEXT: build name style B in
 BattleScene.skillBurst (and drop the castStart name popText), then the Knight's 3-beat look in the game (recipes in
 demo.js are in character pixels like skillFx.js: charge aura/particles, release flash/camera kick/speed lines/hit-stop,
 impact square shockwaves/debris/floor mark), then 2-3 heroes per session with a showcase page each.

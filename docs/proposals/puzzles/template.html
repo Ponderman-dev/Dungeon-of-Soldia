@@ -1,0 +1,398 @@
+<title>Soldia Puzzle Rooms</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: one column of puzzle "rooms"; each is a black RPG window with its playable stage, buttons and notes. */
+:root {
+  color-scheme: dark;
+  --bg: #07070b; --win: #000; --line: #fff; --fg: #fff; --muted: #b4b4c4; --gold: #ffd84a; --red: #ff7a5a; --green: #6ee07a; --floor: #14101f;
+  --pixel: 'Press Start 2P', ui-monospace, monospace;
+  --body: 'IBM Plex Sans', system-ui, sans-serif;
+}
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--body); }
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 24px 60px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+h1 { font: 24px/1.3 var(--pixel); margin: 0; text-wrap: balance; }
+h2 { font: 16px/1.4 var(--pixel); margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); max-width: 62ch; margin: 10px 0 0; }
+.win { background: var(--win); border: 2px solid var(--line); box-shadow: inset 0 0 0 2px #000;
+  clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 2px, calc(100% - 2px) 2px, calc(100% - 2px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 2px), 2px calc(100% - 2px), 2px calc(100% - 4px), 0 calc(100% - 4px)); }
+.win.gold { border-color: var(--gold); }
+.depth { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; }
+.depth .lbl { font: 8px var(--pixel); color: var(--muted); margin-right: 4px; }
+button { font: 8px/1 var(--pixel); color: var(--fg); background: #000; cursor: pointer; padding: 12px 14px; border: 2px solid var(--line); }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+button.on { color: #000; background: var(--line); }
+button.keep.on { background: var(--gold); border-color: var(--gold); }
+button:disabled { color: #555; border-color: #555; cursor: default; }
+.room { padding: 18px; display: grid; gap: 14px; }
+.room .tag { font: 8px var(--pixel); color: var(--gold); }
+.how { margin: 0; color: var(--muted); max-width: 62ch; }
+.stage { position: relative; width: 100%; max-width: 336px; justify-self: center; background: var(--floor); }
+.stage canvas, .stage img { image-rendering: pixelated; display: block; }
+.status { font: 8px/1.8 var(--pixel); min-height: 2em; text-align: center; color: var(--fg); }
+.status.win-msg { color: var(--gold); } .status.lose { color: var(--red); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.notes { margin: 0; padding-left: 18px; color: var(--muted); display: grid; gap: 3px; font-size: 14px; }
+.notes b { color: var(--fg); font-weight: 600; }
+/* 1 Mimic shuffle */
+.chests { height: 170px; }
+.chest { position: absolute; top: 74px; width: 56px; height: 44px; transition: left var(--swap, 400ms) ease-in-out, top var(--swap, 400ms) ease-in-out; cursor: pointer; }
+.chest img { width: 56px; height: 44px; }
+.chest .coin { position: absolute; left: 12px; top: -40px; width: 32px; height: 32px; opacity: 0; transition: opacity .2s, top .3s; }
+.chest .coin.show { opacity: 1; top: -46px; }
+.chest.shake { animation: shake .3s steps(2) 2; }
+@keyframes shake { 50% { transform: translateX(4px); } }
+/* 2 Rune lock */
+.runes { display: grid; gap: 10px; padding: 14px; justify-content: center; }
+.rune { width: 64px; height: 64px; display: grid; place-items: center; cursor: pointer; padding: 0; }
+.rune svg { width: 40px; height: 40px; shape-rendering: crispEdges; }
+.rune.lit { border-color: var(--gold); color: var(--gold); }
+.rune { color: #6a6a80; }
+/* 3 Braziers + 6 Picture */
+.grid { display: grid; gap: 6px; padding: 10px; justify-content: center; }
+.cell { padding: 0; display: grid; place-items: center; cursor: pointer; }
+.pic .cell canvas { width: 100%; height: 100%; }
+.pic .cell.sel { outline: 3px solid var(--gold); outline-offset: -3px; }
+.thumb { justify-self: center; display: flex; gap: 10px; align-items: center; font: 8px var(--pixel); color: var(--muted); }
+.thumb canvas { width: 96px; height: 96px; border: 2px solid #fff; image-rendering: pixelated; }
+.arrows { display: grid; grid-template-columns: repeat(3, 52px); gap: 6px; justify-content: center; }
+.arrows button { font-size: 16px; padding: 10px 0; }
+textarea { width: 100%; box-sizing: border-box; min-height: 90px; background: #000; color: var(--fg); border: 2px solid #fff; padding: 10px; font: 15px/1.5 var(--body); }
+textarea:focus-visible { outline: 2px solid var(--gold); }
+@media (prefers-reduced-motion: reduce) { .chest { transition-duration: 1ms !important; } .chest.shake { animation: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Puzzle Rooms</h1>
+    <p class="lede">Six puzzle ideas for the Puzzle Room, all playable. Switch the depth to see how each one gets harder deeper in the dungeon, press NEW for a fresh one, and press KEEP on the ones you like (you can keep several: the game could pick one at random per room). Solving gives the item pick; giving up leaves with nothing.</p>
+  </header>
+  <div class="depth" role="group" aria-label="Depth">
+    <span class="lbl">DEPTH</span>
+    <button type="button" data-l="0" class="on" id="d0">FLOOR 5</button>
+    <button type="button" data-l="1" id="d1">FLOOR 30</button>
+    <button type="button" data-l="2" id="d2">FLOOR 60</button>
+  </div>
+  <div id="rooms"></div>
+  <section class="win room">
+    <h2>Anything else?</h2>
+    <label for="note" class="how">Changes to a puzzle, a mix of two, other ideas...</label>
+    <textarea id="note" placeholder="Write a note for Claude"></textarea>
+    <div class="row" style="justify-content:flex-start"><button type="button" id="saveNote">SAVE NOTE</button><span class="status" id="noteStatus"></span></div>
+  </section>
+</div>
+
+<script>
+/*SPRITES*/
+let LEVEL = 0;
+const IMG = {};
+const loadImgs = () => Promise.all(Object.entries(SPR).map(([k, src]) => new Promise((res) => { const i = new Image(); i.onload = () => { IMG[k] = i; res(); }; i.src = src; })));
+const rnd = (n) => Math.floor(Math.random() * n);
+const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
+let audio = null;
+const beep = (f, ms = 160) => { try { audio = audio || new AudioContext(); const o = audio.createOscillator(), g = audio.createGain(); o.type = 'square'; o.frequency.value = f; g.gain.value = 0.05; o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + ms / 1000); } catch {} };
+// Pixel drawing on a canvas: every call is in "art pixels", the canvas is scaled up by CSS.
+const px = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+
+const PUZZLES = [];
+function room(def) {
+  const sec = el('section', 'win room'); sec.dataset.id = def.id;
+  sec.innerHTML = `<div class="tag">${def.tag}</div><h2>${def.name}</h2><p class="how">${def.how}</p>`;
+  const stage = el('div', 'stage win ' + (def.stageClass || '')); sec.appendChild(stage);
+  const status = el('div', 'status'); sec.appendChild(status);
+  const row = el('div', 'row'); sec.appendChild(row);
+  const extra = el('div'); sec.insertBefore(extra, row);
+  const btn = (label, fn, cls = '') => { const b = el('button', cls, label); b.type = 'button'; b.onclick = fn; row.appendChild(b); return b; };
+  const ctx = { sec, stage, status, extra, btn, say: (t, kind = '') => { status.textContent = t; status.className = 'status ' + kind; } };
+  btn('NEW', () => def.start(ctx));
+  btn('GIVE UP', () => { if (def.giveUp) def.giveUp(ctx); ctx.say('You leave with nothing.', 'lose'); });
+  const keep = btn('KEEP THIS ONE', () => setKeep(def.id, !keep.classList.contains('on')), 'keep'); keep.id = 'keep-' + def.id;
+  sec.appendChild(el('ul', 'notes', def.notes.map((n) => `<li>${n}</li>`).join('')));
+  document.getElementById('rooms').appendChild(sec);
+  document.getElementById('rooms').style.cssText = 'display:grid;gap:28px';
+  PUZZLES.push({ def, ctx });
+}
+
+// ================= 1 MIMIC SHUFFLE
+room({ id: 'mimic', tag: 'PUZZLE 1 - EYES', name: 'Mimic Shuffle', stageClass: 'chests',
+  how: 'Watch the gold coin go into a chest. The chests shuffle. Tap the chest with the coin. The others are Mimics.',
+  notes: ['<b>Prize:</b> the right chest = the item pick.', '<b>Wrong chest:</b> a Mimic bites one hero (-10% health).', '<b>Deeper:</b> more chests, more swaps, faster.'],
+  start(c) {
+    const P = [{ n: 3, swaps: 5, ms: 420 }, { n: 4, swaps: 9, ms: 300 }, { n: 5, swaps: 13, ms: 220 }][LEVEL];
+    const run = (this.run = (this.run || 0) + 1);
+    c.stage.innerHTML = ''; c.stage.style.setProperty('--swap', P.ms + 'ms');
+    const W = Math.min(336, c.stage.clientWidth || 336), slotX = (s) => Math.round((W / P.n) * (s + 0.5) - 28);
+    const chests = [], slotOf = [];
+    for (let i = 0; i < P.n; i++) {
+      const d = el('div', 'chest', `<img src="${SPR.chest}" alt="chest"><img class="coin" src="${SPR.i_lucky_coin}" alt="">`);
+      d.style.left = slotX(i) + 'px'; c.stage.appendChild(d); chests.push(d); slotOf.push(i);
+    }
+    const t = rnd(P.n); let open = false;
+    c.say('Watch the coin...');
+    (async () => {
+      await sleep(400); if (run !== this.run) return;
+      chests[t].querySelector('.coin').classList.add('show'); await sleep(1000); chests[t].querySelector('.coin').classList.remove('show'); await sleep(400);
+      for (let k = 0; k < P.swaps; k++) {
+        if (run !== this.run) return;
+        const a = rnd(P.n); let b = rnd(P.n - 1); if (b >= a) b++;
+        [slotOf[a], slotOf[b]] = [slotOf[b], slotOf[a]];
+        chests[a].style.left = slotX(slotOf[a]) + 'px'; chests[b].style.left = slotX(slotOf[b]) + 'px';
+        chests[a].style.top = '58px'; chests[b].style.top = '90px'; // one passes in front of the other
+        await sleep(P.ms); chests[a].style.top = chests[b].style.top = '74px'; await sleep(40);
+      }
+      open = true; c.say('Which chest has the coin?');
+    })();
+    chests.forEach((d, i) => (d.onclick = () => {
+      if (!open) return; open = false;
+      if (i === t) { d.querySelector('.coin').classList.add('show'); c.say('TREASURE! Item pick.', 'win-msg'); beep(880, 220); }
+      else { d.querySelector('img').src = SPR.mimic; d.classList.add('shake'); chests[t].querySelector('.coin').classList.add('show'); c.say('MIMIC! It bites a hero: -10% health.', 'lose'); beep(110, 300); }
+    }));
+  },
+  giveUp() { this.run = (this.run || 0) + 1; } });
+
+// ================= 2 RUNE LOCK
+const RUNES = [
+  ['..1..', '.111.', '1.1.1', '..1..', '..1..'], ['1...1', '.1.1.', '..1..', '.1.1.', '1...1'], ['11111', '1....', '111..', '1....', '11111'], ['1.1.1', '1.1.1', '11111', '..1..', '..1..'],
+  ['.111.', '1...1', '1.1.1', '1...1', '.111.'], ['1....', '11...', '1.1..', '1..1.', '11111'], ['..1..', '.1.1.', '1...1', '.1.1.', '..1..'], ['11.11', '1...1', '..1..', '1...1', '11.11'],
+];
+const runeSvg = (r) => { let s = ''; r.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === '1') s += `<rect x="${x}" y="${y}" width="1" height="1"/>`; })); return `<svg viewBox="0 0 5 5" fill="currentColor" aria-hidden="true">${s}</svg>`; };
+const TONES = [262, 330, 392, 440, 523, 587, 659, 784];
+room({ id: 'runes', tag: 'PUZZLE 2 - MEMORY', name: 'Rune Lock', stageClass: '',
+  how: 'The runes on the door light up in an order. Tap them back in the same order. Every round adds one more rune.',
+  notes: ['<b>Prize:</b> the door opens = the item pick.', '<b>Mistake:</b> the door stays shut, you leave with nothing.', '<b>Deeper:</b> more runes on the door, a longer final sequence, faster flashes.'],
+  start(c) {
+    const P = [{ n: 4, len: 4, ms: 480 }, { n: 6, len: 5, ms: 380 }, { n: 8, len: 6, ms: 300 }][LEVEL];
+    const run = (this.run = (this.run || 0) + 1);
+    c.stage.innerHTML = '';
+    const g = el('div', 'runes'); g.style.gridTemplateColumns = `repeat(${P.n > 4 ? 4 : 2}, 64px)`; c.stage.appendChild(g);
+    const pick = shuffle([...RUNES.keys()]).slice(0, P.n);
+    const btns = pick.map((r, i) => { const b = el('button', 'rune win', runeSvg(RUNES[r])); b.type = 'button'; b.setAttribute('aria-label', 'rune ' + (i + 1)); g.appendChild(b); return b; });
+    const seq = Array.from({ length: P.len }, () => rnd(P.n));
+    let round = 1, input = [], listening = false;
+    const flash = async (i, ms) => { btns[i].classList.add('lit'); beep(TONES[i], ms * 0.8); await sleep(ms); btns[i].classList.remove('lit'); await sleep(ms * 0.4); };
+    // Every await checks `run`: pressing NEW or switching depth starts a new game, the old one goes quiet.
+    const show = async () => { listening = false; c.say(`Round ${round} of ${P.len}: watch...`); await sleep(600); for (let k = 0; k < round; k++) { if (run !== this.run) return; await flash(seq[k], P.ms); } if (run !== this.run) return; input = []; listening = true; c.say(`Round ${round} of ${P.len}: your turn`); };
+    btns.forEach((b, i) => (b.onclick = async () => {
+      if (!listening) return;
+      flash(i, 180); input.push(i);
+      if (seq[input.length - 1] !== i) { listening = false; c.say('Wrong rune! The door stays shut.', 'lose'); beep(110, 400); return; }
+      if (input.length === round) { listening = false; if (run !== this.run) return; if (round === P.len) { c.say('The door opens! Item pick.', 'win-msg'); btns.forEach((x) => x.classList.add('lit')); return; } round++; await sleep(500); show(); }
+    }));
+    show();
+  },
+  giveUp() { this.run = (this.run || 0) + 1; } });
+
+// ================= 3 LIGHT THE BRAZIERS
+function drawTorch(cv, lit, t) {
+  const g = cv.getContext('2d'); g.clearRect(0, 0, 16, 16);
+  px(g, 5, 11, 6, 2, '#6b6b7a'); px(g, 6, 13, 4, 2, '#4a4a58'); // the bowl and its foot
+  if (!lit) { px(g, 6, 9, 4, 2, '#2a2a34'); return; }
+  const f = Math.floor(t / 120) % 2;
+  px(g, 6, 7, 4, 4, '#ff7a1a'); px(g, 7 - f, 4, 2, 3, '#ffb347'); px(g, 7, 8, 2, 3, '#ffe066'); px(g, 8 + f, 3, 1, 2, '#ffe066');
+}
+room({ id: 'braziers', tag: 'PUZZLE 3 - LOGIC', name: 'Light the Braziers', stageClass: '',
+  how: 'Tapping a brazier flips it AND its neighbours (up, down, left, right) between lit and dark. Light them all.',
+  notes: ['<b>Prize:</b> all lit = the item pick.', '<b>Always solvable</b> (made by scrambling a solved floor).', '<b>Deeper:</b> a bigger floor, more scrambled.'],
+  start(c) {
+    const P = [{ n: 3, k: 3 }, { n: 4, k: 5 }, { n: 5, k: 7 }][LEVEL];
+    const N = P.n; c.stage.innerHTML = '';
+    const lit = Array(N * N).fill(true), moves = { n: 0 };
+    const press = (i) => { const x = i % N, y = Math.floor(i / N); for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) { const X = x + dx, Y = y + dy; if (X >= 0 && Y >= 0 && X < N && Y < N) lit[Y * N + X] = !lit[Y * N + X]; } };
+    shuffle([...lit.keys()]).slice(0, P.k).forEach(press);
+    if (lit.every(Boolean)) press(rnd(N * N));
+    const size = Math.floor(300 / N) - 6;
+    const g = el('div', 'grid'); g.style.gridTemplateColumns = `repeat(${N}, ${size}px)`; c.stage.appendChild(g);
+    const cells = lit.map((_, i) => { const b = el('button', 'cell win'); b.type = 'button'; b.style.width = b.style.height = size + 'px'; const cv = el('canvas'); cv.width = cv.height = 16; cv.style.width = cv.style.height = Math.floor(size * 0.7) + 'px'; b.appendChild(cv); g.appendChild(b); return { b, cv }; });
+    let done = false;
+    const draw = (t) => cells.forEach((cl, i) => drawTorch(cl.cv, lit[i], t));
+    cells.forEach((cl, i) => (cl.b.onclick = () => { if (done) return; press(i); moves.n++; beep(lit[i] ? 523 : 262, 80); if (lit.every(Boolean)) { done = true; c.say(`All lit in ${moves.n} moves! Item pick.`, 'win-msg'); cells.forEach((x) => x.b.classList.add('gold')); } else c.say(`Moves: ${moves.n}`); }));
+    const run = (this.run = (this.run || 0) + 1);
+    const loop = (t) => { if (run !== this.run) return; draw(t); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+    c.say('Moves: 0');
+  },
+  giveUp() {} });
+
+// ================= 4 MIRROR BEAM
+const DIR = { R: [1, 0], L: [-1, 0], U: [0, -1], D: [0, 1] };
+const BOUNCE = { '/': { R: 'U', U: 'R', L: 'D', D: 'L' }, '\\': { R: 'D', D: 'R', L: 'U', U: 'L' } };
+function trace(lv, ori, withCrystal) {
+  let x = -1, y = lv.srow, d = 'R'; const path = []; let bounces = 0;
+  for (let s = 0; s < 400; s++) {
+    x += DIR[d][0]; y += DIR[d][1];
+    if (x < 0 || y < 0 || x >= lv.n || y >= lv.n) return { path, hit: false, bounces };
+    const key = x + ',' + y; path.push([x, y]);
+    if (lv.pillars.has(key)) return { path, hit: false, bounces, blocked: true };
+    if (withCrystal && lv.crystal === key) return { path, hit: true, bounces };
+    const m = lv.mirrors.findIndex((mm) => mm[0] === x && mm[1] === y);
+    if (m >= 0) { d = BOUNCE[ori[m]][d]; bounces++; }
+  }
+  return { path, hit: false, bounces, loop: true };
+}
+function makeBeamLevel(P) {
+  for (let tries = 0; tries < 400; tries++) {
+    const n = P.n, used = new Set(), cell = () => { let k; do { k = rnd(n) + ',' + rnd(n); } while (used.has(k)); used.add(k); return k.split(',').map(Number); };
+    const srow = rnd(n); used.add('0,' + srow);
+    const mirrors = Array.from({ length: P.m }, cell);
+    const pillars = new Set(Array.from({ length: P.p }, () => cell().join(',')));
+    const lv = { n, srow, mirrors, pillars, crystal: null };
+    let best = null;
+    for (let mask = 0; mask < 1 << P.m; mask++) {
+      const ori = mirrors.map((_, i) => (mask >> i) & 1 ? '/' : '\\');
+      const r = trace(lv, ori, false);
+      if (r.loop) continue;
+      const empties = r.path.filter(([x, y]) => !used.has(x + ',' + y));
+      if (!empties.length) continue;
+      if (!best || r.bounces > best.bounces) best = { bounces: r.bounces, at: empties[empties.length - 1] };
+    }
+    if (!best || best.bounces < P.minB) continue;
+    lv.crystal = best.at.join(',');
+    for (let k = 0; k < 60; k++) {
+      const ori = mirrors.map(() => (Math.random() < 0.5 ? '/' : '\\'));
+      if (!trace(lv, ori, true).hit) return { lv, ori };
+    }
+  }
+  return null;
+}
+room({ id: 'beam', tag: 'PUZZLE 4 - LOGIC', name: 'Mirror Beam', stageClass: '',
+  how: 'A beam of light comes in from the left. Tap a mirror to turn it. Bounce the beam into the purple crystal.',
+  notes: ['<b>Prize:</b> the crystal lights up = the item pick.', '<b>Always solvable:</b> each room is checked by the game before you see it.', '<b>Deeper:</b> a bigger room, more mirrors, pillars that block the beam, more bounces needed.'],
+  start(c) {
+    const P = [{ n: 6, m: 5, p: 1, minB: 2 }, { n: 7, m: 7, p: 2, minB: 3 }, { n: 8, m: 9, p: 3, minB: 4 }][LEVEL];
+    const made = makeBeamLevel(P); if (!made) return c.say('Try NEW again.');
+    const { lv } = made; let ori = made.ori, done = false;
+    const S = 288, cs = Math.floor(S / lv.n), W = cs * lv.n;
+    c.stage.innerHTML = ''; const cv = el('canvas'); cv.width = W; cv.height = W; cv.style.width = '100%'; cv.style.maxWidth = W + 'px'; cv.style.margin = '0 auto'; c.stage.appendChild(cv);
+    const g = cv.getContext('2d');
+    const draw = () => {
+      px(g, 0, 0, W, W, '#14101f');
+      for (let i = 0; i <= lv.n; i++) { px(g, i * cs, 0, 1, W, '#221c33'); px(g, 0, i * cs, W, 1, '#221c33'); }
+      px(g, 0, lv.srow * cs + cs / 2 - 4, 6, 8, '#ffd84a'); // the crack the light comes from
+      lv.pillars.forEach((k) => { const [x, y] = k.split(',').map(Number); px(g, x * cs + 4, y * cs + 4, cs - 8, cs - 8, '#5a5466'); px(g, x * cs + 4, y * cs + 4, cs - 8, 4, '#8a849a'); });
+      const [cx, cy] = lv.crystal.split(',').map(Number); g.imageSmoothingEnabled = false; g.drawImage(IMG.i_static_crystal, cx * cs + (cs - 32) / 2, cy * cs + (cs - 32) / 2, 32, 32);
+      const r = trace(lv, ori, true);
+      // the beam: a gold line along its path
+      let x0 = 0, y0 = lv.srow * cs + cs / 2; g.fillStyle = '#ffd84a';
+      for (const [x, y] of r.path) { const x1 = x * cs + cs / 2, y1 = y * cs + cs / 2; const mx = Math.min(x0, x1), my = Math.min(y0, y1); g.fillRect(mx - 2, my - 2, Math.abs(x1 - x0) + 4, Math.abs(y1 - y0) + 4); x0 = x1; y0 = y1; }
+      lv.mirrors.forEach(([x, y], i) => { const o = ori[i]; const steps = cs - 10; for (let k = 0; k < steps; k += 2) { const yy = o === '/' ? steps - k : k; px(g, x * cs + 5 + k, y * cs + 5 + yy - 2, 3, 4, '#ffffff'); } });
+      if (r.hit) { g.strokeStyle = '#ffd84a'; g.lineWidth = 3; g.strokeRect(cx * cs + 2, cy * cs + 2, cs - 4, cs - 4); }
+      return r.hit;
+    };
+    draw(); c.say('Turn the mirrors.');
+    cv.onclick = (ev) => {
+      if (done) return; const b = cv.getBoundingClientRect(); const x = Math.floor(((ev.clientX - b.left) / b.width) * lv.n), y = Math.floor(((ev.clientY - b.top) / b.height) * lv.n);
+      const m = lv.mirrors.findIndex((mm) => mm[0] === x && mm[1] === y); if (m < 0) return;
+      ori = ori.slice(); ori[m] = ori[m] === '/' ? '\\' : '/'; beep(440, 60);
+      if (draw()) { done = true; c.say('The crystal lights up! Item pick.', 'win-msg'); beep(880, 300); }
+    };
+  } });
+
+// ================= 5 ICE SLIDE
+function slideFrom(lv, [x, y], [dx, dy]) { while (true) { const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= lv.n || Y >= lv.n || lv.rocks.has(X + ',' + Y)) return [x, y]; x = X; y = Y; } }
+function makeIceLevel(P) {
+  for (let tries = 0; tries < 500; tries++) {
+    const n = P.n, rocks = new Set();
+    while (rocks.size < P.r) rocks.add(rnd(n) + ',' + rnd(n));
+    let start; do { start = [rnd(n), rnd(n)]; } while (rocks.has(start.join(',')));
+    const lv = { n, rocks };
+    const dist = new Map([[start.join(','), 0]]), q = [start];
+    while (q.length) { const p = q.shift(); for (const d of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const s = slideFrom(lv, p, d); const k = s.join(','); if (!dist.has(k)) { dist.set(k, dist.get(p.join(',')) + 1); q.push(s); } } }
+    const far = [...dist.entries()].filter(([, v]) => v >= P.min && v <= P.min + 1); // the solution length fits the depth
+    if (!far.length) continue;
+    const pickK = shuffle(far)[0];
+    return { lv, start, goal: pickK[0].split(',').map(Number), par: pickK[1] };
+  }
+  return null;
+}
+room({ id: 'ice', tag: 'PUZZLE 5 - LOGIC', name: 'Ice Slide', stageClass: '',
+  how: 'The key slides on the ice until it hits a rock or a wall. Push it with the arrows (or swipe, or your arrow keys). Stop it ON the keyhole.',
+  notes: ['<b>Prize:</b> the key in the keyhole = the item pick.', '<b>Always solvable:</b> the keyhole is put where the game knows the key can stop. PAR = the fewest moves.', '<b>Deeper:</b> a bigger floor, more rocks, longer solutions (later: a move limit).'],
+  start(c) {
+    const P = [{ n: 6, r: 6, min: 3 }, { n: 7, r: 9, min: 5 }, { n: 8, r: 12, min: 7 }][LEVEL]; // min = fewest moves needed
+    const made = makeIceLevel(P); if (!made) return c.say('Try NEW again.');
+    const { lv, goal, par } = made; let pos = made.start.slice(), moves = 0, done = false, anim = false;
+    const cs = Math.floor(288 / lv.n), W = cs * lv.n;
+    c.stage.innerHTML = ''; const cv = el('canvas'); cv.width = W; cv.height = W; cv.style.width = '100%'; cv.style.maxWidth = W + 'px'; cv.style.margin = '0 auto'; c.stage.appendChild(cv);
+    const g = cv.getContext('2d');
+    const draw = (kx = pos[0] * cs, ky = pos[1] * cs) => {
+      px(g, 0, 0, W, W, '#9fd8f0');
+      for (let y = 0; y < lv.n; y++) for (let x = 0; x < lv.n; x++) { if ((x + y) % 2) px(g, x * cs, y * cs, cs, cs, '#b6e4f6'); px(g, x * cs + 3, y * cs + 3, 4, 2, '#e8f8ff'); }
+      lv.rocks.forEach((k) => { const [x, y] = k.split(',').map(Number); px(g, x * cs + 3, y * cs + 5, cs - 6, cs - 8, '#5f5a6e'); px(g, x * cs + 6, y * cs + 3, cs - 12, 4, '#8a849a'); px(g, x * cs + 3, y * cs + cs - 5, cs - 6, 2, '#3a3646'); });
+      const gx = goal[0] * cs, gy = goal[1] * cs; px(g, gx + 4, gy + 4, cs - 8, cs - 8, '#3a2a1a'); px(g, gx + cs / 2 - 3, gy + 9, 6, 6, '#000'); px(g, gx + cs / 2 - 1, gy + 15, 2, 8, '#000');
+      // the key (gold): a ring and a shaft with teeth
+      const s = Math.max(2, Math.floor(cs / 14));
+      px(g, kx + cs / 2 - 3 * s, ky + 4 * s, 6 * s, 2 * s, '#ffd84a'); px(g, kx + cs / 2 - 3 * s, ky + 4 * s, 2 * s, 5 * s, '#ffd84a'); px(g, kx + cs / 2 + s, ky + 4 * s, 2 * s, 5 * s, '#ffd84a'); px(g, kx + cs / 2 - 3 * s, ky + 8 * s, 6 * s, 2 * s, '#ffd84a');
+      px(g, kx + cs / 2 - s, ky + 10 * s, 2 * s, 4 * s, '#ffd84a'); px(g, kx + cs / 2 + s, ky + 11 * s, 2 * s, s, '#ffd84a');
+    };
+    const move = async (d) => {
+      if (done || anim) return; const to = slideFrom(lv, pos, d); if (to[0] === pos[0] && to[1] === pos[1]) return;
+      anim = true; moves++; beep(330, 60);
+      const steps = Math.abs(to[0] - pos[0]) + Math.abs(to[1] - pos[1]);
+      for (let k = 1; k <= steps * 3; k++) { draw(pos[0] * cs + (to[0] - pos[0]) * cs * k / (steps * 3), pos[1] * cs + (to[1] - pos[1]) * cs * k / (steps * 3)); await sleep(16); }
+      pos = to; anim = false; draw();
+      if (pos[0] === goal[0] && pos[1] === goal[1]) { done = true; c.say(`Unlocked in ${moves} moves (par ${par})! Item pick.`, 'win-msg'); beep(880, 300); } else c.say(`Moves: ${moves}   Par: ${par}`);
+    };
+    draw(); c.say(`Moves: 0   Par: ${par}`);
+    c.extra.innerHTML = ''; const ar = el('div', 'arrows'); c.extra.appendChild(ar);
+    [['', null], ['^', [0, -1]], ['', null], ['<', [-1, 0]], ['v', [0, 1]], ['>', [1, 0]]].forEach(([l, d]) => { if (!d) return ar.appendChild(el('span')); const b = el('button', '', l); b.type = 'button'; b.setAttribute('aria-label', { '^': 'up', 'v': 'down', '<': 'left', '>': 'right' }[l]); b.onclick = () => move(d); ar.appendChild(b); });
+    this.keys = (e) => { const d = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key]; if (d && c.sec.matches(':hover, :focus-within')) { e.preventDefault(); move(d); } };
+    window.onkeydown = this.keys;
+    let sw = null; cv.onpointerdown = (e) => (sw = [e.clientX, e.clientY]); cv.onpointerup = (e) => { if (!sw) return; const dx = e.clientX - sw[0], dy = e.clientY - sw[1]; sw = null; if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return; move(Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)]); };
+    cv.style.touchAction = 'none';
+  } });
+
+// ================= 6 PICTURE PUZZLE (swap, not slide)
+function paintPicture(cv) {
+  const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; const W = 120;
+  px(g, 0, 0, W, W, '#1f1830'); px(g, 0, 0, W, 46, '#120e1d');
+  for (let y = 0; y < 46; y += 8) { px(g, 0, y, W, 1, '#2a2240'); for (let x = (y / 8) % 2 ? 0 : 6; x < W; x += 12) px(g, x, y, 1, 8, '#2a2240'); }
+  for (let y = 46; y < W; y += 14) { px(g, 0, y, W, 1, '#2a2240'); for (let x = ((y - 46) / 14) % 2 ? 0 : 10; x < W; x += 20) px(g, x, y, 1, 14, '#2a2240'); }
+  px(g, 48, 18, 24, 28, '#5a2f8a'); px(g, 50, 16, 20, 2, '#5a2f8a'); px(g, 52, 14, 16, 2, '#5a2f8a'); px(g, 52, 20, 16, 26, '#3a1a5e'); px(g, 59, 30, 2, 2, '#ffd84a');
+  for (const x of [36, 82]) { px(g, x, 22, 2, 6, '#6b4a2a'); px(g, x - 1, 18, 4, 4, '#ff9a3c'); px(g, x, 17, 2, 2, '#ffe066'); }
+  g.drawImage(IMG.goblin, 26, 52); g.drawImage(IMG.slime, 76, 60); g.drawImage(IMG.chest, 53, 50);
+  g.drawImage(IMG.knight, 14, 88); g.drawImage(IMG.rogue, 40, 90); g.drawImage(IMG.archer, 64, 90); g.drawImage(IMG.mage, 88, 88);
+}
+room({ id: 'picture', tag: 'PUZZLE 6 - EYES', name: 'Picture Puzzle', stageClass: 'pic',
+  how: 'A dungeon picture is cut into pieces and mixed up. Tap one piece, then another, to swap them. Put the picture back together.',
+  notes: ['<b>Prize:</b> the finished picture = the item pick.', '<b>Not sliding:</b> any two pieces can swap, so it is relaxed and quick.', '<b>Deeper:</b> more pieces, and the small example picture is hidden.', 'Later: the picture could be a different scene each time (the current floor, the squad, a boss).'],
+  start(c) {
+    const P = [{ g: 3, thumb: true }, { g: 4, thumb: true }, { g: 5, thumb: false }][LEVEL];
+    const full = el('canvas'); full.width = full.height = 120; paintPicture(full);
+    c.extra.innerHTML = '';
+    if (P.thumb) { const t = el('div', 'thumb'); const tc = el('canvas'); tc.width = tc.height = 120; tc.getContext('2d').drawImage(full, 0, 0); t.appendChild(tc); t.appendChild(el('span', '', 'MAKE THIS')); c.extra.appendChild(t); }
+    const N = P.g, piece = 120 / N, size = Math.floor(288 / N) - 4;
+    let order = shuffle([...Array(N * N).keys()]); while (order.every((v, i) => v === i)) order = shuffle(order);
+    c.stage.innerHTML = ''; const grid = el('div', 'grid'); grid.style.gridTemplateColumns = `repeat(${N}, ${size}px)`; grid.style.gap = '2px'; c.stage.appendChild(grid);
+    let sel = -1, moves = 0, done = false;
+    const cells = order.map(() => { const b = el('button', 'cell'); b.type = 'button'; b.style.cssText = `width:${size}px;height:${size}px;border:0;padding:0;background:#000`; const cv = el('canvas'); cv.width = cv.height = piece; b.appendChild(cv); grid.appendChild(b); return { b, cv }; });
+    const draw = () => cells.forEach((cl, i) => { const p = order[i]; const g = cl.cv.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, piece, piece); g.drawImage(full, (p % N) * piece, Math.floor(p / N) * piece, piece, piece, 0, 0, piece, piece); cl.b.classList.toggle('sel', i === sel); });
+    cells.forEach((cl, i) => (cl.b.onclick = () => {
+      if (done) return;
+      if (sel < 0) { sel = i; beep(523, 60); }
+      else if (sel === i) sel = -1;
+      else { [order[sel], order[i]] = [order[i], order[sel]]; sel = -1; moves++; beep(392, 60); }
+      draw();
+      if (order.every((v, k) => v === k)) { done = true; c.stage.classList.add('gold'); grid.style.gap = '0'; c.say(`Done in ${moves} swaps! Item pick.`, 'win-msg'); beep(880, 300); } else c.say(`Swaps: ${moves}`);
+    }));
+    c.stage.classList.remove('gold'); draw(); c.say('Swaps: 0');
+  } });
+
+// ---- depth switch, picks (db collection "picks": doc per puzzle {keep}, doc "note" {text})
+const startAll = () => PUZZLES.forEach(({ def, ctx }) => { ctx.extra.innerHTML = ''; ctx.stage.classList.remove('gold'); def.start(ctx); });
+document.querySelectorAll('.depth button').forEach((b) => (b.onclick = () => { LEVEL = Number(b.dataset.l); document.querySelectorAll('.depth button').forEach((x) => x.classList.toggle('on', x === b)); startAll(); }));
+const markKeep = (id, on) => { const b = document.getElementById('keep-' + id); if (b) { b.classList.toggle('on', on); b.textContent = on ? 'KEPT' : 'KEEP THIS ONE'; } };
+let picks = null;
+function setKeep(id, on) { markKeep(id, on); if (picks) picks.doc(id).set({ keep: on, updatedAt: new Date().toISOString() }).catch(() => {}); }
+loadImgs().then(startAll);
+(async () => {
+  const db = await (window.claude ? claude.use('db') : null);
+  const ns = document.getElementById('noteStatus');
+  if (!db) { ns.textContent = 'Picks are not saved in this view.'; return; }
+  picks = db.collection('picks');
+  picks.onSnapshot((snap) => { for (const d of snap.docs) { const v = d.data(); if (d.id === 'note') { if (!document.getElementById('note').value) document.getElementById('note').value = v.text || ''; } else markKeep(d.id, !!v.keep); } });
+  document.getElementById('saveNote').onclick = async () => { try { await picks.doc('note').set({ text: document.getElementById('note').value, updatedAt: new Date().toISOString() }); ns.textContent = 'SAVED'; } catch { ns.textContent = 'Could not save, try again'; } };
+})();
+</script>

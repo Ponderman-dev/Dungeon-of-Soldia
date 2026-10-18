@@ -184,14 +184,22 @@ export const RECIPES = {
       skullPx(g, x, y, 1, 2);
       return g.out;
     }
-    const hit = ms - fly;
-    for (let i = 0; i < 12; i++) { // green ghost-fire licking upwards
-      const p = ph(hit, i * 20, 380 + i * 20); if (p <= 0 || p >= 1) continue;
-      g.px(b.x + (rnd(i * 3) - 0.5) * 12, b.y + 4 - p * 16 + Math.sin(t / 60 + i) * 1, i % 3 ? NEC.green : C.white, 1 - p);
+    const hit = ms - fly; // round 2 (user: 'the hit should be bright like the projectile and bigger')
+    if (hit < 90) g.disc(b.x, b.y, 4 + hit / 10, C.white, 1 - hit / 90); // white flash
+    const kp = ph(hit, 0, 420); // the skull bursts BIG and bright: white, then glowing green, rising a little and fading
+    if (kp < 1) { const sc = kp < 0.15 ? 3 : 4; skullPx(g, b.x, b.y - 2 - kp * 6, kp < 0.5 ? 1 : 1 - (kp - 0.5) / 0.5, sc); for (let i = 0; i < 12; i++) { const an = (i / 12) * Math.PI * 2; g.px(b.x + Math.cos(an) * (11 + kp * 4), b.y - 2 - kp * 6 + Math.sin(an) * (10 + kp * 4), NEC.green, 0.8 * (1 - kp)); } }
+    for (let i = 0; i < 22; i++) { // bright green ghost-fire licking upwards, bigger
+      const p = ph(hit, i * 15, 450 + i * 15); if (p <= 0 || p >= 1) continue;
+      const x = b.x + (rnd(i * 3) - 0.5) * 20 + Math.sin(t / 60 + i) * 1.2, y = b.y + 6 - p * 26, s = i % 3 ? 2 : 1;
+      g.rect(x, y, s, s, i % 4 === 0 ? C.white : i % 2 ? NEC.green : 0xb8ffc8, 1 - p);
     }
-    const sp = ph(hit, 0, 520); if (sp < 1) for (let i = 0; i < 8; i++) { const an = (i / 8) * Math.PI * 2, r = 3 + 9 * easeOut(sp); g.disc(b.x + Math.cos(an) * r, b.y + Math.sin(an) * r * 0.7 - sp * 3, 1.5 + sp * 1.5, i % 2 ? NEC.purple : NEC.purple2, 0.7 * (1 - sp)); }
-    if (hit < 60) skullPx(g, b.x, b.y, 1 - hit / 60, 2);
-    return { draws: g.out, tints: [['targets', 0, hit < 380 ? [NEC.green, 0.5 * (1 - hit / 380)] : null]] };
+    for (let i = 0; i < 6; i++) { // souls burst out of the hit
+      const p = ph(hit, 30, 520); if (p <= 0 || p >= 1) break;
+      const an = (i / 6) * Math.PI * 2 + 0.3, r = 4 + 16 * easeOut(p), x = b.x + Math.cos(an) * r, y = b.y + Math.sin(an) * r * 0.8, r2 = 4 + 16 * easeOut(Math.max(0, p - 0.1));
+      soulPx(g, x, y, b.x + Math.cos(an) * r2, b.y + Math.sin(an) * r2 * 0.8, 1 - p);
+    }
+    const sp = ph(hit, 80, 650); if (sp > 0 && sp < 1) for (let i = 0; i < 10; i++) { const an = (i / 10) * Math.PI * 2, r = 5 + 12 * easeOut(sp); g.disc(b.x + Math.cos(an) * r, b.y + Math.sin(an) * r * 0.7 - sp * 4, 2 + sp * 2, i % 2 ? NEC.purple : NEC.purple2, 0.55 * (1 - sp)); }
+    return { draws: g.out, tints: [['targets', 0, hit < 80 ? [C.white, 0.8] : hit < 450 ? [NEC.green, 0.6 * (1 - (hit - 80) / 370)] : null]] };
   },
   // BONE SACRIFICE: his skeletons glow green and shake, then CRUMBLE (bones scatter on the floor); a green soul flies
   // out of each one into every hero; each hero gets three spectral bones circling them and a green glow (the shield).
@@ -243,7 +251,7 @@ export const SPECS = {
   sanctuary: { hero: 'cleric', ally: true, now: { recipe: 'divineShield', move: 'hop', heal: '', shield: true },
     new: { charge: 'clericCharge', recipe: 'sanctuaryNew', move: { type: 'hop', liftPx: 10 }, hit: { at: 200, shake: 0, shakeMs: 0, stopMs: 0 }, heal: '', shield: true } },
   death_coil3: { hero: 'necromancer', now: { recipe: 'nowDarkbolt', move: null, number: '50', numberAt: 520 },
-    new: { charge: 'necroCharge', recipe: 'deathCoilNew', move: null, hit: { at: 420, shake: 2, shakeMs: 120, stopMs: 40 }, number: '50' } },
+    new: { charge: 'necroCharge', recipe: 'deathCoilNew', move: null, hit: { at: 420, shake: 3, shakeMs: 160, stopMs: 60 }, number: '50' } },
   bone_sacrifice: { hero: 'necromancer', ally: true, minions: true, squadTargets: true, now: { recipe: 'boneWard', move: 'hop', minionsGone: 0, minionsFade: true },
     new: { charge: 'necroCharge', recipe: 'boneSacrificeNew', move: { type: 'hop', liftPx: 8 }, minionsGone: 150, minionsShake: true } },
   blood_feast: { hero: 'berserker', now: { recipe: 'bloodPact', move: 'hop' }, new: { charge: 'berserkerCharge', tremble: true, recipe: 'bloodFeast', move: { type: 'hop', liftPx: 10 } } },

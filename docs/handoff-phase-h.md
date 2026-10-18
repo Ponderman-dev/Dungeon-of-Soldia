@@ -3,10 +3,10 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
-## START HERE (session 6): HERO KITS v3, Alchemist + Bard + Archer + Mage + Knight + Berserker + Rogue + Samurai done
+## START HERE (session 6): HERO KITS v3, Alchemist + Bard + Archer + Mage + Knight + Berserker + Rogue + Samurai + Cleric done
 DONE: Alchemist (Mad Bomber: poison-only flasks, thrown one by one, glass sound), Bard (Battle Hymn), Archer (Volley
-Gunner, still LAST in review; user: 'leave her as is', will try her in game first), Mage (Elementalist), Knight (Iron Wall), Berserker (Brawler), Rogue (Combo Striker), Samurai (kept the wide Wind Cutter, user); details in docs/systems/heroes.md 'HERO KITS v3'.
-NEXT: Cleric, then Necromancer. CHECK `npm test` by its EXIT CODE (a test file
+Gunner, still LAST in review; user: 'leave her as is', will try her in game first), Mage (Elementalist), Knight (Iron Wall), Berserker (Brawler), Rogue (Combo Striker), Samurai (kept the wide Wind Cutter, user), Cleric (Holy Battle-Healer, still top: tone-down being chosen); details in docs/systems/heroes.md 'HERO KITS v3'.
+NEXT: Cleric tone-down (user wants to compensate her power), then Necromancer. CHECK `npm test` by its EXIT CODE (a test file
 that crashes stops run-all without a FAIL line; that hid a broken test for 4 steps in session 6). A NEW skill id needs its cast effect in
 src/data/skillFx.json (copy the old id's entry). Archer buff ideas if asked: volley every 3rd, volley arrows hit the target again
 when alone (bosses), or give Steady Aim back.

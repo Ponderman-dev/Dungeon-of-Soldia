@@ -930,6 +930,7 @@ export default class BattleState {
       this.tickBandages(hero, dt, events);
       this.tickSong(hero, dt, events);
       this.tickBloodthirst(hero, dt, events);
+      this.tickGrace(hero, dt, events);
       this.tickLute(hero, dt, events);
       this.tickWard(hero, dt, events);
       this.tickSpiritAxe(hero, dt, events);
@@ -1274,6 +1275,43 @@ export default class BattleState {
       if (burst.mods) this.applyStatus(u, { status: 'buff', durationMs: burst.durationMs, mods: burst.mods }, bard, 'song_burst', events);
     }
     this.refreshStats();
+  }
+
+  // Cleric's GRACE (passive.grace): every `everyMs` of a fight she heals the most hurt hero (`heal`, made stronger by
+  // her aura like item heals). Healing SOMEONE ELSE gives HER `selfBuff` (+attack, +attack speed).
+  tickGrace(hero, dt, events) {
+    const G = hero.def.passive && hero.def.passive.grace;
+    if (!G) return;
+    hero.floor.grace = (hero.floor.grace || 0) + dt;
+    if (hero.floor.grace < G.everyMs) return;
+    const ally = this.lowestHealthPercent();
+    if (!ally || ally.hp >= ally.maxHp) { hero.floor.grace = G.everyMs; return; } // nobody hurt: it waits, charged
+    hero.floor.grace = 0;
+    events.push({ type: 'flask', unit: hero, target: ally, flask: { color: '0xfff2a0' } }); // a holy mote lobbed over
+    this.clericHeal(hero, ally, this.healAmount(hero, ally, G.heal) * this.regenAura().factor, events);
+  }
+
+  // A heal from the Cleric: if it lands on SOMEONE ELSE she gets Grace's self buff. Returns the health restored.
+  clericHeal(cleric, ally, amount, events) {
+    const got = this.healUnit(ally, amount, events, { aura: false });
+    const G = cleric.def.passive && cleric.def.passive.grace;
+    if (G && G.selfBuff && ally !== cleric && got > 0) this.applyStatus(cleric, { status: 'buff', durationMs: G.selfBuff.durationMs, mods: G.selfBuff.mods }, cleric, 'grace', events);
+    return got;
+  }
+
+  // HOLY NOVA (skill `holyNova: { heal, radius, damageMultiplier, healSharePercent }`): heals the most hurt hero, and
+  // every enemy within `radius` of THAT hero takes holy damage = damageMultiplier + healSharePercent% of the heal (so it
+  // grows with her healing). No on-hit items.
+  holyNova(hero, skill, slotId, ally, events) {
+    const N = skill.holyNova;
+    if (!ally) return;
+    const raw = this.healAmount(hero, ally, N.heal) * this.regenAura().factor;
+    this.clericHeal(hero, ally, raw, events);
+    const zone = { shape: 'circle', x: ally.x, y: ally.y, radius: N.radius, ySquash: 0.7 };
+    const foes = this.enemies.filter((e) => e.alive && (!this.hasPositions(e) || !this.hasPositions(ally) || this.inZone(e, zone)));
+    events.push({ type: 'wave', unit: hero, skill, wave: 0, waves: 1, targets: foes, zone: this.hasPositions(ally) ? zone : null });
+    const mult = N.damageMultiplier + ((N.healSharePercent / 100) * raw) / Math.max(1, hero.stats.attack);
+    for (const e of foes) this.skillHit(hero, { damageType: skill.damageType, damageMultiplier: mult }, slotId, e, events);
   }
 
   // Berserker's BLOODTHIRST (passive.bloodthirst): below `belowPercent` health he gets +`attackPercent`% attack and
@@ -2528,6 +2566,11 @@ export default class BattleState {
       hero.casting = { index, remaining: ms, total: ms, flasks };
       this.castPages = null;
       this.tickCasting(hero, 0, events);
+      return;
+    }
+    if (skill.holyNova) {
+      this.holyNova(hero, skill, slot.id, targets[0], events);
+      this.castPages = null;
       return;
     }
     if (skill.random) {

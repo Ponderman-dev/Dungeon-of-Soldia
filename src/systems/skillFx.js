@@ -14,7 +14,7 @@ const easeInOut = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2)
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const DUST = 0xc9b18a, KNIFE = 0xe4e8f0, ARROW = 0xc68a5e, NOTE = 0xf06ab4, RUNE = 0x9b4dff, ROAR = 0xff4a4a, DULL = 0x6f6890, GREENEYE = 0x6dff8a, BONE = 0xebe5cf, PETAL = 0xf6a8c8, STANCE = 0xffd27a;
 
-export const CAST_MS = { shieldBash: 600, challenge: 900, bloodPact: 1000, eviscerate: 600, changeSong: 1100, groundPound: 700, rallyCry: 1100, smokeBomb: 1400, huntersMark: 900, savageLeap: 750, warCry: 900, windCutter: 500, focusStance: 700, frostNova: 800, arcaneWard: 1200, divineShield: 700, boneWard: 1200, ballad: 1600 };
+export const CAST_MS = { shieldBash: 600, challenge: 900, bloodPact: 1000, eviscerate: 600, changeSong: 1100, groundPound: 700, rallyCry: 1100, smokeBomb: 1400, huntersMark: 900, savageLeap: 750, warCry: 900, windCutter: 500, focusStance: 700, frostNova: 800, arcaneWard: 1200, divineShield: 700, holyNova: 800, boneWard: 1200, ballad: 1600 };
 export const SHOT_MS = { knife: 200, rain: 300, note: 320, fireball: 720, darkbolt: 520, holybolt: 520, flask: 900 };
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -121,6 +121,14 @@ const CAST = {
     const p = easeOut(ph(q, 0, 0.45)), a = 1 - ph(q, 0.7, 1); const R = u.hw + 6, HH = u.y - u.top + 4;
     for (let an = Math.PI; an <= Math.PI * 2; an += 0.05) g.px(u.x + Math.cos(an) * R, u.y + Math.sin(an) * HH * p, C.holy, 0.85 * a);
     for (let x = -R; x <= R; x++) g.px(u.x + x, u.y, C.holy, 0.6 * a);
+    return g.out;
+  },
+  // Cleric: Holy Nova. A golden ring bursts out from the healed hero, with sparks rising on it.
+  holyNova(q, c) {
+    const g = pen(); const u = c.targets[0]; if (!u) return g.out;
+    const p = easeOut(ph(q, 0, 0.7));
+    if (p > 0 && p < 1) { g.ring(u.x, u.y, 3 + p * 34, C.holy, 1 - p, 1 + p * 14); g.ring(u.x, u.y, p * 28, C.white, (1 - p) * 0.6, p * 11); }
+    burst(g, u.x, u.mid, 10, [C.holy, C.gold, C.white], ph(q, 0, 0.6), 10, 3, 1);
     return g.out;
   },
   // Necromancer: Bone Ward. Small bones orbit each shielded body.

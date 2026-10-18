@@ -1050,11 +1050,11 @@
     "id": "cleric",
     "name": "Cleric",
     "role": "Healer",
-    "summary": "Keeps the squad standing.",
+    "summary": "Holy battle-healer: her healing turns into holy damage.",
     "tips": [
-      "Every hero regenerates health while she lives.",
-      "Every 4th attack heals the most hurt ally instead.",
-      "Divine Shield makes the weakest ally immune for 2s."
+      "Grace: every 5s she heals the most hurt hero; healing someone else gives her +20% attack and attack speed for 4s.",
+      "Holy Nova heals the most hurt hero and burns every enemy around them; bigger heals = bigger nova.",
+      "Heal items work 25% stronger with her. Sanctuary: a shield plus strong regen on the most hurt hero."
     ],
     "damageType": "holy",
     "height": 24,
@@ -1075,8 +1075,8 @@
       "resist": 0.5
     },
     "skills": {
-      "attack": "smite",
-      "support": "divine_shield"
+      "attack": "holy_nova",
+      "support": "sanctuary"
     },
     "perk": {
       "name": "Blessing",
@@ -1089,23 +1089,30 @@
       ]
     },
     "passive": {
-      "name": "Mending",
-      "description": "While she lives every hero regenerates a little (and regen/heals from items are 25% stronger). Every 4th attack heals the most hurt ally instead of hitting.",
+      "name": "Grace",
+      "description": "Heal items (lifesteal, regen, item heals) are 25% stronger while she lives. Every 5s she heals the most hurt hero (8% of their health + her attack). Healing someone else gives HER +20% attack and +20% attack speed for 4s.",
       "regenAura": {
-        "baseRegenPercentPerSec": 0.3,
+        "baseRegenPercentPerSec": 0,
         "healMultiplierPercent": 25
       },
-      "counter": {
-        "id": "mend",
-        "label": "MEND",
-        "color": "#9fe8a8",
-        "every": 4,
-        "scope": "self",
-        "effect": "heal",
-        "firedLabel": "Heal!",
+      "grace": {
+        "everyMs": 5000,
         "heal": {
-          "percentMaxHp": 10,
+          "percentMaxHp": 8,
           "attackMultiplier": 1
+        },
+        "selfBuff": {
+          "durationMs": 4000,
+          "mods": [
+            {
+              "stat": "attack",
+              "percent": 20
+            },
+            {
+              "stat": "attackEfficiency",
+              "percent": 20
+            }
+          ]
         }
       }
     },
@@ -1221,8 +1228,7 @@
     },
     "provides": [
       "heal",
-      "shield",
-      "beat"
+      "shield"
     ]
   },
   {

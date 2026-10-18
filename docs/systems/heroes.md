@@ -79,3 +79,11 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       Break, `killCooldownCutPercent` 60 = a kill cuts the cooldown (popup 'Perfect Cut!'). COUNTER STANCE (`counter_stance`,
       replaces Focus Stance): 4s `parry` only (no next-attack crit); while it is on, counterCut() ignores reach and throws
       the hit back (crescent projectile when far). review.mjs 3 all (x2): avg floor ~27 -> 30.0 / 29.8 (3rd-4th).
+    - **Cleric** HOLY BATTLE-HEALER (built session 6): MENDING (base regen aura + every-4th-attack heal counter) REMOVED.
+      GRACE (`passive.grace` + `regenAura` with base 0 / heal items +25%): every `everyMs` 5s of a fight (`hero.floor.grace`,
+      `tickGrace()`) she heals the most hurt hero (8% + 1x attack, x aura factor; waits charged if nobody is hurt);
+      `clericHeal()`: a heal on SOMEONE ELSE gives HER `selfBuff` +20% attack +20% attack speed 4s. HOLY NOVA (`holy_nova`,
+      `holyNova()`): heals the most hurt hero (12% + 1x attack, x aura factor) and every enemy within 110px of THAT hero
+      takes holy damage = 60% + 25% of the heal (no on-hit items); `wave` event draws the zone; cast effect `holyNova`
+      (skillFx.js, golden ring). SANCTUARY (`sanctuary`, replaces Divine Shield): most hurt hero gets a 25% shield + 3%/s
+      regenBoost for 5s. review.mjs 3 all (x2): avg floor ~34 -> 35.2 / 34.7 (still TOP).

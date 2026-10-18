@@ -223,3 +223,28 @@ const IA = hero('samurai').passive.iaido, WC = skills[hero('samurai').skills.att
 { const { s, es, a } = mk(['samurai'], ['skeletonArcher']); const e = es[0]; e.x = a.x; e.y = a.y - 400; a.stats.crit = 0; cast(s, a, 'support');
   const ev = []; const res = s.strike(e, a, ev, { basic: true }); const back = hits(ev, a).find((x) => x.target === e);
   ok('Counter Stance: hits on him are parried and THROWN BACK, even from far away, as a sure crit', res.parried && back && back.result.crit); }
+
+// ================= CLERIC: HOLY BATTLE-HEALER
+const calm = (s, es) => es.forEach((e) => s.applyStatus(e, { status: 'stun', durationMs: 1e9 }, s.heroes[0], 'test', [])); // enemies stand still
+const GR = hero('cleric').passive.grace, HN = skills[hero('cleric').skills.attack].holyNova, SA = skills[hero('cleric').skills.support];
+{ const { s, es, h } = mk(['cleric', 'knight']); calm(s, es); const [c, k] = h; s.refreshStats(); k.hp = k.maxHp * 0.5; c.hp = c.maxHp; const atk0 = c.stats.attack, spd0 = c.stats.attackEfficiency; const hp0 = k.hp;
+  const ev = run(s, GR.everyMs + 50);
+  ok(`Grace: every ${GR.everyMs / 1000}s she heals the most hurt hero`, k.hp > hp0 && ev.filter((e) => e.type === 'heal' && e.unit === k).length >= 1);
+  ok(`...healing someone else gives HER +${GR.selfBuff.mods[0].percent}% attack and +${GR.selfBuff.mods[1].percent}% attack speed`, Math.abs(c.stats.attack / atk0 - (1 + GR.selfBuff.mods[0].percent / 100)) < 0.02 && c.stats.attackEfficiency > spd0, `${atk0} -> ${c.stats.attack}`); }
+{ const { s, es, h } = mk(['cleric', 'knight']); calm(s, es); const [c, k] = h; s.refreshStats(); k.hp = k.maxHp; c.hp = c.maxHp * 0.5; const atk0 = c.stats.attack;
+  run(s, GR.everyMs + 50); ok('...healing HERSELF gives no buff', c.hp > c.maxHp * 0.5 && c.stats.attack === atk0); }
+{ const { s, es, h } = mk(['cleric', 'knight']); calm(s, es); s.refreshStats(); for (const x of h) x.hp = x.maxHp; const ev = run(s, GR.everyMs + 50);
+  ok('...nobody hurt: no heal (it waits)', !ev.some((e) => e.type === 'heal')); }
+{ const { s, es, h } = mk(['cleric', 'knight'], ['goblin', 'goblin', 'goblin']); const [c, k] = h; s.refreshStats(); c.hp = c.maxHp; k.hp = k.maxHp * 0.4;
+  es[0].x = k.x; es[0].y = k.y - 40; es[1].x = k.x + 40; es[1].y = k.y - 50; es[2].x = k.x; es[2].y = k.y - 400; s.giveItem(c.uid, 'fire_bombs');
+  const hp0 = k.hp, atk0 = c.stats.attack; const ev = cast(s, c, 'attack'); const sk = hits(ev, c).filter((e) => e.skill);
+  const healed = k.hp - hp0, expect = k.maxHp * HN.heal.percentMaxHp / 100 + atk0 * HN.heal.attackMultiplier; // (Grace then buffs her attack)
+  ok('Holy Nova: heals the most hurt hero', Math.abs(healed - expect * s.regenAura().factor) <= 2, `${Math.round(healed)} vs ${Math.round(expect * s.regenAura().factor)}`);
+  ok('...and hits every enemy around THAT hero (not the far one)', sk.length === 2 && !sk.some((e) => e.target === es[2]), sk.length);
+  const per = c.stats.attack * HN.damageMultiplier + (HN.healSharePercent / 100) * expect * s.regenAura().factor;
+  ok(`...for ${HN.damageMultiplier * 100}% + ${HN.healSharePercent}% of the heal`, sk.every((e) => Math.abs(e.result.amount - per) <= 2 || e.result.crit), `${sk.map((e) => e.result.amount).join()} vs ${Math.round(per)}`);
+  ok('...no on-hit items', !ev.some((e) => e.type === 'proc' && e.itemId === 'fire_bombs')); }
+{ const { s, es, h } = mk(['cleric', 'knight']); calm(s, es); const [c, k] = h; s.refreshStats(); c.hp = c.maxHp; k.hp = k.maxHp * 0.3; cast(s, c, 'support');
+  const sh = k.statuses.find((x) => x.type === 'shield'), rg = k.statuses.find((x) => x.type === 'regenBoost');
+  ok(`Sanctuary: the most hurt hero gets a shield (${SA.apply[0].percentMaxHp}%) and regen (${SA.apply[1].percentMaxHpPerSec}%/s) for ${SA.apply[0].durationMs / 1000}s`, sh && Math.abs(sh.amount - k.maxHp * SA.apply[0].percentMaxHp / 100) <= 1 && rg && !c.statuses.some((x) => x.type === 'shield'));
+  const hp0 = k.hp; run(s, 1000); ok('...and the regen heals', k.hp > hp0); }

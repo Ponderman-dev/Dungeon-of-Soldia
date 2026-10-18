@@ -674,6 +674,46 @@
     ],
     "description": "The most hurt ally is invulnerable for 2s and heals 20% of max health when it ends."
   },
+  "holy_nova": {
+    "name": "Holy Nova",
+    "short": "HN",
+    "kind": "attack",
+    "target": "lowestAlly",
+    "damageType": "holy",
+    "cooldownMs": 8000,
+    "castMs": 700,
+    "holyNova": {
+      "heal": {
+        "percentMaxHp": 12,
+        "attackMultiplier": 1
+      },
+      "radius": 110,
+      "damageMultiplier": 0.6,
+      "healSharePercent": 25
+    },
+    "description": "Heals the most hurt hero (12% of their health + her attack) and every enemy around THAT hero takes 60% holy damage plus a quarter of the heal."
+  },
+  "sanctuary": {
+    "name": "Sanctuary",
+    "short": "SA",
+    "kind": "support",
+    "target": "lowestAlly",
+    "cooldownMs": 14000,
+    "castMs": 500,
+    "apply": [
+      {
+        "status": "shield",
+        "percentMaxHp": 25,
+        "durationMs": 5000
+      },
+      {
+        "status": "regenBoost",
+        "durationMs": 5000,
+        "percentMaxHpPerSec": 3
+      }
+    ],
+    "description": "The most hurt hero gets a shield (25% of their health) and strong regen (3% of their health per second) for 5s."
+  },
   "death_coil": {
     "name": "Death Coil",
     "short": "DC",

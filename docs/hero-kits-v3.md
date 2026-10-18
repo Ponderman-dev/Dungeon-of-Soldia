@@ -58,7 +58,7 @@ Decided by the user one hero at a time (feel, passive, attack, support). Numbers
 - Support ARCANE WARD + TEAM ELEMENTS: squad shield + resist, and for 5s the squad's hits leave a random element so
   the whole team sets off reactions.
 
-## Cleric: HOLY BATTLE-HEALER
+## Cleric: HOLY BATTLE-HEALER (BUILT session 6, see docs/systems/heroes.md)
 - Feel: her healing turns into holy damage. Loves heal, regen and shield items.
 - Passive (user's version, replaces Mending): she gets more out of heal items; every 5s she heals one party
   member; healing SOMEONE ELSE gives them (or her? set when built: user said "healing other people give attack

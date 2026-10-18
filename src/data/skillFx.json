@@ -25,5 +25,7 @@
   "blood_feast": "bloodPact",
   "multistrike": "eviscerate",
   "wind_cutter3": "windCutter",
-  "counter_stance": "focusStance"
+  "counter_stance": "focusStance",
+  "sanctuary": "divineShield",
+  "holy_nova": "holyNova"
 }

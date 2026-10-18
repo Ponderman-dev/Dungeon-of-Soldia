@@ -55,6 +55,22 @@
     "woodDark": "0x2c1d14",
     "woodLight": "0x5c4130",
     "iron": "0x3c3b42",
-    "rivet": "0x8a8794"
+    "rivet": "0x8a8794",
+    "dust": "0x6a6258",
+    "anim": {
+      "_about": "How the door opens (Door.open): rattleMs of shaking (rattlePx, rattles times) as it unlocks, then the halves swing open over swingMs (they speed up like a heavy door) to openScale, getting darker as they turn (shadeAlpha), bounce back by bounce and settle (bounceMs). On the hit: a thud shake (shakeMs, shakeIntensity), dust puffs at the foot (puffs each side) and dust falling from the arch (fallingDust).",
+      "rattleMs": 220,
+      "rattles": 4,
+      "rattlePx": 1,
+      "swingMs": 460,
+      "openScale": 0.1,
+      "shadeAlpha": 0.65,
+      "bounce": 0.08,
+      "bounceMs": 130,
+      "shakeMs": 90,
+      "shakeIntensity": 0.003,
+      "puffs": 4,
+      "fallingDust": 8
+    }
   }
 }

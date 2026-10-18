@@ -6,7 +6,8 @@ import floorArt from '../data/floorArt.json';
 // bands. It is CLOSED during the fight; when the floor is cleared its two halves swing open onto a black doorway.
 // Built inside a container (the floor's) so it slides with the floor. x = the door's middle,
 // baseY = the floor line under it. Colours: floorArt.json `door`.
-const C = Object.fromEntries(Object.entries(floorArt.door).filter(([k]) => k !== '_about').map(([k, v]) => [k, Number(v)]));
+const C = Object.fromEntries(Object.entries(floorArt.door).filter(([k]) => k !== '_about' && k !== 'anim').map(([k, v]) => [k, Number(v)]));
+const A = floorArt.door.anim;
 const HALF_W = 18; // half the opening
 const OPEN_H = 52; // straight part of the opening
 const ARCH_H = 14; // the round top
@@ -15,7 +16,11 @@ const FRAME_W = 9; // the stone round the opening
 export default class Door {
   constructor(scene, container, x, baseY) {
     this.scene = scene;
+    this.container = container;
+    this.x = x;
+    this.baseY = baseY;
     this.isOpen = false;
+    this.fx = []; // dust bits still flying (gone on close)
     const top = baseY - OPEN_H;
 
     // The stone arch: two jambs of blocks and a ring of wedge blocks over the top, a lighter keystone.
@@ -64,7 +69,12 @@ export default class Door {
       }
       g.lineStyle(1, C.rivet, 1).strokeCircle(HALF_W - 4, -27, 2.5);
       g.lineStyle(1, C.woodDark, 1).strokePoints(pts, true);
-      leaf.add(g);
+      // A shadow over the half that grows as it turns away from the room's light.
+      const shadow = scene.add.graphics();
+      shadow.fillStyle(0x000000, 1).fillPoints(pts, true);
+      shadow.setAlpha(0);
+      leaf.add([g, shadow]);
+      leaf.shadow = shadow;
       leaf.setScale(-side, 1); // the right half (side 1) is the left one mirrored
       leaf.side = side;
       return leaf;
@@ -73,16 +83,59 @@ export default class Door {
     container.add([frame, hole, this.light, ...this.leaves]);
   }
 
-  // The halves swing open (ms) onto the black doorway.
-  open(ms = 600) {
+  // It unlocks with a rattle, the heavy halves swing open (faster and faster, darker as they turn), slam into the
+  // wall with a small bounce, a thud and dust. Timings: floorArt.json door.anim.
+  open() {
     if (this.isOpen) return;
     this.isOpen = true;
-    for (const leaf of this.leaves) this.scene.tweens.add({ targets: leaf, scaleX: -leaf.side * 0.12, duration: ms, ease: 'Quad.easeOut' });
+    const sc = this.scene;
+    for (const leaf of this.leaves) {
+      const home = leaf.x;
+      sc.tweens.add({ targets: leaf, x: home + A.rattlePx * leaf.side, duration: A.rattleMs / (A.rattles * 2), yoyo: true, repeat: A.rattles - 1 });
+      sc.tweens.add({
+        targets: leaf,
+        scaleX: -leaf.side * A.openScale,
+        delay: A.rattleMs,
+        duration: A.swingMs,
+        ease: 'Cubic.easeIn',
+        onComplete: () => {
+          leaf.x = home;
+          sc.tweens.add({ targets: leaf, scaleX: -leaf.side * (A.openScale + A.bounce), duration: A.bounceMs / 2, yoyo: true, ease: 'Quad.easeOut' });
+        },
+      });
+      sc.tweens.add({ targets: leaf.shadow, alpha: A.shadeAlpha, delay: A.rattleMs, duration: A.swingMs, ease: 'Cubic.easeIn' });
+    }
+    sc.time.delayedCall(A.rattleMs + A.swingMs, () => this.slam());
+  }
+
+  // The halves hit the wall: a thud shake, dust puffs at the foot of the door and dust falling from the arch.
+  slam() {
+    if (!this.isOpen || !this.container.active) return;
+    const sc = this.scene;
+    sc.cameras.main.shake(A.shakeMs, A.shakeIntensity);
+    const add = (o) => { this.container.add(o); this.fx.push(o); return o; };
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < A.puffs; i++) {
+        const c = add(sc.add.circle(this.x + side * (HALF_W + 2), this.baseY - 2, 3 + (i % 2) * 2, C.dust, 0.7));
+        sc.tweens.add({ targets: c, x: c.x + side * (8 + i * 6), y: c.y - 4 - (i % 3) * 3, scale: 2, alpha: 0, duration: 450 + i * 60, ease: 'Quad.easeOut', onComplete: () => c.destroy() });
+      }
+    }
+    for (let i = 0; i < A.fallingDust; i++) {
+      const top = this.baseY - OPEN_H - ARCH_H;
+      const d = add(sc.add.rectangle(this.x + (Math.random() * 2 - 1) * (HALF_W + 6), top + Math.random() * 6, 2, 2, C.dust, 0.9));
+      sc.tweens.add({ targets: d, y: d.y + 18 + Math.random() * 22, alpha: 0, delay: Math.random() * 150, duration: 500 + Math.random() * 300, ease: 'Quad.easeIn', onComplete: () => d.destroy() });
+    }
   }
 
   // Shut again at once (no animation).
   close() {
     this.isOpen = false;
-    for (const leaf of this.leaves) leaf.setScale(-leaf.side, 1);
+    for (const leaf of this.leaves) {
+      this.scene.tweens.killTweensOf([leaf, leaf.shadow]);
+      leaf.setScale(-leaf.side, 1);
+      leaf.shadow.setAlpha(0);
+    }
+    for (const o of this.fx) if (o.active) o.destroy();
+    this.fx = [];
   }
 }

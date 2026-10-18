@@ -23,11 +23,11 @@ const MUTE = '#a8a8b8';
 const FONT = UI.font;
 const WALL_H = 200; // the back wall with the door, as on the battle floors
 const DOOR_X = GAME_WIDTH / 2;
-const BEGIN_Y = WALL_H + 46; // the 'Begin descent' button, just under the big entrance (not over it)
+const BEGIN_Y = 712; // the 'Begin descent' button, at the bottom over RANDOM (screen review: thumb reach, the gate stays clear)
 // Where the 3 picked heroes stand (their feet): the orange slots. Slot order = battle order.
-const SLOTS = [{ x: 92, y: 450 }, { x: GAME_WIDTH / 2, y: 392 }, { x: GAME_WIDTH - 92, y: 450 }]; // 30px lower (screen review)
+const SLOTS = [{ x: 92, y: 392 }, { x: GAME_WIDTH / 2, y: 342 }, { x: GAME_WIDTH - 92, y: 392 }]; // the squad stands before the gate (screen review)
 // The bench: every hero stands on a purple strip at the bottom that scrolls left and right.
-const BENCH = { top: 548, bottom: 742, feetY: 692, firstX: 62, gap: 96 };
+const BENCH = { top: 476, bottom: 670, feetY: 620, firstX: 62, gap: 96 };
 const WALK = combatRules.movement.walkSpeedPxPerSec * 1.6; // a bit quicker than in fights
 const T = combatRules.transition;
 const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
@@ -37,7 +37,7 @@ const DEPTH = { floor: 0, slot: 1, bench: 2, hero: 5, doorFront: 8, ui: 20, pane
 // all heroes stand on a purple bench at the bottom (drag it left/right). Tap one to see the big
 // details card (kit, perk, tips) with a "Choose" button; a chosen hero walks up to the next empty
 // orange slot. Tap a hero in a slot to send it back. With all 3 slots filled a "Begin descent"
-// button appears over the door; the squad walks into the door and the run starts.
+// button appears at the bottom; the squad walks into the door and the run starts.
 // Locked heroes are dark on the bench; their card shows how to unlock them.
 export default class SquadScene extends Phaser.Scene {
   constructor() {
@@ -151,7 +151,7 @@ export default class SquadScene extends Phaser.Scene {
     drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 8, 196, 26);
     this.add.text(20, 21, info, { fontFamily: FONT, fontSize: '8px', color: this.lastRun ? UI.gold : INK }).setOrigin(0, 0.5).setDepth(DEPTH.ui);
 
-    // "Begin descent": only when all 3 slots are filled, just under the door.
+    // "Begin descent": only when all 3 slots are filled, at the bottom over RANDOM.
     this.begin = this.add.container(DOOR_X, BEGIN_Y).setDepth(DEPTH.ui);
     const bg = this.add.graphics();
     drawWindow(bg, -132, -22, 264, 44);

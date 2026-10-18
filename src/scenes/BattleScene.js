@@ -62,12 +62,14 @@ const itemDefs = loadItems(rawItems);
 const TUNE = makeTuner(effectsData);
 // Skill name -> its own cast effect (skillFx.json; a rotation spell is 'skillId:SHORT').
 const DASH_BY_NAME = {}; // skill name -> its dash (combat.json skillFx.dash)
+const WAVE_BY_NAME = {}; // skill name -> its per-wave look (combat.json skillFx.wave)
 const SKILL_FX_BY_NAME = {};
 for (const [id, sk] of Object.entries(rawSkills)) {
   if (id.startsWith('_')) continue;
   if (sk.rotation) for (const r of sk.rotation) SKILL_FX_BY_NAME[r.name] = skillFxData[`${id}:${r.short}`];
   else SKILL_FX_BY_NAME[sk.name] = skillFxData[id];
   if (combatRules.skillFx.dash[id]) DASH_BY_NAME[sk.name] = combatRules.skillFx.dash[id];
+  if (combatRules.skillFx.wave[id]) WAVE_BY_NAME[sk.name] = combatRules.skillFx.wave[id];
 }
 const skillDefs = rawSkills;
 const SKILL_Y = 772; // centre of the skill squares
@@ -1507,8 +1509,11 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'wave') {
       if (e.zone) this.showZone(e.zone, FX.areaMs * 0.7);
       // One wave of a channel (Rain of Arrows, Crescendo): a ring on the caster that grows with the wave.
+      // A skill with its own wave look (combat.json skillFx.wave, e.g. Multistrike slashes) plays that instead.
       const v = this.views.get(e.unit.uid);
-      if (v) {
+      const own = WAVE_BY_NAME[e.skill.name];
+      if (own) this.playWaveFx(own, v, e);
+      else if (v) {
         const c = this.center(v);
         const ring = this.add.circle(c.x, c.y, 10).setStrokeStyle(2 + e.wave, 0xffd84d).setDepth(DEPTH.popup - 1);
         this.tweens.add({ targets: ring, radius: 24 + e.wave * 10, alpha: 0, duration: 400, onComplete: () => ring.destroy() });
@@ -1885,8 +1890,8 @@ export default class BattleScene extends Phaser.Scene {
     this.tweens.add({ targets: go, p: 1, duration: D.inMs, ease: 'Quad.easeIn', onUpdate: set,
       onComplete: () => {
         this.tweens.add({ targets: go, p: 0, delay: D.holdMs, duration: D.outMs, ease: 'Quad.easeOut', onUpdate: set, onComplete: () => { caster.leapX = caster.leapY = 0; } });
-        this.cameras.main.shake(D.shakeMs, D.shakeIntensity);
-        if (!target.ch.active) return;
+        if (D.shakeMs) this.cameras.main.shake(D.shakeMs, D.shakeIntensity);
+        if (!D.knockPx || !target.ch.active) return;
         const kb = { p: 0 };
         const setK = () => { target.leapX = ux * D.knockPx * kb.p; target.leapY = uy * D.knockPx * kb.p; };
         this.tweens.add({ targets: kb, p: 1, duration: D.knockMs, ease: 'Quad.easeOut', onUpdate: setK,
@@ -1935,6 +1940,20 @@ export default class BattleScene extends Phaser.Scene {
     t.x = Math.round(Phaser.Math.Clamp(t.x, t.width / 2 + 6, GAME_WIDTH - t.width / 2 - 6)); // keep it on screen
     this.tweens.add({ targets: t, y, alpha: 1, duration: N.inMs, ease: 'Quad.easeOut' });
     this.tweens.add({ targets: t, y: y - N.risePx, alpha: 0, delay: N.inMs + N.holdMs, duration: N.outMs, onComplete: () => t.destroy() });
+  }
+
+  // One wave of a channel with its own look: the recipe plays on the wave's targets, with a small shake per wave.
+  playWaveFx(W, v, e) {
+    const tv = e.targets.map((u) => this.views.get(u.uid)).filter((x) => x && x.ch.active);
+    if (!v || !tv.length) return;
+    const last = e.wave === e.waves - 1;
+    this.cameras.main.shake(last ? W.lastShakeMs : W.shakeMs, last ? W.lastShakeIntensity : W.shakeIntensity);
+    const frozen = tv.map((x) => this.fxBody(x));
+    this.addFx(CAST_MS[W.recipe], (q, now) => {
+      const c = { caster: v.ch.active ? this.fxBody(v) : null, targets: tv.map((x, i) => (x.ch.active ? (frozen[i] = this.fxBody(x)) : frozen[i])), squad: [], enemies: [], wave: e.wave, waves: e.waves };
+      const out = castFx(W.recipe, q, c, now);
+      return { draws: out.draws, tints: out.tints.map(([list, i, tint]) => [list === 'targets' ? tv[i] : v, tint]) };
+    }, ['skill', W.recipe]);
   }
 
   // The CHARGE beat (combat.json skillFx.charge): the skill's wind-up look on the hero, for the whole wind-up. Stops

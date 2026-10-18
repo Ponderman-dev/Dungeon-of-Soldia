@@ -3,6 +3,13 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
+## START HERE (session 10c): Knight + Rogue skill looks IN THE GAME
+Rogue done straight in the game (docs/systems/effects.md 'ROGUE 3-BEAT'); tools for the next heroes: `skillFx.charge`
+(wind-up look), `skillFx.dash` (aggressive dash + knockback/shake), `skillFx.wave` (per-hit look of a channel),
+skillFx.json (cast/impact recipe). NEXT heroes (ideas): Berserker red splatter, Cleric gold light, Necro green smoke,
+Archer, Mage (element colour), Bard, Samurai, Alchemist. Also done this session: item gain popup = icon + 8px name that
+follow the hero (rewards.md), tap sound = Organic press (sound.md).
+
 ## START HERE (session 10b): Knight look + name style B are IN THE GAME
 Done (session 9): skill name B (capitals, fixed size, over the hero, colour per hero: combat.json skillFx.name), the
 Knight's calm 3-beat look (docs/systems/effects.md 'KNIGHT 3-BEAT'). NEXT: the other heroes' looks, 2-3 per session,

@@ -72,10 +72,17 @@
     "charge": {
       "_about": "The CHARGE beat: skill id -> recipe in src/systems/skillFx.js that plays on the hero during the wind-up (castMs). Heroes not listed have no charge look yet (done hero by hero).",
       "defense_bash": "knightCharge",
-      "challenge": "knightCharge"
+      "challenge": "knightCharge",
+      "multistrike": "rogueCharge",
+      "smoke_bomb": "rogueCharge"
+    },
+    "wave": {
+      "_about": "A channel skill's look PER WAVE: skill id -> recipe in skillFx.js played on the wave's targets (the recipe gets c.wave / c.waves). Replaces the yellow wave ring. shakeMs/shakeIntensity per wave, lastShake* on the final wave.",
+      "multistrike": { "recipe": "rogueSlash", "shakeMs": 50, "shakeIntensity": 0.002, "lastShakeMs": 130, "lastShakeIntensity": 0.006 }
     },
     "dash": {
-      "_about": "An aggressive dash for a skill (user: 'more aggressive movement'): the hero shoots at its target from wherever it stands (forward = distance to the target minus stopPx, between minPx and maxPx) in inMs, holds, comes back in outMs. At the hit (inMs) the target is knocked back knockPx and the screen shakes (shakeMs, shakeIntensity). Replaces the small lunge for that skill.",
+      "_about": "An aggressive dash for a skill (user: 'more aggressive movement'): the hero shoots at its target from wherever it stands (forward = distance to the target minus stopPx, between minPx and maxPx) in inMs, holds, comes back in outMs. At the hit (inMs) the target is knocked back knockPx and the screen shakes (shakeMs, shakeIntensity); 0 = none. Replaces the small lunge for that skill.",
+      "multistrike": { "stopPx": 20, "minPx": 18, "maxPx": 90, "inMs": 70, "holdMs": 640, "outMs": 200, "knockPx": 0, "knockMs": 0, "knockBackMs": 0, "shakeMs": 0, "shakeIntensity": 0 },
       "defense_bash": { "stopPx": 24, "minPx": 22, "maxPx": 70, "inMs": 80, "holdMs": 90, "outMs": 240, "knockPx": 16, "knockMs": 90, "knockBackMs": 320, "shakeMs": 170, "shakeIntensity": 0.009 }
     },
     "name": {

@@ -30,5 +30,8 @@ ok('every shot shows something', SHOT_FX.every((k) => [0.2, 0.4, 0.7].some((q) =
 ok('a skill with no targets draws nothing broken', CAST_FX.every((k) => clean(castFx(k, 0.4, { caster: body(20), targets: [], squad: [], enemies: [] }, 0).draws)));
 const charge = r('combat.json').skillFx.charge;
 ok('charge looks name real skills and real recipes', Object.keys(charge).filter((k) => !k.startsWith('_')).every((k) => skills[k] && CAST_MS[charge[k]] > 0));
+const waveLooks = r('combat.json').skillFx.wave;
+ok('per-wave looks name real channel skills and real recipes', Object.keys(waveLooks).filter((k) => !k.startsWith('_')).every((k) => skills[k] && skills[k].channel && CAST_MS[waveLooks[k].recipe] > 0));
+ok('a wave recipe draws for every wave', ['rogueSlash'].every((k) => [0, 2, 4].every((w) => castFx(k, 0.3, { ...c, wave: w, waves: 5 }, 0).draws.length > 0)));
 ok('unknown recipes are harmless', castFx('nope', 0.5, c, 0).draws.length === 0 && shotFx('nope', 0.5, { x: 0, y: 0 }, { x: 1, y: 1 }, 0).length === 0);
 ok('war cry colours the squad red and the enemies grey', castFx('warCry', 0.7, c, 0).tints.some(([l, , t]) => l === 'squad' && t) && castFx('warCry', 0.7, c, 0).tints.some(([l, , t]) => l === 'enemies' && t));

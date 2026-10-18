@@ -14,7 +14,7 @@ const easeInOut = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2)
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const DUST = 0xc9b18a, KNIFE = 0xe4e8f0, ARROW = 0xc68a5e, NOTE = 0xf06ab4, RUNE = 0x9b4dff, ROAR = 0xff4a4a, DULL = 0x6f6890, GREENEYE = 0x6dff8a, BONE = 0xebe5cf, PETAL = 0xf6a8c8, STANCE = 0xffd27a;
 
-export const CAST_MS = { shieldBash: 800, challenge: 1200, knightCharge: 500, bloodPact: 1000, eviscerate: 600, changeSong: 1100, groundPound: 700, rallyCry: 1100, smokeBomb: 1400, huntersMark: 900, savageLeap: 750, warCry: 900, windCutter: 500, focusStance: 700, frostNova: 800, arcaneWard: 1200, divineShield: 700, holyNova: 800, boneWard: 1200, ballad: 1600 };
+export const CAST_MS = { rogueDash: 160, rogueSlash: 260, rogueCharge: 400, shieldBash: 800, challenge: 1200, knightCharge: 500, bloodPact: 1000, eviscerate: 600, changeSong: 1100, groundPound: 700, rallyCry: 1100, smokeBomb: 1600, huntersMark: 900, savageLeap: 750, warCry: 900, windCutter: 500, focusStance: 700, frostNova: 800, arcaneWard: 1200, divineShield: 700, holyNova: 800, boneWard: 1200, ballad: 1600 };
 export const SHOT_MS = { knife: 200, rain: 300, note: 320, fireball: 720, darkbolt: 520, holybolt: 520, flask: 900 };
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -28,6 +28,8 @@ function rays(g, x, y, n, len, c, p, rot = 0) {
   if (p <= 0 || p >= 1) return;
   for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + rot; const r0 = len * easeOut(p) * 0.4, r1 = len * easeOut(p); g.line(x + Math.cos(a) * r0, y + Math.sin(a) * r0, x + Math.cos(a) * r1, y + Math.sin(a) * r1, c, 1 - p); }
 }
+// The Rogue's colours (cyan).
+const ROGUE = { light: 0xc8f8ff, mid: 0x5fe0f0, deep: 0x1f6f80 };
 // The Knight's colours (steel blue) and his little pixel shield: rim, face, white cross glint.
 const KNIGHT = { white: 0xffffff, light: 0xcfe4ff, mid: 0x6fa8ff, deep: 0x3b6fd4 };
 const SHIELD = ['.#####.', '#xxxxx#', '#xx+xx#', '#x+++x#', '.#x+x#.', '.#xxx#.', '..#x#..', '...#...'];
@@ -65,11 +67,67 @@ const CAST = {
     });
     return { draws: g.out, tints: c.targets.map((h, i) => ['targets', i, q > 0.3 + i * 0.08 && q < 0.95 ? [C.shield, 0.25] : null]) };
   },
-  // Rogue: Smoke Bomb. Grey smoke blooms over every enemy's head (Blind).
+  // Rogue: Smoke Bomb (3-beat look, 2026-10-18). She lobs a little black bomb over the enemies; it bursts into a big
+  // grey smoke cloud on each of them (the Blind status keeps its own small smoke loop after); her squad flickers cyan
+  // for a moment (+evasion).
   smokeBomb(q, c, t) {
-    const g = pen(); const p = easeOut(ph(q, 0, 0.35)), out = ph(q, 0.75, 1);
-    c.enemies.forEach((u) => { for (let k = 0; k < 5; k++) if (out < 1) g.disc(u.x + (k - 2) * 3 + Math.sin(t / 300 + k) * 1.2, u.top + 2 + Math.cos(t / 250 + k) * 1.5, 1.5 + p * 1.5, k % 2 ? C.grey2 : C.grey, 0.8 * p * (1 - out)); });
+    const g = pen(); const u = c.caster; const foes = c.enemies;
+    if (!foes.length) return g.out;
+    const mx = mean(foes, 'x'), my = mean(foes, 'mid');
+    const fp = ph(q, 0, 0.3); // the bomb flies
+    if (fp > 0 && fp < 1) { const [x, y] = fly({ x: u.x, y: u.mid }, { x: mx, y: my }, easeInOut(fp), 22); g.rect(x - 1, y - 1, 3, 3, 0x22222a); g.px(x + 1, y - 2, ROGUE.light); g.px(x + 2, y - 3, 0xffb84d, Math.sin(t / 30) > 0 ? 1 : 0.4); }
+    const sp = ph(q, 0.3, 1);
+    if (sp > 0 && sp < 1) {
+      if (sp < 0.12) g.disc(mx, my, 3 + sp * 30, C.white, 1 - sp / 0.12); // the pop
+      foes.forEach((e, j) => {
+        for (let k = 0; k < 9; k++) {
+          const a = (k / 9) * Math.PI * 2 + j, r = (3 + rnd(k + j * 9) * 7) * easeOut(Math.min(1, sp * 2.5));
+          const x = e.x + Math.cos(a) * r * 1.3 + Math.sin(t / 300 + k) * 1.2, y = e.mid - 3 + Math.sin(a) * r * 0.8 - sp * 6;
+          g.disc(x, y, 2 + easeOut(Math.min(1, sp * 2)) * 2.5, k % 3 ? C.grey2 : k % 2 ? C.grey : ROGUE.deep, 0.85 * (1 - ph(sp, 0.55, 1)));
+        }
+      });
+    }
+    const on = q > 0.3 && q < 0.75 && Math.sin(t / 45) > 0;
+    return { draws: g.out, tints: c.targets.map((h, i) => ['targets', i, on ? [ROGUE.mid, 0.45] : null]) };
+  },
+  // Rogue: Multistrike, the cast moment: she shoots in (cyan streaks behind her). The 5 hits are rogueSlash (per wave).
+  rogueDash(q, c) {
+    const g = pen(); const u = c.targets[0], k = c.caster; if (!u || !k) return g.out;
+    const dx = k.x - u.x, dy = k.mid - u.mid, d = Math.hypot(dx, dy) || 1, p = ph(q, 0, 1);
+    if (p < 1) for (let i = 0; i < 5; i++) { const off = (i - 2) * 2.5, len = 8 + rnd(i) * 8, bx = k.x + (dx / d) * (k.hw + 1) - (dy / d) * off, by = k.mid + (dx / d) * off; g.line(bx, by, bx + (dx / d) * len, by + (dy / d) * len, i % 2 ? ROGUE.mid : ROGUE.light, 0.8 * (1 - p)); }
     return g.out;
+  },
+  // Rogue: one hit of Multistrike (c.wave of c.waves): a quick cyan knife slash across the target, the way alternating
+  // each hit, blood drops (Bleed); the LAST hit is a bigger X of two slashes.
+  rogueSlash(q, c) {
+    const g = pen(); const u = c.targets[0]; if (!u) return g.out;
+    const w = c.wave || 0, last = w === (c.waves || 1) - 1;
+    const slash = (dir, len, p, off = 0) => {
+      if (p <= 0 || p >= 1) return;
+      const grow = easeOut(Math.min(1, p * 2.5)), a = 1 - ph(p, 0.4, 1);
+      const x0 = u.x - (len / 2) * dir, y0 = u.mid - len / 2 + off;
+      for (let k = 0; k < len * grow; k++) {
+        const x = x0 + k * dir, y = y0 + k, edge = Math.abs(k - len / 2) / (len / 2);
+        g.px(x, y, edge < 0.6 ? C.white : ROGUE.light, a); g.px(x + dir, y, ROGUE.mid, a * 0.9); if (edge < 0.3) g.px(x - dir, y, ROGUE.mid, a * 0.7);
+      }
+    };
+    const dir = w % 2 ? -1 : 1;
+    if (last) { slash(1, 22, ph(q, 0, 0.8)); slash(-1, 22, ph(q, 0.12, 0.92)); } else slash(dir, 14, ph(q, 0, 1), (w % 3) - 1);
+    for (let i = 0; i < (last ? 6 : 3); i++) { const p = ph(q, 0.1, 1); if (p > 0 && p < 1) g.rect(u.x + (rnd(w * 7 + i) - 0.5) * 10, u.mid + (rnd(w * 3 + i * 5) - 0.5) * 6 + p * p * 10, 1, 2, C.blood, 1 - p); }
+    return { draws: g.out, tints: [['targets', 0, q < 0.2 ? [C.white, last ? 0.8 : 0.5] : null]] };
+  },
+  // Rogue: the CHARGE beat of her skills (wind-up): she flickers cyan, faster and faster, specks streak into her from
+  // the sides, her two knives glint in turn.
+  rogueCharge(q, c, t) {
+    const g = pen(); const u = c.caster;
+    for (let i = 0; i < 8; i++) {
+      const s = (q * 2 + i / 8) % 1, side = i % 2 ? 1 : -1, y = u.top + 3 + rnd(i * 5) * (u.bot - u.top - 4), x = u.x + side * (u.hw + 2 + 18 * (1 - easeOut(s)));
+      g.rect(x, y, 2, 1, i % 3 ? ROGUE.light : ROGUE.mid, s * 0.9);
+    }
+    const blink = Math.floor(t / (110 - 60 * q)) % 2;
+    for (const [side, on] of [[-1, blink], [1, 1 - blink]]) if (on) { const x = u.x + side * (u.hw + 2), y = u.mid; g.px(x, y, C.white); g.px(x, y - 1, ROGUE.light); g.px(x, y + 1, ROGUE.light); g.px(x - 1, y, ROGUE.light); g.px(x + 1, y, ROGUE.light); }
+    const pulse = 0.5 + 0.5 * Math.sin(t / (60 - 30 * q));
+    return { draws: g.out, tints: [['caster', 0, [ROGUE.mid, Math.round((0.1 + 0.3 * q) * pulse * 20) / 20]]] };
   },
   // Archer: Hunter's Mark. A big red reticle drops onto the target, snaps tight and pulses once.
   huntersMark(q, c) {

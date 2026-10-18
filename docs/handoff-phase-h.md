@@ -3,16 +3,17 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
-## START HERE (session 11): SKILL LOOKS, demo page hero by hero. NEXT = Bard (Mage in the demo, waiting for the user)
+## START HERE (session 11): SKILL LOOKS, demo page hero by hero. NEXT = Samurai (Bard in the demo, waiting for the user)
 Demo page: https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN (source docs/proposals/skill-fx/, build
 `node docs/proposals/skill-fx/make.mjs <scratchpad>/soldia-skill-fx.html`, republish to the SAME url, omit capabilities).
 User's notes: ArtifactData `list` collection `notes`, docs `look:<skillId>` = {verdict ok/change, text}.
 WORKFLOW (user's rule): demo ONLY, one hero at a time; when EVERY hero is approved, build them all into the game in one go.
-STATUS: approved = Knight, Rogue, Berserker, Cleric, Archer (all), bone_sacrifice. Waiting for the user's look: death_coil3
-(round 2 hit; its note still says the round 1 CHANGE), Mage: mage_rotation:FB / :FN / :CL (each rotation spell is its own demo row,
-id 'skill:SHORT', `skillDef()` in demo.js) + mage_ward. Spec tools added session 11: move `recoil`, `rain` (per-wave
-jitter/shake/numbers), `text` (+ `self`), `hit.jitterPx/jitterMs/jitterAll/jitterStagger`, `squadShield`, `number2`/`number2At`;
-demo-only name colours NAME_COLORS (archer, mage) in heroes.js until combat.json gets them. TODO: Bard,
+STATUS: approved = Knight, Rogue, Berserker, Cleric, Archer, Mage (all), bone_sacrifice. Waiting for the user's look: death_coil3
+(round 2 hit; its note still says the round 1 CHANGE), Bard: discord, change_song:march, change_song:ballad (a song = a
+variant row 'skill:variant', spec `song` -> c.song). Rotation spells are rows 'skill:SHORT' (`skillDef()` in demo.js). Spec tools added session 11: move `recoil`, `rain` (per-wave
+jitter/shake/numbers), `text` (+ `self`), `hit.jitterPx/jitterMs/jitterAll/jitterStagger`, `squadShield`, `number2`/`number2At`, `charmed` (enemies turn
+round (`flip`) and bump each other);
+demo-only name colours NAME_COLORS (archer, mage, bard) in heroes.js until combat.json gets them. TODO:
 Samurai, Alchemist (read each kit in skills.json first).
 HOW TO ADD A HERO: recipes in docs/proposals/skill-fx/heroes.js (RECIPES, same format as src/systems/skillFx.js, +
 CAST_MS_NEW) and a SPECS entry (now = today's game look; new = charge, recipe, move dash/leap/hop, hit shake/stop,

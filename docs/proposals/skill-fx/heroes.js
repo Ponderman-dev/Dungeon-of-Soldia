@@ -143,6 +143,22 @@ function crystalPx(g, x, y, h, a) {
 const RUNES = [['#.#', '###', '.#.', '.#.', '#.#'], ['##.', '#.#', '##.', '#.#', '##.'], ['.#.', '#.#', '.#.', '#.#', '.#.'], ['#..', '##.', '#.#', '##.', '#..']];
 function runePx(g, x, y, n, c, a) { RUNES[n % RUNES.length].forEach((row, j) => [...row].forEach((ch, i) => { if (ch === '#') g.px(x + i - 1, y + j - 2, c, a); })); }
 
+// ---- Bard: pink music, real notes and hearts; March = gold, Ballad = soft green ----
+const BARD = { pink: 0xff7ac8, pink2: 0xc0408a, purple: 0x8a4ad0, dark: 0x5a2d8a, gold: 0xffc84d, gold2: 0xff9a2e, green: 0x7dffa0, green2: 0x3fbf6a };
+// An eighth note (head 2x2, stem 4 up, a flag), its head's bottom-left at (x, y). `bent` = a crooked, sour note.
+function notePx(g, x, y, c, a, bent = 0, s = 1) {
+  if (a <= 0) return;
+  const P = (dx, dy, w = 1, h = 1) => g.rect(x + dx * s, y + dy * s, w * s, h * s, c, a);
+  P(0, -1, 2, 2);
+  for (let k = 1; k <= 4; k++) P(1 + (bent && k > 2 ? bent : 0), -1 - k);
+  P(2 + (bent ? bent : 0), -5); P(3 + (bent ? bent : 0), -4);
+  if (s > 1) g.px(x, y - s, C.white, a); // a shine on the head
+}
+const HEART = ['.#.#.', '#####', '#####', '.###.', '..#..'];
+function heartPx(g, x, y, c, a) { HEART.forEach((row, j) => [...row].forEach((ch, i) => { if (ch === '#') g.px(x + i - 2, y + j - 2, (i === 1 && j === 1) ? C.white : c, a); })); }
+const luteAt = (u) => ({ x: u.x + u.hw, y: u.mid + 1 });
+
+const n0 = (j) => j * 30; // each hero's beat starts a little after the one before
 export const RECIPES = {
   // CHARGE: he shakes with rage (the demo trembles him), glows red with a fast heartbeat, hot breath puffs rise from
   // his head, little pebbles hop at his feet.
@@ -493,6 +509,70 @@ export const RECIPES = {
     if (n && ms > 100) out.push(...lightningFx(Math.min(1, (ms - 100) / 320), { x: u.x, y: u.mid }, { x: n.x, y: n.mid }, t, 2));
     return out;
   },
+  // ---- Bard ----
+  // CHARGE: he strums his lute fast: the strings shimmer white, little pink notes pop out of the lute and rise, he
+  // sways and glows pink. (The song rows use the song's colour: gold March, green Ballad.)
+  bardCharge(q, c, t) {
+    const g = pen(); const u = c.caster, l = luteAt(u), col = c.song === 'march' ? BARD.gold : c.song === 'ballad' ? BARD.green : BARD.pink;
+    if (Math.floor(t / 35) % 2) for (let k = -2; k <= 2; k++) g.px(l.x + (k % 2 ? 1 : 0), l.y + k, C.white, 0.9);
+    for (let i = 0; i < 4; i++) { const s = ((t / 520) + i / 4) % 1; notePx(g, l.x + 1 + i % 2 * 3 + Math.sin(t / 150 + i) * 2, l.y - 3 - s * 16, col, (1 - s) * (0.5 + 0.5 * q)); }
+    const pulse = 0.6 + 0.4 * Math.sin(t / 110);
+    return { draws: g.out, tints: [['caster', 0, [col, Math.round((0.08 + 0.22 * q) * pulse * 20) / 20]]] };
+  },
+  // DISCORD: he strikes a harsh chord: CROOKED dark notes wobble out in a stream and smack into every enemy in the
+  // area (a sour pop of pink and purple), then pink HEARTS circle each charmed enemy's head while they turn on each
+  // other (the spec turns them to face each other and bump).
+  discordNew(q, c, t) {
+    const g = pen(); const k = c.caster; if (!k) return g.out;
+    const ms = q * CAST_MS_NEW.discordNew, fly = c.hitMs || 320, a = luteAt(k), R = c.radius || 40, u = c.targets[0];
+    const hitList = c.enemies.filter((e) => !u || Math.hypot(e.x - u.x, (e.y - u.y) * 1.4) <= R);
+    for (let n = 0; n < 6; n++) { // the stream of sour notes
+      const e = hitList[n % hitList.length]; if (!e) break;
+      const st = n * 30, p = ph(ms, st, st + fly - 60); if (p <= 0 || p >= 1) continue;
+      const x = a.x + (e.x - a.x) * p, y = a.y + (e.mid - a.y) * p - Math.sin(p * Math.PI) * (8 + n * 2) + Math.sin(p * 20 + n) * 2;
+      notePx(g, x, y, n % 2 ? BARD.purple : BARD.pink, 1, n % 2 ? 1 : -1, 2);
+    }
+    const hit = ms - fly;
+    hitList.forEach((e, j) => {
+      const ht = hit - j * 40; if (ht < 0) return;
+      if (ht < 90) g.disc(e.x, e.mid, 4 + ht / 10, C.white, 1 - ht / 90);
+      const sp = ph(ht, 0, 420); if (sp < 1) { for (let i = 0; i < 12; i++) { const an = (i / 12) * Math.PI * 2 + j, d = 4 + 14 * easeOut(sp); g.rect(e.x + Math.cos(an) * d + Math.sin(i * 7) * 1.5, e.mid + Math.sin(an) * d * 0.8, 2, 2, i % 3 === 0 ? C.white : i % 2 ? BARD.pink : BARD.purple, 1 - sp); } for (let i = 0; i < 3; i++) notePx(g, e.x + (i - 1) * 7, e.mid - 4 - sp * 10, i % 2 ? BARD.purple : BARD.pink, 1 - sp, i - 1); } // a pop of sparks and broken notes
+      const hp = ph(ht, 150, 400) * (1 - ph(ms, CAST_MS_NEW.discordNew - 300, CAST_MS_NEW.discordNew)); // the hearts: charmed
+      for (let i = 0; i < 3; i++) { const an = t / 220 + (i * Math.PI * 2) / 3 + j; heartPx(g, e.x + Math.cos(an) * (e.hw + 3), e.top - 3 + Math.sin(an) * 2, BARD.pink, hp); }
+    });
+    return { draws: g.out, tints: c.enemies.map((e, i) => ['enemies', i, hitList.includes(e) && hit - i * 40 >= 0 ? (hit - i * 40 < 70 ? [C.white, 0.85] : [BARD.pink, 0.3 + 0.1 * Math.sin(t / 150)]) : null]) };
+  },
+  // CHANGE SONG, MARCH (gold): he plays a quick tune, gold notes hop out in a bouncy line to every hero; each hero
+  // then STOMPS to the beat (4 beats: a dust puff at their feet, a gold pulse, a note bobbing over their head).
+  marchNew(q, c, t) {
+    const g = pen(); const k = c.caster, heroes = c.targets; if (!k) return g.out;
+    const ms = q * CAST_MS_NEW.marchNew, fly = c.hitMs || 300, a = luteAt(k), BEAT = 260;
+    heroes.forEach((h, j) => {
+      for (let n = 0; n < 3; n++) { const p = ph(ms, n * 50 + j * 30, fly + n * 50 + j * 30); if (p <= 0 || p >= 1) continue; const x = a.x + (h.x - a.x) * p, y = a.y + (h.top - 2 - a.y) * p - Math.abs(Math.sin(p * Math.PI * 3)) * 6; notePx(g, x, y, n % 2 ? BARD.gold2 : BARD.gold, 1, 0, 2); }
+      const bt = ms - fly - n0(j); if (bt < 0) return;
+      const b = Math.floor(bt / BEAT), f = (bt % BEAT) / BEAT; if (b >= 4) return;
+      const dp = ph(f, 0, 0.7); for (let d = 0; d < 6; d++) g.rect(h.x + (d - 2.5) * (2 + dp * 4), h.y - dp * 3 - (d % 2), d % 2 ? 1 : 2, 1, d % 2 ? 0x8a7a68 : 0x6a5d50, 1 - dp); // stomp dust
+      notePx(g, h.x - 2, h.top - 4 - Math.round((1 - f) * 3), BARD.gold, 1 - ph(bt, 900, 1040), 0, 2);
+    });
+    const tints = heroes.map((h, j) => { const bt = ms - fly - n0(j); if (bt < 0 || bt >= 4 * BEAT) return ['targets', j, null]; const f = (bt % BEAT) / BEAT; return ['targets', j, f < 0.3 ? [BARD.gold, 0.45 * (1 - f / 0.3)] : null]; });
+    return { draws: g.out, tints };
+  },
+  // CHANGE SONG, BALLAD (green): he plays slow and soft, green notes float up in a gentle wave and drift down onto
+  // every hero; they glow soft green, a small heal, little green "+" and notes rise slowly from them (the regen).
+  balladNew(q, c, t) {
+    const g = pen(); const k = c.caster, heroes = c.targets; if (!k) return g.out;
+    const ms = q * CAST_MS_NEW.balladNew, fly = c.hitMs || 500, a = luteAt(k), END = CAST_MS_NEW.balladNew;
+    heroes.forEach((h, j) => {
+      for (let n = 0; n < 3; n++) { const p = ph(ms, n * 90 + j * 60, fly + n * 90 + j * 60); if (p <= 0 || p >= 1) continue; const e = 1 - (1 - p) * (1 - p) * (1 - p); const x = a.x + (h.x + (n - 1) * 4 - a.x) * p, y = a.y + (h.mid - a.y) * e - Math.sin(p * Math.PI) * 16 + Math.sin(p * 8 + n) * 1.5; notePx(g, x, y, n % 2 ? BARD.green2 : BARD.green, 1, 0, 2); }
+      const bt = ms - fly - j * 60; if (bt < 0) return;
+      const fade = 1 - ph(ms, END - 300, END);
+      for (let i = 0; i < 4; i++) { const s = ((bt / 1100) + i / 4) % 1, x = h.x + (i % 2 ? h.hw + 2 : -h.hw - 3) + Math.sin(t / 300 + i) * 1.5, y = h.mid + 2 - s * 18;
+        if (i < 2) notePx(g, x, y, BARD.green, (1 - s) * fade); else { g.px(x, y, BARD.green, (1 - s) * fade); g.px(x - 1, y, BARD.green, (1 - s) * fade); g.px(x + 1, y, BARD.green, (1 - s) * fade); g.px(x, y - 1, BARD.green, (1 - s) * fade); g.px(x, y + 1, BARD.green, (1 - s) * fade); } }
+    });
+    return { draws: g.out, tints: heroes.map((h, j) => { const bt = ms - fly - j * 60; return ['targets', j, bt >= 0 && ms < END - 200 ? [BARD.green, Math.round((0.15 + 0.08 * Math.sin(t / 200)) * 20) / 20] : null]; }) };
+  },
+  // Today's Discord: the game's note shot to every enemy.
+  nowDiscord(q, c, t) { const k = c.caster; if (!k) return []; const out = []; c.enemies.forEach((e, i) => out.push(...shotFx('note', q, luteAt(k), { x: e.x, y: e.mid }, t, i))); return out; },
   // Today's Death Coil: just the game's dark bolt shot.
   nowDarkbolt(q, c, t) {
     const k = c.caster, u = c.targets[0]; if (!k || !u) return [];
@@ -505,9 +585,9 @@ export const RECIPES = {
     return g.out;
   },
 };
-export const CAST_MS_NEW = { necroCharge: 700, deathCoilNew: 1100, boneSacrificeNew: 1700, nowDarkbolt: 520, clericCharge: 700, holyNovaNew: 1300, sanctuaryNew: 1800, berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400, archerChargeUp: 500, archerChargeAim: 400, arrowRainNew: 3000, huntersMarkNew: 1900, nowArrowRain: 2300, mageChargeFire: 800, mageChargeIce: 700, mageChargeElec: 700, mageChargeArcane: 600, fireballNew: 1900, frostNovaNew: 1700, chainNew: 1200, arcaneWardNew: 2100, nowFireball: 720, nowChain: 520 };
+export const CAST_MS_NEW = { necroCharge: 700, deathCoilNew: 1100, boneSacrificeNew: 1700, nowDarkbolt: 520, clericCharge: 700, holyNovaNew: 1300, sanctuaryNew: 1800, berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400, archerChargeUp: 500, archerChargeAim: 400, arrowRainNew: 3000, huntersMarkNew: 1900, nowArrowRain: 2300, mageChargeFire: 800, mageChargeIce: 700, mageChargeElec: 700, mageChargeArcane: 600, fireballNew: 1900, frostNovaNew: 1700, chainNew: 1200, arcaneWardNew: 2100, nowFireball: 720, nowChain: 520, bardCharge: 600, discordNew: 2300, marchNew: 1700, balladNew: 2200, nowDiscord: 320 };
 // Name colours for heroes the game has none for yet (combat.json skillFx.name.heroColors gets them when they are built).
-export const NAME_COLORS = { archer: '#b8f07a', mage: '#c8a8ff' };
+export const NAME_COLORS = { archer: '#b8f07a', mage: '#c8a8ff', bard: '#ff9ad8' };
 
 // How the demo plays each skill (besides the Knight, who has his own code in demo.js).
 //   now: { recipe, ms, move: 'lunge'|'leap'|'hop'|null, rings: per-wave yellow rings, number }
@@ -539,5 +619,11 @@ export const SPECS = {
     new: { charge: 'mageChargeElec', recipe: 'chainNew', move: { type: 'recoil', px: 5 }, hit: { at: 0, shake: 3, shakeMs: 220, stopMs: 50, jitterPx: 9, jitterMs: 230, jitterAll: true, jitterStagger: 120 }, number: '26', numberAll: true, number2At: 120 } },
   mage_ward: { hero: 'mage', ally: true, squadTargets: true, now: { recipe: 'arcaneWard', move: 'hop' },
     new: { charge: 'mageChargeArcane', recipe: 'arcaneWardNew', move: { type: 'hop', liftPx: 10 }, hit: { at: 380, shake: 0, shakeMs: 0, stopMs: 0 }, squadShield: true, text: { s: '+10 RES', at: 1050, color: '#c8a8ff', self: true } } },
+  discord: { hero: 'bard', now: { recipe: 'nowDiscord', move: null, number: '5', numberAll: true, numberAt: 320 },
+    new: { charge: 'bardCharge', recipe: 'discordNew', move: { type: 'recoil', px: 4 }, hit: { at: 320, shake: 2, shakeMs: 120, stopMs: 40, jitterPx: 5, jitterMs: 150, jitterAll: true, jitterStagger: 40 }, radius: 'area', number: '5', numberAll: true, charmed: { from: 800, every: 450 } } },
+  'change_song:march': { hero: 'bard', ally: true, squadTargets: true, song: 'march', now: { recipe: 'changeSong', move: 'hop', text: { s: 'March!', at: 0, color: '#ffb84d', self: true } },
+    new: { charge: 'bardCharge', recipe: 'marchNew', move: { type: 'hop', liftPx: 8 }, hit: { at: 300, shake: 0, shakeMs: 0, stopMs: 0 }, text: { s: 'MARCH: +15% SPD', at: 1000, color: '#ffc84d', self: true } } },
+  'change_song:ballad': { hero: 'bard', ally: true, squadTargets: true, song: 'ballad', now: { recipe: 'changeSong', move: 'hop', text: { s: 'Ballad!', at: 0, color: '#6dff8f', self: true } },
+    new: { charge: 'bardCharge', recipe: 'balladNew', move: { type: 'hop', liftPx: 6 }, hit: { at: 500, shake: 0, shakeMs: 0, stopMs: 0 }, heal: '+8', text: { s: 'BALLAD: REGEN', at: 1000, color: '#7dffa0', self: true } } },
   blood_feast: { hero: 'berserker', now: { recipe: 'bloodPact', move: 'hop' }, new: { charge: 'berserkerCharge', tremble: true, recipe: 'bloodFeast', move: { type: 'hop', liftPx: 10 } } },
 };

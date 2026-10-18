@@ -18,8 +18,9 @@ import { bodyBox, pen, FX_COLORS as C } from '../../../src/systems/statusFx.js';
 import { castFx, CAST_MS } from '../../../src/systems/skillFx.js';
 import { RECIPES, CAST_MS_NEW, SPECS, NAME_COLORS } from './heroes.js';
 // A recipe by name: a proposed one (heroes.js) or the game's own (skillFx.js). Always { draws, tints }.
-// A skill's data; a rotation spell is 'skillId:SHORT' (the spell's own name/cast, the skill's kind).
-const skillDef = (id) => { const [b, sh] = id.split(':'); const base = skills[b]; if (!sh) return base; const sp = base.rotation.find((r) => r.short === sh); return { ...sp, kind: base.kind }; };
+// A skill's data; a rotation spell is 'skillId:SHORT' (the spell's own name/cast, the skill's kind); 'change_song:march'
+// (no rotation) = a variant row of the same skill.
+const skillDef = (id) => { const [b, sh] = id.split(':'); const base = skills[b]; if (!sh || !base.rotation) return base; const sp = base.rotation.find((r) => r.short === sh); return { ...sp, kind: base.kind }; };
 const runFx = (name, q, c, t) => { const f = RECIPES[name]; if (!f) return castFx(name, q, c, t); const o = f(q, c, t); return Array.isArray(o) ? { draws: o, tints: [] } : { draws: o.draws || [], tints: o.tints || [] }; };
 const fxMs = (name) => CAST_MS_NEW[name] ?? CAST_MS[name] ?? 800;
 
@@ -54,11 +55,12 @@ function actor(def, fx, fy, faceLeft) {
   a.outline = [...ring].map((k) => k.split(',').map(Number)).map(([x, y]) => [x - fx, y - fy]);
   return a;
 }
-function forPixels(a, dx, dy, fn) {
+function forPixels(a, dx, dy, fn, flip = false) {
+  const left = a.faceLeft !== flip; // flip: turned around (a charmed enemy faces its friends)
   for (const p of a.parts) p.px.forEach((row, y) => row.forEach((c, x) => {
     if (c === null) return;
     const relX = p.left + x;
-    fn(Math.round((a.faceLeft ? a.fx - relX - 1 : a.fx + relX) + dx), Math.round(a.fy + p.top + y + dy), c);
+    fn(Math.round((left ? a.fx - relX - 1 : a.fx + relX) + dx), Math.round(a.fy + p.top + y + dy), c);
   }));
 }
 // Where an actor's body is when moved by (dx, dy).
@@ -72,7 +74,7 @@ function drawActor(ctx, a, s = {}) {
     if (s.tint) col = mixColor(col, s.tint[0], s.tint[1]);
     ctx.globalAlpha = s.alpha ?? 1;
     ctx.fillStyle = hex(col); ctx.fillRect(gx * Z, gy * Z, Z, Z);
-  });
+  }, s.flip);
   ctx.globalAlpha = 1;
 }
 
@@ -308,7 +310,7 @@ export class Demo {
       h.dy = 1; h.dx = -1;
       if (look === 'new') {
         if (L.tremble) h.dx += Math.round(Math.sin(et / 23) * (et / P.cast) * 1.4);
-        play(L.charge, et / P.cast, { caster: body(hero, h.dx, h.dy), targets: [], squad: [], enemies: [] });
+        play(L.charge, et / P.cast, { caster: body(hero, h.dx, h.dy), targets: [], squad: [], enemies: [], song: SP.song });
       }
       return;
     }
@@ -338,7 +340,7 @@ export class Demo {
     const land = mv.type === 'leap' ? { x: body(hero).x + (E0.x - body(hero).x) * (mv.share || 0.8), y: body(hero).y } : null; // where he lands: fixed
     const M0 = this.minions.map((m, i) => body(m, st.mins[i].dx, st.mins[i].dy));
     if (L.minionsGone != null) st.mins.forEach((m, i) => { const gt = since - L.minionsGone; if (gt >= 0 && (!L.minionsFade || gt > 300)) m.gone = true; else if (gt >= 0) m.alpha = 1 - gt / 300; if (!m.gone && L.minionsShake && since >= 0) m.dx = Math.round(Math.sin(et / 25 + i) * 0.8); });
-    const c = { caster: C0, targets: SP.squadTargets ? [C0, ...(A0 ? [A0] : [])] : A0 ? [A0] : self ? [C0] : [E0], squad: A0 ? [C0, A0] : [C0], enemies: [E0, E1], minions: M0, hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius, land, ...(L.rain && sk.channel ? { every: L.rain.every, waves: sk.channel.waves.length } : {}) };
+    const c = { caster: C0, targets: SP.squadTargets ? [C0, ...(A0 ? [A0] : [])] : A0 ? [A0] : self ? [C0] : [E0], squad: A0 ? [C0, A0] : [C0], enemies: [E0, E1], minions: M0, hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius, land, song: SP.song, ...(L.rain && sk.channel ? { every: L.rain.every, waves: sk.channel.waves.length } : {}) };
     if (L.hit && L.hit.knockPx && land) { // enemies inside the landing area are thrown back, away from where he lands
       const ht = et - P.impact;
       if (ht >= 0) for (const [a, s] of foes) { const e = body(a); if (Math.hypot(e.x - land.x, (e.y - land.y) * 1.4) > radius) continue; const k = (L.hit.knockPx / Z) * easeOut(ph(ht, 0, 90)) * (1 - easeOut(ph(ht, 200, 600))); s.dx = Math.sign(e.x - land.x || 1) * k; }
@@ -353,6 +355,14 @@ export class Demo {
         const jt = et - P.impact - i * (L.hit.jitterStagger || 0); if (jt < 0 || jt >= L.hit.jitterMs) return;
         const j = jt / L.hit.jitterMs; s.dx = Math.round((Math.sin(j * Math.PI * 6) * L.hit.jitterPx * (1 - j)) / Z);
       });
+    }
+    if (L.charmed && since >= L.charmed.from) { // charmed: the goblin turns round, they take turns bumping into each other
+      const ct = since - L.charmed.from, n = Math.floor(ct / L.charmed.every), f = (ct % L.charmed.every) / L.charmed.every;
+      st.foe.flip = true;
+      const [att, vic, dir] = n % 2 ? [st.foe2, st.foe, -1] : [st.foe, st.foe2, 1];
+      const lunge = f < 0.25 ? easeOut(f / 0.25) : 1 - ph(f, 0.25, 0.6); att.dx = dir * 3 * lunge;
+      if (f > 0.22 && f < 0.5) { const j = (f - 0.22) / 0.28; vic.dx = Math.round(Math.sin(j * Math.PI * 4) * 1.5 * (1 - j)); }
+      if (f > 0.22 && f < 0.36) { const mx = (E0.x + E1.x) / 2, my = (E0.mid + E1.mid) / 2; for (let i = 0; i < 6; i++) { const an = (i / 6) * Math.PI * 2, d = 2 + 5 * (f - 0.22) / 0.14; st.over.px(mx + Math.cos(an) * d, my + Math.sin(an) * d, i % 2 ? 0xffffff : 0xff7ac8, 1); } }
     }
     if (L.squadShield) { const at = since - (L.hit ? L.hit.at : 0); if (at >= 0) { const v = easeOut(ph(at, 0, 200)) * (1 - ph(at, 2500, 3000)); h.shield = v; if (A0) st.ally.shield = v; } }
     if (L.text) { const tt = since - L.text.at, E = L.text.self ? C0 : c.targets[0]; if (tt >= 0 && tt < 1100) st.numbers.push({ text: L.text.s, x: clampX(E.x * Z, L.text.s, 14), y: (E.top - 10) * Z - Math.round(ph(tt, 0, 1100) * 24), size: 14, color: L.text.color, alpha: ph(tt, 0, 100) * (1 - ph(tt, 800, 1100)) }); }

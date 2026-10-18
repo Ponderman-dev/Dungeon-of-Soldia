@@ -222,8 +222,8 @@ const CAST = {
     if (hit < 60) for (let i = 0; i < 4; i++) { const off = (i - 1.5) * 3, len = 6 + rnd(i) * 6, bx = k.x + (dx / d) * (k.hw + 2) - (dy / d) * off, by = k.mid + (dy / d) * 4 + (dx / d) * off; g.line(bx, by, bx + (dx / d) * len, by + (dy / d) * len, i % 2 ? KNIGHT.light : KNIGHT.white, 0.7); }
     if (hit < 0) return g.out;
     const px = u.x + (dx / d) * (u.hw + 1), py = u.mid + (dy / d) * 4; // the side of the target facing him
-    const sp = ph(hit, 0, 380);
-    if (sp < 1) shieldPx(g, px, py, hit < 70 ? KNIGHT.white : KNIGHT.light, hit < 70 ? KNIGHT.white : KNIGHT.mid, sp < 0.35 ? 1 : 1 - (sp - 0.35) / 0.65, 2);
+    const sp = ph(hit, 0, 420);
+    if (sp < 1) shieldPx(g, px, py, hit < 70 ? KNIGHT.white : KNIGHT.light, hit < 70 ? KNIGHT.white : KNIGHT.mid, sp < 0.35 ? 1 : 1 - (sp - 0.35) / 0.65, 3); // 3x (user: 'bigger!')
     const away = Math.atan2(-dy, -dx);
     for (let i = 0; i < 8; i++) {
       const p = ph(hit, 0, 380 + rnd(i) * 140); if (p <= 0 || p >= 1) continue;

@@ -32,31 +32,38 @@ export const RECIPES = {
     const beat = Math.pow(Math.max(0, Math.sin(t / (90 - 40 * q))), 6);
     return { draws: g.out, tints: [['caster', 0, [BERS.mid, Math.round((0.12 + 0.3 * q + 0.2 * beat) * 20) / 20]]] };
   },
-  // SAVAGE LEAP impact (he lands at c.hitMs): the floor cracks open under him, rubble flies, a dust ring rolls out,
-  // blood splatters from every enemy inside the landing area (c.radius) and they flash.
+  // SAVAGE LEAP (round 2, user: 'dust and cracks should stay at the impact zone, not follow the hero', 'more energy').
+  // In the air: red speed streaks trail behind him. Landing (c.hitMs) at c.land (the spot he lands on, it never moves):
+  // a white slam flash at his feet, the floor CRACKS open (long jagged cracks that stay ~1s), lots of rubble flies high,
+  // a big dust ring rolls out, blood bursts from every enemy inside the landing area (c.radius) and they flash.
   savageLeapNew(q, c, t) {
     const g = pen(); const k = c.caster; const ms = q * CAST_MS_NEW.savageLeapNew, hit = ms - (c.hitMs || 0);
-    if (hit < 0 || !k) return { draws: g.out, tints: [] };
-    const L = { x: k.x, y: k.y };
-    const life = 1 - ph(hit, 700, 1100);
-    for (let i = 0; i < 7; i++) { // jagged cracks along the floor
-      const a = (i / 7) * Math.PI * 2 + rnd(i) * 0.5, len = (8 + rnd(i * 5) * 12) * easeOut(ph(hit, 0, 90));
+    if (!k) return { draws: g.out, tints: [] };
+    if (hit < 0) { // in the air: red streaks behind him
+      for (let i = 0; i < 5; i++) { const off = (i - 2) * 3, len = 8 + rnd(i) * 8; g.line(k.x - k.hw - 2, k.mid + off, k.x - k.hw - 2 - len, k.mid + off + len * 0.5, i % 2 ? BERS.mid : BERS.light, 0.8); }
+      return { draws: g.out, tints: [] };
+    }
+    const L = c.land || { x: k.x, y: k.y };
+    if (hit < 90) { const r = 2 + hit / 12; g.disc(L.x, L.y - 2, r, C.white, 1 - hit / 90); }
+    const life = 1 - ph(hit, 900, 1300);
+    for (let i = 0; i < 9; i++) { // jagged cracks along the floor, growing fast
+      const a = (i / 9) * Math.PI * 2 + rnd(i) * 0.5, len = (12 + rnd(i * 5) * 16) * easeOut(ph(hit, 0, 110));
       let x = L.x, y = L.y;
       for (let s = 0; s < len; s += 2) {
         const nx = L.x + Math.cos(a) * (s + 2) + (rnd(i * 31 + s) - 0.5) * 2.5, ny = L.y + Math.sin(a) * (s + 2) * 0.35 + (rnd(i * 17 + s) - 0.5) * 1.2;
-        g.line(x, y, nx, ny, CRACK, life); g.px(nx, ny - 1, BERS.dark, life * 0.6);
+        g.line(x, y, nx, ny, CRACK, life); g.px(nx, ny - 1, BERS.deep, life * 0.7);
         x = nx; y = ny;
       }
     }
-    for (let i = 0; i < 10; i++) { // rubble
-      const p = ph(hit, 0, 450 + rnd(i) * 200); if (p <= 0 || p >= 1) continue;
-      const a = -Math.PI / 2 + (rnd(i * 3) - 0.5) * 2.6, v = 10 + rnd(i * 7) * 12;
-      g.rect(L.x + Math.cos(a) * v * p, L.y - 2 + Math.sin(a) * v * p + p * p * 22, i % 3 ? 1 : 2, i % 3 ? 1 : 2, RUBBLE[i % 3], 1);
+    for (let i = 0; i < 18; i++) { // rubble, flying high
+      const p = ph(hit, 0, 550 + rnd(i) * 250); if (p <= 0 || p >= 1) continue;
+      const a = -Math.PI / 2 + (rnd(i * 3) - 0.5) * 2.8, v = 16 + rnd(i * 7) * 20;
+      g.rect(L.x + Math.cos(a) * v * p, L.y - 2 + Math.sin(a) * v * p + p * p * 34, i % 3 ? 1 : 2, i % 3 ? 1 : 2, RUBBLE[i % 3], 1);
     }
-    const dp = ph(hit, 0, 500); if (dp > 0 && dp < 1) for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2, r = 4 + 20 * easeOut(dp); g.disc(L.x + Math.cos(a) * r, L.y - 1 + Math.sin(a) * r * 0.35, 1.5 + dp * 1.5, i % 2 ? 0x8a7a68 : 0x6a5d50, 0.7 * (1 - dp)); }
+    const dp = ph(hit, 0, 600); if (dp > 0 && dp < 1) for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, r = 4 + 30 * easeOut(dp); g.disc(L.x + Math.cos(a) * r, L.y - 1 + Math.sin(a) * r * 0.35, 2 + dp * 2, i % 2 ? 0x8a7a68 : 0x6a5d50, 0.75 * (1 - dp)); }
     const hitList = c.enemies.filter((e) => Math.hypot(e.x - L.x, (e.y - L.y) * 1.4) <= (c.radius || 30));
     hitList.forEach((e, i) => splatter(g, e.x, e.mid, ph(hit, 0, 600), 14, 11 + i * 7, 14));
-    const tints = c.enemies.map((e, i) => ['enemies', i, hitList.includes(e) ? (hit < 80 ? [C.white, 0.8] : hit < 260 ? [BERS.mid, 0.35] : null) : null]);
+    const tints = c.enemies.map((e, i) => ['enemies', i, hitList.includes(e) ? (hit < 90 ? [C.white, 0.85] : hit < 300 ? [BERS.mid, 0.4] : null) : null]);
     return { draws: g.out, tints };
   },
   // BLOOD FEAST: blood drops spiral in from around him and into his mouth, a red mist bursts at his head, his eyes
@@ -91,6 +98,6 @@ export const SPECS = {
   multistrike: { hero: 'rogue', now: { recipe: 'eviscerate', ms: 600, move: 'lunge', rings: true, number: '6' }, new: { charge: 'rogueCharge', recipe: 'rogueDash', move: { type: 'dash', config: 'multistrike' }, waves: 'multistrike', number: '6' } },
   smoke_bomb: { hero: 'rogue', now: { recipe: 'oldSmokeBomb', move: 'hop' }, new: { charge: 'rogueCharge', recipe: 'smokeBomb', move: { type: 'hop' }, squadTint: true } },
   brawl_leap: { hero: 'berserker', now: { recipe: 'savageLeap', move: 'leap', number: '70', numberAll: true },
-    new: { charge: 'berserkerCharge', tremble: true, recipe: 'savageLeapNew', move: { type: 'leap', upMs: 230, holdMs: 160, backMs: 320, liftPx: 34, share: 0.8 }, hit: { at: 230, shake: 6, shakeMs: 220, stopMs: 90 }, number: '70', numberAll: true, radius: 'landSplash' } },
+    new: { charge: 'berserkerCharge', tremble: true, recipe: 'savageLeapNew', move: { type: 'leap', upMs: 260, holdMs: 200, backMs: 320, liftPx: 54, share: 0.8, slam: true }, hit: { at: 260, shake: 9, shakeMs: 280, stopMs: 120, knockPx: 15 }, number: '70', numberAll: true, radius: 'landSplash' } },
   blood_feast: { hero: 'berserker', now: { recipe: 'bloodPact', move: 'hop' }, new: { charge: 'berserkerCharge', tremble: true, recipe: 'bloodFeast', move: { type: 'hop', liftPx: 10 } } },
 };

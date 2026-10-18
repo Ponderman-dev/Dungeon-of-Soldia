@@ -8,7 +8,9 @@ Demo page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN: Knight (in game), R
 shake on Multistrike: combat.json skillFx.wave.multistrike targetShake* raised, game page not rebuilt yet), Berserker
 (demo only). New heroes go in `docs/proposals/skill-fx/heroes.js` (RECIPES in the game's skillFx.js format + SPECS =
 how the demo plays NOW vs NEW: charge, move dash/leap/hop, hit shake/stop, waves). demo.js `specLook()` plays them.
-Order left: Cleric, Necromancer, Archer, Mage, Bard, Samurai, Alchemist. When ALL are approved: move the recipes
+Notes round 1 (read with ArtifactData list `notes`): OK = challenge, multistrike, smoke_bomb, blood_feast; CHANGE done =
+defense_bash (shield print 3x, also in src/systems/skillFx.js), brawl_leap round 2 (c.land fixed spot, more energy: slam leap,
+streaks, more cracks/rubble/dust, knockback) -> waiting for a re-check. Order left: Cleric, Necromancer, Archer, Mage, Bard, Samurai, Alchemist. When ALL are approved: move the recipes
 into src/systems/skillFx.js (+ CAST_MS, skillFx.json, combat.json charge/dash/wave), tremble = new (needs a small
 jitter in the scene), then build + test + republish the game.
 

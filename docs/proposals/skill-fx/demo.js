@@ -304,8 +304,12 @@ export class Demo {
     if (mv.type === 'hop') h.dy = -Math.sin(Math.min(1, since / 320) * Math.PI) * ((mv.liftPx || 18) / Z);
     if (mv.type === 'leap') { // like BattleScene.leapAt: up and over to 80% of the way, then back
       const up = mv.upMs || 230, hold = mv.holdMs ?? 120, back = mv.backMs || 300, share = mv.share || 0.8;
-      const p = since < up ? easeOut(since / up) : since < up + hold ? 1 : 1 - ph(since, up + hold, up + hold + back);
-      h.dx = (E0.x - body(hero).x) * share * p; h.dy = -Math.sin(Math.min(1, since / up) * Math.PI) * ((mv.liftPx || 26) / Z) * (since < up ? 1 : 0);
+      const p = since < up ? (mv.slam ? since / up : easeOut(since / up)) : since < up + hold ? 1 : 1 - ph(since, up + hold, up + hold + back);
+      h.dx = (E0.x - body(hero).x) * share * p;
+      // slam: shoots up fast, hangs, then SLAMS down (the peak comes early, the fall is quick)
+      const a = Math.min(1, since / up), arc = mv.slam ? Math.sin(Math.pow(a, 0.6) * Math.PI) : Math.sin(a * Math.PI);
+      h.dy = -arc * ((mv.liftPx || 26) / Z) * (since < up ? 1 : 0);
+      if (mv.slam && since >= up && since < up + 90) h.dy = 1; // squash on landing
     }
     if (mv.type === 'dash') {
       const D = FX.dash[mv.config], reachPx = Math.max(D.minPx, dist * Z - D.stopPx);
@@ -315,7 +319,12 @@ export class Demo {
     if (look === 'now' && since < FX.flashMs) h.tint = [support ? 0x5dff96 : 0xff7a3d, 0.6];
     if (look === 'new' && since < 80) tintOn(h, [Number('0x' + (FX.name.heroColors[hero.def.id] || '#ffffff').slice(1)), 0.5]);
     const C0 = body(hero, h.dx, h.dy);
-    const c = { caster: C0, targets: support ? [C0] : [E0], squad: [C0], enemies: [E0, E1], hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius };
+    const land = mv.type === 'leap' ? { x: body(hero).x + (E0.x - body(hero).x) * (mv.share || 0.8), y: body(hero).y } : null; // where he lands: fixed
+    const c = { caster: C0, targets: support ? [C0] : [E0], squad: [C0], enemies: [E0, E1], hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius, land };
+    if (L.hit && L.hit.knockPx && land) { // enemies inside the landing area are thrown back, away from where he lands
+      const ht = et - P.impact;
+      if (ht >= 0) for (const [a, s] of foes) { const e = body(a); if (Math.hypot(e.x - land.x, (e.y - land.y) * 1.4) > radius) continue; const k = (L.hit.knockPx / Z) * easeOut(ph(ht, 0, 90)) * (1 - easeOut(ph(ht, 200, 600))); s.dx = Math.sign(e.x - land.x || 1) * k; }
+    }
     const ms = fxMs(L.recipe);
     if (since < ms) play(L.recipe, since / ms, c);
     if (look === 'now' && !support && T >= P.impact && T < P.impact + FX.shakeMs) st.cam.shake = FX.shakeIntensity * 390;
@@ -372,8 +381,8 @@ export class Demo {
       st.foe.dx = hit < 40 ? 0 : 4 * (1 - easeOut(ph(hit, 40, 360))) * easeOut(ph(hit, 0, 80));
       st.foe.hp = 18;
       // the shield's print flashes on the enemy where it hit: white, then steel blue, fading
-      const sp = ph(hit, 0, 320);
-      if (sp < 1) shield(g, px + 1, py, 1, hit < 60 ? K.white : K.light, hit < 60 ? K.white : K.mid, sp < 0.3 ? 1 : 1 - (sp - 0.3) / 0.7);
+      const sp = ph(hit, 0, 420);
+      if (sp < 1) shield(g, px + 1, py, 3, hit < 70 ? K.white : K.light, hit < 70 ? K.white : K.mid, sp < 0.35 ? 1 : 1 - (sp - 0.35) / 0.65); // 3x (user: 'should be bigger!'), same as the game
       for (let i = 0; i < 6; i++) {
         const p = ph(hit, 0, 380 + rnd(i) * 120); if (p <= 0 || p >= 1) continue;
         const a = -Math.PI / 2 + (rnd(i * 3) - 0.3) * 2.4, d = (6 + rnd(i * 7) * 10) * easeOut(p);

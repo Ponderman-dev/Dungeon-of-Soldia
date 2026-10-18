@@ -60,7 +60,7 @@ ul.ideas li b { color: var(--fg); font-weight: 600; }
 <div class="wrap">
   <header>
     <h1>Skill Effects: hero by hero</h1>
-    <p class="lede">Your note: skills are not powerful or eye-catching enough, and the skill name text is messy and stretchy. Knight: approved, in the game. Rogue: approved (more enemy shake on Multistrike). NEW: the Berserker (scroll down): red, blood splatter, floor cracks and rubble. Same rules: calm, real shapes, name in capitals. Once every hero is approved here, they all go into the game together. Each skill plays in a slice of the real fight screen at game size, today's look on the left, the new one on the right. Tap any scene to replay it from the start. Use <b>Slow</b> to see each beat.</p>
+    <p class="lede">Your note: skills are not powerful or eye-catching enough, and the skill name text is messy and stretchy. Knight: approved (Defense Bash shield print now 3x bigger). Rogue: approved. Berserker: Blood Feast approved, Savage Leap round 2 (more energy, cracks stay put). Same rules: calm, real shapes, name in capitals. Once every hero is approved here, they all go into the game together. Each skill plays in a slice of the real fight screen at game size, today's look on the left, the new one on the right. Tap any scene to replay it from the start. Use <b>Slow</b> to see each beat.</p>
   </header>
   <div class="bar">
     <div class="seg" role="group" aria-label="Speed"><button id="sp1" aria-pressed="true">Normal</button><button id="sp4" aria-pressed="false">Slow x4</button></div>
@@ -150,7 +150,7 @@ for (const [id, about] of [
   ['challenge', 'Support skill: taunts every enemy around him for 3s and gives him +30 defense. New: he hops and lands in a puff of dust and SHOUTS (sound waves roll out), each enemy gets a red "!" and steps towards him, a blue shield pops up beside him (+30 defense).'],
   ['multistrike', 'Attack skill: 5 quick hits of 50% on one enemy, each makes it Bleed. New: cyan charge flicker with knife glints, she dashes in and STAYS for the 5 hits, a cyan knife slash each hit (blood drops, tiny shake), the last hit is a big X with a bigger shake.'],
   ['smoke_bomb', 'Support skill: the squad gets +30 evasion and all enemies are Blinded for 4s. New: cyan charge, she lobs a little bomb with a lit fuse, a white pop, a big grey smoke cloud bursts on every enemy, her squad flickers cyan.'],
-  ['brawl_leap', 'Attack skill: leaps at an enemy, 350% damage to it AND every enemy around where he lands. New: he shakes with rage and glows red (heartbeat), steam puffs from his head; he leaps high, lands with a short freeze and a big shake, the floor CRACKS under him, rubble flies, a dust ring rolls out, blood splatters from every enemy he hits.'],
+  ['brawl_leap', 'Attack skill: leaps at an enemy, 350% damage to it AND every enemy around where he lands. New (round 2: more energy, the cracks stay where he lands): he shakes with rage and glows red (heartbeat); he leaps HIGH with red streaks behind him and SLAMS down: white flash, a freeze and a big shake, the floor cracks open where he landed (stays ~1s), rubble flies high, a big dust ring, every enemy he hits bursts blood and is thrown back.'],
   ['blood_feast', 'Support skill: 50% lifesteal for 4s. New: he shakes with rage, then blood drops spiral in from around him into his mouth, a red mist bursts, his eyes glow red, two heavy heartbeats (red thumps).'],
 ]) {
   const sec = document.createElement('section'); sec.className = 'win'; sec.id = 'look-' + id;

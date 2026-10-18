@@ -11,8 +11,8 @@
     },
     "mimic": {
       "weight": 15,
-      "name": "A Lone Chest",
-      "hint": "Tap the chest... if you dare",
+      "name": "Treasure Room",
+      "hint": "Tap a chest to open it",
       "enemy": "mimic",
       "rewardOdds": {
         "common": 0,

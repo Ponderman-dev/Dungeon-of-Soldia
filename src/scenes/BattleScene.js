@@ -466,15 +466,24 @@ export default class BattleScene extends Phaser.Scene {
     const u = v.unit;
     const base = u.def.eliteOf ? u.def.eliteOf.name : '';
     const head = base && u.name.endsWith(base) ? u.name.slice(0, -base.length).trim() : u.name;
-    const y = v.ch.y - u.def.height * charScale(u.def) - 30;
     const t = this.add
-      .text(v.ch.x, y, base ? `${head}\n${base}` : head, { fontFamily: UI.font, fontSize: '8px', color: u.elite.color, stroke: '#000000', strokeThickness: 3, align: 'center' })
+      .text(v.ch.x, 0, base ? `${head}\n${base}` : head, { fontFamily: UI.font, fontSize: '8px', color: u.elite.color, stroke: '#000000', strokeThickness: 3, align: 'center' })
       .setOrigin(0.5, 1)
       .setDepth(DEPTH.popup);
-    t.x = Phaser.Math.Clamp(t.x, t.width / 2 + 4, GAME_WIDTH - t.width / 2 - 4);
+    // The tag FOLLOWS the elite while it walks (screen review), rising a little as it fades.
+    const rise = { d: 0 };
+    const follow = () => {
+      if (!v.ch.active) return;
+      t.x = Phaser.Math.Clamp(Math.round(v.ch.x), t.width / 2 + 4, GAME_WIDTH - t.width / 2 - 4);
+      t.y = Math.round(v.ch.y - u.def.height * charScale(u.def) - 30 - rise.d);
+    };
+    follow();
+    this.events.on('update', follow);
+    t.once('destroy', () => this.events.off('update', follow));
     t.setScale(0.6);
     this.tweens.add({ targets: t, scale: 1, duration: 220, ease: 'Back.easeOut' });
-    this.tweens.add({ targets: t, y: y - 16, alpha: 0, delay: 1900, duration: 600, onComplete: () => t.destroy() });
+    this.tweens.add({ targets: rise, d: 16, delay: 1900, duration: 600 });
+    this.tweens.add({ targets: t, alpha: 0, delay: 1900, duration: 600, onComplete: () => t.destroy() });
     this.ring(v, Phaser.Display.Color.HexStringToColor(u.elite.color).color);
   }
 

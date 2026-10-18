@@ -23,7 +23,7 @@ const FONT = UI.font;
 const WALL_H = 200; // the back wall with the door, as on the battle floors
 const DOOR_X = GAME_WIDTH / 2;
 // Where the 3 picked heroes stand (their feet): the orange slots. Slot order = battle order.
-const SLOTS = [{ x: 92, y: 420 }, { x: GAME_WIDTH / 2, y: 362 }, { x: GAME_WIDTH - 92, y: 420 }];
+const SLOTS = [{ x: 92, y: 450 }, { x: GAME_WIDTH / 2, y: 392 }, { x: GAME_WIDTH - 92, y: 450 }]; // 30px lower (screen review)
 // The bench: every hero stands on a purple strip at the bottom that scrolls left and right.
 const BENCH = { top: 548, bottom: 742, feetY: 692, firstX: 62, gap: 96 };
 const WALK = combatRules.movement.walkSpeedPxPerSec * 1.6; // a bit quicker than in fights

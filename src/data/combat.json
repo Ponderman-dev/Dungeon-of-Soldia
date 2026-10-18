@@ -47,6 +47,15 @@
     "_about": "Skills wind up before they go off (castMs per skill in skills.json, else defaultCastMs). The skill goes on cooldown when tapped; stunned, frozen or silenced during the wind-up = the skill is lost (still on cooldown). No basic attacks and no walking while winding up.",
     "defaultCastMs": 700
   },
+  "gainText": {
+    "_about": "The name of a new item / skill book page over the hero who got it (BattleScene.gainText): one fixed pixel size, never scaled, abovePx over the health bar (clear of the icon pop), fades in sliding up, holds, rises and fades. The item's icon pops up too (itemFx.json iconPop).",
+    "sizePx": 8,
+    "abovePx": 54,
+    "risePx": 9,
+    "inMs": 140,
+    "holdMs": 1300,
+    "outMs": 400
+  },
   "skillFx": {
     "_about": "How a skill looks when it goes off (C2), so it is clearly different from a normal hit: the caster flashes in the skill colour, a ring bursts (at the target for attack skills, at the caster for support), a name banner, bigger coloured damage numbers, and attack skills shake the screen with a tiny hit-stop.",
     "attackColor": "#ff7a3d",

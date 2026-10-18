@@ -2314,7 +2314,7 @@ export default class BattleScene extends Phaser.Scene {
     const res = this.state.addPage(heroUid, index, page, replace);
     const v = this.views.get(heroUid);
     if (res.ok && v) {
-      this.popText(v, page.name, '#c8a0ff', true);
+      this.gainText(v, page.name, '#c8a0ff');
       v.ch.flash(0xc8a0ff, 200);
     }
   }
@@ -2336,7 +2336,30 @@ export default class BattleScene extends Phaser.Scene {
     this.drawAllBars();
     const view = this.views.get(heroUid);
     this.drawDots(view);
-    this.popText(view, `+${item.name}`, `#${Number(rarities[item.rarity].color).toString(16).padStart(6, '0')}`, true);
+    this.iconPop(view, itemId);
+    this.gainText(view, item.name, `#${Number(rarities[item.rarity].color).toString(16).padStart(6, '0')}`);
+  }
+
+  // A new item or book page on a hero (user: the old 20px '+Name' popup looked 'stretchy and big'): its name at one
+  // fixed small size (combat.json gainText), never scaled, slides up a little and fades, like the skill names.
+  gainText(view, text, color) {
+    if (!view || !view.ch.active) return;
+    const G = combatRules.gainText;
+    const t = this.add.text(view.ch.x, view.bg.y, text, { fontFamily: UI.font, fontSize: `${G.sizePx}px`, color, stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(DEPTH.popup + 1).setAlpha(0);
+    // It FOLLOWS the hero (the squad may walk off to the door), above the health bar and the item's icon pop.
+    const rise = { d: G.risePx };
+    const follow = () => {
+      if (!view.ch.active) return;
+      t.x = Math.round(Phaser.Math.Clamp(view.ch.x, t.width / 2 + 6, GAME_WIDTH - t.width / 2 - 6));
+      t.y = Math.round(view.bg.y - G.abovePx + rise.d);
+    };
+    follow();
+    this.events.on('update', follow);
+    t.once('destroy', () => this.events.off('update', follow));
+    this.tweens.add({ targets: rise, d: 0, duration: G.inMs, ease: 'Quad.easeOut' });
+    this.tweens.add({ targets: t, alpha: 1, duration: G.inMs });
+    this.tweens.add({ targets: rise, d: -G.risePx, delay: G.inMs + G.holdMs, duration: G.outMs });
+    this.tweens.add({ targets: t, alpha: 0, delay: G.inMs + G.holdMs, duration: G.outMs, onComplete: () => t.destroy() });
   }
 
   onLoss() {

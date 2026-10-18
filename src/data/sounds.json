@@ -5,14 +5,10 @@
   "minGapMs": 40,
   "cues": {
     "tap": {
-      "files": [
-        "picked/tap_1",
-        "picked/tap_2",
-        "picked/tap_3"
-      ],
-      "volume": 0.45,
-      "pitchJitter": 0.08,
-      "source": "CC0 (lavenderdotpet/CC0-Public-Domain-Sounds): 40-cc0-water-splash-slime-sfx bubble_01-03 (user: more bubbly)"
+      "file": "press",
+      "volume": 0.5,
+      "pitchJitter": 0.05,
+      "source": "Organic pack press (2026-10-18, user: 'the bubbly sound does not fit for general tap, change it'; the old bubble files stay in picked/tap_1-3)"
     },
     "heroPick": {
       "file": "select",

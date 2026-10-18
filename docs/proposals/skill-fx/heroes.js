@@ -14,7 +14,7 @@ const CLER = { light: 0xfff4c0, gold: 0xffd86a, deep: 0xc89a2a };
 function beam(g, x, y0, y1, w, a) {
   if (a <= 0 || w <= 0) return;
   const half = Math.max(0.5, w / 2);
-  for (let y = Math.round(y0); y <= y1; y++) for (let dx = -Math.ceil(half); dx <= Math.ceil(half); dx++) { const e = Math.abs(dx) / (half + 0.5); g.px(x + dx, y, e < 0.45 ? C.white : CLER.gold, a * (e < 0.45 ? 1 : 0.75) * Math.min(1, (y - y0) / 12 + 0.2)); }
+  for (let y = Math.round(y0); y <= y1; y++) for (let dx = -Math.ceil(half); dx <= Math.ceil(half); dx++) { const e = Math.abs(dx) / (half + 0.5); g.px(x + dx, y, e < 0.45 ? C.white : CLER.gold, a * (e < 0.45 ? 1 : 0.75) * Math.min(1, (y - y0) / 8 + 0.2)); }
 }
 
 // ---- Berserker: red, blood splatter, ground cracks, rubble -----------------------------------------
@@ -105,7 +105,7 @@ export const RECIPES = {
   holyNovaNew(q, c) {
     const g = pen(); const u = c.targets[0]; if (!u) return g.out;
     const ms = q * CAST_MS_NEW.holyNovaNew, land = c.hitMs || 220, hit = ms - land;
-    const top = u.top - 70;
+    const top = u.top - 30; // short beam (user: 'shorter light beam')
     if (hit < 0) { const p = ms / land, bottom = top + (u.y - top) * easeOut(p); beam(g, u.x, top, bottom, 2 + p * 3, 0.9); }
     else {
       const w = 7 * (1 - ph(hit, 0, 500)); if (w > 0.5) beam(g, u.x, top, u.y, w, 1 - ph(hit, 300, 500));
@@ -117,7 +117,7 @@ export const RECIPES = {
     const hitList = c.enemies.filter((e) => Math.hypot(e.x - u.x, (e.y - u.y) * 1.4) <= R);
     hitList.forEach((e, i) => {
       const s = ph(hit, 60 + i * 70, 300 + i * 70); if (s <= 0 || s >= 1) return;
-      beam(g, e.x, e.top - 40, e.y, 2.5 * (1 - s), 1 - s * 0.5);
+      beam(g, e.x, e.top - 18, e.y, 2.5 * (1 - s), 1 - s * 0.5);
       for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2, r = 3 + 8 * easeOut(s); g.px(e.x + Math.cos(a) * r, e.mid + Math.sin(a) * r * 0.7, k % 2 ? C.white : CLER.gold, 1 - s); }
     });
     const tints = [['targets', 0, hit >= 0 && hit < 400 ? [CLER.gold, 0.45 * (1 - hit / 400)] : null], ...c.enemies.map((e, i) => ['enemies', i, hitList.includes(e) && hit > 60 + hitList.indexOf(e) * 70 && hit < 200 + hitList.indexOf(e) * 70 ? [0xfff4c0, 0.8] : null])];
@@ -127,7 +127,7 @@ export const RECIPES = {
   // around them and fade (the shield); the hero glows gold and little green-gold "+" rise (the regen).
   sanctuaryNew(q, c, t) {
     const g = pen(); const u = c.targets[0]; if (!u) return g.out;
-    const ms = q * CAST_MS_NEW.sanctuaryNew, land = c.hitMs || 200, hit = ms - land, top = u.top - 60;
+    const ms = q * CAST_MS_NEW.sanctuaryNew, land = c.hitMs || 200, hit = ms - land, top = u.top - 26;
     if (hit < 0) beam(g, u.x, top, top + (u.y - top) * easeOut(ms / land), 3, 0.7);
     else if (hit < 300) beam(g, u.x, top, u.y, 4 * (1 - hit / 300), 0.7 * (1 - hit / 300));
     if (hit >= 0 && hit < 1000) { // wings: unfold (0-300), hold, fold forward around the body (600-1000) and fade

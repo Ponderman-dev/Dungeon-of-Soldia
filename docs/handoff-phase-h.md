@@ -3,7 +3,22 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
-## START HERE (session 8, latest): SKILL ICONS proposal waiting for the user's notes
+## START HERE (session 9): SKILL EFFECTS + SKILL NAME TEXT (user's answers are in)
+User: skills 'still not visually powerful / eye catchy, not different enough from other visuals'; 'text messy and too stretchy'.
+ANSWERS: the text = ONLY the SKILL NAMES (other popups are fine). Cut-in bar or floating name: user wants to SEE it first.
+PLAN (agreed direction): 1) a small DEMO first (proposal page, like the puzzle/icon pages, review notes in db `notes`): the
+Knight's two skills played on dummies with (A) a skill CUT-IN BAR (dark band slides across, skill icon from skillIcons.json +
+name in the hero colour, no scaling) vs (B) a cleaner floating name (fixed pixel size, slide/fade, never scaled), AND the new
+3-beat skill look on the Knight: CHARGE (aura + particles gather in the wind-up), RELEASE (colour flash, camera kick/zoom, speed
+lines, longer hit-stop), IMPACT (2-3x bigger unique shape + a floor mark that lingers), hero colour/shape language (Knight
+steel-blue square shockwaves; ideas: Berserker red splatter, Rogue cyan streaks, Cleric gold light columns, Necro green-purple
+smoke). The Studio's shared effect stage (src/studio/fxStage.js) can drive the demo. 2) after the user picks: build the
+name style in the game (BattleScene.skillBurst: today a 24px banner scaled 0.5->1 = the 'stretchy' look) and do the 3-beat
+look hero by hero (2-3 per session), each with a showcase page for OK/CHANGE.
+Code today: skill look = BattleScene.skillBurst() + playSkillFx() (src/systems/skillFx.js recipes, src/data/skillFx.json),
+docs/systems/skills.md + effects.md.
+
+## START HERE (session 8): SKILL ICONS proposal waiting for the user's notes
 Screen review (session 7 list) is ALL DONE (steps 1-6, see below). User then asked for SKILL ICONS: a 16x16 pixel icon for
 every hero skill (20) and passive (10) to replace the 2 letters on the fight buttons, and the skill book RECOLOURED per page
 type (stat blue, Debuff purple, Heal green, Defense steel, Team teal, Tempo yellow, Risk red, Area orange, Self pink).

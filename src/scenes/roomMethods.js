@@ -21,6 +21,7 @@ export const roomMethods = {
   // Which room (or null = a fight) floor n is. Never two rooms in a row.
   roomKindFor(n) {
     const prev = this.layer && this.layer.room ? this.layer.room.kind : null;
+    if (this.testRoom && this.testRoom.floor === n && this.testRoom.kind) return this.testRoom.kind === 'fight' ? null : this.testRoom.kind; // TEST tools
     // Dev server only: ?room=treasure makes every odd floor that room (browser checks).
     const forced = import.meta.env.DEV && new URLSearchParams(location.search).get('room');
     if (forced && roomRules.kinds[forced]) return n % 2 ? forced : null;

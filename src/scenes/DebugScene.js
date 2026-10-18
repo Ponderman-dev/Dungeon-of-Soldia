@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, UI } from '../config.js';
 import { drawWindow } from '../entities/uiKit.js';
+import { toggleTestPanel } from './testPanel.js';
 
 // TEST ONLY: a small always-on-top button that gives up the run and goes back to the
-// squad select screen (nothing is saved). Remove this scene before release.
+// squad select screen (nothing is saved), and a 'TEST: tools' button (testPanel.js). Remove this scene before release.
 export default class DebugScene extends Phaser.Scene {
   constructor() {
     super('Debug');
@@ -27,5 +28,10 @@ export default class DebugScene extends Phaser.Scene {
         this.scene.stop('Battle');
         this.scene.run('Squad'); // run, not start: start would also stop this debug scene
       });
+    // A second button under it: the test tools panel (any floor, any item; testPanel.js).
+    const y2 = y + h + 4;
+    drawWindow(this.add.graphics(), x, y2, w, h, { line: 0xffe08a });
+    this.add.text(x + w / 2, y2 + h / 2, 'TEST: tools', { fontFamily: UI.font, fontSize: '8px', color: '#ffe08a' }).setOrigin(0.5);
+    this.add.zone(x + w / 2, y2 + h / 2, w, h).setInteractive().on('pointerdown', () => toggleTestPanel(this.game));
   }
 }

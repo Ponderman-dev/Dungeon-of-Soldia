@@ -129,6 +129,20 @@ export default class BattleScene extends Phaser.Scene {
       });
       for (const h of this.state.heroes) h.hp = h.maxHp;
     }
+    // TEST tools (testPanel.js): a floor jump restarts the scene; the squad keeps its levels, items and skill pages.
+    const jump = this.registry.get('testJump');
+    this.registry.remove('testJump');
+    this.testRoom = jump ? { floor: jump.floor, kind: jump.room } : null;
+    if (jump) {
+      this.state.heroes.forEach((h, i) => {
+        const saved = jump.heroes[i];
+        if (!saved) return;
+        while (h.level < saved.level) this.state.levelUp(h);
+        for (const id of saved.items) this.state.giveItem(h.uid, id);
+        saved.pages.forEach((pages, k) => { for (const page of pages) this.state.addPage(h.uid, k, page); });
+      });
+      for (const h of this.state.heroes) h.hp = h.maxHp;
+    }
 
     this.drawHeroSlots();
     // The floor counter: a small black window in the top-left corner (the interface look, entities/uiKit.js).
@@ -147,6 +161,7 @@ export default class BattleScene extends Phaser.Scene {
     const startAt = import.meta.env.DEV && Number(new URLSearchParams(location.search).get('floor'));
     if (startAt > 1) this.floor = startAt;
     if (demo) this.floor = demoSquad.floor;
+    if (jump) this.floor = jump.floor;
     this.layer = this.buildFloor(this.floor, 0);
     this.floorText.setText(`Floor ${this.floor}`);
     this.beginFloor(); // a fight, or a special room (roomMethods.js)
@@ -217,6 +232,30 @@ export default class BattleScene extends Phaser.Scene {
     else for (const v of this.views.values()) if (v.unit.elite && v.unit.alive) this.eliteName(v); // "Burning Vampiric Bandit"
     if (this.state.enemies.some((u) => u.def.boss)) sfx.play('bossIntro'); // a deep gong when the boss fight starts (after the roar)
     for (const e of this.state.startFloor()) this.showEvent(e); // floor-start minions rise (Necromancer)
+  }
+
+  // TEST tools (testPanel.js): start floor `floor` again with this squad (`room`: null = the game picks, 'fight', or a room kind).
+  testJump(floor, room) {
+    const heroes = this.state.heroes.map((h) => ({ level: h.level, items: h.items.slice(), pages: h.skills.map((k) => (k.pages || []).slice()) }));
+    this.registry.set('testJump', { floor, room, heroes });
+    this.scene.stop('Reward');
+    this.scene.stop('Puzzle');
+    this.scene.restart();
+  }
+
+  testLevelUp() {
+    for (const h of this.state.heroes) {
+      if (!h.alive) continue;
+      this.state.levelUp(h);
+      const v = this.views.get(h.uid);
+      if (v.lvl) v.lvl.setText(`Lv${h.level}`);
+    }
+    this.drawAllBars();
+  }
+
+  testHeal() {
+    for (const h of this.state.heroes) if (h.alive) h.hp = h.maxHp;
+    this.drawAllBars();
   }
 
   // The boss's roar before a boss fight: a hard shake, a white flash, manga action lines bursting from the

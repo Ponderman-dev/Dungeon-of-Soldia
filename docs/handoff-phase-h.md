@@ -15,6 +15,7 @@ puzzle tablet drawScale 8, squad slots 30px lower).
 NEXT, still to do (user's words in quotes):
 - 3 BOSS START: DONE (session 8): `bossRoar()` = roar sound, violent shake, white flash, action lines over the whole screen, huge ROAR!!; fight starts 2s after (combat.json `transition.bossIntro`).
 - 4 DEFEAT: DONE (session 8): screen dims first, then SQUAD DEFEATED pops, then "The squad reached floor N, before <random line>" (names the enemy that landed the last blow; death events now carry `killer`), then a BACK button (no more auto-return). Data: src/data/defeat.json; `BattleScene.showDefeat()`.
+- TEST TOOLS panel added (user asked): gold "TEST: tools" button = jump to any floor / pick its room / give any item / level up / heal (docs/systems/balance-tools.md).
 - 5 ART: hero select door "very big door, like an entrance to a dungeon, very intimidating"; between floors "the door
   opens should have better animation and the door open it should look black"; fight floor "more natural looking floor,
   dirt and grass, an old dungeon, pillars on the wall"; fountain room "more decorations"; Skill Dealer room "shelves of

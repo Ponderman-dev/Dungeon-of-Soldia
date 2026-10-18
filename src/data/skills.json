@@ -490,6 +490,127 @@
     ],
     "description": "The whole squad gets a magic shield (2.5x the Mage's attack) and +10 resist for 4s."
   },
+  "mage_rotation": {
+    "name": "Elemental Rotation",
+    "short": "EL",
+    "kind": "attack",
+    "cooldownMs": 8000,
+    "castMs": 750,
+    "rotation": [
+      {
+        "name": "Fireball",
+        "short": "FB",
+        "target": "enemy",
+        "damageType": "fire",
+        "damageMultiplier": 2.2,
+        "castMs": 800,
+        "projectile": "fireball",
+        "splash": {
+          "damageMultiplier": 0.8
+        },
+        "apply": [
+          {
+            "status": "burn",
+            "durationMs": 4000,
+            "damageMultiplier": 0.35
+          }
+        ],
+        "description": "Fireball: a big fire hit on one enemy, splash on its neighbours, sets Burn. Each Kindling she holds: +30% Fireball and splash.",
+        "charm": {
+          "item": "kindling",
+          "damagePercent": 30,
+          "splashPercent": 30
+        }
+      },
+      {
+        "name": "Frost Nova",
+        "short": "FN",
+        "target": "allEnemies",
+        "damageType": "ice",
+        "damageMultiplier": 0.8,
+        "castMs": 700,
+        "apply": [
+          {
+            "status": "chill",
+            "durationMs": 6000,
+            "stacks": 2
+          }
+        ],
+        "description": "Frost Nova: an ice burst around the target, 2 Chill stacks on every enemy close to it. Each Frost Charm she holds: +25% damage and a 25% bigger burst.",
+        "area": {
+          "shape": "circle",
+          "at": "target",
+          "radius": 120
+        },
+        "charm": {
+          "item": "frost_charm",
+          "damagePercent": 25,
+          "radiusPercent": 25
+        }
+      },
+      {
+        "name": "Chain Lightning",
+        "short": "CL",
+        "target": "enemy",
+        "damageType": "electric",
+        "damageMultiplier": 1.2,
+        "castMs": 700,
+        "chain": true,
+        "apply": [
+          {
+            "status": "shock",
+            "durationMs": 4000
+          }
+        ],
+        "bonusVs": [
+          {
+            "status": "burn",
+            "multiplier": 1.5
+          },
+          {
+            "status": "freeze",
+            "multiplier": 1.5
+          }
+        ],
+        "description": "Chain Lightning: a bolt that jumps to 4 more enemies (nearest next), Shock, +50% against burning or frozen ones. Each Storm Charm she holds: +2 jumps.",
+        "chainJumps": 4,
+        "charm": {
+          "item": "storm_charm",
+          "jumps": 2
+        }
+      }
+    ],
+    "description": "Each cast is the next spell: Fireball > Frost Nova > Chain Lightning. Her element charms make each spell bigger."
+  },
+  "mage_ward": {
+    "name": "Arcane Ward",
+    "short": "AW",
+    "kind": "support",
+    "target": "squad",
+    "cooldownMs": 14000,
+    "castMs": 600,
+    "apply": [
+      {
+        "status": "shield",
+        "attackMultiplier": 2.5,
+        "durationMs": 4000
+      },
+      {
+        "status": "buff",
+        "durationMs": 4000,
+        "mods": [
+          {
+            "stat": "resist",
+            "flat": 10
+          }
+        ]
+      }
+    ],
+    "description": "The whole squad gets a magic shield (2.5x the Mage's attack) and +10 resist for 4s, and for 5s every squad hit leaves a random element (fire, ice or electric), so the whole team sets off reactions.",
+    "teamElements": {
+      "durationMs": 5000
+    }
+  },
   "smite": {
     "name": "Smite",
     "short": "SM",

@@ -865,11 +865,11 @@
     "id": "mage",
     "name": "Mage",
     "role": "Elementalist",
-    "summary": "Combines elements into reactions.",
+    "summary": "Mixes fire, ice and lightning into chain reactions.",
     "tips": [
-      "His spells cycle fire > ice > lightning: each one reacts with the last.",
-      "Chill Band, Static Crystal and Fire Bombs on anyone set up reactions.",
-      "Arcane Ward shields the whole squad."
+      "Element Cycle: her attacks go fire > ice > lightning, so they keep setting off reactions.",
+      "Kindling makes Fireball bigger, Frost Charm makes Frost Nova bigger, Storm Charm adds Chain Lightning jumps.",
+      "Arcane Ward shields the squad, and for 5s everyone's hits leave an element: the whole team sets off reactions."
     ],
     "damageType": "fire",
     "height": 24,
@@ -890,8 +890,8 @@
       "resist": 0.5
     },
     "skills": {
-      "attack": "elemental_rotation",
-      "support": "arcane_ward"
+      "attack": "mage_rotation",
+      "support": "mage_ward"
     },
     "perk": {
       "name": "Arcane Haste",
@@ -904,8 +904,13 @@
       ]
     },
     "passive": {
-      "name": "Reactions",
-      "description": "Fire, ice and electric hits leave their element on the enemy. A different element on top reacts: fire+ice = Steam (Blind), ice+electric = Shatter (+50% hit), fire+electric = Overload (fire burst on enemies around it). Item hits count too.",
+      "name": "Element Cycle",
+      "description": "Her basic attacks go fire > ice > electric in turn. Fire, ice and electric hits leave their element on the enemy; a different element on top reacts: fire+ice = Steam (Blind), ice+electric = Shatter (+50% hit), fire+electric = Overload (fire burst on enemies around it). Item hits count too.",
+      "elementCycle": [
+        "fire",
+        "ice",
+        "electric"
+      ],
       "reactions": {
         "markMs": 4000,
         "steam": [

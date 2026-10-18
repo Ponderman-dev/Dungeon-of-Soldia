@@ -3,10 +3,10 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
-## START HERE (session 6): HERO KITS v3, Alchemist + Bard + Archer done
+## START HERE (session 6): HERO KITS v3, Alchemist + Bard + Archer + Mage done
 DONE: Alchemist (Mad Bomber: poison-only flasks, thrown one by one, glass sound), Bard (Battle Hymn), Archer (Volley
-Gunner, still LAST in review; user: 'leave her as is', will try her in game first); details in docs/systems/heroes.md 'HERO KITS v3'.
-NEXT: Mage, then the rest. Archer buff ideas if asked: volley every 3rd, volley arrows hit the target again
+Gunner, still LAST in review; user: 'leave her as is', will try her in game first), Mage (Elementalist); details in docs/systems/heroes.md 'HERO KITS v3'.
+NEXT: the rest (Knight, Berserker, Rogue, Samurai, Cleric, Necromancer), one per step. Archer buff ideas if asked: volley every 3rd, volley arrows hit the target again
 when alone (bosses), or give Steady Aim back.
 New hero tests go in `scripts/tests/heroes-v3.test.mjs`; move that hero's old block out of heroes-v2.test.mjs.
 Pattern: NEW skill ids for changed skills (e.g. `alch_barrage`) so the v1-fixture tests keep the old ones.

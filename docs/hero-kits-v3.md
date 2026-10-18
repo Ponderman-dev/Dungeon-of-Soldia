@@ -48,7 +48,7 @@ Decided by the user one hero at a time (feel, passive, attack, support). Numbers
 - Support COUNTER STANCE (changes Focus Stance): 4s stance, hits on him are parried and thrown back with his crit
   damage.
 
-## Mage: ELEMENTALIST
+## Mage: ELEMENTALIST (BUILT session 6, see docs/systems/heroes.md)
 - Feel: mixes fire, ice and lightning into chain reactions. Loves elemental items (the 4 charms, Chill Band,
   Fire Bombs, Static Crystal).
 - Passive ELEMENT CYCLE: her basic attacks go fire > ice > electric in turn, so her own attacks set off the

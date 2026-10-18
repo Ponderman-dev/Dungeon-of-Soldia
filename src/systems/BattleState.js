@@ -249,6 +249,7 @@ export default class BattleState {
 
   spawnEnemies(ids, floor) {
     this.focusUid = null;
+    this.teamElementsMs = 0;
     this.tornados = [];
     this.bombs = []; // Kobold Sapper bombs on the floor
     for (const h of this.heroes) {
@@ -900,6 +901,7 @@ export default class BattleState {
     this.tickBookTimers(dt, events); // skill book Aftershock pulses
     this.tickBosses(dt, events); // boss moves, eggs, heat, revives... (bosses.js)
     this.tickElites(dt, events); // elite regen and shields (elites.js)
+    if (this.teamElementsMs > 0) this.teamElementsMs -= dt; // Arcane Ward's Team Elements
 
     // Health regenerates (Heart Charm) and skill cooldowns run down.
     for (const hero of this.heroes) {
@@ -1028,8 +1030,9 @@ export default class BattleState {
     }
     const empower = fired.filter((f) => f.counter.effect === 'empower');
     const metro = this.metronomeBeat(unit, target, events); // Metronome: every 4th basic attack of the holder hits harder
-    const hit = this.strike(unit, target, events, metro ? { basic: true, damagePercent: metro } : unit.hitType ? { basic: true, damageType: unit.hitType } : { basic: true }); // an elite hits with its element
+    const hit = this.strike(unit, target, events, metro ? { basic: true, damagePercent: metro, ...(unit.hitType ? { damageType: unit.hitType } : {}) } : unit.hitType ? { basic: true, damageType: unit.hitType } : { basic: true }); // an elite hits with its element
     if (unit.elite) this.eliteAfterAttack(unit, target, hit, events); // Storm: every 4th hit jumps
+    this.cycleElement(unit); // Mage: the next basic attack is the next element
     if (!hit.dodged) this.addCombo(unit, target, 1, events);
     if (unit.minion && unit.chain && !hit.dodged) this.chainHit(unit, target, unit.chain, events); // Wisp Lantern copies: the bolt jumps on // Rogue: a combo point on this enemy
     this.pierce(unit, target, hit, events); // Archer: a shot on a Marked enemy goes through to the one behind
@@ -1056,6 +1059,15 @@ export default class BattleState {
     this.fireArrows(unit, target, events);
     this.extraArrows(unit, target, events);
     this.volley(unit, target, events); // Archer: every Nth shot fires at more enemies
+  }
+
+  // Mage's ELEMENT CYCLE (passive.elementCycle: ['fire', 'ice', 'electric']): her basic attacks go through the list in
+  // turn (`hitType` = the element of her NEXT shot, also how the scene draws it), so they keep setting off Reactions.
+  cycleElement(unit) {
+    const cyc = unit.def.passive && unit.def.passive.elementCycle;
+    if (!cyc || unit.side !== 'hero') return;
+    unit.cycleIndex = ((unit.cycleIndex || 0) + 1) % cyc.length;
+    unit.hitType = cyc[unit.cycleIndex];
   }
 
   // Archer's VOLLEY (passive.volley): every `every`th basic shot also fires at `arrows`-1 other enemies (the nearest
@@ -1318,6 +1330,8 @@ export default class BattleState {
   // Returns { damagePercent, overload } for the hit that is about to land.
   reaction(attacker, target, type, events) {
     const out = { damagePercent: 0, overload: null };
+    // Arcane Ward's TEAM ELEMENTS (`teamElements`): for a while every squad hit that has no element leaves a random one.
+    if (attacker.side === 'hero' && this.teamElementsMs > 0 && !['fire', 'ice', 'electric'].includes(type)) type = ['fire', 'ice', 'electric'][Math.floor(this.rng() * 3)];
     if (attacker.side !== 'hero' || target.side !== 'enemy' || !['fire', 'ice', 'electric'].includes(type)) return out;
     const mage = this.heroes.find((h) => h.alive && h.def.passive && h.def.passive.reactions);
     if (!mage) return out;
@@ -2302,7 +2316,21 @@ export default class BattleState {
     const slot = hero.skills[index];
     const base = this.skillDefs[slot.id];
     if (!base.rotation) return base;
-    return { ...base, ...base.rotation[(slot.rotation || 0) % base.rotation.length] };
+    return this.charmed(hero, { ...base, ...base.rotation[(slot.rotation || 0) % base.rotation.length] });
+  }
+
+  // Mage's spells grow with their element charm (`charm: { item, damagePercent, splashPercent, radiusPercent, jumps }`,
+  // per copy the caster holds): Kindling = bigger Fireball, Frost Charm = bigger Nova, Storm Charm = more Chain jumps.
+  charmed(hero, spell) {
+    const c = spell.charm;
+    const n = c && hero.items ? hero.items.filter((i) => i === c.item).length : 0;
+    if (!n) return spell;
+    const out = { ...spell };
+    if (c.damagePercent) out.damageMultiplier = spell.damageMultiplier * (1 + (c.damagePercent * n) / 100);
+    if (c.splashPercent && spell.splash) out.splash = { ...spell.splash, damageMultiplier: spell.splash.damageMultiplier * (1 + (c.splashPercent * n) / 100) };
+    if (c.radiusPercent && spell.area) out.area = { ...spell.area, radius: spell.area.radius * (1 + (c.radiusPercent * n) / 100) };
+    if (c.jumps && spell.chainJumps !== undefined) out.chainJumps = spell.chainJumps + c.jumps * n;
+    return out;
   }
 
   // Can this hero cast this skill right now? Returns false if not (dead, stunned, cooling down,
@@ -2423,6 +2451,7 @@ export default class BattleState {
       return;
     }
     if (skill.chain && targets[0]) targets = this.chainOrder(targets[0]); // Chain Lightning: through ALL enemies, nearest next
+    if (skill.chain && skill.chainJumps !== undefined) targets = targets.slice(0, 1 + skill.chainJumps); // ...or `chainJumps` jumps (v3)
     const splash = (hero.specials && hero.specials.skillSplash) || 0; // Siege Cannon: % chance to hit the neighbours too
     if (skill.target === 'enemy' && skill.damageMultiplier && splash > 0 && this.rng() * 100 < splash) {
       const near = this.neighbours(targets[0]);
@@ -2443,6 +2472,7 @@ export default class BattleState {
     }
     for (const spec of skill.selfApply || []) this.applyStatus(hero, spec, hero, `${slot.id}_self`, events); // Challenge: +defense for himself
     if (skill.songSwitch) this.switchSong(hero, events); // Bard's Change Song
+    if (skill.teamElements) { this.teamElementsMs = skill.teamElements.durationMs; events.push({ type: 'proc', unit: hero, label: 'Team Elements!' }); } // Arcane Ward v3
     // `cleanse: N`: every target loses N debuffs (a whole kind each, the oldest first).
     if (skill.cleanse) for (const t of targets) this.cleanse(t, skill.cleanse, events);
     // `applyEnemies`: statuses every living enemy gets (Smoke Bomb: blind).

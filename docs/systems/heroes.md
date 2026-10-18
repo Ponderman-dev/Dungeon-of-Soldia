@@ -42,3 +42,12 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       Balance: review.mjs 3 all avg floor ~25 (old kit) -> ~24.3, still LAST; her share of squad damage 46% -> ~29% (lost
       the 60% pierce on every shot and Steady Aim). Tried: volley 4 arrows, every 3rd, rain 70%: little change in review
       (runs end at the floor-20 boss, where volley has no 2nd target). User: leave her as is for now (try in game first).
+    - **Mage** ELEMENTALIST (built session 6): ELEMENT CYCLE (`passive.elementCycle` ['fire','ice','electric'],
+      `cycleElement()` after each basic strike): `hero.hitType` = the element of her NEXT basic shot (landAttack + the
+      scene's arrow look read it), so her own attacks react every 2nd shot; REACTIONS kept as they were (`passive.reactions`).
+      ROTATION + CHARMS (`mage_rotation`; old `elemental_rotation` stays): `charm: { item, damagePercent, splashPercent,
+      radiusPercent, jumps }` per copy the MAGE holds (`charmed()` inside `currentSpell()`): Kindling = Fireball +30% (and
+      splash), Frost Charm = Nova +25% damage and radius, Storm Charm = +2 Chain jumps; Chain Lightning now has
+      `chainJumps` 4 (was: through ALL enemies). ARCANE WARD + TEAM ELEMENTS (`mage_ward`, `teamElements.durationMs` 5000):
+      `state.teamElementsMs`; while it runs every squad hit without an element leaves a random one (in `reaction()`).
+      review.mjs 3 all (x2): avg floor ~26 -> 26.8 / 26.9 (mid-pack).

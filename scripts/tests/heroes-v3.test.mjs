@@ -110,3 +110,34 @@ const V = hero('archer').passive.volley;
   const ev = [...cast(s, a, 'attack')]; for (let t = 0; t < 2500; t += 20) ev.push(...s.update(20));
   const procs = ev.filter((e) => e.type === 'proc' && e.itemId === 'fire_bombs' && e.unit === a).length;
   ok('...every wave rolls her on-hit items on each enemy hit', procs >= skills.arrow_rain.channel.waves.length * 2, procs); }
+
+// ================= MAGE: ELEMENTALIST
+const CYC = hero('mage').passive.elementCycle;
+{ const { s, es, a } = mk(['mage']); const types = [];
+  for (let i = 0; i < 6; i++) { const ev = []; s.landAttack(a, es[0], ev); types.push(hits(ev, a).find((e) => e.target === es[0] && e.basic).damageType); }
+  ok(`Element Cycle: her basic attacks go ${CYC.join(' > ')} in turn`, types.join() === [...CYC, ...CYC].join(), types.join());
+  const { s: s2, es: es2, a: a2 } = mk(['mage']); let reacts = 0;
+  for (let i = 0; i < 6; i++) { const ev = []; s2.landAttack(a2, es2[0], ev); reacts += ev.filter((e) => e.type === 'reaction').length; }
+  ok('...so her own attacks set off a reaction every 2nd attack (each one uses up the mark)', reacts === 3, reacts); }
+const ROT = skills[hero('mage').skills.attack].rotation;
+const spellAt = (s, a, i) => { a.skills[0].rotation = i; return s.currentSpell(a, 0); };
+{ const { s, a } = mk(['mage']); const plain = [0, 1, 2].map((i) => spellAt(s, a, i));
+  s.giveItem(a.uid, 'kindling'); s.giveItem(a.uid, 'frost_charm'); s.giveItem(a.uid, 'storm_charm'); s.giveItem(a.uid, 'storm_charm');
+  const [fb, nova, chain] = [0, 1, 2].map((i) => spellAt(s, a, i));
+  ok(`Charms: Kindling = Fireball +${ROT[0].charm.damagePercent}% (and its splash)`, Math.abs(fb.damageMultiplier / plain[0].damageMultiplier - (1 + ROT[0].charm.damagePercent / 100)) < 1e-9 && fb.splash.damageMultiplier > plain[0].splash.damageMultiplier);
+  ok(`...Frost Charm = Nova +${ROT[1].charm.damagePercent}% damage, +${ROT[1].charm.radiusPercent}% size`, nova.damageMultiplier > plain[1].damageMultiplier && Math.abs(nova.area.radius / plain[1].area.radius - (1 + ROT[1].charm.radiusPercent / 100)) < 1e-9);
+  ok(`...Storm Charm = +${ROT[2].charm.jumps} Chain jumps each`, chain.chainJumps === plain[2].chainJumps + 2 * ROT[2].charm.jumps, `${plain[2].chainJumps} -> ${chain.chainJumps}`);
+  ok('...charms held by OTHER heroes do not grow her spells', (() => { const x = mk(['mage', 'knight']); x.s.giveItem(x.h[1].uid, 'kindling'); return spellAt(x.s, x.a, 0).damageMultiplier === plain[0].damageMultiplier; })()); }
+{ const { s, es, a } = mk(['mage'], Array(8).fill('goblin')); es.forEach((e, n) => { e.x = 60 + n * 35; e.y = es[0].y; }); a.skills[0].rotation = 2;
+  const chainHits = () => { const ev = [...cast(s, a, 'attack')]; for (let t = 0; t < 1500; t += 20) ev.push(...s.update(20)); return ev.filter((e) => e.type === 'attack' && e.attacker === a && e.skill).length; };
+  a.timer = -1e12; const n0 = chainHits();
+  s.giveItem(a.uid, 'storm_charm'); a.skills[0].rotation = 2; a.skills[0].cooldownLeft = 0;
+  const n1 = chainHits();
+  ok(`...Chain Lightning really hits 1 + ${ROT[2].chainJumps} enemies, +${ROT[2].charm.jumps} with a Storm Charm`, n0 === 1 + ROT[2].chainJumps && n1 === n0 + ROT[2].charm.jumps, `${n0} -> ${n1}`); }
+{ const W = skills[hero('mage').skills.support]; const { s, es, h } = mk(['mage', 'knight']); const [m, k] = h;
+  const plainHit = () => { es[0].statuses = es[0].statuses.filter((x) => x.type !== 'element'); s.strike(k, es[0], [], {}); return es[0].statuses.find((x) => x.type === 'element'); };
+  ok('Team Elements: a Knight (melee) hit leaves no element normally', !plainHit());
+  cast(s, m, 'support');
+  ok('Arcane Ward: shield + resist on the squad', h.every((x) => x.statuses.some((st) => st.type === 'shield')));
+  const el = plainHit(); ok(`...and for ${W.teamElements.durationMs / 1000}s every squad hit leaves a random element`, el && CYC.includes(el.element), el && el.element);
+  run(s, W.teamElements.durationMs + 100); ok('...then it stops', !plainHit()); }

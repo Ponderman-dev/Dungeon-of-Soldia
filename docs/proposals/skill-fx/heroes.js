@@ -51,6 +51,48 @@ function splatter(g, x, y, p, n, seed, dist = 10) {
   }
 }
 
+
+// ---- Archer: leaf green, real arrows (wooden shaft, steel tip, white feathers) ----
+const ARCH = { leaf: 0x8ee05a, deep: 0x3f9a4a, wood: 0xc68a5e, tip: 0xe4e8f0, red: 0xff3a3a, red2: 0xb01e1e, dust: 0x8a7a68 };
+// An arrow with its tip at (x, y) pointing along `ang`: steel tip, wooden shaft `len` long, two white feathers at the tail.
+function arrowPx(g, x, y, ang, len, a, glow) {
+  if (a <= 0) return;
+  const cx = Math.cos(ang), sy = Math.sin(ang);
+  for (let k = 1; k < len; k++) g.px(x - cx * k, y - sy * k, ARCH.wood, a);
+  g.px(x, y, glow ? C.white : ARCH.tip, a); g.px(x - cx, y - sy, ARCH.tip, a);
+  const tx = x - cx * len, ty = y - sy * len;
+  for (const s of [-1, 1]) { g.px(tx - cx + sy * s, ty - sy - cx * s, C.white, a); g.px(tx + sy * s, ty - cx * s, C.white, a); }
+}
+// Where her bow is (the weapon part sits in front of her chest) and the drawn arrow on it.
+const bowAt = (u) => ({ x: u.x + u.hw + 1, y: u.mid - 1 });
+function drawnArrow(g, u, ang, pull, a, t, glint) {
+  const b = bowAt(u), cx = Math.cos(ang), sy = Math.sin(ang);
+  const tip = { x: b.x + cx * (5 - pull), y: b.y + sy * (5 - pull) };
+  arrowPx(g, tip.x, tip.y, ang, 9, a, glint);
+  // the string pulled back to the arrow's tail: two lines from the bow's ends to the nock
+  const nx = tip.x - cx * 9, ny = tip.y - sy * 9;
+  g.line(b.x - 1, b.y - 7, nx, ny, 0xe8e0d0, a * 0.8); g.line(b.x - 1, b.y + 7, nx, ny, 0xe8e0d0, a * 0.8);
+  if (glint) { const on = Math.sin(t / 40) > 0 ? 1 : 0.5; for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) g.px(tip.x + cx + dx, tip.y + sy + dy, ARCH.leaf, on * a); g.px(tip.x + cx, tip.y + sy, C.white, on * a); }
+}
+// Wind and leaves pulled in towards her while she draws (the wind-up).
+function chargeAround(g, u, q, t) {
+  for (let i = 0; i < 7; i++) {
+    const s = (q * 1.6 + i / 7) % 1, an = rnd(i * 11) * Math.PI * 2, r = 20 * (1 - easeOut(s));
+    const x = u.x + Math.cos(an) * r, y = u.mid + Math.sin(an) * r * 0.7;
+    g.rect(x, y, 2, 1, i % 2 ? ARCH.leaf : ARCH.deep, s * 0.9); if (i % 3 === 0) g.px(x + 2, y - 1, ARCH.leaf, s * 0.6);
+  }
+}
+// Where each arrow of an Arrow Rain wave lands, around the target (seeded, the same every loop). Some land ON an enemy.
+function rainSpots(c, w) {
+  const u = c.targets[0]; const R = (c.radius || 36) * 0.8, out = [];
+  for (let i = 0; i < 6; i++) {
+    const s = w * 13 + i * 7;
+    if (i < c.enemies.length) { const e = c.enemies[i]; out.push({ x: e.x + (rnd(s) - 0.5) * 4, y: e.mid - 2 + rnd(s + 1) * 4, foe: i }); continue; }
+    out.push({ x: u.x + (rnd(s) - 0.5) * 2 * R, y: u.y - 2 + rnd(s + 3) * 8, foe: -1 });
+  }
+  return out;
+}
+
 export const RECIPES = {
   // CHARGE: he shakes with rage (the demo trembles him), glows red with a fast heartbeat, hot breath puffs rise from
   // his head, little pebbles hop at his feet.
@@ -224,6 +266,89 @@ export const RECIPES = {
     const tints = [...mins.map((m, j) => ['minions', j, ms < crumble ? [NEC.green, 0.6] : null]), ...heroes.map((h, i) => ['targets', i, ms > arrive + i * 60 ? [NEC.green, 0.25 + 0.1 * Math.sin(t / 150)] : null])];
     return { draws: g.out, tints };
   },
+  // ---- Archer ----
+  // CHARGE (Arrow Rain): she draws her bow and aims HIGH, the string creaks back, the arrowhead glints green, leaves
+  // and wind are pulled in around her, a soft green pulse.
+  archerChargeUp(q, c, t) {
+    const g = pen(); const u = c.caster;
+    chargeAround(g, u, q, t); drawnArrow(g, u, -1.05, 3 * easeOut(q), 1, t, q > 0.55);
+    const pulse = 0.6 + 0.4 * Math.sin(t / 110);
+    return { draws: g.out, tints: [['caster', 0, [ARCH.leaf, Math.round((0.08 + 0.25 * q) * pulse * 20) / 20]]] };
+  },
+  // CHARGE (Hunter's Mark): the same, but she aims STRAIGHT at the enemy and the tip glints red.
+  archerChargeAim(q, c, t) {
+    const g = pen(); const u = c.caster;
+    chargeAround(g, u, q, t); drawnArrow(g, u, 0, 3 * easeOut(q), 1, t, false);
+    if (q > 0.5) { const b = bowAt(u), on = Math.sin(t / 40) > 0 ? 1 : 0.5; g.px(b.x + 1, b.y, C.white, on); for (const [dx, dy] of [[0, -1], [0, 1], [1, 0]]) g.px(b.x + 1 + dx, b.y + dy, ARCH.red, on); }
+    const pulse = 0.6 + 0.4 * Math.sin(t / 110);
+    return { draws: g.out, tints: [['caster', 0, [ARCH.leaf, Math.round((0.08 + 0.25 * q) * pulse * 20) / 20]]] };
+  },
+  // ARROW RAIN: she looses 3 arrows straight UP (they streak off the top), then 6 waves of arrows rain down on the area
+  // (c.radius) around the target, steep, with white streaks. Arrows that hit an enemy burst in a bright white-green
+  // spark (the enemy flashes and jitters, see the spec), the rest STICK in the floor with a puff of dust and stay a
+  // moment after the rain, so you see where it fell. The last wave lands harder (bigger sparks).
+  arrowRainNew(q, c, t) {
+    const g = pen(); const k = c.caster, u = c.targets[0]; if (!k || !u) return g.out;
+    const ms = q * CAST_MS_NEW.arrowRainNew, first = c.hitMs || 300, every = c.every || 333, waves = c.waves || 6, FALL = 150;
+    for (let i = 0; i < 3; i++) { // the shot up
+      const p = ph(ms, i * 40, 220 + i * 40); if (p <= 0 || p >= 1) continue;
+      const b = bowAt(k), ang = -1.05 - (i - 1) * 0.12, d = 6 + 110 * p * p;
+      const x = b.x + Math.cos(ang) * d, y = b.y + Math.sin(ang) * d;
+      arrowPx(g, x, y, ang, 8, 1, true); g.line(x - Math.cos(ang) * 9, y - Math.sin(ang) * 9, x - Math.cos(ang) * 20, y - Math.sin(ang) * 20, ARCH.leaf, 0.6 * (1 - p));
+    }
+    const end = first + (waves - 1) * every + 700, fade = 1 - ph(ms, end, end + 300);
+    for (let w = 0; w < waves; w++) {
+      const land = first + w * every, last = w === waves - 1;
+      rainSpots(c, w).forEach((s, i) => {
+        const ft = ms - (land - FALL) - i * 12; if (ft < 0) return;
+        const ang = 1.25; // steep, falling a little to the right
+        if (ft < FALL) { // falling, with a white streak above
+          const p = ft / FALL, x = s.x - Math.cos(ang) * 60 * (1 - p), y = s.y - Math.sin(ang) * 60 * (1 - p);
+          g.line(x - Math.cos(ang) * 9, y - Math.sin(ang) * 9, x - Math.cos(ang) * 22, y - Math.sin(ang) * 22, C.white, 0.5);
+          arrowPx(g, x, y, ang, 8, 1); return;
+        }
+        const ht = ft - FALL;
+        if (s.foe >= 0) { // hit: a bright spark burst on the enemy
+          const p = ph(ht, 0, last ? 320 : 240); if (p >= 1) return; const big = last ? 1.5 : 1;
+          if (p < 0.3) g.disc(s.x, s.y, (2 + p * 8) * big, C.white, 1 - p / 0.3);
+          for (let r = 0; r < 7; r++) { const an = (r / 7) * Math.PI * 2 + w, d = (2 + 9 * easeOut(p)) * big; g.rect(s.x + Math.cos(an) * d, s.y + Math.sin(an) * d * 0.8, r % 2 ? 1 : 2, 1, r % 3 ? ARCH.leaf : C.white, 1 - p); }
+          return;
+        }
+        arrowPx(g, s.x, s.y, ang, 6, fade); // stuck in the floor (the tip is in the ground)
+        const dp = ph(ht, 0, 260); if (dp < 1) for (let d = 0; d < 4; d++) g.px(s.x + (d - 1.5) * (1 + dp * 3), s.y - dp * 3 - (d % 2), ARCH.dust, 1 - dp);
+      });
+    }
+    const tints = c.enemies.map((e, i) => {
+      for (let w = 0; w < waves; w++) { const ht = ms - (first + w * every) - i * 12; if (ht >= 0 && ht < 70) return ['enemies', i, [C.white, 0.8]]; }
+      return ['enemies', i, null];
+    });
+    return { draws: g.out, tints };
+  },
+  // HUNTER'S MARK: one arrow with a RED RIBBON flies straight and fast at the enemy (a thin red streak), a white flash
+  // and red sparks where it hits; the arrow STAYS stuck in the enemy, its red ribbon fluttering (that is the mark);
+  // the enemy flushes red for a moment. (+25% DMG text: the spec.)
+  huntersMarkNew(q, c, t) {
+    const g = pen(); const k = c.caster, u = c.targets[0]; if (!k || !u) return g.out;
+    const ms = q * CAST_MS_NEW.huntersMarkNew, fly = c.hitMs || 140;
+    const a = bowAt(k), b = { x: u.x - u.hw + 2, y: u.mid - 1 };
+    const ribbon = (x, y, al) => { for (let i = 1; i <= 5; i++) g.px(x - i, y + 1 + Math.round(Math.sin(t / 70 + i * 0.9) * (i / 3)), i % 2 ? ARCH.red : ARCH.red2, al); };
+    if (ms < fly) {
+      const p = ms / fly, x = a.x + (b.x - a.x) * p, y = a.y + (b.y - a.y) * p;
+      g.line(a.x, a.y, x - 9, y, ARCH.red, 0.5); arrowPx(g, x, y, 0, 9, 1, true); ribbon(x - 5, y, 1);
+      return g.out;
+    }
+    const hit = ms - fly, fade = 1 - ph(ms, CAST_MS_NEW.huntersMarkNew - 300, CAST_MS_NEW.huntersMarkNew);
+    if (hit < 80) g.disc(b.x, b.y, 3 + hit / 14, C.white, 1 - hit / 80);
+    const sp = ph(hit, 0, 300); if (sp < 1) for (let r = 0; r < 8; r++) { const an = (r / 8) * Math.PI * 2, d = 3 + 9 * easeOut(sp); g.rect(b.x + Math.cos(an) * d, b.y + Math.sin(an) * d * 0.8, r % 2 ? 1 : 2, 1, r % 2 ? ARCH.red : C.white, 1 - sp); }
+    arrowPx(g, b.x, b.y, 0, 8, fade); ribbon(b.x - 4, b.y, fade); // stuck in the enemy, the ribbon fluttering
+    return { draws: g.out, tints: [['targets', 0, hit < 70 ? [C.white, 0.85] : hit < 500 ? [ARCH.red, 0.45 * (1 - (hit - 70) / 430)] : null]] };
+  },
+  // Today's Arrow Rain: the game's 'rain' shot on every enemy each wave (the yellow ring per wave is the spec's `rings`).
+  nowArrowRain(q, c, t) {
+    const out = []; const ms = q * CAST_MS_NEW.nowArrowRain;
+    for (let w = 0; w < 6; w++) { const wt = ms - w * 333; if (wt < 0 || wt > 300) continue; c.enemies.forEach((e, i) => out.push(...shotFx('rain', wt / 300, { x: e.x, y: e.y - 45 }, { x: e.x, y: e.y }, t, w * 5 + i))); }
+    return out;
+  },
   // Today's Death Coil: just the game's dark bolt shot.
   nowDarkbolt(q, c, t) {
     const k = c.caster, u = c.targets[0]; if (!k || !u) return [];
@@ -236,7 +361,9 @@ export const RECIPES = {
     return g.out;
   },
 };
-export const CAST_MS_NEW = { necroCharge: 700, deathCoilNew: 1100, boneSacrificeNew: 1700, nowDarkbolt: 520, clericCharge: 700, holyNovaNew: 1300, sanctuaryNew: 1800, berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400 };
+export const CAST_MS_NEW = { necroCharge: 700, deathCoilNew: 1100, boneSacrificeNew: 1700, nowDarkbolt: 520, clericCharge: 700, holyNovaNew: 1300, sanctuaryNew: 1800, berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400, archerChargeUp: 500, archerChargeAim: 400, arrowRainNew: 3000, huntersMarkNew: 1900, nowArrowRain: 2300 };
+// Name colours for heroes the game has none for yet (combat.json skillFx.name.heroColors gets them when they are built).
+export const NAME_COLORS = { archer: '#b8f07a' };
 
 // How the demo plays each skill (besides the Knight, who has his own code in demo.js).
 //   now: { recipe, ms, move: 'lunge'|'leap'|'hop'|null, rings: per-wave yellow rings, number }
@@ -254,5 +381,11 @@ export const SPECS = {
     new: { charge: 'necroCharge', recipe: 'deathCoilNew', move: null, hit: { at: 420, shake: 3, shakeMs: 160, stopMs: 60 }, number: '50' } },
   bone_sacrifice: { hero: 'necromancer', ally: true, minions: true, squadTargets: true, now: { recipe: 'boneWard', move: 'hop', minionsGone: 0, minionsFade: true },
     new: { charge: 'necroCharge', recipe: 'boneSacrificeNew', move: { type: 'hop', liftPx: 8 }, minionsGone: 150, minionsShake: true } },
+  arrow_rain: { hero: 'archer', now: { recipe: 'nowArrowRain', move: null, rings: true, number: '10' },
+    new: { charge: 'archerChargeUp', recipe: 'arrowRainNew', move: { type: 'recoil', px: 9 }, hit: { at: 300, shake: 2, shakeMs: 90, stopMs: 0 }, radius: 'area',
+      rain: { every: 333, shake: 2, lastShake: 4, shakeMs: 90, jitterPx: 5, lastJitterPx: 10, jitterMs: 150 }, number: '10' } },
+  hunters_mark: { hero: 'archer', now: { recipe: 'huntersMark', move: 'hop' },
+    new: { charge: 'archerChargeAim', recipe: 'huntersMarkNew', move: { type: 'recoil', px: 6 }, hit: { at: 140, shake: 1.5, shakeMs: 100, stopMs: 40 },
+      text: { s: '+25% DMG', at: 300, color: '#ff7a7a' } } },
   blood_feast: { hero: 'berserker', now: { recipe: 'bloodPact', move: 'hop' }, new: { charge: 'berserkerCharge', tremble: true, recipe: 'bloodFeast', move: { type: 'hop', liftPx: 10 } } },
 };

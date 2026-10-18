@@ -16,7 +16,7 @@ import combat from '../../../src/data/combat.json';
 import { artPixels, partArt, mixColor } from '../../../src/systems/pixelArt.js';
 import { bodyBox, pen, FX_COLORS as C } from '../../../src/systems/statusFx.js';
 import { castFx, CAST_MS } from '../../../src/systems/skillFx.js';
-import { RECIPES, CAST_MS_NEW, SPECS } from './heroes.js';
+import { RECIPES, CAST_MS_NEW, SPECS, NAME_COLORS } from './heroes.js';
 // A recipe by name: a proposed one (heroes.js) or the game's own (skillFx.js). Always { draws, tints }.
 const runFx = (name, q, c, t) => { const f = RECIPES[name]; if (!f) return castFx(name, q, c, t); const o = f(q, c, t); return Array.isArray(o) ? { draws: o, tints: [] } : { draws: o.draws || [], tints: o.tints || [] }; };
 const fxMs = (name) => CAST_MS_NEW[name] ?? CAST_MS[name] ?? 800;
@@ -25,6 +25,7 @@ export const Z = 3, W = 130, H = 96; // scene in character pixels; 390 x 288 on 
 const FLOOR = 54; // where the wall meets the floor
 const FX = combat.skillFx;
 const hex = (n) => '#' + n.toString(16).padStart(6, '0');
+const heroColor = (id) => FX.name.heroColors[id] || NAME_COLORS[id]; // the hero's name colour (game data, or the demo's own for heroes not built yet)
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const ph = (t, a, b) => clamp((t - a) / (b - a));
 const easeOut = (p) => 1 - (1 - p) * (1 - p);
@@ -213,7 +214,7 @@ export class Demo {
       if (s.shield) { ctx.fillStyle = '#ffe08a'; ctx.fillRect(x, y - 3, Math.round(30 * s.shield), 2); }
       if (a === this.hero && et < P.cast) {
         ctx.fillStyle = '#000'; ctx.fillRect(x - 1, y + 5, 32, 5);
-        ctx.fillStyle = look === 'now' ? FX.attackColor : FX.name.heroColors[this.hero.def.id] || KNIGHT.text; ctx.fillRect(x, y + 6, Math.round(30 * et / P.cast), 3);
+        ctx.fillStyle = look === 'now' ? FX.attackColor : heroColor(this.hero.def.id) || KNIGHT.text; ctx.fillRect(x, y + 6, Math.round(30 * et / P.cast), 3);
       }
     }
   }
@@ -286,6 +287,7 @@ export class Demo {
     const E0 = body(this.foe), E1 = body(this.foe2), foes = [[this.foe, st.foe], [this.foe2, st.foe2]];
     const tintOn = (s, tint) => { if (tint && (!s.tint || tint[1] > s.tint[1])) s.tint = tint; };
     const support = sk.kind !== 'attack';
+    const self = support && sk.target !== 'enemy'; // a support skill on herself / the squad (Hunter's Mark targets an enemy)
     const play = (name, q, c) => {
       const o = runFx(name, q, c, et); st.over.out.push(...o.draws);
       for (const [l, i, tint] of o.tints) {
@@ -294,11 +296,12 @@ export class Demo {
         if (A0 && (l === 'targets' || (l === 'squad' && i === 1))) { tintOn(st.ally, tint); continue; }
         if (l === 'caster') tintOn(h, tint);
         else if (l === 'enemies') tintOn((foes[i] || [])[1] || {}, tint);
-        else if (l === 'targets') tintOn(support ? h : (foes[i] || [])[1] || {}, tint);
+        else if (l === 'targets') tintOn(self ? h : (foes[i] || [])[1] || {}, tint);
         else if (l === 'squad') tintOn(h, tint);
       }
     };
-    const radius = L.radius === 'landSplash' && sk.landSplash ? sk.landSplash.radius / Z : L.radius === 'holyNova' && sk.holyNova ? sk.holyNova.radius / Z : 30;
+    const ch = sk.channel, ch0 = () => !!ch;
+    const radius = L.radius === 'landSplash' && sk.landSplash ? sk.landSplash.radius / Z : L.radius === 'holyNova' && sk.holyNova ? sk.holyNova.radius / Z : L.radius === 'area' && sk.area ? sk.area.radius / Z : 30;
     if (et < P.cast) { // the wind-up
       h.dy = 1; h.dx = -1;
       if (look === 'new') {
@@ -312,6 +315,7 @@ export class Demo {
     const dist = Math.hypot(E0.x - body(hero).x, E0.mid - body(hero).mid);
     if (mv.type === 'lunge') { const l = since < 90 ? easeOut(since / 90) : 1 - ph(since, 90, 180); h.dx = l * 9; }
     if (mv.type === 'hop') h.dy = -Math.sin(Math.min(1, since / 320) * Math.PI) * ((mv.liftPx || 18) / Z);
+    if (mv.type === 'recoil') { const r = since < 50 ? easeOut(since / 50) : 1 - easeOut(ph(since, 50, 320)); h.dx = -((mv.px || 6) / Z) * r; } // the bow's kick: she rocks back
     if (mv.type === 'leap') { // like BattleScene.leapAt: up and over to 80% of the way, then back
       const up = mv.upMs || 230, hold = mv.holdMs ?? 120, back = mv.backMs || 300, share = mv.share || 0.8;
       const p = since < up ? (mv.slam ? since / up : easeOut(since / up)) : since < up + hold ? 1 : 1 - ph(since, up + hold, up + hold + back);
@@ -327,12 +331,12 @@ export class Demo {
       h.dx = (reachPx / Z) * go;
     }
     if (look === 'now' && since < FX.flashMs) h.tint = [support ? 0x5dff96 : 0xff7a3d, 0.6];
-    if (look === 'new' && since < 80) tintOn(h, [Number('0x' + (FX.name.heroColors[hero.def.id] || '#ffffff').slice(1)), 0.5]);
+    if (look === 'new' && since < 80) tintOn(h, [Number('0x' + (heroColor(hero.def.id) || '#ffffff').slice(1)), 0.5]);
     const C0 = body(hero, h.dx, h.dy);
     const land = mv.type === 'leap' ? { x: body(hero).x + (E0.x - body(hero).x) * (mv.share || 0.8), y: body(hero).y } : null; // where he lands: fixed
     const M0 = this.minions.map((m, i) => body(m, st.mins[i].dx, st.mins[i].dy));
     if (L.minionsGone != null) st.mins.forEach((m, i) => { const gt = since - L.minionsGone; if (gt >= 0 && (!L.minionsFade || gt > 300)) m.gone = true; else if (gt >= 0) m.alpha = 1 - gt / 300; if (!m.gone && L.minionsShake && since >= 0) m.dx = Math.round(Math.sin(et / 25 + i) * 0.8); });
-    const c = { caster: C0, targets: SP.squadTargets ? [C0, ...(A0 ? [A0] : [])] : A0 ? [A0] : support ? [C0] : [E0], squad: A0 ? [C0, A0] : [C0], enemies: [E0, E1], minions: M0, hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius, land };
+    const c = { caster: C0, targets: SP.squadTargets ? [C0, ...(A0 ? [A0] : [])] : A0 ? [A0] : self ? [C0] : [E0], squad: A0 ? [C0, A0] : [C0], enemies: [E0, E1], minions: M0, hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius, land, ...(L.rain && sk.channel ? { every: L.rain.every, waves: sk.channel.waves.length } : {}) };
     if (L.hit && L.hit.knockPx && land) { // enemies inside the landing area are thrown back, away from where he lands
       const ht = et - P.impact;
       if (ht >= 0) for (const [a, s] of foes) { const e = body(a); if (Math.hypot(e.x - land.x, (e.y - land.y) * 1.4) > radius) continue; const k = (L.hit.knockPx / Z) * easeOut(ph(ht, 0, 90)) * (1 - easeOut(ph(ht, 200, 600))); s.dx = Math.sign(e.x - land.x || 1) * k; }
@@ -341,8 +345,24 @@ export class Demo {
     if (since < ms) play(L.recipe, since / ms, c);
     if (look === 'now' && !support && T >= P.impact && T < P.impact + FX.shakeMs) st.cam.shake = FX.shakeIntensity * 390;
     if (L.hit && T >= P.impact && T < P.impact + P.stopMs + L.hit.shakeMs) st.cam.shake = L.hit.shake * (1 - (T - P.impact) / (P.stopMs + L.hit.shakeMs));
+    if (L.text) { const tt = since - L.text.at, E = c.targets[0]; if (tt >= 0 && tt < 1100) st.numbers.push({ text: L.text.s, x: clampX(E.x * Z, L.text.s, 14), y: (E.top - 10) * Z - Math.round(ph(tt, 0, 1100) * 24), size: 14, color: L.text.color, alpha: ph(tt, 0, 100) * (1 - ph(tt, 800, 1100)) }); }
+    // rain waves (Arrow Rain): every wave lands on all enemies inside the area: a small shake, they jitter, a number each
+    if (L.rain && ch0()) {
+      const R = L.rain, n = sk.channel.waves.length;
+      for (let w = 0; w < n; w++) {
+        const wt = since - L.hit.at - w * R.every; if (wt < 0) continue;
+        const last = w === n - 1;
+        if (wt < R.shakeMs) st.cam.shake = Math.max(st.cam.shake, (last ? R.lastShake : R.shake) * (1 - wt / R.shakeMs));
+        foes.forEach(([a, s], i) => {
+          const e = body(a); if (Math.hypot(e.x - E0.x, (e.y - E0.y) * 1.4) > radius) return;
+          const jt = wt - i * 12;
+          if (jt >= 0 && jt < R.jitterMs) { const j = jt / R.jitterMs; s.dx = Math.round((Math.sin(j * Math.PI * 6) * (last ? R.lastJitterPx : R.jitterPx) * (1 - j)) / Z); }
+          this.number(st, L.number, { ...e, top: e.top - w * 3 }, jt, true);
+        });
+      }
+      return;
+    }
     // channel waves (Multistrike)
-    const ch = sk.channel;
     if (ch && L.waves) {
       const W = FX.wave[L.waves], D = FX.dash[L.waves], n = ch.waves.length;
       for (let w = 0; w < n; w++) {
@@ -515,7 +535,7 @@ export class Demo {
     const a = s < IN ? s / IN : 1 - ph(s, IN + HOLD, IN + HOLD + OUT);
     const y = Math.round((H0.top * Z - 50 + rise) / 3) * 3;
     const up = name.toUpperCase(); // user: all caps
-    text(ctx, up, clampX(H0.x * Z, up, 16), y, 16, FX.name.heroColors[this.hero.def.id] || KNIGHT.text, a, 4);
+    text(ctx, up, clampX(H0.x * Z, up, 16), y, 16, heroColor(this.hero.def.id) || KNIGHT.text, a, 4);
   }
 }
 

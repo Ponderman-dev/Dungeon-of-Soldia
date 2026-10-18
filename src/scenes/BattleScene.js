@@ -1464,7 +1464,8 @@ export default class BattleScene extends Phaser.Scene {
       if (bv) { this.popText(bv, e.skill.name, '#ff7a6a', true); bv.ch.flash(0xff4a3a, 140); }
     } else if (e.type === 'castStart') {
       // The hero winds up and a charge bar fills (see drawCastBars); its name shows when it goes off (skillName).
-      this.views.get(e.unit.uid).ch.castWindUp(e.castMs); // crouch and raise the weapon
+      this.views.get(e.unit.uid).ch.castWindUp(e.castMs);
+      this.playCharge(this.views.get(e.unit.uid), e); // crouch and raise the weapon
     } else if (e.type === 'castCancel') {
       const cv = this.views.get(e.unit.uid);
       if (!cv) return;
@@ -1871,7 +1872,8 @@ export default class BattleScene extends Phaser.Scene {
     const attack = e.skill.kind === 'attack';
     const colorText = attack ? FX.attackColor : FX.supportColor;
     const color = Phaser.Display.Color.HexStringToColor(colorText).color;
-    caster.ch.flash(color, FX.flashMs);
+    const heroColor = caster.unit.side === 'hero' && FX.name.heroColors[caster.unit.def.id]; // a hero with its own look flashes in its colour
+    caster.ch.flash(heroColor ? Phaser.Display.Color.HexStringToColor(heroColor).color : color, FX.flashMs);
     const own = SKILL_FX_BY_NAME[e.skill.name];
     if (own) this.playSkillFx(own, caster, e); // the skill's own effect (systems/skillFx.js) instead of the plain rings
     const spots = own ? [] : attack || e.skill.target === 'squad' || e.skill.target === 'enemy' || e.skill.target === 'lowestAlly' ? e.targets.map((t) => this.views.get(t.uid)).filter(Boolean) : [caster];
@@ -1904,6 +1906,20 @@ export default class BattleScene extends Phaser.Scene {
     t.x = Math.round(Phaser.Math.Clamp(t.x, t.width / 2 + 6, GAME_WIDTH - t.width / 2 - 6)); // keep it on screen
     this.tweens.add({ targets: t, y, alpha: 1, duration: N.inMs, ease: 'Quad.easeOut' });
     this.tweens.add({ targets: t, y: y - N.risePx, alpha: 0, delay: N.inMs + N.holdMs, duration: N.outMs, onComplete: () => t.destroy() });
+  }
+
+  // The CHARGE beat (combat.json skillFx.charge): the skill's wind-up look on the hero, for the whole wind-up. Stops
+  // early when the wind-up is cut (castCancel) or the hero is gone.
+  playCharge(v, e) {
+    const slot = e.unit.skills && e.unit.skills[e.index];
+    const name = slot && FX.charge[slot.id];
+    if (!v || !name || !e.castMs) return;
+    const cast = e.unit.casting;
+    this.addFx(e.castMs, (q, now) => {
+      if (!v.ch.active || (cast && e.unit.casting !== cast)) return [];
+      const out = castFx(name, q, { caster: this.fxBody(v), targets: [], squad: [], enemies: [] }, now);
+      return { draws: out.draws, tints: out.tints.map(([, , tint]) => [v, tint]) };
+    }, ['skill', name]);
   }
 
   // A skill's own cast effect: the recipe gets where the caster, its targets, the squad and the enemies are

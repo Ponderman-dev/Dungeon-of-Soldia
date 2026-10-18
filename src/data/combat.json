@@ -60,6 +60,11 @@
     "shakeMs": 140,
     "shakeIntensity": 0.006,
     "hitStopMs": 70,
+    "charge": {
+      "_about": "The CHARGE beat: skill id -> recipe in src/systems/skillFx.js that plays on the hero during the wind-up (castMs). Heroes not listed have no charge look yet (done hero by hero).",
+      "defense_bash": "knightCharge",
+      "challenge": "knightCharge"
+    },
     "name": {
       "_about": "The skill NAME when a hero's skill goes off (user's pick B, 2026-10-18): once, in CAPITALS, over the hero at one fixed pixel size (never scaled): slides up risePx while it fades in, holds, then rises and fades. Colour = the hero's skill colour (heroColors), else defaultColor.",
       "sizePx": 16,

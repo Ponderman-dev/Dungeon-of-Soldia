@@ -3,6 +3,12 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
+## START HERE (session 10b): Knight look + name style B are IN THE GAME
+Done (session 9): skill name B (capitals, fixed size, over the hero, colour per hero: combat.json skillFx.name), the
+Knight's calm 3-beat look (docs/systems/effects.md 'KNIGHT 3-BEAT'). NEXT: the other heroes' looks, 2-3 per session,
+each with a demo page first (copy docs/proposals/skill-fx: add the hero's recipes, NOW vs NEW scenes, OK/CHANGE).
+Watch: in the game enemies stand ABOVE the heroes, so the name over a melee hero can cover the enemy he hits for ~1s.
+
 ## START HERE (session 10): SKILL EFFECTS DEMO waiting for the user's picks
 Demo page (session 9): https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN (source `docs/proposals/skill-fx/`, see
 docs/proposals/README.md). USER PICKED (session 9): name style B FLOATING NAME (no cut-in bar); the charge -> release -> impact sequence is good,

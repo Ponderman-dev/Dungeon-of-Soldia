@@ -5,7 +5,7 @@ SYNERGISING WITH ITEMS (each hero = the best home for one item family). Measured
 most skills fall from 15-25% of a hero's damage early to 5-13% after floor 45 (items take over).
 Decided by the user one hero at a time (feel, passive, attack, support). Numbers are first guesses, tuned when built.
 
-## Knight: IRON WALL
+## Knight: IRON WALL (BUILT session 6, see docs/systems/heroes.md)
 - Feel: the squad's shield; enemies crash into him and hurt themselves. Loves defense, shield and thorns items.
 - Passive GRUDGE (replaces Intercept): 25% of his defense is added to his attack. Every hit he reflects (thorns
   items) charges his next Shield Bash (+10% per reflect).

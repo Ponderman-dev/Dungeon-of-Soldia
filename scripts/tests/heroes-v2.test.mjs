@@ -17,28 +17,6 @@ const mk = (ids, enemyIds = ['goblin', 'goblin', 'goblin'], rng = Math.random, p
 };
 const skillOf = (u, kind) => u.skills.findIndex((x) => x.kind === kind);
 
-// ---- Knight
-{ const { s, es, h } = mk(['knight', 'rogue', 'archer']); const [k, ro] = h;
-  ok('Knight: Shield Bash + Challenge, passive Intercept', k.skills[0].id === 'knight_bash' && k.skills[1].id === 'challenge' && k.def.passive.intercept);
-  ro.hp = ro.maxHp * 0.3; const ev = []; s.dealDamage(ro, 1, ev);
-  ok('Intercept: an ally under 35% is guarded by the Knight', ro.statuses.some((x) => x.type === 'guarded') && ev.some((e) => e.type === 'intercept'));
-  const kHp = k.hp, rHp = ro.hp; const ev2 = []; s.strike(es[0], ro, ev2, { multiplier: 10 });
-  const kLost = kHp - k.hp, rLost = rHp - ro.hp;
-  ok('...he takes HALF of the hits on that ally', kLost > 0 && Math.abs(kLost - rLost) <= 2, `${kLost} / ${rLost}`);
-  ok('...and it has a cooldown', k.interceptCd > 0); }
-{ const { s, es, h } = mk(['knight']); const k = h[0]; k.specials.thorns = 50;
-  h[0].hp = h[0].maxHp; const other = mk(['knight', 'rogue']); const [k2, ro2] = other.h; k2.specials.thorns = 50; ro2.hp = ro2.maxHp * 0.3; other.s.dealDamage(ro2, 1, []);
-  const e = other.es[0]; const e0 = e.hp; other.s.strike(e, ro2, [], { multiplier: 10 });
-  ok('...his thorns reflect the hits he takes while intercepting', e.hp < e0); }
-{ const { s, es, h } = mk(['knight']); const k = h[0]; const ev = s.castSkill(k.uid, skillOf(k, 'attack'));
-  ok('Shield Bash: 140% damage and a 1.5s stun', ev.some((e) => e.type === 'attack') && es.some((e) => e.statuses.some((x) => x.type === 'stun'))); }
-{ const { s, es, h } = mk(['knight'], ['goblin', 'goblin', 'goblin'], Math.random, true); const k = h[0];
-  for (const e of es) { e.x = k.x + 40; e.y = k.y - 60; } es[2].x = k.x + 330; es[2].y = 200;
-  const d0 = k.stats.defense; s.castSkill(k.uid, skillOf(k, 'support'));
-  ok('Challenge: the enemies AROUND him are taunted', s.tauntedBy(es[0]) === k && s.tauntedBy(es[1]) === k);
-  ok('...a far enemy is not', !s.tauntedBy(es[2]));
-  ok('...and he gets +30 defense', k.stats.defense === d0 + 30); }
-
 // ---- Berserker
 { const { s, es, h } = mk(['berserker']); const b = h[0]; const r0 = b.rage;
   const ev = []; s.landAttack(b, es[0], ev);

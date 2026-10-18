@@ -922,6 +922,24 @@
     ],
     "description": "Bashes one enemy: 140% damage and a 1.5s stun. Stuns stop enemy wind-ups (great against bosses)."
   },
+  "defense_bash": {
+    "name": "Defense Bash",
+    "short": "DB",
+    "kind": "attack",
+    "target": "enemy",
+    "cooldownMs": 9000,
+    "castMs": 500,
+    "damageMultiplier": 1,
+    "apply": [
+      {
+        "status": "stun",
+        "durationMs": 1500
+      }
+    ],
+    "description": "Bashes one enemy for 100% of his attack PLUS 300% of his defense, and stuns it for 1.5s. Every hit he reflected since the last Bash adds +10% (Grudge). Stuns stop enemy wind-ups.",
+    "defenseMultiplier": 3,
+    "grudgeCharged": true
+  },
   "challenge": {
     "name": "Challenge",
     "short": "CH",

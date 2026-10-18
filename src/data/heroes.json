@@ -3,11 +3,11 @@
     "id": "knight",
     "name": "Knight",
     "role": "Tank",
-    "summary": "Guards the squad and stops enemy wind-ups.",
+    "summary": "The iron wall: enemies crash into him, and his defense becomes damage.",
     "tips": [
-      "Shield Bash stuns: use it when a boss starts a big wind-up.",
-      "Challenge pulls every enemy around him onto himself.",
-      "Bulwark Plate and Spite Mail make Intercept hurt the attackers."
+      "Defense Bash hits for his attack PLUS 3x his defense, and stuns: defense items are damage items for him.",
+      "Grudge: every hit he reflects (thorns, Spite Mail, Mirror Buckler) makes his next Bash 10% stronger.",
+      "Challenge pulls every enemy around him onto himself: great with thorns."
     ],
     "damageType": "melee",
     "height": 24,
@@ -141,7 +141,7 @@
       "resist": 0.3
     },
     "skills": {
-      "attack": "knight_bash",
+      "attack": "defense_bash",
       "support": "challenge"
     },
     "perk": {
@@ -160,13 +160,11 @@
       ]
     },
     "passive": {
-      "name": "Intercept",
-      "description": "When an ally drops under 35% health he guards them for 3s: he takes half of every hit on them (his reflect items reflect those hits too). 8s cooldown.",
-      "intercept": {
-        "belowPercent": 35,
-        "sharePercent": 50,
-        "durationMs": 3000,
-        "cooldownMs": 8000
+      "name": "Grudge",
+      "description": "Every hit he reflects (thorns items, Spite Mail, Mirror Buckler) charges his next Shield Bash: +10% per reflect, up to +200%.",
+      "grudge": {
+        "perReflectPercent": 10,
+        "maxStacks": 20
       }
     },
     "provides": [

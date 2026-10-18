@@ -51,3 +51,9 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       `chainJumps` 4 (was: through ALL enemies). ARCANE WARD + TEAM ELEMENTS (`mage_ward`, `teamElements.durationMs` 5000):
       `state.teamElementsMs`; while it runs every squad hit without an element leaves a random one (in `reaction()`).
       review.mjs 3 all (x2): avg floor ~26 -> 26.8 / 26.9 (mid-pack).
+    - **Knight** IRON WALL (built session 6): INTERCEPT REMOVED from him (code stays). GRUDGE (`passive.grudge`,
+      `addGrudge()` on every thorns / Spite Mail / Mirror Buckler reflect): +1 charge per reflected hit up to `maxStacks` 20;
+      his next skill with `grudgeCharged` is +`perReflectPercent` 10% per charge, then charges reset (`grudge` events; scene:
+      orange bar under his health bar, gold when full). DEFENSE BASH (`defense_bash`, old `knight_bash` stays): damage
+      multiplier 1 + `defenseMultiplier` 3 x defense / attack (in `skillHit()`), 1.5s stun, 9s. CHALLENGE unchanged.
+      review.mjs 3 all (x2): avg floor ~29 -> 29.4 / 29.2 (unchanged, 3rd-4th).

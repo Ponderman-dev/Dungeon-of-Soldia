@@ -1878,9 +1878,20 @@ export default class BattleState {
       const back = Math.max(1, Math.round((amount * thorns) / 100));
       const d = this.dealDamage(attacker, back, events);
       if (!d.immune) events.push({ type: 'thorns', unit: attacker, amount: back - d.absorbed, holder: target });
+      this.addGrudge(target, events);
       this.breakEffects(attacker, d.broken, events);
       if (attacker.hp <= 0 && attacker.alive) this.killUnit(attacker, events);
     }
+  }
+
+  // Knight's GRUDGE (passive.grudge): every hit he reflects (thorns, Spite Mail, Mirror Buckler) charges his next
+  // Shield Bash by `perReflectPercent`, up to `maxStacks`; the Bash uses the charge up (skillHit, `grudgeCharged`).
+  addGrudge(holder, events) {
+    const g = holder.def && holder.def.passive && holder.def.passive.grudge;
+    if (!g || !holder.alive) return;
+    const was = holder.grudge || 0;
+    holder.grudge = Math.min(g.maxStacks, was + 1);
+    if (holder.grudge !== was) events.push({ type: 'grudge', unit: holder, stacks: holder.grudge });
   }
 
   // ---- shields and invulnerability ------------------------------------------------------------
@@ -1993,6 +2004,7 @@ export default class BattleState {
     events.push({ type: 'attack', attacker, target, result, damageType: type });
     const d = this.dealDamage(attacker, back, events);
     if (!d.immune) events.push({ type: 'thorns', unit: attacker, amount: back - d.absorbed, holder: target });
+    this.addGrudge(target, events);
     this.breakEffects(attacker, d.broken, events);
     if (attacker.hp <= 0 && attacker.alive) this.killUnit(attacker, events);
     return true;
@@ -2738,7 +2750,16 @@ export default class BattleState {
       if (skill.damageMultiplier) return this.strike(hero, hero, events, { multiplier: (opts.multiplier ?? skill.damageMultiplier), damageType: skill.damageType, reflected: true });
       return null;
     }
-    const base = opts.multiplier ?? skill.damageMultiplier;
+    let base = opts.multiplier ?? skill.damageMultiplier;
+    // Defense Bash (`defenseMultiplier`): also deals that many times the caster's DEFENSE (as a share of his attack).
+    if (skill.defenseMultiplier && opts.multiplier === undefined) base += (skill.defenseMultiplier * hero.stats.defense) / Math.max(1, hero.stats.attack);
+    // Knight's Grudge: the charge from reflected hits makes this skill stronger, then it is used up.
+    if (skill.grudgeCharged && hero.grudge) {
+      base *= 1 + (hero.grudge * hero.def.passive.grudge.perReflectPercent) / 100;
+      events.push({ type: 'proc', unit: hero, label: `Grudge x${hero.grudge}!` });
+      hero.grudge = 0;
+      events.push({ type: 'grudge', unit: hero, stacks: 0 });
+    }
     if (base) {
       let mult = base * (1 + (((hero.specials && hero.specials.skillDamage) || 0) + this.bookmarkBonus(hero)) / 100) * (opts.scale ?? 1);
       // Bonus damage against certain enemies: `debuffedMultiplier` (any debuff: Smite, Death Coil), `bonusVs`

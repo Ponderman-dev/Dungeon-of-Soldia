@@ -259,6 +259,13 @@ export default class BattleScene extends Phaser.Scene {
         g.fillStyle(0x000000, 0.85).fillRect(x - 1, y - 1, BAR_WIDTH + 2, 4);
         g.fillStyle(full ? 0xffd24d : 0xff6a2a, 1).fillRect(x, y, full ? BAR_WIDTH : (BAR_WIDTH * h.rage) / rage.max, 2);
       }
+      // Knight's Grudge: a bar under his health bar fills with every reflected hit (gold when full).
+      const grudge = h.def.passive && h.def.passive.grudge;
+      if (grudge && h.grudge) {
+        const x = v.bg.x - BAR_WIDTH / 2, y = v.bg.y + 5;
+        g.fillStyle(0x000000, 0.85).fillRect(x - 1, y - 1, BAR_WIDTH + 2, 4);
+        g.fillStyle(h.grudge >= grudge.maxStacks ? 0xffd24d : 0xff9a3c, 1).fillRect(x, y, (BAR_WIDTH * h.grudge) / grudge.maxStacks, 2);
+      }
       if (h.def.passive && h.def.passive.combo && h.combo.points > 0) {
         const tv = this.views.get(h.combo.uid);
         if (tv && tv.unit.alive && tv.ch.active && tv.bg.visible) {

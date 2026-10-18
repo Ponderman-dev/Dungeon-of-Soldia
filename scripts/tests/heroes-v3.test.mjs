@@ -141,3 +141,24 @@ const spellAt = (s, a, i) => { a.skills[0].rotation = i; return s.currentSpell(a
   ok('Arcane Ward: shield + resist on the squad', h.every((x) => x.statuses.some((st) => st.type === 'shield')));
   const el = plainHit(); ok(`...and for ${W.teamElements.durationMs / 1000}s every squad hit leaves a random element`, el && CYC.includes(el.element), el && el.element);
   run(s, W.teamElements.durationMs + 100); ok('...then it stops', !plainHit()); }
+
+// ================= KNIGHT: IRON WALL
+const G = hero('knight').passive.grudge, DB = skills[hero('knight').skills.attack];
+{ const { s, es, a } = mk(['knight'], ['goblin']); a.stats.attack = 20; a.stats.defense = 30; s.focusUid = es[0].uid;
+  const dmg = hits(cast(s, a, 'attack'), a).find((e) => e.skill).result.amount;
+  ok(`Defense Bash: ${DB.damageMultiplier * 100}% attack + ${DB.defenseMultiplier * 100}% defense`, Math.abs(dmg - (20 * DB.damageMultiplier + 30 * DB.defenseMultiplier)) <= 2, `${dmg} vs ${20 + 90}`);
+  ok('...and stuns', es[0].statuses.some((x) => x.type === 'stun')); }
+{ const { s, es, a } = mk(['knight'], ['goblin']); a.stats.attack = 20; a.stats.defense = 0; a.specials.thorns = 50; s.focusUid = es[0].uid;
+  for (let i = 0; i < 3; i++) s.strike(es[0], a, [], {});
+  ok('Grudge: every reflected hit adds a charge', a.grudge === 3, a.grudge);
+  const dmg = hits(cast(s, a, 'attack'), a).find((e) => e.skill).result.amount;
+  ok(`...his next Bash is +${G.perReflectPercent}% per charge`, Math.abs(dmg - 20 * (1 + 3 * G.perReflectPercent / 100)) <= 2, dmg);
+  ok('...and the charge is used up', a.grudge === 0);
+  for (let i = 0; i < G.maxStacks + 5; i++) s.strike(es[0], a, [], {});
+  ok(`...up to ${G.maxStacks} charges`, a.grudge === G.maxStacks); }
+{ const { s, es, a } = mk(['knight'], ['goblin']); s.strike(es[0], a, [], {}); ok('...no reflect items = no charge', !a.grudge); }
+{ const { s, es, h } = mk(['knight', 'rogue', 'archer']); const k = h[0];
+  for (const e of es) { e.x = k.x + 40; e.y = k.y - 60; } es[2].x = k.x + 330; es[2].y = 200;
+  const d0 = k.stats.defense; cast(s, k, 'support');
+  ok('Challenge (unchanged): the enemies AROUND him are taunted', s.tauntedBy(es[0]) === k && s.tauntedBy(es[1]) === k && !s.tauntedBy(es[2]));
+  ok('...and he gets +30 defense', k.stats.defense === d0 + 30); }

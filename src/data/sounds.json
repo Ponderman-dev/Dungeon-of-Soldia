@@ -5,9 +5,14 @@
   "minGapMs": 40,
   "cues": {
     "tap": {
-      "file": "press",
-      "volume": 0.5,
-      "pitchJitter": 0.05
+      "files": [
+        "picked/tap_1",
+        "picked/tap_2",
+        "picked/tap_3"
+      ],
+      "volume": 0.45,
+      "pitchJitter": 0.08,
+      "source": "CC0 (lavenderdotpet/CC0-Public-Domain-Sounds): 40-cc0-water-splash-slime-sfx bubble_01-03 (user: more bubbly)"
     },
     "heroPick": {
       "file": "select",
@@ -18,8 +23,14 @@
       "volume": 0.6
     },
     "cardOpen": {
-      "file": "open",
-      "volume": 0.5
+      "files": [
+        "picked/cardOpen_1",
+        "picked/cardOpen_2",
+        "picked/cardOpen_3"
+      ],
+      "volume": 0.5,
+      "pitchJitter": 0.05,
+      "source": "CC0 (lavenderdotpet/CC0-Public-Domain-Sounds): kenney_casinoaudio cardSlide1-3 (user: card slide)"
     },
     "cardClose": {
       "file": "close",
@@ -34,13 +45,19 @@
       "volume": 0.8
     },
     "rewardUp": {
-      "file": "open",
-      "volume": 0.5
+      "file": "picked/rewardUp",
+      "volume": 0.55,
+      "source": "CC0 (lavenderdotpet/CC0-Public-Domain-Sounds): kenney_casinoaudio cardShove1 (user: card sliding)"
     },
     "rewardCard": {
-      "file": "reward",
+      "files": [
+        "picked/rewardCard_1",
+        "picked/rewardCard_2",
+        "picked/rewardCard_3"
+      ],
       "volume": 0.5,
-      "pitchJitter": 0.04
+      "pitchJitter": 0.04,
+      "source": "CC0 (lavenderdotpet/CC0-Public-Domain-Sounds): kenney_casinoaudio cardPlace1-3 (user: card stacks)"
     },
     "itemGiven": {
       "file": "picked/itemGiven",
@@ -74,9 +91,10 @@
       "volume": 0.3
     },
     "skillCast": {
-      "file": "success",
-      "volume": 0.35,
-      "pitchJitter": 0.06
+      "file": "picked/itemProc",
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "source": "the itemProc file (user: magical cast, like the item proc sound)"
     },
     "interrupted": {
       "file": "warning",
@@ -139,11 +157,15 @@
       "source": "yours_sword-cutting-flesh-2788.mp3"
     },
     "miss": {
+      "files": [
+        "picked/miss_1",
+        "picked/miss_2",
+        "picked/miss_3"
+      ],
       "volume": 0.3,
       "pitchJitter": 0.1,
       "minGapMs": 90,
-      "file": "picked/miss",
-      "source": "yours_falling-hit-on-gravel-756.mp3"
+      "source": "CC0 (lavenderdotpet/CC0-Public-Domain-Sounds): Micro Pack - Organic Wooshes Swish 1-3, pitch 1.25 (user: more fast whoosh)"
     },
     "block": {
       "volume": 0.4,
@@ -153,11 +175,14 @@
       "source": "block_E.mp3"
     },
     "shieldSoak": {
-      "volume": 0.2,
+      "files": [
+        "picked/shieldSoak_1",
+        "picked/shieldSoak_2"
+      ],
+      "volume": 0.25,
       "pitchJitter": 0.08,
       "minGapMs": 120,
-      "file": "picked/shieldSoak",
-      "source": "shieldSoak_E.mp3"
+      "source": "CC0 (lavenderdotpet/CC0-Public-Domain-Sounds): 75-cc0-breaking-falling-hit-sfx bfh1_glass_breaking_02/05 (user: more glass break)"
     },
     "shieldBreak": {
       "files": [
@@ -273,14 +298,14 @@
     },
     "flaskBreak": {
       "files": [
-        "kenney/impactGlass_heavy_000",
-        "kenney/impactGlass_heavy_001",
-        "kenney/impactGlass_heavy_002"
+        "picked/flaskBreak_1",
+        "picked/flaskBreak_2",
+        "picked/flaskBreak_3"
       ],
       "volume": 0.35,
-      "pitch": 1.6,
       "pitchJitter": 0.1,
-      "minGapMs": 60
+      "minGapMs": 60,
+      "source": "CC0 (lavenderdotpet/CC0-Public-Domain-Sounds): 75-cc0-breaking-falling-hit-sfx bfh1_glass_breaking_01/03/04 (user: a real glass break)"
     }
   },
   "maxVoices": 8

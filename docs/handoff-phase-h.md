@@ -21,7 +21,7 @@ NEXT, still to do (user's words in quotes):
   dirt and grass, an old dungeon, pillars on the wall"; fountain room (DONE session 8: decorateRoom, roomProps.json decor) "more decorations"; Skill Dealer room (DONE session 8) "shelves of
   book visuals, stack of books, a rug, other decorations; the merchant moves to the left just a bit (not to the edge)
   so the heroes go straight to the door without being blocked by anything".
-- 6 SOUNDS (sound was ON HOLD; workflow in docs/systems/sound.md; sound sites blocked, GitHub CC0 packs worked):
+- 6 SOUNDS: DONE session 8 (docs/systems/sound.md, waiting on the user's ears). (sound was ON HOLD; workflow in docs/systems/sound.md; sound sites blocked, GitHub CC0 packs worked):
   tap "more bubbly"; cardOpen "card slide"; rewardUp "card sliding" (the reward sheet transition too); rewardCard
   "card stacks"; miss "more fast whoosh"; shieldSoak "more glass break"; skillCast "more whoosh / magical cast, like the
   item proc sound"; flaskBreak "more glass break, this is not glass break". Ideas: skillCast = the itemProc file;

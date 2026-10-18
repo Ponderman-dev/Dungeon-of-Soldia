@@ -1,0 +1,255 @@
+<title>Soldia Skill Effects</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: the game's own look (black windows, white lines, Press Start 2P headings) on a dungeon-dark page.
+   One column of sections; each compares live scenes side by side (stack on phones). One deliberate dark look. */
+@font-face { font-family: "Press Start 2P"; src: url(/*FONT*/) format("woff2"); font-display: block; }
+:root {
+  --bg: #0e0b16; --panel: #000000; --line: #ffffff; --soft: #3a3150; --fg: #f0ecf8; --muted: #aaa0c0;
+  --steel: #9cc8ff; --gold: #f2c544; --ok: #7fe0a0; --warn: #ff8a6a;
+  --display: "Press Start 2P", "Courier New", monospace;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 900px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; display: flex; flex-direction: column; gap: 22px; }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(18px, 4.4vw, 26px); line-height: 1.4; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 400; font-size: 14px; line-height: 1.5; margin: 0; color: var(--steel); text-wrap: balance; }
+.lede { color: var(--muted); max-width: 68ch; margin: 10px 0 0; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--soft); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 14px; }
+.bar .status { margin-left: auto; color: var(--muted); font-size: 13px; }
+.bar .status.bad { color: var(--warn); }
+.seg { display: inline-flex; border: 2px solid var(--line); }
+.seg button { font: 10px var(--display); color: var(--fg); background: var(--panel); border: 0; padding: 8px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--line); color: #000; }
+section.win { background: var(--panel); border: 3px solid var(--line); outline: 3px solid #000; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+section.win > p { margin: 0; color: var(--muted); max-width: 70ch; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+.tile { border: 2px solid var(--soft); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tile.picked { border-color: var(--gold); }
+.tile .ttl { display: flex; gap: 10px; align-items: baseline; }
+.tile .ltr { font: 12px var(--display); color: var(--gold); }
+.tile .nm { font-weight: 600; }
+.tile p { margin: 0; font-size: 13px; color: var(--muted); }
+canvas.scene { width: 100%; max-width: 390px; aspect-ratio: 390 / 288; height: auto; image-rendering: pixelated; border: 2px solid var(--soft); background: #000; cursor: pointer; align-self: center; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { font: 10px var(--display); color: var(--fg); background: var(--panel); border: 2px solid var(--line); padding: 9px 12px; cursor: pointer; }
+.btn[aria-pressed="true"].ok { background: var(--ok); border-color: var(--ok); color: #000; }
+.btn[aria-pressed="true"].chg { background: var(--warn); border-color: var(--warn); color: #000; }
+.btn[aria-pressed="true"].pk { background: var(--gold); border-color: var(--gold); color: #000; }
+.btn:focus-visible, textarea:focus-visible, .seg button:focus-visible, canvas.scene:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+label { font: 9px var(--display); color: var(--muted); letter-spacing: .04em; }
+textarea { width: 100%; min-height: 56px; resize: vertical; font: 14px/1.45 var(--body); color: var(--fg); background: #15101f; border: 1px solid var(--soft); padding: 8px 10px; }
+textarea::placeholder { color: #6e6385; }
+.saved { font-size: 12px; color: var(--muted); min-height: 1em; }
+.saved.ok { color: var(--ok); } .saved.bad { color: var(--warn); }
+.beats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .beats { grid-template-columns: 1fr; } }
+.beat { border-left: 3px solid var(--steel); padding: 2px 0 2px 10px; font-size: 14px; }
+.beat b { font: 10px var(--display); color: var(--steel); display: block; margin-bottom: 4px; }
+ul.ideas { margin: 0; padding-left: 18px; color: var(--muted); }
+ul.ideas li b { color: var(--fg); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { canvas.scene { cursor: default; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Skill Effects: Knight sample</h1>
+    <p class="lede">Your note: skills are not powerful or eye-catching enough, and the skill name text is messy and stretchy. Here are the Knight's two skills drawn the new way, in a slice of the real fight screen at game size. Tap any scene to replay it from the start. Use <b>Slow</b> to see each beat.</p>
+  </header>
+  <div class="bar">
+    <div class="seg" role="group" aria-label="Speed"><button id="sp1" aria-pressed="true">Normal</button><button id="sp4" aria-pressed="false">Slow x4</button></div>
+    <span class="status" id="status" aria-live="polite">Connecting…</span>
+  </div>
+
+  <section class="win" id="sec-name">
+    <h2>1. The skill name</h2>
+    <p>Today the name shows twice (small over the hero at the wind-up, then a big banner that grows from half size). Both new styles show it once, at a fixed pixel size, and never stretch it. Both scenes play the new look; pick the name style you like.</p>
+    <div class="pair" id="names"></div>
+    <label for="note-name">NOTE ON THE NAME</label>
+    <textarea id="note-name" placeholder="e.g. A, but the band should be thinner…"></textarea>
+    <div class="saved" id="saved-name"></div>
+  </section>
+
+  <section class="win">
+    <h2>2. The skill look: 3 beats</h2>
+    <div class="beats">
+      <div class="beat"><b>CHARGE</b>During the wind-up his outline lights up steel blue, square specks get pulled in, a square glows under his feet.</div>
+      <div class="beat"><b>RELEASE</b>White flash, the camera kicks in, speed lines, a longer freeze on the hit.</div>
+      <div class="beat"><b>IMPACT</b>A big square shockwave in his colour, debris, and a mark left on the floor that fades slowly.</div>
+    </div>
+    <p>Each hero gets a colour and a shape. The Knight is <b style="color:var(--steel)">steel blue + squares</b>. The left scene is today's game, the right scene is the new look (with name style A until you pick one above).</p>
+  </section>
+
+  <div id="looks" style="display:flex;flex-direction:column;gap:22px"></div>
+
+  <section class="win">
+    <h2>3. Next heroes (ideas)</h2>
+    <ul class="ideas">
+      <li><b>Berserker</b>: red, splatter shapes and jagged cracks.</li>
+      <li><b>Rogue</b>: cyan, thin fast streaks and slashes.</li>
+      <li><b>Cleric</b>: gold, columns of light from above.</li>
+      <li><b>Necromancer</b>: green and purple smoke and skulls.</li>
+      <li><b>Mage</b>: the element's colour, rune circles.</li>
+    </ul>
+    <label for="note-general">ANYTHING ELSE</label>
+    <textarea id="note-general" placeholder="Other ideas or changes…"></textarea>
+    <div class="saved" id="saved-general"></div>
+  </section>
+</div>
+
+<script>/*BUNDLE*/</script>
+<script>
+const SD = window.SoldiaSkillDemo;
+const DEMO = new SD.Demo();
+const notes = {}; // doc id -> data
+let db = null, speed = 1;
+const scenes = []; // { cv, seq: [{skill, look, name}], t0 }
+
+function makeScene(seq, label) {
+  const cv = document.createElement('canvas'); cv.className = 'scene'; cv.width = 390; cv.height = 288; cv.tabIndex = 0;
+  cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', label + ' (tap to replay)');
+  const sc = { cv, seq, t0: performance.now(), clock: 0, last: performance.now() };
+  const replay = () => { sc.clock = 0; };
+  cv.addEventListener('click', replay); cv.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); replay(); } });
+  scenes.push(sc);
+  return cv;
+}
+function tile(letter, name, desc, cv) {
+  const box = document.createElement('div'); box.className = 'tile';
+  const ttl = document.createElement('div'); ttl.className = 'ttl';
+  const l = document.createElement('span'); l.className = 'ltr'; l.textContent = letter;
+  const n = document.createElement('span'); n.className = 'nm'; n.textContent = name;
+  ttl.append(l, n);
+  const p = document.createElement('p'); p.textContent = desc;
+  box.append(ttl, cv, p);
+  return box;
+}
+function noteBox(id, labelText, placeholder) {
+  const frag = document.createDocumentFragment();
+  const lab = document.createElement('label'); lab.htmlFor = 'note-' + id; lab.textContent = labelText;
+  const ta = document.createElement('textarea'); ta.id = 'note-' + id.replace(':', '-'); lab.htmlFor = ta.id; ta.placeholder = placeholder;
+  const saved = document.createElement('div'); saved.className = 'saved';
+  frag.append(lab, ta, saved);
+  return { frag, ta, saved };
+}
+function wireText(docId, ta, saved) {
+  let timer = null;
+  ta.addEventListener('input', () => { saved.textContent = 'Typing…'; saved.className = 'saved'; clearTimeout(timer); timer = setTimeout(() => save(docId, { text: ta.value }, saved), 900); });
+  ta.addEventListener('blur', () => { if (timer) { clearTimeout(timer); timer = null; save(docId, { text: ta.value }, saved); } });
+}
+
+// 1. name styles
+const BOTH = (name) => [{ skill: 'defense_bash', look: 'new', name }, { skill: 'challenge', look: 'new', name }];
+const nameTiles = {};
+const namesEl = document.getElementById('names');
+for (const [k, title, desc] of [
+  ['A', 'Cut-in bar', 'A black band with white edges slides across the top: the skill icon and its name in the hero colour, then it slides away. Big and clear, like a fighting game.'],
+  ['B', 'Floating name', 'The name floats over the hero at one fixed size: it slides up a little, stays, then fades. Quieter, and it shows WHO cast it.'],
+]) {
+  const t = tile(k, title, desc, makeScene(BOTH(k), 'Name style ' + k));
+  const b = document.createElement('button'); b.className = 'btn pk'; b.textContent = 'Pick ' + k; b.setAttribute('aria-pressed', 'false');
+  b.addEventListener('click', () => { const cur = (notes.name || {}).pick; save('name', { pick: cur === k ? null : k }, document.getElementById('saved-name')); });
+  const btns = document.createElement('div'); btns.className = 'btns'; btns.append(b); t.append(btns);
+  nameTiles[k] = { t, b }; namesEl.append(t);
+}
+wireText('name', document.getElementById('note-name'), document.getElementById('saved-name'));
+wireText('general', document.getElementById('note-general'), document.getElementById('saved-general'));
+function pickedName() { return (notes.name || {}).pick || 'A'; }
+
+// 2. the look per skill: today vs new
+const lookUi = {};
+const looksEl = document.getElementById('looks');
+for (const [id, about] of [
+  ['defense_bash', 'Attack skill: bashes one enemy (+300% of his defense) and stuns it 1.5s. New: he dashes in with afterimages, the hit freezes, square shockwaves and steel debris burst out, a cracked plate stays on the floor under the enemy.'],
+  ['challenge', 'Support skill: taunts every enemy around him for 3s and gives him +30 defense. New: he jumps and lands, a diamond shockwave rolls out to the edge of the taunt area and stays on the floor while the taunt lasts, red lines yank each enemy one step towards him, steel corner plates lock onto him (+30 defense).'],
+]) {
+  const sec = document.createElement('section'); sec.className = 'win'; sec.id = 'look-' + id;
+  const h = document.createElement('h2'); h.textContent = SD.SKILLS[id].name;
+  const p = document.createElement('p'); p.textContent = about;
+  const pair = document.createElement('div'); pair.className = 'pair';
+  const newSeq = [{ skill: id, look: 'new', name: 'A' }];
+  pair.append(
+    tile('NOW', 'Today in the game', 'The name pops up twice, small orange effect, short shake.', makeScene([{ skill: id, look: 'now', name: 'now' }], SD.SKILLS[id].name + ' today')),
+    tile('NEW', 'Charge, release, impact', 'Same skill, same timing (0.5s wind-up), new look.', makeScene(newSeq, SD.SKILLS[id].name + ' new look')),
+  );
+  const btns = document.createElement('div'); btns.className = 'btns';
+  const ok = document.createElement('button'); ok.className = 'btn ok'; ok.textContent = 'OK'; ok.setAttribute('aria-pressed', 'false');
+  const chg = document.createElement('button'); chg.className = 'btn chg'; chg.textContent = 'CHANGE'; chg.setAttribute('aria-pressed', 'false');
+  const nb = noteBox('look:' + id, 'NOTE ON THE NEW ' + SD.SKILLS[id].name.toUpperCase(), 'e.g. the shockwave is too big, the floor mark should stay longer…');
+  for (const [b, v] of [[ok, 'ok'], [chg, 'change']]) b.addEventListener('click', () => { const cur = (notes['look:' + id] || {}).verdict; save('look:' + id, { verdict: cur === v ? null : v }, nb.saved); });
+  btns.append(ok, chg);
+  sec.append(h, p, pair, btns, nb.frag);
+  wireText('look:' + id, nb.ta, nb.saved);
+  lookUi[id] = { ok, chg, ta: nb.ta, newSeq };
+  looksEl.append(sec);
+}
+
+function render() {
+  const pk = (notes.name || {}).pick;
+  for (const [k, { t, b }] of Object.entries(nameTiles)) { const on = pk === k; b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Picked ' + k : 'Pick ' + k; t.classList.toggle('picked', on); }
+  for (const [id, u] of Object.entries(lookUi)) {
+    const v = (notes['look:' + id] || {}).verdict;
+    u.ok.setAttribute('aria-pressed', String(v === 'ok')); u.chg.setAttribute('aria-pressed', String(v === 'change'));
+    u.newSeq[0].name = pickedName();
+  }
+}
+function fillTexts() {
+  const set = (id, docId) => { const ta = document.getElementById(id); if (ta && document.activeElement !== ta) ta.value = (notes[docId] || {}).text || ''; };
+  set('note-name', 'name'); set('note-general', 'general');
+  for (const id of Object.keys(lookUi)) set('note-look-' + id, 'look:' + id);
+}
+
+function local(v) { try { if (v === undefined) return JSON.parse(localStorage.getItem('soldia-skillfx') || 'null'); localStorage.setItem('soldia-skillfx', JSON.stringify(v)); } catch (e) { return null; } }
+async function save(docId, patch, savedEl) {
+  const cur = { ...(notes[docId] || {}), ...patch };
+  notes[docId] = cur; local(notes); render();
+  if (!db) { savedEl.textContent = 'Kept in this browser only (not saved online)'; savedEl.className = 'saved bad'; return; }
+  try {
+    const ref = db.collection('notes').doc(docId);
+    const empty = !cur.pick && !cur.verdict && !(cur.text || '').trim();
+    if (empty) await ref.delete(); else await ref.set({ pick: cur.pick || null, verdict: cur.verdict || null, text: cur.text || '', updatedAt: new Date().toISOString() });
+    savedEl.textContent = 'Saved'; savedEl.className = 'saved ok';
+  } catch (e) { savedEl.textContent = 'Could not save: ' + (e && e.message ? e.message : 'try again'); savedEl.className = 'saved bad'; }
+}
+Object.assign(notes, local() || {}); fillTexts(); render();
+
+// speed
+for (const [id, v] of [['sp1', 1], ['sp4', 0.25]]) document.getElementById(id).addEventListener('click', () => {
+  speed = v; document.getElementById('sp1').setAttribute('aria-pressed', String(v === 1)); document.getElementById('sp4').setAttribute('aria-pressed', String(v !== 1));
+});
+
+// draw the scenes that are on screen
+const visible = new Set();
+const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((x) => (x.isIntersecting ? visible.add(x.target) : visible.delete(x.target))), { rootMargin: '80px' }) : null;
+for (const sc of scenes) if (io) io.observe(sc.cv);
+function frame(now) {
+  for (const sc of scenes) {
+    const dt = Math.min(100, now - sc.last); sc.last = now; sc.clock += dt * speed;
+    if (io && !visible.has(sc.cv)) continue;
+    const lens = sc.seq.map((s) => SD.loopMs(s.skill, s.look));
+    let t = sc.clock % lens.reduce((a, b) => a + b, 0), i = 0;
+    while (t >= lens[i]) { t -= lens[i]; i++; }
+    try { DEMO.draw(sc.cv.getContext('2d'), { ...sc.seq[i], t }); } catch (e) { /* keep the page alive */ }
+  }
+  requestAnimationFrame(frame);
+}
+(document.fonts && document.fonts.load ? document.fonts.load('16px "Press Start 2P"') : Promise.resolve()).catch(() => {}).then(() => requestAnimationFrame(frame));
+
+// notes and picks save in the page's database (collection `notes`)
+(async () => {
+  const status = document.getElementById('status');
+  db = window.claude ? await window.claude.use('db') : null;
+  if (!db) { status.textContent = 'Notes stay in this browser (sign in to claude.ai to save them)'; status.classList.add('bad'); return; }
+  status.textContent = 'Picks and notes save automatically';
+  db.collection('notes').onSnapshot((snap) => {
+    for (const d of snap.docs) { const v = d.data() || {}; notes[d.id] = { pick: v.pick || null, verdict: v.verdict || null, text: v.text || '' }; }
+    local(notes); fillTexts(); render();
+  });
+})();
+</script>

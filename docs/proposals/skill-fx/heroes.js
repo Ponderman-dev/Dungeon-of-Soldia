@@ -8,6 +8,15 @@ const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const ph = (q, a, b) => clamp((q - a) / (b - a));
 const easeOut = (p) => 1 - (1 - p) * (1 - p);
 
+// ---- Cleric ----
+const CLER = { light: 0xfff4c0, gold: 0xffd86a, deep: 0xc89a2a };
+// A vertical column of light from y0 down to y1: white core, gold edges, `w` wide.
+function beam(g, x, y0, y1, w, a) {
+  if (a <= 0 || w <= 0) return;
+  const half = Math.max(0.5, w / 2);
+  for (let y = Math.round(y0); y <= y1; y++) for (let dx = -Math.ceil(half); dx <= Math.ceil(half); dx++) { const e = Math.abs(dx) / (half + 0.5); g.px(x + dx, y, e < 0.45 ? C.white : CLER.gold, a * (e < 0.45 ? 1 : 0.75) * Math.min(1, (y - y0) / 12 + 0.2)); }
+}
+
 // ---- Berserker: red, blood splatter, ground cracks, rubble -----------------------------------------
 const BERS = { light: 0xffb0a0, mid: 0xff4a3a, deep: 0xb01e1e, dark: 0x4a0c0c };
 const CRACK = 0x1a120e, RUBBLE = [0x8a7a68, 0x6a5d50, 0x9a9488];
@@ -82,6 +91,57 @@ export const RECIPES = {
     const tint = Math.max(thump(460) * 0.6, thump(640) * 0.55, ms > 640 ? 0.15 : 0);
     return { draws: g.out, tints: [['caster', 0, tint > 0.02 ? [BERS.deep, Math.round(tint * 20) / 20] : null]] };
   },
+  // ---- Cleric: gold, light from above, a halo, angel wings ----
+  // CHARGE: a golden halo appears over her head and brightens, motes of light drift down onto her, a soft gold glow.
+  clericCharge(q, c, t) {
+    const g = pen(); const u = c.caster;
+    const hy = u.top - 3; for (let x = -4; x <= 4; x++) { const y = Math.round(Math.sqrt(Math.max(0, 1 - (x * x) / 16)) * 1.2); g.px(u.x + x, hy - y, CLER.gold, 0.4 + 0.6 * q); g.px(u.x + x, hy + y, CLER.gold, 0.4 + 0.6 * q); }
+    for (let i = 0; i < 8; i++) { const s = (q * 1.4 + i / 8) % 1; g.px(u.x + (rnd(i * 7) - 0.5) * 16 + Math.sin(t / 200 + i) * 1.5, u.top - 22 + s * 26, i % 2 ? C.white : CLER.light, s * (1 - s) * 3 * q); }
+    const pulse = 0.6 + 0.4 * Math.sin(t / 120);
+    return { draws: g.out, tints: [['caster', 0, [CLER.gold, Math.round((0.1 + 0.25 * q) * pulse * 20) / 20]]] };
+  },
+  // HOLY NOVA: a column of light comes down onto the healed hero (white core, gold edges), a flash and a gold glow on
+  // the floor; then a thin pillar of light SMITES every enemy around that hero (sparks, they flash); gold sparkles rise.
+  holyNovaNew(q, c) {
+    const g = pen(); const u = c.targets[0]; if (!u) return g.out;
+    const ms = q * CAST_MS_NEW.holyNovaNew, land = c.hitMs || 220, hit = ms - land;
+    const top = u.top - 70;
+    if (hit < 0) { const p = ms / land, bottom = top + (u.y - top) * easeOut(p); beam(g, u.x, top, bottom, 2 + p * 3, 0.9); }
+    else {
+      const w = 7 * (1 - ph(hit, 0, 500)); if (w > 0.5) beam(g, u.x, top, u.y, w, 1 - ph(hit, 300, 500));
+      if (hit < 80) g.disc(u.x, u.mid, 4 + hit / 16, C.white, 1 - hit / 80);
+      const gl = 1 - ph(hit, 0, 700); for (let x = -12; x <= 12; x++) { const hh = Math.round(Math.sqrt(1 - (x * x) / 144) * 2.5); for (let y = -hh; y <= hh; y++) g.px(u.x + x, u.y + y, Math.abs(x) < 6 ? CLER.light : CLER.gold, 0.6 * gl * (1 - Math.abs(x) / 14)); }
+      for (let i = 0; i < 8; i++) { const s = ph(hit, 100 + i * 60, 700 + i * 60); if (s > 0 && s < 1) g.px(u.x + (rnd(i * 3) - 0.5) * 14, u.mid - s * 18, i % 2 ? C.white : CLER.gold, 1 - s); }
+    }
+    const R = c.radius || 36;
+    const hitList = c.enemies.filter((e) => Math.hypot(e.x - u.x, (e.y - u.y) * 1.4) <= R);
+    hitList.forEach((e, i) => {
+      const s = ph(hit, 60 + i * 70, 300 + i * 70); if (s <= 0 || s >= 1) return;
+      beam(g, e.x, e.top - 40, e.y, 2.5 * (1 - s), 1 - s * 0.5);
+      for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2, r = 3 + 8 * easeOut(s); g.px(e.x + Math.cos(a) * r, e.mid + Math.sin(a) * r * 0.7, k % 2 ? C.white : CLER.gold, 1 - s); }
+    });
+    const tints = [['targets', 0, hit >= 0 && hit < 400 ? [CLER.gold, 0.45 * (1 - hit / 400)] : null], ...c.enemies.map((e, i) => ['enemies', i, hitList.includes(e) && hit > 60 + hitList.indexOf(e) * 70 && hit < 200 + hitList.indexOf(e) * 70 ? [0xfff4c0, 0.8] : null])];
+    return { draws: g.out, tints };
+  },
+  // SANCTUARY: a soft column of light comes down onto the hurt hero, angel WINGS unfold from their back, then fold
+  // around them and fade (the shield); the hero glows gold and little green-gold "+" rise (the regen).
+  sanctuaryNew(q, c, t) {
+    const g = pen(); const u = c.targets[0]; if (!u) return g.out;
+    const ms = q * CAST_MS_NEW.sanctuaryNew, land = c.hitMs || 200, hit = ms - land, top = u.top - 60;
+    if (hit < 0) beam(g, u.x, top, top + (u.y - top) * easeOut(ms / land), 3, 0.7);
+    else if (hit < 300) beam(g, u.x, top, u.y, 4 * (1 - hit / 300), 0.7 * (1 - hit / 300));
+    if (hit >= 0 && hit < 1000) { // wings: unfold (0-300), hold, fold forward around the body (600-1000) and fade
+      const open = easeOut(ph(hit, 0, 300)) * (1 - easeOut(ph(hit, 600, 1000))), a = 1 - ph(hit, 800, 1000);
+      for (const side of [-1, 1]) for (let f = 0; f < 6; f++) { // 6 feathers fan up and out from the shoulder
+        const ang = 0.15 + open * (0.35 + f * 0.24), len = 11 - f * 0.8;
+        const sx = u.x + side * 2, sy = u.top + 8;
+        g.line(sx, sy, sx + side * Math.sin(ang) * len, sy - Math.cos(ang) * len * 0.85 + f * 0.6, f % 2 ? C.white : CLER.light, 0.9 * a);
+      }
+    }
+    for (let i = 0; i < 6; i++) { const s = ((ms - 300) / 900 + i / 6) % 1; if (ms < 300 || ms > CAST_MS_NEW.sanctuaryNew - 150) break; const x = u.x + (rnd(i * 5) - 0.5) * 14, y = u.mid + 4 - s * 16; g.px(x, y, 0x9cffb0, 1 - s); g.px(x - 1, y, 0x9cffb0, 1 - s); g.px(x + 1, y, 0x9cffb0, 1 - s); g.px(x, y - 1, 0x9cffb0, 1 - s); g.px(x, y + 1, 0x9cffb0, 1 - s); }
+    const glow = hit < 0 ? 0 : 0.18 + 0.12 * Math.sin(t / 150);
+    return { draws: g.out, tints: [['targets', 0, glow ? [CLER.gold, Math.round(glow * 20) / 20] : null]] };
+  },
   // Today's Smoke Bomb (before the Rogue's new look), kept so the demo can show what it replaced.
   oldSmokeBomb(q, c, t) {
     const g = pen(); const p = easeOut(ph(q, 0, 0.35)), out = ph(q, 0.75, 1);
@@ -89,7 +149,7 @@ export const RECIPES = {
     return g.out;
   },
 };
-export const CAST_MS_NEW = { berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400 };
+export const CAST_MS_NEW = { clericCharge: 700, holyNovaNew: 1300, sanctuaryNew: 1800, berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400 };
 
 // How the demo plays each skill (besides the Knight, who has his own code in demo.js).
 //   now: { recipe, ms, move: 'lunge'|'leap'|'hop'|null, rings: per-wave yellow rings, number }
@@ -99,5 +159,9 @@ export const SPECS = {
   smoke_bomb: { hero: 'rogue', now: { recipe: 'oldSmokeBomb', move: 'hop' }, new: { charge: 'rogueCharge', recipe: 'smokeBomb', move: { type: 'hop' }, squadTint: true } },
   brawl_leap: { hero: 'berserker', now: { recipe: 'savageLeap', move: 'leap', number: '70', numberAll: true },
     new: { charge: 'berserkerCharge', tremble: true, recipe: 'savageLeapNew', move: { type: 'leap', upMs: 260, holdMs: 200, backMs: 320, liftPx: 54, share: 0.8, slam: true }, hit: { at: 260, shake: 9, shakeMs: 280, stopMs: 120, knockPx: 15 }, number: '70', numberAll: true, radius: 'landSplash' } },
+  holy_nova: { hero: 'cleric', ally: true, now: { recipe: 'holyNova', move: null, heal: '+24', number: '15', radius: 'holyNova' },
+    new: { charge: 'clericCharge', recipe: 'holyNovaNew', move: { type: 'hop', liftPx: 8 }, hit: { at: 220, shake: 2, shakeMs: 120, stopMs: 0 }, heal: '+24', number: '15', radius: 'holyNova' } },
+  sanctuary: { hero: 'cleric', ally: true, now: { recipe: 'divineShield', move: 'hop', heal: '', shield: true },
+    new: { charge: 'clericCharge', recipe: 'sanctuaryNew', move: { type: 'hop', liftPx: 10 }, hit: { at: 200, shake: 0, shakeMs: 0, stopMs: 0 }, heal: '', shield: true } },
   blood_feast: { hero: 'berserker', now: { recipe: 'bloodPact', move: 'hop' }, new: { charge: 'berserkerCharge', tremble: true, recipe: 'bloodFeast', move: { type: 'hop', liftPx: 10 } } },
 };

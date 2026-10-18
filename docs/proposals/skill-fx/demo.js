@@ -144,6 +144,7 @@ export class Demo {
   constructor() {
     const knight = heroes.find((h) => h.id === 'knight');
     this.knight = this.hero = actor(knight, 34, 82, false);
+    this.allyActor = actor(knight, 74, 84, false); // the hurt hero a healer's skill lands on (heroes.js spec `ally`)
     this.actors = { knight: this.knight };
     for (const sp of Object.values(SPECS)) if (!this.actors[sp.hero]) this.actors[sp.hero] = actor(heroes.find((h) => h.id === sp.hero), 34, 82, false);
     this.foe = actor(enemies.goblin, 90, 82, true);
@@ -157,9 +158,10 @@ export class Demo {
     const P = plan(opts.skill, opts.look);
     const T = opts.t;
     this.hero = this.actors[SKILLS[opts.skill].hero || 'knight'];
+    this.ally = SPECS[opts.skill] && SPECS[opts.skill].ally ? this.allyActor : null;
     // Effect time: freezes for the hit-stop at the impact.
     const et = T < P.impact ? T : T < P.impact + P.stopMs ? P.impact : T - P.stopMs;
-    const st = { hero: { dx: 0, dy: 0 }, foe: { dx: 0, dy: 0 }, foe2: { dx: 0, dy: 0 }, cam: { zoom: 1, fx: 195, fy: 200, kx: 0, ky: 0, shake: 0 }, flash: null, lines: null, under: pen(), over: pen(), numbers: [] };
+    const st = { hero: { dx: 0, dy: 0 }, ally: { dx: 0, dy: 0, hp: 13 }, foe: { dx: 0, dy: 0 }, foe2: { dx: 0, dy: 0 }, cam: { zoom: 1, fx: 195, fy: 200, kx: 0, ky: 0, shake: 0 }, flash: null, lines: null, under: pen(), over: pen(), numbers: [] };
     if (SPECS[opts.skill]) this.specLook(st, opts.skill, opts.look, et, P, T);
     else if (opts.look === 'now') this.nowLook(st, opts.skill, et, P, T);
     else if (opts.skill === 'defense_bash') this.newBash(st, et, P, T);
@@ -174,7 +176,7 @@ export class Demo {
     ctx.setTransform(c.zoom, 0, 0, c.zoom, c.fx - c.fx * c.zoom + c.kx + sh[0], c.fy - c.fy * c.zoom + c.ky + sh[1]);
     this.room(ctx);
     blit(ctx, st.under.out);
-    for (const [a, s] of [[this.foe2, st.foe2], [this.foe, st.foe], [this.hero, st.hero]]) {
+    for (const [a, s] of [[this.foe2, st.foe2], [this.foe, st.foe], ...(this.ally ? [[this.ally, st.ally]] : []), [this.hero, st.hero]]) {
       if (s.ghosts) for (const gh of s.ghosts) drawActor(ctx, a, gh);
       if (s.aura) this.aura(ctx, a, s);
       drawActor(ctx, a, s);
@@ -200,11 +202,12 @@ export class Demo {
 
   // Health bars over everyone, and the hero's charge bar while he winds up (like the game).
   bars(ctx, st, et, P, look) {
-    for (const [a, s, col] of [[this.hero, st.hero, '#5dd06a'], [this.foe, st.foe, '#e0503a'], [this.foe2, st.foe2, '#e0503a']]) {
+    for (const [a, s, col] of [[this.hero, st.hero, '#5dd06a'], ...(this.ally ? [[this.ally, st.ally, '#5dd06a']] : []), [this.foe, st.foe, '#e0503a'], [this.foe2, st.foe2, '#e0503a']]) {
       const u = body(a, s.dx, s.dy);
       const x = Math.round(u.x * Z - 15), y = Math.round(u.top * Z - 12);
       ctx.fillStyle = '#000'; ctx.fillRect(x - 1, y - 1, 32, 6);
       ctx.fillStyle = col; ctx.fillRect(x, y, a === this.hero ? 30 : s.hp ?? 30, 4);
+      if (s.shield) { ctx.fillStyle = '#ffe08a'; ctx.fillRect(x, y - 3, Math.round(30 * s.shield), 2); }
       if (a === this.hero && et < P.cast) {
         ctx.fillStyle = '#000'; ctx.fillRect(x - 1, y + 5, 32, 5);
         ctx.fillStyle = look === 'now' ? FX.attackColor : FX.name.heroColors[this.hero.def.id] || KNIGHT.text; ctx.fillRect(x, y + 6, Math.round(30 * et / P.cast), 3);
@@ -276,19 +279,21 @@ export class Demo {
   // ---- ROGUE (today vs the game's new recipes) -----------------------------------------------------
   specLook(st, id, look, et, P, T) {
     const SP = SPECS[id], L = SP[look] || SP.new, sk = skills[id], h = st.hero, since = et - P.cast, hero = this.hero;
+    const A0 = this.ally ? body(this.ally) : null;
     const E0 = body(this.foe), E1 = body(this.foe2), foes = [[this.foe, st.foe], [this.foe2, st.foe2]];
     const tintOn = (s, tint) => { if (tint && (!s.tint || tint[1] > s.tint[1])) s.tint = tint; };
     const support = sk.kind !== 'attack';
     const play = (name, q, c) => {
       const o = runFx(name, q, c, et); st.over.out.push(...o.draws);
       for (const [l, i, tint] of o.tints) {
+        if (A0 && (l === 'targets' || (l === 'squad' && i === 1))) { tintOn(st.ally, tint); continue; }
         if (l === 'caster') tintOn(h, tint);
         else if (l === 'enemies') tintOn((foes[i] || [])[1] || {}, tint);
         else if (l === 'targets') tintOn(support ? h : (foes[i] || [])[1] || {}, tint);
         else if (l === 'squad') tintOn(h, tint);
       }
     };
-    const radius = L.radius === 'landSplash' && sk.landSplash ? sk.landSplash.radius / Z : 30;
+    const radius = L.radius === 'landSplash' && sk.landSplash ? sk.landSplash.radius / Z : L.radius === 'holyNova' && sk.holyNova ? sk.holyNova.radius / Z : 30;
     if (et < P.cast) { // the wind-up
       h.dy = 1; h.dx = -1;
       if (look === 'new') {
@@ -320,7 +325,7 @@ export class Demo {
     if (look === 'new' && since < 80) tintOn(h, [Number('0x' + (FX.name.heroColors[hero.def.id] || '#ffffff').slice(1)), 0.5]);
     const C0 = body(hero, h.dx, h.dy);
     const land = mv.type === 'leap' ? { x: body(hero).x + (E0.x - body(hero).x) * (mv.share || 0.8), y: body(hero).y } : null; // where he lands: fixed
-    const c = { caster: C0, targets: support ? [C0] : [E0], squad: [C0], enemies: [E0, E1], hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius, land };
+    const c = { caster: C0, targets: A0 ? [A0] : support ? [C0] : [E0], squad: A0 ? [C0, A0] : [C0], enemies: [E0, E1], hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius, land };
     if (L.hit && L.hit.knockPx && land) { // enemies inside the landing area are thrown back, away from where he lands
       const ht = et - P.impact;
       if (ht >= 0) for (const [a, s] of foes) { const e = body(a); if (Math.hypot(e.x - land.x, (e.y - land.y) * 1.4) > radius) continue; const k = (L.hit.knockPx / Z) * easeOut(ph(ht, 0, 90)) * (1 - easeOut(ph(ht, 200, 600))); s.dx = Math.sign(e.x - land.x || 1) * k; }
@@ -348,6 +353,11 @@ export class Demo {
         if (wt < 120) st.foe.tint = [0xffffff, 0.5];
         this.number(st, L.number, { ...E0, top: E0.top - w * 3 }, wt, true);
       }
+    } else if (L.heal && A0) { // a heal on the ally: green number, its bar fills; damage numbers on the enemies around it
+      const at = since - (L.hit ? L.hit.at : 0);
+      if (at >= 0) { st.ally.hp = 13 + Math.round(11 * easeOut(ph(at, 0, 300))); this.number(st, L.heal, A0, at, false, '#6dff8f'); }
+      if (L.shield && at >= 0) st.ally.shield = 1 - ph(at, 2500, 3000);
+      if (L.number) for (const [a, E] of [[this.foe, E0], [this.foe2, E1]]) if (Math.hypot(E.x - A0.x, (E.y - A0.y) * 1.4) <= radius) this.number(st, L.number, E, at - 60, true);
     } else if (L.number) {
       const at = since - (L.hit ? L.hit.at : 0);
       this.number(st, L.number, E0, at, true);
@@ -445,10 +455,10 @@ export class Demo {
     if (p > 0.6) { const b = Math.sin(et / 30) > 0 ? 1 : 0.4, x = u.x + u.hw + 2, y = u.mid - 4; st.over.px(x, y, K.white, b); st.over.px(x - 1, y, K.light, b); st.over.px(x + 1, y, K.light, b); st.over.px(x, y - 1, K.light, b); st.over.px(x, y + 1, K.light, b); }
   }
 
-  number(st, txt, E0, since, skill) {
+  number(st, txt, E0, since, skill, color = FX.attackColor) {
     if (since < 0 || since > 1000) return;
     const pop = since < 150 ? 1.5 - 0.5 * easeOut(since / 150) : 1; // the game's skill number pop (unchanged: user is fine with it)
-    st.numbers.push({ text: txt, x: E0.x * Z, y: (E0.top - 8) * Z - Math.round((since / 1000) * 30), size: FX.numberSizePx, color: FX.attackColor, alpha: 1 - since / 1000, scale: skill ? pop : 1 });
+    st.numbers.push({ text: txt, x: E0.x * Z, y: (E0.top - 8) * Z - Math.round((since / 1000) * 30), size: FX.numberSizePx, color, alpha: 1 - since / 1000, scale: skill ? pop : 1 });
   }
 
   // ---- THE SKILL NAME -----------------------------------------------------------------------------

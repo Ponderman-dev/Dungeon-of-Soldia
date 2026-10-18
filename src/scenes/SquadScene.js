@@ -23,6 +23,7 @@ const MUTE = '#a8a8b8';
 const FONT = UI.font;
 const WALL_H = 200; // the back wall with the door, as on the battle floors
 const DOOR_X = GAME_WIDTH / 2;
+const BEGIN_Y = WALL_H + 46; // the 'Begin descent' button, just under the big entrance (not over it)
 // Where the 3 picked heroes stand (their feet): the orange slots. Slot order = battle order.
 const SLOTS = [{ x: 92, y: 450 }, { x: GAME_WIDTH / 2, y: 392 }, { x: GAME_WIDTH - 92, y: 450 }]; // 30px lower (screen review)
 // The bench: every hero stands on a purple strip at the bottom that scrolls left and right.
@@ -90,12 +91,15 @@ export default class SquadScene extends Phaser.Scene {
   drawRoom() {
     this.add.image(0, 0, floorTextureKey(this, dungeons.A.tileColors[0], 0, WALL_H)).setOrigin(0).setScale(FLOOR_PIXEL).setDepth(DEPTH.floor); // as on the battle floors
     // The door into the dungeon: closed until the squad sets off.
-    this.door = new Door(this, this.add.container(0, 0).setDepth(DEPTH.floor), DOOR_X, WALL_H);
+    this.door = new Door(this, this.add.container(0, 0).setDepth(DEPTH.floor), DOOR_X, WALL_H, { big: true }); // the dungeon entrance
     // Two torches beside the door.
     const g = this.add.graphics().setDepth(DEPTH.floor);
-    for (const x of [DOOR_X - 70, DOOR_X + 70]) {
-      g.fillStyle(0x5a3a22, 1).fillRect(x - 3, WALL_H - 90, 6, 18);
-      const flame = this.add.ellipse(x, WALL_H - 96, 10, 14, 0xffb347).setDepth(DEPTH.floor);
+    for (const x of [DOOR_X - 100, DOOR_X + 100]) {
+      g.fillStyle(0x3c3b42, 1).fillRect(x - 5, WALL_H - 92, 10, 4).fillRect(x - 2, WALL_H - 88, 4, 6); // iron bracket
+      g.fillStyle(0x5a3a22, 1).fillRect(x - 3, WALL_H - 110, 6, 20);
+      const glow = this.add.circle(x, WALL_H - 116, 26, 0xff8a30, 0.12).setDepth(DEPTH.floor);
+      this.tweens.add({ targets: glow, alpha: 0.2, scale: 1.1, duration: 260, yoyo: true, repeat: -1 });
+      const flame = this.add.ellipse(x, WALL_H - 116, 12, 18, 0xffb347).setDepth(DEPTH.floor);
       this.tweens.add({ targets: flame, scaleY: 1.25, scaleX: 0.85, alpha: 0.8, duration: 180 + Math.random() * 120, yoyo: true, repeat: -1 });
     }
   }
@@ -147,14 +151,14 @@ export default class SquadScene extends Phaser.Scene {
     drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 8, 196, 26);
     this.add.text(20, 21, info, { fontFamily: FONT, fontSize: '8px', color: this.lastRun ? UI.gold : INK }).setOrigin(0, 0.5).setDepth(DEPTH.ui);
 
-    // "Begin descent": only when all 3 slots are filled, over the door.
-    this.begin = this.add.container(DOOR_X, 96).setDepth(DEPTH.ui);
+    // "Begin descent": only when all 3 slots are filled, just under the door.
+    this.begin = this.add.container(DOOR_X, BEGIN_Y).setDepth(DEPTH.ui);
     const bg = this.add.graphics();
     drawWindow(bg, -132, -22, 264, 44);
     const cur = drawCursor(this.add.graphics(), -120, 0); // the blinking ▶ cursor: everything is ready
     this.time.addEvent({ delay: 500, loop: true, callback: () => cur.setVisible(!cur.visible) });
     this.begin.add([bg, cur, this.add.text(8, 1, 'BEGIN DESCENT', { fontFamily: FONT, fontSize: '16px', color: INK }).setOrigin(0.5)]);
-    this.add.zone(DOOR_X, 96, 230, 50).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.descend());
+    this.add.zone(DOOR_X, BEGIN_Y, 230, 50).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.descend());
 
     // RANDOM under the bench, and the small test toggle at the very bottom.
     const rb = this.add.graphics().setDepth(DEPTH.ui);

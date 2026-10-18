@@ -57,6 +57,14 @@
     "iron": "0x3c3b42",
     "rivet": "0x8a8794",
     "dust": "0x6a6258",
+    "bone": "0xcfc6b0",
+    "eyes": "0xff3020",
+    "small": { "halfW": 18, "openH": 52, "archH": 14, "frameW": 9, "block": 10, "plank": 6, "bands": [-14, -40], "ring": -27 },
+    "big": {
+      "_about": "The squad screen's dungeon ENTRANCE (user: 'very big door, very intimidating'): same parts, bigger, plus a skull keystone (skullPx = pixel size), portcullis spikes over the doorway (teeth), chains beside the arch, claw marks, bones on the floor and red eyes that blink in the dark when it opens. shakeMul / dustMul = a heavier slam.",
+      "halfW": 44, "openH": 112, "archH": 34, "frameW": 20, "block": 16, "plank": 8, "bands": [-24, -64, -100], "ring": -58,
+      "skullPx": 3, "teeth": 7, "shakeMul": 3, "dustMul": 2
+    },
     "anim": {
       "_about": "How the door opens (Door.open): rattleMs of shaking (rattlePx, rattles times) as it unlocks, then the halves swing open over swingMs (they speed up like a heavy door) to openScale, getting darker as they turn (shadeAlpha), bounce back by bounce and settle (bounceMs). On the hit: a thud shake (shakeMs, shakeIntensity), dust puffs at the foot (puffs each side) and dust falling from the arch (fallingDust).",
       "rattleMs": 220,

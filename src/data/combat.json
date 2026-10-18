@@ -77,8 +77,8 @@
       "smoke_bomb": "rogueCharge"
     },
     "wave": {
-      "_about": "A channel skill's look PER WAVE: skill id -> recipe in skillFx.js played on the wave's targets (the recipe gets c.wave / c.waves). Replaces the yellow wave ring. shakeMs/shakeIntensity per wave, lastShake* on the final wave.",
-      "multistrike": { "recipe": "rogueSlash", "shakeMs": 50, "shakeIntensity": 0.002, "lastShakeMs": 130, "lastShakeIntensity": 0.006 }
+      "_about": "A channel skill's look PER WAVE: skill id -> recipe in skillFx.js played on the wave's targets (the recipe gets c.wave / c.waves). Replaces the yellow wave ring. shakeMs/shakeIntensity per wave, lastShake* on the final wave; targetShakePx/Ms = the hit enemy itself jitters side to side (user: 'the enemy should be shaking during the shanking').",
+      "multistrike": { "recipe": "rogueSlash", "shakeMs": 50, "shakeIntensity": 0.002, "lastShakeMs": 130, "lastShakeIntensity": 0.006, "targetShakePx": 4, "targetShakeMs": 110, "lastTargetShakePx": 7 }
     },
     "dash": {
       "_about": "An aggressive dash for a skill (user: 'more aggressive movement'): the hero shoots at its target from wherever it stands (forward = distance to the target minus stopPx, between minPx and maxPx) in inMs, holds, comes back in outMs. At the hit (inMs) the target is knocked back knockPx and the screen shakes (shakeMs, shakeIntensity); 0 = none. Replaces the small lunge for that skill.",

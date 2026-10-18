@@ -308,6 +308,7 @@ export class Demo {
         const last = w === MS_WAVES - 1;
         if (wt < CAST_MS.rogueSlash) play('rogueSlash', wt / CAST_MS.rogueSlash, { caster: C0, targets: [E0], squad: [], enemies: [], wave: w, waves: MS_WAVES }, (l, i, tint) => tintOn(st.foe, tint));
         const sm = last ? RWAVE.lastShakeMs : RWAVE.shakeMs; if (wt < sm) st.cam.shake = (last ? RWAVE.lastShakeIntensity : RWAVE.shakeIntensity) * 390 * (1 - wt / sm);
+        if (wt < RWAVE.targetShakeMs) { const j = wt / RWAVE.targetShakeMs; st.foe.dx = Math.round((Math.sin(j * Math.PI * 6) * (last ? RWAVE.lastTargetShakePx : RWAVE.targetShakePx) * (1 - j)) / Z); } // the enemy jitters each hit
         this.number(st, '6', { ...E0, top: E0.top - w * 3 }, wt, true);
       }
     } else {

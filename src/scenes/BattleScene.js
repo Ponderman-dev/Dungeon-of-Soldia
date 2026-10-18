@@ -1948,6 +1948,14 @@ export default class BattleScene extends Phaser.Scene {
     if (!v || !tv.length) return;
     const last = e.wave === e.waves - 1;
     this.cameras.main.shake(last ? W.lastShakeMs : W.shakeMs, last ? W.lastShakeIntensity : W.shakeIntensity);
+    if (W.targetShakePx) { // the hit enemy jitters side to side (uses the leap offset; dash/knockback are not running on it)
+      const px = last ? W.lastTargetShakePx : W.targetShakePx, j = { p: 0 };
+      for (const x of tv) {
+        this.tweens.add({ targets: j, p: 1, duration: W.targetShakeMs,
+          onUpdate: () => { if (x.ch.active) x.leapX = Math.round(Math.sin(j.p * Math.PI * 6) * px * (1 - j.p)); },
+          onComplete: () => { x.leapX = 0; } });
+      }
+    }
     const frozen = tv.map((x) => this.fxBody(x));
     this.addFx(CAST_MS[W.recipe], (q, now) => {
       const c = { caster: v.ch.active ? this.fxBody(v) : null, targets: tv.map((x, i) => (x.ch.active ? (frozen[i] = this.fxBody(x)) : frozen[i])), squad: [], enemies: [], wave: e.wave, waves: e.waves };

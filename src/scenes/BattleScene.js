@@ -89,7 +89,6 @@ export default class BattleScene extends Phaser.Scene {
 
   create() {
     this.lastKiller = null; // the enemy that felled the last hero (defeat screen)
-    this.bannerRows = []; // skill banner rows in use (timers die with the scene, so start fresh)
     // Drawing layers made on first use: a new run (scene started again) must make new ones, the old ones were destroyed
     // with the last run (bug: on a second run status effects, hits, elites, bombs... were drawn on dead layers).
     for (const k of ['arrowG', 'bombG', 'bombTopG', 'castBars', 'crownG', 'eliteG', 'heroHud', 'hitG', 'orderG', 'statusG', 'tauntLines']) this[k] = null;
@@ -1464,8 +1463,7 @@ export default class BattleScene extends Phaser.Scene {
       const bv = this.views.get(e.unit.uid);
       if (bv) { this.popText(bv, e.skill.name, '#ff7a6a', true); bv.ch.flash(0xff4a3a, 140); }
     } else if (e.type === 'castStart') {
-      // The hero winds up: its name pops up and a charge bar fills (see drawCastBars).
-      this.popText(this.views.get(e.unit.uid), e.skill.name, '#9fc4ff');
+      // The hero winds up and a charge bar fills (see drawCastBars); its name shows when it goes off (skillName).
       this.views.get(e.unit.uid).ch.castWindUp(e.castMs); // crouch and raise the weapon
     } else if (e.type === 'castCancel') {
       const cv = this.views.get(e.unit.uid);
@@ -1882,26 +1880,30 @@ export default class BattleScene extends Phaser.Scene {
       const ring = this.add.circle(c.x, c.y, 10).setStrokeStyle(4, color).setDepth(DEPTH.popup - 1);
       this.tweens.add({ targets: ring, radius: FX.ringRadius, alpha: 0, duration: FX.ringMs, ease: 'Quad.easeOut', onComplete: () => ring.destroy() });
     }
-    // Two skills at once: each banner takes its own row (the first free one), so names never print over each other.
-    this.bannerRows = this.bannerRows || [];
-    let row = 0;
-    while (this.bannerRows[row]) row++;
-    this.bannerRows[row] = true;
-    const by = FX.bannerY + row * 30;
-    const banner = this.add
-      .text(GAME_WIDTH / 2, by, e.skill.name, { fontFamily: UI.font, fontSize: '24px', color: colorText, stroke: '#000000', strokeThickness: 5 })
-      .setOrigin(0.5)
-      .setDepth(DEPTH.popup + 1)
-      .setScale(0.5);
-    this.tweens.add({ targets: banner, scale: 1, duration: 160, ease: 'Back.easeOut' });
-    this.time.delayedCall(FX.bannerMs * 0.6, () => { this.bannerRows[row] = false; }); // the row is free once it starts to fade
-    this.tweens.add({ targets: banner, alpha: 0, y: by - 16, delay: FX.bannerMs * 0.6, duration: FX.bannerMs * 0.4, onComplete: () => banner.destroy() });
+    this.skillName(caster, e.skill.name);
     // A skill that puts statuses on every enemy (Smoke Bomb) also shows a grey cloud on each of them.
     if (e.skill.applyEnemies && !own) for (const en of this.state.enemies) if (en.alive && this.views.get(en.uid)) this.puff(this.views.get(en.uid).ch.x, this.views.get(en.uid).ch.y, 0x9a9aa8, 6);
     if (attack) {
       this.cameras.main.shake(FX.shakeMs, FX.shakeIntensity);
       this.hitStop = FX.hitStopMs;
     }
+  }
+
+  // The skill's NAME (user's pick B): once, in capitals, over the hero at one fixed pixel size (never scaled). It slides
+  // up a little while it fades in, holds, then rises and fades (combat.json skillFx.name).
+  skillName(caster, name) {
+    const N = FX.name;
+    const hero = caster.unit.def && caster.unit.def.id;
+    const color = (caster.unit.side === 'hero' && N.heroColors[hero]) || N.defaultColor;
+    const y = Math.round(caster.ch.y + caster.ch.hopOffset - caster.unit.def.height * charScale(caster.unit.def) - N.abovePx);
+    const t = this.add
+      .text(caster.ch.x, y + N.risePx, name.toUpperCase(), { fontFamily: UI.font, fontSize: `${N.sizePx}px`, color, stroke: '#000000', strokeThickness: 4 })
+      .setOrigin(0.5)
+      .setDepth(DEPTH.popup + 1)
+      .setAlpha(0);
+    t.x = Math.round(Phaser.Math.Clamp(t.x, t.width / 2 + 6, GAME_WIDTH - t.width / 2 - 6)); // keep it on screen
+    this.tweens.add({ targets: t, y, alpha: 1, duration: N.inMs, ease: 'Quad.easeOut' });
+    this.tweens.add({ targets: t, y: y - N.risePx, alpha: 0, delay: N.inMs + N.holdMs, duration: N.outMs, onComplete: () => t.destroy() });
   }
 
   // A skill's own cast effect: the recipe gets where the caster, its targets, the squad and the enemies are

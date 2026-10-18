@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
+import { drawWindow, drawCursor } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import itemTypes from '../data/itemTypes.json';
 import rarities from '../data/rarities.json';
@@ -10,16 +11,19 @@ import bookData from '../data/skillBooks.json';
 import { rollBookPages, pageFit } from '../systems/books.js';
 import { SKILL_COLORS } from '../config.js';
 
-const COLORS = { sheet: 0x17112a, panel: 0x231b38, line: 0x3a2f57, purple: 0x8b55d6, gold: 0xf2b632, disabled: 0x3a3350 };
-const INK = '#f3eefc';
-const MUTE = '#a399c2';
-const FONT = 'system-ui, Arial, sans-serif';
+// The interface look (config.js UI, entities/uiKit.js): black windows, white lines, gold = chosen, pixel font.
+const COLORS = { gold: 0xffd84a, dim: 0x4a4a5a };
+const INK = UI.text;
+const MUTE = '#c8c8d4'; // descriptions: a light grey so the white names stand out
+const FONT = UI.font;
+// Press Start 2P stays crisp on its 8px grid: every old size becomes 8 (small text) or 16 (titles, names, buttons).
+const px = (size) => (size >= 16 ? 16 : 8);
 const SHEET_TOP = 44; // the sheet slides up to here; the dungeon stays visible (dimmed) above it
 const PAD = 16;
 const CARD_W = GAME_WIDTH - PAD * 2;
 const TEXT_X = 112; // where a card's text starts (right of the icon)
 const ICON_W = 98; // the icon column
-const DESC_PX = 15; // description text size
+const DESC_PX = 8; // description text size
 const TITLE_H = 54; // the step title above the cards
 const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
 const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
@@ -50,11 +54,9 @@ export default class RewardScene extends Phaser.Scene {
     this.tweens.add({ targets: this.dim, fillAlpha: 0.6, duration: 300 });
     this.sheet = this.add.container(0, GAME_HEIGHT);
     const bg = this.add.graphics();
-    bg.fillStyle(COLORS.sheet, 1).fillRoundedRect(0, SHEET_TOP, GAME_WIDTH, GAME_HEIGHT - SHEET_TOP + 40, 24);
-    bg.lineStyle(2, COLORS.purple, 0.8).strokeRoundedRect(0, SHEET_TOP, GAME_WIDTH, GAME_HEIGHT - SHEET_TOP + 40, 24);
-    bg.fillStyle(COLORS.line, 1).fillRoundedRect(GAME_WIDTH / 2 - 22, SHEET_TOP + 8, 44, 5, 3); // the little handle
+    drawWindow(bg, 4, SHEET_TOP, GAME_WIDTH - 8, GAME_HEIGHT - SHEET_TOP + 40); // one big black window
     this.sheet.add(bg);
-    this.sheet.add(this.add.text(GAME_WIDTH / 2, SHEET_TOP + 24, this.payload.banner || `FLOOR ${this.payload.floor} CLEARED`, { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: '#f2b632' }).setOrigin(0.5, 0));
+    this.sheet.add(this.add.text(GAME_WIDTH / 2, SHEET_TOP + 20, this.payload.banner || `FLOOR ${this.payload.floor} CLEARED`, { fontFamily: FONT, fontSize: '8px', color: UI.gold }).setOrigin(0.5, 0));
     this.tweens.add({ targets: this.sheet, y: 0, duration: 420, ease: 'Cubic.easeOut' });
     sfx.play('rewardUp');
 
@@ -80,7 +82,7 @@ export default class RewardScene extends Phaser.Scene {
   }
 
   text(x, y, str, size, color, bold = false, wrap = 0) {
-    const style = { fontFamily: FONT, fontSize: `${size}px`, fontStyle: bold ? 'bold' : 'normal', color, lineSpacing: 2 };
+    const style = { fontFamily: FONT, fontSize: `${px(size)}px`, color, lineSpacing: px(size) / 2 };
     if (wrap) style.wordWrap = { width: wrap, useAdvancedWrap: true };
     return this.track(this.add.text(x, y, str, style));
   }
@@ -88,7 +90,7 @@ export default class RewardScene extends Phaser.Scene {
   // Text that must fit a box: wraps to `w` and shrinks a size at a time until it is at most `maxH` tall.
   fitText(x, y, str, size, color, w, maxH, bold = false) {
     const t = this.text(x, y, str, size, color, bold, w);
-    for (let s = size - 1; t.height > maxH && s >= 10; s--) t.setFontSize(s);
+    if (t.height > maxH) t.setFontSize(8).setLineSpacing(4); // too tall: drop to the small size (sizes stay on the pixel grid)
     return t;
   }
 
@@ -98,16 +100,19 @@ export default class RewardScene extends Phaser.Scene {
 
   // How tall a card must be for its description (the card grows instead of the text spilling out).
   cardHeight(item) {
-    const probe = this.add.text(0, 0, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, lineSpacing: 3, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
+    const probe = this.add.text(0, 0, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, lineSpacing: 4, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
     let h = probe.height;
     probe.destroy();
-    if (item.perStack) h += this.perStackHeight(item) + 6;
-    return Math.max(136, 68 + h + 18);
+    const name = this.add.text(0, 0, item.name, { fontFamily: FONT, fontSize: '16px', lineSpacing: 6, wordWrap: { width: CARD_W - TEXT_X - 12, useAdvancedWrap: true } });
+    h += name.height;
+    name.destroy();
+    if (item.perStack) h += this.perStackHeight(item) + 8;
+    return Math.max(136, 32 + h + 10 + 18);
   }
 
   // The small "Per stack: ..." line under an item's text (items.json `perStack`: what one more copy adds).
   perStackStyle() {
-    return { fontFamily: FONT, fontSize: '13px', fontStyle: 'bold', color: '#b9a6f0', lineSpacing: 2, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } };
+    return { fontFamily: FONT, fontSize: '8px', color: UI.gold, lineSpacing: 4, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } };
   }
 
   perStackHeight(item) {
@@ -125,22 +130,19 @@ export default class RewardScene extends Phaser.Scene {
     const g = this.add.graphics();
     const paint = (lit) => {
       g.clear();
-      g.fillStyle(0x000000, 0.3).fillRoundedRect(2, 4, CARD_W, h, 16);
-      g.fillStyle(lit ? 0x31254d : COLORS.panel, 1).fillRoundedRect(0, 0, CARD_W, h, 16);
-      g.fillStyle(rc, 0.12).fillRoundedRect(0, 0, ICON_W, h, { tl: 16, bl: 16, tr: 0, br: 0 }); // a rarity tint behind the icon
-      g.lineStyle(lit ? 4 : 2, lit ? COLORS.gold : rc, 1).strokeRoundedRect(0, 0, CARD_W, h, 16);
+      drawWindow(g, 0, 0, CARD_W, h, { line: lit ? COLORS.gold : UI.line }); // the chosen card gets a gold line
     };
     paint(highlighted);
     card.add(g);
     card.add(this.add.image(ICON_W / 2, h / 2 - 9, itemIconKey(this, item.id, item.rarity)).setScale(4));
-    card.add(this.add.text(ICON_W / 2, h / 2 + 42, itemTypes[item.type].label, { fontFamily: FONT, fontSize: '10px', fontStyle: 'bold', color: MUTE }).setOrigin(0.5));
-    card.add(this.add.text(TEXT_X, 16, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : item.kind === 'book' ? 'BOOK' : 'ITEM'}`, { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: hex(rc) }));
-    const name = this.add.text(TEXT_X, 34, item.name, { fontFamily: FONT, fontSize: '21px', fontStyle: 'bold', color: INK });
-    for (let s = 20; name.width > CARD_W - TEXT_X - 16 && s >= 13; s--) name.setFontSize(s); // long names shrink to fit
+    card.add(this.add.text(ICON_W / 2, h / 2 + 42, itemTypes[item.type].label.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5));
+    card.add(this.add.text(TEXT_X, 16, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : item.kind === 'book' ? 'BOOK' : 'ITEM'}`.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: hex(rc) }));
+    // The name: 16px, or two 16px lines when it is long (never an in-between size: they blur).
+    const name = this.add.text(TEXT_X, 32, item.name, { fontFamily: FONT, fontSize: '16px', color: INK, lineSpacing: 6, wordWrap: { width: CARD_W - TEXT_X - 12, useAdvancedWrap: true } });
     card.add(name);
-    const desc = this.add.text(TEXT_X, 66, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, color: MUTE, lineSpacing: 3, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
+    const desc = this.add.text(TEXT_X, 32 + name.height + 10, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, color: MUTE, lineSpacing: 4, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
     card.add(desc);
-    if (item.perStack) card.add(this.add.text(TEXT_X, 66 + desc.height + 6, `Per stack: ${item.perStack}`, this.perStackStyle()));
+    if (item.perStack) card.add(this.add.text(TEXT_X, desc.y + desc.height + 8, `Per stack: ${item.perStack}`, this.perStackStyle()));
     card.paint = paint;
     return card;
   }
@@ -194,21 +196,21 @@ export default class RewardScene extends Phaser.Scene {
     const bw = 84;
     const bx = GAME_WIDTH - PAD - bw;
     const bb = this.track(this.add.graphics());
-    bb.fillStyle(COLORS.panel, 1).fillRoundedRect(bx, SHEET_TOP + 48, bw, 32, 16).lineStyle(2, COLORS.line, 1).strokeRoundedRect(bx, SHEET_TOP + 48, bw, 32, 16);
-    this.text(bx + bw / 2, SHEET_TOP + 64, '‹ Back', 14, INK, true).setOrigin(0.5);
+    drawWindow(bb, bx, SHEET_TOP + 48, bw, 32);
+    this.text(bx + bw / 2, SHEET_TOP + 64, 'Back', 8, INK).setOrigin(0.5);
     this.track(this.add.zone(bx + bw / 2, SHEET_TOP + 64, bw + 10, 44).setInteractive()).on('pointerdown', () => { sfx.play('tap'); onTap(); });
   }
 
   // Page card sizes: normal, or COMPACT when a book shows more than 3 pages (the Skill Dealer's 5) so all fit.
   pageLook() {
     return this.compactPages
-      ? { iconW: 64, textX: 74, desc: 13, name: 17, label: 11, nameY: 25, descY: 49, minH: 80, iconScale: 2, gap: 10 }
-      : { iconW: ICON_W, textX: TEXT_X, desc: DESC_PX, name: 20, label: 12, nameY: 32, descY: 62, minH: 112, iconScale: 3, gap: 14 };
+      ? { iconW: 64, textX: 74, desc: 8, name: 16, label: 8, nameY: 24, descY: 48, minH: 80, iconScale: 2, gap: 10 }
+      : { iconW: ICON_W, textX: TEXT_X, desc: DESC_PX, name: 16, label: 8, nameY: 32, descY: 60, minH: 112, iconScale: 3, gap: 14 };
   }
 
   pageHeight(page) {
     const L = this.pageLook();
-    const probe = this.add.text(0, 0, page.text, { fontFamily: FONT, fontSize: `${L.desc}px`, lineSpacing: 3, wordWrap: { width: CARD_W - L.textX - 16, useAdvancedWrap: true } });
+    const probe = this.add.text(0, 0, page.text, { fontFamily: FONT, fontSize: `${L.desc}px`, lineSpacing: 4, wordWrap: { width: CARD_W - L.textX - 16, useAdvancedWrap: true } });
     const h = probe.height;
     probe.destroy();
     return Math.max(L.minH, L.descY + h + (this.compactPages ? 10 : 16));
@@ -223,17 +225,14 @@ export default class RewardScene extends Phaser.Scene {
     const g = this.add.graphics();
     const paint = (on) => {
       g.clear();
-      g.fillStyle(0x000000, 0.3).fillRoundedRect(2, 4, CARD_W, h, 16);
-      g.fillStyle(on ? 0x31254d : COLORS.panel, 1).fillRoundedRect(0, 0, CARD_W, h, 16);
-      g.fillStyle(rc, 0.12).fillRoundedRect(0, 0, L.iconW, h, { tl: 16, bl: 16, tr: 0, br: 0 });
-      g.lineStyle(on ? 4 : 2, on ? COLORS.gold : rc, 1).strokeRoundedRect(0, 0, CARD_W, h, 16);
+      drawWindow(g, 0, 0, CARD_W, h, { line: on ? COLORS.gold : UI.line });
     };
     paint(lit);
     card.add(g);
     card.add(this.add.image(L.iconW / 2, h / 2 - (this.compactPages ? 0 : 8), itemIconKey(this, golden ? 'golden_book' : 'skill_book', golden ? 'legendary' : 'rare')).setScale(L.iconScale));
-    card.add(this.add.text(L.textX, this.compactPages ? 9 : 14, page.kind === 'stat' ? 'STAT PAGE' : `MODIFIER · ${(page.tag || '').toUpperCase()}`, { fontFamily: FONT, fontSize: `${L.label}px`, fontStyle: 'bold', color: hex(rc) }));
-    card.add(this.add.text(L.textX, L.nameY, page.name, { fontFamily: FONT, fontSize: `${L.name}px`, fontStyle: 'bold', color: INK }));
-    card.add(this.add.text(L.textX, L.descY, page.text, { fontFamily: FONT, fontSize: `${L.desc}px`, color: MUTE, lineSpacing: 3, wordWrap: { width: CARD_W - L.textX - 16, useAdvancedWrap: true } }));
+    card.add(this.add.text(L.textX, this.compactPages ? 9 : 14, page.kind === 'stat' ? 'STAT PAGE' : `MODIFIER - ${(page.tag || '').toUpperCase()}`, { fontFamily: FONT, fontSize: `${L.label}px`, color: hex(rc) }));
+    card.add(this.add.text(L.textX, L.nameY, page.name, { fontFamily: FONT, fontSize: `${L.name}px`, color: INK }));
+    card.add(this.add.text(L.textX, L.descY, page.text, { fontFamily: FONT, fontSize: `${L.desc}px`, color: MUTE, lineSpacing: 4, wordWrap: { width: CARD_W - L.textX - 16, useAdvancedWrap: true } }));
     card.paint = paint;
     return card;
   }
@@ -280,7 +279,7 @@ export default class RewardScene extends Phaser.Scene {
     this.skillButtons = [];
     for (const hero of this.payload.state.heroes) {
       const g = this.track(this.add.graphics());
-      g.fillStyle(COLORS.panel, 1).fillRoundedRect(PAD, y, CARD_W, rowH - 10, 16).lineStyle(2, COLORS.line, 1).strokeRoundedRect(PAD, y, CARD_W, rowH - 10, 16);
+      drawWindow(g, PAD, y, CARD_W, rowH - 10);
       const ch = new Character(this, PAD + 34, y + 92, hero.def);
       ch.setScale(2).setAlpha(hero.alive ? 1 : 0.35);
       this.track(ch);
@@ -299,12 +298,11 @@ export default class RewardScene extends Phaser.Scene {
         const btn = { bg, bx, by, bw, bh: 70, hero, idx, fit, col };
         btn.paint = (on) => {
           bg.clear();
-          bg.fillStyle(on ? 0x31254d : 0x1c1530, 1).fillRoundedRect(bx, by, bw, 70, 12);
-          bg.lineStyle(on ? 3 : 2, on ? COLORS.gold : usable ? col.ready : COLORS.line, usable ? 1 : 0.5).strokeRoundedRect(bx, by, bw, 70, 12);
+          drawWindow(bg, bx, by, bw, 70, { line: on ? COLORS.gold : usable ? col.ready : COLORS.dim });
         };
         btn.paint(false);
         this.fitText(bx + 8, by + 6, skillDefs[slot.id].name, 13, usable ? INK : MUTE, bw - 16, 34, true);
-        const note = fit === 'dead' ? 'Fallen' : fit === 'full' ? 'Stat pages full' : fit === 'duplicate' ? 'Already has it' : fit === 'replace' ? 'Full: replaces one' : `${stats}/${limits.maxStatPages ?? 3} stats · ${mods}/${limits.modifierSlots ?? 2} mods`;
+        const note = fit === 'dead' ? 'Fallen' : fit === 'full' ? 'Stat pages full' : fit === 'duplicate' ? 'Already has it' : fit === 'replace' ? 'Full: replaces one' : `${stats}/${limits.maxStatPages ?? 3} stats ${mods}/${limits.modifierSlots ?? 2} mods`;
         this.text(bx + 8, by + 50, note, 11, fit === 'replace' ? '#ffd9a0' : MUTE);
         if (usable) this.track(this.add.zone(bx + bw / 2, by + 35, bw, 70).setInteractive()).on('pointerdown', () => this.selectSkill(btn));
         this.skillButtons.push(btn);
@@ -329,11 +327,11 @@ export default class RewardScene extends Phaser.Scene {
     const t = this.target;
     g.clear();
     const y = GAME_HEIGHT - 72;
-    g.fillStyle(t ? 0x2f9a55 : COLORS.disabled, 1).fillRoundedRect(PAD, y, CARD_W, 52, 26);
-    if (t) g.lineStyle(2, COLORS.gold, 1).strokeRoundedRect(PAD, y, CARD_W, 52, 26);
+    drawWindow(g, PAD, y, CARD_W, 52, { line: t ? UI.line : COLORS.dim });
     const name = t && this.payload.state.skillDefs[t.hero.skills[t.idx].id].name;
-    this.buttonText.setText(t ? (t.fit === 'replace' ? 'Choose what it replaces' : `Write it into ${name}`) : 'Pick a skill').setColor(t ? '#ffffff' : '#8a82a8');
-    for (let s = 18; this.buttonText.width > CARD_W - 24 && s >= 12; s--) this.buttonText.setFontSize(s);
+    this.buttonText.setText(t ? (t.fit === 'replace' ? 'Choose what it replaces' : `Write it into ${name}`) : 'Pick a skill').setColor(t ? UI.text : UI.dim);
+    this.buttonText.setFontSize(this.buttonText.setFontSize(16).width > CARD_W - 48 ? 8 : 16); // long labels drop to the small size
+    if (t) drawCursor(g, Math.round(GAME_WIDTH / 2 - this.buttonText.width / 2 - 18), y + 26); // the ▶ cursor: ready to confirm
   }
 
   confirmPage() {
@@ -373,7 +371,7 @@ export default class RewardScene extends Phaser.Scene {
     const stats = [...new Set(item.effects.filter((e) => e.stat).map((e) => e.stat))].slice(0, 2);
     if (!stats.length) return '';
     const after = this.payload.state.previewStats(hero.uid, item.id);
-    return stats.map((st) => `${STAT_LABEL[st]} ${Math.round(hero.stats[st])} → ${Math.round(after.stats[st])}`).join('   ');
+    return stats.map((st) => `${STAT_LABEL[st]} ${Math.round(hero.stats[st])}>${Math.round(after.stats[st])}`).join('  ');
   }
 
   // "Who gets it?": the item card on top, then ONE ROW PER HERO (user's choice): picture, name + level, the items
@@ -433,7 +431,7 @@ export default class RewardScene extends Phaser.Scene {
     const gap = 23;
     const fit = Math.floor(w / gap);
     const shown = kinds.length > fit ? kinds.slice(0, fit - 1) : kinds;
-    const style = { fontFamily: 'monospace', fontSize: '10px', fontStyle: 'bold', color: '#ffffff', stroke: '#000000', strokeThickness: 3 };
+    const style = { fontFamily: FONT, fontSize: '8px', color: '#ffffff', stroke: '#000000', strokeThickness: 3 };
     shown.forEach(([id, count], i) => {
       const def = this.payload.state.itemDefs[id];
       const ix = x + i * gap;
@@ -446,18 +444,16 @@ export default class RewardScene extends Phaser.Scene {
   drawHeroCard(i, selected) {
     const { g, x, y, w, h, hero } = this.heroGraphics[i];
     g.clear();
-    g.fillStyle(selected ? 0x31254d : COLORS.panel, 1).fillRoundedRect(x, y, w, h, 16);
-    g.lineStyle(selected ? 4 : 2, selected ? COLORS.gold : COLORS.line, 1).strokeRoundedRect(x, y, w, h, 16);
-    if (!hero.alive) g.fillStyle(0x000000, 0.35).fillRoundedRect(x, y, w, h, 16);
+    drawWindow(g, x, y, w, h, { line: selected ? COLORS.gold : hero.alive ? UI.line : COLORS.dim });
   }
 
   drawButton() {
     const g = this.buttonGraphics;
     g.clear();
     const y = GAME_HEIGHT - 72;
-    g.fillStyle(this.selected ? 0x2f9a55 : COLORS.disabled, 1).fillRoundedRect(PAD, y, CARD_W, 52, 26);
-    if (this.selected) g.lineStyle(2, COLORS.gold, 1).strokeRoundedRect(PAD, y, CARD_W, 52, 26);
-    this.buttonText.setText(this.selected ? `Give to ${this.selected.name}` : 'Pick a hero').setColor(this.selected ? '#ffffff' : '#8a82a8');
+    drawWindow(g, PAD, y, CARD_W, 52, { line: this.selected ? UI.line : COLORS.dim });
+    this.buttonText.setText(this.selected ? `Give to ${this.selected.name}` : 'Pick a hero').setColor(this.selected ? UI.text : UI.dim);
+    if (this.selected) drawCursor(g, Math.round(GAME_WIDTH / 2 - this.buttonText.width / 2 - 18), y + 26); // the ▶ cursor: ready to confirm
   }
 
   selectHero(i) {

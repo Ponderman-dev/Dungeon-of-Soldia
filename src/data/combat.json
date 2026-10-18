@@ -57,7 +57,7 @@
     "ringMs": 380,
     "bannerY": 250,
     "bannerMs": 1000,
-    "numberSizePx": 26,
+    "numberSizePx": 16,
     "shakeMs": 140,
     "shakeIntensity": 0.006,
     "hitStopMs": 70,

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH } from '../config.js';
+import { GAME_WIDTH, UI } from '../config.js';
 import Character from '../entities/Character.js';
 import * as sfx from '../audio/sfx.js';
 import roomRules from '../data/rooms.json';
@@ -54,7 +54,7 @@ export const roomMethods = {
     const room = this.layer.room;
     this.banner.setText(room.rules.name);
     this.roomHint = this.add
-      .text(GAME_WIDTH / 2, 556, room.rules.hint, { fontFamily: 'monospace', fontSize: '15px', color: '#f2e6b0', stroke: '#000000', strokeThickness: 4 })
+      .text(GAME_WIDTH / 2, 556, room.rules.hint, { fontFamily: UI.font, fontSize: '8px', color: '#f2e6b0', stroke: '#000000', strokeThickness: 4 })
       .setOrigin(0.5)
       .setDepth(20);
     for (const prop of room.props) {

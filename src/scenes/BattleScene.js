@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, SKILL_COLORS } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, SKILL_COLORS, UI } from '../config.js';
+import { drawWindow, uiText, uiStyle } from '../entities/uiKit.js';
 import allHeroDefs from '../data/heroes.json';
 import squadIds from '../data/squad.json';
 import demoSquad from '../data/demoSquad.json'; // the Monster House demo page's squad
@@ -128,12 +129,13 @@ export default class BattleScene extends Phaser.Scene {
     }
 
     this.drawHeroSlots();
-    this.floorText = this.add
-      .text(16, 24, '', { fontFamily: 'monospace', fontSize: '16px', color: '#9a8fc0' })
+    // The floor counter: a small black window in the top-left corner (the interface look, entities/uiKit.js).
+    this.floorBox = drawWindow(this.add.graphics().setDepth(DEPTH.hud), 8, 8, 160, 32);
+    this.floorText = uiText(this, 20, 25, '', 'normal')
       .setOrigin(0, 0.5)
       .setDepth(DEPTH.hud);
     this.banner = this.add
-      .text(GAME_WIDTH / 2, 520, '', { fontFamily: 'monospace', fontSize: '24px', color: '#ffffff', stroke: '#000000', strokeThickness: 4, align: 'center' })
+      .text(GAME_WIDTH / 2, 520, '', { fontFamily: UI.font, fontSize: '24px', color: '#ffffff', stroke: '#000000', strokeThickness: 4, align: 'center' })
       .setOrigin(0.5)
       .setDepth(DEPTH.hud);
     this.focusMarker = this.add.ellipse(0, 0, 70, 18).setStrokeStyle(2, 0xff4d4d).setVisible(false).setDepth(DEPTH.marker);
@@ -466,7 +468,7 @@ export default class BattleScene extends Phaser.Scene {
     const head = base && u.name.endsWith(base) ? u.name.slice(0, -base.length).trim() : u.name;
     const y = v.ch.y - u.def.height * charScale(u.def) - 30;
     const t = this.add
-      .text(v.ch.x, y, base ? `${head}\n${base}` : head, { fontFamily: 'monospace', fontSize: '13px', fontStyle: 'bold', color: u.elite.color, stroke: '#000000', strokeThickness: 3, align: 'center' })
+      .text(v.ch.x, y, base ? `${head}\n${base}` : head, { fontFamily: UI.font, fontSize: '8px', color: u.elite.color, stroke: '#000000', strokeThickness: 3, align: 'center' })
       .setOrigin(0.5, 1)
       .setDepth(DEPTH.popup);
     t.x = Phaser.Math.Clamp(t.x, t.width / 2 + 4, GAME_WIDTH - t.width / 2 - 4);
@@ -818,13 +820,13 @@ export default class BattleScene extends Phaser.Scene {
       // The two skill squares under the hero: tap to cast. Left = attack skill (red), right = support skill (green).
       view.skillButtons = unit.skills.map((slot, j) => {
         const x = cx + (j === 0 ? -22 : 22);
-        const textStyle = { fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color: '#f3eefc' };
+        const textStyle = uiStyle('normal', UI.text);
         const button = {
           x: x - SKILL_W / 2,
           y: SKILL_Y - SKILL_H / 2,
           g: this.add.graphics().setDepth(3),
           code: this.add.text(x, SKILL_Y, skillDefs[slot.id].short, textStyle).setOrigin(0.5).setDepth(4),
-          cd: this.add.text(x, SKILL_Y, '', { ...textStyle, fontSize: '16px', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5),
+          cd: this.add.text(x, SKILL_Y, '', { ...textStyle, color: UI.dim }).setOrigin(0.5).setDepth(5),
         };
         this.add
           .zone(x, SKILL_Y, SKILL_W + 6, SKILL_H + 6)
@@ -858,16 +860,16 @@ export default class BattleScene extends Phaser.Scene {
         const ready = this.mode === 'fighting' && this.state.canCast(hero, j);
         const g = b.g;
         g.clear();
-        const colors = SKILL_COLORS[slot.kind];
-        g.fillStyle(ready ? colors.ready : colors.idle, hero.alive ? 1 : 0.5).fillRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
+        // A black window: white line when it can be cast, grey while it cools down (a grey fill drains from the top).
+        const kindColor = slot.kind === 'attack' ? UI.red : UI.green; // the letters say attack (red) or support (green)
+        drawWindow(g, b.x, b.y, SKILL_W, SKILL_H, { line: ready ? UI.line : 0x4a4a5a, alpha: hero.alive ? 1 : 0.5 });
         if (slot.cooldownLeft > 0) {
           const frac = slot.cooldownLeft / skill.cooldownMs;
-          g.fillStyle(0x000000, 0.55).fillRoundedRect(b.x, b.y, SKILL_W, SKILL_H * frac, 8);
+          g.fillStyle(0x2a2a36, 1).fillRect(b.x + 4, b.y + 4, SKILL_W - 8, Math.round((SKILL_H - 8) * frac));
         }
-        g.lineStyle(ready ? 3 : 2, ready ? 0xf2b632 : colors.ready, ready ? 1 : 0.5).strokeRoundedRect(b.x, b.y, SKILL_W, SKILL_H, 8);
         this.drawPageMarks(g, b, slot, hero.alive);
         b.cd.setText(slot.cooldownLeft > 0 ? String(Math.ceil(slot.cooldownLeft / 1000)) : '');
-        b.code.setColor(ready ? '#f3eefc' : '#8a86a0');
+        b.code.setColor(ready ? kindColor : UI.dim);
         b.code.setVisible(slot.cooldownLeft <= 0); // the cooldown number takes the letters' place
       });
     }
@@ -911,7 +913,7 @@ export default class BattleScene extends Phaser.Scene {
     // A hero's level, just left of its health bar ("Lv3").
     if (unit.side === 'hero' && !unit.minion) {
       view.lvl = this.add
-        .text(x - BAR_WIDTH / 2 - 3, barY, `Lv${unit.level}`, { fontFamily: 'monospace', fontSize: '10px', fontStyle: 'bold', color: '#ffd24d', stroke: '#000000', strokeThickness: 3 })
+        .text(x - BAR_WIDTH / 2 - 3, barY, `Lv${unit.level}`, { fontFamily: UI.font, fontSize: '8px', color: '#ffd24d', stroke: '#000000', strokeThickness: 3 })
         .setOrigin(1, 0.5)
         .setDepth(DEPTH.heroBar);
     }
@@ -1040,7 +1042,7 @@ export default class BattleScene extends Phaser.Scene {
       const parts = [img];
       if (e.n > 1) {
         const num = this.add
-          .text((e.x + ICON_PX / 2) * S, e.y * S + 1, String(e.n), { fontFamily: 'monospace', fontSize: '13px', fontStyle: 'bold', color: '#ffffff', stroke: '#1a1020', strokeThickness: 3 })
+          .text((e.x + ICON_PX / 2) * S, e.y * S + 1, String(e.n), { fontFamily: UI.font, fontSize: '8px', color: '#ffffff', stroke: '#1a1020', strokeThickness: 3 })
           .setOrigin(0, 0.5);
         view.chipBox.add(num);
         parts.push(num);
@@ -1053,7 +1055,7 @@ export default class BattleScene extends Phaser.Scene {
     const leftovers = kinds.filter((k) => !statusIcons[k] && statusInfo[k] && !statusInfo[k].instant);
     for (const k of leftovers) {
       const chip = this.add
-        .text(x, -((Math.ceil(list.length / 3) || 0) * ICON_PX * S) - 10, statusInfo[k].label, { fontFamily: 'monospace', fontSize: '9px', fontStyle: 'bold', color: statusInfo[k].textColor, backgroundColor: statusInfo[k].color, padding: { x: 2, y: 1 } })
+        .text(x, -((Math.ceil(list.length / 3) || 0) * ICON_PX * S) - 10, statusInfo[k].label, { fontFamily: UI.font, fontSize: '8px', color: statusInfo[k].textColor, backgroundColor: statusInfo[k].color, padding: { x: 2, y: 1 } })
         .setOrigin(0, 0.5);
       view.chipBox.add(chip);
       x += chip.width + 3;
@@ -1085,14 +1087,14 @@ export default class BattleScene extends Phaser.Scene {
     if (kinds.length > maxShown) { more = kinds.length - (maxShown - 1); kinds = kinds.slice(0, maxShown - 1); }
     const n = kinds.length + (more ? 1 : 0);
     const at = (i) => { const row = Math.floor(i / perRow), inRow = Math.min(perRow, n - row * perRow); return [((i % perRow) - (inRow - 1) / 2) * gap, row * rowH]; };
-    const style = { fontFamily: 'monospace', fontSize: '10px', fontStyle: 'bold', color: '#ffffff', stroke: '#000000', strokeThickness: 3 };
+    const style = { fontFamily: UI.font, fontSize: '8px', color: '#ffffff', stroke: '#000000', strokeThickness: 3 };
     kinds.forEach(([id, count], i) => {
       const def = itemDefs[id];
       const [x, y] = at(i);
       view.dots.add(this.add.image(x, y, itemIconKey(this, id, def.rarity)));
       if (count > 1) view.dots.add(this.add.text(x + 11, y + 11, String(count), style).setOrigin(1, 1));
     });
-    if (more) { const [x, y] = at(kinds.length); view.dots.add(this.add.text(x, y, `+${more}`, { ...style, fontSize: '11px' }).setOrigin(0.5)); }
+    if (more) { const [x, y] = at(kinds.length); view.dots.add(this.add.text(x, y, `+${more}`, { ...style, fontSize: '8px' }).setOrigin(0.5)); }
   }
 
   // Who walks through the door with the squad: the living heroes, then any greater minions.
@@ -1525,7 +1527,7 @@ export default class BattleScene extends Phaser.Scene {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
       if (v.lvl) v.lvl.setText(`Lv${e.unit.level}`);
-      this.popText(v, `LEVEL UP\nLv${e.unit.level}`, '#ffd24d', true, 15); // two short lines: three heroes levelling at once don't print over each other
+      this.popText(v, `LEVEL UP\nLv${e.unit.level}`, '#ffd24d', true, 8); // two short lines: three heroes levelling at once don't print over each other
     } else if (e.type === 'death') {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
@@ -1761,7 +1763,7 @@ export default class BattleScene extends Phaser.Scene {
     this.bannerRows[row] = true;
     const by = FX.bannerY + row * 30;
     const banner = this.add
-      .text(GAME_WIDTH / 2, by, e.skill.name, { fontFamily: 'monospace', fontSize: '24px', fontStyle: 'bold', color: colorText, stroke: '#000000', strokeThickness: 5 })
+      .text(GAME_WIDTH / 2, by, e.skill.name, { fontFamily: UI.font, fontSize: '24px', color: colorText, stroke: '#000000', strokeThickness: 5 })
       .setOrigin(0.5)
       .setDepth(DEPTH.popup + 1)
       .setScale(0.5);
@@ -1971,9 +1973,9 @@ export default class BattleScene extends Phaser.Scene {
     this.cameras.main.flash(180, 120, 20, 20);
     this.cameras.main.shake(320, 0.008);
     const y = 300;
-    const style = { fontFamily: 'monospace', fontStyle: 'bold', stroke: '#000000', strokeThickness: 7, align: 'center' };
+    const style = { fontFamily: UI.font, stroke: '#000000', strokeThickness: 7, align: 'center' };
     const top = this.add.text(GAME_WIDTH / 2, y - 30, "IT'S A", { ...style, fontSize: '24px', color: '#ffd24d' }).setOrigin(0.5).setDepth(DEPTH.popup + 2);
-    const big = this.add.text(GAME_WIDTH / 2, y + 8, 'MONSTER HOUSE!', { ...style, fontSize: '34px', color: '#ff4a3a' }).setOrigin(0.5).setDepth(DEPTH.popup + 2);
+    const big = this.add.text(GAME_WIDTH / 2, y + 8, 'MONSTER HOUSE!', { ...style, fontSize: '24px', color: '#ff4a3a' }).setOrigin(0.5).setDepth(DEPTH.popup + 2);
     if (big.width > GAME_WIDTH - 12) big.setFontSize(Math.floor((34 * (GAME_WIDTH - 12)) / big.width));
     for (const [t, d] of [[top, 0], [big, 90]]) {
       t.setScale(2.6).setAlpha(0);
@@ -1987,7 +1989,7 @@ export default class BattleScene extends Phaser.Scene {
   // A boss move's name, big and red, in the middle of the screen.
   bossBanner(text) {
     const b = this.add
-      .text(GAME_WIDTH / 2, FX.bannerY - 40, text, { fontFamily: 'monospace', fontSize: '22px', fontStyle: 'bold', color: '#ff6a5a', stroke: '#000000', strokeThickness: 5 })
+      .text(GAME_WIDTH / 2, FX.bannerY - 40, text, { fontFamily: UI.font, fontSize: '16px', color: '#ff6a5a', stroke: '#000000', strokeThickness: 5 })
       .setOrigin(0.5)
       .setDepth(DEPTH.popup + 1)
       .setScale(1.4);
@@ -2010,7 +2012,7 @@ export default class BattleScene extends Phaser.Scene {
     bosses.forEach((u, i) => {
       const y = 104 + i * 34;
       let t = this.bossNames[i];
-      if (!t) t = this.bossNames[i] = this.add.text(X, 0, '', { fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color: '#ffe0d8', stroke: '#000000', strokeThickness: 3 }).setOrigin(0, 1).setDepth(DEPTH.hud);
+      if (!t) t = this.bossNames[i] = this.add.text(X, 0, '', { fontFamily: UI.font, fontSize: '8px', color: '#ffe0d8', stroke: '#000000', strokeThickness: 3 }).setOrigin(0, 1).setDepth(DEPTH.hud);
       t.setText(u.dust ? `${u.name} (dust)` : u.alive ? u.name : `${u.name} (down)`).setPosition(X, y - 3).setVisible(true);
       g.fillStyle(0x000000, 0.85).fillRect(X - 2, y - 2, W + 4, 12);
       g.fillStyle(0x3a1018, 1).fillRect(X, y, W, 8);
@@ -2038,9 +2040,8 @@ export default class BattleScene extends Phaser.Scene {
     const y = view.ch.y + view.ch.hopOffset - view.unit.def.height * charScale(view.unit.def) - 22 - view.popSlot * 15;
     const t = this.add
       .text(view.ch.x, y, text, {
-        fontFamily: 'monospace',
+        fontFamily: UI.font,
         fontSize: sizePx ? `${sizePx}px` : big ? '20px' : '14px',
-        fontStyle: 'bold',
         color,
         stroke: '#000000',
         strokeThickness: 3,

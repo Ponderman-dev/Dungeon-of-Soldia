@@ -13,6 +13,13 @@ one recipe per icon: edit the recipe, re-run, rebuild the page with `node docs/p
 BUILT into the game (session 8, docs/systems/skills.md 'SKILL ICONS'): fight buttons, passive icon + tap tooltip, hero card,
 book colours; the user's one note (Mage rotation border = next element) done. NEXT: ask the user what's next (ideas: hero balance
 pass, drop odds, bosses rework).
+USER'S NEXT ASK (session 8 end): skill effects 'still not visually powerful / eye catchy, skills not different enough' + 'text is
+messy and too stretchy'. Proposed plan (waiting on 2 answers: which text exactly, and whether a skill CUT-IN BAR is wanted):
+1 clean text: never scale pixel text (no 0.5->1 banner pop, no 1.5x damage-number pop; slide/fade, 8px grid sizes); skill name
+  as a short cut-in band (icon + name, hero colour) instead of the floating banner. 2 every skill gets 3 beats in its hero's
+  colour/shape language: CHARGE (aura + particles gather in the wind-up), RELEASE (colour flash, camera kick/zoom, speed lines,
+  longer hit-stop), IMPACT (2-3x bigger unique shape + a floor mark that lingers). 3 a skill SHOWCASE review page (each skill
+  looping on dummies, OK/CHANGE notes), 2-3 heroes per session; start with step 1 + the Knight as a sample.
 Also new this session: TEST tools panel (gold 'TEST: tools' button), floorArt.js, room decorations (roomProps.json decor).
 
 ## START HERE (session 7): SCREEN REVIEW NOTES, working through them

@@ -3,6 +3,14 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
+## START HERE (session 6, latest): INTERFACE STYLE
+User: 'let's do interfaces', picked 'ONE LOOK FOR EVERYTHING' (a shared pixel-art UI style for all screens). Proposal page
+https://claude.ai/artifact/PBDU3qq4XzyMV43ujcfUkC (source docs/proposals/ui-style/): looks A Torchlit Stone / B Old Parchment
+/ C Arcane Night, fonts Pixelify Sans / Silkscreen / Jersey 10 / VT323 / Press Start 2P (all OFL: bundle the font file in
+the game, no Google Fonts at runtime). Read the picks with ArtifactData `list` collection `picks`, then build it step by
+step (shared UI kit first: colours + panel/button drawing in one module, then screen by screen). Today: squad + reward
+use a smooth sans font with rounded cards, battle uses monospace, skill buttons show 2 letters (icons proposed).
+
 ## START HERE (session 6): HERO KITS v3, Alchemist + Bard + Archer + Mage + Knight + Berserker + Rogue + Samurai + Cleric + Necromancer done = ALL 10
 DONE: Alchemist (Mad Bomber: poison-only flasks, thrown one by one, glass sound), Bard (Battle Hymn), Archer (Volley
 Gunner, still LAST in review; user: 'leave her as is', will try her in game first), Mage (Elementalist), Knight (Iron Wall), Berserker (Brawler), Rogue (Combo Striker), Samurai (kept the wide Wind Cutter, user), Cleric (Holy Battle-Healer, 'Light' tone-down + fragile stats: mid-pack), Necromancer (Legion Master); details in docs/systems/heroes.md 'HERO KITS v3'.

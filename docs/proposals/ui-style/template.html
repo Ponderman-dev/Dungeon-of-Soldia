@@ -1,0 +1,253 @@
+<title>Soldia UI Style</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Silkscreen:wght@400;700&family=Press+Start+2P&family=VT323&family=Jersey+10&family=Jacquard+12&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a single proposal column; each option is a row of one phone mock + its notes and pick button. */
+:root {
+  color-scheme: dark;
+  --bg: #121019;          /* page ground, a violet-biased near-black like the game's #14101f */
+  --surface: #1c1926;
+  --line: #2f2a3d;
+  --fg: #ece8f4;
+  --muted: #a49cb8;
+  --pick: #ffd24d;        /* the game's own gold */
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-label: 'IBM Plex Mono', ui-monospace, monospace;
+}
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--font-body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 40px; }
+h1 { font: 700 30px/1.15 'Pixelify Sans', var(--font-body); margin: 0; text-wrap: balance; }
+h2 { font: 600 20px/1.25 var(--font-body); margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); max-width: 64ch; margin: 8px 0 0; }
+.label { font: 500 11px/1 var(--font-label); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+section { display: grid; gap: 16px; }
+.today { display: flex; gap: 14px; flex-wrap: wrap; }
+.today figure { margin: 0; display: grid; gap: 6px; }
+.today img { width: 180px; max-width: 100%; border: 1px solid var(--line); border-radius: 6px; display: block; }
+.today figcaption { font-size: 13px; color: var(--muted); }
+.problems { margin: 0; padding-left: 20px; color: var(--fg); max-width: 70ch; display: grid; gap: 4px; }
+.option { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 28px; padding-block: 24px; border-top: 1px solid var(--line); align-items: start; }
+@media (max-width: 720px) { .option { grid-template-columns: minmax(0, 1fr); justify-items: center; } .option .notes { justify-self: stretch; } }
+.notes { display: grid; gap: 10px; min-width: 0; }
+.notes p { margin: 0; max-width: 60ch; }
+.notes ul { margin: 0; padding-left: 20px; color: var(--muted); display: grid; gap: 3px; }
+.swatches { display: flex; gap: 6px; flex-wrap: wrap; }
+.swatches span { width: 26px; height: 26px; border-radius: 4px; border: 1px solid #0006; }
+.pickbtn { justify-self: start; font: 600 14px var(--font-body); background: transparent; color: var(--fg); border: 1.5px solid var(--line); border-radius: 999px; padding: 9px 18px; cursor: pointer; }
+.pickbtn:hover { border-color: var(--pick); }
+.pickbtn:focus-visible, textarea:focus-visible, .savebtn:focus-visible { outline: 2px solid var(--pick); outline-offset: 2px; }
+.picked .pickbtn { background: var(--pick); color: #1a1408; border-color: var(--pick); }
+.picked .pickbtn::before { content: "✓ "; }
+.status { font-size: 13px; color: var(--muted); min-height: 1.4em; }
+
+/* ---------- the phone mocks: every option is the same markup, themed by its class ---------- */
+.phone { width: 300px; max-width: 100%; border-radius: 22px; padding: 10px; background: #000; box-shadow: 0 0 0 1px var(--line); }
+.screen { --px: 2px; background: var(--u-bg); color: var(--u-text); font-family: var(--u-body); border-radius: 14px; overflow: hidden; display: grid; gap: 10px; padding: 10px; image-rendering: pixelated; }
+.screen img { image-rendering: pixelated; display: block; }
+.topbar { display: flex; justify-content: space-between; align-items: center; }
+.floor { font: var(--u-title-size) var(--u-title); color: var(--u-trim); letter-spacing: .04em; }
+.iconbtn { width: 30px; height: 30px; display: grid; place-items: center; }
+.panel { background: var(--u-panel); border: var(--px) solid var(--u-border); box-shadow: inset var(--px) var(--px) 0 var(--u-hi), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 var(--u-lo); }
+.field { position: relative; height: 196px; background: var(--u-floor); overflow: hidden; }
+.field .grid { position: absolute; inset: 0; background-image: linear-gradient(var(--u-floorline) 2px, transparent 2px), linear-gradient(90deg, var(--u-floorline) 2px, transparent 2px); background-size: 34px 34px; opacity: .5; }
+.unit { position: absolute; display: grid; justify-items: center; gap: 3px; }
+.unit img { height: 64px; width: auto; }
+.unit.small img { height: 44px; }
+.hp { width: 46px; height: 7px; background: var(--u-hpbg); border: var(--px) solid var(--u-border-dark); }
+.hp i { display: block; height: 100%; background: var(--u-hp); }
+.hp.foe i { background: var(--u-foe); }
+.lv { font: 10px/1 var(--u-title); color: var(--u-trim); }
+.skills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pair { display: flex; gap: 4px; justify-content: center; }
+.sk { width: 40px; height: 40px; display: grid; place-items: center; position: relative; font: 10px/1 var(--u-title); color: var(--u-text); }
+.sk svg { width: 22px; height: 22px; shape-rendering: crispEdges; }
+.sk.atk { background: var(--u-atk); border: var(--px) solid var(--u-atk-edge); box-shadow: inset var(--px) var(--px) 0 #ffffff33, inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 #00000055; }
+.sk.sup { background: var(--u-sup); border: var(--px) solid var(--u-sup-edge); box-shadow: inset var(--px) var(--px) 0 #ffffff33, inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 #00000055; }
+.sk.cd::after { content: "4"; position: absolute; inset: 0; display: grid; place-items: center; background: #000a; font: 14px/1 var(--u-title); color: #fff; }
+.card { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; padding: 10px; }
+.card .ico { width: 64px; height: 64px; display: grid; place-items: center; background: var(--u-iconbg); border: var(--px) solid var(--u-border-dark); }
+.card .ico img { width: 48px; height: 48px; }
+.card .rar { font: 10px/1 var(--u-title); letter-spacing: .08em; color: var(--u-muted); text-transform: uppercase; }
+.card .nm { font: var(--u-name-size) var(--u-title); color: var(--u-text); margin: 4px 0 3px; }
+.card .ds { font-size: 14px; line-height: 1.25; color: var(--u-text); }
+.card .ps { font-size: 13px; color: var(--u-accent); margin-top: 3px; }
+.btn { font: var(--u-btn-size) var(--u-title); text-transform: uppercase; letter-spacing: .06em; text-align: center; padding: 12px 10px; color: var(--u-btn-text); background: var(--u-btn); border: var(--px) solid var(--u-btn-edge); box-shadow: inset 0 calc(-1 * var(--px) * 2) 0 var(--u-btn-lo), inset 0 var(--px) 0 var(--u-btn-hi); }
+.btn.ghost { background: transparent; color: var(--u-text); border-color: var(--u-border); box-shadow: none; padding: 8px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* A: Torchlit Stone */
+.stone { --u-bg: #18151d; --u-panel: #3a3442; --u-hi: #5d5569; --u-lo: #211d27; --u-border: #0d0b10; --u-border-dark: #0d0b10;
+  --u-floor: #231f2a; --u-floorline: #2e2936; --u-text: #efe6d2; --u-muted: #b3a891; --u-trim: #e3b553; --u-accent: #e3b553;
+  --u-hp: #5fcf6a; --u-foe: #d9493a; --u-hpbg: #120f14; --u-iconbg: #26212c;
+  --u-atk: #a8432c; --u-atk-edge: #3a120a; --u-sup: #3b8a4f; --u-sup-edge: #0f2b17;
+  --u-btn: #c98b2a; --u-btn-edge: #3a2508; --u-btn-lo: #8a5a14; --u-btn-hi: #f2c76a; --u-btn-text: #2a1804;
+  --u-title: 700 1em 'Pixelify Sans', monospace; --u-body: 'Pixelify Sans', monospace; --u-title-size: 700 16px/1; --u-name-size: 700 18px/1.1; --u-btn-size: 700 16px/1; }
+.stone .floor, .stone .lv, .stone .rar, .stone .nm, .stone .btn, .stone .sk { font-family: 'Pixelify Sans', monospace; }
+/* B: Old Parchment */
+.parch { --u-bg: #2b1c13; --u-panel: #e8d6a8; --u-hi: #fbefcc; --u-lo: #b9995e; --u-border: #3f2614; --u-border-dark: #3f2614;
+  --u-floor: #3a2719; --u-floorline: #463020; --u-text: #3b2414; --u-muted: #7a5a36; --u-trim: #f0d48a; --u-accent: #8c2f1c;
+  --u-hp: #4f9a3a; --u-foe: #b8321f; --u-hpbg: #2a1a10; --u-iconbg: #d6bf87;
+  --u-atk: #9c3a22; --u-atk-edge: #3f1a0c; --u-sup: #4a7a34; --u-sup-edge: #1d3312;
+  --u-btn: #7a2c1a; --u-btn-edge: #2a0f07; --u-btn-lo: #4f1a0e; --u-btn-hi: #a8503a; --u-btn-text: #f6e6bd; }
+.parch .floor, .parch .lv { font-family: 'Pixelify Sans', monospace; font-weight: 700; }
+.parch .floor { font-size: 16px; }
+.parch .rar, .parch .btn, .parch .sk, .parch .nm { font-family: 'Pixelify Sans', monospace; font-weight: 700; }
+.parch .nm { font-size: 18px; } .parch .btn { font-size: 16px; } .parch .rar { font-size: 10px; }
+.parch .btn.ghost { color: var(--u-trim); border-color: var(--u-trim); }
+.parch .sk { color: #f6e6bd; }
+/* C: Arcane Night */
+.arcane { --u-bg: #120e1d; --u-panel: #1f1830; --u-hi: #3b2d5e; --u-lo: #0c0914; --u-border: #7a5cc9; --u-border-dark: #06040b;
+  --u-floor: #19142a; --u-floorline: #241d3a; --u-text: #ece6ff; --u-muted: #9f92c4; --u-trim: #ffd24d; --u-accent: #b9a0ff;
+  --u-hp: #6ee07a; --u-foe: #ff5a5a; --u-hpbg: #07050c; --u-iconbg: #150f24;
+  --u-atk: #b8402a; --u-atk-edge: #ff9a6b; --u-sup: #2f9a55; --u-sup-edge: #8ff0ae;
+  --u-btn: #2a1d4d; --u-btn-edge: #b9a0ff; --u-btn-lo: #160f2b; --u-btn-hi: #4a3880; --u-btn-text: #ffd24d; }
+.arcane .floor, .arcane .lv, .arcane .rar, .arcane .nm, .arcane .btn, .arcane .sk { font-family: 'Pixelify Sans', monospace; font-weight: 700; }
+.arcane .floor { font-size: 16px; } .arcane .nm { font-size: 18px; } .arcane .btn { font-size: 16px; } .arcane .rar { font-size: 10px; }
+.arcane .panel { box-shadow: inset var(--px) var(--px) 0 var(--u-hi), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 var(--u-lo), 0 0 0 var(--px) #000, 0 0 14px #7a5cc944; }
+.arcane .btn { box-shadow: inset 0 calc(-1 * var(--px) * 2) 0 var(--u-btn-lo), inset 0 var(--px) 0 var(--u-btn-hi), 0 0 12px #b9a0ff55; }
+
+/* ---------- fonts ---------- */
+.fonts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.spec { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; align-content: start; }
+.spec .demo { background: #18151d; color: #efe6d2; padding: 12px; border-radius: 6px; display: grid; gap: 6px; }
+.spec .big { font-size: 1.4em; line-height: 1.1; color: #e3b553; }
+.spec .small { font-size: .95em; line-height: 1.3; }
+.spec .nums { font-size: .95em; color: #ff9a6b; }
+.spec.picked { border-color: var(--pick); }
+textarea { width: 100%; box-sizing: border-box; min-height: 90px; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: 15px/1.5 var(--font-body); }
+.savebtn { font: 600 14px var(--font-body); background: var(--pick); color: #1a1408; border: 0; border-radius: 999px; padding: 9px 18px; cursor: pointer; justify-self: start; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="label">Dungeon of Soldia · interface proposal</div>
+    <h1>One look for every screen</h1>
+    <p class="lede">Today the squad and reward screens use a smooth modern font with rounded cards, while the fight uses a typewriter font and letter buttons. Below are three directions for one shared pixel-art style, each shown on the same pieces: the floor counter, the fight with its skill buttons, a reward card and the main buttons. Pick a look and a font; your picks are saved for Claude.</p>
+  </header>
+
+  <section>
+    <div class="label">Today</div>
+    <div class="today" id="today"></div>
+    <ul class="problems">
+      <li>Three different fonts, and none of them is pixel art.</li>
+      <li>Rounded, soft cards on the menus next to hard pixel heroes.</li>
+      <li>Skill buttons only show two letters (DB, CH...), so you have to remember what they do.</li>
+      <li>The floor counter is a faint grey typewriter font.</li>
+    </ul>
+  </section>
+
+  <section id="looks">
+    <div class="label">1 · Pick a look</div>
+  </section>
+
+  <section>
+    <div class="label">2 · Pick a font</div>
+    <p class="lede" style="margin:0">All five are free pixel fonts (Open Font License), so they can be packed into the Android app and work offline.</p>
+    <div class="fonts" id="fonts"></div>
+  </section>
+
+  <section>
+    <div class="label">3 · Anything else?</div>
+    <label for="note" class="lede" style="margin:0">Mix and match ("stone panels with arcane buttons"), colours you dislike, screens to do first...</label>
+    <textarea id="note" placeholder="Write a note for Claude"></textarea>
+    <button class="savebtn" id="saveNote" type="button">Save note</button>
+    <div class="status" id="noteStatus"></div>
+  </section>
+</div>
+
+<script>
+/*SPRITES*/
+/*SHOTS*/
+const LOOKS = [
+  { id: 'stone', name: 'A · Torchlit Stone', swatch: ['#3a3442', '#5d5569', '#e3b553', '#c98b2a', '#efe6d2'],
+    text: 'Grey dungeon stone with bevelled pixel edges and gold trim, like carved slabs lit by torches. Fits the dungeon walls already in the game.',
+    bullets: ['Panels look raised (light top-left edge, dark bottom-right).', 'Gold for titles and important numbers.', 'Warm amber main button, like a torch.'] },
+  { id: 'parch', name: 'B · Old Parchment', swatch: ['#2b1c13', '#e8d6a8', '#3f2614', '#7a2c1a', '#f0d48a'],
+    text: 'Cream parchment cards in dark wooden frames with brown ink. A storybook / old map feel, lighter and warmer than the fight.',
+    bullets: ['Very readable item text (dark ink on light paper).', 'Strong contrast with the dark dungeon fight.', 'Red wax-seal main button.'] },
+  { id: 'arcane', name: 'C · Arcane Night', swatch: ['#120e1d', '#1f1830', '#7a5cc9', '#b9a0ff', '#ffd24d'],
+    text: 'Keeps today\'s purple night colours but makes them pixel art: square corners, 2-pixel borders, a soft violet glow. The smallest change from what you have now.',
+    bullets: ['Closest to the current game, least work.', 'Glowing violet frames, gold highlights.', 'Feels magical rather than stony.'] },
+];
+const FONTS = [
+  { id: 'pixelify', name: 'Pixelify Sans', css: "'Pixelify Sans', monospace", note: 'Rounded and very readable at small sizes. Used in the mocks above.', size: 16 },
+  { id: 'silkscreen', name: 'Silkscreen', css: "'Silkscreen', monospace", note: 'Classic tiny pixel caps. Sharp, but long item texts get wide.', size: 13 },
+  { id: 'jersey', name: 'Jersey 10', css: "'Jersey 10', monospace", note: 'Tall, narrow and bold: fits a lot of text on a phone.', size: 21 },
+  { id: 'vt323', name: 'VT323', css: "'VT323', monospace", note: 'Old computer terminal look. Thin, very retro.', size: 21 },
+  { id: 'press', name: 'Press Start 2P', css: "'Press Start 2P', monospace", note: 'The famous 8-bit arcade font. Very chunky, best for titles only.', size: 10 },
+];
+// Tiny pixel glyphs for the skill buttons (8x8, drawn as crisp squares).
+const GLYPH = {
+  sword: ['......11', '.....111', '....111.', '1..111..', '.1111...', '..11....', '.1.11...', '1...1...'],
+  shield: ['.111111.', '11111111', '11111111', '11111111', '.111111.', '.111111.', '..1111..', '...11...'],
+  bolt: ['....11..', '...11...', '..11....', '.111111.', '....11..', '...11...', '..11....', '.11.....'],
+  heart: ['.11..11.', '11111111', '11111111', '11111111', '.111111.', '..1111..', '...11...', '........'],
+  arrow: ['1.......', '.1......', '..1...1.', '...1.11.', '....11..', '...111..', '..1.....', '........'],
+  eye: ['........', '..1111..', '.1....1.', '1..11..1', '1..11..1', '.1....1.', '..1111..', '........'],
+};
+const glyph = (name) => {
+  const rows = GLYPH[name]; let r = '';
+  rows.forEach((row, y) => [...row].forEach((c, x) => { if (c === '1') r += `<rect x="${x}" y="${y}" width="1" height="1"/>`; }));
+  return `<svg viewBox="0 0 8 8" fill="currentColor" aria-hidden="true">${r}</svg>`;
+};
+function mock(cls) {
+  const u = (spr, x, y, hpCls, w, lv, small) => `<div class="unit ${small ? 'small' : ''}" style="left:${x}px;top:${y}px">${lv ? `<span class="lv">Lv${lv}</span>` : ''}<div class="hp ${hpCls}"><i style="width:${w}%"></i></div><img src="${SPR[spr]}" alt=""></div>`;
+  return `<div class="phone"><div class="screen ${cls}">
+    <div class="topbar"><span class="floor">FLOOR 12</span><span class="iconbtn panel">${glyph('eye').replace('fill="currentColor"', 'fill="currentColor" style="width:14px;height:14px;color:var(--u-trim)"')}</span></div>
+    <div class="field panel"><div class="grid"></div>
+      ${u('goblin', 40, 8, 'foe', 70, 0, true)}${u('slime', 168, 22, 'foe', 35, 0, true)}
+      ${u('knight', 22, 96, '', 90, 4)}${u('rogue', 116, 88, '', 55, 4)}${u('archer', 206, 100, '', 75, 3)}
+    </div>
+    <div class="skills">
+      <div class="pair"><div class="sk atk">${glyph('shield')}</div><div class="sk sup cd">${glyph('shield')}</div></div>
+      <div class="pair"><div class="sk atk">${glyph('sword')}</div><div class="sk sup">${glyph('eye')}</div></div>
+      <div class="pair"><div class="sk atk cd">${glyph('arrow')}</div><div class="sk sup">${glyph('heart')}</div></div>
+    </div>
+    <div class="card panel"><div class="ico"><img src="${SPR.i_eagle_eye}" alt=""></div>
+      <div><div class="rar">Common item</div><div class="nm">Eagle Eye</div><div class="ds">+15% ranged damage.</div><div class="ps">Per stack: +15% ranged damage</div></div></div>
+    <div class="btn">Begin descent</div>
+    <div class="row2"><div class="btn ghost">Random</div><div class="btn ghost">Back</div></div>
+  </div></div>`;
+}
+document.getElementById('today').innerHTML = [['1-squad', 'Squad screen'], ['2-battle', 'Fight'], ['6-reward-who', 'Reward: who gets it?']]
+  .map(([k, c]) => `<figure><img src="${SHOT[k]}" alt="${c} as it looks today"><figcaption>${c}</figcaption></figure>`).join('');
+const looks = document.getElementById('looks');
+for (const L of LOOKS) {
+  const el = document.createElement('div'); el.className = 'option'; el.dataset.id = L.id;
+  el.innerHTML = `${mock(L.id)}<div class="notes"><h2>${L.name}</h2><div class="swatches">${L.swatch.map((c) => `<span style="background:${c}" title="${c}"></span>`).join('')}</div><p>${L.text}</p><ul>${L.bullets.map((b) => `<li>${b}</li>`).join('')}</ul><button class="pickbtn" type="button" id="pick-${L.id}">Pick this look</button><div class="status"></div></div>`;
+  looks.appendChild(el);
+}
+const fonts = document.getElementById('fonts');
+for (const F of FONTS) {
+  const el = document.createElement('div'); el.className = 'spec'; el.dataset.id = F.id;
+  el.innerHTML = `<h2>${F.name}</h2><div class="demo" style="font-family:${F.css};font-size:${F.size}px"><div class="big">FLOOR 12 · Choose a reward</div><div class="small">Eagle Eye: +15% ranged damage. Per stack: +15%.</div><div class="nums">-128  CRIT 312!  Lv4</div></div><p class="lede" style="margin:0">${F.note}</p><button class="pickbtn" type="button" id="font-${F.id}">Pick this font</button>`;
+  fonts.appendChild(el);
+}
+
+// Picks are saved in the page's database (collection "picks") so Claude can read them back.
+const mark = (sel, id) => document.querySelectorAll(sel).forEach((n) => n.classList.toggle('picked', n.dataset.id === id));
+let db = null;
+(async () => {
+  db = await (window.claude ? claude.use('db') : null);
+  const say = (msg) => document.querySelectorAll('.option .status').forEach((s) => (s.textContent = msg));
+  if (!db) { say('Picks cannot be saved in this view (open it on claude.ai while signed in).'); return; }
+  const picks = db.collection('picks');
+  picks.onSnapshot((snap) => {
+    for (const d of snap.docs) {
+      const v = d.data();
+      if (d.id === 'look') mark('.option', v.pick);
+      if (d.id === 'font') mark('.spec', v.pick);
+      if (d.id === 'note' && !document.getElementById('note').value) document.getElementById('note').value = v.text || '';
+    }
+  });
+  const save = async (id, data, statusEl) => {
+    try { await picks.doc(id).set({ ...data, updatedAt: new Date().toISOString() }); if (statusEl) statusEl.textContent = 'Saved.'; }
+    catch (e) { if (statusEl) statusEl.textContent = 'Could not save: ' + (e && e.message ? e.message : 'try again'); }
+  };
+  for (const L of LOOKS) document.getElementById('pick-' + L.id).onclick = (ev) => { mark('.option', L.id); save('look', { pick: L.id, name: L.name }, ev.target.nextElementSibling); };
+  for (const F of FONTS) document.getElementById('font-' + F.id).onclick = () => { mark('.spec', F.id); save('font', { pick: F.id, name: F.name }); };
+  document.getElementById('saveNote').onclick = () => save('note', { text: document.getElementById('note').value }, document.getElementById('noteStatus'));
+})();
+</script>

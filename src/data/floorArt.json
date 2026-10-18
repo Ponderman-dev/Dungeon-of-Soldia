@@ -1,0 +1,48 @@
+{
+  "_about": "The pixel-art look of every floor (systems/floorArt.js draws it, no Phaser). pixel = screen pixels per art pixel. Each floor uses one of `variants` random layouts per tile colour (dungeons.json tileColors; tintShare = how much that colour tints the stones). Wall: stone bricks (brickH, brick widths), PILLARS (x centres in art pixels, width, capital/base), moss and vines from the top. Floor: old flagstones (row heights, stone widths) with dark dirt in the gaps, cracks, DIRT patches (count, radius), GRASS tufts (mostly near dirt and the walls), moss specks and pebbles, a shadow under the wall and darker side edges.",
+  "pixel": 2,
+  "variants": 6,
+  "tintShare": 0.3,
+  "wall": {
+    "brickH": 8,
+    "brickW": [10, 20],
+    "stone": ["0x34323a", "0x2e2c34", "0x3a3740", "0x29272f"],
+    "mortar": "0x141217",
+    "highlight": 10,
+    "vines": 5,
+    "vineLen": [10, 34],
+    "mossBase": 40
+  },
+  "pillars": {
+    "x": [36, 159],
+    "width": 16,
+    "capitalH": 7,
+    "baseH": 7,
+    "overhang": 3,
+    "light": "0x6a6672",
+    "mid": "0x4c4954",
+    "dark": "0x2c2a31",
+    "cracks": 2
+  },
+  "floor": {
+    "rowH": [14, 22],
+    "stoneW": [16, 32],
+    "stone": ["0x3a3836", "0x34322f", "0x403d39", "0x2f2d2b", "0x3b362e", "0x36332c"],
+    "gap": "0x1d1610",
+    "highlight": 8,
+    "shade": 10,
+    "cracks": 22,
+    "sunkenShare": 0.12,
+    "dirt": ["0x3a2b1f", "0x33251a", "0x433222", "0x2c2016"],
+    "dirtPatches": 6,
+    "dirtRadius": [9, 22],
+    "grass": ["0x3d6a28", "0x4e8232", "0x2e5220", "0x5f9638"],
+    "grassTufts": 95,
+    "moss": ["0x2b4a22", "0x35592a"],
+    "mossSpecks": 260,
+    "pebbles": 90,
+    "pebble": ["0x5a5650", "0x4a4640"],
+    "wallShadow": 10,
+    "edgeShade": 22
+  }
+}

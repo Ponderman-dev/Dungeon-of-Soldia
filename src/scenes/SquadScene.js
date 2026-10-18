@@ -3,6 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, UI } from '../config.js';
 import { drawWindow, drawCursor } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
+import { floorTextureKey, FLOOR_PIXEL } from '../entities/floorTexture.js';
 import heroDefs from '../data/heroes.json';
 import skillDefs from '../data/skills.json';
 import unlocks from '../data/unlocks.json';
@@ -87,23 +88,11 @@ export default class SquadScene extends Phaser.Scene {
   // ---- drawing -------------------------------------------------------------------------------
 
   drawRoom() {
-    const base = Number(dungeons.A.tileColors[0]);
-    const line = Phaser.Display.Color.ValueToColor(base).brighten(10).color;
-    const wall = Phaser.Display.Color.ValueToColor(base).darken(25).color;
-    const g = this.add.graphics().setDepth(DEPTH.floor);
-    g.fillStyle(base, 1).fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    g.fillStyle(wall, 1).fillRect(0, 0, GAME_WIDTH, WALL_H);
-    g.lineStyle(1, line, 0.6);
-    for (const [top, bottom, rowH, brickW] of [[WALL_H, GAME_HEIGHT, 44, 78], [0, WALL_H, 25, 50]]) {
-      let row = 0;
-      for (let y = top; y <= bottom; y += rowH, row++) {
-        g.lineBetween(0, y, GAME_WIDTH, y);
-        for (let x = (row % 2) * (brickW / 2); x < GAME_WIDTH; x += brickW) g.lineBetween(x, y, x, Math.min(y + rowH, bottom));
-      }
-    }
+    this.add.image(0, 0, floorTextureKey(this, dungeons.A.tileColors[0], 0, WALL_H)).setOrigin(0).setScale(FLOOR_PIXEL).setDepth(DEPTH.floor); // as on the battle floors
     // The door into the dungeon: closed until the squad sets off.
     this.door = new Door(this, this.add.container(0, 0).setDepth(DEPTH.floor), DOOR_X, WALL_H);
     // Two torches beside the door.
+    const g = this.add.graphics().setDepth(DEPTH.floor);
     for (const x of [DOOR_X - 70, DOOR_X + 70]) {
       g.fillStyle(0x5a3a22, 1).fillRect(x - 3, WALL_H - 90, 6, 18);
       const flame = this.add.ellipse(x, WALL_H - 96, 10, 14, 0xffb347).setDepth(DEPTH.floor);

@@ -17,6 +17,8 @@ import rawSkills from '../data/skills.json';
 import statusInfo from '../data/statuses.json';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
+import { floorTextureKey, FLOOR_PIXEL } from '../entities/floorTexture.js';
+import floorArt from '../data/floorArt.json';
 import * as sfx from '../audio/sfx.js';
 import { statusIconKey } from '../entities/statusIconTexture.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
@@ -1043,25 +1045,11 @@ export default class BattleScene extends Phaser.Scene {
     const container = this.add.container(0, yOffset).setDepth(DEPTH.floor);
     // (kept for the floor slide; the heroes now fade out in the doorway instead of being covered)
     const front = this.add.container(0, yOffset).setDepth(DEPTH.doorFront);
+    // The floor's pixel art (old flagstones, dirt, grass; a brick wall with pillars): entities/floorTexture.js.
     const colors = this.dungeon.tileColors;
-    const base = Number(colors[(n - 1) % colors.length]);
-    const line = Phaser.Display.Color.ValueToColor(base).brighten(10).color;
-    const wall = Phaser.Display.Color.ValueToColor(base).darken(25).color;
-
-    const g = this.add.graphics();
-    g.fillStyle(base, 1).fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    g.fillStyle(wall, 1).fillRect(0, 0, GAME_WIDTH, WALL_H);
-    g.lineStyle(1, line, 0.6);
-    // Brick rows: every other row is shifted sideways.
-    const rows = [[WALL_H, GAME_HEIGHT, 44, 78], [0, WALL_H, 25, 50]];
-    for (const [top, bottom, rowH, brickW] of rows) {
-      let row = 0;
-      for (let y = top; y <= bottom; y += rowH, row++) {
-        g.lineBetween(0, y, GAME_WIDTH, y);
-        for (let x = (row % 2) * (brickW / 2); x < GAME_WIDTH; x += brickW) g.lineBetween(x, y, x, Math.min(y + rowH, bottom));
-      }
-    }
-    container.add(g);
+    const tint = colors[(n - 1) % colors.length];
+    const variant = Math.floor((n - 1) / colors.length) % floorArt.variants;
+    container.add(this.add.image(0, 0, floorTextureKey(this, tint, variant, WALL_H)).setOrigin(0).setScale(FLOOR_PIXEL));
 
     // The door in the back wall: closed wooden doors that swing open when the floor is cleared.
     const door = new Door(this, container, DOOR_X, WALL_H);

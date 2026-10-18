@@ -234,7 +234,7 @@
     },
     "bossRoar": {
       "file": "picked/bossRoar",
-      "volume": 0.8,
+      "volume": 1,
       "source": "new_80-CC0-creature-sfx-2/roar_04.ogg (pitch 0.75 + echo)"
     },
     "bossIntro": {

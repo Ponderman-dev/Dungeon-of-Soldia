@@ -578,7 +578,7 @@ export default class BattleState {
     }
     this.retargetAttacksOn(target, events);
     if (this.focusUid === target.uid) this.focusUid = null;
-    events.push({ type: 'death', unit: target });
+    events.push({ type: 'death', unit: target, killer });
     if (target.minion) {
       this.minionDied(target, events); // no XP, no morale
       return;

@@ -13,9 +13,8 @@ show EVERY item icon on up to 3 lines then shrink, no "+N" (`drawIconGrid()`), b
 "Which skill?" rows). Step 2 (mimic room shows the treasure room's name + hint, elite name tag follows the elite,
 puzzle tablet drawScale 8, squad slots 30px lower).
 NEXT, still to do (user's words in quotes):
-- 3 BOSS START: DONE (session 8): roar (`bossRoar`, CC0 creature roar) + shake + red "ROAR!", 2s wait, then the fight (combat.json `transition.bossIntro`). Waiting on the user's OK of the sound.
-- 4 DEFEAT: "big SQUAD DEFEATED text appeared first, then the flavor text 'the squad have reached floor 69, before
-  (flavor random text of how they are defeated)'. Then a button to go back." (flavor lines in JSON).
+- 3 BOSS START: DONE (session 8): `bossRoar()` = roar sound, violent shake, white flash, action lines over the whole screen, huge ROAR!!; fight starts 2s after (combat.json `transition.bossIntro`).
+- 4 DEFEAT: DONE (session 8): screen dims first, then SQUAD DEFEATED pops, then "The squad reached floor N, before <random line>" (names the enemy that landed the last blow; death events now carry `killer`), then a BACK button (no more auto-return). Data: src/data/defeat.json; `BattleScene.showDefeat()`.
 - 5 ART: hero select door "very big door, like an entrance to a dungeon, very intimidating"; between floors "the door
   opens should have better animation and the door open it should look black"; fight floor "more natural looking floor,
   dirt and grass, an old dungeon, pillars on the wall"; fountain room "more decorations"; Skill Dealer room "shelves of

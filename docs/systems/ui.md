@@ -17,3 +17,4 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   from the top + the seconds), all fight texts (popups 8, big/skill numbers 16 = combat.json skillFx.numberSizePx,
   banners 24), reward sheet + "who gets it" + skill book steps, squad select + hero card, room hint window, puzzle,
   test button. Next: per-screen changes with the user (reward, battle, hero select, puzzle).
+- **Defeat screen (screen review, user):** `BattleScene.showDefeat()`: the screen dims to black first, then a big red SQUAD DEFEATED pops in (small shake), then "The squad reached floor N, before <line>" (a random line from `src/data/defeat.json`: `withKiller` lines name the enemy whose hit felled the last hero, `death` events carry `killer`; `noKiller` when nobody did), then a BACK button to the squad screen (the old 3s auto-return, `restartDelayMs`, is gone). Timings and texts in defeat.json.

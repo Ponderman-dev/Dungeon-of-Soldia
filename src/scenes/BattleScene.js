@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, SKILL_COLORS, UI } from '../config.js';
-import { drawWindow, uiText, uiStyle } from '../entities/uiKit.js';
+import { drawWindow, uiText, uiStyle, uiButton } from '../entities/uiKit.js';
 import allHeroDefs from '../data/heroes.json';
 import squadIds from '../data/squad.json';
 import demoSquad from '../data/demoSquad.json'; // the Monster House demo page's squad
@@ -42,6 +42,7 @@ import bookData from '../data/skillBooks.json';
 import { maybeAddBook } from '../systems/books.js';
 import { loadProgress, saveProgress, recordRun, unlockedIds } from '../systems/progress.js';
 import unlocks from '../data/unlocks.json';
+import defeatData from '../data/defeat.json';
 import { roomMethods } from './roomMethods.js';
 
 const DUNGEON_ID = 'A';
@@ -84,6 +85,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   create() {
+    this.lastKiller = null; // the enemy that felled the last hero (defeat screen)
     this.bannerRows = []; // skill banner rows in use (timers die with the scene, so start fresh)
     // Drawing layers made on first use: a new run (scene started again) must make new ones, the old ones were destroyed
     // with the last run (bug: on a second run status effects, hits, elites, bombs... were drawn on dead layers).
@@ -175,12 +177,9 @@ export default class BattleScene extends Phaser.Scene {
     // A boss floor: the boss roars and the screen shakes first, then a short wait before the fight starts.
     const bossViews = [...this.views.values()].filter((v) => v.unit.side === 'enemy' && v.unit.def.boss && v.unit.alive);
     if (bossViews.length && !this.bossIntroDone) {
-      const B = T.bossIntro;
       this.bossIntroDone = true;
-      sfx.play('bossRoar');
-      this.cameras.main.shake(B.shakeMs, B.shakeIntensity);
-      for (const v of bossViews) { this.popText(v, 'ROAR!', '#ff4a3a', true); this.ring(v, 0xff4a3a); }
-      this.time.delayedCall(B.waitMs, () => this.startFighting());
+      this.bossRoar(bossViews[0]);
+      this.time.delayedCall(T.bossIntro.waitMs, () => this.startFighting());
       return;
     }
     this.bossIntroDone = false;
@@ -218,6 +217,49 @@ export default class BattleScene extends Phaser.Scene {
     else for (const v of this.views.values()) if (v.unit.elite && v.unit.alive) this.eliteName(v); // "Burning Vampiric Bandit"
     if (this.state.enemies.some((u) => u.def.boss)) sfx.play('bossIntro'); // a deep gong when the boss fight starts (after the roar)
     for (const e of this.state.startFloor()) this.showEvent(e); // floor-start minions rise (Necromancer)
+  }
+
+  // The boss's roar before a boss fight: a hard shake, a white flash, manga action lines bursting from the
+  // boss over the whole screen and a huge ROAR!! that slams in (numbers: combat.json transition.bossIntro).
+  bossRoar(view) {
+    const B = T.bossIntro;
+    const L = B.lines;
+    sfx.play('bossRoar');
+    this.cameras.main.shake(B.shakeMs, B.shakeIntensity);
+    this.cameras.main.flash(B.flashMs, 255, 255, 255);
+    const c = this.center(view);
+    const fp = view.ch.parentContainer; // before the fight the boss still stands in its floor container
+    if (fp) { c.x += fp.x; c.y += fp.y; }
+    const far = Math.hypot(GAME_WIDTH, GAME_HEIGHT); // every line runs off the screen
+    const g = this.add.graphics().setDepth(DEPTH.popup + 1);
+    // Thin wedges from a ring round the boss out to the screen edge, a new random set each flicker.
+    const drawLines = () => {
+      g.clear().fillStyle(Number(L.color), 1);
+      for (let i = 0; i < L.count; i++) {
+        const a = ((i + Math.random() * 0.8) / L.count) * Math.PI * 2;
+        const half = (L.widthPx * (0.35 + Math.random() * 0.65)) / 2 / far; // the angle half the wide end covers
+        const r0 = L.innerPx * (1 + Math.random() * 0.6);
+        g.fillTriangle(
+          c.x + Math.cos(a) * r0, c.y + Math.sin(a) * r0,
+          c.x + Math.cos(a - half) * far, c.y + Math.sin(a - half) * far,
+          c.x + Math.cos(a + half) * far, c.y + Math.sin(a + half) * far,
+        );
+      }
+    };
+    drawLines();
+    g.setAlpha(L.alpha);
+    const flicker = this.time.addEvent({ delay: L.flickerMs, loop: true, callback: drawLines });
+    this.tweens.add({ targets: g, alpha: 0, delay: B.roarMs * 0.7, duration: B.roarMs * 0.3, onComplete: () => { flicker.remove(); g.destroy(); } });
+    // ROAR!! slams in huge over the boss (kept on screen), shakes, then fades.
+    const t = this.add.text(GAME_WIDTH / 2, Phaser.Math.Clamp(c.y, 140, GAME_HEIGHT / 2), 'ROAR!!', {
+      fontFamily: UI.font, fontSize: `${B.textPx}px`, color: '#ff3a2a', stroke: '#000000', strokeThickness: 10, align: 'center',
+    }).setOrigin(0.5).setDepth(DEPTH.popup + 2);
+    if (t.width > GAME_WIDTH - 12) t.setScale((GAME_WIDTH - 12) / t.width);
+    const end = t.scale;
+    t.setScale(end * 3).setAlpha(0);
+    this.tweens.add({ targets: t, scale: end, alpha: 1, duration: 180, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: t, angle: { from: -4, to: 4 }, delay: 180, duration: 70, yoyo: true, repeat: Math.max(0, Math.floor((B.roarMs - 400) / 140)) });
+    this.tweens.add({ targets: t, alpha: 0, scale: end * 1.3, delay: B.roarMs, duration: 300, onComplete: () => t.destroy() });
   }
 
   // A minion rises from the ground: a dark puff, the figure grows up out of the floor, then its bars show.
@@ -1553,6 +1595,7 @@ export default class BattleScene extends Phaser.Scene {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
       sfx.play(e.unit.side === 'enemy' || e.unit.minion ? 'enemyDeath' : 'heroFall');
+      if (e.unit.side === 'hero' && !e.unit.minion) this.lastKiller = e.killer && e.killer.side === 'enemy' ? e.killer.def.name : null; // named on the defeat screen
       if (e.unit.side === 'enemy' || e.unit.minion) {
         v.ch.stopMove(); // it fades out where it fell
         v.ch.castCancel();
@@ -2195,7 +2238,7 @@ export default class BattleScene extends Phaser.Scene {
     this.mode = 'lost';
     sfx.play('defeat');
     this.drawBossHud();
-    this.banner.setText(`Squad defeated\nReached floor ${this.floor}`);
+    this.banner.setText('');
     // Save the run (floor reached, enemies defeated) and see which heroes it unlocked.
     const progress = loadProgress();
     const before = unlockedIds(allHeroDefs, progress, unlocks);
@@ -2203,7 +2246,40 @@ export default class BattleScene extends Phaser.Scene {
     saveProgress(progress);
     const newly = unlockedIds(allHeroDefs, progress, unlocks).filter((id) => !before.includes(id));
     const lastRun = { floor: this.floor, kills: this.state.kills || 0, newly };
-    this.time.delayedCall(combatRules.restartDelayMs, () => this.scene.start('Squad', { lastRun }));
+    this.showDefeat(() => this.scene.start('Squad', { lastRun }));
+  }
+
+  // The defeat screen (user): the screen dims first, then SQUAD DEFEATED pops in, then how far the squad got and a
+  // random line on how it ended (naming the enemy that landed the last blow), then a Back button. Data: defeat.json.
+  showDefeat(onBack) {
+    const D = defeatData;
+    const top = 1000; // above everything (flying enemies sit high too)
+    const dim = this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000).setOrigin(0).setAlpha(0).setDepth(top).setInteractive(); // also blocks taps on the fight
+    this.tweens.add({ targets: dim, alpha: D.dimAlpha, duration: D.dimMs });
+    const title = uiText(this, GAME_WIDTH / 2, 300, 'SQUAD\nDEFEATED', D.titlePx, '#ff4a3a', { align: 'center', stroke: '#000000', strokeThickness: 8 })
+      .setOrigin(0.5).setDepth(top + 1).setAlpha(0);
+    if (title.width > GAME_WIDTH - 16) title.setScale((GAME_WIDTH - 16) / title.width);
+    const end = title.scale;
+    this.time.delayedCall(D.titleDelayMs, () => {
+      title.setScale(end * 2.6);
+      this.tweens.add({ targets: title, scale: end, alpha: 1, duration: 260, ease: 'Back.easeOut' });
+      this.time.delayedCall(200, () => this.cameras.main.shake(220, 0.006));
+    });
+    const name = this.lastKiller;
+    const pool = name ? D.withKiller : D.noKiller;
+    const line = pool[Math.floor(Math.random() * pool.length)]
+      .replace(/\ba \{enemy\}/, `${/^[aeiou]/i.test(name || '') ? 'an' : 'a'} {enemy}`)
+      .replace(/\{enemy\}/g, name || '');
+    const story = uiText(this, GAME_WIDTH / 2, 420, `${D.story.replace('{floor}', this.floor)} before ${line}`, 'normal', UI.text, {
+      align: 'center', wordWrap: { width: GAME_WIDTH - 48 },
+    }).setOrigin(0.5, 0).setDepth(top + 1).setAlpha(0);
+    this.time.delayedCall(D.storyDelayMs, () => this.tweens.add({ targets: story, alpha: 1, y: { from: story.y + 12, to: story.y }, duration: 400 }));
+    this.time.delayedCall(D.buttonDelayMs, () => {
+      const w = 200, h = 64;
+      const btn = uiButton(this, (GAME_WIDTH - w) / 2, Math.max(story.y + story.height + 40, 640), w, h, D.button, { selected: true, depth: top + 2, onTap: () => { sfx.play('tap'); onBack(); } });
+      btn.container.setAlpha(0);
+      this.tweens.add({ targets: btn.container, alpha: 1, duration: 300 });
+    });
   }
 }
 

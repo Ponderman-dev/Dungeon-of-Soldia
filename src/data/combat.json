@@ -17,7 +17,6 @@
     "attackPerStep": 0.525,
     "attackStepFloors": 3
   },
-  "restartDelayMs": 3000,
   "meleeVsFlyingMissPercent": 15,
   "attackTiming": {
     "hero": {
@@ -102,9 +101,13 @@
     "slideMs": 1000,
     "doorFadePx": 70,
     "bossIntro": {
-      "_about": "A boss floor: when the squad is in place the boss ROARS (sound bossRoar) and the camera shakes (shakeMs, shakeIntensity), then nobody moves for waitMs before the fight starts (BattleScene.startFighting).",
-      "shakeMs": 900,
-      "shakeIntensity": 0.012,
+      "_about": "A boss floor: when the squad is in place the boss ROARS (sound bossRoar): the camera shakes hard (shakeMs, shakeIntensity = share of the screen), a white flash (flashMs), manga ACTION LINES burst from the boss over the whole screen (lines: count, innerPx = empty circle round the boss, widthPx = thickest line end, flickerMs = redrawn this often, alpha, color) and a huge ROAR!! (textPx) slams in; all of it lasts roarMs. The fight starts waitMs after the roar began (BattleScene.bossRoar).",
+      "roarMs": 1300,
+      "shakeMs": 1300,
+      "shakeIntensity": 0.035,
+      "flashMs": 160,
+      "textPx": 48,
+      "lines": { "count": 46, "innerPx": 70, "widthPx": 9, "flickerMs": 60, "alpha": 0.9, "color": "0xffffff" },
       "waitMs": 2000
     }
   },

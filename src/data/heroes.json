@@ -1235,11 +1235,11 @@
     "id": "necromancer",
     "name": "Necromancer",
     "role": "Summoner",
-    "summary": "Raises skeletons that fight beside the squad.",
+    "summary": "Commands an army of the dead: more minions, more power.",
     "tips": [
-      "Skeletons rise during every fight, no upkeep.",
-      "A Death Coil kill raises an extra skeleton.",
-      "Bone Ward shields heroes AND skeletons; broken shields hit back."
+      "Legion: skeletons rise all fight and grow 3% stronger per Necromancer level; minion items count double for him.",
+      "Every minion that dies gives a Soul; Death Coil spends them all (+20% each). A Death Coil kill raises a skeleton.",
+      "Bone Sacrifice turns his skeletons into squad shields (bigger per skeleton); with Grave Dust they explode on the way."
     ],
     "damageType": "dark",
     "height": 23,
@@ -1260,8 +1260,8 @@
       "resist": 0.4
     },
     "skills": {
-      "attack": "death_coil",
-      "support": "bone_ward"
+      "attack": "death_coil3",
+      "support": "bone_sacrifice"
     },
     "perk": {
       "name": "Grim Resolve",
@@ -1274,14 +1274,20 @@
       ]
     },
     "passive": {
-      "name": "Skeleton Summoner",
-      "description": "Raises a skeleton every 5-6s (up to 5); two rise at the start of every floor. They vanish when the floor ends.",
+      "name": "Legion",
+      "description": "Raises a skeleton every 5-6s (up to 5; two at the start of every floor). His skeletons get +3% health and attack per Necromancer level, and minion items count double for him. Every minion that dies gives him a Soul (up to 10) for Death Coil.",
       "spawner": {
         "minion": "skeleton",
         "minMs": 5000,
         "maxMs": 6000,
         "cap": 5,
         "atFloorStart": 2
+      },
+      "legion": {
+        "minion": "skeleton",
+        "perLevelPercent": 3,
+        "minionItemMultiplier": 2,
+        "maxSouls": 10
       }
     },
     "parts": {

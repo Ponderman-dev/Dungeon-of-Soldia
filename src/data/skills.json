@@ -750,6 +750,38 @@
     ],
     "description": "The squad (skeletons too) gets a bone shield; when it breaks, bone shards hurt the enemies."
   },
+  "death_coil3": {
+    "name": "Death Coil",
+    "short": "DC",
+    "kind": "attack",
+    "target": "enemy",
+    "damageType": "dark",
+    "cooldownMs": 8000,
+    "castMs": 700,
+    "damageMultiplier": 2.5,
+    "debuffedMultiplier": 1.5,
+    "onKill": {
+      "raise": "skeleton"
+    },
+    "projectile": "darkbolt",
+    "description": "A dark bolt: 250% (+50% against debuffed enemies), +20% per Soul he has (all Souls are spent). If it kills, a skeleton rises.",
+    "soulBonusPercent": 20
+  },
+  "bone_sacrifice": {
+    "name": "Bone Sacrifice",
+    "short": "BS",
+    "kind": "support",
+    "target": "self",
+    "cooldownMs": 14000,
+    "castMs": 600,
+    "boneSacrifice": {
+      "minion": "skeleton",
+      "basePercent": 5,
+      "perMinionPercent": 6,
+      "durationMs": 6000
+    },
+    "description": "Sacrifices ALL his skeletons: every hero gets a shield of 5% + 6% per skeleton of their health for 6s. Each skeleton gives a Soul; with Grave Dust they explode."
+  },
   "crescendo": {
     "name": "Crescendo",
     "short": "CR",

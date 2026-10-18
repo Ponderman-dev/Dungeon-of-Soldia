@@ -1,4 +1,4 @@
-# Hero kits v3 (session 5 brainstorm, NOT built yet)
+# Hero kits v3 (session 5 brainstorm; ALL BUILT in session 6, see docs/systems/heroes.md 'HERO KITS v3')
 
 Goal (user): every hero's gimmick must feel truly different, and skills must keep up with progression by
 SYNERGISING WITH ITEMS (each hero = the best home for one item family). Measured with `scripts/tests/dmgshare.mjs`:
@@ -67,7 +67,7 @@ Decided by the user one hero at a time (feel, passive, attack, support). Numbers
   healed ally; can proc items.
 - Support (user's version, replaces Divine Shield): a SHIELD plus strong REGEN for 5s.
 
-## Necromancer: LEGION MASTER
+## Necromancer: LEGION MASTER (BUILT session 6, see docs/systems/heroes.md)
 - Feel: commands an army of the dead; more minions = more power. Loves minion items (Bone Charm, Grave Dust,
   Rat Cage, Necro Crown).
 - Passive LEGION (user's version): keeps the skeletons; every minion that dies gives a Soul (for his skills) and

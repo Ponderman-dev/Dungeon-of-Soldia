@@ -248,3 +248,31 @@ const GR = hero('cleric').passive.grace, HN = skills[hero('cleric').skills.attac
   const sh = k.statuses.find((x) => x.type === 'shield'), rg = k.statuses.find((x) => x.type === 'regenBoost');
   ok(`Sanctuary: the most hurt hero gets a shield (${SA.apply[0].percentMaxHp}%) and regen (${SA.apply[1].percentMaxHpPerSec}%/s) for ${SA.apply[0].durationMs / 1000}s`, sh && Math.abs(sh.amount - k.maxHp * SA.apply[0].percentMaxHp / 100) <= 1 && rg && !c.statuses.some((x) => x.type === 'shield'));
   const hp0 = k.hp; run(s, 1000); ok('...and the regen heals', k.hp > hp0); }
+
+// ================= NECROMANCER: LEGION MASTER
+const LG = hero('necromancer').passive.legion, DC = skills[hero('necromancer').skills.attack], BS = skills[hero('necromancer').skills.support].boneSacrifice;
+const raise = (s, n, k = 1) => { for (let i = 0; i < k; i++) s.spawnMinion(n, { kind: 'weak', key: 'hero', capGroup: 'hero', spec: { minion: 'skeleton', cap: 5 } }, []); return s.minions.filter((m) => m.holderUid === n.uid); };
+{ const { s, a } = mk(['necromancer']); s.minions = []; const [m] = raise(s, a); const hp1 = m.maxHp;
+  a.level = 11; s.refreshStats(); s.refreshMinionStats(m);
+  ok(`Legion: his skeletons get +${LG.perLevelPercent}% per Necromancer level`, Math.abs(m.maxHp / hp1 - (1 + LG.perLevelPercent * 10 / 100)) < 0.05, `${hp1} -> ${m.maxHp}`); }
+{ const withN = mk(['necromancer', 'knight']), withK = mk(['rogue', 'knight']);
+  withN.s.giveItem(withN.h[0].uid, 'bone_charm'); withK.s.giveItem(withK.h[0].uid, 'bone_charm');
+  ok(`...minion items count x${LG.minionItemMultiplier} for him (Bone Charm)`, withN.s.minionBoost().bone === withK.s.minionBoost().bone * LG.minionItemMultiplier, `${withK.s.minionBoost().bone} -> ${withN.s.minionBoost().bone}`); }
+{ const { s, a } = mk(['necromancer']); s.minions = []; const bones = raise(s, a, 3);
+  for (const m of bones) { m.hp = 0; s.killUnit(m, []); }
+  ok('...every minion that dies gives a Soul', a.souls === 3, a.souls);
+  for (let i = 0; i < LG.maxSouls + 5; i++) s.gainSoul([]); ok(`...up to ${LG.maxSouls}`, a.souls === LG.maxSouls); }
+{ const plain = mk(['necromancer'], ['goblin']); plain.a.stats.crit = 0; plain.s.focusUid = plain.es[0].uid;
+  const d0 = hits(cast(plain.s, plain.a, 'attack'), plain.a).find((e) => e.skill).result.amount;
+  ok(`Death Coil: ${DC.damageMultiplier * 100}%`, Math.abs(d0 - plain.a.stats.attack * DC.damageMultiplier) <= 2, d0);
+  const { s, es, a } = mk(['necromancer'], ['goblin']); a.stats.crit = 0; s.focusUid = es[0].uid; a.souls = 5;
+  const d1 = hits(cast(s, a, 'attack'), a).find((e) => e.skill).result.amount;
+  ok(`...+${DC.soulBonusPercent}% per Soul, and spends them`, Math.abs(d1 / d0 - (1 + 5 * DC.soulBonusPercent / 100)) < 0.05 && a.souls === 0, `${d0} -> ${d1}`); }
+{ const { s, es, a } = mk(['necromancer'], ['goblin']); s.minions = []; s.focusUid = es[0].uid; es[0].hp = 1; const n0 = s.minions.length; cast(s, a, 'attack');
+  ok('...a kill raises a skeleton', s.minions.length === n0 + 1); }
+{ const { s, h, a } = mk(['necromancer', 'knight']); s.refreshStats(); s.minions = []; raise(s, a, 3);
+  cast(s, a, 'support'); const sh = h[1].statuses.find((x) => x.type === 'shield');
+  ok(`Bone Sacrifice: all his skeletons die, every hero gets ${BS.basePercent}% + ${BS.perMinionPercent}% per skeleton as a shield`, s.minions.filter((m) => m.holderUid === a.uid).length === 0 && sh && Math.abs(sh.amount - h[1].maxHp * (BS.basePercent + 3 * BS.perMinionPercent) / 100) <= 1, sh && sh.amount);
+  ok('...and each sacrificed skeleton is a Soul', a.souls === 3); }
+{ const { s, es, a } = mk(['necromancer']); s.minions = []; s.giveItem(a.uid, 'grave_dust'); const bones = raise(s, a, 2); for (const m of bones) { m.x = es[0].x; m.y = es[0].y + 20; }
+  const ev = cast(s, a, 'support'); ok('...with Grave Dust they explode on the way', ev.filter((e) => e.type === 'minionExplode').length === 2); }

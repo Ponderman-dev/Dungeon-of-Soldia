@@ -669,12 +669,13 @@ export default class BattleState {
     for (const h of this.heroes) {
       if (!h.alive) continue;
       const sp = h.specials;
-      sum.bone += sp.boneCharm || 0;
-      sum.whistle += sp.whistleCap || 0;
-      sum.speed += sp.whistleSpeed || 0;
-      sum.whistleHp += sp.whistleHealth || 0;
-      sum.dust += sp.graveDust || 0;
-      sum.crown += sp.necroCrownCap || 0;
+      const x = (h.def.passive && h.def.passive.legion && h.def.passive.legion.minionItemMultiplier) || 1; // Legion: minion items count double for him
+      sum.bone += (sp.boneCharm || 0) * x;
+      sum.whistle += (sp.whistleCap || 0) * x;
+      sum.speed += (sp.whistleSpeed || 0) * x;
+      sum.whistleHp += (sp.whistleHealth || 0) * x;
+      sum.dust += (sp.graveDust || 0) * x;
+      sum.crown += (sp.necroCrownCap || 0) * x;
       sum.crownKill = sum.crownKill || !!sp.necroCrownKill;
       sum.spawnSpeed = Math.max(sum.spawnSpeed || 0, sp.necroCrownSpeed || 0); // does not grow with copies
     }
@@ -827,10 +828,37 @@ export default class BattleState {
   // A minion was killed: a greater one starts its revival wait.
   minionDied(m, events = []) {
     this.minions = this.minions.filter((x) => x !== m);
+    this.gainSoul(events); // Necromancer's Legion
     this.explodeMinion(m, events); // Mimic, Grave Dust
     const holder = this.heroes.find((h) => h.uid === m.holderUid);
     if (m.greater && holder) this.sourceState(holder, m.sourceKey).wait = this.rules.minions.revivalFloors;
     this.refreshStats();
+  }
+
+  // Necromancer's LEGION (passive.legion): every minion that dies gives each living Necromancer a Soul (up to
+  // `maxSouls`); his skill with `soulBonusPercent` (Death Coil) spends them all for extra damage.
+  gainSoul(events) {
+    for (const h of this.heroes) {
+      const L = h.alive && h.def.passive && h.def.passive.legion;
+      if (!L || (h.souls || 0) >= L.maxSouls) continue;
+      h.souls = (h.souls || 0) + 1;
+      events.push({ type: 'soul', unit: h, souls: h.souls });
+    }
+  }
+
+  // BONE SACRIFICE (skill `boneSacrifice: { minion, basePercent, perMinionPercent, durationMs }`): all his skeletons
+  // die (Grave Dust makes them explode, each death is a Soul) and every living hero gets a shield of basePercent +
+  // perMinionPercent per skeleton of their max health.
+  boneSacrifice(hero, skill, slotId, events) {
+    const B = skill.boneSacrifice;
+    const bones = this.minions.filter((m) => m.alive && m.holderUid === hero.uid && m.def.id === B.minion);
+    for (const m of bones) {
+      events.push({ type: 'proc', unit: m, label: 'Sacrifice!' });
+      m.hp = 0;
+      this.killUnit(m, events);
+    }
+    const pct = B.basePercent + B.perMinionPercent * bones.length;
+    for (const h of this.heroes.filter((x) => x.alive)) this.applyStatus(h, { status: 'shield', percentMaxHp: pct, durationMs: B.durationMs }, hero, slotId, events);
   }
 
   // The upkeep a hero pays: every minion ITEM of his that has a live minion costs its full upkeep (greater minion)
@@ -867,7 +895,10 @@ export default class BattleState {
     const boost = this.minionBoost();
     const bonus = m.copyBonus ?? m.def.copyStatBonus ?? this.rules.minions.copyStatBonus ?? 0;
     const growth = m.def.growthPerFloor ? 1 + Math.min(m.def.growthMax ?? 1, m.def.growthPerFloor * (m.floors || 0)) : 1;
-    const scale = (1 + bonus * ((m.copies || 1) - 1)) * growth * (1 + boost.bone / 100);
+    const holder = this.heroes.find((h) => h.uid === m.holderUid);
+    const legion = holder && holder.def.passive && holder.def.passive.legion;
+    const lvl = legion && m.def.id === legion.minion ? 1 + ((legion.perLevelPercent || 0) * ((holder.level || 1) - 1)) / 100 : 1; // Legion: his skeletons level up with him
+    const scale = (1 + bonus * ((m.copies || 1) - 1)) * growth * (1 + boost.bone / 100) * lvl;
     const ratio = m.maxHp > 0 ? m.hp / m.maxHp : 1;
     const hpScale = m.greater ? 1 : 1 + (boost.weakHealth || 0) / 100; // Overseer's Whistle: weak minions are tougher
     m.maxHp = Math.max(1, Math.round(raw.health * scale * hpScale));
@@ -2568,6 +2599,11 @@ export default class BattleState {
       this.tickCasting(hero, 0, events);
       return;
     }
+    if (skill.boneSacrifice) {
+      this.boneSacrifice(hero, skill, slot.id, events);
+      this.castPages = null;
+      return;
+    }
     if (skill.holyNova) {
       this.holyNova(hero, skill, slot.id, targets[0], events);
       this.castPages = null;
@@ -2829,6 +2865,13 @@ export default class BattleState {
     let base = opts.multiplier ?? skill.damageMultiplier;
     // Defense Bash (`defenseMultiplier`): also deals that many times the caster's DEFENSE (as a share of his attack).
     if (skill.defenseMultiplier && opts.multiplier === undefined) base += (skill.defenseMultiplier * hero.stats.defense) / Math.max(1, hero.stats.attack);
+    // Necromancer's Souls (`soulBonusPercent`): every Soul makes this skill stronger, then they are all spent.
+    if (skill.soulBonusPercent && hero.souls) {
+      base *= 1 + (hero.souls * skill.soulBonusPercent) / 100;
+      events.push({ type: 'proc', unit: hero, label: `Souls x${hero.souls}!` });
+      hero.souls = 0;
+      events.push({ type: 'soul', unit: hero, souls: 0 });
+    }
     // Knight's Grudge: the charge from reflected hits makes this skill stronger, then it is used up.
     if (skill.grudgeCharged && hero.grudge) {
       base *= 1 + (hero.grudge * hero.def.passive.grudge.perReflectPercent) / 100;

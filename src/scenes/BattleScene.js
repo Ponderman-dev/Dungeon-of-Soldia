@@ -259,6 +259,13 @@ export default class BattleScene extends Phaser.Scene {
         g.fillStyle(0x000000, 0.85).fillRect(x - 1, y - 1, BAR_WIDTH + 2, 4);
         g.fillStyle(full ? 0xffd24d : 0xff6a2a, 1).fillRect(x, y, full ? BAR_WIDTH : (BAR_WIDTH * h.rage) / rage.max, 2);
       }
+      // Necromancer's Souls: a purple bar under his health bar fills with every minion death (pale when full).
+      const legion = h.def.passive && h.def.passive.legion;
+      if (legion && h.souls) {
+        const x = v.bg.x - BAR_WIDTH / 2, y = v.bg.y + 5;
+        g.fillStyle(0x000000, 0.85).fillRect(x - 1, y - 1, BAR_WIDTH + 2, 4);
+        g.fillStyle(h.souls >= legion.maxSouls ? 0xe6c8ff : 0xa064ff, 1).fillRect(x, y, (BAR_WIDTH * h.souls) / legion.maxSouls, 2);
+      }
       // Knight's Grudge: a bar under his health bar fills with every reflected hit (gold when full).
       const grudge = h.def.passive && h.def.passive.grudge;
       if (grudge && h.grudge) {

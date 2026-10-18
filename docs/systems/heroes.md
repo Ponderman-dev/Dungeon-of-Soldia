@@ -93,3 +93,13 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       34.3; no bonus + Grace 8s 30.9; that + Holy Nova 8% 30.3. Her healing carries squads; Sanctuary/self buff barely matter.
       Then user: make her FRAGILE: health 100 -> 80 (growth 4 -> 3%), attack 14 -> 11, defense 5 -> 2: avg floor -> 27.9 / 26.6
       (mid-pack; squads with her die earlier, so every hero's average dropped ~1).
+    - **Necromancer** LEGION MASTER (built session 6): LEGION (`passive.legion` + the old `spawner`): his skeletons get
+      +`perLevelPercent` 3% health/attack per Necromancer level (`refreshMinionStats`); squad minion boosters he holds
+      (Bone Charm, Whistle, Grave Dust, Necro Crown cap) count x`minionItemMultiplier` 2 (`minionBoost`); every minion that
+      dies gives each living Necromancer a Soul up to `maxSouls` 10 (`gainSoul()` in `minionDied`; purple bar under his
+      health bar). DEATH COIL v3 (`death_coil3`): 250%, `soulBonusPercent` 20 = +20% per Soul, spends all; a kill still
+      raises a skeleton. BONE SACRIFICE (`bone_sacrifice`, replaces Bone Ward; cast effect = boneWard): all his skeletons
+      die (killUnit: Grave Dust explodes them, each is a Soul), every living hero gets a shield of 5% + 6% per skeleton
+      for 6s. review.mjs 3 all (x2): avg floor ~28 -> 27.3 / 27.0 (mid-pack).
+    - ALL 10 v3 KITS BUILT (session 6). Last review (x2): rogue ~31.4, samurai ~28.4, cleric ~28.4, knight ~27.7,
+      necromancer ~27.2, berserker ~26.8, mage ~26.6, alchemist ~25.4, bard ~25, archer ~23.5; mean floor ~27.

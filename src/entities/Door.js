@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import floorArt from '../data/floorArt.json';
+import * as sfx from '../audio/sfx.js';
 
 // The door in the back wall of every floor, drawn to match the stone wall (screen review, user): a stone arch of
 // blocks with a keystone, and a dark wooden door of planks with iron bands. It is CLOSED during the fight; when the
@@ -191,6 +192,7 @@ export default class Door {
       sc.tweens.add({ targets: d, y: d.y + 18 + Math.random() * 22 * more, alpha: 0, delay: Math.random() * 150, duration: 500 + Math.random() * 300, ease: 'Quad.easeIn', onComplete: () => d.destroy() });
     }
     if (this.big) {
+      sfx.play('gateSlam'); // a deep THUMP when the entrance slams open
       sc.tweens.add({ targets: this.eyes, alpha: 1, delay: 250, duration: 300 });
       sc.time.delayedCall(1000, () => this.isOpen && this.eyes.setAlpha(0)); // a blink
       sc.time.delayedCall(1090, () => this.isOpen && this.eyes.setAlpha(1));

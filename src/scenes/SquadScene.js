@@ -3,6 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, UI } from '../config.js';
 import { drawWindow, drawCursor } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
+import floorArt from '../data/floorArt.json';
 import { floorTextureKey, FLOOR_PIXEL } from '../entities/floorTexture.js';
 import heroDefs from '../data/heroes.json';
 import skillDefs from '../data/skills.json';
@@ -473,6 +474,8 @@ export default class SquadScene extends Phaser.Scene {
     this.door.open();
     const doorY = WALL_H - 10;
     const gather = { x: DOOR_X, y: 300 };
+    const A = floorArt.door.anim;
+    const doorOpenMs = A.rattleMs + A.swingMs + A.bounceMs; // until the gate has slammed open
     let left = ids.length;
     ids.forEach((id, i) => {
       const f = this.figures.get(id);
@@ -485,7 +488,7 @@ export default class SquadScene extends Phaser.Scene {
       this.tweens.addCounter({
         from: 0,
         to: 1,
-        delay: 450 + i * 380, // the doors swing open first
+        delay: doorOpenMs + T.squadEnter.waitMs + i * T.squadEnter.staggerMs, // the gate swings open, a beat of waiting, then in
         duration: (total / WALK) * 1000,
         onUpdate: (tw) => {
           let d = tw.getValue() * total;
@@ -502,7 +505,7 @@ export default class SquadScene extends Phaser.Scene {
         onComplete: () => {
           f.ch.setVisible(false);
           if (--left === 0) {
-            this.cameras.main.fadeOut(260, 0, 0, 0);
+            this.cameras.main.fadeOut(T.squadEnter.fadeMs, 0, 0, 0);
             this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Battle'));
           }
         },

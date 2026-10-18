@@ -8,3 +8,4 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
 - ROUND 5 picks applied (2026-10-17): hitMelee = New: Slash (organic wooshes), hitRanged = New: Wood hit 03, hitIce = New: Glass hit 02, hitFire stays Wizard fire woosh. Melee re-pick done (the old 'T' letter-bug pick is gone).
 - `flaskBreak` (2026-10-17, user asked): small glass break (Kenney impactGlass_heavy, pitch 1.6) when an Alchemist flask lands (`showFlask()` / `lobFlask()` in BattleScene).
 - `bossRoar` (2026-10-18, screen review): CC0 `80-CC0-creature-sfx-2/roar_04.ogg` (lavenderdotpet pack) pitched to 0.75 with a stone-room echo (ffmpeg), plays when a boss floor starts (before the 2s wait).
+- `gateSlam` (2026-10-18, user: 'a very THUMPP sound for the entrance door'): CC0 wood hit (bfh1_wood_hit_02, pitch 0.62) + a sub-bass boom + brown-noise rumble + stone echo, made with ffmpeg; played by `Door.slam()` for the big entrance only.

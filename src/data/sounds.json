@@ -232,6 +232,11 @@
       "file": "picked/bossMove",
       "source": "yours_futuristic-bass-hit-2303.mp3"
     },
+    "gateSlam": {
+      "file": "picked/gateSlam",
+      "volume": 1,
+      "source": "new_75-cc0-breaking-falling-hit-sfx/bfh1_wood_hit_02.ogg (pitch 0.62) + a sub-bass boom + brown-noise rumble + stone echo (ffmpeg)"
+    },
     "bossRoar": {
       "file": "picked/bossRoar",
       "volume": 1,

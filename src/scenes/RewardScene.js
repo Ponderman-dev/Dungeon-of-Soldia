@@ -19,15 +19,17 @@ const MUTE = '#c8c8d4'; // descriptions: a light grey so the white names stand o
 const FONT = UI.font;
 // Press Start 2P stays crisp on its 8px grid: every old size becomes 8 (small text) or 16 (titles, names, buttons).
 const px = (size) => (size >= 16 ? 16 : 8);
-const SHEET_TOP = 44; // the sheet slides up to here; the dungeon stays visible (dimmed) above it
+const SHEET_TOP = 44; // the highest the sheet ever goes; it is only as tall as each step needs and sits in the MIDDLE of the screen (screen review)
+const HEAD = 52; // the sheet's top row (FLOOR N CLEARED, the Back pill); a step's content starts this far down
+const SHEET_MAX_BOTTOM = GAME_HEIGHT - 8; // the lowest its bottom edge ever goes
 const PAD = 16;
 const CARD_W = GAME_WIDTH - PAD * 2;
+const ROW_ITEM_LINES = 3; // a hero row on 'Who gets it?' grows for up to this many lines of item icons
 const TEXT_X = 112; // where a card's text starts (right of the icon)
 const ICON_W = 98; // the icon column
 const DESC_PX = 8; // description text size
 const TITLE_H = 54; // the step title above the cards
 const BTN_H = 76; // the big confirm button at the bottom (Give / Write it in); user: "needs to be bigger"
-const BTN_Y = GAME_HEIGHT - 16 - BTN_H; // its top
 const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
 const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
 
@@ -56,10 +58,11 @@ export default class RewardScene extends Phaser.Scene {
     this.dim = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x05030a, 0).setInteractive();
     this.tweens.add({ targets: this.dim, fillAlpha: 0.6, duration: 300 });
     this.sheet = this.add.container(0, GAME_HEIGHT);
-    const bg = this.add.graphics();
-    drawWindow(bg, 4, SHEET_TOP, GAME_WIDTH - 8, GAME_HEIGHT - SHEET_TOP + 40); // one big black window
-    this.sheet.add(bg);
-    this.sheet.add(this.add.text(GAME_WIDTH / 2, SHEET_TOP + 20, this.payload.banner || `FLOOR ${this.payload.floor} CLEARED`, { fontFamily: FONT, fontSize: '8px', color: UI.gold }).setOrigin(0.5, 0));
+    this.sheetBg = this.add.graphics();
+    this.sheet.add(this.sheetBg);
+    this.banner = this.add.text(GAME_WIDTH / 2, 0, this.payload.banner || `FLOOR ${this.payload.floor} CLEARED`, { fontFamily: FONT, fontSize: '8px', color: UI.gold }).setOrigin(0.5, 0);
+    this.sheet.add(this.banner);
+    this.top = null; // the sheet's top edge now (each step sets it with fitSheet)
     this.tweens.add({ targets: this.sheet, y: 0, duration: 420, ease: 'Cubic.easeOut' });
     sfx.play('rewardUp');
 
@@ -72,6 +75,40 @@ export default class RewardScene extends Phaser.Scene {
   }
 
   // ---- helpers -----------------------------------------------------------------------
+
+  // The sheet is only as tall as a step needs (`contentH` = the step's content under the top row) and sits in the
+  // middle of the screen (user). Returns the sheet's new top edge (the step draws from there); this.btnY = where a
+  // step's big bottom button goes. The window grows or shrinks to it in a short slide.
+  fitSheet(contentH) {
+    const h = Math.min(SHEET_MAX_BOTTOM - SHEET_TOP, HEAD + contentH);
+    const top = Math.round(Math.max(SHEET_TOP, (GAME_HEIGHT - h) / 2));
+    const bottom = top + h;
+    this.btnY = bottom - 14 - BTN_H;
+    const draw = (t, b) => {
+      this.sheetBg.clear();
+      drawWindow(this.sheetBg, 4, t, GAME_WIDTH - 8, b - t);
+      this.banner.setY(t + 20);
+    };
+    if (this.sheetTween) this.sheetTween.stop();
+    if (this.top === null) draw(top, bottom);
+    else {
+      const from = { t: this.top, b: this.bottom };
+      this.sheetTween = this.tweens.add({ targets: from, t: top, b: bottom, duration: 160, ease: 'Quad.easeOut', onUpdate: () => draw(Math.round(from.t), Math.round(from.b)) });
+    }
+    this.top = top;
+    this.bottom = bottom;
+    return top;
+  }
+
+  // How tall a text would be (nothing is drawn).
+  measure(str, size, wrap = 0) {
+    const style = { fontFamily: FONT, fontSize: `${px(size)}px`, lineSpacing: px(size) / 2 };
+    if (wrap) style.wordWrap = { width: wrap, useAdvancedWrap: true };
+    const t = this.add.text(0, 0, str, style);
+    const h = t.height;
+    t.destroy();
+    return h;
+  }
 
   track(obj) {
     this.sheet.add(obj);
@@ -155,10 +192,10 @@ export default class RewardScene extends Phaser.Scene {
   showPick(first = false) {
     this.step = 'pick';
     this.clearStep();
-    // The title and the cards sit in the MIDDLE of the sheet (user's choice), not at its top.
+    // The sheet fits the title and the cards (screen review: smaller, the dungeon shows above it).
     const heights = this.payload.choices.map((item) => this.cardHeight(item));
     const total = TITLE_H + heights.reduce((a, b) => a + b, 0) + 14 * (heights.length - 1);
-    const top = SHEET_TOP + Math.max(44, (GAME_HEIGHT - SHEET_TOP - total) / 2);
+    const top = this.fitSheet(total + 16) + HEAD - 8;
     this.text(GAME_WIDTH / 2, top, 'Choose a reward', 28, INK, true).setOrigin(0.5, 0);
 
     let y = top + TITLE_H;
@@ -194,14 +231,15 @@ export default class RewardScene extends Phaser.Scene {
 
   // ---- skill book: pick a page, then the hero's skill (then, on a full skill, which modifier it replaces) -------
 
-  // A small "Back" pill at the top right of the sheet.
+  // A small "Back" pill at the top right of the sheet (call it after fitSheet).
   backButton(onTap) {
     const bw = 84;
     const bx = GAME_WIDTH - PAD - bw;
     const bb = this.track(this.add.graphics());
-    drawWindow(bb, bx, SHEET_TOP + 48, bw, 32);
-    this.text(bx + bw / 2, SHEET_TOP + 64, 'Back', 8, INK).setOrigin(0.5);
-    this.track(this.add.zone(bx + bw / 2, SHEET_TOP + 64, bw + 10, 44).setInteractive()).on('pointerdown', () => { sfx.play('tap'); onTap(); });
+    const by = this.top + 10; // in the top row, beside FLOOR N CLEARED
+    drawWindow(bb, bx, by, bw, 28);
+    this.text(bx + bw / 2, by + 14, 'Back', 8, INK).setOrigin(0.5);
+    this.track(this.add.zone(bx + bw / 2, by + 14, bw + 10, 40).setInteractive()).on('pointerdown', () => { sfx.play('tap'); onTap(); });
   }
 
   // Page card sizes: normal, or COMPACT when a book shows more than 3 pages (the Skill Dealer's 5) so all fit.
@@ -248,7 +286,7 @@ export default class RewardScene extends Phaser.Scene {
     const gap = this.pageLook().gap;
     const heights = pages.map((p) => this.pageHeight(p));
     const total = TITLE_H + 26 + heights.reduce((a, b) => a + b, 0) + gap * (heights.length - 1);
-    const top = SHEET_TOP + Math.max(this.payload.choices.length > 1 ? 90 : 56, (GAME_HEIGHT - SHEET_TOP - total) / 2); // room for the Back pill
+    const top = this.fitSheet(total + 16) + HEAD - 8;
     if (this.payload.choices.length > 1) this.backButton(() => this.showPick());
     this.text(GAME_WIDTH / 2, top, 'Choose a page', 28, INK, true).setOrigin(0.5, 0);
     this.text(GAME_WIDTH / 2, top + 36, 'It stays on one skill for the rest of the run.', 13, MUTE).setOrigin(0.5, 0);
@@ -272,14 +310,16 @@ export default class RewardScene extends Phaser.Scene {
     this.clearStep();
     this.pickedPage = page;
     this.target = null;
+    const heroes = this.payload.state.heroes;
+    const sumText = `${page.name}: ${page.text}`;
+    const rowH = 132; // one hero row (its two skill buttons)
+    const T = this.fitSheet(42 + this.measure(sumText, 13, CARD_W) + 12 + rowH * heroes.length + 4 + BTN_H + 14) + HEAD - 6;
     this.backButton(() => this.showPages());
-    this.text(PAD, SHEET_TOP + 46, 'Which skill?', 26, INK, true);
-    const sum = this.text(PAD, SHEET_TOP + 86, `${page.name}: ${page.text}`, 13, MUTE, false, CARD_W);
+    this.text(PAD, T, 'Which skill?', 26, INK, true);
+    const sum = this.text(PAD, T + 32, sumText, 13, MUTE, false, CARD_W);
     const limits = this.payload.state.rules.books || {};
     const skillDefs = this.payload.state.skillDefs;
-    let y = SHEET_TOP + 96 + sum.height + 8;
-    const heroes = this.payload.state.heroes;
-    const rowH = Math.min(160, Math.floor((BTN_Y - 12 - y) / heroes.length)); // the room down to the button, shared (user: more space per hero)
+    let y = T + 42 + sum.height;
     const bh = rowH - 10 - 40; // a skill button's height
     this.skillButtons = [];
     for (const hero of heroes) {
@@ -315,9 +355,9 @@ export default class RewardScene extends Phaser.Scene {
       y += rowH;
     }
     this.buttonGraphics = this.track(this.add.graphics());
-    this.buttonText = this.text(GAME_WIDTH / 2, BTN_Y + BTN_H / 2, 'Pick a skill', 18, '#ffffff', true).setOrigin(0.5);
+    this.buttonText = this.text(GAME_WIDTH / 2, this.btnY + BTN_H / 2, 'Pick a skill', 18, '#ffffff', true).setOrigin(0.5);
     this.drawBookButton();
-    this.track(this.add.zone(GAME_WIDTH / 2, BTN_Y + BTN_H / 2, CARD_W, BTN_H).setInteractive()).on('pointerdown', () => this.confirmPage());
+    this.track(this.add.zone(GAME_WIDTH / 2, this.btnY + BTN_H / 2, CARD_W, BTN_H).setInteractive()).on('pointerdown', () => this.confirmPage());
   }
 
   selectSkill(btn) {
@@ -331,7 +371,7 @@ export default class RewardScene extends Phaser.Scene {
     const g = this.buttonGraphics;
     const t = this.target;
     g.clear();
-    const y = BTN_Y;
+    const y = this.btnY;
     drawWindow(g, PAD, y, CARD_W, BTN_H, { line: t ? UI.line : COLORS.dim });
     const name = t && this.payload.state.skillDefs[t.hero.skills[t.idx].id].name;
     this.buttonText.setText(t ? (t.fit === 'replace' ? 'Choose what it replaces' : `Write it into ${name}`) : 'Pick a skill').setColor(t ? UI.text : UI.dim);
@@ -350,12 +390,15 @@ export default class RewardScene extends Phaser.Scene {
   showReplace(t) {
     this.step = 'replace';
     this.clearStep();
-    this.backButton(() => this.showSkillPick(this.pickedPage));
     const skill = this.payload.state.skillDefs[t.hero.skills[t.idx].id];
-    this.text(PAD, SHEET_TOP + 46, 'Replace which page?', 26, INK, true);
-    const sub = this.text(PAD, SHEET_TOP + 86, `${skill.name} can hold 2 modifiers. ${this.pickedPage.name} takes the place of the one you tap.`, 13, MUTE, false, CARD_W);
-    let y = SHEET_TOP + 96 + sub.height + 10;
+    const subText = `${skill.name} can hold 2 modifiers. ${this.pickedPage.name} takes the place of the one you tap.`;
     const mods = (t.hero.skills[t.idx].pages || []).filter((p) => p.kind === 'modifier');
+    const cardsH = mods.reduce((a, p) => a + this.pageHeight(p) + 14, 0);
+    const T = this.fitSheet(42 + this.measure(subText, 13, CARD_W) + 12 + cardsH + 2) + HEAD - 6;
+    this.backButton(() => this.showSkillPick(this.pickedPage));
+    this.text(PAD, T, 'Replace which page?', 26, INK, true);
+    const sub = this.text(PAD, T + 32, subText, 13, MUTE, false, CARD_W);
+    let y = T + 44 + sub.height;
     mods.forEach((p, i) => {
       const h = this.pageHeight(p);
       const card = this.drawPageCard(p, PAD, y, h);
@@ -386,18 +429,21 @@ export default class RewardScene extends Phaser.Scene {
     this.clearStep();
     this.selected = null;
     const item = this.chosen;
-    this.text(PAD, SHEET_TOP + 46, 'Who gets it?', 26, INK, true);
-    this.backButton(() => this.showPick()); // back to the 3 rewards (changed your mind)
-
+    const heroes = this.payload.state.heroes;
     const itemH = this.cardHeight(item);
-    this.drawCard(item, PAD, SHEET_TOP + 94, itemH, true);
+    // Each hero row is as tall as its item icons need (1 to ROW_ITEM_LINES lines; then they shrink to fit).
+    const rowGap = 8;
+    const iconW = CARD_W - 74 - 10;
+    const perLine = Math.max(1, Math.floor((iconW + 3) / (FRAMED_SIZE + 3)));
+    const lines = Math.max(1, ...heroes.map((h) => Math.min(ROW_ITEM_LINES, Math.ceil(new Set(h.items).size / perLine))));
+    const rowH = Math.max(96, 58 + lines * (FRAMED_SIZE + 3));
+    const T = this.fitSheet(44 + itemH + 14 + (rowH + rowGap) * heroes.length + 4 + BTN_H + 14) + HEAD - 6;
+    this.text(PAD, T, 'Who gets it?', 26, INK, true);
+    this.backButton(() => this.showPick()); // back to the 3 rewards (changed your mind)
+    this.drawCard(item, PAD, T + 44, itemH, true);
 
     this.heroGraphics = [];
-    // Rows share the room down to the Give button (user: more room per hero, up to 3 lines of item icons).
-    const heroes = this.payload.state.heroes;
-    let y = SHEET_TOP + 94 + itemH + 14;
-    const rowGap = 8;
-    const rowH = Math.min(150, Math.floor((BTN_Y - 12 - y - rowGap * (heroes.length - 1)) / heroes.length));
+    let y = T + 44 + itemH + 14;
     for (const [i, hero] of heroes.entries()) {
       const ok = canReceive(hero, item);
       const g = this.track(this.add.graphics());
@@ -425,9 +471,9 @@ export default class RewardScene extends Phaser.Scene {
 
     // The Give button at the bottom.
     this.buttonGraphics = this.track(this.add.graphics());
-    this.buttonText = this.text(GAME_WIDTH / 2, BTN_Y + BTN_H / 2, 'Pick a hero', 18, '#ffffff', true).setOrigin(0.5);
+    this.buttonText = this.text(GAME_WIDTH / 2, this.btnY + BTN_H / 2, 'Pick a hero', 18, '#ffffff', true).setOrigin(0.5);
     this.drawButton();
-    this.track(this.add.zone(GAME_WIDTH / 2, BTN_Y + BTN_H / 2, CARD_W, BTN_H).setInteractive()).on('pointerdown', () => this.confirm());
+    this.track(this.add.zone(GAME_WIDTH / 2, this.btnY + BTN_H / 2, CARD_W, BTN_H).setInteractive()).on('pointerdown', () => this.confirm());
   }
 
   // All the hero's items (framed icons, a white number = copies) in a box from (x, top), w wide and h tall: up to
@@ -437,9 +483,9 @@ export default class RewardScene extends Phaser.Scene {
     for (const id of hero.items) counts.set(id, (counts.get(id) || 0) + 1);
     const kinds = [...counts.entries()];
     if (!kinds.length) return this.text(x, top + 4, 'No items yet', 12, MUTE).setAlpha(alpha);
-    const lines = 3;
-    let scale = Math.min(1, h / lines / (FRAMED_SIZE + 3));
     const perLine = (sc) => Math.floor((w + 3 * sc) / ((FRAMED_SIZE + 3) * sc));
+    const lines = Math.max(1, Math.min(ROW_ITEM_LINES, Math.ceil(kinds.length / perLine(1)))); // only as many lines as it needs
+    let scale = Math.min(1, h / lines / (FRAMED_SIZE + 3));
     while (perLine(scale) * lines < kinds.length) scale *= 0.9;
     const step = (FRAMED_SIZE + 3) * scale;
     const n = perLine(scale);
@@ -462,7 +508,7 @@ export default class RewardScene extends Phaser.Scene {
   drawButton() {
     const g = this.buttonGraphics;
     g.clear();
-    const y = BTN_Y;
+    const y = this.btnY;
     drawWindow(g, PAD, y, CARD_W, BTN_H, { line: this.selected ? UI.line : COLORS.dim });
     this.buttonText.setText(this.selected ? `Give to ${this.selected.name}` : 'Pick a hero').setColor(this.selected ? UI.text : UI.dim);
     if (this.selected) drawCursor(g, Math.round(GAME_WIDTH / 2 - this.buttonText.width / 2 - 18), y + BTN_H / 2); // the ▶ cursor: ready to confirm

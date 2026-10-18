@@ -3,7 +3,8 @@
 // moving an approved one into the game is a copy into CAST + CAST_MS there.
 // SPECS says how the demo plays each skill: the NOW look (today's game) and the NEW look (charge, move, cast recipe, hit).
 import { pen, rnd, FX_COLORS as C } from '../../../src/systems/statusFx.js';
-import { shotFx } from '../../../src/systems/skillFx.js';
+import { shotFx, castFx } from '../../../src/systems/skillFx.js';
+import { lightningFx } from '../../../src/systems/itemFx.js';
 
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const ph = (q, a, b) => clamp((q - a) / (b - a));
@@ -92,6 +93,55 @@ function rainSpots(c, w) {
   }
   return out;
 }
+
+// ---- Mage: each spell in its element's colours; a glowing orb gathers on her staff tip in the wind-up ----
+const EL = {
+  fire: { core: 0xffffff, light: 0xffe066, mid: 0xff9a2e, deep: 0xd9452b },
+  ice: { core: 0xffffff, light: 0xbfefff, mid: 0x9fe0ff, deep: 0x4aa8e0 },
+  electric: { core: 0xffffff, light: 0xfff6a0, mid: 0xffe94d, deep: 0xc8a020 },
+  arcane: { core: 0xffffff, light: 0xe0c8ff, mid: 0xb07cff, deep: 0x6a3ac8 },
+};
+const SMOKE = [0x3a3440, 0x4e4656], SCORCH = 0x1a120e;
+const staffTip = (u) => ({ x: u.x + u.hw + 1, y: u.top + 7 });
+// The wind-up for one element: an orb grows on her staff tip (fire flickers, ice shards circle it, lightning crackles,
+// arcane has white sparks orbiting), motes of that colour spiral in, she pulses in the colour.
+function mageCharge(el) {
+  return (q, c, t) => {
+    const g = pen(); const u = c.caster, K = EL[el], o = staffTip(u), r = 1 + 2 * q;
+    for (let i = 0; i < 7; i++) { const s = (q * 1.5 + i / 7) % 1, an = rnd(i * 9) * Math.PI * 2 + s * 2, d = 18 * (1 - easeOut(s)); g.px(o.x + Math.cos(an) * d, o.y + Math.sin(an) * d * 0.8, i % 2 ? K.light : K.mid, s); }
+    g.disc(o.x, o.y, r + 0.6, K.mid, 0.9); g.disc(o.x, o.y, r * 0.5, K.core, 1);
+    if (el === 'fire') for (let i = 0; i < 4; i++) { const s = ((t / 260) + i / 4) % 1; g.px(o.x + (rnd(i) - 0.5) * 3, o.y - r - s * 5, s < 0.5 ? K.light : K.deep, 1 - s); }
+    if (el === 'ice') for (let i = 0; i < 4; i++) { const an = t / 200 + (i * Math.PI) / 2, d = r + 3; g.rect(o.x + Math.cos(an) * d, o.y + Math.sin(an) * d - 1, 1, 2, i % 2 ? K.core : K.light, 0.4 + 0.6 * q); }
+    if (el === 'electric' && Math.floor(t / 40) % 2) for (let i = 0; i < 3; i++) { const an = rnd(i + Math.floor(t / 40)) * Math.PI * 2; let x = o.x, y = o.y; for (let k = 0; k < 3; k++) { const nx = x + Math.cos(an) * 2 + (rnd(i * 7 + k + t) - 0.5) * 2, ny = y + Math.sin(an) * 2 + (rnd(i * 5 + k) - 0.5) * 2; g.line(x, y, nx, ny, k ? K.mid : K.core, q); x = nx; y = ny; } }
+    if (el === 'arcane') for (let i = 0; i < 3; i++) { const an = t / 150 + (i * Math.PI * 2) / 3; g.px(o.x + Math.cos(an) * (r + 3), o.y + Math.sin(an) * (r + 2), C.white, 0.5 + 0.5 * q); }
+    const pulse = 0.6 + 0.4 * Math.sin(t / 110);
+    return { draws: g.out, tints: [['caster', 0, [K.mid, Math.round((0.08 + 0.25 * q) * pulse * 20) / 20]]] };
+  };
+}
+// A fire burst at (x, y): white flash, a ball of flame swelling, flame tongues licking up, embers flying, black smoke.
+function fireBurst(g, x, y, hit, big, t, seed) {
+  const K = EL.fire;
+  if (hit < 90) g.disc(x, y, (3 + hit / 12) * big, C.white, 1 - hit / 90);
+  const bp = ph(hit, 20, 280); if (bp > 0 && bp < 1) { g.disc(x, y, (3 + 6 * easeOut(bp)) * big, bp < 0.4 ? K.light : K.mid, 0.9 * (1 - bp)); g.disc(x, y, (1.5 + 3 * easeOut(bp)) * big, K.core, 0.8 * (1 - bp)); }
+  for (let i = 0; i < Math.round(18 * big); i++) { const p = ph(hit, i * 12, 380 + i * 12); if (p <= 0 || p >= 1) continue; const s = i % 3 ? 2 : 1; g.rect(x + (rnd(seed + i * 3) - 0.5) * 16 * big + Math.sin(t / 60 + i), y + 4 - p * 22 * big, s, s, i % 5 === 0 ? K.core : i % 2 ? K.light : K.mid, 1 - p); }
+  for (let i = 0; i < Math.round(10 * big); i++) { const p = ph(hit, 0, 450 + rnd(seed + i) * 200); if (p <= 0 || p >= 1) continue; const an = -Math.PI / 2 + (rnd(seed + i * 5) - 0.5) * 3, v = (10 + rnd(seed + i * 7) * 12) * big; g.px(x + Math.cos(an) * v * p, y + Math.sin(an) * v * p + p * p * 18, i % 2 ? K.light : K.deep, 1 - p); }
+  for (let i = 0; i < 5; i++) { const p = ph(hit, 250 + i * 60, 1100 + i * 60); if (p <= 0 || p >= 1) continue; g.disc(x + (rnd(seed + i * 11) - 0.5) * 10 * big, y - 6 - p * 16, 1.5 + p * 2.5, SMOKE[i % 2], 0.55 * (1 - p)); }
+}
+// A jagged lightning bolt from a to b: white core, yellow edges, a little fork; new shape every 40ms (it crackles).
+function boltPx(g, a, b, t, seed, al) {
+  const K = EL.electric, d = Math.hypot(b.x - a.x, b.y - a.y) || 1, n = Math.max(3, Math.ceil(d / 5)), nx = -(b.y - a.y) / d, ny = (b.x - a.x) / d, f = Math.floor(t / 40);
+  const pts = []; for (let i = 0; i <= n; i++) { const k = i / n, o = i === 0 || i === n ? 0 : (rnd(seed * 31 + i * 7 + f * 13) - 0.5) * 6; pts.push([a.x + (b.x - a.x) * k + nx * o, a.y + (b.y - a.y) * k + ny * o]); }
+  for (let i = 0; i < n; i++) { const [x0, y0] = pts[i], [x1, y1] = pts[i + 1]; g.line(x0, y0 - 1, x1, y1 - 1, K.mid, al); g.line(x0, y0 + 1, x1, y1 + 1, K.deep, al * 0.8); g.line(x0, y0, x1, y1, K.core, al); }
+  const fi = 1 + Math.floor(rnd(seed + f) * (n - 2)), [fx, fy] = pts[fi]; g.line(fx, fy, fx + (rnd(f + seed) - 0.3) * 6, fy + 4 + rnd(f) * 3, K.mid, al * 0.8);
+}
+// An ice crystal growing out of the floor at (x, y): a narrow spike `h` tall, white on its left edge.
+function crystalPx(g, x, y, h, a) {
+  if (h < 1 || a <= 0) return;
+  for (let k = 0; k < h; k++) { const w = Math.max(0, Math.round((1 - k / h) * 1.6)); for (let dx = -w; dx <= w; dx++) g.px(x + dx, y - k, dx < 0 ? EL.ice.core : dx > 0 ? EL.ice.deep : EL.ice.light, a); }
+}
+// A rune glyph (arcane letters), 5 px tall: picked by n.
+const RUNES = [['#.#', '###', '.#.', '.#.', '#.#'], ['##.', '#.#', '##.', '#.#', '##.'], ['.#.', '#.#', '.#.', '#.#', '.#.'], ['#..', '##.', '#.#', '##.', '#..']];
+function runePx(g, x, y, n, c, a) { RUNES[n % RUNES.length].forEach((row, j) => [...row].forEach((ch, i) => { if (ch === '#') g.px(x + i - 1, y + j - 2, c, a); })); }
 
 export const RECIPES = {
   // CHARGE: he shakes with rage (the demo trembles him), glows red with a fast heartbeat, hot breath puffs rise from
@@ -349,6 +399,100 @@ export const RECIPES = {
     for (let w = 0; w < 6; w++) { const wt = ms - w * 333; if (wt < 0 || wt > 300) continue; c.enemies.forEach((e, i) => out.push(...shotFx('rain', wt / 300, { x: e.x, y: e.y - 45 }, { x: e.x, y: e.y }, t, w * 5 + i))); }
     return out;
   },
+  // ---- Mage ----
+  mageChargeFire: mageCharge('fire'), mageChargeIce: mageCharge('ice'), mageChargeElec: mageCharge('electric'), mageChargeArcane: mageCharge('arcane'),
+  // FIREBALL: a BIG fireball with a flame tail and dropping embers flies from her staff in a small arc; on the enemy: a
+  // white flash, a ball of flame swells, flame tongues lick up, embers fly, black smoke rises; a smaller burst on the
+  // enemy next to it (the splash); a black scorch mark with glowing embers stays on the floor for a moment.
+  fireballNew(q, c, t) {
+    const g = pen(); const k = c.caster, u = c.targets[0]; if (!k || !u) return g.out;
+    const ms = q * CAST_MS_NEW.fireballNew, fly = c.hitMs || 300, K = EL.fire, a = staffTip(k), b = { x: u.x, y: u.mid };
+    const at = (p) => ({ x: a.x + (b.x - a.x) * p, y: a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * 6 });
+    if (ms < fly) {
+      const p = ms / fly, o = at(p);
+      for (let i = 1; i < 12; i++) { const pp = Math.max(0, p - i * 0.03), tr = at(pp); g.disc(tr.x, tr.y + (rnd(i + Math.floor(t / 40)) - 0.5) * 2, 2.6 - i * 0.2, i < 4 ? K.light : i < 8 ? K.mid : K.deep, 1 - i / 12); }
+      for (let i = 0; i < 4; i++) { const ep = (p * 3 + i / 4) % 1, e = at(Math.max(0, p - 0.15 * (i + 1) / 4)); g.px(e.x, e.y + ep * 6, K.mid, 1 - ep); }
+      g.disc(o.x, o.y, 4, K.mid); g.disc(o.x, o.y, 2.5, K.light); g.disc(o.x + 1, o.y - 1, 1, K.core);
+      return g.out;
+    }
+    const hit = ms - fly;
+    const sc = 1 - ph(hit, 1100, 1500); // scorch mark under the enemy
+    if (sc > 0) { for (let x = -9; x <= 9; x++) { const hh = Math.round(Math.sqrt(1 - (x * x) / 81) * 2); for (let y = -hh; y <= hh; y++) g.px(u.x + x, u.y + y, SCORCH, 0.6 * sc); } for (let i = 0; i < 5; i++) g.px(u.x + (rnd(i * 3) - 0.5) * 14, u.y + (rnd(i * 5) - 0.5) * 3, Math.sin(t / 80 + i) > 0 ? K.mid : K.deep, sc); }
+    fireBurst(g, b.x, b.y, hit, 1.3, t, 3);
+    const n = c.enemies.find((e) => e.x !== u.x); if (n) fireBurst(g, n.x, n.mid, hit - 80, 0.7, t, 17);
+    return { draws: g.out, tints: c.enemies.map((e, i) => { const h2 = e.x === u.x ? hit : hit - 80; return ['enemies', i, h2 >= 0 && h2 < 70 ? [C.white, 0.85] : h2 >= 0 && h2 < 450 ? [K.deep, 0.45 * (1 - (h2 - 70) / 380)] : null]; }) };
+  },
+  // FROST NOVA: she slams her staff down; frost creeps across the floor to the enemies, then ICE CRYSTALS burst up out
+  // of the floor around every enemy in the area (they freeze blue and jitter), the floor around them frosts over,
+  // snowflakes drift; after a moment the crystals SHATTER into ice chips that tinkle down.
+  frostNovaNew(q, c, t) {
+    const g = pen(); const k = c.caster, u = c.targets[0]; if (!k || !u) return g.out;
+    const ms = q * CAST_MS_NEW.frostNovaNew, land = c.hitMs || 160, K = EL.ice, R = c.radius || 40, hit = ms - land;
+    const cp = ph(ms, 0, land); // frost creeping along the floor from her feet
+    for (let x = k.x + 3; x < k.x + 3 + (u.x - k.x - 3) * cp; x += 2) g.px(x, k.y + Math.round(Math.sin(x * 1.7) * 1.2), (x / 2) % 2 ? K.light : K.mid, 0.8 * (1 - ph(hit, 300, 700)));
+    if (hit < 0) return g.out;
+    const hitList = c.enemies.filter((e) => Math.hypot(e.x - u.x, (e.y - u.y) * 1.4) <= R);
+    const fr = easeOut(ph(hit, 0, 250)) * (1 - ph(hit, 1100, 1500)); // frost on the floor (a dither of pale ice)
+    if (fr > 0) for (const e of hitList) for (let x = -14; x <= 14; x++) { const hh = Math.round(Math.sqrt(1 - (x * x) / 196) * 3 * easeOut(ph(hit, 0, 250))); for (let y = -hh; y <= hh; y++) if ((x + y) % 2 === 0) g.px(e.x + x, e.y + y, Math.abs(x) < 6 ? K.light : K.mid, 0.55 * fr); }
+    hitList.forEach((e, j) => {
+      for (let i = 0; i < 6; i++) { // crystals: grow (0-120), stand, shatter (650)
+        const x = e.x + (i - 2.5) * 4 + (rnd(j * 7 + i) - 0.5) * 2, y = e.y + 1 + (i % 2), H = 7 + rnd(j * 3 + i * 5) * 9, gp = easeOut(ph(hit, i * 15, 120 + i * 15));
+        if (hit < 650) crystalPx(g, x, y, H * gp, 1);
+        const sp = ph(hit, 650, 1100); if (sp > 0 && sp < 1) for (let s = 0; s < 3; s++) { const an = -Math.PI / 2 + (rnd(i * 9 + s + j) - 0.5) * 2.4, v = 6 + rnd(i + s * 3) * 8; g.px(x + Math.cos(an) * v * sp, y - H / 2 + Math.sin(an) * v * sp + sp * sp * 16, s % 2 ? K.core : K.light, 1 - sp); }
+      }
+      if (hit < 80) g.disc(e.x, e.mid, 4 + hit / 12, C.white, 1 - hit / 80);
+    });
+    for (let i = 0; i < 10; i++) { const s = ((hit / 1400) + i / 10) % 1; if (hit > 1300) break; g.px(u.x + (rnd(i * 13) - 0.5) * 2 * R + Math.sin(t / 300 + i) * 2, u.top - 14 + s * 30, C.white, 0.8 * (1 - s)); }
+    return { draws: g.out, tints: c.enemies.map((e, i) => ['enemies', i, hitList.includes(e) ? (hit < 70 ? [C.white, 0.85] : hit < 900 ? [K.mid, 0.55] : null) : null]) };
+  },
+  // CHAIN LIGHTNING: a thick crackling bolt leaps from her staff to the enemy, then JUMPS on to the next one; each hit:
+  // a white flash, a spray of yellow sparks, the enemy lights up white-yellow and shakes hard (electrocuted), a puff
+  // of smoke rises after.
+  chainNew(q, c, t) {
+    const g = pen(); const k = c.caster, u = c.targets[0]; if (!k || !u) return g.out;
+    const ms = q * CAST_MS_NEW.chainNew, K = EL.electric, jump = c.jumpMs || 120, LIVE = 230;
+    const order = [u, ...c.enemies.filter((e) => e.x !== u.x)];
+    const tints = c.enemies.map((e, i) => ['enemies', i, null]);
+    order.forEach((e, j) => {
+      const st = j * jump, ht = ms - st; if (ht < 0) return;
+      const from = j === 0 ? staffTip(k) : { x: order[j - 1].x, y: order[j - 1].mid }, to = { x: e.x, y: e.mid };
+      if (ht < LIVE && (ht < 80 || Math.floor(t / 30) % 3 !== 2)) boltPx(g, from, to, t, j * 5 + 1, 1 - ph(ht, LIVE - 60, LIVE));
+      if (ht < 90) g.disc(to.x, to.y, 3 + ht / 14, C.white, 1 - ht / 90);
+      const sp = ph(ht, 0, 320); if (sp < 1) for (let i = 0; i < 10; i++) { const an = rnd(j * 11 + i) * Math.PI * 2, d = 3 + 11 * easeOut(sp); g.rect(to.x + Math.cos(an) * d, to.y + Math.sin(an) * d * 0.8 + sp * sp * 6, i % 3 ? 1 : 2, 1, i % 2 ? K.mid : K.core, 1 - sp); }
+      for (let i = 0; i < 3; i++) { const p = ph(ht, 250 + i * 70, 900 + i * 70); if (p > 0 && p < 1) g.disc(to.x + (i - 1) * 3, e.top - p * 10, 1.5 + p * 2, SMOKE[i % 2], 0.5 * (1 - p)); }
+      const idx = c.enemies.indexOf(e); if (idx >= 0) tints[idx] = ['enemies', idx, ht < LIVE ? [Math.floor(t / 40) % 2 ? C.white : K.light, 0.8] : null];
+    });
+    return { draws: g.out, tints };
+  },
+  // ARCANE WARD: she lifts her staff, glowing purple RUNES rise from it and float over to every hero; where they land
+  // a shimmering arcane BUBBLE closes around the hero (the shield, a white glint slides over it), and three little
+  // element sparks (fire, ice, lightning) circle each hero (the team elements: their hits leave an element).
+  arcaneWardNew(q, c, t) {
+    const g = pen(); const k = c.caster, heroes = c.targets; if (!k) return g.out;
+    const ms = q * CAST_MS_NEW.arcaneWardNew, K = EL.arcane, o = staffTip(k), arrive = c.hitMs || 380, END = CAST_MS_NEW.arcaneWardNew;
+    heroes.forEach((h, j) => {
+      for (let r = 0; r < 3; r++) { // runes rise from the staff, then float to the hero's chest
+        const p = ph(ms, r * 50 + j * 40, arrive + r * 50 + j * 40); if (p <= 0 || p >= 1) continue;
+        const x = o.x + (h.x + (r - 1) * 5 - o.x) * easeOut(p), y = o.y - Math.sin(p * Math.PI) * 14 + (h.mid - o.y) * easeOut(p);
+        runePx(g, x, y, r + j, p < 0.8 ? K.light : C.white, 1); g.px(x, y + 3, K.mid, 0.5);
+      }
+      const bt = ms - arrive - j * 40; if (bt < 0) return;
+      const fade = 1 - ph(ms, END - 300, END), open = easeOut(ph(bt, 0, 160)), R = (h.hw + 5) * (0.6 + 0.4 * open), RY = (h.y - h.top) / 2 + 4;
+      for (let an = 0; an < Math.PI * 2; an += 0.07) { const x = h.x + Math.cos(an) * R, y = h.mid + Math.sin(an) * RY * (0.6 + 0.4 * open); g.px(x, y, Math.sin(an * 3 + t / 200) > 0.3 ? K.light : K.mid, 0.75 * fade); }
+      const gl = ((bt / 700) % 1) * Math.PI * 0.8 - Math.PI * 0.9; for (let d = 0; d < 3; d++) g.px(h.x + Math.cos(gl + d * 0.08) * R, h.mid + Math.sin(gl + d * 0.08) * RY, C.white, fade); // the glint
+      if (bt < 90) g.disc(h.x, h.mid, 3 + bt / 12, C.white, 0.7 * (1 - bt / 90));
+      ['fire', 'ice', 'electric'].forEach((el, i) => { const an = t / 260 + (i * Math.PI * 2) / 3 + j; g.rect(h.x + Math.cos(an) * (R + 3), h.mid + Math.sin(an) * (RY * 0.5), 2, 2, EL[el].mid, open * fade); g.px(h.x + Math.cos(an) * (R + 3), h.mid + Math.sin(an) * (RY * 0.5), EL[el].core, open * fade); });
+    });
+    return { draws: g.out, tints: heroes.map((h, i) => ['targets', i, ms > arrive + i * 40 && ms < arrive + i * 40 + 200 ? [K.light, 0.4] : null]) };
+  },
+  // Today's Mage spells: Fireball = the game's fireball shot; Chain Lightning = the item lightning bolt, enemy to enemy.
+  nowFireball(q, c, t) { const k = c.caster, u = c.targets[0]; if (!k || !u) return []; return shotFx('fireball', q, staffTip(k), { x: u.x, y: u.mid }, t); },
+  nowChain(q, c, t) {
+    const k = c.caster, u = c.targets[0]; if (!k || !u) return []; const n = c.enemies.find((e) => e.x !== u.x), ms = q * CAST_MS_NEW.nowChain, out = [];
+    out.push(...lightningFx(Math.min(1, ms / 320), staffTip(k), { x: u.x, y: u.mid }, t, 1));
+    if (n && ms > 100) out.push(...lightningFx(Math.min(1, (ms - 100) / 320), { x: u.x, y: u.mid }, { x: n.x, y: n.mid }, t, 2));
+    return out;
+  },
   // Today's Death Coil: just the game's dark bolt shot.
   nowDarkbolt(q, c, t) {
     const k = c.caster, u = c.targets[0]; if (!k || !u) return [];
@@ -361,9 +505,9 @@ export const RECIPES = {
     return g.out;
   },
 };
-export const CAST_MS_NEW = { necroCharge: 700, deathCoilNew: 1100, boneSacrificeNew: 1700, nowDarkbolt: 520, clericCharge: 700, holyNovaNew: 1300, sanctuaryNew: 1800, berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400, archerChargeUp: 500, archerChargeAim: 400, arrowRainNew: 3000, huntersMarkNew: 1900, nowArrowRain: 2300 };
+export const CAST_MS_NEW = { necroCharge: 700, deathCoilNew: 1100, boneSacrificeNew: 1700, nowDarkbolt: 520, clericCharge: 700, holyNovaNew: 1300, sanctuaryNew: 1800, berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400, archerChargeUp: 500, archerChargeAim: 400, arrowRainNew: 3000, huntersMarkNew: 1900, nowArrowRain: 2300, mageChargeFire: 800, mageChargeIce: 700, mageChargeElec: 700, mageChargeArcane: 600, fireballNew: 1900, frostNovaNew: 1700, chainNew: 1200, arcaneWardNew: 2100, nowFireball: 720, nowChain: 520 };
 // Name colours for heroes the game has none for yet (combat.json skillFx.name.heroColors gets them when they are built).
-export const NAME_COLORS = { archer: '#b8f07a' };
+export const NAME_COLORS = { archer: '#b8f07a', mage: '#c8a8ff' };
 
 // How the demo plays each skill (besides the Knight, who has his own code in demo.js).
 //   now: { recipe, ms, move: 'lunge'|'leap'|'hop'|null, rings: per-wave yellow rings, number }
@@ -387,5 +531,13 @@ export const SPECS = {
   hunters_mark: { hero: 'archer', now: { recipe: 'huntersMark', move: 'hop' },
     new: { charge: 'archerChargeAim', recipe: 'huntersMarkNew', move: { type: 'recoil', px: 6 }, hit: { at: 140, shake: 1.5, shakeMs: 100, stopMs: 40 },
       text: { s: '+25% DMG', at: 300, color: '#ff7a7a' } } },
+  'mage_rotation:FB': { hero: 'mage', now: { recipe: 'nowFireball', move: null, number: '48', numberAt: 330 },
+    new: { charge: 'mageChargeFire', recipe: 'fireballNew', move: { type: 'recoil', px: 6 }, hit: { at: 300, shake: 4, shakeMs: 200, stopMs: 70, jitterPx: 8, jitterMs: 180 }, number: '48', number2: '17', numberAll: true, number2At: 80 } },
+  'mage_rotation:FN': { hero: 'mage', now: { recipe: 'frostNova', move: null, number: '18', numberAll: true, numberAt: 280 },
+    new: { charge: 'mageChargeIce', recipe: 'frostNovaNew', move: { type: 'hop', liftPx: 6 }, hit: { at: 160, shake: 3, shakeMs: 160, stopMs: 60, jitterPx: 6, jitterMs: 160, jitterAll: true }, radius: 'area', number: '18', numberAll: true } },
+  'mage_rotation:CL': { hero: 'mage', now: { recipe: 'nowChain', move: null, number: '26', numberAll: true },
+    new: { charge: 'mageChargeElec', recipe: 'chainNew', move: { type: 'recoil', px: 5 }, hit: { at: 0, shake: 3, shakeMs: 220, stopMs: 50, jitterPx: 9, jitterMs: 230, jitterAll: true, jitterStagger: 120 }, number: '26', numberAll: true, number2At: 120 } },
+  mage_ward: { hero: 'mage', ally: true, squadTargets: true, now: { recipe: 'arcaneWard', move: 'hop' },
+    new: { charge: 'mageChargeArcane', recipe: 'arcaneWardNew', move: { type: 'hop', liftPx: 10 }, hit: { at: 380, shake: 0, shakeMs: 0, stopMs: 0 }, squadShield: true, text: { s: '+10 RES', at: 1050, color: '#c8a8ff', self: true } } },
   blood_feast: { hero: 'berserker', now: { recipe: 'bloodPact', move: 'hop' }, new: { charge: 'berserkerCharge', tremble: true, recipe: 'bloodFeast', move: { type: 'hop', liftPx: 10 } } },
 };

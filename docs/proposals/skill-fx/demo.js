@@ -18,6 +18,8 @@ import { bodyBox, pen, FX_COLORS as C } from '../../../src/systems/statusFx.js';
 import { castFx, CAST_MS } from '../../../src/systems/skillFx.js';
 import { RECIPES, CAST_MS_NEW, SPECS, NAME_COLORS } from './heroes.js';
 // A recipe by name: a proposed one (heroes.js) or the game's own (skillFx.js). Always { draws, tints }.
+// A skill's data; a rotation spell is 'skillId:SHORT' (the spell's own name/cast, the skill's kind).
+const skillDef = (id) => { const [b, sh] = id.split(':'); const base = skills[b]; if (!sh) return base; const sp = base.rotation.find((r) => r.short === sh); return { ...sp, kind: base.kind }; };
 const runFx = (name, q, c, t) => { const f = RECIPES[name]; if (!f) return castFx(name, q, c, t); const o = f(q, c, t); return Array.isArray(o) ? { draws: o, tints: [] } : { draws: o.draws || [], tints: o.tints || [] }; };
 const fxMs = (name) => CAST_MS_NEW[name] ?? CAST_MS[name] ?? 800;
 
@@ -121,7 +123,7 @@ export const SKILLS = {
   defense_bash: { id: 'defense_bash', name: skills.defense_bash.name, castMs: skills.defense_bash.castMs },
   challenge: { id: 'challenge', name: skills.challenge.name, castMs: skills.challenge.castMs },
 };
-for (const [id, sp] of Object.entries(SPECS)) SKILLS[id] = { id, name: skills[id].name, castMs: skills[id].castMs, hero: sp.hero };
+for (const [id, sp] of Object.entries(SPECS)) SKILLS[id] = { id, name: skillDef(id).name, castMs: skillDef(id).castMs, hero: sp.hero };
 // The Rogue's skills play the GAME'S OWN recipes (src/systems/skillFx.js: rogueCharge, rogueDash, rogueSlash, smokeBomb)
 // with the game's dash / wave numbers (combat.json skillFx.dash / wave), so what the page shows is what the game does.
 const RDASH = FX.dash.multistrike, RWAVE = FX.wave.multistrike;
@@ -131,7 +133,7 @@ function plan(skillId, look) {
   const cast = SKILLS[skillId].castMs;
   const sp = SPECS[skillId];
   if (sp) {
-    const attack = skills[skillId].kind === 'attack';
+    const attack = skillDef(skillId).kind === 'attack';
     if (look === 'now') return { cast, impact: cast, stopMs: attack ? FX.hitStopMs : 0, end: cast + Math.max(1700, fxMs(sp.now.recipe) + 300) };
     const hit = sp.new.hit || { at: 0, stopMs: 0 };
     return { cast, impact: cast + hit.at, stopMs: hit.stopMs || 0, end: cast + Math.max(1700, fxMs(sp.new.recipe) + 300) };
@@ -282,7 +284,7 @@ export class Demo {
 
   // ---- ROGUE (today vs the game's new recipes) -----------------------------------------------------
   specLook(st, id, look, et, P, T) {
-    const SP = SPECS[id], L = SP[look] || SP.new, sk = skills[id], h = st.hero, since = et - P.cast, hero = this.hero;
+    const SP = SPECS[id], L = SP[look] || SP.new, sk = skillDef(id), h = st.hero, since = et - P.cast, hero = this.hero;
     const A0 = this.ally ? body(this.ally) : null;
     const E0 = body(this.foe), E1 = body(this.foe2), foes = [[this.foe, st.foe], [this.foe2, st.foe2]];
     const tintOn = (s, tint) => { if (tint && (!s.tint || tint[1] > s.tint[1])) s.tint = tint; };
@@ -345,7 +347,15 @@ export class Demo {
     if (since < ms) play(L.recipe, since / ms, c);
     if (look === 'now' && !support && T >= P.impact && T < P.impact + FX.shakeMs) st.cam.shake = FX.shakeIntensity * 390;
     if (L.hit && T >= P.impact && T < P.impact + P.stopMs + L.hit.shakeMs) st.cam.shake = L.hit.shake * (1 - (T - P.impact) / (P.stopMs + L.hit.shakeMs));
-    if (L.text) { const tt = since - L.text.at, E = c.targets[0]; if (tt >= 0 && tt < 1100) st.numbers.push({ text: L.text.s, x: clampX(E.x * Z, L.text.s, 14), y: (E.top - 10) * Z - Math.round(ph(tt, 0, 1100) * 24), size: 14, color: L.text.color, alpha: ph(tt, 0, 100) * (1 - ph(tt, 800, 1100)) }); }
+    if (L.hit && L.hit.jitterPx) { // the hit enemies jitter side to side (user: enemies shake when hit hard)
+      foes.forEach(([a, s], i) => {
+        if (i > 0 && !L.hit.jitterAll) return; const e = body(a); if (L.radius === 'area' && Math.hypot(e.x - E0.x, (e.y - E0.y) * 1.4) > radius) return;
+        const jt = et - P.impact - i * (L.hit.jitterStagger || 0); if (jt < 0 || jt >= L.hit.jitterMs) return;
+        const j = jt / L.hit.jitterMs; s.dx = Math.round((Math.sin(j * Math.PI * 6) * L.hit.jitterPx * (1 - j)) / Z);
+      });
+    }
+    if (L.squadShield) { const at = since - (L.hit ? L.hit.at : 0); if (at >= 0) { const v = easeOut(ph(at, 0, 200)) * (1 - ph(at, 2500, 3000)); h.shield = v; if (A0) st.ally.shield = v; } }
+    if (L.text) { const tt = since - L.text.at, E = L.text.self ? C0 : c.targets[0]; if (tt >= 0 && tt < 1100) st.numbers.push({ text: L.text.s, x: clampX(E.x * Z, L.text.s, 14), y: (E.top - 10) * Z - Math.round(ph(tt, 0, 1100) * 24), size: 14, color: L.text.color, alpha: ph(tt, 0, 100) * (1 - ph(tt, 800, 1100)) }); }
     // rain waves (Arrow Rain): every wave lands on all enemies inside the area: a small shake, they jitter, a number each
     if (L.rain && ch0()) {
       const R = L.rain, n = sk.channel.waves.length;
@@ -388,7 +398,7 @@ export class Demo {
     } else if (L.number) {
       const at = since - (L.hit ? L.hit.at : L.numberAt || 0);
       this.number(st, L.number, E0, at, true);
-      if (L.numberAll) this.number(st, L.number, E1, at - 40, true);
+      if (L.numberAll) this.number(st, L.number2 || L.number, E1, at - (L.number2At ?? 40), true);
     }
   }
 

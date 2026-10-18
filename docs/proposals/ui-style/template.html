@@ -43,7 +43,7 @@ section { display: grid; gap: 16px; }
 
 /* ---------- the phone mocks: every option is the same markup, themed by its class ---------- */
 .phone { width: 300px; max-width: 100%; border-radius: 22px; padding: 10px; background: #000; box-shadow: 0 0 0 1px var(--line); }
-.screen { --px: 2px; background: var(--u-bg); color: var(--u-text); font-family: var(--u-body); border-radius: 14px; overflow: hidden; display: grid; gap: 10px; padding: 10px; image-rendering: pixelated; }
+.screen { --px: 2px; background: var(--u-bg); color: var(--u-text); font-family: var(--u-body); border-radius: 14px; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 10px; image-rendering: pixelated; }
 .screen img { image-rendering: pixelated; display: block; }
 .topbar { display: flex; justify-content: space-between; align-items: center; }
 .floor { font: var(--u-title-size) var(--u-title); color: var(--u-trim); letter-spacing: .04em; }
@@ -58,9 +58,9 @@ section { display: grid; gap: 16px; }
 .hp i { display: block; height: 100%; background: var(--u-hp); }
 .hp.foe i { background: var(--u-foe); }
 .lv { font: 10px/1 var(--u-title); color: var(--u-trim); }
-.skills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.skills { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
 .pair { display: flex; gap: 4px; justify-content: center; }
-.sk { width: 40px; height: 40px; display: grid; place-items: center; position: relative; font: 10px/1 var(--u-title); color: var(--u-text); }
+.sk { width: 38px; height: 38px; display: grid; place-items: center; position: relative; font: 10px/1 var(--u-title); color: var(--u-text); }
 .sk svg { width: 22px; height: 22px; shape-rendering: crispEdges; }
 .sk.atk { background: var(--u-atk); border: var(--px) solid var(--u-atk-edge); box-shadow: inset var(--px) var(--px) 0 #ffffff33, inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 #00000055; }
 .sk.sup { background: var(--u-sup); border: var(--px) solid var(--u-sup-edge); box-shadow: inset var(--px) var(--px) 0 #ffffff33, inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 #00000055; }
@@ -110,7 +110,11 @@ section { display: grid; gap: 16px; }
 /* ---------- fonts ---------- */
 .fonts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
 .spec { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; align-content: start; }
-.spec .demo { background: #18151d; color: #efe6d2; padding: 12px; border-radius: 6px; display: grid; gap: 6px; }
+.spec .demo { background: #18151d; color: #efe6d2; padding: 12px; border-radius: 6px; display: grid; gap: 8px; justify-items: start; min-height: 70px; }
+.spec .demo canvas, .screen canvas { image-rendering: pixelated; display: block; }
+.screen [data-tx] { -webkit-font-smoothing: none; font-smooth: never; }
+.btn .bmp { display: inline-block; vertical-align: middle; }
+.btn { display: grid; place-items: center; }
 .spec .big { font-size: 1.4em; line-height: 1.1; color: #e3b553; }
 .spec .small { font-size: .95em; line-height: 1.3; }
 .spec .nums { font-size: .95em; color: #ff9a6b; }
@@ -143,8 +147,8 @@ textarea { width: 100%; box-sizing: border-box; min-height: 90px; background: va
   </section>
 
   <section>
-    <div class="label">2 · Pick a font</div>
-    <p class="lede" style="margin:0">All five are free pixel fonts (Open Font License), so they can be packed into the Android app and work offline.</p>
+    <div class="label">2 · Pick a font (strict pixel grid)</div>
+    <p class="lede" style="margin:0">Only fonts where every pixel is the same size, shown at whole multiples of their pixel grid so nothing blurs. Tap one to redraw all three mocks above in it. The Soldia 5x7 font is drawn pixel by pixel for this game; the other two are free fonts (Open Font License) that can be packed into the Android app.</p>
     <div class="fonts" id="fonts"></div>
   </section>
 
@@ -172,12 +176,33 @@ const LOOKS = [
     bullets: ['Closest to the current game, least work.', 'Glowing violet frames, gold highlights.', 'Feels magical rather than stony.'] },
 ];
 const FONTS = [
-  { id: 'pixelify', name: 'Pixelify Sans', css: "'Pixelify Sans', monospace", note: 'Rounded and very readable at small sizes. Used in the mocks above.', size: 16 },
-  { id: 'silkscreen', name: 'Silkscreen', css: "'Silkscreen', monospace", note: 'Classic tiny pixel caps. Sharp, but long item texts get wide.', size: 13 },
-  { id: 'jersey', name: 'Jersey 10', css: "'Jersey 10', monospace", note: 'Tall, narrow and bold: fits a lot of text on a phone.', size: 21 },
-  { id: 'vt323', name: 'VT323', css: "'VT323', monospace", note: 'Old computer terminal look. Thin, very retro.', size: 21 },
-  { id: 'press', name: 'Press Start 2P', css: "'Press Start 2P', monospace", note: 'The famous 8-bit arcade font. Very chunky, best for titles only.', size: 10 },
+  { id: 'soldia', name: 'Soldia 5x7 (custom)', note: 'Hand-made for the game: every letter on a 5x7 grid, like old arcade and handheld games. Perfectly even and crisp, upper and lower case, easy to tweak letter by letter later.' },
+  { id: 'press', name: 'Press Start 2P', css: "'Press Start 2P', monospace", sizes: { title: 16, name: 16, body: 8, small: 8 }, note: 'The famous 8-bit arcade font on an 8x8 grid, capitals and lower case. Very chunky: long item text needs the small size.' },
+  { id: 'silkscreen', name: 'Silkscreen', css: "'Silkscreen', monospace", sizes: { title: 16, name: 16, body: 16, small: 8 }, note: 'Classic small pixel capitals (no lower case). Sharp and even, but everything is in capitals.' },
 ];
+// Every text in the mocks has a role: how big it is drawn (Soldia scale or css size), wrapped or not, capitals or not.
+const ROLES = { floor: ['title', 2, false, true], nm: ['name', 2, false, false], ds: ['body', 2, true, false], ps: ['body', 2, true, false], rar: ['small', 2, false, true], btn: ['small', 2, false, true], lv: ['small', 1, false, false] };
+function applyFont(id) {
+  const F = FONTS.find((f) => f.id === id) || FONTS[0];
+  document.querySelectorAll('.screen [data-tx]').forEach((el) => {
+    const [role, scale, wrap, caps] = ROLES[el.dataset.tx];
+    if (el.dataset.text === undefined) el.dataset.text = el.textContent;
+    const text = caps ? el.dataset.text.toUpperCase() : el.dataset.text;
+    if (F.id === 'soldia') {
+      el.textContent = '';
+      el.classList.add('bmp');
+      const color = getComputedStyle(el).color;
+      const width = wrap ? el.parentElement.clientWidth : 0;
+      el.appendChild(wrap ? bitmapLines(text, scale, color, width) : bitmapText(text, scale, color));
+    } else {
+      el.classList.remove('bmp');
+      el.textContent = el.dataset.text;
+      el.style.fontFamily = F.css; el.style.fontWeight = '400'; el.style.fontSize = F.sizes[role] + 'px'; el.style.lineHeight = '1.25';
+    }
+  });
+  mark('.spec', F.id);
+}
+
 // Tiny pixel glyphs for the skill buttons (8x8, drawn as crisp squares).
 const GLYPH = {
   sword: ['......11', '.....111', '....111.', '1..111..', '.1111...', '..11....', '.1.11...', '1...1...'],
@@ -193,9 +218,9 @@ const glyph = (name) => {
   return `<svg viewBox="0 0 8 8" fill="currentColor" aria-hidden="true">${r}</svg>`;
 };
 function mock(cls) {
-  const u = (spr, x, y, hpCls, w, lv, small) => `<div class="unit ${small ? 'small' : ''}" style="left:${x}px;top:${y}px">${lv ? `<span class="lv">Lv${lv}</span>` : ''}<div class="hp ${hpCls}"><i style="width:${w}%"></i></div><img src="${SPR[spr]}" alt=""></div>`;
+  const u = (spr, x, y, hpCls, w, lv, small) => `<div class="unit ${small ? 'small' : ''}" style="left:${x}px;top:${y}px">${lv ? `<span class="lv" data-tx="lv">Lv${lv}</span>` : ''}<div class="hp ${hpCls}"><i style="width:${w}%"></i></div><img src="${SPR[spr]}" alt=""></div>`;
   return `<div class="phone"><div class="screen ${cls}">
-    <div class="topbar"><span class="floor">FLOOR 12</span><span class="iconbtn panel">${glyph('eye').replace('fill="currentColor"', 'fill="currentColor" style="width:14px;height:14px;color:var(--u-trim)"')}</span></div>
+    <div class="topbar"><span class="floor" data-tx="floor">Floor 12</span><span class="iconbtn panel">${glyph('eye').replace('fill="currentColor"', 'fill="currentColor" style="width:14px;height:14px;color:var(--u-trim)"')}</span></div>
     <div class="field panel"><div class="grid"></div>
       ${u('goblin', 40, 8, 'foe', 70, 0, true)}${u('slime', 168, 22, 'foe', 35, 0, true)}
       ${u('knight', 22, 96, '', 90, 4)}${u('rogue', 116, 88, '', 55, 4)}${u('archer', 206, 100, '', 75, 3)}
@@ -206,9 +231,9 @@ function mock(cls) {
       <div class="pair"><div class="sk atk cd">${glyph('arrow')}</div><div class="sk sup">${glyph('heart')}</div></div>
     </div>
     <div class="card panel"><div class="ico"><img src="${SPR.i_eagle_eye}" alt=""></div>
-      <div><div class="rar">Common item</div><div class="nm">Eagle Eye</div><div class="ds">+15% ranged damage.</div><div class="ps">Per stack: +15% ranged damage</div></div></div>
-    <div class="btn">Begin descent</div>
-    <div class="row2"><div class="btn ghost">Random</div><div class="btn ghost">Back</div></div>
+      <div><div class="rar" data-tx="rar">Common item</div><div class="nm" data-tx="nm">Eagle Eye</div><div class="ds" data-tx="ds">+15% ranged damage.</div><div class="ps" data-tx="ps">Per stack: +15% ranged damage</div></div></div>
+    <div class="btn"><span data-tx="btn">Begin descent</span></div>
+    <div class="row2"><div class="btn ghost"><span data-tx="btn">Random</span></div><div class="btn ghost"><span data-tx="btn">Back</span></div></div>
   </div></div>`;
 }
 document.getElementById('today').innerHTML = [['1-squad', 'Squad screen'], ['2-battle', 'Fight'], ['6-reward-who', 'Reward: who gets it?']]
@@ -222,12 +247,22 @@ for (const L of LOOKS) {
 const fonts = document.getElementById('fonts');
 for (const F of FONTS) {
   const el = document.createElement('div'); el.className = 'spec'; el.dataset.id = F.id;
-  el.innerHTML = `<h2>${F.name}</h2><div class="demo" style="font-family:${F.css};font-size:${F.size}px"><div class="big">FLOOR 12 · Choose a reward</div><div class="small">Eagle Eye: +15% ranged damage. Per stack: +15%.</div><div class="nums">-128  CRIT 312!  Lv4</div></div><p class="lede" style="margin:0">${F.note}</p><button class="pickbtn" type="button" id="font-${F.id}">Pick this font</button>`;
+  el.innerHTML = `<h2>${F.name}</h2><div class="demo"></div><p class="lede" style="margin:0">${F.note}</p><button class="pickbtn" type="button" id="font-${F.id}">Use this font</button>`;
+  const demo = el.querySelector('.demo');
+  const lines = [['FLOOR 12 · CHOOSE A REWARD', 'title', '#e3b553'], ['Eagle Eye: +15% ranged damage.', 'body', '#efe6d2'], ['-128  CRIT 312!  Lv4', 'body', '#ff9a6b']];
+  for (const [t, role, col] of lines) {
+    if (F.id === 'soldia') demo.appendChild(bitmapLines(t, 2, col, 236));
+    else { const d = document.createElement('div'); d.textContent = t; d.style.cssText = `font-family:${F.css};font-size:${F.sizes[role]}px;line-height:1.3;color:${col}`; demo.appendChild(d); }
+  }
   fonts.appendChild(el);
 }
+// Fonts load after the first paint: redraw the mocks once they are in, starting with the custom font.
+applyFont('soldia');
+if (document.fonts) document.fonts.ready.then(() => applyFont(document.querySelector('.spec.picked')?.dataset.id || 'soldia'));
 
+for (const F of FONTS) document.getElementById('font-' + F.id).onclick = () => applyFont(F.id);
 // Picks are saved in the page's database (collection "picks") so Claude can read them back.
-const mark = (sel, id) => document.querySelectorAll(sel).forEach((n) => n.classList.toggle('picked', n.dataset.id === id));
+function mark(sel, id) { document.querySelectorAll(sel).forEach((n) => n.classList.toggle('picked', n.dataset.id === id)); }
 let db = null;
 (async () => {
   db = await (window.claude ? claude.use('db') : null);
@@ -238,7 +273,7 @@ let db = null;
     for (const d of snap.docs) {
       const v = d.data();
       if (d.id === 'look') mark('.option', v.pick);
-      if (d.id === 'font') mark('.spec', v.pick);
+      if (d.id === 'font') applyFont(v.pick);
       if (d.id === 'note' && !document.getElementById('note').value) document.getElementById('note').value = v.text || '';
     }
   });
@@ -247,7 +282,7 @@ let db = null;
     catch (e) { if (statusEl) statusEl.textContent = 'Could not save: ' + (e && e.message ? e.message : 'try again'); }
   };
   for (const L of LOOKS) document.getElementById('pick-' + L.id).onclick = (ev) => { mark('.option', L.id); save('look', { pick: L.id, name: L.name }, ev.target.nextElementSibling); };
-  for (const F of FONTS) document.getElementById('font-' + F.id).onclick = () => { mark('.spec', F.id); save('font', { pick: F.id, name: F.name }); };
+  for (const F of FONTS) document.getElementById('font-' + F.id).onclick = () => { applyFont(F.id); save('font', { pick: F.id, name: F.name }); };
   document.getElementById('saveNote').onclick = () => save('note', { text: document.getElementById('note').value }, document.getElementById('noteStatus'));
 })();
 </script>

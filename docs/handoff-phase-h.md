@@ -3,7 +3,19 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
-## START HERE (session 7, latest): SCREEN REVIEW NOTES, working through them
+## START HERE (session 8, latest): SKILL ICONS proposal waiting for the user's notes
+Screen review (session 7 list) is ALL DONE (steps 1-6, see below). User then asked for SKILL ICONS: a 16x16 pixel icon for
+every hero skill (20) and passive (10) to replace the 2 letters on the fight buttons, and the skill book RECOLOURED per page
+type (stat blue, Debuff purple, Heal green, Defense steel, Team teal, Tempo yellow, Risk red, Area orange, Self pink).
+Review page: https://claude.ai/artifact/66p6zRjp6S78Gg9rAk6YSs (ArtifactData `list` collection `notes`; ids `icon:<skillId>`,
+`icon:passive_<heroId>`, `book:<tag>`). Icons: `src/data/skillIcons.json`, drawn by `scripts/art/skill-icons.mjs` (pixel pen,
+one recipe per icon: edit the recipe, re-run, rebuild the page with `node docs/proposals/skill-icons/make.mjs <out.html>`).
+NEXT: read the notes, redraw the CHANGE ones, then build them into the game (skill buttons in BattleScene show the icon
+instead of the 2 letters; passive icon somewhere visible, e.g. the hero card / hero HUD; book colours in skillBooks.json and
+the reward page cards). Ask the user where the passive icon should show in fights.
+Also new this session: TEST tools panel (gold 'TEST: tools' button), floorArt.js, room decorations (roomProps.json decor).
+
+## START HERE (session 7): SCREEN REVIEW NOTES, working through them
 The user marked the SCREEN REVIEW page https://claude.ai/artifact/UR98Jn7UBts1xrvEZw97qP (ArtifactData `list`,
 collection `notes`; ids like `clip:reward-up`, `still:fight`, `sound:miss`). Page source + recorder:
 `docs/proposals/screen-review/` (record.mjs, make.mjs; clips are NOT in git, re-record to republish).

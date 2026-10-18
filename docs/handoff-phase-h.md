@@ -4,7 +4,7 @@ Read `CLAUDE.md` first, then this file. Every item decision of this phase is in 
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
 ## START HERE (session 10c): Knight + Rogue skill looks IN THE GAME
-Rogue done straight in the game (docs/systems/effects.md 'ROGUE 3-BEAT'); tools for the next heroes: `skillFx.charge`
+Rogue done in the game (docs/systems/effects.md 'ROGUE 3-BEAT'), then (user: 'where's the demo?') added to the demo page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN (it plays the GAME's rogue recipes; notes in db `notes` `look:multistrike` / `look:smoke_bomb`). ALWAYS demo page FIRST for the next heroes, then build; tools for the next heroes: `skillFx.charge`
 (wind-up look), `skillFx.dash` (aggressive dash + knockback/shake), `skillFx.wave` (per-hit look of a channel),
 skillFx.json (cast/impact recipe). NEXT heroes (ideas): Berserker red splatter, Cleric gold light, Necro green smoke,
 Archer, Mage (element colour), Bard, Samurai, Alchemist. Also done this session: item gain popup = icon + 8px name that

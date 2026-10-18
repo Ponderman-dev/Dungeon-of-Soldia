@@ -59,8 +59,8 @@ ul.ideas li b { color: var(--fg); font-weight: 600; }
 
 <div class="wrap">
   <header>
-    <h1>Skill Effects: Knight sample</h1>
-    <p class="lede">Your note: skills are not powerful or eye-catching enough, and the skill name text is messy and stretchy. Here are the Knight's two skills drawn the new way (version 3), in a slice of the real fight screen at game size. Tap any scene to replay it from the start. Use <b>Slow</b> to see each beat.</p>
+    <h1>Skill Effects: Knight and Rogue</h1>
+    <p class="lede">Your note: skills are not powerful or eye-catching enough, and the skill name text is messy and stretchy. The Knight's look is approved and in the game. NEW: the Rogue's two skills (scroll down), cyan + knives and smoke, same rules: calm, real shapes, name in capitals. Each skill plays in a slice of the real fight screen at game size, today's look on the left, the new one on the right. Tap any scene to replay it from the start. Use <b>Slow</b> to see each beat.</p>
   </header>
   <div class="bar">
     <div class="seg" role="group" aria-label="Speed"><button id="sp1" aria-pressed="true">Normal</button><button id="sp4" aria-pressed="false">Slow x4</button></div>
@@ -148,14 +148,16 @@ const looksEl = document.getElementById('looks');
 for (const [id, about] of [
   ['defense_bash', 'Attack skill: bashes one enemy (+300% of his defense) and stuns it 1.5s. New: he dashes in, a short freeze on the hit, the print of his shield flashes on the enemy, a few chips fly, the enemy skids back in a little dust.'],
   ['challenge', 'Support skill: taunts every enemy around him for 3s and gives him +30 defense. New: he hops and lands in a puff of dust and SHOUTS (sound waves roll out), each enemy gets a red "!" and steps towards him, a blue shield pops up beside him (+30 defense).'],
+  ['multistrike', 'Attack skill: 5 quick hits of 50% on one enemy, each makes it Bleed. New: cyan charge flicker with knife glints, she dashes in and STAYS for the 5 hits, a cyan knife slash each hit (blood drops, tiny shake), the last hit is a big X with a bigger shake.'],
+  ['smoke_bomb', 'Support skill: the squad gets +30 evasion and all enemies are Blinded for 4s. New: cyan charge, she lobs a little bomb with a lit fuse, a white pop, a big grey smoke cloud bursts on every enemy, her squad flickers cyan.'],
 ]) {
   const sec = document.createElement('section'); sec.className = 'win'; sec.id = 'look-' + id;
-  const h = document.createElement('h2'); h.textContent = SD.SKILLS[id].name;
+  const h = document.createElement('h2'); h.textContent = (SD.SKILLS[id].hero === 'rogue' ? 'Rogue: ' : 'Knight: ') + SD.SKILLS[id].name;
   const p = document.createElement('p'); p.textContent = about;
   const pair = document.createElement('div'); pair.className = 'pair';
   const newSeq = [{ skill: id, look: 'new', name: 'B' }];
   pair.append(
-    tile('NOW', 'Today in the game', 'The name pops up twice, small orange effect, short shake.', makeScene([{ skill: id, look: 'now', name: 'now' }], SD.SKILLS[id].name + ' today')),
+    tile('NOW', 'Today in the game', SD.SKILLS[id].hero === 'rogue' ? 'The name pops up twice, small effect (and a yellow ring on her per hit).' : 'The name pops up twice, small orange effect, short shake.', makeScene([{ skill: id, look: 'now', name: 'now' }], SD.SKILLS[id].name + ' today')),
     tile('NEW', 'Charge, release, impact', 'Same skill, same timing (0.5s wind-up), calmer new look.', makeScene(newSeq, SD.SKILLS[id].name + ' new look')),
   );
   const btns = document.createElement('div'); btns.className = 'btns';

@@ -760,16 +760,20 @@ export default class BattleScene extends Phaser.Scene {
     const half = (20 * cfg.scale) / 2 + 4;
     const nearEdge = v.ch.x < GAME_WIDTH * 0.3 ? 1 : v.ch.x > GAME_WIDTH * 0.7 ? -1 : 0;
     const offset = nearEdge ? nearEdge * n * cfg.gapPx : (n ? (n % 2 ? 1 : -1) * Math.ceil(n / 2) * cfg.gapPx : 0);
-    const x = Phaser.Math.Clamp(v.ch.x + offset, half, GAME_WIDTH - half);
-    const y = v.bg.y - (10 * cfg.scale + 4); // just above the bar, however big the icon is
-    const img = this.add.image(x, y + 12, itemIconKey(this, itemId, def.rarity)).setScale(cfg.scale).setDepth(DEPTH.popup);
+    // It FOLLOWS the hero (user): placed every frame just above the bar, however big the icon is.
+    const spot = () => ({ x: Phaser.Math.Clamp(v.ch.x + offset, half, GAME_WIDTH - half), y: v.bg.y - (10 * cfg.scale + 4) });
+    const lift = { d: 12 };
+    const img = this.add.image(spot().x, spot().y + lift.d, itemIconKey(this, itemId, def.rarity)).setScale(cfg.scale).setDepth(DEPTH.popup);
+    const follow = () => { if (!v.ch.active) return; const p = spot(); img.setPosition(Math.round(p.x), Math.round(p.y + lift.d)); };
+    this.events.on('update', follow);
+    img.once('destroy', () => this.events.off('update', follow));
     v.pops.push(img);
     const ms = cfg.ms;
-    this.tweens.add({ targets: img, y, duration: ms * 0.25, ease: 'Back.easeOut' });
-    this.tweens.add({ targets: img, y: y - cfg.riseCharPx * CHAR_SCALE, alpha: 0, delay: ms * 0.7, duration: ms * 0.3, onComplete: () => img.destroy() });
-    // a white ring flashes out from the icon as it appears
-    const c = { x: x / CHAR_SCALE, y: y / CHAR_SCALE };
-    this.addFx(ms * 0.25, (q) => { const out = []; const r = (9 + q * 16) * (cfg.scale / CHAR_SCALE); for (let i = 0; i < 40; i++) { const a = (i / 40) * Math.PI * 2; out.push([Math.round(c.x + Math.cos(a) * r), Math.round(c.y + Math.sin(a) * r), 1, 1, 0xffffff, 1 - q]); } return out; });
+    this.tweens.add({ targets: lift, d: 0, duration: ms * 0.25, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: lift, d: -cfg.riseCharPx * CHAR_SCALE, delay: ms * 0.7, duration: ms * 0.3 });
+    this.tweens.add({ targets: img, alpha: 0, delay: ms * 0.7, duration: ms * 0.3, onComplete: () => img.destroy() });
+    // a white ring flashes out from the icon as it appears (and moves with it)
+    this.addFx(ms * 0.25, (q) => { const out = []; const c = { x: img.x / CHAR_SCALE, y: img.y / CHAR_SCALE }; const r = (9 + q * 16) * (cfg.scale / CHAR_SCALE); for (let i = 0; i < 40; i++) { const a = (i / 40) * Math.PI * 2; out.push([Math.round(c.x + Math.cos(a) * r), Math.round(c.y + Math.sin(a) * r), 1, 1, 0xffffff, 1 - q]); } return out; });
   }
 
   // Where an AREA skill lands: a faint ring (circle), wedge (cone) or strip (band) on the floor that

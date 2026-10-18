@@ -1,0 +1,149 @@
+<title>Soldia Skill Icons</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* One card per hero: attack skill, support skill and passive icons (big + game size), each with OK / CHANGE + a note.
+   Then the skill book in one colour per page type. The game's look: black windows, white lines, pixel font. */
+:root {
+  color-scheme: dark;
+  --bg: #07070b; --win: #000; --line: #fff; --fg: #fff; --muted: #b4b4c4; --gold: #ffd84a; --red: #ff7a5a; --green: #6ee07a;
+  --attack: #b8402a; --support: #2f9a55; --passive: #f2b632;
+  --pixel: 'Press Start 2P', ui-monospace, monospace;
+  --body: 'IBM Plex Sans', system-ui, sans-serif;
+}
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--body); margin: 0; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1100px; margin: 0 auto; padding-block: 22px 60px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 24px; }
+h1 { font: 20px/1.4 var(--pixel); margin: 0; text-wrap: balance; }
+h2 { font: 12px/1.5 var(--pixel); margin: 0; color: var(--gold); }
+h3 { font: 600 15px/1.3 var(--body); margin: 0; }
+.lede { color: var(--muted); max-width: 70ch; margin: 8px 0 0; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; display: flex; align-items: center; }
+.bar .progress { margin-left: auto; font: 8px var(--pixel); color: var(--muted); }
+button { font: 8px/1 var(--pixel); color: var(--fg); background: #000; cursor: pointer; padding: 11px 13px; border: 2px solid var(--line); }
+button:focus-visible, textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.v-ok.on { background: var(--green); border-color: var(--green); color: #000; }
+.v-change.on { background: var(--red); border-color: var(--red); color: #000; }
+.win { background: var(--win); border: 2px solid var(--line); box-shadow: inset 0 0 0 2px #000;
+  clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 2px, calc(100% - 2px) 2px, calc(100% - 2px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 2px), 2px calc(100% - 2px), 2px calc(100% - 4px), 0 calc(100% - 4px)); }
+.hero { padding: 14px; display: grid; gap: 12px; }
+.hero > header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.hero > header .role { color: var(--muted); font-size: 14px; }
+.row { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.icon { padding: 12px; display: grid; gap: 8px; align-content: start; }
+.icon.ok { border-color: var(--green); } .icon.change { border-color: var(--red); }
+.show { display: flex; align-items: flex-end; gap: 14px; }
+.show canvas { image-rendering: pixelated; display: block; }
+.tag { font: 8px/1.6 var(--pixel); }
+.tag.attack { color: #ff8a6a; } .tag.support { color: var(--green); } .tag.passive { color: var(--passive); }
+.icon p { margin: 0; color: var(--muted); font-size: 14px; }
+.small { font: 8px var(--pixel); color: var(--muted); text-align: center; margin-top: 4px; }
+.verdict { display: flex; gap: 6px; }
+textarea { width: 100%; box-sizing: border-box; min-height: 50px; resize: vertical; background: #0b0b10; color: var(--fg); border: 1px solid #555; padding: 8px; font: 14px/1.4 var(--body); }
+.saved { font: 8px var(--pixel); color: var(--muted); min-height: 1em; }
+.books { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Skill Icons</h1>
+    <p class="lede">A pixel icon for every hero skill and passive, to replace the 2 letters on the fight buttons. Each is shown big and at about game size, in its button colour (red = attack skill, green = support skill, gold = passive). Below them: the skill book in one colour per page type. Mark each OK or CHANGE and write what you want different. Everything is saved for Claude.</p>
+  </header>
+  <nav class="bar"><h2>Heroes</h2><span class="progress" id="progress"></span></nav>
+  <main id="main" style="display:grid;gap:18px"></main>
+  <section style="display:grid;gap:12px">
+    <h2>Skill books: one colour per page type</h2>
+    <p class="lede" style="margin:0">The blue book stays for stat pages; each kind of modifier page gets its own colour. The golden boss book stays gold.</p>
+    <div class="books" id="books"></div>
+  </section>
+</div>
+
+<script>
+/*DATA*/
+const notes = {};
+let store = null;
+const total = DATA.HEROES.length * 3 + DATA.BOOKS.length;
+const progress = () => { const done = Object.values(notes).filter((n) => n.verdict).length; document.getElementById('progress').textContent = `${done} / ${total} REVIEWED`; };
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const hex = (n) => '#' + Number(n).toString(16).padStart(6, '0');
+const FRAME = { attack: ['#b8402a', '#47201b', '#e07a5a'], support: ['#2f9a55', '#1b3d27', '#7ee09a'], passive: ['#f2b632', '#3a2a12', '#fff0a8'], book: ['#8f8aa3', '#2a2438', '#b3aec4'] };
+
+// Draws a 16x16 icon inside a 20x20 frame (edge, fill, light inner edge), `scale` screen pixels per pixel.
+function iconCanvas(icon, frame, scale, palette) {
+  const c = el('canvas'); c.width = c.height = 20 * scale; const g = c.getContext('2d');
+  const [edge, fill, hi] = frame;
+  for (let y = 0; y < 20; y++) for (let x = 0; x < 20; x++) {
+    const isEdge = x === 0 || y === 0 || x === 19 || y === 19, corner = (x === 0 || x === 19) && (y === 0 || y === 19);
+    if (corner) continue;
+    g.fillStyle = isEdge ? edge : x === 1 || y === 1 ? hi : fill; g.fillRect(x * scale, y * scale, scale, scale);
+  }
+  const pal = palette || icon.palette;
+  icon.rows.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === '.') return; g.fillStyle = hex(pal[parseInt(ch, 36)]); g.fillRect((x + 2) * scale, (y + 2) * scale, scale, scale); }));
+  return c;
+}
+
+function reviewBox(id, card) {
+  const wrap = el('div');
+  const v = el('div', 'verdict');
+  const ok = el('button', 'v-ok', 'OK'); ok.type = 'button';
+  const ch = el('button', 'v-change', 'CHANGE'); ch.type = 'button';
+  v.append(ok, ch);
+  const ta = el('textarea'); ta.placeholder = 'What should change?'; ta.setAttribute('aria-label', 'Note');
+  const saved = el('div', 'saved');
+  wrap.append(v, ta, saved);
+  const paint = () => { const n = notes[id] || {}; ok.classList.toggle('on', n.verdict === 'ok'); ch.classList.toggle('on', n.verdict === 'change'); card.classList.toggle('ok', n.verdict === 'ok'); card.classList.toggle('change', n.verdict === 'change'); if (document.activeElement !== ta) ta.value = n.text || ''; };
+  const save = async () => {
+    progress(); paint();
+    if (!store) { saved.textContent = 'NOT SAVED IN THIS VIEW'; return; }
+    try { await store.doc(id).set({ ...notes[id], updatedAt: new Date().toISOString() }); saved.textContent = 'SAVED'; } catch { saved.textContent = 'COULD NOT SAVE, TRY AGAIN'; }
+  };
+  ok.onclick = () => { notes[id] = { ...(notes[id] || {}), verdict: notes[id]?.verdict === 'ok' ? null : 'ok' }; save(); };
+  ch.onclick = () => { notes[id] = { ...(notes[id] || {}), verdict: notes[id]?.verdict === 'change' ? null : 'change' }; save(); };
+  ta.onchange = () => { notes[id] = { ...(notes[id] || {}), text: ta.value, verdict: notes[id]?.verdict || (ta.value.trim() ? 'change' : null) }; save(); };
+  card.paint = paint;
+  return wrap;
+}
+
+const main = document.getElementById('main');
+const KIND = { attack: 'ATTACK SKILL', support: 'SUPPORT SKILL', passive: 'PASSIVE' };
+for (const h of DATA.HEROES) {
+  const card = el('article', 'hero win');
+  card.append(el('header', '', `<h2>${esc(h.name.toUpperCase())}</h2><span class="role">${esc(h.role)}</span>`));
+  const row = el('div', 'row');
+  for (const ic of h.icons) {
+    const box = el('div', 'icon win'); box.dataset.id = 'icon:' + ic.key;
+    const show = el('div', 'show');
+    show.append(iconCanvas(DATA.ICONS[ic.key], FRAME[ic.kind], 6));
+    const small = el('div'); small.append(iconCanvas(DATA.ICONS[ic.key], FRAME[ic.kind], 2)); small.append(el('div', 'small', 'GAME SIZE'));
+    show.append(small);
+    box.append(show, el('div', `tag ${ic.kind}`, KIND[ic.kind]), el('h3', '', esc(ic.name)), el('p', '', esc(ic.text)));
+    box.append(reviewBox('icon:' + ic.key, box));
+    row.append(box);
+  }
+  card.append(row);
+  main.append(card);
+}
+const booksEl = document.getElementById('books');
+for (const b of DATA.BOOKS) {
+  const pal = DATA.BOOK.palette.slice(); pal[1] = b.cols[0]; pal[2] = b.cols[1]; pal[5] = b.cols[2];
+  const box = el('div', 'icon win'); box.dataset.id = 'book:' + b.tag;
+  const show = el('div', 'show'); show.append(iconCanvas(DATA.BOOK, FRAME.book, 5, pal));
+  box.append(show, el('h3', '', esc(b.label)), el('p', '', esc(b.pages.join(', '))));
+  box.append(reviewBox('book:' + b.tag, box));
+  booksEl.append(box);
+}
+progress();
+
+(async () => {
+  const db = await (window.claude ? claude.use('db') : null);
+  if (!db) { document.querySelectorAll('.saved').forEach((s) => (s.textContent = 'NOT SAVED IN THIS VIEW')); return; }
+  store = db.collection('notes');
+  store.onSnapshot((snap) => {
+    for (const d of snap.docs) notes[d.id] = d.data();
+    document.querySelectorAll('[data-id]').forEach((c) => c.paint && c.paint());
+    progress();
+  });
+})();
+</script>

@@ -172,6 +172,18 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   startFighting() {
+    // A boss floor: the boss roars and the screen shakes first, then a short wait before the fight starts.
+    const bossViews = [...this.views.values()].filter((v) => v.unit.side === 'enemy' && v.unit.def.boss && v.unit.alive);
+    if (bossViews.length && !this.bossIntroDone) {
+      const B = T.bossIntro;
+      this.bossIntroDone = true;
+      sfx.play('bossRoar');
+      this.cameras.main.shake(B.shakeMs, B.shakeIntensity);
+      for (const v of bossViews) { this.popText(v, 'ROAR!', '#ff4a3a', true); this.ring(v, 0xff4a3a); }
+      this.time.delayedCall(B.waitMs, () => this.startFighting());
+      return;
+    }
+    this.bossIntroDone = false;
     this.showSlots(true);
     // Enemy health bars and tags leave their floor (they slid in with it) and go on top of every
     // fighter, like the heroes' bars, so a character never covers a bar.
@@ -204,7 +216,7 @@ export default class BattleScene extends Phaser.Scene {
     this.mode = 'fighting';
     if (this.state.monsterHouse) this.monsterHouseBanner();
     else for (const v of this.views.values()) if (v.unit.elite && v.unit.alive) this.eliteName(v); // "Burning Vampiric Bandit"
-    if (this.state.enemies.some((u) => u.def.boss)) sfx.play('bossIntro'); // a deep gong when a boss floor starts
+    if (this.state.enemies.some((u) => u.def.boss)) sfx.play('bossIntro'); // a deep gong when the boss fight starts (after the roar)
     for (const e of this.state.startFloor()) this.showEvent(e); // floor-start minions rise (Necromancer)
   }
 

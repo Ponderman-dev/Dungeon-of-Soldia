@@ -100,7 +100,13 @@
     "stepLenPx": 90,
     "stepHeight": 6,
     "slideMs": 1000,
-    "doorFadePx": 70
+    "doorFadePx": 70,
+    "bossIntro": {
+      "_about": "A boss floor: when the squad is in place the boss ROARS (sound bossRoar) and the camera shakes (shakeMs, shakeIntensity), then nobody moves for waitMs before the fight starts (BattleScene.startFighting).",
+      "shakeMs": 900,
+      "shakeIntensity": 0.012,
+      "waitMs": 2000
+    }
   },
   "manaRegenPerSec": 2,
   "winManaPercent": 20,

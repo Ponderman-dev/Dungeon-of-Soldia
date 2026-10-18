@@ -61,11 +61,13 @@ const itemDefs = loadItems(rawItems);
 // Effect settings from the Studio (speed and colour swaps per effect, data/effects.json).
 const TUNE = makeTuner(effectsData);
 // Skill name -> its own cast effect (skillFx.json; a rotation spell is 'skillId:SHORT').
+const DASH_BY_NAME = {}; // skill name -> its dash (combat.json skillFx.dash)
 const SKILL_FX_BY_NAME = {};
 for (const [id, sk] of Object.entries(rawSkills)) {
   if (id.startsWith('_')) continue;
   if (sk.rotation) for (const r of sk.rotation) SKILL_FX_BY_NAME[r.name] = skillFxData[`${id}:${r.short}`];
   else SKILL_FX_BY_NAME[sk.name] = skillFxData[id];
+  if (combatRules.skillFx.dash[id]) DASH_BY_NAME[sk.name] = combatRules.skillFx.dash[id];
 }
 const skillDefs = rawSkills;
 const SKILL_Y = 772; // centre of the skill squares
@@ -1477,8 +1479,10 @@ export default class BattleScene extends Phaser.Scene {
       if (e.zone) this.showZone(e.zone, FX.areaMs);
       this.skillBurst(caster, e);
       if (e.skill.leap && e.targets[0]) this.leapAt(caster, this.views.get(e.targets[0].uid)); // Savage Leap
+      const dash = DASH_BY_NAME[e.skill.name];
+      if (dash && e.targets[0]) this.dashAt(caster, this.views.get(e.targets[0].uid), dash); // Defense Bash
       caster.ch.castRelease(e.skill.kind); // the skill's own animation (not the normal swing)
-      if ((e.skill.target === 'enemy' || e.skill.target === 'allEnemies') && e.targets[0] && !e.skill.leap) {
+      if ((e.skill.target === 'enemy' || e.skill.target === 'allEnemies') && e.targets[0] && !e.skill.leap && !dash) {
         const t = this.views.get(e.targets[0].uid);
         caster.ch.lunge(t.ch.x, t.ch.y);
       }
@@ -1865,6 +1869,27 @@ export default class BattleScene extends Phaser.Scene {
     this.tweens.add({ targets: jump, p: 1, duration: 230, ease: 'Quad.easeOut', onUpdate: set, onComplete: () => this.tweens.add({ targets: jump, p: 0, duration: 300, delay: 120, ease: 'Quad.easeInOut', onUpdate: set, onComplete: () => { caster.leapX = caster.leapY = caster.leapLift = 0; } }) });
   }
 
+  // An aggressive skill dash (combat.json skillFx.dash): the hero shoots at its target from wherever it stands, the
+  // target is knocked back at the hit with a small shake, then both settle back. Uses the same view offsets as leapAt.
+  dashAt(caster, target, D) {
+    if (!target || !target.ch.active) return;
+    const dx = target.ch.x - caster.ch.x, dy = target.ch.y - caster.ch.y, len = Math.hypot(dx, dy) || 1;
+    const reach = Phaser.Math.Clamp(len - D.stopPx, D.minPx, D.maxPx);
+    const ux = dx / len, uy = dy / len;
+    const go = { p: 0 };
+    const set = () => { caster.leapX = ux * reach * go.p; caster.leapY = uy * reach * go.p; };
+    this.tweens.add({ targets: go, p: 1, duration: D.inMs, ease: 'Quad.easeIn', onUpdate: set,
+      onComplete: () => {
+        this.tweens.add({ targets: go, p: 0, delay: D.holdMs, duration: D.outMs, ease: 'Quad.easeOut', onUpdate: set, onComplete: () => { caster.leapX = caster.leapY = 0; } });
+        this.cameras.main.shake(D.shakeMs, D.shakeIntensity);
+        if (!target.ch.active) return;
+        const kb = { p: 0 };
+        const setK = () => { target.leapX = ux * D.knockPx * kb.p; target.leapY = uy * D.knockPx * kb.p; };
+        this.tweens.add({ targets: kb, p: 1, duration: D.knockMs, ease: 'Quad.easeOut', onUpdate: setK,
+          onComplete: () => this.tweens.add({ targets: kb, p: 0, duration: D.knockBackMs, ease: 'Quad.easeInOut', onUpdate: setK, onComplete: () => { target.leapX = target.leapY = 0; } }) });
+      } });
+  }
+
   // A skill goes off: the caster flashes in the skill colour, a ring bursts (on each target for an
   // attack skill, around the caster for a support skill) and the skill's name shows as a banner.
   // Attack skills also shake the screen and freeze the fight for a split second (hit-stop).
@@ -1930,7 +1955,7 @@ export default class BattleScene extends Phaser.Scene {
     const frozen = {}; // last known bodies, for fighters that are gone mid-effect
     const bodies = (k) => lists[k].map((v, i) => (v.ch.active ? (frozen[k + i] = this.fxBody(v)) : frozen[k + i] || this.fxBody(v)));
     this.addFx(CAST_MS[name], (q, now) => {
-      const c = { caster: bodies('caster')[0], targets: bodies('targets'), squad: bodies('squad'), enemies: bodies('enemies') };
+      const c = { caster: bodies('caster')[0], targets: bodies('targets'), squad: bodies('squad'), enemies: bodies('enemies'), hitMs: (DASH_BY_NAME[e.skill.name] || {}).inMs || 0 };
       const out = castFx(name, q, c, now);
       return { draws: out.draws, tints: out.tints.map(([list, i, tint]) => [lists[list] && lists[list][i], tint]) };
     }, ['skill', name]);

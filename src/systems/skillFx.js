@@ -14,7 +14,7 @@ const easeInOut = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2)
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const DUST = 0xc9b18a, KNIFE = 0xe4e8f0, ARROW = 0xc68a5e, NOTE = 0xf06ab4, RUNE = 0x9b4dff, ROAR = 0xff4a4a, DULL = 0x6f6890, GREENEYE = 0x6dff8a, BONE = 0xebe5cf, PETAL = 0xf6a8c8, STANCE = 0xffd27a;
 
-export const CAST_MS = { shieldBash: 700, challenge: 1200, knightCharge: 500, bloodPact: 1000, eviscerate: 600, changeSong: 1100, groundPound: 700, rallyCry: 1100, smokeBomb: 1400, huntersMark: 900, savageLeap: 750, warCry: 900, windCutter: 500, focusStance: 700, frostNova: 800, arcaneWard: 1200, divineShield: 700, holyNova: 800, boneWard: 1200, ballad: 1600 };
+export const CAST_MS = { shieldBash: 800, challenge: 1200, knightCharge: 500, bloodPact: 1000, eviscerate: 600, changeSong: 1100, groundPound: 700, rallyCry: 1100, smokeBomb: 1400, huntersMark: 900, savageLeap: 750, warCry: 900, windCutter: 500, focusStance: 700, frostNova: 800, arcaneWard: 1200, divineShield: 700, holyNova: 800, boneWard: 1200, ballad: 1600 };
 export const SHOT_MS = { knife: 200, rain: 300, note: 320, fireball: 720, darkbolt: 520, holybolt: 520, flask: 900 };
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -31,18 +31,18 @@ function rays(g, x, y, n, len, c, p, rot = 0) {
 // The Knight's colours (steel blue) and his little pixel shield: rim, face, white cross glint.
 const KNIGHT = { white: 0xffffff, light: 0xcfe4ff, mid: 0x6fa8ff, deep: 0x3b6fd4 };
 const SHIELD = ['.#####.', '#xxxxx#', '#xx+xx#', '#x+++x#', '.#x+x#.', '.#xxx#.', '..#x#..', '...#...'];
-function shieldPx(g, cx, cy, rim, face, a) {
+function shieldPx(g, cx, cy, rim, face, a, s = 1) {
   if (a <= 0) return;
-  SHIELD.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') g.px(cx + x - 3, cy + y - 4, ch === '#' ? rim : ch === '+' ? 0xffffff : face, a); }));
+  SHIELD.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') g.rect(Math.round(cx + (x - 3.5) * s), Math.round(cy + (y - 4) * s), s, s, ch === '#' ? rim : ch === '+' ? 0xffffff : face, a); }));
 }
 // A little dust kicked up at someone's feet.
-function dustPx(g, x, y, p, seed = 1) {
+function dustPx(g, x, y, p, seed = 1, size = 1) {
   if (p <= 0 || p >= 1) return;
-  for (let i = 0; i < 8; i++) { const side = i % 2 ? 1 : -1, d = (3 + rnd(seed + i) * 7) * easeOut(p); g.rect(x + side * d, y - 1 - rnd(seed + i * 5) * 3 * p, i % 3 ? 1 : 2, 1, i % 3 ? 0x8a7a68 : 0x6a5d50, 1 - p); }
+  for (let i = 0; i < 8 * size; i++) { const side = i % 2 ? 1 : -1, d = (3 + rnd(seed + i) * 7 * size) * easeOut(p); g.rect(x + side * d, y - 1 - rnd(seed + i * 5) * 3 * p, i % 3 ? 1 : 2, 1, i % 3 ? 0x8a7a68 : 0x6a5d50, 1 - p); }
 }
 // A shout: a curved sound wave (2 px thick) of radius r around (x, y), facing `ang`.
-function shoutPx(g, x, y, r, ang, c, a) {
-  for (let k = -10; k <= 10; k++) { const t = ang + k * 0.06; for (const rr of [r, r + 1]) g.px(x + Math.cos(t) * rr, y + Math.sin(t) * rr * 1.3, c, a); }
+function shoutPx(g, x, y, r, ang, c, a, th = 2) {
+  for (let k = -12; k <= 12; k++) { const t = ang + k * 0.06; for (let j = 0; j < th; j++) g.px(x + Math.cos(t) * (r + j), y + Math.sin(t) * (r + j) * 1.3, c, a); }
 }
 const mean = (list, k) => list.reduce((s, u) => s + u[k], 0) / Math.max(1, list.length);
 
@@ -159,17 +159,21 @@ const CAST = {
   shieldBash(q, c) {
     const g = pen(); const u = c.targets[0]; if (!u) return g.out;
     const k = c.caster || u, dx = k.x - u.x, dy = k.mid - u.mid, d = Math.hypot(dx, dy) || 1;
+    const ms = q * CAST_MS.shieldBash, hit = ms - (c.hitMs || 0); // hitMs: when his dash lands (combat.json skillFx.dash)
+    // the dash: steel streaks behind him while he shoots in
+    if (hit < 60) for (let i = 0; i < 4; i++) { const off = (i - 1.5) * 3, len = 6 + rnd(i) * 6, bx = k.x + (dx / d) * (k.hw + 2) - (dy / d) * off, by = k.mid + (dy / d) * 4 + (dx / d) * off; g.line(bx, by, bx + (dx / d) * len, by + (dy / d) * len, i % 2 ? KNIGHT.light : KNIGHT.white, 0.7); }
+    if (hit < 0) return g.out;
     const px = u.x + (dx / d) * (u.hw + 1), py = u.mid + (dy / d) * 4; // the side of the target facing him
-    const ms = q * CAST_MS.shieldBash, sp = ph(ms, 0, 320);
-    if (sp < 1) shieldPx(g, px, py, ms < 60 ? KNIGHT.white : KNIGHT.light, ms < 60 ? KNIGHT.white : KNIGHT.mid, sp < 0.3 ? 1 : 1 - (sp - 0.3) / 0.7);
+    const sp = ph(hit, 0, 380);
+    if (sp < 1) shieldPx(g, px, py, hit < 70 ? KNIGHT.white : KNIGHT.light, hit < 70 ? KNIGHT.white : KNIGHT.mid, sp < 0.35 ? 1 : 1 - (sp - 0.35) / 0.65, 2);
     const away = Math.atan2(-dy, -dx);
-    for (let i = 0; i < 6; i++) {
-      const p = ph(ms, 0, 380 + rnd(i) * 120); if (p <= 0 || p >= 1) continue;
-      const a = away + (rnd(i * 3) - 0.5) * 2.2, r = (6 + rnd(i * 7) * 10) * easeOut(p);
-      g.px(px + Math.cos(a) * r, py + Math.sin(a) * r * 0.8 + p * p * 10, [KNIGHT.light, KNIGHT.mid, KNIGHT.deep][i % 3], 1 - p);
+    for (let i = 0; i < 8; i++) {
+      const p = ph(hit, 0, 380 + rnd(i) * 140); if (p <= 0 || p >= 1) continue;
+      const a = away + (rnd(i * 3) - 0.5) * 2.2, r = (8 + rnd(i * 7) * 12) * easeOut(p);
+      g.rect(px + Math.cos(a) * r, py + Math.sin(a) * r * 0.8 + p * p * 10, i % 3 ? 1 : 2, i % 3 ? 1 : 2, [KNIGHT.light, KNIGHT.mid, KNIGHT.deep][i % 3], 1 - p);
     }
-    dustPx(g, u.x, u.y, ph(ms, 0, 450), 3);
-    return { draws: g.out, tints: [['targets', 0, ms < 60 ? [C.white, 0.7] : null]] };
+    dustPx(g, u.x, u.y, ph(hit, 0, 450), 3);
+    return { draws: g.out, tints: [['targets', 0, hit < 70 ? [C.white, 0.75] : null]] };
   },
   // Knight: Challenge (calm 3-beat look). He lands in a puff of dust and SHOUTS: three sound waves roll out towards
   // the enemies, each taunted enemy flashes red (the taunt status draws its own "!"), a little blue shield pops up
@@ -178,11 +182,11 @@ const CAST = {
     const g = pen(); const u = c.caster; const ms = q * CAST_MS.challenge;
     const foes = c.targets.length ? c.targets : c.enemies;
     const ang = foes.length ? Math.atan2(mean(foes, 'mid') - (u.top + 4), mean(foes, 'x') - u.x) : 0;
-    for (let k = 0; k < 3; k++) { const p = ph(ms, k * 70, k * 70 + 380); if (p > 0 && p < 1) shoutPx(g, u.x + Math.cos(ang) * u.hw, u.top + 4, 4 + 30 * easeOut(p), ang, k === 0 ? KNIGHT.white : KNIGHT.light, 1 - p); }
-    dustPx(g, u.x, u.y, ph(ms, 0, 400), 9);
+    for (let k = 0; k < 3; k++) { const p = ph(ms, k * 70, k * 70 + 420); if (p > 0 && p < 1) shoutPx(g, u.x + Math.cos(ang) * u.hw, u.top + 4, 4 + 42 * easeOut(p), ang, k === 2 ? KNIGHT.light : KNIGHT.white, 1 - p * p, k === 0 ? 3 : 2); }
+    dustPx(g, u.x, u.y, ph(ms, 0, 450), 9, 1.5);
     const bp = ph(ms, 60, 900);
-    if (bp > 0 && bp < 1) shieldPx(g, u.x - u.hw - 7, u.mid - 2 - Math.round(easeOut(bp) * 4), KNIGHT.light, KNIGHT.mid, bp < 0.7 ? 1 : 1 - (bp - 0.7) / 0.3);
-    return { draws: g.out, tints: [['caster', 0, ms > 60 && ms < 360 ? [KNIGHT.mid, 0.3 * (1 - (ms - 60) / 300)] : null], ...c.targets.map((e, i) => ['targets', i, ms > 80 + i * 60 && ms < 180 + i * 60 ? [ROAR, 0.4] : null])] };
+    if (bp > 0 && bp < 1) shieldPx(g, u.x - u.hw - 10, u.mid - 4 - Math.round(easeOut(bp) * 5), bp < 0.12 ? KNIGHT.white : KNIGHT.light, bp < 0.12 ? KNIGHT.white : KNIGHT.mid, bp < 0.7 ? 1 : 1 - (bp - 0.7) / 0.3, 2);
+    return { draws: g.out, tints: [['caster', 0, ms < 420 ? [KNIGHT.light, 0.55 * (1 - ms / 420)] : null], ...c.targets.map((e, i) => ['targets', i, ms > 80 + i * 60 && ms < 180 + i * 60 ? [ROAR, 0.4] : null])] };
   },
   // Knight: the CHARGE beat of both his skills (plays during the wind-up, q = wind-up progress): he glows steel blue,
   // more and more, little specks get pulled into him, a soft glow under his feet, a glint on his weapon at the end.

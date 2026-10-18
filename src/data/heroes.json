@@ -341,11 +341,11 @@
     "id": "rogue",
     "name": "Rogue",
     "role": "Assassin",
-    "summary": "Builds combo points, then finishes with Eviscerate.",
+    "summary": "Fast hits, many procs, bleeding enemies.",
     "tips": [
-      "Tap one enemy so all his hits build points on it.",
-      "Eviscerate at 5 points: sure crit, bleed and every on-hit item fires.",
-      "Smoke Bomb is the squad's escape: evasion + blind."
+      "Dirty Fighting: 15% of his hits make the enemy Bleed, and enemies he has debuffed miss 20% of their attacks on him.",
+      "Multistrike: 5 quick hits on one enemy; every hit Bleeds and rolls his on-hit items.",
+      "Attack speed, double hits and on-hit items love him. Smoke Bomb is the squad's escape: evasion + blind."
     ],
     "damageType": "melee",
     "height": 23,
@@ -474,7 +474,7 @@
       "attackEfficiency": 0.5
     },
     "skills": {
-      "attack": "eviscerate",
+      "attack": "multistrike",
       "support": "smoke_bomb"
     },
     "perk": {
@@ -488,14 +488,26 @@
       ]
     },
     "passive": {
-      "name": "Combo",
-      "description": "Each hit on the SAME enemy adds a combo point (max 5); debuff item procs and double hits add points too. +15% damage and +10 crit against debuffed enemies.",
-      "opportunist": {
-        "damagePercent": 15,
-        "critFlat": 10
-      },
-      "combo": {
-        "max": 5
+      "name": "Dirty Fighting",
+      "description": "15% chance on hit to make the enemy Bleed. Enemies he has debuffed miss 20% of their attacks on HIM.",
+      "procs": [
+        {
+          "proc": "onAttack",
+          "chance": 15,
+          "label": "Bleed!",
+          "silent": true,
+          "targets": "target",
+          "apply": [
+            {
+              "status": "bleed",
+              "durationMs": 4000,
+              "damageMultiplier": 0.3
+            }
+          ]
+        }
+      ],
+      "dirtyFighting": {
+        "missPercent": 20
       }
     },
     "provides": [

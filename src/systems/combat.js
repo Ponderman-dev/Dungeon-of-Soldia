@@ -59,7 +59,7 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
   if (block > 0 && !recharging && rng() * 100 < block) return { dodged: true, blocked: true, crit: false, amount: 0, mult: 1 };
 
   // Blind: the attacker misses some of its attacks.
-  const blind = statusSum(attacker, 'blind', 'missPercent');
+  const blind = statusSum(attacker, 'blind', 'missPercent') + (opts.extraMissPercent || 0); // + Rogue's Dirty Fighting
   if (blind > 0 && rng() * 100 < blind) return { dodged: true, missed: true, crit: false, amount: 0, mult: 1 };
 
   // Melee swings often miss flying enemies.

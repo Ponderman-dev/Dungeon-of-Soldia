@@ -32,7 +32,7 @@ const T = ['knight', 'rogue'];
 { const { s, a, es } = mk(['archer', ...T], undefined, () => 0.99); s.refreshStats(); const atk0 = a.stats.attackEfficiency, crit0 = a.stats.crit;
   run(s, 2900); ok('Steady Aim: not active before 3s without a hit', !a.steady && a.stats.attackEfficiency === atk0);
   run(s, 300);
-  ok('...after 3s without being hit: +25% attack speed and +15 crit', a.steady && Math.abs(a.stats.attackEfficiency - (atk0 + 25)) < 0.01 && Math.abs(a.stats.crit - (crit0 + 15)) < 0.01);
+  ok('...after 3s without being hit: +25% attack speed and +15 crit', a.steady && Math.abs(a.stats.attackEfficiency - atk0 * 1.25) < 0.01 && Math.abs(a.stats.crit - (crit0 + 15)) < 0.01);
   s.strike(es[0], a, [], {});
   ok('...being hit resets it at once', !a.steady && a.stats.attackEfficiency === atk0 && a.sinceHit === 0);
   run(s, 2000); ok('...and it takes another 3s', !a.steady); run(s, 1200); ok('...then it is back', a.steady); }

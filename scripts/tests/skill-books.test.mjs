@@ -116,7 +116,7 @@ const withPage = (id, idx = 0, heroIds = ['knight', 'rogue', 'archer']) => { con
 { const { s, h } = withPage('gravecall'); for (let i = 0; i < 3; i++) { h[0].skills[0].cooldownLeft = 0; s.castSkill(h[0].uid, 0); }
   ok('Gravecall: raises skeletons, at most 2 per hero', s.minions.filter((m) => m.alive !== false && m.holderUid === h[0].uid).length === 2); }
 { const m = mk(['knight'], 0); m.s.rng = () => 0; m.s.addPage(m.h[0].uid, 1, page('concussive'));
-  const r2 = mk(['rogue'], 0); r2.s.rng = () => 0; r2.s.addPage(r2.h[0].uid, 0, page('concussive')); r2.s.castSkill(r2.h[0].uid, 0);
+  const r2 = mk(['rogue'], 0); r2.s.rng = () => 0; r2.s.addPage(r2.h[0].uid, 0, page('concussive')); r2.s.castSkill(r2.h[0].uid, 0); for (let t = 0; t < 800; t += 20) r2.s.update(20); // Multistrike's hits land over time
   ok('Concussive: a hit can stun', r2.es.some((e) => e.statuses.some((x) => x.type === 'stun'))); }
 { const a = mk(['knight'], 0), b = withPage('reckless', 0, ['knight']);
   const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));

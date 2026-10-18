@@ -35,8 +35,8 @@ const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
   const rd = (f) => JSON.parse(fs2.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
   const { default: BS } = await import('../../src/systems/BattleState.js');
   const { loadItems: li } = await import('../../src/systems/items.js');
-  const heroes = rd('heroes.json');
-  const s = new BS({ heroDefs: [{ ...heroes.find((h) => h.id === 'archer'), passive: { name: 'Steady Aim', steadyAim: { afterMs: 1500, attackSpeedPercent: 25, critFlat: 15 } } }], // the v2 Archer's state bonus (the mechanic stays) enemyDefs: rd('enemies.json'), itemDefs: li(rd('items.json')), skillDefs: rd('skills.json'), statusDefs: rd('statuses.json'), rules: rd('combat.json'), damageTypes: rd('damageTypes.json'), leveling: rd('leveling.json') });
+  const heroes = rd('heroes.json'); // the Archer below gets the v2 Steady Aim passive back (the mechanic stays)
+  const s = new BS({ heroDefs: [{ ...heroes.find((h) => h.id === 'archer'), passive: { name: 'Steady Aim', steadyAim: { afterMs: 1500, attackSpeedPercent: 25, critFlat: 15 } } }], enemyDefs: rd('enemies.json'), itemDefs: li(rd('items.json')), skillDefs: rd('skills.json'), statusDefs: rd('statuses.json'), rules: rd('combat.json'), damageTypes: rd('damageTypes.json'), leveling: rd('leveling.json') });
   const a = s.heroes[0];
   a.steady = true;
   s.refreshStats();

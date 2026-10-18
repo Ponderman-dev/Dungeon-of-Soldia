@@ -1601,6 +1601,9 @@ export default class BattleState {
     const ia = attacker.side === 'enemy' ? this.iaido(target) : null;
     let forced = false;
     if (ia && target.alive) { target.iaidoHits++; forced = target.iaidoHits % ia.every === 0; }
+    // Rogue's DIRTY FIGHTING (passive.dirtyFighting): an enemy he has debuffed misses some of its attacks on HIM.
+    const dirty = attacker.side === 'enemy' && target.def.passive && target.def.passive.dirtyFighting;
+    if (dirty && attacker.debuffedBy && attacker.debuffedBy.has(target.uid)) opts = { ...opts, extraMissPercent: (opts.extraMissPercent || 0) + dirty.missPercent };
     const result = forced ? { dodged: true, blocked: true, parried: true, crit: false, amount: 0, mult: 1 } : computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, opts);
     if (!result.dodged && attacker.side === 'enemy' && target.side === 'hero') result.amount = this.interceptHit(attacker, target, result.amount, events); // Knight takes his share
     if (!result.dodged && target.side === 'enemy') {
@@ -2172,6 +2175,7 @@ export default class BattleState {
       return;
     }
     if (target.def.heat) this.heatFromStatus(target, spec.status, events);
+    if (info.debuff && target.side === 'enemy' && source && source.side === 'hero') (target.debuffedBy = target.debuffedBy || new Set()).add(source.uid); // who has debuffed it (Dirty Fighting)
     if (target.streak && ['stun', 'freeze', 'fear'].includes(spec.status)) target.streak = { uid: null, count: 0 }; // Brawler's Streak combo is lost
     const scale = info.control ? target.def.statusDurationScale ?? 1 : 1;
     // A shield with no durationMs lasts until it is broken.
@@ -2509,7 +2513,7 @@ export default class BattleState {
     if (skill.channel) {
       // A channel: after the cast it keeps firing waves; the hero is busy until the last one.
       const ch = skill.channel;
-      hero.casting = { index, remaining: ch.waves.length * ch.intervalMs, total: ch.waves.length * ch.intervalMs, channel: { skill, slotId: slot.id, waves: ch.waves, intervalMs: ch.intervalMs, timer: 0, wave: 0, zone, book: book.mods } };
+      hero.casting = { index, remaining: ch.waves.length * ch.intervalMs, total: ch.waves.length * ch.intervalMs, channel: { skill, slotId: slot.id, waves: ch.waves, intervalMs: ch.intervalMs, timer: 0, wave: 0, zone, book: book.mods, aimUid: targets[0] && targets[0].uid } };
       this.castPages = null;
       return;
     }
@@ -2829,7 +2833,13 @@ export default class BattleState {
       if (z.shape === 'cone') z.dir = Math.atan2(aim.y - z.y, aim.x - z.x);
       else { z.x = aim.x; z.y = aim.y; }
     }
-    const targets = this.enemies.filter((e) => e.alive && (!z || e === aim || this.inZone(e, z)));
+    let targets = this.enemies.filter((e) => e.alive && (!z || e === aim || this.inZone(e, z)));
+    // A one-enemy channel (Multistrike, skill target 'enemy'): every wave hits the same enemy, or the next one if it died.
+    if (ch.skill.target === 'enemy') {
+      let one = this.enemies.find((e) => e.uid === ch.aimUid && e.alive);
+      if (!one) { one = this.pickTarget(hero); if (one) ch.aimUid = one.uid; }
+      targets = one ? [one] : [];
+    }
     events.push({ type: 'wave', unit: hero, skill: ch.skill, wave: ch.wave, waves: ch.waves.length, targets, zone: z });
     for (const t of targets) {
       const res = this.skillHit(hero, { ...ch.skill, apply: null, onCrit: ch.skill.onCrit }, ch.slotId, t, events, { multiplier: mult });

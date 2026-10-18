@@ -182,3 +182,23 @@ const BT = hero('berserker').passive.bloodthirst;
 { const F = skills[hero('berserker').skills.support]; const { s, a } = mk(['berserker', 'rogue']); const ls0 = a.specials.lifesteal || 0; cast(s, a, 'support');
   ok(`Blood Feast: +${F.apply[0].mods[0].percent}% lifesteal for himself (not the squad)`, a.specials.lifesteal === ls0 + F.apply[0].mods[0].percent && !(s.heroes[1].specials.lifesteal > 0));
   run(s, F.apply[0].durationMs + 100); ok(`...for ${F.apply[0].durationMs / 1000}s`, (a.specials.lifesteal || 0) === ls0); }
+
+// ================= ROGUE: COMBO STRIKER
+const DF = hero('rogue').passive, MS = skills[hero('rogue').skills.attack];
+{ const bleedRate = (() => { let n = 0; const N = 2000; const { s, es, a } = mk(['rogue'], ['goblin']); for (let i = 0; i < N; i++) { es[0].statuses = []; s.landAttack(a, es[0], []); if (es[0].statuses.some((x) => x.type === 'bleed')) n++; } return n / N; })();
+  ok(`Dirty Fighting: ${DF.procs[0].chance}% of his hits make the enemy Bleed`, Math.abs(bleedRate - DF.procs[0].chance / 100) < 0.03, bleedRate.toFixed(3)); }
+{ const missRate = (debuffed) => { const { s, es, h } = mk(['rogue', 'knight'], ['goblin']); const [ro, k] = h; const g = es[0];
+    if (debuffed) s.applyStatus(g, { status: 'weaken', durationMs: 1 }, ro, 'test', []);
+    let m = 0, mk2 = 0; const N = 3000; for (let i = 0; i < N; i++) { if (s.strike(g, ro, [], {}).missed) m++; if (s.strike(g, k, [], {}).missed) mk2++; } return [m / N, mk2 / N]; };
+  const [plain] = missRate(false), [onHim, onOther] = missRate(true);
+  ok(`...an enemy he has debuffed misses ${DF.dirtyFighting.missPercent}% of its attacks on HIM`, plain === 0 && Math.abs(onHim - DF.dirtyFighting.missPercent / 100) < 0.03, onHim.toFixed(3));
+  ok('...but not on other heroes', onOther === 0); }
+{ const { s, es, a } = mk(['rogue'], ['goblin', 'goblin']); a.procs = []; s.focusUid = es[1].uid;
+  const ev = [...cast(s, a, 'attack')]; for (let t = 0; t < 1200; t += 20) ev.push(...s.update(20));
+  const sk = ev.filter((e) => e.type === 'attack' && e.attacker === a && e.skill);
+  ok(`Multistrike: ${MS.channel.waves.length} quick hits of ${MS.channel.waves[0] * 100}% on ONE enemy`, sk.length === MS.channel.waves.length && sk.every((e) => e.target === es[1]) && Math.abs(sk[0].result.amount - a.stats.attack * MS.channel.waves[0]) <= 1, sk.map((e) => e.result.amount).join());
+  ok('...every hit makes it Bleed (a stack each)', s.stacks(es[1], 'bleed') >= MS.channel.waves.length, s.stacks(es[1], 'bleed'));
+  ok(`...cooldown ${MS.cooldownMs / 1000}s`, MS.cooldownMs === 7000); }
+{ const { s, es, a } = mk(['rogue'], ['goblin'], () => 0); s.giveItem(a.uid, 'fire_bombs');
+  const ev = [...cast(s, a, 'attack')]; for (let t = 0; t < 700; t += 20) ev.push(...s.update(20));
+  ok('...and rolls his on-hit items every hit', ev.filter((e) => e.type === 'proc' && e.itemId === 'fire_bombs').length >= MS.channel.waves.length); }

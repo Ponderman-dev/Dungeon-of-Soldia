@@ -65,3 +65,10 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       (`blood_feast`, replaces Blood Pact): himself +50% lifesteal for 4s, 12s cooldown. Cast effects: skillFx.json maps the
       new ids (defense_bash, mage_rotation:FN, mage_ward, brawl_leap, blood_feast) to the old recipes.
       review.mjs 3 all (x2): avg floor ~30 (2nd-3rd) -> 27.9 / 27.9 (mid-pack).
+    - **Rogue** COMBO STRIKER (built session 6): COMBO + Opportunist REMOVED from him (code stays, `eviscerate` stays).
+      DIRTY FIGHTING: `passive.procs` 15% onAttack Bleed (silent) + `passive.dirtyFighting.missPercent` 20: an enemy he
+      has debuffed (`enemy.debuffedBy` Set of hero uids, filled in `applyStatus` for any debuff from a hero) misses 20% of
+      its attacks on HIM only (`extraMissPercent` opt -> computeDamage's blind roll). MULTISTRIKE (`multistrike`): a
+      ONE-ENEMY channel (skill `target: 'enemy'` + `channel` = every wave hits `ch.aimUid`, the next target if it died):
+      5 waves of 50% every 120ms, `waveApply` Bleed, `waveOnHit` = on-hit items each hit; 7s cooldown. Smoke Bomb kept.
+      review.mjs 3 all (x2): avg floor ~30 -> 28.9 / 31.7 (still 2nd).

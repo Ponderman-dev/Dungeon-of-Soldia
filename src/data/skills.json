@@ -1052,6 +1052,34 @@
     },
     "description": "Spends his combo points on one enemy: 60% damage + 60% per point. With 5 points it always crits, makes it Bleed and fires all his on-hit items."
   },
+  "multistrike": {
+    "name": "Multistrike",
+    "short": "MS",
+    "kind": "attack",
+    "target": "enemy",
+    "cooldownMs": 7000,
+    "castMs": 400,
+    "damageMultiplier": 0.5,
+    "channel": {
+      "intervalMs": 120,
+      "waves": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "waveApply": [
+      {
+        "status": "bleed",
+        "durationMs": 4000,
+        "damageMultiplier": 0.3
+      }
+    ],
+    "waveOnHit": true,
+    "description": "5 quick hits of 50% on one enemy: every hit makes it Bleed and rolls his on-hit items."
+  },
   "headshot": {
     "name": "Headshot",
     "short": "HS",

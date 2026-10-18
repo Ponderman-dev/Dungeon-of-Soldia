@@ -22,5 +22,6 @@
   "mage_rotation:FN": "frostNova",
   "mage_ward": "arcaneWard",
   "brawl_leap": "savageLeap",
-  "blood_feast": "bloodPact"
+  "blood_feast": "bloodPact",
+  "multistrike": "eviscerate"
 }

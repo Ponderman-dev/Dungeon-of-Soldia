@@ -17,23 +17,6 @@ const mk = (ids, enemyIds = ['goblin', 'goblin', 'goblin'], rng = Math.random, p
 };
 const skillOf = (u, kind) => u.skills.findIndex((x) => x.kind === kind);
 
-// ---- Rogue
-{ const { s, es, h } = mk(['rogue']); const ro = h[0];
-  for (let i = 0; i < 7; i++) s.landAttack(ro, es[0], []);
-  ok('Rogue: hits on the same enemy build combo points (max 5)', ro.combo.uid === es[0].uid && ro.combo.points === 5);
-  s.landAttack(ro, es[1], []); ok('...another enemy starts over', ro.combo.uid === es[1].uid && ro.combo.points === 1); }
-{ const { s: s1, es: a, h: h1 } = mk(['rogue']); const r1 = h1[0];
-  const d1 = s1.castSkill(r1.uid, skillOf(r1, 'attack')).find((e) => e.type === 'attack').result.amount;
-  const { s: s2, es: b, h: h2 } = mk(['rogue']); const r2 = h2[0]; s2.focusUid = b[0].uid;
-  for (let i = 0; i < 5; i++) s2.landAttack(r2, b[0], []);
-  const ev = s2.castSkill(r2.uid, skillOf(r2, 'attack')); const hit = ev.find((e) => e.type === 'attack' && e.skill);
-  ok('Eviscerate: 5 points hit much harder (60% + 60% per point)', hit.result.amount > d1 * 4, `${d1} -> ${hit.result.amount}`);
-  ok('...a full combo always crits and makes it Bleed', hit.result.crit && b[0].statuses.some((x) => x.type === 'bleed'));
-  ok('...the points are spent', r2.combo.points === 0); }
-{ const { s, es, h } = mk(['rogue'], ['goblin'], () => 0); const ro = h[0]; s.giveItem(ro.uid, 'venom_fang');
-  const ev = []; s.landAttack(ro, es[0], ev);
-  ok('...a debuff item proc adds an extra combo point', ro.combo.points === 2, ro.combo.points); }
-
 // ---- Samurai
 { const { s, es, h } = mk(['samurai'], ['goblin'], () => 0.99); const sa = h[0]; const e = es[0];
   const res = []; for (let i = 0; i < 6; i++) res.push(s.strike(e, sa, [], { basic: true }));

@@ -21,7 +21,7 @@ Decided by the user one hero at a time (feel, passive, attack, support). Numbers
   to go off on every enemy it hits.
 - Support (user's version): SUPER LIFESTEAL for 4s (number to set when built, e.g. 50% lifesteal for him).
 
-## Rogue: COMBO STRIKER
+## Rogue: COMBO STRIKER (BUILT session 6, see docs/systems/heroes.md)
 - Feel: fast hits, many procs, bleeding enemies. Loves attack speed, double-hit and on-hit items.
 - Passive (user's version, replaces Combo): 15% chance on hit to make the enemy BLEED; enemies he has debuffed
   miss some of their attacks ON HIM ONLY (e.g. 20% miss vs him; number set when built).

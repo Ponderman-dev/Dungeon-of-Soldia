@@ -684,14 +684,14 @@
     "castMs": 700,
     "holyNova": {
       "heal": {
-        "percentMaxHp": 12,
+        "percentMaxHp": 10,
         "attackMultiplier": 1
       },
       "radius": 110,
       "damageMultiplier": 0.6,
       "healSharePercent": 25
     },
-    "description": "Heals the most hurt hero (12% of their health + her attack) and every enemy around THAT hero takes 60% holy damage plus a quarter of the heal."
+    "description": "Heals the most hurt hero (10% of their health + her attack) and every enemy around THAT hero takes 60% holy damage plus a quarter of the heal."
   },
   "sanctuary": {
     "name": "Sanctuary",

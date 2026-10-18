@@ -87,3 +87,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       takes holy damage = 60% + 25% of the heal (no on-hit items); `wave` event draws the zone; cast effect `holyNova`
       (skillFx.js, golden ring). SANCTUARY (`sanctuary`, replaces Divine Shield): most hurt hero gets a 25% shield + 3%/s
       regenBoost for 5s. review.mjs 3 all (x2): avg floor ~34 -> 35.2 / 34.7 (still TOP).
+      TONE-DOWN (user picked 'Light' of 4 tested options): heal items +25% -> +10% (`regenAura.healMultiplierPercent`),
+      Grace every 5s -> 7s, Holy Nova heal 12% -> 10%: avg floor -> 32.4 / 32.8 (still 1st, rogue ~31). Tested and NOT
+      chosen (avg floor): no heal-item bonus 33.2; Grace 8s 33.0; self buff +10% 34.8; health 85 34.4; weaker Sanctuary
+      34.3; no bonus + Grace 8s 30.9; that + Holy Nova 8% 30.3. Her healing carries squads; Sanctuary/self buff barely matter.

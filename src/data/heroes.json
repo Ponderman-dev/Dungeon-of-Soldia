@@ -1052,9 +1052,9 @@
     "role": "Healer",
     "summary": "Holy battle-healer: her healing turns into holy damage.",
     "tips": [
-      "Grace: every 5s she heals the most hurt hero; healing someone else gives her +20% attack and attack speed for 4s.",
+      "Grace: every 7s she heals the most hurt hero; healing someone else gives her +20% attack and attack speed for 4s.",
       "Holy Nova heals the most hurt hero and burns every enemy around them; bigger heals = bigger nova.",
-      "Heal items work 25% stronger with her. Sanctuary: a shield plus strong regen on the most hurt hero."
+      "Heal items work 10% stronger with her. Sanctuary: a shield plus strong regen on the most hurt hero."
     ],
     "damageType": "holy",
     "height": 24,
@@ -1090,13 +1090,13 @@
     },
     "passive": {
       "name": "Grace",
-      "description": "Heal items (lifesteal, regen, item heals) are 25% stronger while she lives. Every 5s she heals the most hurt hero (8% of their health + her attack). Healing someone else gives HER +20% attack and +20% attack speed for 4s.",
+      "description": "Heal items (lifesteal, regen, item heals) are 10% stronger while she lives. Every 7s she heals the most hurt hero (8% of their health + her attack). Healing someone else gives HER +20% attack and +20% attack speed for 4s.",
       "regenAura": {
         "baseRegenPercentPerSec": 0,
-        "healMultiplierPercent": 25
+        "healMultiplierPercent": 10
       },
       "grace": {
-        "everyMs": 5000,
+        "everyMs": 7000,
         "heal": {
           "percentMaxHp": 8,
           "attackMultiplier": 1

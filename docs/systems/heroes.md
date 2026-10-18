@@ -41,7 +41,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       cooldown 10s, `waveOnHit` = every wave rolls her on-hit items + Fire Arrows on each enemy hit (in `fireWave()`).
       Balance: review.mjs 3 all avg floor ~25 (old kit) -> ~24.3, still LAST; her share of squad damage 46% -> ~29% (lost
       the 60% pierce on every shot and Steady Aim). Tried: volley 4 arrows, every 3rd, rain 70%: little change in review
-      (runs end at the floor-20 boss, where volley has no 2nd target). User: leave her as is for now (try in game first).
+      (runs end at the floor-20 boss, where volley has no 2nd target). User: leave her as is for now (try in game first). Then user: attack speed a bit higher -> base attackEfficiency 100 -> 115: avg floor ~24.3 -> ~25.3.
     - **Mage** ELEMENTALIST (built session 6): ELEMENT CYCLE (`passive.elementCycle` ['fire','ice','electric'],
       `cycleElement()` after each basic strike): `hero.hitType` = the element of her NEXT basic shot (landAttack + the
       scene's arrow look read it), so her own attacks react every 2nd shot; REACTIONS kept as they were (`passive.reactions`).

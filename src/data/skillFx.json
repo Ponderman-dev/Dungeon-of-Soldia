@@ -17,5 +17,10 @@
   "challenge": "challenge",
   "blood_pact": "bloodPact",
   "eviscerate": "eviscerate",
-  "change_song": "changeSong"
+  "change_song": "changeSong",
+  "defense_bash": "shieldBash",
+  "mage_rotation:FN": "frostNova",
+  "mage_ward": "arcaneWard",
+  "brawl_leap": "savageLeap",
+  "blood_feast": "bloodPact"
 }

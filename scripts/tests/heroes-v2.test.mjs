@@ -17,22 +17,6 @@ const mk = (ids, enemyIds = ['goblin', 'goblin', 'goblin'], rng = Math.random, p
 };
 const skillOf = (u, kind) => u.skills.findIndex((x) => x.kind === kind);
 
-// ---- Berserker
-{ const { s, es, h } = mk(['berserker']); const b = h[0]; const r0 = b.rage;
-  const ev = []; s.landAttack(b, es[0], ev);
-  ok('Berserker: his hits fill Rage', b.rage > r0, b.rage);
-  s.dealDamage(b, 10, ev); ok('...hits he takes fill it too', b.rage > 8);
-  b.rage = 99; const sp0 = b.stats.attackEfficiency; const ev2 = []; s.landAttack(b, es[0], ev2);
-  ok('...full Rage = FRENZY (+50% attack speed, lifesteal)', s.frenzied(b) && b.stats.attackEfficiency > sp0 * 1.4 && b.specials.lifesteal >= 15, b.stats.attackEfficiency);
-  ok('...the bar empties', b.rage === 0); }
-{ const { s, es, h } = mk(['berserker', 'rogue']); const b = h[0]; s.refreshStats(); b.hp = b.maxHp; const hp0 = b.hp, max0 = b.maxHp; const ev = s.castSkill(b.uid, skillOf(b, 'support'));
-  ok('Blood Pact: costs 15% of his health', ev.some((e) => e.type === 'selfCost' && e.amount === Math.round(max0 * 0.15)));
-  ok('...squad gets 12% lifesteal', h.every((x) => x.specials.lifesteal >= 12)); }
-{ const { s, es, h } = mk(['berserker'], ['goblin', 'goblin', 'goblin'], Math.random, true); const b = h[0];
-  es[0].x = 150; es[1].x = 200; es[2].x = 380; for (const e of es) e.y = 340; s.focusUid = es[0].uid; const hp = es.map((e) => e.hp);
-  s.castSkill(b.uid, skillOf(b, 'attack'));
-  ok('Savage Leap: a shockwave hits the enemy next to the target', es[1].hp < hp[1] && es[2].hp === hp[2]); }
-
 // ---- Rogue
 { const { s, es, h } = mk(['rogue']); const ro = h[0];
   for (let i = 0; i < 7; i++) s.landAttack(ro, es[0], []);

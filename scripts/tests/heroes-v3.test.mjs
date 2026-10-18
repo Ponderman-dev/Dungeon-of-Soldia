@@ -162,3 +162,23 @@ const G = hero('knight').passive.grudge, DB = skills[hero('knight').skills.attac
   const d0 = k.stats.defense; cast(s, k, 'support');
   ok('Challenge (unchanged): the enemies AROUND him are taunted', s.tauntedBy(es[0]) === k && s.tauntedBy(es[1]) === k && !s.tauntedBy(es[2]));
   ok('...and he gets +30 defense', k.stats.defense === d0 + 30); }
+
+// ================= BERSERKER: BRAWLER
+const BT = hero('berserker').passive.bloodthirst;
+{ const { s, a } = mk(['berserker']); s.refreshStats(); a.hp = a.maxHp; const atk0 = a.stats.attack; // his real health (refreshStats undoes the test's 100000)
+  a.hp = a.maxHp * (BT.belowPercent / 100) - 10; const ev = run(s, 100);
+  ok(`Bloodthirst: below ${BT.belowPercent}% health, +${BT.attackPercent}% attack`, a.thirst && Math.abs(a.stats.attack / atk0 - (1 + BT.attackPercent / 100)) < 0.02 && ev.some((e) => e.type === 'proc' && e.label === 'Bloodthirst!'), `${atk0} -> ${a.stats.attack}`);
+  a.specials.lifesteal = 10; a.hp = a.maxHp * 0.3; const hp0 = a.hp; s.afterHit(a, s.enemies[0], 100, []);
+  ok(`...and x${BT.lifestealMultiplier} lifesteal`, Math.round(a.hp - hp0) === Math.round(100 * 0.1 * BT.lifestealMultiplier), a.hp - hp0);
+  a.hp = a.maxHp; run(s, BT.lingerMs - 300); ok(`...it LINGERS ${BT.lingerMs / 1000}s after he heals above half`, a.thirst);
+  run(s, 600); ok('...then it ends', !a.thirst && Math.abs(a.stats.attack - atk0) < 0.01); }
+{ const L = skills[hero('berserker').skills.attack]; const { s, es, a } = mk(['berserker'], ['goblin', 'goblin', 'goblin']);
+  es[0].x = 150; es[1].x = 150 + L.landSplash.radius - 20; es[2].x = 150 + L.landSplash.radius + 150; for (const e of es) e.y = 340; s.focusUid = es[0].uid;
+  a.stats.crit = 0; const ev = cast(s, a, 'attack'); const dm = (e) => (hits(ev, a).find((x) => x.target === e) || { result: { amount: 0 } }).result.amount;
+  ok(`Savage Leap: ${L.damageMultiplier * 100}% to its target AND the enemies where he lands`, Math.abs(dm(es[0]) - a.stats.attack * L.damageMultiplier) <= 2 && Math.abs(dm(es[1]) - dm(es[0])) <= 2 && dm(es[2]) === 0, `${dm(es[0])} ${dm(es[1])} ${dm(es[2])}`); }
+{ const L = skills[hero('berserker').skills.attack]; const { s, es, a } = mk(['berserker'], ['goblin', 'goblin']); es[0].x = 150; es[1].x = 170; for (const e of es) e.y = 340; s.focusUid = es[0].uid;
+  let n = 0; const tries = 1500; for (let i = 0; i < tries; i++) { a.procs = [{ proc: 'onAttack', chance: 20, label: 'x', itemId: 'war_banner', targets: 'self', apply: [{ status: 'shield', amount: 1, durationMs: 1 }] }]; a.skills[0].cooldownLeft = 0; for (const e of es) { e.hp = e.maxHp; e.alive = true; } n += cast(s, a, 'attack').filter((e) => e.type === 'proc' && e.itemId === 'war_banner').length; }
+  ok(`...every enemy hit rolls his on-hit items at x${L.procBoost} chance (20% -> about 40%, on 2 enemies)`, Math.abs(n / tries / 2 - 0.2 * L.procBoost) < 0.04, (n / tries / 2).toFixed(2)); }
+{ const F = skills[hero('berserker').skills.support]; const { s, a } = mk(['berserker', 'rogue']); const ls0 = a.specials.lifesteal || 0; cast(s, a, 'support');
+  ok(`Blood Feast: +${F.apply[0].mods[0].percent}% lifesteal for himself (not the squad)`, a.specials.lifesteal === ls0 + F.apply[0].mods[0].percent && !(s.heroes[1].specials.lifesteal > 0));
+  run(s, F.apply[0].durationMs + 100); ok(`...for ${F.apply[0].durationMs / 1000}s`, (a.specials.lifesteal || 0) === ls0); }

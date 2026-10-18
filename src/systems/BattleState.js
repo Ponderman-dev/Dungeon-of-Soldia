@@ -929,6 +929,7 @@ export default class BattleState {
       if (hero.triageCd > 0) hero.triageCd -= dt; // Aid Kit triage cooldown
       this.tickBandages(hero, dt, events);
       this.tickSong(hero, dt, events);
+      this.tickBloodthirst(hero, dt, events);
       this.tickLute(hero, dt, events);
       this.tickWard(hero, dt, events);
       this.tickSpiritAxe(hero, dt, events);
@@ -1272,6 +1273,21 @@ export default class BattleState {
       if (burst.healPercent) this.healUnit(u, (u.maxHp * burst.healPercent) / 100, events);
       if (burst.mods) this.applyStatus(u, { status: 'buff', durationMs: burst.durationMs, mods: burst.mods }, bard, 'song_burst', events);
     }
+    this.refreshStats();
+  }
+
+  // Berserker's BLOODTHIRST (passive.bloodthirst): below `belowPercent` health he gets +`attackPercent`% attack and
+  // x`lifestealMultiplier` lifesteal (`hero.thirst`, statUpkeep / afterHit); it LINGERS `lingerMs` after he heals back
+  // above, so lifesteal does not switch it off at once.
+  tickBloodthirst(hero, dt, events) {
+    const B = hero.def.passive && hero.def.passive.bloodthirst;
+    if (!B) return;
+    if (hero.hp < (hero.maxHp * B.belowPercent) / 100) hero.thirstLinger = B.lingerMs;
+    else if (hero.thirstLinger > 0) hero.thirstLinger -= dt;
+    const on = hero.thirstLinger > 0;
+    if (on === !!hero.thirst) return;
+    hero.thirst = on;
+    if (on) events.push({ type: 'proc', unit: hero, label: 'Bloodthirst!' });
     this.refreshStats();
   }
 
@@ -1717,7 +1733,7 @@ export default class BattleState {
     for (const proc of [...hero.procs]) {
       const debuffs = (proc.apply || []).some((sp) => (sp.to === 'target' || (!sp.to && proc.targets === 'target')) && this.statusDefs[sp.status] && this.statusDefs[sp.status].debuff);
       const base = String(proc.itemId).startsWith('passive_') ? proc.chance : proc.chance * this.marchProcs(); // Bard's March: item procs likelier
-      const chance = debuffs ? this.debuffChance(hero, base) : base; // Opportunist: his debuffs are likelier
+      const chance = (debuffs ? this.debuffChance(hero, base) : base) * (ctx.chanceMult || 1); // Opportunist: his debuffs are likelier; Savage Leap: x chanceMult
       if (proc.meleeOnly && hero.damageType !== 'melee') continue; // Thousand Cuts: melee hits only
       if (proc.rangedOnly && hero.damageType === 'melee') continue; // Moonlight Twinblade: ranged attacks only
       if (proc.proc !== trigger || (!ctx.force && this.rng() * 100 >= chance)) continue; // ctx.force: every proc goes off
@@ -1850,7 +1866,7 @@ export default class BattleState {
   // Item specials that trigger when a hit lands: lifesteal heals the attacker, thorns reflects
   // some of a MELEE hit back at the attacker.
   afterHit(attacker, target, amount, events, result = {}) {
-    const lifesteal = (attacker.specials && attacker.specials.lifesteal) || 0;
+    const lifesteal = ((attacker.specials && attacker.specials.lifesteal) || 0) * (attacker.thirst ? attacker.def.passive.bloodthirst.lifestealMultiplier : 1); // Bloodthirst: doubled
     if (lifesteal > 0 && attacker.alive) {
       const base = Math.max(1, Math.round(((amount * lifesteal) / 100) * (attacker.side === 'hero' ? this.regenAura().factor : 1))); // the Cleric's aura makes item heals stronger (not an elite's)
       if (this.healUnit(attacker, base, events, { aura: false }) > 0) {
@@ -2533,10 +2549,15 @@ export default class BattleState {
         this.rollProcs(hero, 'onAttack', events, { target, hit: !res.dodged });
         this.fireArrows(hero, target, events);
       }
+      // Savage Leap v3 (`procBoost`): every enemy it hits rolls his on-hit items, at `procBoost` times their chance.
+      if (skill.procBoost && res && target.alive) this.rollProcs(hero, 'onAttack', events, { target, hit: !res.dodged, chanceMult: skill.procBoost });
       // Savage Leap (`landSplash`): a shockwave hits the other enemies near where he lands.
       if (skill.landSplash && first) {
         const near = this.enemies.filter((e) => e.alive && e !== target && (this.hasPositions(e) && this.hasPositions(target) ? this.distance(e, target) <= skill.landSplash.radius : this.neighbours(target).includes(e)));
-        for (const e of near) this.skillHit(hero, { ...skill, apply: null, doubleIf: null, landSplash: null }, slot.id, e, events, { multiplier: skill.landSplash.damageMultiplier });
+        for (const e of near) {
+          const r = this.skillHit(hero, { ...skill, apply: null, doubleIf: null, landSplash: null }, slot.id, e, events, { multiplier: skill.landSplash.damageMultiplier });
+          if (skill.procBoost && r && e.alive) this.rollProcs(hero, 'onAttack', events, { target: e, hit: !r.dodged, chanceMult: skill.procBoost });
+        }
       }
       first = false;
       // Fireball: the neighbours of its target are hit too, for a share of the damage, with the same debuffs.
@@ -3049,6 +3070,7 @@ export default class BattleState {
     if (hero.lanternGain) upkeep.push({ stat: 'attack', percent: hero.lanternGain }, { stat: 'health', percent: hero.lanternGain }); // Soul Lantern
     const sa = hero.def.passive && hero.def.passive.steadyAim;
     if (sa && hero.steady) upkeep.push({ stat: 'attackEfficiency', percent: sa.attackSpeedPercent }, { stat: 'crit', flat: sa.critFlat });
+    if (hero.thirst) upkeep.push({ stat: 'attack', percent: hero.def.passive.bloodthirst.attackPercent }); // Berserker's Bloodthirst
     const lob = hero.def.passive && hero.def.passive.lobbed;
     if (lob && lob.attackSpeedPercent) upkeep.push({ stat: 'attackEfficiency', percent: lob.attackSpeedPercent }); // Alchemist: slower flasks
     // Bard's March: the whole squad attacks faster while he plays it (Conductor's Baton makes it stronger).

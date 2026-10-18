@@ -13,7 +13,7 @@ Decided by the user one hero at a time (feel, passive, attack, support). Numbers
   damage items for him.
 - Support CHALLENGE: unchanged (taunt nearby 3s + 30 defense).
 
-## Berserker: BRAWLER
+## Berserker: BRAWLER (BUILT session 6, see docs/systems/heroes.md)
 - Feel: wades into crowds and hits everything around him. Loves splash and area items.
 - Passive BLOODTHIRST (replaces Rage): below 50% health +40% attack and his lifesteal is doubled. Lifesteal items
   keep him alive down there.

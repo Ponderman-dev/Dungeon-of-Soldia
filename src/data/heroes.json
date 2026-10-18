@@ -175,11 +175,11 @@
     "id": "berserker",
     "name": "Berserker",
     "role": "Bruiser",
-    "summary": "Fills his Rage and goes into a Frenzy.",
+    "summary": "Wades into crowds; stronger and thirstier when hurt.",
     "tips": [
-      "Crits and lifesteal fill Rage faster.",
-      "Blood Pact costs his own health but gives the squad lifesteal.",
-      "Savage Leap does double damage to bleeding or half-dead enemies."
+      "Bloodthirst: below half health he gets +40% attack and double lifesteal (it lasts 3s after he heals back up).",
+      "Savage Leap hits EVERY enemy where he lands for 350%, and his on-hit items are twice as likely to go off on each.",
+      "Blood Feast: 50% lifesteal for 4s. Splash and area items love him."
     ],
     "damageType": "melee",
     "height": 23,
@@ -313,8 +313,8 @@
       "crit": 0.3
     },
     "skills": {
-      "attack": "savage_leap",
-      "support": "blood_pact"
+      "attack": "brawl_leap",
+      "support": "blood_feast"
     },
     "perk": {
       "name": "Battle Fury",
@@ -327,29 +327,13 @@
       ]
     },
     "passive": {
-      "name": "Rage",
-      "description": "His hits (crits twice) and hits he takes fill a Rage bar. Full: 6s FRENZY (+50% attack speed, 15% lifesteal). Also attacks faster the more hurt he is.",
-      "bloodrage": {
-        "attackSpeedPercentPerMissing": 0.6
-      },
-      "rage": {
-        "max": 100,
-        "perHitDealt": 8,
-        "perHitTaken": 10,
-        "critMultiplier": 2,
-        "frenzy": {
-          "durationMs": 6000,
-          "mods": [
-            {
-              "stat": "attackEfficiency",
-              "percent": 50
-            },
-            {
-              "special": "lifesteal",
-              "percent": 15
-            }
-          ]
-        }
+      "name": "Bloodthirst",
+      "description": "Below 50% health: +40% attack and his lifesteal is doubled. It lasts 3s after he heals back above 50%.",
+      "bloodthirst": {
+        "belowPercent": 50,
+        "attackPercent": 40,
+        "lifestealMultiplier": 2,
+        "lingerMs": 3000
       }
     }
   },

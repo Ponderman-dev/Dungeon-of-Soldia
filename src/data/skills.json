@@ -994,6 +994,43 @@
     ],
     "description": "Pays 15% of his own health: the whole squad gets 12% lifesteal for 6s."
   },
+  "brawl_leap": {
+    "name": "Savage Leap",
+    "short": "SL",
+    "kind": "attack",
+    "target": "enemy",
+    "cooldownMs": 9000,
+    "castMs": 600,
+    "damageMultiplier": 3.5,
+    "leap": true,
+    "landSplash": {
+      "radius": 90,
+      "damageMultiplier": 3.5
+    },
+    "procBoost": 2,
+    "description": "Leaps at an enemy: 350% damage to it AND every enemy around where he lands. Each enemy hit rolls his on-hit items at DOUBLE their chance."
+  },
+  "blood_feast": {
+    "name": "Blood Feast",
+    "short": "BF",
+    "kind": "support",
+    "target": "self",
+    "cooldownMs": 12000,
+    "castMs": 400,
+    "apply": [
+      {
+        "status": "buff",
+        "durationMs": 4000,
+        "mods": [
+          {
+            "special": "lifesteal",
+            "percent": 50
+          }
+        ]
+      }
+    ],
+    "description": "He drinks deep: 50% lifesteal for 4s (doubled by Bloodthirst when he is below half health)."
+  },
   "eviscerate": {
     "name": "Eviscerate",
     "short": "EV",

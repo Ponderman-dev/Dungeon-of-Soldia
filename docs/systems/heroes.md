@@ -57,3 +57,11 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       orange bar under his health bar, gold when full). DEFENSE BASH (`defense_bash`, old `knight_bash` stays): damage
       multiplier 1 + `defenseMultiplier` 3 x defense / attack (in `skillHit()`), 1.5s stun, 9s. CHALLENGE unchanged.
       review.mjs 3 all (x2): avg floor ~29 -> 29.4 / 29.2 (unchanged, 3rd-4th).
+    - **Berserker** BRAWLER (built session 6): RAGE / Frenzy / Bloodrage REMOVED from him (code stays). BLOODTHIRST
+      (`passive.bloodthirst`, `tickBloodthirst()`): below `belowPercent` 50% health `hero.thirst` = +`attackPercent` 40% attack
+      (statUpkeep) and lifesteal x`lifestealMultiplier` 2 (afterHit); LINGERS `lingerMs` 3s after he heals back above.
+      SAVAGE LEAP v3 (`brawl_leap`, old `savage_leap` stays): 350% to the target + `landSplash` 350% within 90px,
+      `procBoost` 2 = every enemy hit rolls his on-hit items at x2 chance (`rollProcs` ctx.chanceMult). BLOOD FEAST
+      (`blood_feast`, replaces Blood Pact): himself +50% lifesteal for 4s, 12s cooldown. Cast effects: skillFx.json maps the
+      new ids (defense_bash, mage_rotation:FN, mage_ward, brawl_leap, blood_feast) to the old recipes.
+      review.mjs 3 all (x2): avg floor ~30 (2nd-3rd) -> 27.9 / 27.9 (mid-pack).

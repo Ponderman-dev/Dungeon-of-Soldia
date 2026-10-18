@@ -1,11 +1,11 @@
-// Special rooms: which floors become rooms, the slide puzzle, the fountain blessing, the Mimic's prize, the dealer's book.
+// Special rooms: which floors become rooms, the puzzle room (see puzzles.test.mjs), the fountain blessing, the Mimic's prize, the dealer's book.
 import fs from 'fs';
 import { noPerks } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems } from '../../src/systems/items.js';
 import { rollChoices } from '../../src/systems/rewards.js';
 import { rollBookPages } from '../../src/systems/books.js';
-import { roomForFloor, solvedBoard, isSolved, slide, shuffleBoard, neighbours } from '../../src/systems/rooms.js';
+import { roomForFloor } from '../../src/systems/rooms.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const rooms = r('rooms.json'), dungeon = r('dungeons.json').A, itemDefs = loadItems(r('items.json')), rw = r('rewards.json');
@@ -21,25 +21,6 @@ ok('never two rooms in a row', roomForFloor(rooms, dungeon, 6, 'treasure', alway
 { let n = 0, seen = new Set(); for (let i = 0; i < 20000; i++) { const k = roomForFloor(rooms, dungeon, 10); if (k) { n++; seen.add(k); } }
   ok('about 1 floor in 4 is a room', Math.abs(n / 20000 - rooms.chance) < 0.015, (n / 200).toFixed(1) + '%');
   ok('all 5 kinds show up', ['treasure', 'mimic', 'fountain', 'dealer', 'puzzle'].every((k) => seen.has(k)), [...seen].join()); }
-
-// Slide puzzle
-ok('solved board is 1..8 then the gap', solvedBoard(3).join() === '1,2,3,4,5,6,7,8,0' && isSolved(solvedBoard(3)));
-ok('corner has 2 neighbours, middle 4', neighbours(3, 0).length === 2 && neighbours(3, 4).length === 4);
-ok('a tile next to the gap slides', slide(solvedBoard(3), 3, 7).join() === '1,2,3,4,5,6,7,0,8');
-ok('a tile away from the gap does not', slide(solvedBoard(3), 3, 0) === null);
-{ let bad = 0; for (let i = 0; i < 200; i++) { const b = shuffleBoard(3, rooms.kinds.puzzle.shuffleMoves); if (isSolved(b) || [...b].sort().join() !== '0,1,2,3,4,5,6,7,8') bad++;
-    // solvable: an 8-puzzle board is solvable when its number of inversions is even
-    const t = b.filter((x) => x); let inv = 0; for (let x = 0; x < t.length; x++) for (let y = x + 1; y < t.length; y++) if (t[x] > t[y]) inv++; if (inv % 2) bad++; }
-  ok('shuffled boards are never solved and always solvable', bad === 0); }
-
-// Easy (user): every shuffled board can be solved within shuffleMoves slides (shortest path by search).
-{ const max = rooms.kinds.puzzle.shuffleMoves; let worst = 0;
-  const dist = (start) => { const goal = solvedBoard(3).join(); let frontier = [start], seen = new Set([start.join()]), d = 0;
-    while (frontier.length) { if (frontier.some((b) => b.join() === goal)) return d; const next = [];
-      for (const b of frontier) for (const i of neighbours(3, b.indexOf(0))) { const n = slide(b, 3, i); const k = n.join(); if (!seen.has(k)) { seen.add(k); next.push(n); } }
-      frontier = next; d++; } return Infinity; };
-  for (let i = 0; i < 100; i++) worst = Math.max(worst, dist(shuffleBoard(3, max)));
-  ok('puzzle is easy: solvable in ' + max + ' moves or fewer', worst <= max, 'hardest seen: ' + worst); }
 
 // Fountain blessing: the next 3 fights start with a regen buff
 { const s = mk(); s.heroes.forEach((h) => (h.hp = h.maxHp / 2)); s.healHeroes(rooms.kinds.fountain.healPercent);

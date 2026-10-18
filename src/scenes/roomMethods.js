@@ -166,15 +166,22 @@ export const roomMethods = {
     this.openRewardSheet([bookData.cards.dealer], after, 'THE SKILL DEALER');
   },
 
-  // The slide puzzle sheet; solved = an item pick, given up = nothing.
+  // The puzzle sheet (PuzzleScene: one of the 5 kept puzzles, harder deeper down); solved = an item pick, given
+  // up or failed = nothing. A wrong chest in Mimic Shuffle bites one hero (`mimicBiteHealthPercent`, never kills).
   startPuzzle(after) {
     const rules = this.layer.room.rules;
+    const forced = import.meta.env.DEV && new URLSearchParams(location.search).get('puzzle'); // dev: ?puzzle=<kind>
     this.scene.launch('Puzzle', {
-      size: rules.size,
-      moves: rules.shuffleMoves,
-      onDone: (solved) => {
+      floor: this.floor,
+      kind: forced && rules.puzzles.includes(forced) ? forced : null,
+      onDone: (solved, info = {}) => {
         this.scene.stop('Puzzle');
         this.scene.resume();
+        if (info.bite) {
+          const hit = this.state.trapDamage(rules.mimicBiteHealthPercent);
+          const v = hit && this.views.get(hit.unit.uid);
+          if (v) { this.setBar(v); this.popText(v, `-${hit.amount}`, UI.red, true); }
+        }
         if (solved) this.itemPick('PUZZLE SOLVED', after);
         else after();
       },

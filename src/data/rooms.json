@@ -41,9 +41,189 @@
       "weight": 15,
       "name": "Puzzle Room",
       "hint": "Tap the stone tablet",
-      "size": 3,
-      "shuffleMoves": 8,
-      "_shuffle": "user: easy puzzle. The board is the solved one slid 8 times at random, so it is always solvable in 8 moves or fewer."
+      "_puzzles": "User kept 5 of the 6 puzzle ideas (docs/proposals/puzzles/, session 6); the 1-8 slide puzzle is gone. A room picks one at random. tiers: the last one whose fromFloor is reached. Rules: src/systems/puzzles.js.",
+      "puzzles": [
+        "mimic",
+        "runes",
+        "beam",
+        "ice",
+        "picture"
+      ],
+      "names": {
+        "mimic": "Mimic Shuffle",
+        "runes": "Rune Lock",
+        "beam": "Mirror Beam",
+        "ice": "Ice Slide",
+        "picture": "Picture Puzzle"
+      },
+      "howTo": {
+        "mimic": "Watch the coin. Tap its chest.\nThe others are Mimics!",
+        "runes": "Watch the runes light up.\nTap them in the same order.",
+        "beam": "Tap a mirror to turn it.\nBounce the light into the crystal.",
+        "ice": "The key slides until it hits\nsomething. Stop it on the keyhole.",
+        "picture": "Tap two pieces to swap them.\nRebuild the picture."
+      },
+      "mimicBiteHealthPercent": 10,
+      "tiers": {
+        "mimic": [
+          {
+            "fromFloor": 0,
+            "chests": 3,
+            "swaps": 5,
+            "swapMs": 420
+          },
+          {
+            "fromFloor": 25,
+            "chests": 4,
+            "swaps": 9,
+            "swapMs": 300
+          },
+          {
+            "fromFloor": 50,
+            "chests": 5,
+            "swaps": 13,
+            "swapMs": 220
+          }
+        ],
+        "runes": [
+          {
+            "fromFloor": 0,
+            "runes": 4,
+            "length": 4,
+            "flashMs": 480
+          },
+          {
+            "fromFloor": 25,
+            "runes": 6,
+            "length": 5,
+            "flashMs": 380
+          },
+          {
+            "fromFloor": 50,
+            "runes": 8,
+            "length": 6,
+            "flashMs": 300
+          }
+        ],
+        "beam": [
+          {
+            "fromFloor": 0,
+            "size": 6,
+            "mirrors": 5,
+            "pillars": 1,
+            "minBounces": 2
+          },
+          {
+            "fromFloor": 25,
+            "size": 7,
+            "mirrors": 7,
+            "pillars": 2,
+            "minBounces": 3
+          },
+          {
+            "fromFloor": 50,
+            "size": 8,
+            "mirrors": 9,
+            "pillars": 3,
+            "minBounces": 4
+          }
+        ],
+        "ice": [
+          {
+            "fromFloor": 0,
+            "size": 6,
+            "rocks": 6,
+            "minMoves": 3
+          },
+          {
+            "fromFloor": 25,
+            "size": 7,
+            "rocks": 9,
+            "minMoves": 5
+          },
+          {
+            "fromFloor": 50,
+            "size": 8,
+            "rocks": 12,
+            "minMoves": 7
+          }
+        ],
+        "picture": [
+          {
+            "fromFloor": 0,
+            "grid": 3,
+            "showExample": true
+          },
+          {
+            "fromFloor": 25,
+            "grid": 4,
+            "showExample": true
+          },
+          {
+            "fromFloor": 50,
+            "grid": 5,
+            "showExample": false
+          }
+        ]
+      },
+      "runeGlyphs": [
+        [
+          "..1..",
+          ".111.",
+          "1.1.1",
+          "..1..",
+          "..1.."
+        ],
+        [
+          "1...1",
+          ".1.1.",
+          "..1..",
+          ".1.1.",
+          "1...1"
+        ],
+        [
+          "11111",
+          "1....",
+          "111..",
+          "1....",
+          "11111"
+        ],
+        [
+          "1.1.1",
+          "1.1.1",
+          "11111",
+          "..1..",
+          "..1.."
+        ],
+        [
+          ".111.",
+          "1...1",
+          "1.1.1",
+          "1...1",
+          ".111."
+        ],
+        [
+          "1....",
+          "11...",
+          "1.1..",
+          "1..1.",
+          "11111"
+        ],
+        [
+          "..1..",
+          ".1.1.",
+          "1...1",
+          ".1.1.",
+          "..1.."
+        ],
+        [
+          "11.11",
+          "1...1",
+          "..1..",
+          "1...1",
+          "11.11"
+        ]
+      ]
     }
   }
 }

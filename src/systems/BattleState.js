@@ -3208,6 +3208,17 @@ export default class BattleState {
   }
 
   // Heals every living hero by a % of their max health. Returns [{ unit, amount }].
+  // A trap outside a fight (a Mimic in the Puzzle Room bites): one random living hero loses `percent` of max health,
+  // but never dies from it (at least 1 health is left). Returns { unit, amount } or null.
+  trapDamage(percent) {
+    const alive = this.heroes.filter((h) => h.alive);
+    if (!alive.length) return null;
+    const unit = alive[Math.floor(this.rng() * alive.length)];
+    const amount = Math.min(Math.round((unit.maxHp * percent) / 100), unit.hp - 1);
+    unit.hp -= amount;
+    return { unit, amount };
+  }
+
   healHeroes(percent) {
     const healed = [];
     for (const h of this.heroes) {

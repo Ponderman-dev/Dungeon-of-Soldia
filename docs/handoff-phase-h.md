@@ -3,6 +3,15 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
+## START HERE (session 10d): DEMO-ONLY mode, hero by hero (user: 'once all demo approved then we implement to the game')
+Demo page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN: Knight (in game), Rogue (in game; user wants MORE enemy
+shake on Multistrike: combat.json skillFx.wave.multistrike targetShake* raised, game page not rebuilt yet), Berserker
+(demo only). New heroes go in `docs/proposals/skill-fx/heroes.js` (RECIPES in the game's skillFx.js format + SPECS =
+how the demo plays NOW vs NEW: charge, move dash/leap/hop, hit shake/stop, waves). demo.js `specLook()` plays them.
+Order left: Cleric, Necromancer, Archer, Mage, Bard, Samurai, Alchemist. When ALL are approved: move the recipes
+into src/systems/skillFx.js (+ CAST_MS, skillFx.json, combat.json charge/dash/wave), tremble = new (needs a small
+jitter in the scene), then build + test + republish the game.
+
 ## START HERE (session 10c): Knight + Rogue skill looks IN THE GAME
 Rogue done in the game (docs/systems/effects.md 'ROGUE 3-BEAT'), then (user: 'where's the demo?') added to the demo page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN (it plays the GAME's rogue recipes; notes in db `notes` `look:multistrike` / `look:smoke_bomb`). ALWAYS demo page FIRST for the next heroes, then build; tools for the next heroes: `skillFx.charge`
 (wind-up look), `skillFx.dash` (aggressive dash + knockback/shake), `skillFx.wave` (per-hit look of a channel),

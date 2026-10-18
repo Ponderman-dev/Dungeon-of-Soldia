@@ -15,6 +15,10 @@ import combat from '../../../src/data/combat.json';
 import { artPixels, partArt, mixColor } from '../../../src/systems/pixelArt.js';
 import { bodyBox, pen, FX_COLORS as C } from '../../../src/systems/statusFx.js';
 import { castFx, CAST_MS } from '../../../src/systems/skillFx.js';
+import { RECIPES, CAST_MS_NEW, SPECS } from './heroes.js';
+// A recipe by name: a proposed one (heroes.js) or the game's own (skillFx.js). Always { draws, tints }.
+const runFx = (name, q, c, t) => { const f = RECIPES[name]; if (!f) return castFx(name, q, c, t); const o = f(q, c, t); return Array.isArray(o) ? { draws: o, tints: [] } : { draws: o.draws || [], tints: o.tints || [] }; };
+const fxMs = (name) => CAST_MS_NEW[name] ?? CAST_MS[name] ?? 800;
 
 export const Z = 3, W = 130, H = 96; // scene in character pixels; 390 x 288 on screen
 const FLOOR = 54; // where the wall meets the floor
@@ -114,9 +118,8 @@ function bigBang(g, x, y, n, c) { // a little pixel exclamation mark, n px tall
 export const SKILLS = {
   defense_bash: { id: 'defense_bash', name: skills.defense_bash.name, castMs: skills.defense_bash.castMs },
   challenge: { id: 'challenge', name: skills.challenge.name, castMs: skills.challenge.castMs },
-  multistrike: { id: 'multistrike', name: skills.multistrike.name, castMs: skills.multistrike.castMs, hero: 'rogue' },
-  smoke_bomb: { id: 'smoke_bomb', name: skills.smoke_bomb.name, castMs: skills.smoke_bomb.castMs, hero: 'rogue' },
 };
+for (const [id, sp] of Object.entries(SPECS)) SKILLS[id] = { id, name: skills[id].name, castMs: skills[id].castMs, hero: sp.hero };
 // The Rogue's skills play the GAME'S OWN recipes (src/systems/skillFx.js: rogueCharge, rogueDash, rogueSlash, smokeBomb)
 // with the game's dash / wave numbers (combat.json skillFx.dash / wave), so what the page shows is what the game does.
 const RDASH = FX.dash.multistrike, RWAVE = FX.wave.multistrike;
@@ -124,8 +127,13 @@ const MS_WAVES = skills.multistrike.channel.waves.length, MS_EVERY = skills.mult
 const DASH = 80; // ms from release to contact (Defense Bash)
 function plan(skillId, look) {
   const cast = SKILLS[skillId].castMs;
-  if (skillId === 'multistrike') return { cast, impact: cast, stopMs: look === 'now' ? FX.hitStopMs : 0, end: cast + 1700 };
-  if (skillId === 'smoke_bomb') return { cast, impact: cast, stopMs: 0, end: cast + 2200 };
+  const sp = SPECS[skillId];
+  if (sp) {
+    const attack = skills[skillId].kind === 'attack';
+    if (look === 'now') return { cast, impact: cast, stopMs: attack ? FX.hitStopMs : 0, end: cast + Math.max(1700, fxMs(sp.now.recipe) + 300) };
+    const hit = sp.new.hit || { at: 0, stopMs: 0 };
+    return { cast, impact: cast + hit.at, stopMs: hit.stopMs || 0, end: cast + Math.max(1700, fxMs(sp.new.recipe) + 300) };
+  }
   if (look === 'now') return { cast, impact: cast, stopMs: skillId === 'defense_bash' ? FX.hitStopMs : 0, end: cast + 1500 };
   if (skillId === 'defense_bash') return { cast, impact: cast + DASH, stopMs: 80, end: cast + DASH + 1700 };
   return { cast, impact: cast + 130, stopMs: 40, end: cast + 130 + 3300 };
@@ -136,7 +144,8 @@ export class Demo {
   constructor() {
     const knight = heroes.find((h) => h.id === 'knight');
     this.knight = this.hero = actor(knight, 34, 82, false);
-    this.rogue = actor(heroes.find((h) => h.id === 'rogue'), 34, 82, false);
+    this.actors = { knight: this.knight };
+    for (const sp of Object.values(SPECS)) if (!this.actors[sp.hero]) this.actors[sp.hero] = actor(heroes.find((h) => h.id === sp.hero), 34, 82, false);
     this.foe = actor(enemies.goblin, 90, 82, true);
     this.foe2 = actor(enemies.slime, 112, 86, true);
     this.icon = {};
@@ -147,11 +156,11 @@ export class Demo {
   draw(ctx, opts) {
     const P = plan(opts.skill, opts.look);
     const T = opts.t;
-    this.hero = SKILLS[opts.skill].hero === 'rogue' ? this.rogue : this.knight;
+    this.hero = this.actors[SKILLS[opts.skill].hero || 'knight'];
     // Effect time: freezes for the hit-stop at the impact.
     const et = T < P.impact ? T : T < P.impact + P.stopMs ? P.impact : T - P.stopMs;
     const st = { hero: { dx: 0, dy: 0 }, foe: { dx: 0, dy: 0 }, foe2: { dx: 0, dy: 0 }, cam: { zoom: 1, fx: 195, fy: 200, kx: 0, ky: 0, shake: 0 }, flash: null, lines: null, under: pen(), over: pen(), numbers: [] };
-    if (SKILLS[opts.skill].hero === 'rogue') this.rogueLook(st, opts.skill, opts.look, et, P, T);
+    if (SPECS[opts.skill]) this.specLook(st, opts.skill, opts.look, et, P, T);
     else if (opts.look === 'now') this.nowLook(st, opts.skill, et, P, T);
     else if (opts.skill === 'defense_bash') this.newBash(st, et, P, T);
     else this.newChallenge(st, et, P, T);
@@ -265,56 +274,75 @@ export class Demo {
   }
 
   // ---- ROGUE (today vs the game's new recipes) -----------------------------------------------------
-  rogueLook(st, id, look, et, P, T) {
-    const h = st.hero, since = et - P.cast;
-    const E0 = body(this.foe), E1 = body(this.foe2);
+  specLook(st, id, look, et, P, T) {
+    const SP = SPECS[id], L = SP[look] || SP.new, sk = skills[id], h = st.hero, since = et - P.cast, hero = this.hero;
+    const E0 = body(this.foe), E1 = body(this.foe2), foes = [[this.foe, st.foe], [this.foe2, st.foe2]];
     const tintOn = (s, tint) => { if (tint && (!s.tint || tint[1] > s.tint[1])) s.tint = tint; };
-    const play = (name, q, c, onTint) => { const o = castFx(name, q, c, et); st.over.out.push(...o.draws); for (const [l, i, tint] of o.tints) onTint(l, i, tint); };
-    if (et < P.cast) {
+    const support = sk.kind !== 'attack';
+    const play = (name, q, c) => {
+      const o = runFx(name, q, c, et); st.over.out.push(...o.draws);
+      for (const [l, i, tint] of o.tints) {
+        if (l === 'caster') tintOn(h, tint);
+        else if (l === 'enemies') tintOn((foes[i] || [])[1] || {}, tint);
+        else if (l === 'targets') tintOn(support ? h : (foes[i] || [])[1] || {}, tint);
+        else if (l === 'squad') tintOn(h, tint);
+      }
+    };
+    const radius = L.radius === 'landSplash' && sk.landSplash ? sk.landSplash.radius / Z : 30;
+    if (et < P.cast) { // the wind-up
       h.dy = 1; h.dx = -1;
-      if (look === 'new') play('rogueCharge', et / P.cast, { caster: body(this.rogue, h.dx, h.dy), targets: [], squad: [], enemies: [] }, (l, i, tint) => tintOn(h, tint));
-      return;
-    }
-    if (look === 'now') {
-      if (since < FX.flashMs) h.tint = [id === 'multistrike' ? 0xff7a3d : 0x5dff96, 0.6];
-      if (id === 'multistrike') {
-        const lunge = since < 90 ? easeOut(since / 90) : 1 - ph(since, 90, 180);
-        h.dx = lunge * 9; // 26 px lunge, only from her home spot
-        if (since < 600) play('eviscerate', since / 600, { caster: body(this.rogue, h.dx), targets: [E0], squad: [], enemies: [E0, E1] }, () => {});
-        if (T >= P.impact && T < P.impact + FX.shakeMs) st.cam.shake = FX.shakeIntensity * 390;
-        for (let w = 0; w < MS_WAVES; w++) { // today: a yellow ring grows on her each hit
-          const wt = since - w * MS_EVERY; if (wt < 0 || wt > 400) continue;
-          const H0 = body(this.rogue, h.dx), r = (10 + (14 + w * 10) * (wt / 400)) / Z;
-          st.over.ring(H0.x, H0.mid, r, 0xffd84d, 1 - wt / 400);
-          if (wt < 120) st.foe.tint = [0xffffff, 0.5];
-          this.number(st, '6', { ...E0, top: E0.top - w * 3 }, wt, true);
-        }
-      } else {
-        h.dy = -Math.sin(Math.min(1, since / 320) * Math.PI) * 6;
-        const q = since / 1400;
-        if (q < 1) { const p = easeOut(ph(q, 0, 0.35)), out = ph(q, 0.75, 1); for (const u of [E0, E1]) for (let k = 0; k < 5; k++) if (out < 1) st.over.disc(u.x + (k - 2) * 3 + Math.sin(et / 300 + k) * 1.2, u.top + 2 + Math.cos(et / 250 + k) * 1.5, 1.5 + p * 1.5, k % 2 ? C.grey2 : C.grey, 0.8 * p * (1 - out)); }
+      if (look === 'new') {
+        if (L.tremble) h.dx += Math.round(Math.sin(et / 23) * (et / P.cast) * 1.4);
+        play(L.charge, et / P.cast, { caster: body(hero, h.dx, h.dy), targets: [], squad: [], enemies: [] });
       }
       return;
     }
-    // NEW
-    if (id === 'multistrike') {
-      const H0 = body(this.rogue), reachPx = Math.max(RDASH.minPx, (Math.hypot(E0.x - H0.x, E0.mid - H0.mid) * Z) - RDASH.stopPx); // the demo stage is wider than a real fight: always reach
-      const go = since < RDASH.inMs ? (since / RDASH.inMs) ** 2 : since < RDASH.inMs + RDASH.holdMs ? 1 : 1 - easeOut(ph(since, RDASH.inMs + RDASH.holdMs, RDASH.inMs + RDASH.holdMs + RDASH.outMs));
-      h.dx = (reachPx / Z) * go; h.dy = 0;
-      const C0 = body(this.rogue, h.dx);
-      if (since < CAST_MS.rogueDash) play('rogueDash', since / CAST_MS.rogueDash, { caster: C0, targets: [E0], squad: [], enemies: [] }, () => {});
-      for (let w = 0; w < MS_WAVES; w++) {
-        const wt = since - RDASH.inMs - w * MS_EVERY; if (wt < 0) continue;
-        const last = w === MS_WAVES - 1;
-        if (wt < CAST_MS.rogueSlash) play('rogueSlash', wt / CAST_MS.rogueSlash, { caster: C0, targets: [E0], squad: [], enemies: [], wave: w, waves: MS_WAVES }, (l, i, tint) => tintOn(st.foe, tint));
-        const sm = last ? RWAVE.lastShakeMs : RWAVE.shakeMs; if (wt < sm) st.cam.shake = (last ? RWAVE.lastShakeIntensity : RWAVE.shakeIntensity) * 390 * (1 - wt / sm);
-        if (wt < RWAVE.targetShakeMs) { const j = wt / RWAVE.targetShakeMs; st.foe.dx = Math.round((Math.sin(j * Math.PI * 6) * (last ? RWAVE.lastTargetShakePx : RWAVE.targetShakePx) * (1 - j)) / Z); } // the enemy jitters each hit
-        this.number(st, '6', { ...E0, top: E0.top - w * 3 }, wt, true);
+    // movement
+    const mv = look === 'now' ? { type: L.move } : L.move || {};
+    const dist = Math.hypot(E0.x - body(hero).x, E0.mid - body(hero).mid);
+    if (mv.type === 'lunge') { const l = since < 90 ? easeOut(since / 90) : 1 - ph(since, 90, 180); h.dx = l * 9; }
+    if (mv.type === 'hop') h.dy = -Math.sin(Math.min(1, since / 320) * Math.PI) * ((mv.liftPx || 18) / Z);
+    if (mv.type === 'leap') { // like BattleScene.leapAt: up and over to 80% of the way, then back
+      const up = mv.upMs || 230, hold = mv.holdMs ?? 120, back = mv.backMs || 300, share = mv.share || 0.8;
+      const p = since < up ? easeOut(since / up) : since < up + hold ? 1 : 1 - ph(since, up + hold, up + hold + back);
+      h.dx = (E0.x - body(hero).x) * share * p; h.dy = -Math.sin(Math.min(1, since / up) * Math.PI) * ((mv.liftPx || 26) / Z) * (since < up ? 1 : 0);
+    }
+    if (mv.type === 'dash') {
+      const D = FX.dash[mv.config], reachPx = Math.max(D.minPx, dist * Z - D.stopPx);
+      const go = since < D.inMs ? (since / D.inMs) ** 2 : since < D.inMs + D.holdMs ? 1 : 1 - easeOut(ph(since, D.inMs + D.holdMs, D.inMs + D.holdMs + D.outMs));
+      h.dx = (reachPx / Z) * go;
+    }
+    if (look === 'now' && since < FX.flashMs) h.tint = [support ? 0x5dff96 : 0xff7a3d, 0.6];
+    if (look === 'new' && since < 80) tintOn(h, [Number('0x' + (FX.name.heroColors[hero.def.id] || '#ffffff').slice(1)), 0.5]);
+    const C0 = body(hero, h.dx, h.dy);
+    const c = { caster: C0, targets: support ? [C0] : [E0], squad: [C0], enemies: [E0, E1], hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius };
+    const ms = fxMs(L.recipe);
+    if (since < ms) play(L.recipe, since / ms, c);
+    if (look === 'now' && !support && T >= P.impact && T < P.impact + FX.shakeMs) st.cam.shake = FX.shakeIntensity * 390;
+    if (L.hit && T >= P.impact && T < P.impact + P.stopMs + L.hit.shakeMs) st.cam.shake = L.hit.shake * (1 - (T - P.impact) / (P.stopMs + L.hit.shakeMs));
+    // channel waves (Multistrike)
+    const ch = sk.channel;
+    if (ch && L.waves) {
+      const W = FX.wave[L.waves], D = FX.dash[L.waves], n = ch.waves.length;
+      for (let w = 0; w < n; w++) {
+        const wt = since - (D ? D.inMs : 0) - w * ch.intervalMs; if (wt < 0) continue;
+        const last = w === n - 1;
+        if (wt < fxMs(W.recipe)) play(W.recipe, wt / fxMs(W.recipe), { ...c, wave: w, waves: n });
+        const sm = last ? W.lastShakeMs : W.shakeMs; if (wt < sm) st.cam.shake = (last ? W.lastShakeIntensity : W.shakeIntensity) * 390 * (1 - wt / sm);
+        if (wt < W.targetShakeMs) { const j = wt / W.targetShakeMs; st.foe.dx = Math.round((Math.sin(j * Math.PI * 6) * (last ? W.lastTargetShakePx : W.targetShakePx) * (1 - j)) / Z); }
+        this.number(st, L.number, { ...E0, top: E0.top - w * 3 }, wt, true);
       }
-    } else {
-      h.dy = -Math.sin(Math.min(1, since / 320) * Math.PI) * 6;
-      const q = since / CAST_MS.smokeBomb;
-      if (q < 1) play('smokeBomb', q, { caster: body(this.rogue, h.dx, h.dy), targets: [body(this.rogue, h.dx, h.dy)], squad: [], enemies: [E0, E1] }, (l, i, tint) => tintOn(h, tint));
+    } else if (ch && L.rings) {
+      for (let w = 0; w < ch.waves.length; w++) {
+        const wt = since - w * ch.intervalMs; if (wt < 0 || wt > 400) continue;
+        st.over.ring(C0.x, C0.mid, (10 + (14 + w * 10) * (wt / 400)) / Z, 0xffd84d, 1 - wt / 400);
+        if (wt < 120) st.foe.tint = [0xffffff, 0.5];
+        this.number(st, L.number, { ...E0, top: E0.top - w * 3 }, wt, true);
+      }
+    } else if (L.number) {
+      const at = since - (L.hit ? L.hit.at : 0);
+      this.number(st, L.number, E0, at, true);
+      if (L.numberAll) this.number(st, L.number, E1, at - 40, true);
     }
   }
 

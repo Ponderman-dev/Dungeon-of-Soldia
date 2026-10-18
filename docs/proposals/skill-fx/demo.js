@@ -9,6 +9,7 @@
 // Everything is drawn in CHARACTER pixels (1 = 3 screen px), like src/systems/skillFx.js; the page only picks what to play.
 import heroes from '../../../src/data/heroes.json';
 import enemies from '../../../src/data/enemies.json';
+import minionDefs from '../../../src/data/minions.json';
 import skills from '../../../src/data/skills.json';
 import icons from '../../../src/data/skillIcons.json';
 import combat from '../../../src/data/combat.json';
@@ -144,6 +145,7 @@ export class Demo {
   constructor() {
     const knight = heroes.find((h) => h.id === 'knight');
     this.knight = this.hero = actor(knight, 34, 82, false);
+    this.minionActors = [actor(minionDefs.skeleton, 50, 90, false), actor(minionDefs.skeleton, 58, 78, false)]; // a necromancer's skeletons (spec `minions`)
     this.allyActor = actor(knight, 74, 84, false); // the hurt hero a healer's skill lands on (heroes.js spec `ally`)
     this.actors = { knight: this.knight };
     for (const sp of Object.values(SPECS)) if (!this.actors[sp.hero]) this.actors[sp.hero] = actor(heroes.find((h) => h.id === sp.hero), 34, 82, false);
@@ -159,9 +161,10 @@ export class Demo {
     const T = opts.t;
     this.hero = this.actors[SKILLS[opts.skill].hero || 'knight'];
     this.ally = SPECS[opts.skill] && SPECS[opts.skill].ally ? this.allyActor : null;
+    this.minions = SPECS[opts.skill] && SPECS[opts.skill].minions ? this.minionActors : [];
     // Effect time: freezes for the hit-stop at the impact.
     const et = T < P.impact ? T : T < P.impact + P.stopMs ? P.impact : T - P.stopMs;
-    const st = { hero: { dx: 0, dy: 0 }, ally: { dx: 0, dy: 0, hp: 13 }, foe: { dx: 0, dy: 0 }, foe2: { dx: 0, dy: 0 }, cam: { zoom: 1, fx: 195, fy: 200, kx: 0, ky: 0, shake: 0 }, flash: null, lines: null, under: pen(), over: pen(), numbers: [] };
+    const st = { hero: { dx: 0, dy: 0 }, ally: { dx: 0, dy: 0, hp: 13 }, mins: [{ dx: 0, dy: 0 }, { dx: 0, dy: 0 }], foe: { dx: 0, dy: 0 }, foe2: { dx: 0, dy: 0 }, cam: { zoom: 1, fx: 195, fy: 200, kx: 0, ky: 0, shake: 0 }, flash: null, lines: null, under: pen(), over: pen(), numbers: [] };
     if (SPECS[opts.skill]) this.specLook(st, opts.skill, opts.look, et, P, T);
     else if (opts.look === 'now') this.nowLook(st, opts.skill, et, P, T);
     else if (opts.skill === 'defense_bash') this.newBash(st, et, P, T);
@@ -176,7 +179,7 @@ export class Demo {
     ctx.setTransform(c.zoom, 0, 0, c.zoom, c.fx - c.fx * c.zoom + c.kx + sh[0], c.fy - c.fy * c.zoom + c.ky + sh[1]);
     this.room(ctx);
     blit(ctx, st.under.out);
-    for (const [a, s] of [[this.foe2, st.foe2], [this.foe, st.foe], ...(this.ally ? [[this.ally, st.ally]] : []), [this.hero, st.hero]]) {
+    for (const [a, s] of [[this.foe2, st.foe2], [this.foe, st.foe], ...this.minions.map((m, i) => [m, st.mins[i]]).filter(([, s]) => !s.gone), ...(this.ally ? [[this.ally, st.ally]] : []), [this.hero, st.hero]]) {
       if (s.ghosts) for (const gh of s.ghosts) drawActor(ctx, a, gh);
       if (s.aura) this.aura(ctx, a, s);
       drawActor(ctx, a, s);
@@ -286,6 +289,8 @@ export class Demo {
     const play = (name, q, c) => {
       const o = runFx(name, q, c, et); st.over.out.push(...o.draws);
       for (const [l, i, tint] of o.tints) {
+        if (l === 'minions') { tintOn(st.mins[i] || {}, tint); continue; }
+        if (SP.squadTargets && (l === 'targets' || l === 'squad')) { tintOn(i === 0 ? h : st.ally, tint); continue; }
         if (A0 && (l === 'targets' || (l === 'squad' && i === 1))) { tintOn(st.ally, tint); continue; }
         if (l === 'caster') tintOn(h, tint);
         else if (l === 'enemies') tintOn((foes[i] || [])[1] || {}, tint);
@@ -325,7 +330,9 @@ export class Demo {
     if (look === 'new' && since < 80) tintOn(h, [Number('0x' + (FX.name.heroColors[hero.def.id] || '#ffffff').slice(1)), 0.5]);
     const C0 = body(hero, h.dx, h.dy);
     const land = mv.type === 'leap' ? { x: body(hero).x + (E0.x - body(hero).x) * (mv.share || 0.8), y: body(hero).y } : null; // where he lands: fixed
-    const c = { caster: C0, targets: A0 ? [A0] : support ? [C0] : [E0], squad: A0 ? [C0, A0] : [C0], enemies: [E0, E1], hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius, land };
+    const M0 = this.minions.map((m, i) => body(m, st.mins[i].dx, st.mins[i].dy));
+    if (L.minionsGone != null) st.mins.forEach((m, i) => { const gt = since - L.minionsGone; if (gt >= 0 && (!L.minionsFade || gt > 300)) m.gone = true; else if (gt >= 0) m.alpha = 1 - gt / 300; if (!m.gone && L.minionsShake && since >= 0) m.dx = Math.round(Math.sin(et / 25 + i) * 0.8); });
+    const c = { caster: C0, targets: SP.squadTargets ? [C0, ...(A0 ? [A0] : [])] : A0 ? [A0] : support ? [C0] : [E0], squad: A0 ? [C0, A0] : [C0], enemies: [E0, E1], minions: M0, hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius, land };
     if (L.hit && L.hit.knockPx && land) { // enemies inside the landing area are thrown back, away from where he lands
       const ht = et - P.impact;
       if (ht >= 0) for (const [a, s] of foes) { const e = body(a); if (Math.hypot(e.x - land.x, (e.y - land.y) * 1.4) > radius) continue; const k = (L.hit.knockPx / Z) * easeOut(ph(ht, 0, 90)) * (1 - easeOut(ph(ht, 200, 600))); s.dx = Math.sign(e.x - land.x || 1) * k; }
@@ -359,7 +366,7 @@ export class Demo {
       if (L.shield && at >= 0) st.ally.shield = 1 - ph(at, 2500, 3000);
       if (L.number) for (const [a, E] of [[this.foe, E0], [this.foe2, E1]]) if (Math.hypot(E.x - A0.x, (E.y - A0.y) * 1.4) <= radius) this.number(st, L.number, E, at - 60, true);
     } else if (L.number) {
-      const at = since - (L.hit ? L.hit.at : 0);
+      const at = since - (L.hit ? L.hit.at : L.numberAt || 0);
       this.number(st, L.number, E0, at, true);
       if (L.numberAll) this.number(st, L.number, E1, at - 40, true);
     }

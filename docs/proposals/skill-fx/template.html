@@ -60,7 +60,7 @@ ul.ideas li b { color: var(--fg); font-weight: 600; }
 <div class="wrap">
   <header>
     <h1>Skill Effects: hero by hero</h1>
-    <p class="lede">Your note: skills are not powerful or eye-catching enough, and the skill name text is messy and stretchy. Knight: approved (Defense Bash shield print now 3x bigger). Rogue: approved. Berserker: Blood Feast approved, Savage Leap round 2 (more energy, cracks stay put). NEW: the Cleric (scroll down): gold, light from above, a halo, angel wings. Same rules: calm, real shapes, name in capitals. Once every hero is approved here, they all go into the game together. Each skill plays in a slice of the real fight screen at game size, today's look on the left, the new one on the right. Tap any scene to replay it from the start. Use <b>Slow</b> to see each beat.</p>
+    <p class="lede">Your note: skills are not powerful or eye-catching enough, and the skill name text is messy and stretchy. Knight: approved (Defense Bash shield print now 3x bigger). Rogue: approved. Berserker: Blood Feast approved, Savage Leap round 2 (more energy, cracks stay put). Cleric: light from above, a halo, angel wings (shorter beams). NEW: the Necromancer (scroll down): green and purple smoke, a skull bolt, crumbling skeletons and souls. Same rules: calm, real shapes, name in capitals. Once every hero is approved here, they all go into the game together. Each skill plays in a slice of the real fight screen at game size, today's look on the left, the new one on the right. Tap any scene to replay it from the start. Use <b>Slow</b> to see each beat.</p>
   </header>
   <div class="bar">
     <div class="seg" role="group" aria-label="Speed"><button id="sp1" aria-pressed="true">Normal</button><button id="sp4" aria-pressed="false">Slow x4</button></div>
@@ -154,9 +154,11 @@ for (const [id, about] of [
   ['blood_feast', 'Support skill: 50% lifesteal for 4s. New: he shakes with rage, then blood drops spiral in from around him into his mouth, a red mist bursts, his eyes glow red, two heavy heartbeats (red thumps).'],
   ['holy_nova', 'Attack skill: heals the most hurt hero (here the Knight) and every enemy around THAT hero takes holy damage. New: a golden halo lights up over her head while light motes drift down onto her; a column of light comes down onto the hurt hero (flash, gold glow on the floor, sparkles rise) and a thin pillar of light smites every enemy around them.'],
   ['sanctuary', 'Support skill: the most hurt hero gets a shield (25% of their health) and strong regen for 5s. New: the same halo charge; a soft column of light comes down onto the hurt hero, angel WINGS unfold from their back and fold around them (the shield), they glow gold and little green + rise (the regen).'],
+  ['death_coil3', 'Attack skill: a dark bolt for 250% (more against debuffed enemies, more per Soul); if it kills, a skeleton rises. New: green and purple smoke swirls around his hands and his eyes glow green; a glowing green SKULL flies at the enemy, coiling, with a purple smoke trail, and bursts in green ghost-fire and purple smoke.'],
+  ['bone_sacrifice', 'Support skill: sacrifices ALL his skeletons, every hero gets a shield. New: the same smoke charge; his skeletons glow green and shake, then CRUMBLE (bones scatter), a green soul flies out of each one into every hero, and each hero gets three spectral bones circling them and a green glow (the shield).'],
 ]) {
   const sec = document.createElement('section'); sec.className = 'win'; sec.id = 'look-' + id;
-  const h = document.createElement('h2'); h.textContent = ({ rogue: 'Rogue: ', berserker: 'Berserker: ', cleric: 'Cleric: ' }[SD.SKILLS[id].hero] || 'Knight: ') + SD.SKILLS[id].name;
+  const h = document.createElement('h2'); h.textContent = ({ rogue: 'Rogue: ', berserker: 'Berserker: ', cleric: 'Cleric: ', necromancer: 'Necromancer: ' }[SD.SKILLS[id].hero] || 'Knight: ') + SD.SKILLS[id].name;
   const p = document.createElement('p'); p.textContent = about;
   const pair = document.createElement('div'); pair.className = 'pair';
   const newSeq = [{ skill: id, look: 'new', name: 'B' }];

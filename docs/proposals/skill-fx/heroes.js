@@ -3,6 +3,7 @@
 // moving an approved one into the game is a copy into CAST + CAST_MS there.
 // SPECS says how the demo plays each skill: the NOW look (today's game) and the NEW look (charge, move, cast recipe, hit).
 import { pen, rnd, FX_COLORS as C } from '../../../src/systems/statusFx.js';
+import { shotFx } from '../../../src/systems/skillFx.js';
 
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const ph = (q, a, b) => clamp((q - a) / (b - a));
@@ -15,6 +16,25 @@ function beam(g, x, y0, y1, w, a) {
   if (a <= 0 || w <= 0) return;
   const half = Math.max(0.5, w / 2);
   for (let y = Math.round(y0); y <= y1; y++) for (let dx = -Math.ceil(half); dx <= Math.ceil(half); dx++) { const e = Math.abs(dx) / (half + 0.5); g.px(x + dx, y, e < 0.45 ? C.white : CLER.gold, a * (e < 0.45 ? 1 : 0.75) * Math.min(1, (y - y0) / 8 + 0.2)); }
+}
+
+// ---- Necromancer: green + purple, smoke, skulls, souls ----
+const NEC = { green: 0x6dff8a, green2: 0x2fbf5a, purple: 0x9b4dff, purple2: 0x4a2470, bone: 0xebe5cf, bone2: 0xb8b09a };
+const SKULL = ['.###.', '#####', '#g#g#', '.###.', '.#.#.'];
+function skullPx(g, x, y, a, s = 1) {
+  SKULL.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.') g.rect(x + (i - 2) * s, y + (j - 2) * s, s, s, ch === 'g' ? NEC.green : NEC.bone, a); }));
+}
+// A soul: a small green glowing orb with a fading tail behind it (from `from` towards where it is now).
+function soulPx(g, x, y, tx, ty, a) {
+  g.rect(x - 1, y - 1, 3, 3, NEC.green, a); g.px(x, y, C.white, a);
+  const dx = x - tx, dy = y - ty, d = Math.hypot(dx, dy) || 1;
+  for (let k = 1; k < 5; k++) g.px(x + (dx / d) * k * 1.5, y + (dy / d) * k * 1.5, k % 2 ? NEC.green2 : NEC.green, a * (1 - k / 5));
+}
+// A small bone: a bar with knobs at both ends.
+function bonePx(g, x, y, ang, a) {
+  const cx = Math.cos(ang), sy = Math.sin(ang);
+  for (let k = -2; k <= 2; k++) g.px(x + cx * k, y + sy * k, NEC.bone, a);
+  g.px(x + cx * 3 + 0.5, y + sy * 3 - 0.5, NEC.bone2, a); g.px(x - cx * 3 - 0.5, y - sy * 3 + 0.5, NEC.bone2, a);
 }
 
 // ---- Berserker: red, blood splatter, ground cracks, rubble -----------------------------------------
@@ -142,6 +162,65 @@ export const RECIPES = {
     const glow = hit < 0 ? 0 : 0.18 + 0.12 * Math.sin(t / 150);
     return { draws: g.out, tints: [['targets', 0, glow ? [CLER.gold, Math.round(glow * 20) / 20] : null]] };
   },
+  // ---- Necromancer ----
+  // CHARGE: green and purple smoke swirls around his hands, his eyes glow green, he pulses purple.
+  necroCharge(q, c, t) {
+    const g = pen(); const u = c.caster;
+    for (let i = 0; i < 6; i++) { const a = t / 160 + (i / 6) * Math.PI * 2, r = 5 + 3 * Math.sin(t / 200 + i); g.disc(u.x + u.hw + 1 + Math.cos(a) * r * 0.6, u.mid + Math.sin(a) * r * 0.5, 1 + q, i % 2 ? NEC.purple : NEC.green2, (0.4 + 0.5 * q) * (0.6 + 0.4 * Math.sin(t / 90 + i))); }
+    g.px(u.x - 1, u.top + 4, NEC.green, 0.5 + 0.5 * q); g.px(u.x + 2, u.top + 4, NEC.green, 0.5 + 0.5 * q);
+    const pulse = 0.6 + 0.4 * Math.sin(t / 110);
+    return { draws: g.out, tints: [['caster', 0, [NEC.purple, Math.round((0.1 + 0.3 * q) * pulse * 20) / 20]]] };
+  },
+  // DEATH COIL: a glowing green SKULL flies at the enemy, coiling (wobbling) with a purple smoke trail; it bursts in
+  // green ghost-fire and purple smoke on the enemy, who goes sickly green for a moment.
+  deathCoilNew(q, c, t) {
+    const g = pen(); const u = c.targets[0], k = c.caster; if (!u || !k) return g.out;
+    const ms = q * CAST_MS_NEW.deathCoilNew, fly = c.hitMs || 420;
+    const a = { x: k.x + k.hw + 3, y: k.mid - 2 }, b = { x: u.x, y: u.mid };
+    if (ms < fly) {
+      const p = ms / fly, x = a.x + (b.x - a.x) * p, y = a.y + (b.y - a.y) * p + Math.sin(p * Math.PI * 3) * 4 * (1 - p);
+      for (let i = 1; i <= 7; i++) { const pp = Math.max(0, p - i * 0.035), tx = a.x + (b.x - a.x) * pp, ty = a.y + (b.y - a.y) * pp + Math.sin(pp * Math.PI * 3) * 4 * (1 - pp); g.disc(tx, ty, 2.4 - i * 0.2, i % 2 ? NEC.purple : NEC.purple2, 0.75 * (1 - i / 8)); }
+      for (const [dx, dy] of [[-6, 0], [6, 0], [0, -6], [0, 6], [-4, -4], [4, 4], [4, -4], [-4, 4]]) g.px(x + dx, y + dy, NEC.green2, 0.6);
+      skullPx(g, x, y, 1, 2);
+      return g.out;
+    }
+    const hit = ms - fly;
+    for (let i = 0; i < 12; i++) { // green ghost-fire licking upwards
+      const p = ph(hit, i * 20, 380 + i * 20); if (p <= 0 || p >= 1) continue;
+      g.px(b.x + (rnd(i * 3) - 0.5) * 12, b.y + 4 - p * 16 + Math.sin(t / 60 + i) * 1, i % 3 ? NEC.green : C.white, 1 - p);
+    }
+    const sp = ph(hit, 0, 520); if (sp < 1) for (let i = 0; i < 8; i++) { const an = (i / 8) * Math.PI * 2, r = 3 + 9 * easeOut(sp); g.disc(b.x + Math.cos(an) * r, b.y + Math.sin(an) * r * 0.7 - sp * 3, 1.5 + sp * 1.5, i % 2 ? NEC.purple : NEC.purple2, 0.7 * (1 - sp)); }
+    if (hit < 60) skullPx(g, b.x, b.y, 1 - hit / 60, 2);
+    return { draws: g.out, tints: [['targets', 0, hit < 380 ? [NEC.green, 0.5 * (1 - hit / 380)] : null]] };
+  },
+  // BONE SACRIFICE: his skeletons glow green and shake, then CRUMBLE (bones scatter on the floor); a green soul flies
+  // out of each one into every hero; each hero gets three spectral bones circling them and a green glow (the shield).
+  boneSacrificeNew(q, c, t) {
+    const g = pen(); const ms = q * CAST_MS_NEW.boneSacrificeNew, mins = c.minions || [], heroes = c.targets;
+    const crumble = 150;
+    mins.forEach((m, j) => {
+      const p = ph(ms, crumble, crumble + 600); if (p <= 0 || p >= 1) return;
+      for (let i = 0; i < 6; i++) { const an = -Math.PI / 2 + (rnd(j * 9 + i) - 0.5) * 2.6, v = 6 + rnd(i * 5 + j) * 8; bonePx(g, m.x + Math.cos(an) * v * p, Math.min(m.y - 1, m.mid + Math.sin(an) * v * p + p * p * 18), an + p * 6 * (i % 2 ? 1 : -1), 1 - ph(p, 0.7, 1)); }
+      if (p < 0.4) g.disc(m.x, m.mid, 3 + p * 10, 0x9a9488, 0.5 * (1 - p / 0.4));
+    });
+    mins.forEach((m, j) => heroes.forEach((h, i) => { // souls fly from each skeleton to each hero
+      const p = ph(ms, crumble + 100 + i * 60, crumble + 650 + i * 60); if (p <= 0 || p >= 1) return;
+      const x = m.x + (h.x - m.x) * easeOut(p), y = m.mid + (h.mid - m.mid) * easeOut(p) - Math.sin(p * Math.PI) * 12, px = m.x + (h.x - m.x) * easeOut(Math.max(0, p - 0.08)), py = m.mid + (h.mid - m.mid) * easeOut(Math.max(0, p - 0.08)) - Math.sin(Math.max(0, p - 0.08) * Math.PI) * 12;
+      soulPx(g, x, y, px, py, 1);
+    }));
+    const arrive = crumble + 650;
+    heroes.forEach((h, i) => {
+      const p = ph(ms, arrive + i * 60, CAST_MS_NEW.boneSacrificeNew); if (p <= 0 || p >= 1) return;
+      for (let k = 0; k < 3; k++) { const an = t / 180 + (k / 3) * Math.PI * 2; bonePx(g, h.x + Math.cos(an) * (h.hw + 5), h.mid + Math.sin(an) * 5, an + Math.PI / 2, 1 - ph(p, 0.7, 1)); }
+    });
+    const tints = [...mins.map((m, j) => ['minions', j, ms < crumble ? [NEC.green, 0.6] : null]), ...heroes.map((h, i) => ['targets', i, ms > arrive + i * 60 ? [NEC.green, 0.25 + 0.1 * Math.sin(t / 150)] : null])];
+    return { draws: g.out, tints };
+  },
+  // Today's Death Coil: just the game's dark bolt shot.
+  nowDarkbolt(q, c, t) {
+    const k = c.caster, u = c.targets[0]; if (!k || !u) return [];
+    return shotFx('darkbolt', q, { x: k.x + k.hw + 2, y: k.mid }, { x: u.x, y: u.mid }, t, 3);
+  },
   // Today's Smoke Bomb (before the Rogue's new look), kept so the demo can show what it replaced.
   oldSmokeBomb(q, c, t) {
     const g = pen(); const p = easeOut(ph(q, 0, 0.35)), out = ph(q, 0.75, 1);
@@ -149,7 +228,7 @@ export const RECIPES = {
     return g.out;
   },
 };
-export const CAST_MS_NEW = { clericCharge: 700, holyNovaNew: 1300, sanctuaryNew: 1800, berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400 };
+export const CAST_MS_NEW = { necroCharge: 700, deathCoilNew: 1100, boneSacrificeNew: 1700, nowDarkbolt: 520, clericCharge: 700, holyNovaNew: 1300, sanctuaryNew: 1800, berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400 };
 
 // How the demo plays each skill (besides the Knight, who has his own code in demo.js).
 //   now: { recipe, ms, move: 'lunge'|'leap'|'hop'|null, rings: per-wave yellow rings, number }
@@ -163,5 +242,9 @@ export const SPECS = {
     new: { charge: 'clericCharge', recipe: 'holyNovaNew', move: { type: 'hop', liftPx: 8 }, hit: { at: 220, shake: 2, shakeMs: 120, stopMs: 0 }, heal: '+24', number: '15', radius: 'holyNova' } },
   sanctuary: { hero: 'cleric', ally: true, now: { recipe: 'divineShield', move: 'hop', heal: '', shield: true },
     new: { charge: 'clericCharge', recipe: 'sanctuaryNew', move: { type: 'hop', liftPx: 10 }, hit: { at: 200, shake: 0, shakeMs: 0, stopMs: 0 }, heal: '', shield: true } },
+  death_coil3: { hero: 'necromancer', now: { recipe: 'nowDarkbolt', move: null, number: '50', numberAt: 520 },
+    new: { charge: 'necroCharge', recipe: 'deathCoilNew', move: null, hit: { at: 420, shake: 2, shakeMs: 120, stopMs: 40 }, number: '50' } },
+  bone_sacrifice: { hero: 'necromancer', ally: true, minions: true, squadTargets: true, now: { recipe: 'boneWard', move: 'hop', minionsGone: 0, minionsFade: true },
+    new: { charge: 'necroCharge', recipe: 'boneSacrificeNew', move: { type: 'hop', liftPx: 8 }, minionsGone: 150, minionsShake: true } },
   blood_feast: { hero: 'berserker', now: { recipe: 'bloodPact', move: 'hop' }, new: { charge: 'berserkerCharge', tremble: true, recipe: 'bloodFeast', move: { type: 'hop', liftPx: 10 } } },
 };

@@ -9,7 +9,10 @@ docs/proposals/README.md). USER PICKED (session 9): name style B FLOATING NAME (
 but impact was 'too super flashy, don't interrupt the flow' -> page v2 is the CALM version (no screen flash, no speed
 lines, camera nudge 3%, hit-stop 80ms, small square ring + diamond r~16, 6 chips, floor mark fades in ~1s). Read any
 later notes with ArtifactData `list` collection `notes` (`look:defense_bash`, `look:challenge` ok/change + text,
-`general`). NEXT: build name style B in
+`general`). v3 (user: 'all cap the text', 'I don't understand the geometric effects'): name in CAPITALS; no abstract
+squares/diamonds any more, every shape is a real thing: Bash = his shield's pixel print flashes on the enemy + chips +
+dust as it skids back; Challenge = hop + dust, SHOUT sound waves, red '!', a blue shield pops up beside him (+30 DEF
+text after the shout). NEXT: build name style B in
 BattleScene.skillBurst (and drop the castStart name popText), then the Knight's 3-beat look in the game (recipes in
 demo.js are in character pixels like skillFx.js: charge aura/particles, release flash/camera kick/speed lines/hit-stop,
 impact square shockwaves/debris/floor mark), then 2-3 heroes per session with a showcase page each.

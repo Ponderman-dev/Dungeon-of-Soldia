@@ -89,6 +89,22 @@ function diamond(g, cx, cy, r, ry, c, a, th = 1, dotted = false) {
     }
   }
 }
+// A little pixel shield (the Knight's own sign), s = pixel size. Rim in `rim`, face in `face`, a white glint.
+const SHIELD = ['.#####.', '#xxxxx#', '#xx+xx#', '#x+++x#', '.#x+x#.', '.#xxx#.', '..#x#..', '...#...'];
+function shield(g, cx, cy, s, rim, face, a) {
+  if (a <= 0) return;
+  SHIELD.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === '.') return; g.rect(cx + (x - 3) * s, cy + (y - 4) * s, s, s, ch === '#' ? rim : ch === '+' ? 0xffffff : face, a); }));
+}
+// Dust kicked up at someone's feet (the floor's colour).
+function dust(g, x, y, p, n = 8, seed = 1) {
+  if (p <= 0 || p >= 1) return;
+  for (let i = 0; i < n; i++) { const side = i % 2 ? 1 : -1, d = (3 + rnd(seed + i) * 7) * easeOut(p); g.rect(x + side * d, y - 1 - rnd(seed + i * 5) * 3 * p, i % 3 ? 1 : 2, 1, i % 3 ? 0x8a7a68 : 0x6a5d50, 1 - p); }
+}
+// A shout: curved sound waves going out to the right of the mouth.
+function shout(g, x, y, r, c, a) {
+  if (a <= 0) return;
+  for (let k = -10; k <= 10; k++) { const ang = k * 0.06; for (const rr of [r, r + 1]) g.px(x + Math.cos(ang) * rr, y + Math.sin(ang) * rr * 1.3, c, a); }
+}
 function bigBang(g, x, y, n, c) { // a little pixel exclamation mark, n px tall
   g.rect(x - 1, y, 2, n - 3, c, 1); g.rect(x - 1, y + n - 2, 2, 2, c, 1);
 }
@@ -237,9 +253,9 @@ export class Demo {
     }
   }
 
-  // ---- NEW: Defense Bash (calm version, user: 'impact too flashy, don't interrupt the flow') ---------
-  // No screen flash, no speed lines, a tiny camera nudge, a short freeze, one small square ring + diamond, a few chips,
-  // and a small floor mark that fades within a second.
+  // ---- NEW: Defense Bash (calm v3, user: 'impact too flashy' then 'I don't understand the geometric effects') ---------
+  // No screen flash, no speed lines, a tiny camera nudge, a short freeze; the shield's print flashes where it hits,
+  // a few chips fly, the enemy skids back in a little dust.
   newBash(st, et, P, T) {
     const h = st.hero, K = KNIGHT;
     const H0 = body(this.hero), E0 = body(this.foe);
@@ -262,31 +278,23 @@ export class Demo {
       st.foe.tint = hit < 60 ? [0xffffff, 0.7] : null;
       st.foe.dx = hit < 40 ? 0 : 4 * (1 - easeOut(ph(hit, 40, 360))) * easeOut(ph(hit, 0, 80));
       st.foe.hp = 18;
-      if (hit < 60) g.rect(px - 1, py - 1, 3, 3, K.white, 1);
-      [[0, 'sq', K.white], [40, 'dia', K.mid]].forEach(([d, kind, col]) => {
-        const p = ph(hit, d, d + 280); if (p <= 0 || p >= 1) return;
-        const r = 3 + 13 * easeOut3(p), a = (1 - p) * 0.9;
-        if (kind === 'sq') sqRing(g, px, py, r, r * 0.8, col, a); else diamond(g, px, py, r * 1.15, r, col, a);
-      });
+      // the shield's print flashes on the enemy where it hit: white, then steel blue, fading
+      const sp = ph(hit, 0, 320);
+      if (sp < 1) shield(g, px + 1, py, 1, hit < 60 ? K.white : K.light, hit < 60 ? K.white : K.mid, sp < 0.3 ? 1 : 1 - (sp - 0.3) / 0.7);
       for (let i = 0; i < 6; i++) {
         const p = ph(hit, 0, 380 + rnd(i) * 120); if (p <= 0 || p >= 1) continue;
         const a = -Math.PI / 2 + (rnd(i * 3) - 0.3) * 2.4, d = (6 + rnd(i * 7) * 10) * easeOut(p);
         g.px(px + Math.cos(a) * d, py + Math.sin(a) * d * 0.8 + p * p * 10, [K.light, K.mid, K.deep][i % 3], 1 - p);
       }
-      const fm = 1 - ph(hit, 700, 1100);
-      if (fm > 0) {
-        const fx = E0.x, fy = E0.y + 1, grow = easeOut(ph(hit, 0, 100));
-        sqRing(u, fx, fy, 7 * grow, 2, K.deep, 0.6 * fm);
-        if (grow >= 1) for (const [x0, y0, x1, y1] of [[-7, -2, -10, -3], [7, 2, 10, 3]]) u.line(fx + x0, fy + y0, fx + x1, fy + y1, K.deep, 0.5 * fm);
-      }
+      dust(g, E0.x + st.foe.dx, E0.y, ph(hit, 0, 450), 8, 3); // he skids back: a little dust at his feet
       this.number(st, '128', E0, hit, true);
       if (hit > 60 && hit < 1600) for (let i = 0; i < 3; i++) { const a = et / 150 + (i * Math.PI * 2) / 3; g.px(E0.x + st.foe.dx + Math.cos(a) * 5, E0.top - 2 + Math.sin(a) * 2, STAR, 1); }
     }
   }
 
   // ---- NEW: Challenge (calm version) ------------------------------------------------------------
-  // A small hop, one diamond ring rolls out to the edge of the taunt area, the area stays faint on the floor while the
-  // taunt lasts, a red "!" over each taunted enemy (they step towards him), steel corner plates for the +30 defense.
+  // A small hop, he SHOUTS (sound waves roll out towards the enemies), a red "!" over each taunted enemy (they step
+  // towards him), a little blue shield pops over his head for the +30 defense.
   newChallenge(st, et, P, T) {
     const h = st.hero, K = KNIGHT;
     const H0 = body(this.hero);
@@ -303,29 +311,24 @@ export class Demo {
     if (hit >= 0) {
       if (T >= P.impact && T < P.impact + P.stopMs + 100) st.cam.shake = 1.5 * (1 - (T - P.impact) / (P.stopMs + 100));
       const g = st.over, u = st.under, fx = H0.x, fy = H0.y;
-      const R = skills.challenge.area.radius / Z;
-      const p = ph(hit, 0, 420); if (p > 0 && p < 1) diamond(u, fx, fy, 4 + R * easeOut3(p), (4 + R * easeOut3(p)) * 0.38, K.mid, 0.8 * (1 - p * p));
       const life = skills.challenge.apply[0].durationMs;
-      const zf = ph(hit, 200, 400) * (1 - ph(hit, life - 400, life));
-      if (zf > 0) diamond(u, fx, fy, R, R * 0.38, K.deep, 0.35 * zf, 1, true);
+      // he shouts: three sound waves roll out from his head towards the enemies; dust where he lands
+      for (let k = 0; k < 3; k++) { const p = ph(hit, k * 70, k * 70 + 380); if (p > 0 && p < 1) shout(g, H0.x + H0.hw, H0.top + 4, 4 + 30 * easeOut(p), k === 0 ? K.white : K.light, 1 - p); }
+      dust(g, fx, fy, ph(hit, 0, 400), 8, 9);
       [[this.foe, st.foe], [this.foe2, st.foe2]].forEach(([a, s], i) => {
         const e = body(a); const d = 80 + i * 60;
         s.dx = -3 * easeOut(ph(hit, d, d + 200)); s.tint = hit > d && hit < d + 100 ? [RED, 0.4] : null;
         if (hit > d && hit < life) { const drop = Math.round(4 * (1 - easeOut3(ph(hit, d, d + 140)))); bigBang(g, e.x + s.dx, e.top - 12 - drop, 7, RED); }
       });
-      const bp = easeOut3(ph(hit, 40, 220)), bf = 1 - ph(hit, life - 400, life);
-      if (bp > 0 && bf > 0) {
-        const pad = 2 + 6 * (1 - bp), a = bf * 0.8;
-        const x0 = H0.x - H0.hw - pad, x1 = H0.x + H0.hw + pad, y0 = H0.top - pad + st.hero.dy, y1 = H0.bot + pad - 1 + st.hero.dy;
-        for (const [x, y, sx, sy] of [[x0, y0, 1, 1], [x1, y0, -1, 1], [x0, y1, 1, -1], [x1, y1, -1, -1]]) {
-          g.rect(sx > 0 ? x : x - 2, y, 3, 1, K.light, a); g.rect(x, sy > 0 ? y : y - 2, 1, 3, K.light, a);
-        }
-      }
-      if (hit < 900) st.numbers.push({ text: '+30 DEF', x: (H0.x + H0.hw + 22) * Z, y: H0.mid * Z - Math.round(ph(hit, 100, 900) * 24), size: 14, color: KNIGHT.text, alpha: 1 - ph(hit, 600, 900) });
+      // +30 defense: a little blue shield pops up beside him and he shines blue for a moment
+      const bp = ph(hit, 60, 900);
+      if (bp > 0 && bp < 1) shield(g, H0.x - H0.hw - 7, H0.mid - 2 - Math.round(easeOut(bp) * 4), 1, K.light, K.mid, bp < 0.7 ? 1 : 1 - (bp - 0.7) / 0.3);
+      if (hit > 60 && hit < 360) st.hero.tint = [K.mid, 0.3 * (1 - (hit - 60) / 300)];
+      if (hit > 420 && hit < 1300) st.numbers.push({ text: '+30 DEF', x: (H0.x + H0.hw + 22) * Z, y: H0.mid * Z - Math.round(ph(hit, 420, 1300) * 24), size: 14, color: KNIGHT.text, alpha: ph(hit, 420, 520) * (1 - ph(hit, 1000, 1300)) }); // after the shout
     }
   }
 
-  // CHARGE (both new skills): crouch, the outline lights up, square specks are pulled in, a square glows on the floor.
+  // CHARGE (both new skills): crouch, the outline lights up, specks are pulled in, a soft glow on the floor.
   charge(st, et, P) {
     if (et >= P.cast) return;
     const p = et / P.cast, K = KNIGHT, h = st.hero;
@@ -336,7 +339,7 @@ export class Demo {
       const s = (p * 1.7 + i / 12) % 1, a = rnd(i * 13) * Math.PI * 2, r = 22 * (1 - easeOut(s));
       st.over.rect(u.x + Math.cos(a) * r, u.mid + Math.sin(a) * r * 0.8, i % 3 ? 1 : 2, i % 3 ? 1 : 2, i % 2 ? K.light : K.mid, s * 0.9);
     }
-    sqRing(st.under, u.x, u.y, 4 + 9 * p, 2 + 2 * p, K.mid, 0.3 + 0.5 * p);
+    st.under.ring(u.x, u.y, 4 + 5 * p, 1.5 + 1 * p, K.mid, 0.3 + 0.5 * p);
     if (p > 0.6) { const b = Math.sin(et / 30) > 0 ? 1 : 0.4, x = u.x + u.hw + 2, y = u.mid - 4; st.over.px(x, y, K.white, b); st.over.px(x - 1, y, K.light, b); st.over.px(x + 1, y, K.light, b); st.over.px(x, y - 1, K.light, b); st.over.px(x, y + 1, K.light, b); }
   }
 
@@ -392,7 +395,8 @@ export class Demo {
     const rise = s < IN ? 9 * (1 - easeOut(s / IN)) : s < IN + HOLD ? 0 : -9 * ph(s, IN + HOLD, IN + HOLD + OUT);
     const a = s < IN ? s / IN : 1 - ph(s, IN + HOLD, IN + HOLD + OUT);
     const y = Math.round((H0.top * Z - 50 + rise) / 3) * 3;
-    text(ctx, name, clampX(H0.x * Z, name, 16), y, 16, KNIGHT.text, a, 4);
+    const up = name.toUpperCase(); // user: all caps
+    text(ctx, up, clampX(H0.x * Z, up, 16), y, 16, KNIGHT.text, a, 4);
   }
 }
 

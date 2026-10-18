@@ -60,7 +60,7 @@ ul.ideas li b { color: var(--fg); font-weight: 600; }
 <div class="wrap">
   <header>
     <h1>Skill Effects: Knight sample</h1>
-    <p class="lede">Your note: skills are not powerful or eye-catching enough, and the skill name text is messy and stretchy. Here are the Knight's two skills drawn the new way (version 2, calmer), in a slice of the real fight screen at game size. Tap any scene to replay it from the start. Use <b>Slow</b> to see each beat.</p>
+    <p class="lede">Your note: skills are not powerful or eye-catching enough, and the skill name text is messy and stretchy. Here are the Knight's two skills drawn the new way (version 3), in a slice of the real fight screen at game size. Tap any scene to replay it from the start. Use <b>Slow</b> to see each beat.</p>
   </header>
   <div class="bar">
     <div class="seg" role="group" aria-label="Speed"><button id="sp1" aria-pressed="true">Normal</button><button id="sp4" aria-pressed="false">Slow x4</button></div>
@@ -69,17 +69,17 @@ ul.ideas li b { color: var(--fg); font-weight: 600; }
 
   <section class="win" id="sec-name">
     <h2>Skill name: B, floating name</h2>
-    <p>Your pick: no cut-in bar. The name floats over the hero once, at one fixed size, slides up a little, stays, then fades. It never stretches.</p>
+    <p>Your pick: no cut-in bar. The name floats over the hero once, in CAPITALS, at one fixed size, slides up a little, stays, then fades. It never stretches.</p>
   </section>
 
   <section class="win">
     <h2>The skill look: 3 beats</h2>
     <div class="beats">
-      <div class="beat"><b>CHARGE</b>During the wind-up his outline lights up steel blue, square specks get pulled in, a square glows under his feet.</div>
+      <div class="beat"><b>CHARGE</b>During the wind-up his outline lights up blue, little specks get pulled in, a soft glow under his feet.</div>
       <div class="beat"><b>RELEASE</b>He lights up and dashes or jumps, the camera nudges in a little, a short freeze on the hit.</div>
-      <div class="beat"><b>IMPACT</b>A small square ring in his colour, a few chips, a small floor mark that fades fast.</div>
+      <div class="beat"><b>IMPACT</b>Bash: his shield's print flashes on the enemy, who skids back in a little dust. Challenge: he shouts, the enemies get a red "!", a blue shield pops up beside him.</div>
     </div>
-    <p>Version 2, calmer (your note: the impact was too flashy and broke the flow). Same three beats, but no screen flash, no speed lines, a tiny camera nudge, a short freeze, a smaller shockwave and a floor mark that fades within a second. The Knight is still <b style="color:var(--steel)">steel blue + squares</b>. Left: today's game. Right: the new look.</p>
+    <p>Version 3. Calm (your note: too flashy) and no more abstract squares and diamonds (your note: hard to understand). Every shape is now a real thing: the Knight's <b style="color:var(--steel)">blue shield</b>, a shout, dust on the floor. Left: today's game. Right: the new look.</p>
   </section>
 
   <div id="looks" style="display:flex;flex-direction:column;gap:22px"></div>
@@ -146,8 +146,8 @@ wireText('general', document.getElementById('note-general'), document.getElement
 const lookUi = {};
 const looksEl = document.getElementById('looks');
 for (const [id, about] of [
-  ['defense_bash', 'Attack skill: bashes one enemy (+300% of his defense) and stuns it 1.5s. New: he dashes in with afterimages, the hit freezes, square shockwaves and steel debris burst out, a cracked plate stays on the floor under the enemy.'],
-  ['challenge', 'Support skill: taunts every enemy around him for 3s and gives him +30 defense. New: he jumps and lands, a diamond shockwave rolls out to the edge of the taunt area and stays on the floor while the taunt lasts, red lines yank each enemy one step towards him, steel corner plates lock onto him (+30 defense).'],
+  ['defense_bash', 'Attack skill: bashes one enemy (+300% of his defense) and stuns it 1.5s. New: he dashes in, a short freeze on the hit, the print of his shield flashes on the enemy, a few chips fly, the enemy skids back in a little dust.'],
+  ['challenge', 'Support skill: taunts every enemy around him for 3s and gives him +30 defense. New: he hops and lands in a puff of dust and SHOUTS (sound waves roll out), each enemy gets a red "!" and steps towards him, a blue shield pops up beside him (+30 defense).'],
 ]) {
   const sec = document.createElement('section'); sec.className = 'win'; sec.id = 'look-' + id;
   const h = document.createElement('h2'); h.textContent = SD.SKILLS[id].name;

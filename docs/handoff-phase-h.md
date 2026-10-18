@@ -3,7 +3,33 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
-## START HERE (session 6, latest): INTERFACE LOOK BUILT
+## START HERE (session 7, latest): SCREEN REVIEW NOTES, working through them
+The user marked the SCREEN REVIEW page https://claude.ai/artifact/UR98Jn7UBts1xrvEZw97qP (ArtifactData `list`,
+collection `notes`; ids like `clip:reward-up`, `still:fight`, `sound:miss`). Page source + recorder:
+`docs/proposals/screen-review/` (record.mjs, make.mjs; clips are NOT in git, re-record to republish).
+Agreed order (user OK'd it): 1 reward layout, 2 quick dungeon fixes, 3 boss start, 4 defeat screen, 5 new art, 6 sounds.
+DONE: step 1 (two-line "Floor N / cleared!" banner, big Give / Write-it-in button `BTN_H` 76, "Who gets it?" rows
+show EVERY item icon on up to 3 lines then shrink, no "+N" (`drawIconGrid()`), book page icons x4 / x3, roomier
+"Which skill?" rows). Step 2 (mimic room shows the treasure room's name + hint, elite name tag follows the elite,
+puzzle tablet drawScale 8, squad slots 30px lower).
+NEXT, still to do (user's words in quotes):
+- 3 BOSS START: "start with a roar sound and camera shake first then wait 2 second to start the fight" (numbers in JSON).
+- 4 DEFEAT: "big SQUAD DEFEATED text appeared first, then the flavor text 'the squad have reached floor 69, before
+  (flavor random text of how they are defeated)'. Then a button to go back." (flavor lines in JSON).
+- 5 ART: hero select door "very big door, like an entrance to a dungeon, very intimidating"; between floors "the door
+  opens should have better animation and the door open it should look black"; fight floor "more natural looking floor,
+  dirt and grass, an old dungeon, pillars on the wall"; fountain room "more decorations"; Skill Dealer room "shelves of
+  book visuals, stack of books, a rug, other decorations; the merchant moves to the left just a bit (not to the edge)
+  so the heroes go straight to the door without being blocked by anything".
+- 6 SOUNDS (sound was ON HOLD; workflow in docs/systems/sound.md; sound sites blocked, GitHub CC0 packs worked):
+  tap "more bubbly"; cardOpen "card slide"; rewardUp "card sliding" (the reward sheet transition too); rewardCard
+  "card stacks"; miss "more fast whoosh"; shieldSoak "more glass break"; skillCast "more whoosh / magical cast, like the
+  item proc sound"; flaskBreak "more glass break, this is not glass break". Ideas: skillCast = the itemProc file;
+  glass = picked/hitIce "glass hit 02".
+Browser checks: shot scripts in the scratchpad were throwaway; pattern = Playwright from scratchpad/pw, dev server run
+from the scratchpad (see CLAUDE.md), `window.__game` + scene methods (e.g. `rw.showAssign()`, `sc.tapProp(...)`).
+
+## START HERE (session 6): INTERFACE LOOK BUILT
 User picked look D 'Classic RPG Window' + Press Start 2P; built on every screen (docs/systems/ui.md). NEXT: discuss
 per-screen changes with the user: reward, battle, hero select, and THE PUZZLE (user was very excited about it).
 PUZZLE: user wants the 1-8 slide puzzle GONE. Demo page with 6 playable ideas (Mimic Shuffle, Rune Lock, Light the
@@ -13,7 +39,7 @@ Puzzles centred (user). NEXT: the user reviews every screen on the SCREEN REVIEW
 https://claude.ai/artifact/UR98Jn7UBts1xrvEZw97qP (84 items: layout, animations, sounds); read the notes with ArtifactData
 `list` collection `notes` and work through the CHANGE ones, screen by screen.
 
-## START HERE (session 6, latest): INTERFACE STYLE
+## START HERE (session 6): INTERFACE STYLE
 User: 'let's do interfaces', picked 'ONE LOOK FOR EVERYTHING' (a shared pixel-art UI style for all screens). Proposal page
 https://claude.ai/artifact/PBDU3qq4XzyMV43ujcfUkC (source docs/proposals/ui-style/): looks A Torchlit Stone / B Old Parchment
 / C Arcane Night, fonts Pixelify Sans / Silkscreen / Jersey 10 / VT323 / Press Start 2P (all OFL: bundle the font file in

@@ -14,7 +14,8 @@ import { pickPuzzle, puzzleSettings, mimicPlan, runePlan, traceBeam, flipMirror,
 const R = rooms.kinds.puzzle;
 const FONT = UI.font;
 const SHEET_TOP = 44;
-const STAGE_TOP = 214; // where the puzzle itself starts
+const BLOCK_TOP = 104; // the title; the puzzle starts at STAGE_TOP (the whole block is then centred, see create)
+const STAGE_TOP = 214;
 const BUTTON_Y = GAME_HEIGHT - 92;
 const hex = (c) => Number(c.replace('#', '0x'));
 const GOLD = hex(UI.gold);
@@ -40,13 +41,18 @@ export default class PuzzleScene extends Phaser.Scene {
     this.sheet = this.add.container(0, GAME_HEIGHT);
     this.sheet.add(drawWindow(this.add.graphics(), 4, SHEET_TOP, GAME_WIDTH - 8, GAME_HEIGHT - SHEET_TOP + 40));
     this.sheet.add(this.add.text(GAME_WIDTH / 2, SHEET_TOP + 20, 'PUZZLE ROOM', { fontFamily: FONT, fontSize: '8px', color: UI.gold }).setOrigin(0.5, 0));
-    this.sheet.add(this.add.text(GAME_WIDTH / 2, 104, R.names[this.kind], { fontFamily: FONT, fontSize: '16px', color: UI.text }).setOrigin(0.5, 0));
-    this.sheet.add(this.add.text(GAME_WIDTH / 2, 134, R.howTo[this.kind], { fontFamily: FONT, fontSize: '8px', color: '#c8c8d4', align: 'center', lineSpacing: 6 }).setOrigin(0.5, 0));
+    // The title, how-to, status line and the puzzle form one block that is centred in the sheet (user: not at the top).
+    this.block = this.add.container(0, 0);
+    this.sheet.add(this.block);
+    this.block.add(this.add.text(GAME_WIDTH / 2, BLOCK_TOP, R.names[this.kind], { fontFamily: FONT, fontSize: '16px', color: UI.text }).setOrigin(0.5, 0));
+    this.block.add(this.add.text(GAME_WIDTH / 2, 134, R.howTo[this.kind], { fontFamily: FONT, fontSize: '8px', color: '#c8c8d4', align: 'center', lineSpacing: 6 }).setOrigin(0.5, 0));
     this.status = this.add.text(GAME_WIDTH / 2, 182, '', { fontFamily: FONT, fontSize: '8px', color: UI.text, align: 'center' }).setOrigin(0.5, 0);
-    this.sheet.add(this.status);
+    this.block.add(this.status);
     this.giveUp = uiButton(this, GAME_WIDTH / 2 - 80, BUTTON_Y, 160, 44, 'Give up', { onTap: () => this.finish(false) });
     this.sheet.add(this.giveUp.container);
-    ({ mimic: this.makeMimic, runes: this.makeRunes, beam: this.makeBeam, ice: this.makeIce, picture: this.makePicture })[this.kind].call(this);
+    const bottom = ({ mimic: this.makeMimic, runes: this.makeRunes, beam: this.makeBeam, ice: this.makeIce, picture: this.makePicture })[this.kind].call(this);
+    // Centre the block between the top of the sheet and the buttons (each make* returns where its puzzle ends).
+    if (bottom) this.block.y = Math.round((SHEET_TOP + 40 + BUTTON_Y - 16) / 2 - (BLOCK_TOP + bottom) / 2);
     this.tweens.add({ targets: this.sheet, y: 0, duration: 420, ease: 'Cubic.easeOut' });
     sfx.play('rewardUp');
   }
@@ -84,13 +90,13 @@ export default class PuzzleScene extends Phaser.Scene {
   makeMimic() {
     const P = this.P;
     const plan = mimicPlan(P);
-    const y = 470;
+    const y = STAGE_TOP + 120; // the chests' feet (the coin shows 74px above)
     const slotX = (s) => Math.round((GAME_WIDTH / P.chests) * (s + 0.5));
     const scale = roomProps.chest.drawScale ?? 4;
     this.slotOf = [...Array(P.chests).keys()];
     this.chests = this.slotOf.map((s) => {
       const ch = new Character(this, slotX(s), y, roomProps.chest).setScale(scale);
-      this.sheet.add(ch);
+      this.block.add(ch);
       return ch;
     });
     // The coin: a little gold disc drawn in pixels.
@@ -99,7 +105,7 @@ export default class PuzzleScene extends Phaser.Scene {
     coin.fillStyle(GOLD, 1).fillRect(-8, -6, 16, 12).fillRect(-6, -8, 12, 16);
     coin.fillStyle(0xfff3a0, 1).fillRect(-4, -4, 4, 4);
     coin.setVisible(false);
-    this.sheet.add(coin);
+    this.block.add(coin);
     const showCoin = (ch) => coin.setPosition(ch.x, y - 74).setVisible(true);
     let open = false;
     this.say('Watch the coin...');
@@ -135,7 +141,7 @@ export default class PuzzleScene extends Phaser.Scene {
         }
         // A Mimic: the chest wakes up, shakes and bites; the coin shows where it really was.
         const mimic = new Character(this, ch.x, ch.y, minionDefs.mimic).setScale(scale);
-        this.sheet.add(mimic);
+        this.block.add(mimic);
         ch.setVisible(false);
         this.tweens.add({ targets: mimic, x: ch.x + 5, duration: 60, yoyo: true, repeat: 3 });
         sfx.play('heroFall');
@@ -143,6 +149,7 @@ export default class PuzzleScene extends Phaser.Scene {
         this.lose('A MIMIC! It bites!', { bite: true });
       });
     });
+    return y + 12; // the bottom of the chests
   }
 
   // ---- Rune Lock ---------------------------------------------------------------------------------------------
@@ -158,7 +165,7 @@ export default class PuzzleScene extends Phaser.Scene {
       const x = left + (i % cols) * (size + gap);
       const y = top + Math.floor(i / cols) * (size + gap);
       const g = this.add.graphics();
-      this.sheet.add(g);
+      this.block.add(g);
       const paint = (lit) => {
         g.clear();
         drawWindow(g, x, y, size, size, { line: lit ? GOLD : UI.line });
@@ -167,7 +174,7 @@ export default class PuzzleScene extends Phaser.Scene {
       };
       paint(false);
       const zone = this.add.zone(x, y, size, size).setOrigin(0).setInteractive();
-      this.sheet.add(zone);
+      this.block.add(zone);
       return { paint, zone };
     });
     let round = 1;
@@ -212,6 +219,7 @@ export default class PuzzleScene extends Phaser.Scene {
       show();
     }));
     show();
+    return top + Math.ceil(P.runes / cols) * (size + gap) - gap;
   }
 
   // ---- Mirror Beam -------------------------------------------------------------------------------------------
@@ -226,7 +234,7 @@ export default class PuzzleScene extends Phaser.Scene {
     const top = STAGE_TOP + 20;
     const frame = drawWindow(this.add.graphics(), left - 6, top - 6, W + 12, W + 12, { fill: 0x14101f });
     const g = this.add.graphics();
-    this.sheet.add([frame, g]);
+    this.block.add([frame, g]);
     const [cx, cy] = level.crystal.split(',').map(Number);
     const draw = () => {
       g.clear();
@@ -268,17 +276,18 @@ export default class PuzzleScene extends Phaser.Scene {
     draw();
     this.say('Turn the mirrors.');
     const zone = this.add.zone(left, top, W, W).setOrigin(0).setInteractive();
-    this.sheet.add(zone);
-    zone.on('pointerdown', (p) => {
+    this.block.add(zone);
+    zone.on('pointerdown', (p, lx, ly) => {
       if (this.done) return;
-      const x = Math.floor((p.x - left) / cs);
-      const y = Math.floor((p.y - top) / cs);
+      const x = Math.floor(lx / cs); // local to the zone: right wherever the block is
+      const y = Math.floor(ly / cs);
       const m = level.mirrors.findIndex(([mx, my]) => mx === x && my === y);
       if (m < 0) return;
       ori = flipMirror(ori, m);
       sfx.play('puzzleSlide');
       if (draw()) this.win('The crystal lights up!');
     });
+    return top + W + 6;
   }
 
   // ---- Ice Slide ---------------------------------------------------------------------------------------------
@@ -295,7 +304,7 @@ export default class PuzzleScene extends Phaser.Scene {
     const top = STAGE_TOP;
     const frame = drawWindow(this.add.graphics(), left - 6, top - 6, W + 12, W + 12);
     const g = this.add.graphics();
-    this.sheet.add([frame, g]);
+    this.block.add([frame, g]);
     const key = { x: pos[0] * cs, y: pos[1] * cs };
     const draw = () => {
       g.clear();
@@ -344,10 +353,10 @@ export default class PuzzleScene extends Phaser.Scene {
     const by = top + W + 18;
     for (const [label, d, dx, dy] of [['^', [0, -1], 0, 0], ['<', [-1, 0], -1, 1], ['v', [0, 1], 0, 1], ['>', [1, 0], 1, 1]]) {
       const b = uiButton(this, GAME_WIDTH / 2 - 26 + dx * 60, by + dy * 46, 52, 40, label, { onTap: () => move(d) });
-      this.sheet.add(b.container);
+      this.block.add(b.container);
     }
     const zone = this.add.zone(left, top, W, W).setOrigin(0).setInteractive();
-    this.sheet.add(zone);
+    this.block.add(zone);
     let from = null;
     zone.on('pointerdown', (p) => (from = { x: p.x, y: p.y }));
     zone.on('pointerup', (p) => {
@@ -358,6 +367,7 @@ export default class PuzzleScene extends Phaser.Scene {
       if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
       move(Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)]);
     });
+    return by + 46 + 40; // the arrow buttons
   }
 
   // ---- Picture Puzzle ----------------------------------------------------------------------------------------
@@ -405,7 +415,7 @@ export default class PuzzleScene extends Phaser.Scene {
     const left = Math.round((GAME_WIDTH - W) / 2);
     const top = STAGE_TOP + 30;
     const frame = this.add.graphics();
-    this.sheet.add(frame);
+    this.block.add(frame);
     const paintFrame = (gold) => { frame.clear(); drawWindow(frame, left - 8, top - 8, W + 16, W + 16, { line: gold ? GOLD : UI.line }); };
     paintFrame(false);
     let order = shufflePieces(N * N);
@@ -413,12 +423,12 @@ export default class PuzzleScene extends Phaser.Scene {
     let swaps = 0;
     const spots = order.map((_, i) => {
       const img = this.add.image(left + (i % N) * (piece + gap), top + Math.floor(i / N) * (piece + gap), key, `p${order[i]}`).setOrigin(0).setScale(scale).setInteractive();
-      this.sheet.add(img);
+      this.block.add(img);
       img.on('pointerdown', () => tap(i));
       return img;
     });
     const mark = this.add.graphics();
-    this.sheet.add(mark);
+    this.block.add(mark);
     const draw = () => {
       spots.forEach((img, i) => img.setFrame(`p${order[i]}`));
       mark.clear();
@@ -445,12 +455,13 @@ export default class PuzzleScene extends Phaser.Scene {
     if (P.showExample) {
       this.giveUp.container.x = GAME_WIDTH / 2 - 168;
       const full = this.add.image(left + (W - 120 * scale) / 2, top + (W - 120 * scale) / 2, key).setOrigin(0).setScale(scale).setVisible(false); // whole-number scale: crisp
-      this.sheet.add(full);
+      this.block.add(full);
       const peek = uiButton(this, GAME_WIDTH / 2 + 8, BUTTON_Y, 160, 44, 'Peek');
       peek.hit.on('pointerdown', () => full.setVisible(!this.done));
       peek.hit.on('pointerup', () => full.setVisible(false));
       peek.hit.on('pointerout', () => full.setVisible(false));
-      this.sheet.add(peek.container);
+      this.sheet.add(peek.container); // the buttons stay at the bottom
     }
+    return top + W + 8;
   }
 }

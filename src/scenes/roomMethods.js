@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, UI } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
 import { drawWindow } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import * as sfx from '../audio/sfx.js';
@@ -41,12 +41,58 @@ export const roomMethods = {
     const xs =
       kind === 'treasure' ? (Math.random() < rules.twoChestChance ? [GAME_WIDTH / 3, (GAME_WIDTH * 2) / 3] : [GAME_WIDTH / 2]) : [rules.x ?? GAME_WIDTH / 2];
     const def = { treasure: 'chest', mimic: 'chest', fountain: 'fountain', dealer: 'dealer', puzzle: 'tablet' }[kind];
+    this.decorateRoom(kind, container); // under the props
     for (const x of xs) {
       const ch = new Character(this, x, PROP_Y, roomProps[def]);
       container.add(ch);
       room.props.push({ ch, x, done: false });
     }
     return room;
+  },
+
+  // Room decorations (roomProps.json `decor`): pixel sprites, soft pulsing lights, puddles and drifting fireflies,
+  // all on the room's floor container (they slide away with it).
+  decorateRoom(kind, container) {
+    const D = roomProps.decor;
+    const R = D && D.rooms[kind];
+    if (!R) return;
+    const g = this.add.graphics();
+    container.add(g);
+    for (const [x, y, w, h] of R.puddles || []) {
+      g.fillStyle(0x16304e, 0.9).fillEllipse(x, y, w + 2, h + 2); // wet dark edge
+      g.fillStyle(0x2f5f98, 0.85).fillEllipse(x, y, w, h);
+      g.fillStyle(0x8fc8ff, 0.7).fillRect(Math.round(x - w / 4), Math.round(y - 1), Math.round(w / 3), 2); // a glint
+    }
+    for (const [name, x, y] of R.items || []) {
+      const art = D.sprites[name];
+      const p = D.px;
+      const w = art.rows[0].length;
+      const top = y - art.rows.length * p;
+      art.rows.forEach((row, r) => [...row].forEach((c, k) => {
+        if (c === '.') return;
+        g.fillStyle(Number(art.palette[Number(c)]), 1).fillRect(Math.round(x - (w * p) / 2 + k * p), top + r * p, p, p);
+      }));
+    }
+    for (const [x, y, radius, color, alpha] of R.glows || []) {
+      // Two flat layers (a wide faint one and a small brighter core) so the light looks soft on the floor.
+      const glow = this.add.container(x, y, [this.add.ellipse(0, 0, radius * 2, radius * 1.1, Number(color), alpha * 0.5), this.add.ellipse(0, 0, radius, radius * 0.55, Number(color), alpha)]);
+      glow.setAlpha(0.7);
+      container.add(glow);
+      this.tweens.add({ targets: glow, alpha: 1, scale: 1.12, duration: 600 + Math.random() * 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+    const [x0, y0, x1, y1] = R.area || [0, 0, GAME_WIDTH, GAME_HEIGHT];
+    for (let i = 0; i < (R.fireflies || 0); i++) {
+      const fx = x0 + Math.random() * (x1 - x0);
+      const fy = y0 + Math.random() * (y1 - y0);
+      const f = this.add.rectangle(fx, fy, 2, 2, Number(R.fireflyColor), 0.9);
+      const halo = this.add.circle(fx, fy, 5, Number(R.fireflyColor), 0.15);
+      container.add([halo, f]);
+      const dx = (Math.random() * 2 - 1) * 30;
+      const dy = (Math.random() * 2 - 1) * 20;
+      const ms = 2200 + Math.random() * 2000;
+      this.tweens.add({ targets: [f, halo], x: fx + dx, y: fy + dy, duration: ms, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.tweens.add({ targets: [f, halo], alpha: 0.1, duration: 500 + Math.random() * 700, yoyo: true, repeat: -1, delay: Math.random() * 1000 });
+    }
   },
 
   // The room is ready: its name and a hint show, a small gold arrow bobs over everything that can be tapped.

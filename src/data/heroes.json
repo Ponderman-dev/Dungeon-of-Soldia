@@ -1059,16 +1059,16 @@
     "damageType": "holy",
     "height": 24,
     "stats": {
-      "health": 100,
-      "attack": 14,
-      "defense": 5,
+      "health": 80,
+      "attack": 11,
+      "defense": 2,
       "resist": 12,
       "evasion": 4,
       "crit": 5,
       "attackEfficiency": 95
     },
     "growthPercent": {
-      "health": 4,
+      "health": 3,
       "attack": 3
     },
     "growthFlat": {

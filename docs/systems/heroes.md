@@ -91,3 +91,5 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       Grace every 5s -> 7s, Holy Nova heal 12% -> 10%: avg floor -> 32.4 / 32.8 (still 1st, rogue ~31). Tested and NOT
       chosen (avg floor): no heal-item bonus 33.2; Grace 8s 33.0; self buff +10% 34.8; health 85 34.4; weaker Sanctuary
       34.3; no bonus + Grace 8s 30.9; that + Holy Nova 8% 30.3. Her healing carries squads; Sanctuary/self buff barely matter.
+      Then user: make her FRAGILE: health 100 -> 80 (growth 4 -> 3%), attack 14 -> 11, defense 5 -> 2: avg floor -> 27.9 / 26.6
+      (mid-pack; squads with her die earlier, so every hero's average dropped ~1).

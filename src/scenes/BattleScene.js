@@ -2066,7 +2066,7 @@ export default class BattleScene extends Phaser.Scene {
     if (this.tauntLines) this.tauntLines.clear();
     this.drawBossHud(); // mode is 'won': the boss bar goes away
     this.focusMarker.setVisible(false);
-    this.banner.setText(`Floor ${this.floor} cleared!`);
+    this.banner.setText(`Floor ${this.floor}\ncleared!`); // two lines (user): one line ran off the screen on floor 10+
     this.layer.setDoorOpen(true);
 
     this.state.clearStatuses();

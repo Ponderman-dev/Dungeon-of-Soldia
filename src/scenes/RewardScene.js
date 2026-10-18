@@ -6,6 +6,7 @@ import itemTypes from '../data/itemTypes.json';
 import rarities from '../data/rarities.json';
 import { canReceive } from '../systems/items.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
+import { FRAMED_SIZE } from '../systems/itemIcons.js';
 import * as sfx from '../audio/sfx.js';
 import bookData from '../data/skillBooks.json';
 import { rollBookPages, pageFit } from '../systems/books.js';
@@ -25,6 +26,8 @@ const TEXT_X = 112; // where a card's text starts (right of the icon)
 const ICON_W = 98; // the icon column
 const DESC_PX = 8; // description text size
 const TITLE_H = 54; // the step title above the cards
+const BTN_H = 76; // the big confirm button at the bottom (Give / Write it in); user: "needs to be bigger"
+const BTN_Y = GAME_HEIGHT - 16 - BTN_H; // its top
 const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
 const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
 
@@ -204,8 +207,8 @@ export default class RewardScene extends Phaser.Scene {
   // Page card sizes: normal, or COMPACT when a book shows more than 3 pages (the Skill Dealer's 5) so all fit.
   pageLook() {
     return this.compactPages
-      ? { iconW: 64, textX: 74, desc: 8, name: 16, label: 8, nameY: 24, descY: 48, minH: 80, iconScale: 2, gap: 10 }
-      : { iconW: ICON_W, textX: TEXT_X, desc: DESC_PX, name: 16, label: 8, nameY: 32, descY: 60, minH: 112, iconScale: 3, gap: 14 };
+      ? { iconW: 84, textX: 88, desc: 8, name: 16, label: 8, nameY: 24, descY: 48, minH: 84, iconScale: 3, gap: 10 }
+      : { iconW: 104, textX: 108, desc: DESC_PX, name: 16, label: 8, nameY: 32, descY: 60, minH: 112, iconScale: 4, gap: 14 }; // big icons (user): each page gets its own icon later
   }
 
   pageHeight(page) {
@@ -274,20 +277,22 @@ export default class RewardScene extends Phaser.Scene {
     const sum = this.text(PAD, SHEET_TOP + 86, `${page.name}: ${page.text}`, 13, MUTE, false, CARD_W);
     const limits = this.payload.state.rules.books || {};
     const skillDefs = this.payload.state.skillDefs;
-    const rowH = 124;
     let y = SHEET_TOP + 96 + sum.height + 8;
+    const heroes = this.payload.state.heroes;
+    const rowH = Math.min(160, Math.floor((BTN_Y - 12 - y) / heroes.length)); // the room down to the button, shared (user: more space per hero)
+    const bh = rowH - 10 - 40; // a skill button's height
     this.skillButtons = [];
-    for (const hero of this.payload.state.heroes) {
+    for (const hero of heroes) {
       const g = this.track(this.add.graphics());
       drawWindow(g, PAD, y, CARD_W, rowH - 10);
-      const ch = new Character(this, PAD + 34, y + 92, hero.def);
-      ch.setScale(2).setAlpha(hero.alive ? 1 : 0.35);
+      const ch = new Character(this, PAD + 36, y + rowH - 26, hero.def);
+      ch.setScale(2.5).setAlpha(hero.alive ? 1 : 0.35);
       this.track(ch);
-      this.text(PAD + 70, y + 8, hero.name, 15, INK, true).setAlpha(hero.alive ? 1 : 0.5);
-      const bw = (CARD_W - 70 - 16) / 2;
+      this.text(PAD + 76, y + 10, hero.name, 17, INK, true).setAlpha(hero.alive ? 1 : 0.5);
+      const bw = (CARD_W - 76 - 16) / 2;
       hero.skills.forEach((slot, idx) => {
-        const bx = PAD + 70 + idx * (bw + 6);
-        const by = y + 32;
+        const bx = PAD + 76 + idx * (bw + 6);
+        const by = y + 34;
         const fit = pageFit(hero, idx, page, limits);
         const usable = fit === 'ok' || fit === 'replace';
         const pages = slot.pages || [];
@@ -295,24 +300,24 @@ export default class RewardScene extends Phaser.Scene {
         const mods = pages.filter((p) => p.kind === 'modifier').length;
         const col = SKILL_COLORS[slot.kind] || SKILL_COLORS.attack;
         const bg = this.track(this.add.graphics());
-        const btn = { bg, bx, by, bw, bh: 70, hero, idx, fit, col };
+        const btn = { bg, bx, by, bw, bh, hero, idx, fit, col };
         btn.paint = (on) => {
           bg.clear();
-          drawWindow(bg, bx, by, bw, 70, { line: on ? COLORS.gold : usable ? col.ready : COLORS.dim });
+          drawWindow(bg, bx, by, bw, bh, { line: on ? COLORS.gold : usable ? col.ready : COLORS.dim });
         };
         btn.paint(false);
         this.fitText(bx + 8, by + 6, skillDefs[slot.id].name, 13, usable ? INK : MUTE, bw - 16, 34, true);
-        const note = fit === 'dead' ? 'Fallen' : fit === 'full' ? 'Stat pages full' : fit === 'duplicate' ? 'Already has it' : fit === 'replace' ? 'Full: replaces one' : `${stats}/${limits.maxStatPages ?? 3} stats ${mods}/${limits.modifierSlots ?? 2} mods`;
-        this.text(bx + 8, by + 50, note, 11, fit === 'replace' ? '#ffd9a0' : MUTE);
-        if (usable) this.track(this.add.zone(bx + bw / 2, by + 35, bw, 70).setInteractive()).on('pointerdown', () => this.selectSkill(btn));
+        const note = fit === 'dead' ? 'Fallen' : fit === 'full' ? 'Stat pages full' : fit === 'duplicate' ? 'Already has it' : fit === 'replace' ? 'Full: replaces one' : `${stats}/${limits.maxStatPages ?? 3} stats\n${mods}/${limits.modifierSlots ?? 2} mods`;
+        this.text(bx + 8, by + bh - 30, note, 11, fit === 'replace' ? '#ffd9a0' : MUTE);
+        if (usable) this.track(this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive()).on('pointerdown', () => this.selectSkill(btn));
         this.skillButtons.push(btn);
       });
       y += rowH;
     }
     this.buttonGraphics = this.track(this.add.graphics());
-    this.buttonText = this.text(GAME_WIDTH / 2, GAME_HEIGHT - 46, 'Pick a skill', 18, '#ffffff', true).setOrigin(0.5);
+    this.buttonText = this.text(GAME_WIDTH / 2, BTN_Y + BTN_H / 2, 'Pick a skill', 18, '#ffffff', true).setOrigin(0.5);
     this.drawBookButton();
-    this.track(this.add.zone(GAME_WIDTH / 2, GAME_HEIGHT - 46, CARD_W, 52).setInteractive()).on('pointerdown', () => this.confirmPage());
+    this.track(this.add.zone(GAME_WIDTH / 2, BTN_Y + BTN_H / 2, CARD_W, BTN_H).setInteractive()).on('pointerdown', () => this.confirmPage());
   }
 
   selectSkill(btn) {
@@ -326,12 +331,12 @@ export default class RewardScene extends Phaser.Scene {
     const g = this.buttonGraphics;
     const t = this.target;
     g.clear();
-    const y = GAME_HEIGHT - 72;
-    drawWindow(g, PAD, y, CARD_W, 52, { line: t ? UI.line : COLORS.dim });
+    const y = BTN_Y;
+    drawWindow(g, PAD, y, CARD_W, BTN_H, { line: t ? UI.line : COLORS.dim });
     const name = t && this.payload.state.skillDefs[t.hero.skills[t.idx].id].name;
     this.buttonText.setText(t ? (t.fit === 'replace' ? 'Choose what it replaces' : `Write it into ${name}`) : 'Pick a skill').setColor(t ? UI.text : UI.dim);
     this.buttonText.setFontSize(this.buttonText.setFontSize(16).width > CARD_W - 48 ? 8 : 16); // long labels drop to the small size
-    if (t) drawCursor(g, Math.round(GAME_WIDTH / 2 - this.buttonText.width / 2 - 18), y + 26); // the ▶ cursor: ready to confirm
+    if (t) drawCursor(g, Math.round(GAME_WIDTH / 2 - this.buttonText.width / 2 - 18), y + BTN_H / 2); // the ▶ cursor: ready to confirm
   }
 
   confirmPage() {
@@ -388,9 +393,12 @@ export default class RewardScene extends Phaser.Scene {
     this.drawCard(item, PAD, SHEET_TOP + 94, itemH, true);
 
     this.heroGraphics = [];
-    const rowH = 92;
-    let y = SHEET_TOP + 94 + itemH + 16;
-    for (const [i, hero] of this.payload.state.heroes.entries()) {
+    // Rows share the room down to the Give button (user: more room per hero, up to 3 lines of item icons).
+    const heroes = this.payload.state.heroes;
+    let y = SHEET_TOP + 94 + itemH + 14;
+    const rowGap = 8;
+    const rowH = Math.min(150, Math.floor((BTN_Y - 12 - y - rowGap * (heroes.length - 1)) / heroes.length));
+    for (const [i, hero] of heroes.entries()) {
       const ok = canReceive(hero, item);
       const g = this.track(this.add.graphics());
       this.heroGraphics.push({ g, x: PAD, y, w: CARD_W, h: rowH, hero });
@@ -398,47 +406,51 @@ export default class RewardScene extends Phaser.Scene {
       const alpha = ok ? 1 : 0.45;
 
       // A small copy of the hero (same parts as in battle).
-      const ch = new Character(this, PAD + 36, y + rowH - 16, hero.def);
+      const ch = new Character(this, PAD + 36, y + Math.min(rowH - 16, 84), hero.def);
       ch.setScale(2.5).setAlpha(alpha);
       this.track(ch);
 
-      const name = this.text(PAD + 74, y + 14, hero.name, 17, INK, true).setAlpha(alpha);
-      this.text(PAD + 74 + name.width + 8, y + 18, `Lv ${hero.level}`, 13, MUTE).setAlpha(alpha);
+      const name = this.text(PAD + 74, y + 12, hero.name, 17, INK, true).setAlpha(alpha);
+      this.text(PAD + 74 + name.width + 8, y + 16, `Lv ${hero.level}`, 13, MUTE).setAlpha(alpha);
       const line = ok ? this.changeLine(hero, item) : hero.alive ? 'Can\'t take more' : 'Fallen';
-      if (line) this.text(GAME_WIDTH - PAD - 14, y + 16, line, 15, ok ? '#6dff8f' : MUTE, true).setOrigin(1, 0);
+      if (line) this.text(PAD + 74, y + 34, line, 8, ok ? '#6dff8f' : MUTE).setAlpha(alpha);
 
-      // Items this hero already has: the same small icons as under the skill squares in battle.
-      this.drawIconRow(hero, PAD + 84, y + 64, CARD_W - 84 - 12, alpha);
+      // Items this hero already has: every icon shown, up to 3 lines, smaller when they do not fit.
+      const top = y + 50;
+      this.drawIconGrid(hero, PAD + 74, top, CARD_W - 74 - 10, y + rowH - 8 - top, alpha);
 
       if (ok) this.track(this.add.zone(PAD + CARD_W / 2, y + rowH / 2, CARD_W, rowH).setInteractive()).on('pointerdown', () => this.selectHero(i));
-      y += rowH + 10;
+      y += rowH + rowGap;
     }
 
     // The Give button at the bottom.
     this.buttonGraphics = this.track(this.add.graphics());
-    this.buttonText = this.text(GAME_WIDTH / 2, GAME_HEIGHT - 46, 'Pick a hero', 18, '#ffffff', true).setOrigin(0.5);
+    this.buttonText = this.text(GAME_WIDTH / 2, BTN_Y + BTN_H / 2, 'Pick a hero', 18, '#ffffff', true).setOrigin(0.5);
     this.drawButton();
-    this.track(this.add.zone(GAME_WIDTH / 2, GAME_HEIGHT - 46, CARD_W, 52).setInteractive()).on('pointerdown', () => this.confirm());
+    this.track(this.add.zone(GAME_WIDTH / 2, BTN_Y + BTN_H / 2, CARD_W, BTN_H).setInteractive()).on('pointerdown', () => this.confirm());
   }
 
-  // One line of the hero's items (framed icons, a white number = copies), starting at x, centred on y; what does
-  // not fit in `w` becomes "+N". "No items yet" when empty.
-  drawIconRow(hero, x, y, w, alpha) {
+  // All the hero's items (framed icons, a white number = copies) in a box from (x, top), w wide and h tall: up to
+  // 3 lines at full size; when even 3 lines are too few the icons shrink until every one fits (user: no "+N").
+  drawIconGrid(hero, x, top, w, h, alpha) {
     const counts = new Map();
     for (const id of hero.items) counts.set(id, (counts.get(id) || 0) + 1);
     const kinds = [...counts.entries()];
-    if (!kinds.length) return this.text(x - 10, y - 8, 'No items yet', 12, MUTE).setAlpha(alpha);
-    const gap = 23;
-    const fit = Math.floor(w / gap);
-    const shown = kinds.length > fit ? kinds.slice(0, fit - 1) : kinds;
+    if (!kinds.length) return this.text(x, top + 4, 'No items yet', 12, MUTE).setAlpha(alpha);
+    const lines = 3;
+    let scale = Math.min(1, h / lines / (FRAMED_SIZE + 3));
+    const perLine = (sc) => Math.floor((w + 3 * sc) / ((FRAMED_SIZE + 3) * sc));
+    while (perLine(scale) * lines < kinds.length) scale *= 0.9;
+    const step = (FRAMED_SIZE + 3) * scale;
+    const n = perLine(scale);
     const style = { fontFamily: FONT, fontSize: '8px', color: '#ffffff', stroke: '#000000', strokeThickness: 3 };
-    shown.forEach(([id, count], i) => {
+    kinds.forEach(([id, count], i) => {
       const def = this.payload.state.itemDefs[id];
-      const ix = x + i * gap;
-      this.track(this.add.image(ix, y, itemIconKey(this, id, def.rarity)).setAlpha(alpha));
-      if (count > 1) this.track(this.add.text(ix + 11, y + 11, String(count), style).setOrigin(1, 1).setAlpha(alpha));
+      const ix = Math.round(x + (i % n) * step);
+      const iy = Math.round(top + Math.floor(i / n) * step);
+      this.track(this.add.image(ix, iy, itemIconKey(this, id, def.rarity)).setOrigin(0).setScale(scale).setAlpha(alpha));
+      if (count > 1) this.track(this.add.text(ix + FRAMED_SIZE * scale + 1, iy + FRAMED_SIZE * scale + 1, String(count), style).setOrigin(1, 1).setAlpha(alpha));
     });
-    if (shown.length < kinds.length) this.text(x + shown.length * gap, y, `+${kinds.length - shown.length}`, 12, INK, true).setOrigin(0.5).setAlpha(alpha);
   }
 
   drawHeroCard(i, selected) {
@@ -450,10 +462,10 @@ export default class RewardScene extends Phaser.Scene {
   drawButton() {
     const g = this.buttonGraphics;
     g.clear();
-    const y = GAME_HEIGHT - 72;
-    drawWindow(g, PAD, y, CARD_W, 52, { line: this.selected ? UI.line : COLORS.dim });
+    const y = BTN_Y;
+    drawWindow(g, PAD, y, CARD_W, BTN_H, { line: this.selected ? UI.line : COLORS.dim });
     this.buttonText.setText(this.selected ? `Give to ${this.selected.name}` : 'Pick a hero').setColor(this.selected ? UI.text : UI.dim);
-    if (this.selected) drawCursor(g, Math.round(GAME_WIDTH / 2 - this.buttonText.width / 2 - 18), y + 26); // the ▶ cursor: ready to confirm
+    if (this.selected) drawCursor(g, Math.round(GAME_WIDTH / 2 - this.buttonText.width / 2 - 18), y + BTN_H / 2); // the ▶ cursor: ready to confirm
   }
 
   selectHero(i) {

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, UI } from '../config.js';
+import { drawWindow, drawCursor } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
 import heroDefs from '../data/heroes.json';
@@ -15,12 +16,10 @@ import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describ
 import * as sfx from '../audio/sfx.js';
 import { slotsFrom, addToSlots, removeFromSlots, isFull, squadOrder } from '../systems/squadSlots.js';
 
-const INK = '#f3eefc';
-const MUTE = '#9a8fb8';
-const FONT = 'system-ui, Arial, sans-serif';
-const GOLD = 0xf2b632;
-const ORANGE = 0xff8a3d;
-const PURPLE = 0x8b55d6;
+// The interface look (config.js UI, entities/uiKit.js): black windows, white lines, Press Start 2P at 8 / 16 / 24px.
+const INK = UI.text;
+const MUTE = '#a8a8b8';
+const FONT = UI.font;
 const WALL_H = 200; // the back wall with the door, as on the battle floors
 const DOOR_X = GAME_WIDTH / 2;
 // Where the 3 picked heroes stand (their feet): the orange slots. Slot order = battle order.
@@ -66,8 +65,8 @@ export default class SquadScene extends Phaser.Scene {
     this.figures = new Map();
     heroDefs.forEach((def, i) => {
       const ch = new Character(this, 0, 0, def).setDepth(DEPTH.hero);
-      const name = this.add.text(0, 0, def.name, { fontFamily: FONT, fontSize: '10px', fontStyle: 'bold', color: INK }).setOrigin(0.5, 0).setDepth(DEPTH.hero);
-      const tag = this.add.text(0, 0, 'NEW', { fontFamily: FONT, fontSize: '9px', fontStyle: 'bold', color: '#14101f', backgroundColor: '#6dff8f', padding: { x: 3, y: 1 } }).setOrigin(0.5, 1).setDepth(DEPTH.hero + 1);
+      const name = this.add.text(0, 0, def.name, { fontFamily: FONT, fontSize: '8px', color: INK, stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5, 0).setDepth(DEPTH.hero);
+      const tag = this.add.text(0, 0, 'NEW', { fontFamily: FONT, fontSize: '8px', color: '#000000', backgroundColor: '#6ee07a', padding: { x: 3, y: 2 } }).setOrigin(0.5, 1).setDepth(DEPTH.hero + 1);
       this.figures.set(def.id, { def, ch, name, tag, benchIndex: i });
     });
     for (const f of this.figures.values()) {
@@ -117,13 +116,13 @@ export default class SquadScene extends Phaser.Scene {
     this.slotMarks = SLOTS.map((s, i) => {
       const shadow = this.add.ellipse(s.x, s.y, 64, 16, 0x000000, 0.28).setDepth(DEPTH.slot);
       const ring = this.add.ellipse(s.x, s.y, 58, 14).setStrokeStyle(1, 0xd8c8ff, 0.35).setDepth(DEPTH.slot);
-      const num = this.add.text(s.x, s.y - 30, '+', { fontFamily: FONT, fontSize: '22px', color: '#d8c8ff' }).setOrigin(0.5).setDepth(DEPTH.slot).setAlpha(0.35);
+      const num = this.add.text(s.x, s.y - 30, '+', { fontFamily: FONT, fontSize: '16px', color: '#ffffff' }).setOrigin(0.5).setDepth(DEPTH.slot).setAlpha(0.35);
       this.tweens.add({ targets: [ring, num], alpha: '-=0.15', duration: 1100 + i * 120, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       // A small "Send back" button under a filled slot (the hero walks back to the bench).
       const back = this.add.container(s.x, s.y + 42).setDepth(DEPTH.ui);
       const bg = this.add.graphics();
-      bg.fillStyle(0x14101f, 0.75).fillRoundedRect(-34, -10, 68, 20, 10).lineStyle(1, 0x6f5a9a, 1).strokeRoundedRect(-34, -10, 68, 20, 10);
-      back.add([bg, this.add.text(0, 0, 'Send back', { fontFamily: FONT, fontSize: '10px', fontStyle: 'bold', color: '#cfc6e6' }).setOrigin(0.5)]);
+      drawWindow(bg, -44, -12, 88, 24);
+      back.add([bg, this.add.text(0, 0, 'Send back', { fontFamily: FONT, fontSize: '8px', color: INK }).setOrigin(0.5)]);
       return { shadow, ring, num, back };
     });
   }
@@ -135,7 +134,7 @@ export default class SquadScene extends Phaser.Scene {
     // Arrows at both ends (also tappable).
     this.arrows = [-1, 1].map((dir) => {
       const x = dir < 0 ? 22 : GAME_WIDTH - 22;
-      const t = this.add.text(x, BENCH.feetY - 34, dir < 0 ? '‹' : '›', { fontFamily: FONT, fontSize: '30px', fontStyle: 'bold', color: '#c9a8ff' }).setOrigin(0.5).setDepth(DEPTH.ui);
+      const t = this.add.text(x, BENCH.feetY - 34, dir < 0 ? '<' : '>', { fontFamily: FONT, fontSize: '24px', color: '#ffffff' }).setOrigin(0.5).setDepth(DEPTH.ui);
       return { dir, t };
     });
   }
@@ -143,8 +142,9 @@ export default class SquadScene extends Phaser.Scene {
   drawUi() {
     // Sound on/off (small, under the test button); saved in the progress.
     const sx = GAME_WIDTH - 30, sy = 56;
-    this.soundBtn = this.add.text(sx, sy, '', { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: '#cfc6e6', backgroundColor: '#1d1530', padding: { x: 8, y: 4 } }).setOrigin(1, 0.5).setDepth(DEPTH.ui);
-    const drawSound = () => this.soundBtn.setText(sfx.isMuted() ? '♪ off' : '♪ on').setAlpha(sfx.isMuted() ? 0.6 : 1);
+    drawWindow(this.add.graphics().setDepth(DEPTH.ui), sx - 104, sy - 13, 110, 26);
+    this.soundBtn = this.add.text(sx - 49, sy, '', { fontFamily: FONT, fontSize: '8px', color: INK }).setOrigin(0.5).setDepth(DEPTH.ui);
+    const drawSound = () => this.soundBtn.setText(sfx.isMuted() ? 'SOUND OFF' : 'SOUND ON').setColor(sfx.isMuted() ? UI.dim : INK);
     drawSound();
     this.soundBtn.setInteractive().on('pointerdown', () => {
       sfx.setMuted(!sfx.isMuted());
@@ -155,25 +155,24 @@ export default class SquadScene extends Phaser.Scene {
     if (this.lastRun && (this.lastRun.newly || []).length) this.time.delayedCall(400, () => sfx.play('unlock'));
     // One short line at the top: the last run, or what to do.
     const info = this.lastRun ? `Last run: floor ${this.lastRun.floor}` : 'Choose 3 heroes';
-    this.add.text(14, 19, info, { fontFamily: FONT, fontSize: '14px', fontStyle: 'bold', color: this.lastRun ? '#f2b632' : INK }).setDepth(DEPTH.ui).setShadow(0, 2, '#000000', 2, false, true);
+    drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 8, 196, 26);
+    this.add.text(20, 21, info, { fontFamily: FONT, fontSize: '8px', color: this.lastRun ? UI.gold : INK }).setOrigin(0, 0.5).setDepth(DEPTH.ui);
 
     // "Begin descent": only when all 3 slots are filled, over the door.
     this.begin = this.add.container(DOOR_X, 96).setDepth(DEPTH.ui);
     const bg = this.add.graphics();
-    bg.fillStyle(0x000000, 0.35).fillRoundedRect(-104, -16, 208, 42, 21);
-    bg.fillStyle(0xc0532a, 1).fillRoundedRect(-104, -21, 208, 42, 21);
-    bg.fillStyle(0xe0743a, 1).fillRoundedRect(-98, -18, 196, 16, 8); // shine
-    bg.lineStyle(2, GOLD, 1).strokeRoundedRect(-104, -21, 208, 42, 21);
-    this.begin.add([bg, this.add.text(0, 0, 'BEGIN DESCENT', { fontFamily: FONT, fontSize: '17px', fontStyle: 'bold', color: '#ffffff' }).setOrigin(0.5).setShadow(0, 2, '#5a1e0e', 0, false, true)]);
-    this.beginPulse = this.tweens.add({ targets: this.begin, scale: { from: 1, to: 1.06 }, duration: 520, yoyo: true, repeat: -1 });
+    drawWindow(bg, -132, -22, 264, 44);
+    const cur = drawCursor(this.add.graphics(), -120, 0); // the blinking ▶ cursor: everything is ready
+    this.time.addEvent({ delay: 500, loop: true, callback: () => cur.setVisible(!cur.visible) });
+    this.begin.add([bg, cur, this.add.text(8, 1, 'BEGIN DESCENT', { fontFamily: FONT, fontSize: '16px', color: INK }).setOrigin(0.5)]);
     this.add.zone(DOOR_X, 96, 230, 50).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.descend());
 
     // RANDOM under the bench, and the small test toggle at the very bottom.
     const rb = this.add.graphics().setDepth(DEPTH.ui);
-    rb.fillStyle(0x3a2a62, 1).fillRoundedRect(GAME_WIDTH / 2 - 64, 756, 128, 34, 17).lineStyle(2, PURPLE, 1).strokeRoundedRect(GAME_WIDTH / 2 - 64, 756, 128, 34, 17);
-    this.add.text(GAME_WIDTH / 2, 773, 'RANDOM', { fontFamily: FONT, fontSize: '14px', fontStyle: 'bold', color: INK }).setOrigin(0.5).setDepth(DEPTH.ui);
+    drawWindow(rb, GAME_WIDTH / 2 - 70, 754, 140, 38);
+    this.add.text(GAME_WIDTH / 2, 774, 'RANDOM', { fontFamily: FONT, fontSize: '16px', color: INK }).setOrigin(0.5).setDepth(DEPTH.ui);
     this.add.zone(GAME_WIDTH / 2, 773, 140, 40).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.pickRandom());
-    this.toggleText = this.add.text(GAME_WIDTH / 2, 818, '', { fontFamily: FONT, fontSize: '11px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
+    this.toggleText = this.add.text(GAME_WIDTH / 2, 818, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
     this.add.zone(GAME_WIDTH / 2, 818, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
   }
 
@@ -215,7 +214,7 @@ export default class SquadScene extends Phaser.Scene {
       if (x > -40 && x < GAME_WIDTH + 40) this.benchSpots.fillStyle(0x000000, onBench ? 0.28 : 0.14).fillEllipse(x, BENCH.feetY, 50, 13); // a soft shadow (faint = its hero is in a slot)
       if (onBench) f.ch.setPosition(x, BENCH.feetY);
       f.name.setPosition(f.ch.x, f.ch.y + (inSlot ? 13 : 9)).setVisible(!this.walkers.has(f.def.id) && !(this.leaving && this.slots.includes(f.def.id)));
-      f.name.setColor(inSlot ? INK : this.unlocked(f.def.id) ? '#cfc6e6' : '#6f6890');
+      f.name.setColor(inSlot ? INK : this.unlocked(f.def.id) ? '#d0d0dc' : '#6a6a7a');
       f.tag.setPosition(f.ch.x, f.ch.y - f.def.height * CHAR_SCALE - 4);
       // Heroes on the bench only show inside it (the strip is narrower than the screen).
       const hidden = onBench && (x < 14 || x > GAME_WIDTH - 14);
@@ -226,7 +225,7 @@ export default class SquadScene extends Phaser.Scene {
     const pages = Math.ceil(heroDefs.length / 3);
     const at = this.maxScroll() ? Math.round((this.scroll / this.maxScroll()) * (pages - 1)) : 0;
     this.pager.clear();
-    for (let i = 0; i < pages; i++) this.pager.fillStyle(i === at ? 0xc9a8ff : 0x5a4785, 1).fillCircle(GAME_WIDTH / 2 + (i - (pages - 1) / 2) * 12, BENCH.bottom - 12, 3);
+    for (let i = 0; i < pages; i++) this.pager.fillStyle(i === at ? 0xffffff : 0x4a4a5a, 1).fillRect(GAME_WIDTH / 2 + (i - (pages - 1) / 2) * 12 - 3, BENCH.bottom - 15, 6, 6); // square pixel dots
     for (const a of this.arrows) a.t.setAlpha((a.dir < 0 ? this.scroll > 1 : this.scroll < this.maxScroll() - 1) ? 1 : 0.2);
   }
 
@@ -246,7 +245,7 @@ export default class SquadScene extends Phaser.Scene {
     });
     const ready = this.ready() && !this.leaving;
     this.begin.setVisible(ready);
-    this.toggleText.setText(`${this.progress.unlockAll ? '☑' : '☐'} test: unlock every hero`).setColor(this.progress.unlockAll ? '#6dff8f' : MUTE);
+    this.toggleText.setText(`${this.progress.unlockAll ? '[X]' : '[ ]'} test: unlock every hero`).setColor(this.progress.unlockAll ? UI.green : MUTE);
   }
 
   // ---- input ---------------------------------------------------------------------------------
@@ -383,77 +382,71 @@ export default class SquadScene extends Phaser.Scene {
     const put = (o) => { card.add(o); return o; };
     objs.push(card);
     const g = put(this.add.graphics());
-    g.fillStyle(0x000000, 0.4).fillRoundedRect(X + 3, Y + 6, W, H, 20);
-    g.fillStyle(0x1b1430, 1).fillRoundedRect(X, Y, W, H, 20).lineStyle(2, 0x4a3878, 1).strokeRoundedRect(X, Y, W, H, 20);
-    // Portrait: the hero big on a little lit stage.
-    g.fillStyle(0x2b2046, 1).fillRoundedRect(X + 12, Y + 12, W - 24, 150, 14);
-    g.fillStyle(ORANGE, 0.16).fillEllipse(GAME_WIDTH / 2, Y + 142, 120, 26);
+    drawWindow(g, X, Y, W, H);
+    // Portrait: the hero big in an inner window on the dungeon floor colour.
+    drawWindow(g, X + 12, Y + 12, W - 24, 150, { fill: 0x14101f });
+    g.fillStyle(0x000000, 0.35).fillEllipse(GAME_WIDTH / 2, Y + 142, 120, 22);
     const big = put(new Character(this, GAME_WIDTH / 2, Y + 142, def).setScale(5));
     if (!open) big.setWash(0x05030a, 0.92);
-    const text = (x, y, str, size, color, bold = false, wrap = 0) => put(this.add.text(x, y, str, { fontFamily: FONT, fontSize: `${size}px`, fontStyle: bold ? 'bold' : 'normal', color, wordWrap: wrap ? { width: wrap } : undefined, lineSpacing: 3 }));
-    const element = ['fire', 'holy', 'dark', 'ice', 'electric'].includes(def.damageType) ? ` · ${def.damageType}` : '';
+    // Every size lands on the font's 8px grid: big titles 24, names 16, the rest 8.
+    const text = (x, y, str, size, color, bold = false, wrap = 0) => put(this.add.text(x, y, str, { fontFamily: FONT, fontSize: `${size >= 24 ? 24 : size >= 14 ? 16 : 8}px`, color, wordWrap: wrap ? { width: wrap, useAdvancedWrap: true } : undefined, lineSpacing: size >= 14 ? 6 : 4 }));
+    const element = ['fire', 'holy', 'dark', 'ice', 'electric'].includes(def.damageType) ? ` - ${def.damageType}` : '';
     text(GAME_WIDTH / 2, Y + 178, def.name, 24, INK, true).setOrigin(0.5, 0);
-    text(GAME_WIDTH / 2, Y + 210, `${def.role || ''} · ${def.damageType === 'melee' ? 'melee' : 'ranged'}${element}`.toUpperCase(), 11, '#ffb27a', true).setOrigin(0.5, 0);
+    text(GAME_WIDTH / 2, Y + 210, `${def.role || ''} - ${def.damageType === 'melee' ? 'melee' : 'ranged'}${element}`.toUpperCase(), 11, UI.gold, true).setOrigin(0.5, 0);
     const perk = perkMods({ def, level: 1 }).map((m) => `${m.percent !== undefined ? `+${m.percent}%` : `+${m.flat}`} ${STAT_SHORT[m.stat] || ({ skillDamage: 'skill dmg', regen: 'HP/s', dotDamage: 'DoT dmg' })[m.special] || m.special}`).join(', ');
     text(GAME_WIDTH / 2, Y + 230, `${def.summary || ''}  Team: ${perk}`, 12, MUTE, false, W - 48).setOrigin(0.5, 0).setAlign('center');
 
     // Passive, attack skill, support skill: a coloured badge + name + what it does.
     let y = Y + 280;
     const row = (badge, color, name, extra, body) => {
-      g.fillStyle(color, 1).fillRoundedRect(X + 16, y, 22, 22, 6);
-      text(X + 27, y + 11, badge, 12, '#14101f', true).setOrigin(0.5);
-      text(X + 48, y + 3, name, 14, INK, true);
-      if (extra) text(X + W - 16, y + 5, extra, 10, MUTE, true).setOrigin(1, 0);
-      const b = text(X + 48, y + 23, body, 12, '#cfc6e6', false, W - 64);
-      y = b.y + b.height + 14;
+      g.fillStyle(color, 1).fillRect(X + 16, y, 22, 22); // a square coloured badge: P passive, A attack, S support
+      text(X + 27, y + 12, badge, 8, '#000000', true).setOrigin(0.5);
+      const n = text(X + 48, y + 3, name, 14, INK, true, W - 64);
+      const b = text(X + 48, n.y + n.height + 8, extra ? `${extra}. ${body}` : body, 12, '#d0d0dc', false, W - 64);
+      y = b.y + b.height + 16;
     };
     const atk = skillDefs[def.skills.attack];
     const sup = skillDefs[def.skills.support];
-    row('P', 0xf2d66b, def.passive.name, 'passive', def.passive.description);
-    row('A', 0xff9a7a, atk.name, `${atk.cooldownMs / 1000}s`, atk.description);
-    row('S', 0x8ee6a8, sup.name, `${sup.cooldownMs / 1000}s`, sup.description);
+    row('P', 0xffd84a, def.passive.name, '', def.passive.description);
+    row('A', 0xff7a5a, atk.name, `Cooldown ${atk.cooldownMs / 1000}s`, atk.description);
+    row('S', 0x6ee07a, sup.name, `Cooldown ${sup.cooldownMs / 1000}s`, sup.description);
     // One tip is enough here.
     if (def.tips && def.tips.length) {
-      g.lineStyle(1, 0x3a2f57, 1).lineBetween(X + 16, y - 4, X + W - 16, y - 4);
-      text(X + 16, y + 6, `Tip: ${def.tips[0]}`, 12, '#c9a8ff', false, W - 32);
+      g.fillStyle(0xffffff, 1).fillRect(X + 16, y - 6, W - 32, 2); // a white pixel rule
+      text(X + 16, y + 6, `Tip: ${def.tips[0]}`, 12, UI.gold, false, W - 32);
     }
 
     // The button at the bottom.
     const by = Y + H - 64;
     let label;
-    let color;
     let action = null;
     if (!open) {
       const req = unlocks.requirements[id];
       label = 'LOCKED';
-      color = 0x3a3350;
-      text(GAME_WIDTH / 2, by - 22, req ? `${describeRequirement(req, unlocks)}  (${describeProgress(req, this.progress, unlocks)})` : '', 13, '#ffd9a0', true).setOrigin(0.5);
+      text(GAME_WIDTH / 2, by - 22, req ? `${describeRequirement(req, unlocks)}  (${describeProgress(req, this.progress, unlocks)})` : '', 13, UI.gold, true).setOrigin(0.5);
     } else if (picked) {
       label = 'SEND BACK';
-      color = 0x6b2f3a;
       action = () => this.sendBack(id);
     } else if (full) {
       // Squad full: choosing still works, the hero in the last slot walks back to the bench (user's choice).
       const out = this.slots[this.slots.length - 1];
       label = 'CHOOSE';
-      color = 0x2f9a55;
       text(GAME_WIDTH / 2, by - 22, `${heroDefs.find((h) => h.id === out).name} goes back to the bench.`, 12, MUTE, true).setOrigin(0.5);
       action = () => { this.sendBack(out); this.choose(id); };
     } else {
       label = 'CHOOSE';
-      color = 0x2f9a55;
       action = () => this.choose(id);
     }
-    g.fillStyle(color, 1).fillRoundedRect(X + 16, by, W - 32, 48, 24);
-    if (action) g.lineStyle(2, GOLD, 1).strokeRoundedRect(X + 16, by, W - 32, 48, 24);
-    text(GAME_WIDTH / 2, by + 24, label, 17, action ? '#ffffff' : '#8a82a8', true).setOrigin(0.5);
+    drawWindow(g, X + 16, by, W - 32, 48, { line: action ? UI.line : 0x4a4a5a });
+    const lt = text(GAME_WIDTH / 2, by + 25, label, 17, action ? INK : UI.dim, true).setOrigin(0.5);
+    if (action) drawCursor(g, Math.round(GAME_WIDTH / 2 - lt.width / 2 - 20), by + 24);
     add(this.add.zone(GAME_WIDTH / 2, by + 24, W - 32, 48).setInteractive()).on('pointerdown', () => {
       this.closePanel();
       if (action) action();
     });
     // Close (X) in the corner, and a tap outside the card closes it too.
-    g.fillStyle(0x14101f, 0.8).fillCircle(X + W - 26, Y + 26, 15);
-    text(X + W - 26, Y + 26, '✕', 16, INK, true).setOrigin(0.5);
+    drawWindow(g, X + W - 42, Y + 10, 32, 32);
+    text(X + W - 26, Y + 27, 'X', 16, INK, true).setOrigin(0.5);
     add(this.add.zone(X + W - 26, Y + 26, 48, 48).setInteractive()).on('pointerdown', () => { sfx.play('cardClose'); this.closePanel(); });
 
     this.panel = objs;

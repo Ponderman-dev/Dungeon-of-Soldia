@@ -1,15 +1,13 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
+import { drawWindow } from '../entities/uiKit.js';
 import * as sfx from '../audio/sfx.js';
 import { shuffleBoard, slide, isSolved } from '../systems/rooms.js';
 
-const FONT = 'system-ui, Arial, sans-serif';
+const FONT = UI.font; // the interface look: black windows, white lines, pixel font (config.js UI)
 const SHEET_TOP = 44;
 const TILE = 104; // one tile on screen
 const GAP = 6;
-// Tile colours run from purple (1) to gold (8), so the order is easy to see.
-const FROM = Phaser.Display.Color.ValueToColor(0x6a3fb0);
-const TO = Phaser.Display.Color.ValueToColor(0xf2b632);
 
 // The slide puzzle of the Puzzle Room (rooms.json `puzzle`): a sheet like the reward screen with a 3x3 board.
 // Tap a tile next to the gap to slide it. Put 1-8 in order (gap bottom right) = solved. "Give up" leaves with
@@ -33,13 +31,12 @@ export default class PuzzleScene extends Phaser.Scene {
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x05030a, 0.6).setInteractive();
     this.sheet = this.add.container(0, GAME_HEIGHT);
     const bg = this.add.graphics();
-    bg.fillStyle(0x17112a, 1).fillRoundedRect(0, SHEET_TOP, GAME_WIDTH, GAME_HEIGHT - SHEET_TOP + 40, 24);
-    bg.lineStyle(2, 0x8b55d6, 0.8).strokeRoundedRect(0, SHEET_TOP, GAME_WIDTH, GAME_HEIGHT - SHEET_TOP + 40, 24);
+    drawWindow(bg, 4, SHEET_TOP, GAME_WIDTH - 8, GAME_HEIGHT - SHEET_TOP + 40);
     this.sheet.add(bg);
-    this.sheet.add(this.add.text(GAME_WIDTH / 2, SHEET_TOP + 24, 'PUZZLE ROOM', { fontFamily: FONT, fontSize: '12px', fontStyle: 'bold', color: '#f2b632' }).setOrigin(0.5, 0));
-    this.sheet.add(this.add.text(GAME_WIDTH / 2, 150, 'Slide the tiles', { fontFamily: FONT, fontSize: '28px', fontStyle: 'bold', color: '#f3eefc' }).setOrigin(0.5, 0));
-    this.sheet.add(this.add.text(GAME_WIDTH / 2, 190, 'Put them in order 1 to 8. Tap a tile next to the gap.', { fontFamily: FONT, fontSize: '13px', color: '#a399c2' }).setOrigin(0.5, 0));
-    this.moveText = this.add.text(GAME_WIDTH / 2, 226, 'Moves: 0', { fontFamily: FONT, fontSize: '14px', fontStyle: 'bold', color: '#f3eefc' }).setOrigin(0.5, 0);
+    this.sheet.add(this.add.text(GAME_WIDTH / 2, SHEET_TOP + 20, 'PUZZLE ROOM', { fontFamily: FONT, fontSize: '8px', color: UI.gold }).setOrigin(0.5, 0));
+    this.sheet.add(this.add.text(GAME_WIDTH / 2, 150, 'Slide the tiles', { fontFamily: FONT, fontSize: '16px', color: UI.text }).setOrigin(0.5, 0));
+    this.sheet.add(this.add.text(GAME_WIDTH / 2, 184, 'Put them in order 1 to 8.\nTap a tile next to the gap.', { fontFamily: FONT, fontSize: '8px', color: '#c8c8d4', align: 'center', lineSpacing: 6 }).setOrigin(0.5, 0));
+    this.moveText = this.add.text(GAME_WIDTH / 2, 226, 'Moves: 0', { fontFamily: FONT, fontSize: '8px', color: UI.text }).setOrigin(0.5, 0);
     this.sheet.add(this.moveText);
 
     // The board frame.
@@ -47,8 +44,7 @@ export default class PuzzleScene extends Phaser.Scene {
     this.left = (GAME_WIDTH - boardW) / 2 + GAP;
     this.top = 270;
     const frame = this.add.graphics();
-    frame.fillStyle(0x0d0a18, 1).fillRoundedRect(this.left - GAP, this.top - GAP, boardW, boardW, 14);
-    frame.lineStyle(2, 0x3a2f57, 1).strokeRoundedRect(this.left - GAP, this.top - GAP, boardW, boardW, 14);
+    drawWindow(frame, this.left - GAP - 4, this.top - GAP - 4, boardW + 8, boardW + 8, { fill: 0x14101f });
     this.sheet.add(frame);
 
     // One container per tile, keyed by its number.
@@ -64,9 +60,9 @@ export default class PuzzleScene extends Phaser.Scene {
     // Give up: leave the room with nothing.
     const by = this.top + boardW + 40;
     const giveUp = this.add.graphics();
-    giveUp.fillStyle(0x231b38, 1).fillRoundedRect(GAME_WIDTH / 2 - 80, by, 160, 44, 22).lineStyle(2, 0x3a2f57, 1).strokeRoundedRect(GAME_WIDTH / 2 - 80, by, 160, 44, 22);
+    drawWindow(giveUp, GAME_WIDTH / 2 - 80, by, 160, 44);
     this.sheet.add(giveUp);
-    this.sheet.add(this.add.text(GAME_WIDTH / 2, by + 22, 'Give up', { fontFamily: FONT, fontSize: '16px', fontStyle: 'bold', color: '#a399c2' }).setOrigin(0.5));
+    this.sheet.add(this.add.text(GAME_WIDTH / 2, by + 23, 'Give up', { fontFamily: FONT, fontSize: '16px', color: UI.text }).setOrigin(0.5));
     const zone = this.add.zone(GAME_WIDTH / 2, by + 22, 160, 48).setInteractive();
     this.sheet.add(zone);
     zone.on('pointerdown', () => this.finish(false));
@@ -81,20 +77,18 @@ export default class PuzzleScene extends Phaser.Scene {
   }
 
   makeTile(n) {
-    const c = Phaser.Display.Color.Interpolate.ColorWithColor(FROM, TO, this.size * this.size - 2, n - 1);
-    const color = Phaser.Display.Color.GetColor(c.r, c.g, c.b);
+    // A tile is a small black window with a big white number; solved, they all turn gold.
     const tile = this.add.container(0, 0);
     const g = this.add.graphics();
+    const num = this.add.text(TILE / 2 + 2, TILE / 2 + 2, String(n), { fontFamily: FONT, fontSize: '32px', color: UI.text }).setOrigin(0.5);
     tile.paint = (glow) => {
       g.clear();
-      g.fillStyle(0x000000, 0.35).fillRoundedRect(2, 4, TILE, TILE, 12);
-      g.fillStyle(color, 1).fillRoundedRect(0, 0, TILE, TILE, 12);
-      g.fillStyle(0xffffff, 0.18).fillRoundedRect(4, 4, TILE - 8, 14, 7);
-      g.lineStyle(glow ? 4 : 2, glow ? 0xffffff : 0x000000, glow ? 1 : 0.5).strokeRoundedRect(0, 0, TILE, TILE, 12);
+      drawWindow(g, 0, 0, TILE, TILE, { line: glow ? 0xffd84a : UI.line });
+      num.setColor(glow ? UI.gold : UI.text);
     };
     tile.paint(false);
     tile.add(g);
-    tile.add(this.add.text(TILE / 2, TILE / 2, String(n), { fontFamily: FONT, fontSize: '44px', fontStyle: 'bold', color: '#ffffff', stroke: '#000000', strokeThickness: 5 }).setOrigin(0.5));
+    tile.add(num);
     const hit = this.add.zone(TILE / 2, TILE / 2, TILE, TILE).setInteractive();
     hit.on('pointerdown', () => this.tapTile(n));
     tile.add(hit);
@@ -130,7 +124,7 @@ export default class PuzzleScene extends Phaser.Scene {
     this.done = true;
     sfx.play('puzzleSolved');
     Object.values(this.tiles).forEach((t, i) => this.time.delayedCall(i * 50, () => t.paint(true)));
-    this.moveText.setText(`Solved in ${this.moves} moves!`).setColor('#f2b632');
+    this.moveText.setText(`Solved in ${this.moves} moves!`).setColor(UI.gold);
     this.time.delayedCall(1000, () => this.finish(true));
   }
 

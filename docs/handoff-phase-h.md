@@ -3,6 +3,10 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
+## START HERE (session 6, latest): INTERFACE LOOK BUILT
+User picked look D 'Classic RPG Window' + Press Start 2P; built on every screen (docs/systems/ui.md). NEXT: discuss
+per-screen changes with the user: reward, battle, hero select, and THE PUZZLE (user was very excited about it).
+
 ## START HERE (session 6, latest): INTERFACE STYLE
 User: 'let's do interfaces', picked 'ONE LOOK FOR EVERYTHING' (a shared pixel-art UI style for all screens). Proposal page
 https://claude.ai/artifact/PBDU3qq4XzyMV43ujcfUkC (source docs/proposals/ui-style/): looks A Torchlit Stone / B Old Parchment

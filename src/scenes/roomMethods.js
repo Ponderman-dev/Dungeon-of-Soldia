@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, UI } from '../config.js';
+import { drawWindow } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import * as sfx from '../audio/sfx.js';
 import roomRules from '../data/rooms.json';
@@ -53,10 +54,10 @@ export const roomMethods = {
     this.showSlots(true);
     const room = this.layer.room;
     this.banner.setText(room.rules.name);
-    this.roomHint = this.add
-      .text(GAME_WIDTH / 2, 556, room.rules.hint, { fontFamily: UI.font, fontSize: '8px', color: '#f2e6b0', stroke: '#000000', strokeThickness: 4 })
-      .setOrigin(0.5)
-      .setDepth(20);
+    // The hint in a small black window (the interface look).
+    const hint = this.add.text(GAME_WIDTH / 2, 557, room.rules.hint, { fontFamily: UI.font, fontSize: '8px', color: UI.text, align: 'center', lineSpacing: 4, wordWrap: { width: GAME_WIDTH - 64, useAdvancedWrap: true } }).setOrigin(0.5).setDepth(20);
+    const box = drawWindow(this.add.graphics().setDepth(19), GAME_WIDTH / 2 - hint.width / 2 - 14, 556 - hint.height / 2 - 10, hint.width + 28, hint.height + 20);
+    this.roomHint = this.add.container(0, 0, [box, hint]).setDepth(20);
     for (const prop of room.props) {
       const { ch } = prop;
       const def = ch.def;
@@ -77,7 +78,7 @@ export const roomMethods = {
     room.busy = true;
     prop.done = true;
     if (prop.arrow) prop.arrow.destroy();
-    if (this.roomHint) this.roomHint.setText('');
+    if (this.roomHint) this.roomHint.setVisible(false);
     this.banner.setText('');
     sfx.play('tap');
     const after = () => {

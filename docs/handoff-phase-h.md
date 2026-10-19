@@ -8,6 +8,8 @@ User approved every hero on the demo page and asked to build them in: done (docs
 src/systems/heroLooks.js; combat.json skillFx.charge/look/wave/flask/counter; BattleScene.showEvents holds a look's hit
 numbers until it lands). Game page rebuilt and republished. NEXT: ask the user to play and note anything off (timing of the
 held numbers, Wind Cutter's sweep across the enemy row, the Archer's aim). The demo page keeps its own frozen copies.
+LATER (user, 2026-10-19): 'we need to work on the sounds, but not now' (docs/systems/sound.md; the new skill looks have no
+sounds of their own yet).
 
 ## START HERE (session 11): SKILL LOOKS, demo page hero by hero. ALL 10 HEROES IN THE DEMO. NEXT = the user's last OKs, then BUILD ALL INTO THE GAME
 Demo page: https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN (source docs/proposals/skill-fx/, build

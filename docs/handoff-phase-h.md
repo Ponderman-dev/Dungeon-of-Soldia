@@ -9,6 +9,7 @@ listing all 205 sounds with a drop-down to give each one a moment. DONE: board h
 (details + rebuild in docs/systems/sound.md 'ROUND 6'). NEXT: read db `picks` (page 1) and `assign` (page 2, wins) with
 ArtifactData, then apply: skill_<id> cues in sounds.json, BattleScene plays the skill's cue on cast (fallback skillCast),
 apply-picks.py for `assign` (several files per cue), sounds.test.mjs, rebuild + republish the game.
+ROUND 7 (same session): the user's 40 PIXABAY sounds are on the board too (add-pixabay.py, credits in docs/credits-sounds.md).
 Then back to the session 11 plan below (skill looks demo, NEXT = Archer).
 
 ## START HERE (session 11): SKILL LOOKS, demo page hero by hero. NEXT = Archer

@@ -196,15 +196,14 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
     column(cx - half, cx + half, 0, wallH);
     const o = P.overhang;
     column(cx - half - o, cx + half + o, 0, P.capitalH); // capital
-    column(cx - half - o, cx + half + o, wallH - P.baseH, wallH + 2); // base, a little over the floor line
+    column(cx - half - o, cx + half + o, wallH - P.baseH, wallH); // base, standing on the floor line like the wall
     for (const y of [P.capitalH, wallH - P.baseH - 1]) for (let x = cx - half - o; x < cx + half + o; x++) set(x, y, tinted(num(P.dark))); // the shadow line under the capital / over the base
     for (let i = 0; i < P.cracks; i++) {
       let x = cx - half + 2 + Math.floor(rnd() * (P.width - 4));
       let y = P.capitalH + 4 + Math.floor(rnd() * (wallH - P.capitalH - P.baseH - 12));
       for (let k = between([4, 9]); k > 0; k--, y++) { set(x, y, tinted(num(P.dark))); if (rnd() < 0.4) x += rnd() < 0.5 ? 1 : -1; }
     }
-    // The pillar's shadow on the floor (falls down-right).
-    for (let y = wallH + 2; y < wallH + 7; y++) for (let x = cx - half + 2; x < cx + half + o + 2; x++) if (inside(x, y)) set(x, y, shade(get(x, y), -14));
+    // (No block shadow on the floor: the wall's contact shadow runs under the pillar too; a square looked like it floated.)
   }
 
   // Hanging vines from the top of the wall (over bricks and pillars).

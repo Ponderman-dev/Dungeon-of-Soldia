@@ -1484,7 +1484,7 @@
     "xp": 150,
     "stats": {
       "health": 1100,
-      "attack": 8,
+      "attack": 7,
       "defense": 8,
       "attackEfficiency": 80
     },
@@ -1584,7 +1584,7 @@
     "xp": 180,
     "stats": {
       "health": 2500,
-      "attack": 12,
+      "attack": 6,
       "defense": 4,
       "attackEfficiency": 90
     },
@@ -1714,7 +1714,7 @@
     "xp": 200,
     "stats": {
       "health": 3600,
-      "attack": 13,
+      "attack": 10,
       "defense": 15,
       "resist": 10,
       "attackEfficiency": 70
@@ -2103,7 +2103,8 @@
       "hpPercent": 15,
       "reformMs": 10000,
       "reformPercent": 50,
-      "toughen": 1.5
+      "toughen": 1.5,
+      "maxReforms": 2
     },
     "abilities": [
       {

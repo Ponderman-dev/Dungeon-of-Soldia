@@ -20,7 +20,7 @@
 //   plates: { count, cutPercent, plateHpPercent, fireMultiplier }   armor plates: less damage until broken (Frost Warden)
 //   statusImmune: [status ids]
 //   link: { partner, enrage: [mods], reviveMs, revivePercent }        twin bosses (Rask & Vesh)
-//   phylactery: { id, hpPercent, reformMs, reformPercent, toughen }   a second life (Morthul)
+//   phylactery: { id, hpPercent, reformMs, reformPercent, toughen, maxReforms }   a second life (Morthul; back at most maxReforms times)
 //   heat: { max, perSec, perFireHit, perIceHit, freezeDrop, chillDrop, eruption: { damageMultiplier, damageType, apply } }
 //   mirror: { atStart, atHp: [..], statPercent }                       glass clones of the heroes (Sela)
 //   sky: { atHp: [..], durationMs, strikeEveryMs, strike, summon, groundedMs, vulnerable }   flies out of reach (Vharox)
@@ -405,7 +405,8 @@ export const bossMethods = {
 
   // ---- Morthul: phylactery (a second life) --------------------------------------------------------
   // At 0 health he falls to dust (alive but untouchable) and his crystal appears. Break it in time or he
-  // comes back at `reformPercent` health; the next crystal is `toughen` times tougher.
+  // comes back at `reformPercent` health; the next crystal is `toughen` times tougher. After `maxReforms` comebacks the
+  // next crystal running out ends him for good.
   turnToDust(u, events) {
     const ph = u.def.phylactery;
     u.dust = true;
@@ -432,7 +433,16 @@ export const bossMethods = {
     events.push({ type: 'death', unit: crystal, vanish: true });
     if (!boss || !boss.alive) return;
     boss.dust = false;
-    boss.hp = Math.round((boss.maxHp * boss.def.phylactery.reformPercent) / 100);
+    // He comes back at most `maxReforms` times, then crumbles for good (bug: each crystal was 1.5x tougher, so a
+    // squad that missed one could never break the next: the fight never ended).
+    const ph = boss.def.phylactery;
+    if (ph.maxReforms != null && (boss.reforms || 0) >= ph.maxReforms) {
+      boss.finalDeath = true;
+      boss.hp = 0;
+      return this.killUnit(boss, events);
+    }
+    boss.reforms = (boss.reforms || 0) + 1;
+    boss.hp = Math.round((boss.maxHp * ph.reformPercent) / 100);
     boss.toughness *= boss.def.phylactery.toughen;
     events.push({ type: 'reform', unit: boss });
   },

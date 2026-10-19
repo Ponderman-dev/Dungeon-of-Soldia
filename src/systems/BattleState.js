@@ -427,7 +427,9 @@ export default class BattleState {
   inReach(unit, target) {
     if (!this.hasPositions(unit) || !this.hasPositions(target)) return true;
     const M = this.rules.movement;
-    const big = (target.size || 1) - 1; // a big target can be hit from its edge
+    // A big target can be hit from its edge, and a big attacker swings from its own edge (bug: a boss walked into
+    // the hero's middle, got pushed out, walked back in: overlapping and jittering).
+    const big = (target.size || 1) + (unit.size || 1) - 2;
     const dx = (target.x - unit.x) / (M.reachX * (1 + big * 0.5));
     const dy = (target.y - unit.y) / (M.reachY * (1 + big * 0.3));
     return dx * dx + dy * dy <= 1;

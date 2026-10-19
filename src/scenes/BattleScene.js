@@ -2129,10 +2129,12 @@ export default class BattleScene extends Phaser.Scene {
     const aim = () => { const en = this.state.enemies.filter((u) => u.alive).map((u) => this.views.get(u.uid)).filter((x) => x && x.ch.active).map((x) => this.fxBody(x)); return en.length ? { x: en.reduce((s2, b) => s2 + b.x, 0) / en.length, y: en.reduce((s2, b) => s2 + b.mid, 0) / en.length } : null; };
     this.addFx(e.castMs, (q, now) => {
       if (!v.ch.active || (cast && e.unit.casting !== cast)) { if (tremble) v.leapX = 0; return []; }
-      if (tremble) v.leapX = q >= 0.999 ? 0 : Math.round(Math.sin(now / 23) * q * tremble); // shaking with rage / shaking the flask
+      if (tremble) v.leapX = v.trembleX = q >= 0.999 ? 0 : Math.round(Math.sin(now / 23) * q * tremble); // shaking with rage / shaking the flask
       const out = castFx(name, q, { caster: this.fxBody(v), targets: [], squad: [], enemies: [], song: e.unit.nextSong || 'march', aim: aim() }, now);
       return { draws: out.draws, tints: out.tints.map(([, , tint]) => [v, tint]) };
     }, ['skill', name]);
+    // The effect's last frame is rarely exactly the end: settle him back in place unless a leap/dash took over.
+    if (tremble) this.time.delayedCall(e.castMs + 30, () => { if (v.ch.active && v.leapX === v.trembleX) v.leapX = 0; });
   }
 
   // A skill's own cast effect: the recipe gets where the caster, its targets, the squad and the enemies are

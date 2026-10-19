@@ -166,6 +166,7 @@ export default class BattleScene extends Phaser.Scene {
       .text(GAME_WIDTH / 2, 520, '', { fontFamily: UI.font, fontSize: '24px', color: '#ffffff', stroke: '#000000', strokeThickness: 4, align: 'center' })
       .setOrigin(0.5)
       .setDepth(DEPTH.hud);
+    this.dangerGlow = this.add.graphics().setDepth(DEPTH.heroBar - 0.5); // low-health glow at the bottom edge (drawDangerGlow)
     this.focusMarker = this.add.ellipse(0, 0, 70, 18).setStrokeStyle(2, 0xff4d4d).setVisible(false).setDepth(DEPTH.marker);
 
     this.showSlots(false, 0);
@@ -196,6 +197,7 @@ export default class BattleScene extends Phaser.Scene {
       if (h.alive) continue;
       const v = this.views.get(h.uid);
       v.ch.setVisible(false);
+      if (v.grave) v.grave.setVisible(false);
       this.setBarsVisible(v, false);
     }
   }
@@ -1392,6 +1394,7 @@ export default class BattleScene extends Phaser.Scene {
 
   update(time, delta) {
     this.refreshHud();
+    this.drawDangerGlow();
     if (this.mode !== 'fighting') {
       this.drawStatusFx();
       return;
@@ -1768,7 +1771,7 @@ export default class BattleScene extends Phaser.Scene {
         v.ch.setPosition(v.ch.homeX, v.ch.homeY).setDepth(DEPTH.hero);
         this.syncBar(v);
         v.ch.die(); // death clip if it has one, then it stops moving
-        v.ch.setAlpha(0.25);
+        this.heroFell(v);
         v.skillButtons.forEach((b) => [b.g, b.code, b.cd].forEach((o) => o.setAlpha(0)));
         if (v.passiveIcon) v.passiveIcon.setAlpha(0);
         v.bg.setAlpha(0.4);
@@ -1941,6 +1944,91 @@ export default class BattleScene extends Phaser.Scene {
     if (v.lvl) v.lvl.destroy();
     v.chipBox.destroy();
     this.views.delete(uid);
+  }
+
+  // The big smoke cloud a fallen hero turns into (combat.json heroDanger poof*): puffs burst out in a ring and up.
+  heroPoof(x, y) {
+    const D = combatRules.heroDanger, n = D.poofCount, color = Phaser.Display.Color.HexStringToColor(D.poofColor).color;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2, r = 6 + (i % 3) * 3;
+      const c = this.add.circle(x + Math.cos(a) * 6, y + Math.sin(a) * 4, r, i % 4 === 0 ? 0xb8b8c4 : color, 0.95).setDepth(DEPTH.popup - 2).setScale(0.4);
+      this.tweens.add({ targets: c, x: x + Math.cos(a) * 30, y: y + Math.sin(a) * 18 - 12, scale: 1.5, alpha: 0, duration: D.poofMs + (i % 3) * 80, ease: 'Quad.easeOut', onComplete: () => c.destroy() });
+    }
+    const core = this.add.circle(x, y, 12, 0xffffff, 1).setDepth(DEPTH.popup - 2).setScale(0.5); // the bright middle
+    this.tweens.add({ targets: core, scale: 2, alpha: 0, duration: D.poofMs * 0.6, ease: 'Quad.easeOut', onComplete: () => core.destroy() });
+  }
+
+  // A pixel tombstone (grey stone, dark cross) standing at x, y (its foot); it pops up out of the smoke.
+  makeGrave(x, y) {
+    const P = CHAR_SCALE, w = 8, hgt = 10;
+    const grave = this.add.graphics().setDepth(DEPTH.hero - 0.5);
+    grave.fillStyle(0x1a1a1a).fillRect(-w / 2 * P - P, -hgt * P - P, (w + 2) * P, (hgt + 1) * P); // outline
+    grave.fillStyle(0x8a8a96).fillRect(-w / 2 * P, -hgt * P, w * P, hgt * P);
+    grave.fillStyle(0x1a1a1a).fillRect(-w / 2 * P - P, -hgt * P - P, P, P).fillRect((w / 2) * P, -hgt * P - P, P, P); // round top corners
+    grave.fillStyle(0xb4b4c0).fillRect(-w / 2 * P, -hgt * P, w * P, P); // light top edge
+    grave.fillStyle(0x3a3a44).fillRect(-P, -8 * P, P, 6 * P).fillRect(-2 * P, -6 * P, 4 * P, P); // the cross
+    grave.fillStyle(0x2a2a30, 0.6).fillRect(-w / 2 * P - 2 * P, 0, (w + 4) * P, P); // a little dirt at its foot
+    grave.setPosition(x, y).setScale(0.3, 0.3);
+    this.tweens.add({ targets: grave, scaleX: 1, scaleY: 1, duration: 260, ease: 'Back.easeOut' });
+    return grave;
+  }
+
+  // A hero in danger (combat.json heroDanger): below lowHpPercent health a soft red glow rises from the bottom edge of
+  // the screen under that hero's slot, stronger the lower its health, pulsing slowly. A hero that just fell flares its
+  // column once (v.fellAt). Pixel bands, no smoothing.
+  drawDangerGlow() {
+    const D = combatRules.heroDanger, g = this.dangerGlow;
+    g.clear();
+    const now = this.time.now, color = Phaser.Display.Color.HexStringToColor(D.glowColor).color;
+    const bandH = Math.ceil(D.glowHeightPx / D.glowBands);
+    this.state.heroes.forEach((h, i) => {
+      const v = this.views.get(h.uid);
+      if (!v) return;
+      let strength = 0;
+      const ratio = h.hp / h.maxHp;
+      if (h.alive && this.mode === 'fighting' && ratio * 100 < D.lowHpPercent) {
+        const deep = 1 - (ratio * 100) / D.lowHpPercent; // 0 at the line .. 1 at no health
+        const pulse = 0.75 + 0.25 * Math.sin((now / D.pulseMs) * Math.PI * 2);
+        strength = (D.glowMinStrength + (1 - D.glowMinStrength) * deep) * pulse;
+      }
+      if (v.fellAt !== undefined && now - v.fellAt < D.fellGlowMs) strength = Math.max(strength, 1.4 * (1 - (now - v.fellAt) / D.fellGlowMs));
+      if (strength <= 0) return;
+      const x = this.slotWidth * i;
+      for (let k = 0; k < D.glowBands; k++) {
+        const fade = 1 - k / D.glowBands;
+        g.fillStyle(color, Math.min(1, D.glowAlpha * strength * fade * fade));
+        g.fillRect(x, GAME_HEIGHT - (k + 1) * bandH, this.slotWidth, bandH);
+      }
+    });
+  }
+
+  // A hero fell (combat.json heroDanger): a white flash, it tips over (towards the middle of the screen), lies still a
+  // moment, then POOF: a cloud of smoke bursts over the body and it is replaced by a tombstone. '<NAME> FELL' shows
+  // over it and its column of the danger glow flares.
+  heroFell(v) {
+    const D = combatRules.heroDanger;
+    v.fellAt = this.time.now;
+    v.ch.flash(0xffffff, 160);
+    const back = v.ch.homeX < GAME_WIDTH / 2 ? -1 : 1; // its body falls towards the middle of the screen, never off the edge
+    this.tweens.add({ targets: v.ch, angle: -90 * back, duration: D.fallMs, ease: 'Bounce.easeOut' });
+    // Where the lying body is: half its height along the floor from its feet.
+    const bodyX = v.ch.homeX - back * (v.unit.def.height * charScale(v.unit.def)) / 2, bodyY = v.ch.homeY - 6;
+    this.time.delayedCall(D.fallMs + D.lieMs, () => {
+      if (!v.ch.active) return;
+      this.heroPoof(bodyX, bodyY);
+      this.time.delayedCall(D.poofMs * 0.2, () => {
+        if (!v.ch.active) return;
+        v.ch.setVisible(false); // gone under the smoke
+        v.grave = this.makeGrave(bodyX, v.ch.homeY);
+      });
+    });
+    // '<NAME> FELL' over the hero.
+    const y = v.ch.homeY - v.unit.def.height * charScale(v.unit.def) - 34;
+    const t = this.add.text(v.ch.homeX, y, `${v.unit.name.toUpperCase()}\nFELL`, { fontFamily: UI.font, fontSize: `${D.textSizePx}px`, color: D.textColor, stroke: '#000000', strokeThickness: 4, align: 'center' })
+      .setOrigin(0.5).setDepth(DEPTH.popup).setScale(1.6).setAlpha(0);
+    t.x = Phaser.Math.Clamp(t.x, t.width / 2 + 4, GAME_WIDTH - t.width / 2 - 4);
+    this.tweens.add({ targets: t, scale: 1, alpha: 1, duration: 200, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: t, alpha: 0, y: y - 16, delay: 200 + D.textHoldMs, duration: D.textOutMs, onComplete: () => t.destroy() });
   }
 
   // Floating number above a fighter.

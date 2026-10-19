@@ -1481,7 +1481,7 @@ export default class BattleScene extends Phaser.Scene {
       if (e.reason === 'interrupted') { this.popText(this.views.get(e.unit.uid), 'Interrupted!', '#ff8a5c', true); sfx.play('interrupted'); }
     } else if (e.type === 'cast') {
       const caster = this.views.get(e.unit.uid);
-      if (e.unit.side === 'hero' && !e.unit.minion) sfx.play('skillCast');
+      if (e.unit.side === 'hero' && !e.unit.minion) sfx.play(sfx.has(`skill_${e.skillId}`) ? `skill_${e.skillId}` : 'skillCast'); // each skill its own sound
       if (e.zone) this.showZone(e.zone, FX.areaMs);
       this.skillBurst(caster, e);
       if (e.skill.leap && e.targets[0]) this.leapAt(caster, this.views.get(e.targets[0].uid)); // Savage Leap

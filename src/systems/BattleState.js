@@ -2567,7 +2567,7 @@ export default class BattleState {
       }
     }
 
-    events.push({ type: 'cast', unit: hero, skill, targets, zone });
+    events.push({ type: 'cast', unit: hero, skill, skillId: slot.id, targets, zone }); // skillId: the skill's own sound (skill_<id>)
     if (!echo) this.bookCast(hero, skill, book.mods, events, targets);
     this.castPages = book.mods.length ? { hero, mods: book.mods } : null; // on-hit modifiers (Inks, Siphon) for this cast's hits
     // Blood Pact: the skill costs the caster some of their own health.

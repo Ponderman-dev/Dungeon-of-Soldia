@@ -12,3 +12,13 @@ const cues = new Set(Object.keys(data.cues));
 const src = ['src/scenes/BattleScene.js', 'src/scenes/SquadScene.js', 'src/scenes/RewardScene.js'].map((f) => fs.readFileSync(new URL('../../' + f, import.meta.url), 'utf8')).join('\n');
 const used = [...src.matchAll(/sfx\.play\('([a-zA-Z]+)'\)/g)].map((m) => m[1]);
 ok('every cue the scenes play exists in sounds.json', used.every((u) => cues.has(u)), used.filter((u) => !cues.has(u)).join());
+// Hero skills have their own sound (user: 'every skill sounds different'); BattleScene plays skill_<id> on a cast,
+// or the shared skillCast when the skill has none.
+const heroes = JSON.parse(fs.readFileSync(new URL('../../src/data/heroes.json', import.meta.url)));
+const skillIds = (Array.isArray(heroes) ? heroes : heroes.heroes).flatMap((h) => Object.values(h.skills));
+const stray = [...cues].filter((c) => c.startsWith('skill_') && !skillIds.includes(c.slice(6)));
+ok('every skill_<id> sound belongs to a real hero skill', stray.length === 0, stray.join());
+const shared = skillIds.filter((id) => !cues.has(`skill_${id}`));
+if (shared.length) console.log('INFO skills still on the shared skillCast sound:', shared.join());
+const bs = fs.readFileSync(new URL('../../src/systems/BattleState.js', import.meta.url), 'utf8');
+ok('the cast event names its skill (skillId) for the sound', /type: 'cast',[^}]*skillId: slot\.id/.test(bs));

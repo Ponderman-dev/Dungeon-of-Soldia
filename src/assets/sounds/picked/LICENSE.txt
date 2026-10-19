@@ -8,3 +8,7 @@ Round 5 (2026-10-16): new options on the sound board come from two CC0 (public d
   water/splash, Organic Wooshes, Books & Paper, and more; every folder CC0 1.0)
 - github.com/PanderMusubi/sound-effects-library-weapons (CC0 1.0)
 Free for commercial games, no credit needed. A picked file keeps its source name in sounds.json `source` (new_...).
+
+Round 7 (2026-10-19): files whose cue has `source: pixabay_...` come from Pixabay (pixabay.com), Pixabay Content
+License: free in games, also commercially, no credit needed; never sell or share the files on their own (as a pack).
+Creators and links: docs/credits-sounds.md.

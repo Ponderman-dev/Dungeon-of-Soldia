@@ -5,10 +5,10 @@
   "minGapMs": 40,
   "cues": {
     "tap": {
-      "file": "press",
+      "file": "picked/tap",
       "volume": 0.5,
       "pitchJitter": 0.05,
-      "source": "Organic pack press (2026-10-18, user: 'the bubbly sound does not fit for general tap, change it'; the old bubble files stay in picked/tap_1-3)"
+      "source": "pixabay_button-394464.mp3"
     },
     "heroPick": {
       "file": "select",
@@ -43,17 +43,13 @@
     "rewardUp": {
       "file": "picked/rewardUp",
       "volume": 0.55,
-      "source": "CC0 (lavenderdotpet/CC0-Public-Domain-Sounds): kenney_casinoaudio cardShove1 (user: card sliding)"
+      "source": "new_kenney-casinoaudio-audio-cardfan2.mp3"
     },
     "rewardCard": {
-      "files": [
-        "picked/rewardCard_1",
-        "picked/rewardCard_2",
-        "picked/rewardCard_3"
-      ],
       "volume": 0.5,
       "pitchJitter": 0.04,
-      "source": "CC0 (lavenderdotpet/CC0-Public-Domain-Sounds): kenney_casinoaudio cardPlace1-3 (user: card stacks)"
+      "source": "new_kenney-casinoaudio-audio-cardplace4.mp3",
+      "file": "picked/rewardCard"
     },
     "itemGiven": {
       "file": "picked/itemGiven",
@@ -87,21 +83,22 @@
       "volume": 0.3
     },
     "skillCast": {
-      "file": "picked/itemProc",
+      "file": "picked/skillCast",
       "volume": 0.3,
       "pitchJitter": 0.06,
-      "source": "the itemProc file (user: magical cast, like the item proc sound)"
+      "source": "new_80-cc0-rpg-sfx-spell-01.mp3"
     },
     "interrupted": {
-      "file": "warning",
-      "volume": 0.4
+      "file": "picked/interrupted",
+      "volume": 0.4,
+      "source": "new_kenney-interfacesounds-audio-error-004.mp3"
     },
     "hitMelee": {
       "volume": 0.35,
       "pitchJitter": 0.08,
       "minGapMs": 60,
       "file": "picked/hitMelee",
-      "source": "new_micro-pack-organic-wooshes-slash.mp3"
+      "source": "yours_sword-strikes-armor-2765.mp3"
     },
     "hitRanged": {
       "volume": 0.35,
@@ -115,28 +112,28 @@
       "pitchJitter": 0.08,
       "minGapMs": 70,
       "file": "picked/hitFire",
-      "source": "yours_wizard-fire-woosh-1326.mp3"
+      "source": "pixabay_fire-magic-5-378639.mp3"
     },
     "hitIce": {
       "volume": 0.3,
       "pitchJitter": 0.08,
       "minGapMs": 70,
       "file": "picked/hitIce",
-      "source": "new_75-cc0-breaking-falling-hit-sfx-bfh1-glass-hit-02.mp3"
+      "source": "pixabay_iced-magic-4-378604.mp3"
     },
     "hitElectric": {
       "volume": 0.25,
       "pitchJitter": 0.1,
       "minGapMs": 70,
       "file": "picked/hitElectric",
-      "source": "yours_spring-metal-hit-2302.mp3"
+      "source": "pixabay_short-electric-zap-561890.mp3"
     },
     "hitDark": {
       "volume": 0.4,
       "pitchJitter": 0.06,
       "minGapMs": 70,
       "file": "picked/hitDark",
-      "source": "yours_futuristic-bass-hit-2303.mp3"
+      "source": "new_100-cc0-sfx-weird-05.mp3"
     },
     "hitHoly": {
       "volume": 0.2,
@@ -153,40 +150,30 @@
       "source": "yours_sword-cutting-flesh-2788.mp3"
     },
     "miss": {
-      "files": [
-        "picked/miss_1",
-        "picked/miss_2",
-        "picked/miss_3"
-      ],
       "volume": 0.3,
       "pitchJitter": 0.1,
       "minGapMs": 90,
-      "source": "CC0 (lavenderdotpet/CC0-Public-Domain-Sounds): Micro Pack - Organic Wooshes Swish 1-3, pitch 1.25 (user: more fast whoosh)"
+      "source": "new_micro-pack-organic-wooshes-swish-2.mp3",
+      "file": "picked/miss"
     },
     "block": {
       "volume": 0.4,
       "pitchJitter": 0.06,
       "minGapMs": 90,
       "file": "picked/block",
-      "source": "block_E.mp3"
+      "source": "new_100-cc0-sfx-metal-04.mp3"
     },
     "shieldSoak": {
-      "files": [
-        "picked/shieldSoak_1",
-        "picked/shieldSoak_2"
-      ],
       "volume": 0.25,
       "pitchJitter": 0.08,
       "minGapMs": 120,
-      "source": "CC0 (lavenderdotpet/CC0-Public-Domain-Sounds): 75-cc0-breaking-falling-hit-sfx bfh1_glass_breaking_02/05 (user: more glass break)"
+      "source": "new_100-cc0-sfx-slam-02.mp3",
+      "file": "picked/shieldSoak"
     },
     "shieldBreak": {
-      "files": [
-        "kenney/impactGlass_heavy_000",
-        "kenney/impactGlass_heavy_001",
-        "kenney/impactGlass_heavy_002"
-      ],
-      "volume": 0.5
+      "volume": 0.5,
+      "file": "picked/shieldBreak",
+      "source": "new_75-cc0-breaking-falling-hit-sfx-bfh1-glass-breaking-01.mp3"
     },
     "stun": {
       "volume": 0.4,
@@ -209,7 +196,7 @@
       "volume": 0.45,
       "pitchJitter": 0.1,
       "minGapMs": 80,
-      "source": "yours_body-impact-falling-into-the-sand-2498.mp3"
+      "source": "yours_falling-hit-on-gravel-756.mp3"
     },
     "heroFall": {
       "volume": 0.5,
@@ -226,17 +213,13 @@
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/itemProc",
-      "source": "yours_fast-magic-game-spell-883.mp3"
+      "source": "yours_video-game-retro-click-237.mp3"
     },
     "minionSummon": {
-      "files": [
-        "kenney/impactMining_000",
-        "kenney/impactMining_001",
-        "kenney/impactMining_002"
-      ],
       "volume": 0.3,
-      "pitch": 0.8,
-      "minGapMs": 150
+      "minGapMs": 150,
+      "file": "picked/minionSummon",
+      "source": "new_80-cc0-rpg-sfx-spell-01.mp3"
     },
     "bossWarn": {
       "files": [
@@ -251,7 +234,7 @@
       "volume": 0.5,
       "minGapMs": 200,
       "file": "picked/bossMove",
-      "source": "yours_futuristic-bass-hit-2303.mp3"
+      "source": "new_25-cc0-bang-sfx-cannon-01.mp3"
     },
     "gateSlam": {
       "file": "picked/gateSlam",
@@ -273,15 +256,17 @@
       "pitchJitter": 0.08,
       "minGapMs": 90,
       "file": "picked/step",
-      "source": "step_E.mp3"
+      "source": "yours_walking-on-stones-loop-1269.mp3"
     },
     "chestOpen": {
-      "file": "picked/doorOpen",
-      "volume": 0.5
+      "file": "picked/chestOpen",
+      "volume": 0.5,
+      "source": "pixabay_game-bonus-144751.mp3"
     },
     "fountain": {
-      "file": "picked/potion",
-      "volume": 0.7
+      "file": "picked/fountain",
+      "volume": 0.7,
+      "source": "new_40-cc0-water-splash-slime-sfx-bubble-01.mp3"
     },
     "puzzleSlide": {
       "file": "press",
@@ -289,8 +274,9 @@
       "pitchJitter": 0.05
     },
     "puzzleSolved": {
-      "file": "achievement",
-      "volume": 0.7
+      "file": "picked/puzzleSolved",
+      "volume": 0.7,
+      "source": "pixabay_game-bonus-144751.mp3"
     },
     "flaskBreak": {
       "files": [
@@ -302,6 +288,139 @@
       "pitchJitter": 0.1,
       "minGapMs": 60,
       "source": "CC0 (lavenderdotpet/CC0-Public-Domain-Sounds): 75-cc0-breaking-falling-hit-sfx bfh1_glass_breaking_01/03/04 (user: a real glass break)"
+    },
+    "skill_death_coil3": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_death_coil3",
+      "source": "pixabay_casting-magic-3-382381.mp3"
+    },
+    "skill_holy_nova": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_holy_nova",
+      "source": "pixabay_casting-magic-3-382381.mp3"
+    },
+    "skill_defense_bash": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_defense_bash",
+      "source": "pixabay_punch-impact-hit-567196.mp3"
+    },
+    "skill_arrow_rain": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_arrow_rain",
+      "source": "pixabay_many-arrows-flying-by-306037.mp3"
+    },
+    "skill_alch_barrage": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_alch_barrage",
+      "source": "new_75-cc0-breaking-falling-hit-sfx-bfh1-glass-breaking-01.mp3"
+    },
+    "skill_mage_ward": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_mage_ward",
+      "source": "pixabay_warp-magic-5-382388.mp3"
+    },
+    "skill_blood_feast": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_blood_feast",
+      "source": "new_80-cc0-rpg-sfx-creature-die-01.mp3"
+    },
+    "skill_smoke_bomb": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_smoke_bomb",
+      "source": "new_micro-pack-organic-wooshes-swish-2.mp3"
+    },
+    "skill_bone_sacrifice": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_bone_sacrifice",
+      "source": "pixabay_earth-magic-6-378601.mp3"
+    },
+    "skill_discord": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_discord",
+      "source": "pixabay_mandolin-strum-high-g-chord-100702.mp3"
+    },
+    "skill_challenge": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_challenge",
+      "source": "new_80-cc0-rpg-sfx-creature-roar-03.mp3"
+    },
+    "skill_counter_stance": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_counter_stance",
+      "source": "new_100-cc0-sfx-metal-04.mp3"
+    },
+    "skill_change_song": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_change_song",
+      "source": "pixabay_mandolin-strum-high-g-chord-100702.mp3"
+    },
+    "skill_multistrike": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_multistrike",
+      "source": "pixabay_rpg-sword-attack-combo-27-388938.mp3"
+    },
+    "skill_hunters_mark": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_hunters_mark",
+      "source": "new_kenney-interfacesounds-audio-select-003.mp3"
+    },
+    "skill_sanctuary": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_sanctuary",
+      "source": "yours_light-spell-873.mp3"
+    },
+    "skill_brawl_leap": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_brawl_leap",
+      "source": "pixabay_heavy-body-fall-352446.mp3"
+    },
+    "skill_wind_cutter3": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_wind_cutter3",
+      "source": "pixabay_rpg-sword-attack-combo-22-388940.mp3"
+    },
+    "skill_mage_rotation": {
+      "volume": 0.3,
+      "pitchJitter": 0.06,
+      "minGapMs": 120,
+      "file": "picked/skill_mage_rotation",
+      "source": "pixabay_lightning-spell-386163.mp3"
     }
   },
   "maxVoices": 8

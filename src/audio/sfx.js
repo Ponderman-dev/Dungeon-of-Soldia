@@ -78,6 +78,11 @@ export async function play(cue) {
   }
 }
 
+// True when sounds.json has this cue (e.g. a skill's own 'skill_<id>' sound).
+export function has(cue) {
+  return !!soundData.cues[cue];
+}
+
 export function isMuted() {
   return muted;
 }

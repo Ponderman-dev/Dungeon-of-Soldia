@@ -36,6 +36,7 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
   const inside = (x, y) => x >= 0 && y >= 0 && x < width && y < height;
   const get = (x, y) => px[y * width + x];
   const set = (x, y, c) => { if (inside(x, y)) px[y * width + x] = c; };
+  const grain = art.grain ?? 0.12; // share of stone pixels a shade lighter/darker (0 = flat, clean stones)
   const W = art.wall;
   const F = art.floor;
   const P = art.pillars;
@@ -62,7 +63,7 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
           const chipped = (chip === 'tl' && y <= top + 2 && i <= x + 2) || (chip === 'br' && y >= top + W.brickH - 2 && i >= x + w - 3);
           if (gapPx || corner || chipped) { set(i, y, mortar); continue; }
           const v = y === top + 1 ? W.highlight : y === top + W.brickH - 1 || i === x + w - 1 ? -W.shade : 0;
-          set(i, y, shade(c, v + (rnd() < 0.12 ? (rnd() < 0.5 ? -5 : 5) : 0)));
+          set(i, y, shade(c, v + (rnd() < grain ? (rnd() < 0.5 ? -5 : 5) : 0)));
         }
       }
       bricks.push({ x, y: top, w, h: W.brickH });
@@ -86,7 +87,7 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
     for (let y = brickBottom; y < wallH; y++) {
       for (let i = x; i < x + w; i++) {
         if (i < 0 || i >= width) continue;
-        set(i, y, i === x ? mortar : y === brickBottom ? shade(c, W.highlight + 8) : y === wallH - 1 ? shade(c, -6) : shade(c, rnd() < 0.12 ? -5 : 0));
+        set(i, y, i === x ? mortar : y === brickBottom ? shade(c, W.highlight + 8) : y === wallH - 1 ? shade(c, -6) : shade(c, rnd() < grain ? -5 : 0));
       }
     }
     x += w;
@@ -117,7 +118,7 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
           const corner = (y === top + 1 || y === top + h - 1) && (i === x + 1 || i === x + w - 1);
           if (corner) continue;
           const v = y === top + 1 ? F.highlight : y === top + h - 1 || i === x + w - 1 ? -F.shade : 0;
-          set(i, y, shade(c, v + (rnd() < 0.12 ? (rnd() < 0.5 ? -5 : 5) : 0))); // a little grain
+          set(i, y, shade(c, v + (rnd() < grain ? (rnd() < 0.5 ? -5 : 5) : 0))); // a little grain
         }
       }
       stones.push({ x, y: top, w, h });

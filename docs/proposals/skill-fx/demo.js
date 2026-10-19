@@ -16,8 +16,11 @@ import combat from '../../../src/data/combat.json';
 import { artPixels, partArt, mixColor } from '../../../src/systems/pixelArt.js';
 import { bodyBox, pen, FX_COLORS as C } from '../../../src/systems/statusFx.js';
 import { castFx, CAST_MS } from '../../../src/systems/skillFx.js';
-import { RECIPES, CAST_MS_NEW, SPECS } from './heroes.js';
+import { RECIPES, CAST_MS_NEW, SPECS, NAME_COLORS } from './heroes.js';
 // A recipe by name: a proposed one (heroes.js) or the game's own (skillFx.js). Always { draws, tints }.
+// A skill's data; a rotation spell is 'skillId:SHORT' (the spell's own name/cast, the skill's kind); 'change_song:march'
+// (no rotation) = a variant row of the same skill.
+const skillDef = (id) => { const [b, sh] = id.split(':'); const base = skills[b]; if (!sh || !base.rotation) return base; const sp = base.rotation.find((r) => r.short === sh); return { ...sp, kind: base.kind }; };
 const runFx = (name, q, c, t) => { const f = RECIPES[name]; if (!f) return castFx(name, q, c, t); const o = f(q, c, t); return Array.isArray(o) ? { draws: o, tints: [] } : { draws: o.draws || [], tints: o.tints || [] }; };
 const fxMs = (name) => CAST_MS_NEW[name] ?? CAST_MS[name] ?? 800;
 
@@ -25,6 +28,7 @@ export const Z = 3, W = 130, H = 96; // scene in character pixels; 390 x 288 on 
 const FLOOR = 54; // where the wall meets the floor
 const FX = combat.skillFx;
 const hex = (n) => '#' + n.toString(16).padStart(6, '0');
+const heroColor = (id) => FX.name.heroColors[id] || NAME_COLORS[id]; // the hero's name colour (game data, or the demo's own for heroes not built yet)
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const ph = (t, a, b) => clamp((t - a) / (b - a));
 const easeOut = (p) => 1 - (1 - p) * (1 - p);
@@ -51,11 +55,12 @@ function actor(def, fx, fy, faceLeft) {
   a.outline = [...ring].map((k) => k.split(',').map(Number)).map(([x, y]) => [x - fx, y - fy]);
   return a;
 }
-function forPixels(a, dx, dy, fn) {
+function forPixels(a, dx, dy, fn, flip = false) {
+  const left = a.faceLeft !== flip; // flip: turned around (a charmed enemy faces its friends)
   for (const p of a.parts) p.px.forEach((row, y) => row.forEach((c, x) => {
     if (c === null) return;
     const relX = p.left + x;
-    fn(Math.round((a.faceLeft ? a.fx - relX - 1 : a.fx + relX) + dx), Math.round(a.fy + p.top + y + dy), c);
+    fn(Math.round((left ? a.fx - relX - 1 : a.fx + relX) + dx), Math.round(a.fy + p.top + y + dy), c);
   }));
 }
 // Where an actor's body is when moved by (dx, dy).
@@ -69,7 +74,7 @@ function drawActor(ctx, a, s = {}) {
     if (s.tint) col = mixColor(col, s.tint[0], s.tint[1]);
     ctx.globalAlpha = s.alpha ?? 1;
     ctx.fillStyle = hex(col); ctx.fillRect(gx * Z, gy * Z, Z, Z);
-  });
+  }, s.flip);
   ctx.globalAlpha = 1;
 }
 
@@ -120,7 +125,7 @@ export const SKILLS = {
   defense_bash: { id: 'defense_bash', name: skills.defense_bash.name, castMs: skills.defense_bash.castMs },
   challenge: { id: 'challenge', name: skills.challenge.name, castMs: skills.challenge.castMs },
 };
-for (const [id, sp] of Object.entries(SPECS)) SKILLS[id] = { id, name: skills[id].name, castMs: skills[id].castMs, hero: sp.hero };
+for (const [id, sp] of Object.entries(SPECS)) SKILLS[id] = { id, name: skillDef(id).name, castMs: skillDef(id).castMs, hero: sp.hero };
 // The Rogue's skills play the GAME'S OWN recipes (src/systems/skillFx.js: rogueCharge, rogueDash, rogueSlash, smokeBomb)
 // with the game's dash / wave numbers (combat.json skillFx.dash / wave), so what the page shows is what the game does.
 const RDASH = FX.dash.multistrike, RWAVE = FX.wave.multistrike;
@@ -130,7 +135,7 @@ function plan(skillId, look) {
   const cast = SKILLS[skillId].castMs;
   const sp = SPECS[skillId];
   if (sp) {
-    const attack = skills[skillId].kind === 'attack';
+    const attack = skillDef(skillId).kind === 'attack';
     if (look === 'now') return { cast, impact: cast, stopMs: attack ? FX.hitStopMs : 0, end: cast + Math.max(1700, fxMs(sp.now.recipe) + 300) };
     const hit = sp.new.hit || { at: 0, stopMs: 0 };
     return { cast, impact: cast + hit.at, stopMs: hit.stopMs || 0, end: cast + Math.max(1700, fxMs(sp.new.recipe) + 300) };
@@ -213,7 +218,7 @@ export class Demo {
       if (s.shield) { ctx.fillStyle = '#ffe08a'; ctx.fillRect(x, y - 3, Math.round(30 * s.shield), 2); }
       if (a === this.hero && et < P.cast) {
         ctx.fillStyle = '#000'; ctx.fillRect(x - 1, y + 5, 32, 5);
-        ctx.fillStyle = look === 'now' ? FX.attackColor : FX.name.heroColors[this.hero.def.id] || KNIGHT.text; ctx.fillRect(x, y + 6, Math.round(30 * et / P.cast), 3);
+        ctx.fillStyle = look === 'now' ? FX.attackColor : heroColor(this.hero.def.id) || KNIGHT.text; ctx.fillRect(x, y + 6, Math.round(30 * et / P.cast), 3);
       }
     }
   }
@@ -281,11 +286,12 @@ export class Demo {
 
   // ---- ROGUE (today vs the game's new recipes) -----------------------------------------------------
   specLook(st, id, look, et, P, T) {
-    const SP = SPECS[id], L = SP[look] || SP.new, sk = skills[id], h = st.hero, since = et - P.cast, hero = this.hero;
+    const SP = SPECS[id], L = SP[look] || SP.new, sk = skillDef(id), h = st.hero, since = et - P.cast, hero = this.hero;
     const A0 = this.ally ? body(this.ally) : null;
     const E0 = body(this.foe), E1 = body(this.foe2), foes = [[this.foe, st.foe], [this.foe2, st.foe2]];
     const tintOn = (s, tint) => { if (tint && (!s.tint || tint[1] > s.tint[1])) s.tint = tint; };
     const support = sk.kind !== 'attack';
+    const self = support && sk.target !== 'enemy'; // a support skill on herself / the squad (Hunter's Mark targets an enemy)
     const play = (name, q, c) => {
       const o = runFx(name, q, c, et); st.over.out.push(...o.draws);
       for (const [l, i, tint] of o.tints) {
@@ -294,16 +300,17 @@ export class Demo {
         if (A0 && (l === 'targets' || (l === 'squad' && i === 1))) { tintOn(st.ally, tint); continue; }
         if (l === 'caster') tintOn(h, tint);
         else if (l === 'enemies') tintOn((foes[i] || [])[1] || {}, tint);
-        else if (l === 'targets') tintOn(support ? h : (foes[i] || [])[1] || {}, tint);
+        else if (l === 'targets') tintOn(self ? h : (foes[i] || [])[1] || {}, tint);
         else if (l === 'squad') tintOn(h, tint);
       }
     };
-    const radius = L.radius === 'landSplash' && sk.landSplash ? sk.landSplash.radius / Z : L.radius === 'holyNova' && sk.holyNova ? sk.holyNova.radius / Z : 30;
+    const ch = sk.channel, ch0 = () => !!ch;
+    const radius = L.radius === 'landSplash' && sk.landSplash ? sk.landSplash.radius / Z : L.radius === 'holyNova' && sk.holyNova ? sk.holyNova.radius / Z : L.radius === 'area' && sk.area ? sk.area.radius / Z : 30;
     if (et < P.cast) { // the wind-up
       h.dy = 1; h.dx = -1;
       if (look === 'new') {
         if (L.tremble) h.dx += Math.round(Math.sin(et / 23) * (et / P.cast) * 1.4);
-        play(L.charge, et / P.cast, { caster: body(hero, h.dx, h.dy), targets: [], squad: [], enemies: [] });
+        play(L.charge, et / P.cast, { caster: body(hero, h.dx, h.dy), targets: [], squad: [], enemies: [], song: SP.song, brew: SP.brew });
       }
       return;
     }
@@ -312,6 +319,7 @@ export class Demo {
     const dist = Math.hypot(E0.x - body(hero).x, E0.mid - body(hero).mid);
     if (mv.type === 'lunge') { const l = since < 90 ? easeOut(since / 90) : 1 - ph(since, 90, 180); h.dx = l * 9; }
     if (mv.type === 'hop') h.dy = -Math.sin(Math.min(1, since / 320) * Math.PI) * ((mv.liftPx || 18) / Z);
+    if (mv.type === 'recoil') { const r = since < 50 ? easeOut(since / 50) : 1 - easeOut(ph(since, 50, 320)); h.dx = -((mv.px || 6) / Z) * r; } // the bow's kick: she rocks back
     if (mv.type === 'leap') { // like BattleScene.leapAt: up and over to 80% of the way, then back
       const up = mv.upMs || 230, hold = mv.holdMs ?? 120, back = mv.backMs || 300, share = mv.share || 0.8;
       const p = since < up ? (mv.slam ? since / up : easeOut(since / up)) : since < up + hold ? 1 : 1 - ph(since, up + hold, up + hold + back);
@@ -327,12 +335,12 @@ export class Demo {
       h.dx = (reachPx / Z) * go;
     }
     if (look === 'now' && since < FX.flashMs) h.tint = [support ? 0x5dff96 : 0xff7a3d, 0.6];
-    if (look === 'new' && since < 80) tintOn(h, [Number('0x' + (FX.name.heroColors[hero.def.id] || '#ffffff').slice(1)), 0.5]);
+    if (look === 'new' && since < 80) tintOn(h, [Number('0x' + (heroColor(hero.def.id) || '#ffffff').slice(1)), 0.5]);
     const C0 = body(hero, h.dx, h.dy);
     const land = mv.type === 'leap' ? { x: body(hero).x + (E0.x - body(hero).x) * (mv.share || 0.8), y: body(hero).y } : null; // where he lands: fixed
     const M0 = this.minions.map((m, i) => body(m, st.mins[i].dx, st.mins[i].dy));
     if (L.minionsGone != null) st.mins.forEach((m, i) => { const gt = since - L.minionsGone; if (gt >= 0 && (!L.minionsFade || gt > 300)) m.gone = true; else if (gt >= 0) m.alpha = 1 - gt / 300; if (!m.gone && L.minionsShake && since >= 0) m.dx = Math.round(Math.sin(et / 25 + i) * 0.8); });
-    const c = { caster: C0, targets: SP.squadTargets ? [C0, ...(A0 ? [A0] : [])] : A0 ? [A0] : support ? [C0] : [E0], squad: A0 ? [C0, A0] : [C0], enemies: [E0, E1], minions: M0, hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius, land };
+    const c = { caster: C0, targets: SP.squadTargets ? [C0, ...(A0 ? [A0] : [])] : A0 ? [A0] : self ? [C0] : [E0], squad: A0 ? [C0, A0] : [C0], enemies: [E0, E1], minions: M0, hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius, land, song: SP.song, brew: SP.brew, volley: L.volley, ...(L.rain && sk.channel ? { every: L.rain.every, waves: sk.channel.waves.length } : {}) };
     if (L.hit && L.hit.knockPx && land) { // enemies inside the landing area are thrown back, away from where he lands
       const ht = et - P.impact;
       if (ht >= 0) for (const [a, s] of foes) { const e = body(a); if (Math.hypot(e.x - land.x, (e.y - land.y) * 1.4) > radius) continue; const k = (L.hit.knockPx / Z) * easeOut(ph(ht, 0, 90)) * (1 - easeOut(ph(ht, 200, 600))); s.dx = Math.sign(e.x - land.x || 1) * k; }
@@ -341,8 +349,61 @@ export class Demo {
     if (since < ms) play(L.recipe, since / ms, c);
     if (look === 'now' && !support && T >= P.impact && T < P.impact + FX.shakeMs) st.cam.shake = FX.shakeIntensity * 390;
     if (L.hit && T >= P.impact && T < P.impact + P.stopMs + L.hit.shakeMs) st.cam.shake = L.hit.shake * (1 - (T - P.impact) / (P.stopMs + L.hit.shakeMs));
+    if (L.hit && L.hit.jitterPx) { // the hit enemies jitter side to side (user: enemies shake when hit hard)
+      foes.forEach(([a, s], i) => {
+        if (i > 0 && !L.hit.jitterAll) return; const e = body(a); if (L.radius === 'area' && Math.hypot(e.x - E0.x, (e.y - E0.y) * 1.4) > radius) return;
+        const jt = et - P.impact - i * (L.hit.jitterStagger || 0); if (jt < 0 || jt >= L.hit.jitterMs) return;
+        const j = jt / L.hit.jitterMs; s.dx = Math.round((Math.sin(j * Math.PI * 6) * L.hit.jitterPx * (1 - j)) / Z);
+      });
+    }
+    if (L.charmed && since >= L.charmed.from) { // charmed: the goblin turns round, they take turns bumping into each other
+      const ct = since - L.charmed.from, n = Math.floor(ct / L.charmed.every), f = (ct % L.charmed.every) / L.charmed.every;
+      st.foe.flip = true;
+      const [att, vic, dir] = n % 2 ? [st.foe2, st.foe, -1] : [st.foe, st.foe2, 1];
+      const lunge = f < 0.25 ? easeOut(f / 0.25) : 1 - ph(f, 0.25, 0.6); att.dx = dir * 3 * lunge;
+      if (f > 0.22 && f < 0.5) { const j = (f - 0.22) / 0.28; vic.dx = Math.round(Math.sin(j * Math.PI * 4) * 1.5 * (1 - j)); }
+      if (f > 0.22 && f < 0.36) { const mx = (E0.x + E1.x) / 2, my = (E0.mid + E1.mid) / 2; for (let i = 0; i < 6; i++) { const an = (i / 6) * Math.PI * 2, d = 2 + 5 * (f - 0.22) / 0.14; st.over.px(mx + Math.cos(an) * d, my + Math.sin(an) * d, i % 2 ? 0xffffff : 0xff7ac8, 1); } }
+    }
+    if (L.foeLunge) { const ft = since - L.foeLunge.at; if (ft >= 0 && ft < L.foeLunge.ms) { const f = ft / L.foeLunge.ms; st.foe.dx = -(L.foeLunge.px / Z) * (f < 0.4 ? easeOut(f / 0.4) : 1 - ph(f, 0.4, 1)); } } // an enemy swings at the hero
+    if (L.volley) { // thrown one by one (Flask Barrage / Mystery Brew): a throw each `every`, each lands `flyMs` later
+      const V = L.volley, ally = SP.squadTargets;
+      V.order.forEach((ti, w) => {
+        const tt = since - w * V.every; if (tt < 0) return;
+        if (V.throwPx && tt < 200) h.dx = -1 + (V.throwPx / Z) * (tt < 60 ? easeOut(tt / 60) : 1 - ph(tt, 60, 200)); // the throw: he leans in
+        const ht = tt - V.flyMs; if (ht < 0) return;
+        if (ally) { // a brew lands on a hero
+          const kind = V.kinds[w], isAlly = ti === 1 && A0;
+          if (kind === 'heal' && isAlly) { st.ally.hp = Math.min(30, (st.ally.hp ?? 13) + Math.round(8 * easeOut(ph(ht, 0, 300)))); this.number(st, V.heal, { ...A0, top: A0.top - w * 2 }, ht, false, '#6dff8f'); }
+          if (kind === 'shield' && isAlly) st.ally.shield = easeOut(ph(ht, 0, 200)) * (1 - ph(since, 2600, 3000));
+          return;
+        }
+        if (V.shake && ht < 100) st.cam.shake = Math.max(st.cam.shake, V.shake * (1 - ht / 100));
+        foes.forEach(([a, s2], i) => {
+          const hitIt = i === ti; if (!hitIt && !V.splash) return;
+          if (hitIt && V.jitterPx && ht < 150) { const j = ht / 150; s2.dx = Math.round((Math.sin(j * Math.PI * 6) * V.jitterPx * (1 - j)) / Z); }
+          const e = body(a); this.number(st, hitIt ? V.number : V.splash, { ...e, top: e.top - (w >> 1) * 3 }, ht - (hitIt ? 0 : 40), true);
+        });
+      });
+    }
+    if (L.squadShield) { const at = since - (L.hit ? L.hit.at : 0); if (at >= 0) { const v = easeOut(ph(at, 0, 200)) * (1 - ph(at, 2500, 3000)); h.shield = v; if (A0) st.ally.shield = v; } }
+    if (L.text) { const tt = since - L.text.at, E = L.text.self ? C0 : c.targets[0]; if (tt >= 0 && tt < 1100) st.numbers.push({ text: L.text.s, x: clampX(E.x * Z, L.text.s, 14), y: (E.top - 10) * Z - Math.round(ph(tt, 0, 1100) * 24), size: 14, color: L.text.color, alpha: ph(tt, 0, 100) * (1 - ph(tt, 800, 1100)) }); }
+    // rain waves (Arrow Rain): every wave lands on all enemies inside the area: a small shake, they jitter, a number each
+    if (L.rain && ch0()) {
+      const R = L.rain, n = sk.channel.waves.length;
+      for (let w = 0; w < n; w++) {
+        const wt = since - L.hit.at - w * R.every; if (wt < 0) continue;
+        const last = w === n - 1;
+        if (wt < R.shakeMs) st.cam.shake = Math.max(st.cam.shake, (last ? R.lastShake : R.shake) * (1 - wt / R.shakeMs));
+        foes.forEach(([a, s], i) => {
+          const e = body(a); if (Math.hypot(e.x - E0.x, (e.y - E0.y) * 1.4) > radius) return;
+          const jt = wt - i * 12;
+          if (jt >= 0 && jt < R.jitterMs) { const j = jt / R.jitterMs; s.dx = Math.round((Math.sin(j * Math.PI * 6) * (last ? R.lastJitterPx : R.jitterPx) * (1 - j)) / Z); }
+          this.number(st, L.number, { ...e, top: e.top - w * 3 }, jt, true);
+        });
+      }
+      return;
+    }
     // channel waves (Multistrike)
-    const ch = sk.channel;
     if (ch && L.waves) {
       const W = FX.wave[L.waves], D = FX.dash[L.waves], n = ch.waves.length;
       for (let w = 0; w < n; w++) {
@@ -367,8 +428,8 @@ export class Demo {
       if (L.number) for (const [a, E] of [[this.foe, E0], [this.foe2, E1]]) if (Math.hypot(E.x - A0.x, (E.y - A0.y) * 1.4) <= radius) this.number(st, L.number, E, at - 60, true);
     } else if (L.number) {
       const at = since - (L.hit ? L.hit.at : L.numberAt || 0);
-      this.number(st, L.number, E0, at, true);
-      if (L.numberAll) this.number(st, L.number, E1, at - 40, true);
+      this.number(st, L.number, E0, at, true, L.numberColor);
+      if (L.numberAll) this.number(st, L.number2 || L.number, E1, at - (L.number2At ?? 40), true, L.numberColor);
     }
   }
 
@@ -515,7 +576,7 @@ export class Demo {
     const a = s < IN ? s / IN : 1 - ph(s, IN + HOLD, IN + HOLD + OUT);
     const y = Math.round((H0.top * Z - 50 + rise) / 3) * 3;
     const up = name.toUpperCase(); // user: all caps
-    text(ctx, up, clampX(H0.x * Z, up, 16), y, 16, FX.name.heroColors[this.hero.def.id] || KNIGHT.text, a, 4);
+    text(ctx, up, clampX(H0.x * Z, up, 16), y, 16, heroColor(this.hero.def.id) || KNIGHT.text, a, 4);
   }
 }
 

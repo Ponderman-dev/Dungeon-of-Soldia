@@ -29,6 +29,7 @@ const ROW_ITEM_LINES = 3; // a hero row on 'Who gets it?' grows for up to this m
 const TEXT_X = 112; // where a card's text starts (right of the icon)
 const ICON_W = 98; // the icon column
 const DESC_PX = 8; // description text size
+const BACK_W = 84; // the Back pill's width (top right of the sheet)
 const TITLE_H = 54; // the step title above the cards
 const BTN_H = 76; // the big confirm button at the bottom (Give / Write it in); user: "needs to be bigger"
 const STAT_LABEL = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
@@ -62,6 +63,14 @@ export default class RewardScene extends Phaser.Scene {
     this.sheetBg = this.add.graphics();
     this.sheet.add(this.sheetBg);
     this.banner = this.add.text(GAME_WIDTH / 2, 0, this.payload.banner || `FLOOR ${this.payload.floor} CLEARED`, { fontFamily: FONT, fontSize: '8px', color: UI.gold }).setOrigin(0.5, 0);
+    // A long banner ('BOSS DEFEATED: A GOLDEN BOOK') ran under the Back pill: it wraps to two lines between the pills.
+    const room = 2 * (GAME_WIDTH - PAD - BACK_W - 8 - GAME_WIDTH / 2);
+    this.bannerDy = 20;
+    if (this.banner.width > room) {
+      if (this.banner.text.includes(': ')) this.banner.setText(this.banner.text.replace(': ', ':\n')); // break after the colon
+      this.banner.setWordWrapWidth(room).setAlign('center').setLineSpacing(4);
+      this.bannerDy = 14;
+    }
     this.sheet.add(this.banner);
     this.top = null; // the sheet's top edge now (each step sets it with fitSheet)
     this.tweens.add({ targets: this.sheet, y: 0, duration: 420, ease: 'Cubic.easeOut' });
@@ -88,11 +97,21 @@ export default class RewardScene extends Phaser.Scene {
     const draw = (t, b) => {
       this.sheetBg.clear();
       drawWindow(this.sheetBg, 4, t, GAME_WIDTH - 8, b - t);
-      this.banner.setY(t + 20);
+      this.banner.setY(t + this.bannerDy);
     };
     if (this.sheetTween) this.sheetTween.stop();
     if (this.top === null) draw(top, bottom);
     else {
+      // The new step's content (made right after this call) waits hidden until the sheet has its new size, then
+      // fades in (it used to show at once on top of the still-moving sheet: title over the banner).
+      this.events.once('prerender', () => {
+        for (const o of this.stepObjects) {
+          if (o.alpha === undefined) continue;
+          const a = o.alpha;
+          o.setAlpha(0);
+          this.tweens.add({ targets: o, alpha: a, delay: 160, duration: 120 });
+        }
+      });
       const from = { t: this.top, b: this.bottom };
       this.sheetTween = this.tweens.add({ targets: from, t: top, b: bottom, duration: 160, ease: 'Quad.easeOut', onUpdate: () => draw(Math.round(from.t), Math.round(from.b)) });
     }
@@ -234,7 +253,7 @@ export default class RewardScene extends Phaser.Scene {
 
   // A small "Back" pill at the top right of the sheet (call it after fitSheet).
   backButton(onTap) {
-    const bw = 84;
+    const bw = BACK_W;
     const bx = GAME_WIDTH - PAD - bw;
     const bb = this.track(this.add.graphics());
     const by = this.top + 10; // in the top row, beside FLOOR N CLEARED

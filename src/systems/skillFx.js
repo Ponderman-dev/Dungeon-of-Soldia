@@ -6,6 +6,7 @@
 //   They return { draws, tints: [[listName, index, [colour, amount] | null]] } or just draws.
 //   Shot recipes: (q, a, b, t, seed) with a = from, b = to ({ x, y }), q = 0..1 over SHOT_MS[kind].
 import { pen, rnd, FX_COLORS as C } from './statusFx.js';
+import { LOOKS, LOOK_MS } from './heroLooks.js';
 
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const ph = (q, a, b) => clamp((q - a) / (b - a));
@@ -287,6 +288,9 @@ const CAST = {
     return g.out;
   },
 };
+// The heroes' approved v2 looks (heroLooks.js) are cast recipes too.
+Object.assign(CAST, LOOKS);
+Object.assign(CAST_MS, LOOK_MS);
 export const CAST_FX = Object.keys(CAST);
 
 // One cast effect: always { draws, tints } (tints = [listName, index, tint | null], listName = caster/targets/squad/enemies).

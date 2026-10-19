@@ -52,6 +52,7 @@ const DUNGEON_ID = 'A';
 const SLOT_Y = 720;
 const ENEMY_Y = 340;
 const BAR_WIDTH = 44;
+const POP_REPEAT_MS = 600; // the same word over one fighter is not popped again within this time
 const WALL_H = 200; // the back wall (with the door) fills the top of each floor
 const DOOR_X = GAME_WIDTH / 2;
 const T = combatRules.transition;
@@ -64,14 +65,19 @@ const TUNE = makeTuner(effectsData);
 const DASH_BY_NAME = {}; // skill name -> its dash (combat.json skillFx.dash)
 const WAVE_BY_NAME = {}; // skill name -> its per-wave look (combat.json skillFx.wave)
 const SKILL_FX_BY_NAME = {};
+const LOOK_BY_NAME = {}; // skill (or rotation spell) name -> how its v2 look plays (combat.json skillFx.look), with its id
 for (const [id, sk] of Object.entries(rawSkills)) {
   if (id.startsWith('_')) continue;
   if (sk.rotation) for (const r of sk.rotation) SKILL_FX_BY_NAME[r.name] = skillFxData[`${id}:${r.short}`];
   else SKILL_FX_BY_NAME[sk.name] = skillFxData[id];
+  if (sk.rotation) for (const r of sk.rotation) { const L = combatRules.skillFx.look[`${id}:${r.short}`]; if (L) LOOK_BY_NAME[r.name] = { ...L, id, area: r.area }; }
+  else if (combatRules.skillFx.look[id]) LOOK_BY_NAME[sk.name] = { ...combatRules.skillFx.look[id], id, area: sk.area, landSplash: sk.landSplash, holyNova: sk.holyNova };
   if (combatRules.skillFx.dash[id]) DASH_BY_NAME[sk.name] = combatRules.skillFx.dash[id];
   if (combatRules.skillFx.wave[id]) WAVE_BY_NAME[sk.name] = combatRules.skillFx.wave[id];
 }
 const skillDefs = rawSkills;
+// A skill's per-wave look (combat.json skillFx.wave), by the wave's skill (a copy of the skill def, so by name).
+const waveLook = (skill) => WAVE_BY_NAME[skill.name];
 const SKILL_Y = 772; // centre of the skill squares
 const SKILL_W = 40;
 const SKILL_H = 44;
@@ -424,6 +430,9 @@ export default class BattleScene extends Phaser.Scene {
       try { look = statusLook(kinds, v.box, now + (u.uid % 7) * 137, TUNE); } // each fighter a little out of step
       catch (err) { console.error(err); continue; } // a broken effect must never stop the fight
       v.ch.setStatusLook(v.hitTint || look.tint, look.ice);
+      // Still sliding in with its floor (an elite's shield at the start): the screen-space effects wait until it
+      // has arrived, or they were drawn at its final spot before the enemy got there.
+      if (v.ch.parentContainer) continue;
       this.nudge(v, look.dx * Math.abs(v.ch.scaleY));
       this.paintFx(g, v, look.draws);
     }
@@ -691,7 +700,11 @@ export default class BattleScene extends Phaser.Scene {
     if (!v.box) v.box = bodyBox(v.unit.def.parts, v.unit.def.height);
     const k = charScale(v.unit.def) / CHAR_SCALE; // a boss's body box is in its own (finer) pixels
     const x = (v.ch.x + v.box.cx * v.ch.scaleX) / CHAR_SCALE, y = v.ch.y / CHAR_SCALE;
-    return { x, y, top: y + v.box.top * k, mid: y + v.box.mid * k, bot: y + v.box.bot * k, hw: v.box.hw * k };
+    const b = { x, y, top: y + v.box.top * k, mid: y + v.box.mid * k, bot: y + v.box.bot * k, hw: v.box.hw * k };
+    // The weapon part (staff, bow, lute, flask, sword): the skill looks anchor on it, so they follow a redesigned hero.
+    const w = v.unit.def.parts && v.unit.def.parts.weapon;
+    if (w) { b.wx = (v.ch.x + w.x * v.ch.scaleX) / CHAR_SCALE; b.wy = y + w.y * k; b.wtop = y + (w.y - w.h / 2) * k; b.wbot = y + (w.y + w.h / 2) * k; }
+    return b;
   }
 
   // An item went off: its icon pops over the holder (instead of a text label) and its own effect plays
@@ -906,7 +919,13 @@ export default class BattleScene extends Phaser.Scene {
       const u = v.unit;
       if (!u.alive || u.x === undefined || v.ch.lunging) continue;
       const hover = u.flying ? u.def.hover || 0 : 0;
-      v.ch.hopOffset = u.moving ? Math.abs(Math.sin((u.walked / M.hopLengthPx) * Math.PI)) * M.hopHeight : 0;
+      // Hop only at walking pace: a crowd's small shoves don't lift it (Grukk used to hang mid-hop, 'floating'),
+      // and the hop sinks smoothly back to the ground when it stops.
+      const full = combatRules.movement.walkSpeedPxPerSec * M.hopFullSpeedShare;
+      const want = u.moving ? Math.min(1, (u.speed || 0) / full) : 0;
+      const was = v.hopAmt || 0;
+      v.hopAmt = was + (want - was) * Math.min(1, this.game.loop.delta / (want > was ? M.hopStartMs : M.hopEaseMs)); // starts slowly: a one-frame step doesn't lift it
+      v.ch.hopOffset = Math.abs(Math.sin((u.walked / M.hopLengthPx) * Math.PI)) * M.hopHeight * v.hopAmt;
       v.ch.setPosition(u.x + (v.leapX || 0), u.y + (v.leapY || 0) - hover - v.ch.hopOffset - v.ch.castLift - (v.leapLift || 0));
       // Look at whoever it is fighting (so the weapon swings towards it).
       const foe = (u.pending && u.pending.target) || (this.views.get(u.foe) || {}).unit || v.lookAt;
@@ -977,7 +996,7 @@ export default class BattleScene extends Phaser.Scene {
   // Taps on a skill square.
   castFromUI(heroUid, index) {
     if (this.mode !== 'fighting') return;
-    for (const e of this.state.castSkill(heroUid, index)) this.showEvent(e);
+    this.showEvents(this.state.castSkill(heroUid, index));
   }
 
   // Redraws the skill squares (ready / cooling down) and health bars.
@@ -1129,11 +1148,14 @@ export default class BattleScene extends Phaser.Scene {
   // Keeps a fighter's health bar attached to it while it moves.
   syncBar(view, baseY = view.ch.y + view.ch.hopOffset) {
     const y = baseY - view.unit.def.height * Math.abs(view.ch.scaleY) - 10;
-    view.bg.setPosition(view.ch.x, y).setAlpha(view.ch.alpha);
-    view.fill.setPosition(view.ch.x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
-    view.shieldFill.setPosition(view.ch.x - BAR_WIDTH / 2, y - 5).setAlpha(view.ch.alpha);
-    view.chipBox.setPosition(view.ch.x, y - 18).setAlpha(view.ch.alpha);
-    if (view.lvl) view.lvl.setPosition(view.ch.x - BAR_WIDTH / 2 - 3, y).setAlpha(view.bg.alpha);
+    // The bar (and the Lv label left of it) stays on screen when the fighter stands at a side wall.
+    const left = BAR_WIDTH / 2 + (view.lvl ? view.lvl.width + 5 : 2);
+    const x = Phaser.Math.Clamp(view.ch.x, left, GAME_WIDTH - BAR_WIDTH / 2 - 2);
+    view.bg.setPosition(x, y).setAlpha(view.ch.alpha);
+    view.fill.setPosition(x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
+    view.shieldFill.setPosition(x - BAR_WIDTH / 2, y - 5).setAlpha(view.ch.alpha);
+    view.chipBox.setPosition(x, y - 18).setAlpha(view.ch.alpha);
+    if (view.lvl) view.lvl.setPosition(x - BAR_WIDTH / 2 - 3, y).setAlpha(view.bg.alpha);
     this.blinkIcons(view);
   }
 
@@ -1269,7 +1291,11 @@ export default class BattleScene extends Phaser.Scene {
         if (step !== view.lastStep) { view.lastStep = step; if (step > 0 && ch.alpha > 0.3) sfx.play('step'); } // a footstep each landing
         ch.setScale(scaleAt(y));
         ch.setDepth(DEPTH.hero + y / 10000);
-        if (fadeLastPx) ch.setAlpha(Phaser.Math.Clamp((total - walked) / fadeLastPx, 0, 1)); // fades out stepping through the door
+        if (fadeLastPx) { // stepping through the door: the hero goes dark in the doorway's shadow, then fades out
+          const k = Phaser.Math.Clamp((total - walked) / fadeLastPx, 0, 1);
+          ch.setWash(0x000000, Math.round((1 - k) * T.doorDarken * 10) / 10);
+          ch.setAlpha(Phaser.Math.Clamp(k * T.doorFadeLate, 0, 1));
+        }
       },
       onComplete: () => {
         const last = points[points.length - 1];
@@ -1292,6 +1318,8 @@ export default class BattleScene extends Phaser.Scene {
     if (!left) return done();
     living.forEach((v, i) => {
       v.ch.setScale(CHAR_SCALE).setAlpha(1).setVisible(true).setPosition(DOOR_X, GAME_HEIGHT + 90);
+      v.ch.setWash(0x000000, 0); // out of the last doorway's shadow
+      this.drawMoraleWash(); // (and the morale wash back on)
       this.setBarsVisible(v, false);
       this.walkPath(
         v,
@@ -1380,7 +1408,7 @@ export default class BattleScene extends Phaser.Scene {
     }
     // Cap the step so switching browser tabs doesn't cause a huge jump.
     const events = this.state.update(Math.min(delta, 100));
-    for (const e of events) this.showEvent(e);
+    this.showEvents(events);
     this.followPositions();
     this.drawTornados();
     this.drawCastBars();
@@ -1401,7 +1429,55 @@ export default class BattleScene extends Phaser.Scene {
     else if (this.state.allHeroesDead()) this.onLoss();
   }
 
-  showEvent(e) {
+  // A held event can still be drawn: its fighters still have their views.
+  lateOk(e) {
+    const ids = e.type === 'attack' ? [e.attacker, e.target] : e.type === 'death' || e.type === 'heal' ? [e.unit] : [];
+    return this.mode === 'fighting' || this.mode === 'won' ? ids.every((u) => !u || this.views.get(u.uid)) : false;
+  }
+
+  // One batch of events. A v2 skill look (combat.json skillFx.look / wave / flask / counter) HOLDS the hits it draws:
+  // that caster's damage numbers, the heals and the enemy deaths of the same batch wait until the look lands (hitMs,
+  // + staggerMs per target in the look's target order), and projectiles the look already draws are not drawn again.
+  // Only the drawing waits: the fight itself (BattleState) has already done it all.
+  showEvents(events) {
+    let hold = null;
+    for (const e of events) {
+      if (hold && e.type === 'projectile' && e.from === hold.unit && (hold.swallow || []).includes(e.kind)) continue;
+      const opened = this.holdFor(e);
+      if (opened !== undefined) { hold = opened; this.showEvent(e); continue; }
+      const late = hold && this.heldMs(hold, e);
+      if (late) this.time.delayedCall(late, () => this.showEvent(e, true));
+      else this.showEvent(e);
+    }
+  }
+
+  // Does this event start a hold? Returns the hold, null (it ends the last one) or undefined (not a look's event).
+  holdFor(e) {
+    if (e.type === 'cast' && e.unit.side === 'hero') {
+      const L = LOOK_BY_NAME[e.skill.name];
+      return L && L.hitMs ? { unit: e.unit, ms: L.hitMs, stagger: L.staggerMs || 0, order: e.targets, swallow: L.swallow } : null;
+    }
+    if (e.type === 'wave' && e.unit.side === 'hero') {
+      const W = waveLook(e.skill);
+      return W && W.hitMs ? { unit: e.unit, ms: W.hitMs, stagger: W.staggerMs || 0, order: e.targets, swallow: W.swallow } : undefined;
+    }
+    if (e.type === 'flask' && e.flask && e.flask.name) return { unit: e.unit, ms: FX.flask.hitMs, stagger: 0, order: [e.target] };
+    // A crescent that is not part of a Wind Cutter (those are swallowed by its cast hold) is a Counter Stance counter-cut.
+    if (e.type === 'projectile' && e.kind === 'crescent' && e.from.side === 'hero') return { unit: e.from, ms: FX.counter.hitMs, stagger: 0, order: [e.to] };
+    return undefined;
+  }
+
+  // How long an event waits under a hold (0 = now).
+  heldMs(hold, e) {
+    const at = (u) => hold.ms + hold.stagger * Math.max(0, hold.order.indexOf(u));
+    if (e.type === 'attack' && e.attacker === hold.unit && !e.basic) return at(e.target);
+    if (e.type === 'heal') return hold.ms;
+    if (e.type === 'death' && e.unit.side === 'enemy') return at(e.unit) + 1;
+    return 0;
+  }
+
+  showEvent(e, late = false) {
+    if (late && !this.lateOk(e)) return; // a held event whose fighter is already gone
     if (e.type === 'attackStart') {
       const a = this.views.get(e.attacker.uid);
       const t = this.views.get(e.target.uid);
@@ -1464,7 +1540,8 @@ export default class BattleScene extends Phaser.Scene {
       const color = e.attacker.side === 'hero' ? damageTypes[e.damageType || e.attacker.damageType].color : '#ff6b6b';
       this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : color, crit);
     } else if (e.type === 'projectile') {
-      this.showProjectile(this.views.get(e.from.uid), this.views.get(e.to.uid), e.kind);
+      if (e.kind === 'crescent' && e.from.side === 'hero') this.playCounterLook(this.views.get(e.from.uid), this.views.get(e.to.uid)); // Counter Stance
+      else this.showProjectile(this.views.get(e.from.uid), this.views.get(e.to.uid), e.kind);
     } else if (e.type === 'castStart' && e.boss) {
       // A boss winds up a move: its name in red over it, and a red bar fills (drawCastBars).
       sfx.play('bossWarn');
@@ -1483,12 +1560,14 @@ export default class BattleScene extends Phaser.Scene {
       const caster = this.views.get(e.unit.uid);
       if (e.unit.side === 'hero' && !e.unit.minion) sfx.play(sfx.has(`skill_${e.skillId}`) ? `skill_${e.skillId}` : 'skillCast'); // each skill its own sound
       if (e.zone) this.showZone(e.zone, FX.areaMs);
+      const look = e.unit.side === 'hero' ? LOOK_BY_NAME[e.skill.name] : null;
+      if (look) this.lookMoves(caster, e, look); // before the burst: the look wants to know where he lands
       this.skillBurst(caster, e);
-      if (e.skill.leap && e.targets[0]) this.leapAt(caster, this.views.get(e.targets[0].uid)); // Savage Leap
+      if (e.skill.leap && e.targets[0] && !(look && look.leap)) this.leapAt(caster, this.views.get(e.targets[0].uid)); // Savage Leap
       const dash = DASH_BY_NAME[e.skill.name];
       if (dash && e.targets[0]) this.dashAt(caster, this.views.get(e.targets[0].uid), dash); // Defense Bash
       caster.ch.castRelease(e.skill.kind); // the skill's own animation (not the normal swing)
-      if ((e.skill.target === 'enemy' || e.skill.target === 'allEnemies') && e.targets[0] && !e.skill.leap && !dash) {
+      if ((e.skill.target === 'enemy' || e.skill.target === 'allEnemies') && e.targets[0] && !e.skill.leap && !dash && !look) {
         const t = this.views.get(e.targets[0].uid);
         caster.ch.lunge(t.ch.x, t.ch.y);
       }
@@ -1511,15 +1590,16 @@ export default class BattleScene extends Phaser.Scene {
       // One wave of a channel (Rain of Arrows, Crescendo): a ring on the caster that grows with the wave.
       // A skill with its own wave look (combat.json skillFx.wave, e.g. Multistrike slashes) plays that instead.
       const v = this.views.get(e.unit.uid);
-      const own = WAVE_BY_NAME[e.skill.name];
-      if (own) this.playWaveFx(own, v, e);
+      const own = waveLook(e.skill);
+      if (own && own.none) { /* its cast look draws it (Holy Nova's smite) */ } else if (own) this.playWaveFx(own, v, e);
       else if (v) {
         const c = this.center(v);
         const ring = this.add.circle(c.x, c.y, 10).setStrokeStyle(2 + e.wave, 0xffd84d).setDepth(DEPTH.popup - 1);
         this.tweens.add({ targets: ring, radius: 24 + e.wave * 10, alpha: 0, duration: 400, onComplete: () => ring.destroy() });
       }
     } else if (e.type === 'flask') {
-      this.showFlask(this.views.get(e.unit.uid), this.views.get(e.target.uid), Number(e.flask.color));
+      if (e.flask.name && e.unit.side === 'hero') this.playFlaskLook(this.views.get(e.unit.uid), this.views.get(e.target.uid), e.flask); // Alchemist v2 look
+      else this.showFlask(this.views.get(e.unit.uid), this.views.get(e.target.uid), Number(e.flask.color));
     } else if (e.type === 'minionSpawn') {
       this.showMinion(e.unit);
     } else if (e.type === 'tornadoSpawn') {
@@ -1865,17 +1945,105 @@ export default class BattleScene extends Phaser.Scene {
 
   // Floating number above a fighter.
   // Savage Leap: the hero jumps at the target in an arc and lands back in his spot.
-  leapAt(caster, target) {
+  // With `S` (combat.json skillFx.look.brawl_leap.leap) it is the v2 SLAM: up fast and high (liftPx), hangs, slams down
+  // at upMs, holds holdMs, comes back in backMs.
+  leapAt(caster, target, S = null) {
     if (!target) return;
-    const dx = (target.ch.x - caster.ch.x) * 0.8;
-    const dy = (target.ch.y - caster.ch.y) * 0.8;
-    const jump = { p: 0 };
+    const share = S ? S.share : 0.8;
+    const dx = (target.ch.x - caster.ch.x) * share;
+    const dy = (target.ch.y - caster.ch.y) * share;
+    const jump = { p: 0 }, lift = S ? S.liftPx : 26;
+    let going = true;
     const set = () => {
       caster.leapX = dx * jump.p;
       caster.leapY = dy * jump.p;
-      caster.leapLift = Math.sin(jump.p * Math.PI) * 26;
+      // the slam: the peak comes early and the fall is quick; no lift on the way back
+      caster.leapLift = S ? (going ? Math.sin(Math.pow(jump.p, 0.6) * Math.PI) * lift : 0) : Math.sin(jump.p * Math.PI) * 26;
     };
-    this.tweens.add({ targets: jump, p: 1, duration: 230, ease: 'Quad.easeOut', onUpdate: set, onComplete: () => this.tweens.add({ targets: jump, p: 0, duration: 300, delay: 120, ease: 'Quad.easeInOut', onUpdate: set, onComplete: () => { caster.leapX = caster.leapY = caster.leapLift = 0; } }) });
+    const back = () => { going = false; this.tweens.add({ targets: jump, p: 0, duration: S ? S.backMs : 300, delay: S ? S.holdMs : 120, ease: 'Quad.easeInOut', onUpdate: set, onComplete: () => { caster.leapX = caster.leapY = caster.leapLift = 0; } }); };
+    this.tweens.add({ targets: jump, p: 1, duration: S ? S.upMs : 230, ease: S ? 'Linear' : 'Quad.easeOut', onUpdate: set, onComplete: back });
+  }
+
+  // How a v2 skill look moves the scene (combat.json skillFx.look): the leap slam or a recoil, then at the hit (hitMs)
+  // the shake, the hit-stop and the hit enemies jittering. Also notes where Savage Leap lands (for its look).
+  lookMoves(caster, e, L) {
+    const t0 = e.targets[0] && this.views.get(e.targets[0].uid);
+    if (L.leap && t0) {
+      this.leapAt(caster, t0, L.leap);
+      const a = this.fxBody(caster), b = this.fxBody(t0);
+      e.land = { x: a.x + (b.x - a.x) * L.leap.share, y: a.y + (b.y - a.y) * L.leap.share }; // where he lands: it never moves
+    }
+    if (L.move && L.move.type === 'recoil') {
+      const to = t0 ? t0.ch : { x: caster.ch.x, y: caster.ch.y - 100 }; // no target: rock back down (enemies are above)
+      const dx = caster.ch.x - to.x, dy = caster.ch.y - to.y, len = Math.hypot(dx, dy) || 1, r = { p: 0 };
+      const set = () => { caster.leapX = (dx / len) * L.move.px * r.p; caster.leapY = (dy / len) * L.move.px * r.p; };
+      this.tweens.add({ targets: r, p: 1, duration: 50, ease: 'Quad.easeOut', onUpdate: set,
+        onComplete: () => this.tweens.add({ targets: r, p: 0, duration: 270, ease: 'Quad.easeOut', onUpdate: set, onComplete: () => { caster.leapX = caster.leapY = 0; } }) });
+    }
+    const hitViews = e.targets.filter((u) => u.side === 'enemy').map((u) => this.views.get(u.uid)).filter(Boolean);
+    const radius = (L.leap ? L.landSplash && L.landSplash.radius : 0) || 0;
+    if (L.leap && radius && e.land) for (const en of this.state.enemies) { // everyone in the landing area is thrown back too
+      const v = en.alive && this.views.get(en.uid); if (!v || hitViews.includes(v)) continue;
+      const b = this.fxBody(v); if (Math.hypot(b.x - e.land.x, (b.y - e.land.y) * 1.4) * CHAR_SCALE <= radius) hitViews.push(v);
+    }
+    this.time.delayedCall(L.hitMs || 0, () => {
+      if (L.shakeMs) this.cameras.main.shake(L.shakeMs, L.shakeIntensity);
+      if (L.stopMs) this.hitStop = Math.max(this.hitStop || 0, L.stopMs);
+      hitViews.forEach((v, i) => {
+        if (L.leap && L.leap.knockPx && e.land) this.knockFrom(v, e.land, L.leap.knockPx);
+        else if (L.jitterPx) this.time.delayedCall((L.staggerMs || 0) * i, () => this.jitter(v, L.jitterPx, L.jitterMs));
+      });
+    });
+  }
+
+  // A fighter jitters side to side (a hard hit); uses the leap offset.
+  jitter(v, px, ms) {
+    if (!v || !v.ch.active) return;
+    const j = { p: 0 };
+    this.tweens.add({ targets: j, p: 1, duration: ms, onUpdate: () => { if (v.ch.active) v.leapX = Math.round(Math.sin(j.p * Math.PI * 6) * px * (1 - j.p)); }, onComplete: () => { v.leapX = 0; } });
+  }
+
+  // A fighter is thrown back away from a point (character pixels), then settles back.
+  knockFrom(v, at, px) {
+    if (!v || !v.ch.active) return;
+    const b = this.fxBody(v), dx = b.x - at.x, dy = b.y - at.y, len = Math.hypot(dx, dy) || 1, k = { p: 0 };
+    const set = () => { if (v.ch.active) { v.leapX = (dx / len) * px * k.p; v.leapY = (dy / len) * px * k.p; } };
+    this.tweens.add({ targets: k, p: 1, duration: 90, ease: 'Quad.easeOut', onUpdate: set,
+      onComplete: () => this.tweens.add({ targets: k, p: 0, delay: 110, duration: 400, ease: 'Quad.easeInOut', onUpdate: set, onComplete: () => { v.leapX = v.leapY = 0; } }) });
+  }
+
+  // Alchemist v2: one named flask (Flask Barrage / Mystery Brew) spins over and shatters (combat.json skillFx.flask).
+  playFlaskLook(from, to, flask) {
+    if (!from || !to) return;
+    const F = FX.flask, seed = (this.impactSeed = (this.impactSeed || 0) + 1);
+    let a = this.fxBody(from), b = this.fxBody(to);
+    const enemies = () => this.state.enemies.filter((u) => u.alive).map((u) => this.views.get(u.uid)).filter((v) => v && v.ch.active);
+    this.addFx(CAST_MS[F.recipe], (q, now) => {
+      if (from.ch.active) a = this.fxBody(from); if (to.ch.active) b = this.fxBody(to);
+      const out = castFx(F.recipe, q, { caster: a, targets: [b], squad: [], enemies: enemies().map((v) => this.fxBody(v)), flask, hitMs: F.hitMs, seed }, now);
+      return { draws: out.draws, tints: out.tints.map(([list, , tint]) => [list === 'targets' ? to : from, tint]) };
+    }, ['skill', F.recipe]);
+    this.time.delayedCall(F.hitMs, () => {
+      sfx.play('flaskBreak');
+      if (to.unit.side === 'enemy') { this.cameras.main.shake(F.shakeMs, F.shakeIntensity); this.jitter(to, F.jitterPx, F.jitterMs); }
+    });
+  }
+
+  // Samurai v2: a counter-cut thrown back from far away (Counter Stance): clang, crescent, cut (combat.json skillFx.counter).
+  playCounterLook(from, to) {
+    if (!from || !to) return;
+    const K = FX.counter;
+    let a = this.fxBody(from), b = this.fxBody(to);
+    this.addFx(CAST_MS[K.recipe], (q, now) => {
+      if (from.ch.active) a = this.fxBody(from); if (to.ch.active) b = this.fxBody(to);
+      const out = castFx(K.recipe, q, { caster: a, targets: [b], squad: [], enemies: [], hitMs: K.hitMs }, now);
+      return { draws: out.draws, tints: out.tints.map(([list, , tint]) => [list === 'targets' ? to : from, tint]) };
+    }, ['skill', K.recipe]);
+    this.time.delayedCall(K.hitMs, () => {
+      this.cameras.main.shake(K.shakeMs, K.shakeIntensity);
+      if (K.stopMs) this.hitStop = Math.max(this.hitStop || 0, K.stopMs);
+      this.jitter(to, K.jitterPx, K.jitterMs);
+    });
   }
 
   // An aggressive skill dash (combat.json skillFx.dash): the hero shoots at its target from wherever it stands, the
@@ -1919,7 +2087,7 @@ export default class BattleScene extends Phaser.Scene {
     this.skillName(caster, e.skill.name);
     // A skill that puts statuses on every enemy (Smoke Bomb) also shows a grey cloud on each of them.
     if (e.skill.applyEnemies && !own) for (const en of this.state.enemies) if (en.alive && this.views.get(en.uid)) this.puff(this.views.get(en.uid).ch.x, this.views.get(en.uid).ch.y, 0x9a9aa8, 6);
-    if (attack) {
+    if (attack && !(caster.unit.side === 'hero' && LOOK_BY_NAME[e.skill.name])) { // a v2 look shakes / freezes at its own hit (lookMoves)
       this.cameras.main.shake(FX.shakeMs, FX.shakeIntensity);
       this.hitStop = FX.hitStopMs;
     }
@@ -1931,13 +2099,24 @@ export default class BattleScene extends Phaser.Scene {
     const N = FX.name;
     const hero = caster.unit.def && caster.unit.def.id;
     const color = (caster.unit.side === 'hero' && N.heroColors[hero]) || N.defaultColor;
-    const y = Math.round(caster.ch.y + caster.ch.hopOffset - caster.unit.def.height * charScale(caster.unit.def) - N.abovePx);
+    let y = Math.round(caster.ch.y + caster.ch.hopOffset - caster.unit.def.height * charScale(caster.unit.def) - N.abovePx);
+    // Never on top of another skill name or the 'Floor cleared!' banner: it goes above them instead.
+    this.nameLabels = (this.nameLabels || []).filter((o) => o.t.active);
+    const blocks = this.nameLabels.map((o) => o.box);
+    if (this.banner.text) blocks.push(this.banner.getBounds());
+    const w = name.length * N.sizePx + 12, h = N.sizePx + 8, x0 = Phaser.Math.Clamp(caster.ch.x, w / 2 + 6, GAME_WIDTH - w / 2 - 6);
+    for (let i = 0; i < 6; i++) {
+      const hit = blocks.find((b) => Math.abs(b.centerX - x0) < (b.width + w) / 2 && Math.abs(b.centerY - y) < (b.height + h) / 2);
+      if (!hit) break;
+      y = Math.round(hit.y - h / 2 - 2);
+    }
     const t = this.add
       .text(caster.ch.x, y + N.risePx, name.toUpperCase(), { fontFamily: UI.font, fontSize: `${N.sizePx}px`, color, stroke: '#000000', strokeThickness: 4 })
       .setOrigin(0.5)
       .setDepth(DEPTH.popup + 1)
       .setAlpha(0);
     t.x = Math.round(Phaser.Math.Clamp(t.x, t.width / 2 + 6, GAME_WIDTH - t.width / 2 - 6)); // keep it on screen
+    this.nameLabels.push({ t, box: new Phaser.Geom.Rectangle(t.x - t.width / 2, y - t.height / 2, t.width, t.height) });
     this.tweens.add({ targets: t, y, alpha: 1, duration: N.inMs, ease: 'Quad.easeOut' });
     this.tweens.add({ targets: t, y: y - N.risePx, alpha: 0, delay: N.inMs + N.holdMs, duration: N.outMs, onComplete: () => t.destroy() });
   }
@@ -1947,18 +2126,15 @@ export default class BattleScene extends Phaser.Scene {
     const tv = e.targets.map((u) => this.views.get(u.uid)).filter((x) => x && x.ch.active);
     if (!v || !tv.length) return;
     const last = e.wave === e.waves - 1;
-    this.cameras.main.shake(last ? W.lastShakeMs : W.shakeMs, last ? W.lastShakeIntensity : W.shakeIntensity);
-    if (W.targetShakePx) { // the hit enemy jitters side to side (uses the leap offset; dash/knockback are not running on it)
-      const px = last ? W.lastTargetShakePx : W.targetShakePx, j = { p: 0 };
-      for (const x of tv) {
-        this.tweens.add({ targets: j, p: 1, duration: W.targetShakeMs,
-          onUpdate: () => { if (x.ch.active) x.leapX = Math.round(Math.sin(j.p * Math.PI * 6) * px * (1 - j.p)); },
-          onComplete: () => { x.leapX = 0; } });
-      }
-    }
+    // The shake and the jitter come when the wave lands (hitMs: Arrow Rain's arrows fall first).
+    this.time.delayedCall(W.hitMs || 0, () => {
+      this.cameras.main.shake(last ? W.lastShakeMs : W.shakeMs, last ? W.lastShakeIntensity : W.shakeIntensity);
+      if (W.targetShakePx) for (const x of tv) this.jitter(x, last ? W.lastTargetShakePx : W.targetShakePx, W.targetShakeMs); // the hit enemy jitters side to side
+    });
     const frozen = tv.map((x) => this.fxBody(x));
+    const z = e.zone, center = z && z.x != null ? { x: z.x / CHAR_SCALE, y: z.y / CHAR_SCALE } : null; // the area the wave falls on
     this.addFx(CAST_MS[W.recipe], (q, now) => {
-      const c = { caster: v.ch.active ? this.fxBody(v) : null, targets: tv.map((x, i) => (x.ch.active ? (frozen[i] = this.fxBody(x)) : frozen[i])), squad: [], enemies: [], wave: e.wave, waves: e.waves };
+      const c = { caster: v.ch.active ? this.fxBody(v) : null, targets: tv.map((x, i) => (x.ch.active ? (frozen[i] = this.fxBody(x)) : frozen[i])), squad: [], enemies: [], wave: e.wave, waves: e.waves, hitMs: W.hitMs, center, radius: z && z.radius ? z.radius / CHAR_SCALE : undefined };
       const out = castFx(W.recipe, q, c, now);
       return { draws: out.draws, tints: out.tints.map(([list, i, tint]) => [list === 'targets' ? tv[i] : v, tint]) };
     }, ['skill', W.recipe]);
@@ -1966,27 +2142,41 @@ export default class BattleScene extends Phaser.Scene {
 
   // The CHARGE beat (combat.json skillFx.charge): the skill's wind-up look on the hero, for the whole wind-up. Stops
   // early when the wind-up is cut (castCancel) or the hero is gone.
+  // A rotation spell has its own charge ('skillId:SHORT'); { recipe, tremble } also trembles the hero (Berserker,
+  // Alchemist). The recipe gets the song that comes next (Bard) and where the enemies are (c.aim, the Archer's aim).
   playCharge(v, e) {
     const slot = e.unit.skills && e.unit.skills[e.index];
-    const name = slot && FX.charge[slot.id];
-    if (!v || !name || !e.castMs) return;
+    const spec = slot && ((e.skill && e.skill.short && FX.charge[`${slot.id}:${e.skill.short}`]) || FX.charge[slot.id]);
+    if (!v || !spec || !e.castMs) return;
+    const name = spec.recipe || spec, tremble = spec.tremble || 0;
     const cast = e.unit.casting;
+    const aim = () => { const en = this.state.enemies.filter((u) => u.alive).map((u) => this.views.get(u.uid)).filter((x) => x && x.ch.active).map((x) => this.fxBody(x)); return en.length ? { x: en.reduce((s2, b) => s2 + b.x, 0) / en.length, y: en.reduce((s2, b) => s2 + b.mid, 0) / en.length } : null; };
     this.addFx(e.castMs, (q, now) => {
-      if (!v.ch.active || (cast && e.unit.casting !== cast)) return [];
-      const out = castFx(name, q, { caster: this.fxBody(v), targets: [], squad: [], enemies: [] }, now);
+      if (!v.ch.active || (cast && e.unit.casting !== cast)) { if (tremble) v.leapX = 0; return []; }
+      if (tremble) v.leapX = v.trembleX = q >= 0.999 ? 0 : Math.round(Math.sin(now / 23) * q * tremble); // shaking with rage / shaking the flask
+      const out = castFx(name, q, { caster: this.fxBody(v), targets: [], squad: [], enemies: [], song: e.unit.nextSong || 'march', aim: aim() }, now);
       return { draws: out.draws, tints: out.tints.map(([, , tint]) => [v, tint]) };
     }, ['skill', name]);
+    // The effect's last frame is rarely exactly the end: settle him back in place unless a leap/dash took over.
+    if (tremble) this.time.delayedCall(e.castMs + 30, () => { if (v.ch.active && v.leapX === v.trembleX) v.leapX = 0; });
   }
 
   // A skill's own cast effect: the recipe gets where the caster, its targets, the squad and the enemies are
   // NOW (every frame), and may colour some of them for a moment.
   playSkillFx(name, caster, e) {
     const views = (units) => units.map((u) => this.views.get(u.uid)).filter((v) => v && v.ch.active);
-    const lists = { caster: [caster], targets: views(e.targets), squad: views(this.state.heroes.filter((h) => h.alive)), enemies: views(this.state.enemies.filter((u) => u.alive)) };
+    const L = caster.unit.side === 'hero' ? LOOK_BY_NAME[e.skill.name] : null; // a v2 look (combat.json skillFx.look)
+    const squad = views(this.state.heroes.filter((h) => h.alive));
+    // Bone Sacrifice: his skeletons are already dead in the fight, their views still stand for a moment.
+    const minions = L && L.minions ? this.state.minions.filter((m) => m.holderUid === caster.unit.uid).map((m) => this.views.get(m.uid)).filter((v) => v && v.ch.active) : [];
+    const lists = { caster: [caster], targets: L && L.targets === 'squad' ? squad : views(e.targets), squad, enemies: views(this.state.enemies.filter((u) => u.alive)), minions };
     const frozen = {}; // last known bodies, for fighters that are gone mid-effect
     const bodies = (k) => lists[k].map((v, i) => (v.ch.active ? (frozen[k + i] = this.fxBody(v)) : frozen[k + i] || this.fxBody(v)));
+    const area = L && (L.radius === 'area' ? L.area && L.area.radius : L.radius === 'landSplash' ? L.landSplash && L.landSplash.radius : L.radius === 'holyNova' ? L.holyNova && L.holyNova.radius : 0);
+    const enemyAim = () => { const en = bodies('enemies'); return en.length ? { x: en.reduce((s2, b) => s2 + b.x, 0) / en.length, y: en.reduce((s2, b) => s2 + b.mid, 0) / en.length } : null; };
     this.addFx(CAST_MS[name], (q, now) => {
-      const c = { caster: bodies('caster')[0], targets: bodies('targets'), squad: bodies('squad'), enemies: bodies('enemies'), hitMs: (DASH_BY_NAME[e.skill.name] || {}).inMs || 0 };
+      const c = { caster: bodies('caster')[0], targets: bodies('targets'), squad: bodies('squad'), enemies: bodies('enemies'), minions: bodies('minions'), hitMs: L ? L.hitMs || 0 : (DASH_BY_NAME[e.skill.name] || {}).inMs || 0 };
+      if (L) Object.assign(c, { radius: area ? area / CHAR_SCALE : undefined, land: e.land, song: caster.unit.song, allHit: !!L.allHit, aim: enemyAim() });
       const out = castFx(name, q, c, now);
       return { draws: out.draws, tints: out.tints.map(([list, i, tint]) => [lists[list] && lists[list][i], tint]) };
     }, ['skill', name]);
@@ -2234,6 +2424,15 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   popText(view, text, color, big = false, sizePx = null) {
+    // The same WORD (Counter!, Blocked!) already floating over this fighter is not shown again: a Samurai
+    // countering a lot made an unreadable pile. Numbers always show.
+    const now = this.time.now;
+    view.recentPops = view.recentPops || {};
+    if (/[a-z]/i.test(text)) {
+      const last = view.recentPops[text];
+      if (last && now - last < POP_REPEAT_MS) return;
+      view.recentPops[text] = now;
+    }
     // Pop-ups that appear together stack upwards instead of overlapping.
     view.popSlot = ((view.popSlot ?? -1) + 1) % 4;
     // Above where the fighter is right now (a hero may be away at an enemy).

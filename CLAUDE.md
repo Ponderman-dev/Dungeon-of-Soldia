@@ -4,6 +4,8 @@ Mobile auto-battler roguelike. Phaser + Vite + plain JavaScript (ES modules, no 
 Will be wrapped for Android later (Solana Seeker dApp Store).
 Full design: `docs/game-design-recap.md`. Read it before designing features.
 HANDOFF (latest session): read the START HERE section of `docs/handoff-phase-h.md` first.
+Update the handoff ONLY when the user asks for a handoff (commits + `docs/systems/*.md` are the running record).
+Keep it SHORT (current state only); old sessions go to `docs/handoff-archive.md` (search it, never read it whole).
 Item numbers: `docs/item-decisions.md` is the current truth (overrides `docs/item-list.md` and older notes).
 
 ## About the user
@@ -73,13 +75,17 @@ and suggest a fresh session per task.
 - Browser checks: run vite from the SCRATCHPAD dir (the repo has a tracked vite.log, don't dirty it).
 
 ## Preview pages (republish to the SAME url; ignore the "download link" warning, a false alarm from Phaser)
+- NO NEW PAGES: drawing = the Character Studio; any other 'look and pick' review = REUSE the Skill Effects page
+  (`docs/proposals/skill-fx`, swap its content per topic, keep it small). New page only if the user asks.
+- NEVER read a published page back (the game page is our own 2.5 MB build): publish the file; if it is refused as
+  'not viewed', the live copy is saved to a file: don't open it, just publish again.
 - Game: `npm run build:page`, copy `dist-page.html` to the scratchpad as `dungeon-of-soldia.html`,
   publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr
 - Studio: `npm run build:studio`, copy `studio-page.html` as `soldia-studio.html`,
   publish to https://claude.ai/artifact/1azV1LBUimRkeavNpQBgc7 (has `db`; omit `capabilities` on republish)
 - Monster House demo: copy `house-demo-page.html` as `monster-house-demo.html`, https://claude.ai/artifact/4vMvwYLs9sUHr5KcxZ75aH
 - Item review page (user notes in db `notes`): https://claude.ai/artifact/S7cbuLJoStsdi5hpg2SBef
-- Other proposal pages: see `docs/handoff-phase-h.md` and `docs/proposals/README.md`.
+- Old proposal pages (kept, not updated any more): `docs/proposals/README.md`.
 
 ## Layout
 - `index.html`  page shell

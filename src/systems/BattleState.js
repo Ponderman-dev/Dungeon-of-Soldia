@@ -427,7 +427,9 @@ export default class BattleState {
   inReach(unit, target) {
     if (!this.hasPositions(unit) || !this.hasPositions(target)) return true;
     const M = this.rules.movement;
-    const big = (target.size || 1) - 1; // a big target can be hit from its edge
+    // A big target can be hit from its edge, and a big attacker swings from its own edge (bug: a boss walked into
+    // the hero's middle, got pushed out, walked back in: overlapping and jittering).
+    const big = (target.size || 1) + (unit.size || 1) - 2;
     const dx = (target.x - unit.x) / (M.reachX * (1 + big * 0.5));
     const dy = (target.y - unit.y) / (M.reachY * (1 + big * 0.3));
     return dx * dx + dy * dy <= 1;
@@ -490,6 +492,7 @@ export default class BattleState {
       const d = Math.min(step, len);
       u.x += (dx / len) * d;
       u.y += (dy / len) * d;
+      u.speed = dt > 0 ? (d * 1000) / dt : 0;
       walking.add(u);
     }
     // Push apart. Ranged fighters hold their ground (only the other one moves).
@@ -542,6 +545,7 @@ export default class BattleState {
       const b = before.get(u);
       const moved = Math.hypot(u.x - b.x, u.y - b.y);
       u.moving = moved > 0.05;
+      if (!walking.has(u)) u.speed = 0; // its OWN walking pace (px/s); being shoved is not a step, so the scene doesn't hop it
       u.walked += moved;
     }
   }

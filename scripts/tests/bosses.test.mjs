@@ -76,6 +76,15 @@ ok('a boss floor always brings its own line-up', JSON.stringify(enemiesForFloor(
   const crystal = s.enemies.find((e) => e.def.id === 'phylactery'); crystal.hp = crystal.maxHp = 1e6;
   const ev = run(s, 10200);
   ok('...a crystal left alone: he REFORMS at 50% health', m.alive && !m.dust && ev.some((e) => e.type === 'reform') && Math.abs(m.hp / m.maxHp - 0.5) < 0.1, (m.hp / m.maxHp).toFixed(2)); }
+// He comes back only maxReforms times: the crystal after that ends him (a fight could never end before).
+{ const { s, es, h } = mk(['morthul']); const m = es[0]; const max = m.def.phylactery.maxReforms;
+  let reforms = 0;
+  for (let i = 0; i <= max; i++) {
+    m.hp = 0; s.killUnit(m, [], h[0]);
+    const crystal = s.enemies.find((e) => e.def.id === 'phylactery' && e.alive); crystal.hp = crystal.maxHp = 1e9;
+    reforms += run(s, m.def.phylactery.reformMs + 200).filter((e) => e.type === 'reform').length;
+  }
+  ok(`Morthul comes back ${max} times, then his crystal running out ends him for good`, reforms === max && !m.alive && s.allEnemiesDead(), `${reforms} reforms, alive ${m.alive}`); }
 
 // ---- Ignatius
 { const { s, es, h } = mk(['ignatius']); const ig = es[0]; ig.hp = ig.maxHp = 1e6;

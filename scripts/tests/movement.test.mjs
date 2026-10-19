@@ -101,3 +101,26 @@ const starts = (ev, u) => ev.filter((e) => e.type === 'attackStart' && e.attacke
   const n = run(s, 10000).filter((e) => e.type === 'attack' && e.attacker === knight).length;
   const expected = 10000 / s.interval(knight);
   ok('attack speed sets how often a melee hero hits once there', Math.abs(n - expected) <= 1, `${n} vs ${expected.toFixed(1)}`); }
+
+// `speed` = its OWN walking pace (the scene hops only then): a fighter that is only shoved has speed 0
+// (bug: Grukk, jostled by his goblins, hung mid-hop and looked like he floated).
+{ const { s, es, h } = mk(['knight'], ['goblin']); const [knight] = h, [g] = es;
+  run(s, 200);
+  ok('a walking fighter has its walking speed', Math.abs(knight.speed - M.walkSpeedPxPerSec) < 1, String(knight.speed));
+  g.stats.attack = 0; run(s, 4000);
+  knight.x = g.x + 1; knight.y = g.y; knight.pending = { target: g }; // busy swinging, standing on the goblin: only pushed
+  s.move(20);
+  ok('a fighter that is only shoved has speed 0', knight.moving && knight.speed === 0, `${knight.moving} ${knight.speed}`); }
+
+// A BIG attacker swings from its own edge (reach grows with both sizes): a boss walking at a hero stops outside
+// the push-apart oval instead of walking into him and being shoved out again (overlapping, jittering).
+for (const bossId of ['grukk', 'frost_warden', 'ignatius']) {
+  const { s, es, h } = mk(['knight'], [bossId]); const [knight] = h, [boss] = es;
+  knight.stats.attack = 0; boss.stats.attack = 0; knight.x = 60; // the knight stands near the left wall
+  let moves = 0;
+  const pin = () => { knight.x = 60; knight.y = M.layout.heroY; knight.knock = null; }; // he stays put (Cleaver Charge knocks him back)
+  run(s, 6000, pin); run(s, 2000, () => { pin(); if (boss.speed > 0) moves++; }); // its own steps
+  const k = ((boss.size || 1) + 1) / 2;
+  const d = Math.hypot((boss.x - knight.x) / (M.separateX * k), (boss.y - knight.y) / (M.separateY * (1 + (k - 1) * 0.5)));
+  ok(`${bossId} stops at the hero's edge, not inside him`, s.inReach(boss, knight) && d >= 0.95, d.toFixed(2));
+  ok(`...and stands still there (no walk-in / push-out jitter)`, moves < 5, String(moves)); }

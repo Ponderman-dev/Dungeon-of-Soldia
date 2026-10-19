@@ -6,6 +6,8 @@ import Door from '../entities/Door.js';
 import { skillIconKey } from '../entities/skillIconTexture.js';
 import floorArt from '../data/floorArt.json';
 import { floorTextureKey, FLOOR_PIXEL } from '../entities/floorTexture.js';
+import { layerTexture } from '../entities/pixelLayer.js';
+import { torchLayers } from '../systems/torchArt.js';
 import heroDefs from '../data/heroes.json';
 import skillDefs from '../data/skills.json';
 import unlocks from '../data/unlocks.json';
@@ -29,7 +31,7 @@ const BEGIN_Y = 712; // the 'Begin descent' button, at the bottom over RANDOM (s
 // Where the 3 picked heroes stand (their feet): the orange slots. Slot order = battle order.
 const SLOTS = [{ x: 92, y: 392 }, { x: GAME_WIDTH / 2, y: 342 }, { x: GAME_WIDTH - 92, y: 392 }]; // the squad stands before the gate (screen review)
 // The bench: every hero stands on a purple strip at the bottom that scrolls left and right.
-const BENCH = { top: 476, bottom: 670, feetY: 620, firstX: 62, gap: 96 };
+const BENCH = { top: 476, bottom: 670, feetY: 620, firstX: 62, gap: 96, fadeFrom: 4, fadePx: 46 }; // fade: heroes fade out over fadePx before the screen edge
 const WALK = combatRules.movement.walkSpeedPxPerSec * 1.6; // a bit quicker than in fights
 const T = combatRules.transition;
 const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
@@ -94,15 +96,18 @@ export default class SquadScene extends Phaser.Scene {
     this.add.image(0, 0, floorTextureKey(this, dungeons.A.tileColors[0], 0, WALL_H)).setOrigin(0).setScale(FLOOR_PIXEL).setDepth(DEPTH.floor); // as on the battle floors
     // The door into the dungeon: closed until the squad sets off.
     this.door = new Door(this, this.add.container(0, 0).setDepth(DEPTH.floor), DOOR_X, WALL_H, { big: true }); // the dungeon entrance
-    // Two torches beside the door.
-    const g = this.add.graphics().setDepth(DEPTH.floor);
-    for (const x of [DOOR_X - 100, DOOR_X + 100]) {
-      g.fillStyle(0x3c3b42, 1).fillRect(x - 5, WALL_H - 92, 10, 4).fillRect(x - 2, WALL_H - 88, 4, 6); // iron bracket
-      g.fillStyle(0x5a3a22, 1).fillRect(x - 3, WALL_H - 110, 6, 20);
-      const glow = this.add.circle(x, WALL_H - 116, 26, 0xff8a30, 0.12).setDepth(DEPTH.floor);
-      this.tweens.add({ targets: glow, alpha: 0.2, scale: 1.1, duration: 260, yoyo: true, repeat: -1 });
-      const flame = this.add.ellipse(x, WALL_H - 116, 12, 18, 0xffb347).setDepth(DEPTH.floor);
-      this.tweens.add({ targets: flame, scaleY: 1.25, scaleX: 0.85, alpha: 0.8, duration: 180 + Math.random() * 120, yoyo: true, repeat: -1 });
+    // Two torches on the pillars beside the door: pixel art (systems/torchArt.js), the flame flickers by switching frames.
+    const T = floorArt.torch, L = torchLayers(T), P = FLOOR_PIXEL;
+    const img = (lay, key, x, y) => this.add.image(x, y, layerTexture(this, key, lay)).setOrigin(lay.ax / lay.w, lay.ay / lay.h).setScale(P).setDepth(DEPTH.floor);
+    const flameKeys = L.flames.map((f, i) => layerTexture(this, `torch-flame-${i}`, f));
+    for (const x of floorArt.pillars.x.map((ax) => ax * P)) { // on the two pillars
+      const y = WALL_H - 33 * P; // the top of the handle
+      const glow = img(L.glow, 'torch-glow', x, y);
+      this.tweens.add({ targets: glow, alpha: 0.75, duration: 300 + Math.random() * 120, yoyo: true, repeat: -1 });
+      img(L.holder, 'torch-holder', x, y);
+      const flame = img(L.flames[0], 'torch-flame-0', x, y);
+      let f = Math.floor(Math.random() * flameKeys.length);
+      this.time.addEvent({ delay: T.frameMs, loop: true, callback: () => { f = (f + 1 + Math.floor(Math.random() * 2)) % flameKeys.length; flame.setTexture(flameKeys[f]); } });
     }
   }
 
@@ -205,16 +210,18 @@ export default class SquadScene extends Phaser.Scene {
       const x = this.benchX(f);
       const onBench = !this.slots.includes(f.def.id) && !this.walkers.has(f.def.id);
       const inSlot = this.slots.includes(f.def.id) && !this.walkers.has(f.def.id);
+      // Near the bench's ends a hero fades out (it slides off smoothly instead of popping away).
+      const fade = Phaser.Math.Clamp((Math.min(x, GAME_WIDTH - x) - BENCH.fadeFrom) / BENCH.fadePx, 0, 1);
       // An empty spot shows where a picked hero will come back to.
-      if (x > -40 && x < GAME_WIDTH + 40) this.benchSpots.fillStyle(0x000000, onBench ? 0.28 : 0.14).fillEllipse(x, BENCH.feetY, 50, 13); // a soft shadow (faint = its hero is in a slot)
+      if (fade > 0) this.benchSpots.fillStyle(0x000000, (onBench ? 0.28 : 0.14) * fade).fillEllipse(x, BENCH.feetY, 50, 13); // a soft shadow (faint = its hero is in a slot)
       if (onBench) f.ch.setPosition(x, BENCH.feetY);
       f.name.setPosition(f.ch.x, f.ch.y + (inSlot ? 13 : 9)).setVisible(!this.walkers.has(f.def.id) && !(this.leaving && this.slots.includes(f.def.id)));
       f.name.setColor(inSlot ? INK : this.unlocked(f.def.id) ? '#d0d0dc' : '#6a6a7a');
       f.tag.setPosition(f.ch.x, f.ch.y - f.def.height * CHAR_SCALE - 4);
-      // Heroes on the bench only show inside it (the strip is narrower than the screen).
-      const hidden = onBench && (x < 14 || x > GAME_WIDTH - 14);
-      f.ch.setVisible(!hidden);
-      f.name.setVisible(f.name.visible && !hidden);
+      const a = onBench ? fade : 1;
+      f.ch.setVisible(a > 0).setAlpha(a);
+      f.name.setVisible(f.name.visible && a > 0).setAlpha(a);
+      f.tag.setAlpha(a);
     }
     // Pager dots under the rug: where the bench is scrolled to.
     const pages = Math.ceil(heroDefs.length / 3);
@@ -511,7 +518,9 @@ export default class SquadScene extends Phaser.Scene {
           const hop = Math.abs(Math.sin(((tw.getValue() * total) / T.stepLenPx) * Math.PI)) * T.stepHeight;
           f.ch.setPosition(x, y - hop).setDepth(DEPTH.hero + y / 10000);
           f.ch.setScale(CHAR_SCALE * Phaser.Math.Clamp(0.55 + 0.45 * ((y - doorY) / (SLOTS[0].y - doorY)), 0.55, 1));
-          f.ch.setAlpha(Phaser.Math.Clamp(((1 - tw.getValue()) * total) / T.doorFadePx, 0, 1)); // fades out in the doorway
+          const left = Phaser.Math.Clamp(((1 - tw.getValue()) * total) / T.doorFadePx, 0, 1); // 1 -> 0 over the last doorFadePx
+          f.ch.setWash(0x000000, Math.round((1 - left) * T.doorDarken * 10) / 10); // goes dark in the doorway's shadow
+          f.ch.setAlpha(Phaser.Math.Clamp(left * T.doorFadeLate, 0, 1)); // then fades out
         },
         onComplete: () => {
           f.ch.setVisible(false);

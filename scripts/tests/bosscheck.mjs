@@ -54,7 +54,12 @@ for (const sq of squads) for (let n = 0; n < N; n++) {
       // Carry on with everyone alive again (the next boss gets a fresh test).
       for (const h of s.heroes) { h.alive = true; h.hp = h.maxHp; }
       s.refreshStats && s.refreshStats();
-    } else fight(s, floor, true);
+    } else {
+      fight(s, floor, true);
+      // A big hit can still kill a protected hero inside one step: bring him back, or the squad reached the next
+      // boss already dead (bug: Rask/Morthul 'won' in 0.8s against squads that were dead before the fight).
+      if (s.heroes.some((h) => !h.alive)) { for (const h of s.heroes) if (!h.alive) { h.alive = true; h.hp = h.maxHp; } s.refreshStats(); }
+    }
     s.endFloor(); s.winHeal(rules.winHealPercent); s.clearStatuses();
     let choices = rollChoices({ itemDefs, rules: rw, floor, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance });
     choices = maybeAddBook(choices, bookData, s.heroes, bookData.bookChancePerScreen);

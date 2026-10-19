@@ -13,7 +13,7 @@ STATUS: approved = Knight, Rogue, Berserker, Cleric, Archer, Mage, Bard (all; us
 flasks thrown one by one, spec `volley` {every, flyMs, order, kinds}; demo shows only the main hit number per flask). Songs = variant rows 'skill:variant' (spec `song`). Rotation spells are rows 'skill:SHORT' (`skillDef()` in demo.js). Spec tools added session 11: move `recoil`, `rain` (per-wave
 jitter/shake/numbers), `text` (+ `self`), `hit.jitterPx/jitterMs/jitterAll/jitterStagger`, `squadShield`, `number2`/`number2At`, `charmed` (enemies turn
 round (`flip`) and bump each other);
-demo-only name colours NAME_COLORS (archer, mage, bard, samurai), `numberColor` in heroes.js until combat.json gets them. TODO: when all are OK, build them into the game (see 'IN THE GAME ALREADY' below).
+demo-only name colours NAME_COLORS (archer, mage, bard, samurai, alchemist), `numberColor` in heroes.js until combat.json gets them. TODO: when all are OK, build them into the game (see 'IN THE GAME ALREADY' below).
 HOW TO ADD A HERO: recipes in docs/proposals/skill-fx/heroes.js (RECIPES, same format as src/systems/skillFx.js, +
 CAST_MS_NEW) and a SPECS entry (now = today's game look; new = charge, recipe, move dash/leap/hop, hit shake/stop,
 number/heal, ally/minions/squadTargets); a row in template.html's list + its hero prefix; check frames with

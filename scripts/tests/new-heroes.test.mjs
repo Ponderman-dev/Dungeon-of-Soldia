@@ -1,10 +1,10 @@
 // E3-E10 heroes (real data): Archer, Berserker, Samurai, Mage, Cleric, Necromancer, Bard, Alchemist.
 import fs from 'fs';
 import BattleState from '../../src/systems/BattleState.js';
-import { kitsV1 } from './util.mjs';
+import { kitsV1, plainRules } from './util.mjs';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
-const rules = r('combat.json'), heroDefs = kitsV1(r('heroes.json')), skills = r('skills.json');
+const rules = plainRules(r('combat.json')), heroDefs = kitsV1(r('heroes.json')), skills = r('skills.json');
 const noCast = Object.fromEntries(Object.entries(skills).map(([id, d]) => [id, { ...d, castMs: 0, ...(d.rotation ? { rotation: d.rotation.map((x) => ({ ...x, castMs: 0 })) } : {}) }]));
 const def = (id) => ({ ...heroDefs.find((h) => h.id === id), perk: undefined });
 // A squad of 3 (first = the hero under test) against `enemyIds`; rng can be fixed.

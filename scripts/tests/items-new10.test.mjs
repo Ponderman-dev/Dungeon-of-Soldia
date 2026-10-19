@@ -2,14 +2,14 @@
 import fs from 'fs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems } from '../../src/systems/items.js';
-import { noPerks, frozenItems } from './util.mjs';
+import { noPerks, frozenItems, plainRules } from './util.mjs';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const itemDefs = loadItems(frozenItems());
 const heroes = r('heroes.json');
 const mk = (ids = ['knight', 'rogue', 'archer'], enemyIds = ['goblin'], rng = () => 0.5) => {
   const defs = noPerks(heroes);
-  const s = new BattleState({ heroDefs: ids.map((id) => defs.find((h) => h.id === id)), enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });
+  const s = new BattleState({ heroDefs: ids.map((id) => defs.find((h) => h.id === id)), enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: plainRules(r('combat.json')), damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });
   const es = s.spawnEnemies(enemyIds, 1);
   for (const e of es) { e.hp = e.maxHp = 1e7; e.stats.defense = 0; e.stats.resist = 0; e.stats.evasion = 0; e.weak = []; e.resists = []; e.flying = false; }
   for (const h of s.heroes) { h.stats.evasion = 0; h.baseStats.evasion = 0; }

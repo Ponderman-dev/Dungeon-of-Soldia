@@ -1,12 +1,12 @@
 import fs from 'fs';
-import { noPerks } from './util.mjs';
+import { noPerks, plainRules } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems } from '../../src/systems/items.js';
 import { rollChoices } from '../../src/systems/rewards.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const itemDefs = loadItems(r('items.json')), rw = r('rewards.json');
 let seed = 7; const rng = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-const mk = () => new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });
+const mk = () => new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: plainRules(r('combat.json')), damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });
 const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
 { const s = mk(); const k = s.heroes[0]; const atk = k.stats.attack; s.giveItem(k.uid, 'siege_cannon');
   ok('siege cannon: no attack bonus any more', Math.abs(k.stats.attack - atk) < 0.01, `${atk} -> ${k.stats.attack}`);

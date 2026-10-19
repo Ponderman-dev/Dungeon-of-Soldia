@@ -21,3 +21,6 @@ export const kitsV1 = (defs) => defs.map((h) => (V1[h.id] ? { ...h, passive: V1[
 // item numbers in src/data/items.json never breaks them. Copy an item into the fixture only when it is NEW or its
 // effect SHAPE changes (then test the new mechanic). Data checks (icons, texts, drop odds) read the real file.
 export const frozenItems = () => JSON.parse(fs.readFileSync(new URL('./fixtures/items-frozen.json', import.meta.url), 'utf8'));
+// combat.json without the hero toughness tuning (heroDefense bonus, deathSave), for tests that check exact
+// defense numbers or killing blows of other mechanics.
+export const plainRules = (rules) => ({ ...rules, heroDefense: { percent: 0 }, deathSave: null });

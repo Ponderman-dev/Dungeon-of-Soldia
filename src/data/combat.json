@@ -11,6 +11,14 @@
     "linearUpTo": 50
   },
   "winHealPercent": 25,
+  "heroDefense": {
+    "_about": "Every hero's defense and resist (after levels, before items) is raised by this percent.",
+    "percent": 10
+  },
+  "deathSave": {
+    "_about": "Once per run per hero: the first hit that would kill the hero only does this percent of its damage. If that is still enough to kill, the hero dies anyway (the save is used up either way).",
+    "damagePercent": 50
+  },
   "floorScaling": {
     "hpPerStep": 0.35,
     "hpStepFloors": 3,

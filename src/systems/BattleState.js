@@ -2017,6 +2017,7 @@ export default class BattleState {
         broken.push(shield);
       }
     }
+    if (left >= target.hp && left > 0) left = this.deathSave(target, left, events || []);
     target.hp = Math.max(0, target.hp - left);
     if (target.hp <= 0) this.phoenixSave(target, events || []); // Phoenix Feather: one feather is used up instead of dying
     if (left > 0 && target.def.passive && target.def.passive.rage) this.gainRage(target, target.def.passive.rage.perHitTaken, events); // Berserker: hits taken fill Rage
@@ -2070,6 +2071,17 @@ export default class BattleState {
     let pages = 0;
     for (const slot of hero.skills || []) for (const p of slot.pages || []) pages += p.kind === 'modifier' ? 2 : 1;
     return per * pages;
+  }
+
+  // Death save (combat.json deathSave), once per run per hero: the first hit that would kill only does
+  // `damagePercent`% of its damage. If that still kills, the hero dies anyway. Event `deathSave` { unit, survived }.
+  deathSave(target, amount, events) {
+    const rule = this.rules.deathSave;
+    if (!rule || target.side !== 'hero' || target.minion || !target.alive || target.deathSaveUsed) return amount;
+    target.deathSaveUsed = true;
+    const cut = Math.round((amount * rule.damagePercent) / 100);
+    events.push({ type: 'deathSave', unit: target, survived: cut < target.hp });
+    return cut;
   }
 
   // Phoenix Feather (used up): when the holder would die it stays at 1 health, is invulnerable for 1s and heals back up
@@ -3130,6 +3142,9 @@ export default class BattleState {
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
       const levelStats = statsAtLevel(hero.baseStats, hero.def, hero.level);
+      const tough = 1 + ((this.rules.heroDefense && this.rules.heroDefense.percent) || 0) / 100; // combat.json heroDefense
+      levelStats.defense = (levelStats.defense || 0) * tough;
+      levelStats.resist = (levelStats.resist || 0) * tough;
       const { stats, damageBonus, specials, procs, minionSources } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale, this.statUpkeep(hero), this.squadItemMult());
       hero.minionSources = this.buildSources(hero, minionSources);
       const hpDelta = stats.health - hero.maxHp;

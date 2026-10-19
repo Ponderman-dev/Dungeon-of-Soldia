@@ -178,6 +178,31 @@ function cutPx(g, e, p, a, big = 1) {
   g.line(x0, y0, x0 + (x1 - x0) * k, y0 + (y1 - y0) * k, C.white, a); g.line(x0, y0 + 1, x0 + (x1 - x0) * k, y0 + 1 + (y1 - y0) * k, SAM.red, a * 0.8);
 }
 
+// ---- Alchemist: real glass flasks (cork, glass, liquid), shattering glass, splashes, bubbling puddles ----
+const ALC = { glass: 0xd8f0f0, cork: 0x9a6b3a, poison: 0x6bd16a, poison2: 0x3f9a4a, poisonL: 0xb8ffb0, heal: 0x6dff8f, speed: 0xffe94d, shield: 0x6fd0ff };
+const BREW = { heal: ALC.heal, speed: ALC.speed, shield: ALC.shield };
+const FLASK = ['..k..', '..g..', '.ggg.', 'gLLLg', 'gLwLg', '.ggg.']; // k cork, g glass, L liquid, w shine
+// A flask at (x, y) (its middle), turned by `rot` quarter turns (it spins as it flies).
+function flaskPx(g, x, y, col, rot, a = 1, sc = 2) {
+  FLASK.forEach((row, j) => [...row].forEach((ch, i) => {
+    if (ch === '.') return; let dx = i - 2, dy = j - 3;
+    for (let r = 0; r < (rot & 3); r++) [dx, dy] = [-dy, dx];
+    g.rect(x + dx * sc, y + dy * sc, sc, sc, ch === 'k' ? ALC.cork : ch === 'g' ? ALC.glass : ch === 'w' ? C.white : col, a);
+  }));
+}
+// Where a lobbed flask is at p (0..1) between a and b: a high arc.
+const lob = (a, b, p, h = 28) => ({ x: a.x + (b.x - a.x) * p, y: a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * h });
+// Glass shatters and the liquid splashes out at (x, y): white flash, glass shards fly, drops of `col` burst up and fall.
+function shatterPx(g, x, y, ht, col, big, seed) {
+  if (ht < 0) return;
+  if (ht < 60) g.disc(x, y, 2 + (ht / 15) * big, C.white, 1 - ht / 60);
+  const p = ph(ht, 0, 420); if (p >= 1) return;
+  for (let i = 0; i < 7; i++) { const an = rnd(seed + i) * Math.PI * 2, d = (4 + rnd(seed + i * 3) * 10) * easeOut(p) * big; g.px(x + Math.cos(an) * d, y + Math.sin(an) * d * 0.6 + p * p * 8, i % 2 ? C.white : ALC.glass, 1 - p); }
+  for (let i = 0; i < 12; i++) { const an = -Math.PI / 2 + (rnd(seed + i * 5) - 0.5) * 2.8, v = (8 + rnd(seed + i * 7) * 12) * big, s = i % 3 ? 1 : 2; g.rect(x + Math.cos(an) * v * p, y + Math.sin(an) * v * p + p * p * 22, s, s, i % 4 === 0 ? C.white : col, 1 - p); }
+}
+// The alchemist's hand (the flask he holds sits in front of his belly).
+const handAt = (u) => ({ x: u.x + u.hw, y: u.mid + 1 });
+
 const n0 = (j) => j * 30; // each hero's beat starts a little after the one before
 export const RECIPES = {
   // CHARGE: he shakes with rage (the demo trembles him), glows red with a fast heartbeat, hot breath puffs rise from
@@ -654,6 +679,60 @@ export const RECIPES = {
     const edge = ms < END - 200 && Math.floor(t / 90) % 3 !== 0 ? [C.white, 0.18] : null;
     return { draws: g.out, tints: [['caster', 0, ct >= 0 && ct < 90 ? [C.white, 0.7] : edge], ['enemies', 0, e && ms - A - 260 >= 0 && ms - A - 260 < 90 ? [C.white, 0.85] : null]] };
   },
+  // ---- Alchemist ----
+  // CHARGE: he shakes his flask (the demo trembles him a little): it bubbles over, bubbles pop out of its neck, a puff
+  // of steam, green fizz; he glows green. (Mystery Brew: the bubbles cycle heal green, speed yellow, shield blue.)
+  alchCharge(q, c, t) {
+    const g = pen(); const u = c.caster, h = handAt(u), cols = c.brew ? [ALC.heal, ALC.speed, ALC.shield] : [ALC.poison, ALC.poisonL];
+    for (let i = 0; i < 6; i++) { const s = ((t / 450) + i / 6) % 1, x = h.x + 2 + Math.sin(t / 90 + i * 2) * (1 + s * 2), y = h.y - 4 - s * 14; if (i % 3) g.px(x, y, cols[i % cols.length], (1 - s) * (0.5 + 0.5 * q)); else { g.px(x, y - 1, cols[i % cols.length], 1 - s); g.px(x - 1, y, cols[i % cols.length], 1 - s); g.px(x + 1, y, cols[i % cols.length], 1 - s); g.px(x, y + 1, cols[i % cols.length], 1 - s); } }
+    if (q > 0.5) { const sp = ph(q, 0.5, 1); g.disc(h.x + 2, h.y - 8 - sp * 6, 1.5 + sp * 2, 0xc8c8d0, 0.5 * (1 - sp)); }
+    const pulse = 0.6 + 0.4 * Math.sin(t / 110);
+    return { draws: g.out, tints: [['caster', 0, [c.brew ? ALC.speed : ALC.poison, Math.round((0.08 + 0.22 * q) * pulse * 20) / 20]]] };
+  },
+  // FLASK BARRAGE: he throws 5 real flasks one by one, each spinning high over in an arc; each SHATTERS on its enemy
+  // (white flash, glass shards, a big green splash), leaves a bubbling poison PUDDLE on the floor that stays while the
+  // barrage goes on, and green poison wisps rise from the enemies it splashed (they go sickly green).
+  barrageNew(q, c, t) {
+    const g = pen(); const k = c.caster, V = c.volley; if (!k || !V) return g.out;
+    const ms = q * CAST_MS_NEW.barrageNew, a = handAt(k), END = CAST_MS_NEW.barrageNew, fade = 1 - ph(ms, END - 400, END);
+    const tints = c.enemies.map((e, i) => ['enemies', i, null]);
+    V.order.forEach((ti, w) => {
+      const e = c.enemies[ti]; if (!e) return;
+      const st = w * V.every, ft = ms - st, land = { x: e.x + (rnd(w * 3) - 0.5) * 6, y: e.mid };
+      if (ft >= 0 && ft < V.flyMs) { const o = lob(a, land, ft / V.flyMs); flaskPx(g, o.x, o.y, ALC.poison, Math.floor(ft / 70)); g.px(o.x - 2, o.y + 3, ALC.poison2, 0.6); }
+      const ht = ft - V.flyMs; if (ht < 0) return;
+      if (fade > 0) for (let x = -7; x <= 7; x++) { const hh = Math.round(Math.sqrt(1 - (x * x) / 49) * 2 * easeOut(ph(ht, 60, 260))); for (let y = -hh; y <= hh; y++) g.px(land.x + x, e.y + y, Math.abs(x) < 3 && y === 0 ? ALC.poisonL : ALC.poison2, 0.75 * fade); } // the puddle
+      if (fade > 0) { const bs = ((ms + w * 170) / 500) % 1; g.px(land.x - 3 + w % 3 * 3, e.y - 1 - bs * 3, ALC.poisonL, (1 - bs) * fade); } // it bubbles
+      shatterPx(g, land.x, land.y, ht, ALC.poison, 1.5, w * 13);
+      c.enemies.forEach((o, j) => { const p = ph(ht, 80 + j * 30, 900 + j * 30); if (p > 0 && p < 1 && (j === ti || Math.abs(o.x - e.x) < 25)) for (let i = 0; i < 3; i++) g.disc(o.x + (i - 1) * 4 + Math.sin(t / 200 + i + w) * 1.5, o.top + 2 - p * 10, 1 + p * 1.5, i % 2 ? ALC.poison : ALC.poison2, 0.5 * (1 - p)); });
+      if (ht < 70) tints[ti] = ['enemies', ti, [C.white, 0.85]];
+    });
+    c.enemies.forEach((e, i) => { if (!tints[i][2] && ms > V.flyMs) tints[i] = ['enemies', i, [ALC.poison, Math.round((0.3 * fade) * 20) / 20]]; });
+    return { draws: g.out, tints };
+  },
+  // MYSTERY BREW: 4 flasks in 3 colours spin over to the heroes; each shatters ON the hero in a splash of its colour and
+  // turns into what it does: HEAL green = "+" rise and a heal, SPEED yellow = sparks and wind streaks at their feet,
+  // SHIELD blue = a glassy blue bubble forms round them (the shield bar).
+  brewNew(q, c, t) {
+    const g = pen(); const k = c.caster, V = c.volley, heroes = c.targets; if (!k || !V) return g.out;
+    const ms = q * CAST_MS_NEW.brewNew, a = handAt(k), END = CAST_MS_NEW.brewNew, fade = 1 - ph(ms, END - 300, END);
+    const tints = heroes.map((h, i) => ['targets', i, null]);
+    V.order.forEach((ti, w) => {
+      const h = heroes[ti]; if (!h) return; const kind = V.kinds[w], col = BREW[kind];
+      const ft = ms - w * V.every, land = { x: h.x, y: h.top + 2 };
+      if (ft >= 0 && ft < V.flyMs) { const o = lob(a, land, ft / V.flyMs, ti === 0 ? 20 : 26); flaskPx(g, o.x, o.y, col, Math.floor(ft / 70)); }
+      const ht = ft - V.flyMs; if (ht < 0) return;
+      shatterPx(g, land.x, land.y, ht, col, 1.2, w * 17 + 5);
+      if (kind === 'heal') for (let i = 0; i < 4; i++) { const s = ph(ht, 60 + i * 80, 700 + i * 80); if (s <= 0 || s >= 1) continue; const x = h.x + (i - 1.5) * 4, y = h.mid - s * 16; for (const [dx, dy] of [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]]) g.px(x + dx, y + dy, ALC.heal, 1 - s); }
+      if (kind === 'speed') { const p = ph(ht, 50, 900); if (p < 1) for (let i = 0; i < 4; i++) { const yy = h.y - 2 - i * 2, x = h.x - h.hw - 3 - ((t / 6 + i * 7) % 10); g.line(x, yy, x + 4, yy, ALC.speed, 1 - p); g.px(h.x + (rnd(i + w) - 0.5) * 12, h.mid - 6 + rnd(i * 3) * 12, C.white, Math.floor(t / 60 + i) % 2 ? 1 - p : 0); } }
+      if (kind === 'shield') { const op = easeOut(ph(ht, 60, 260)), R = h.hw + 5, RY = (h.y - h.top) / 2 + 4; for (let an = 0; an < Math.PI * 2; an += 0.08) if (rnd(Math.round(an * 50)) < op) g.px(h.x + Math.cos(an) * R, h.mid + Math.sin(an) * RY, Math.sin(an * 3 + t / 200) > 0.4 ? C.white : ALC.shield, 0.85 * fade); }
+      if (ht < 300) tints[ti] = ['targets', ti, [col, 0.5 * (1 - ht / 300)]];
+    });
+    return { draws: g.out, tints };
+  },
+  // Today's flasks: the game's flask shot per throw (green poison / the brew's colours).
+  nowBarrage(q, c, t) { const k = c.caster; if (!k) return []; const ms = q * CAST_MS_NEW.nowBarrage, out = []; [0, 1, 0, 1, 0].forEach((ti, w) => { const e = c.enemies[ti], ft = ms - w * 250; if (e && ft >= 0 && ft < 900) out.push(...shotFx('flask', ft / 900, handAt(k), { x: e.x, y: e.mid }, t, w, ALC.poison)); }); return out; },
+  nowBrew(q, c, t) { const k = c.caster; if (!k) return []; const ms = q * CAST_MS_NEW.nowBrew, out = []; [[1, 'heal'], [1, 'shield'], [0, 'speed'], [1, 'heal']].forEach(([ti, kind], w) => { const h = c.targets[ti], ft = ms - w * 250; if (h && ft >= 0 && ft < 900) out.push(...shotFx('flask', ft / 900, handAt(k), { x: h.x, y: h.mid }, t, w, BREW[kind])); }); return out; },
   // Today's Death Coil: just the game's dark bolt shot.
   nowDarkbolt(q, c, t) {
     const k = c.caster, u = c.targets[0]; if (!k || !u) return [];
@@ -666,9 +745,9 @@ export const RECIPES = {
     return g.out;
   },
 };
-export const CAST_MS_NEW = { necroCharge: 700, deathCoilNew: 1100, boneSacrificeNew: 1700, nowDarkbolt: 520, clericCharge: 700, holyNovaNew: 1300, sanctuaryNew: 1800, berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400, archerChargeUp: 500, archerChargeAim: 400, arrowRainNew: 3000, huntersMarkNew: 1900, nowArrowRain: 2300, mageChargeFire: 800, mageChargeIce: 700, mageChargeElec: 700, mageChargeArcane: 600, fireballNew: 1900, frostNovaNew: 1700, chainNew: 1200, arcaneWardNew: 2100, nowFireball: 720, nowChain: 520, bardCharge: 600, discordNew: 2300, marchNew: 1700, balladNew: 2200, nowDiscord: 320, samuraiCharge: 700, windCutterNew: 1500, counterStanceNew: 2400 };
+export const CAST_MS_NEW = { necroCharge: 700, deathCoilNew: 1100, boneSacrificeNew: 1700, nowDarkbolt: 520, clericCharge: 700, holyNovaNew: 1300, sanctuaryNew: 1800, berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400, archerChargeUp: 500, archerChargeAim: 400, arrowRainNew: 3000, huntersMarkNew: 1900, nowArrowRain: 2300, mageChargeFire: 800, mageChargeIce: 700, mageChargeElec: 700, mageChargeArcane: 600, fireballNew: 1900, frostNovaNew: 1700, chainNew: 1200, arcaneWardNew: 2100, nowFireball: 720, nowChain: 520, bardCharge: 600, discordNew: 2300, marchNew: 1700, balladNew: 2200, nowDiscord: 320, samuraiCharge: 700, windCutterNew: 1500, counterStanceNew: 2400, alchCharge: 700, barrageNew: 2700, brewNew: 2500, nowBarrage: 1900, nowBrew: 1650 };
 // Name colours for heroes the game has none for yet (combat.json skillFx.name.heroColors gets them when they are built).
-export const NAME_COLORS = { archer: '#b8f07a', mage: '#c8a8ff', bard: '#ff9ad8', samurai: '#ff6a7f' };
+export const NAME_COLORS = { archer: '#b8f07a', mage: '#c8a8ff', bard: '#ff9ad8', samurai: '#ff6a7f', alchemist: '#7ae0b0' };
 
 // How the demo plays each skill (besides the Knight, who has his own code in demo.js).
 //   now: { recipe, ms, move: 'lunge'|'leap'|'hop'|null, rings: per-wave yellow rings, number }
@@ -710,5 +789,9 @@ export const SPECS = {
     new: { charge: 'samuraiCharge', recipe: 'windCutterNew', move: { type: 'recoil', px: -12 }, hit: { at: 520, shake: 4, shakeMs: 220, stopMs: 90, jitterPx: 9, jitterMs: 220, jitterAll: true, jitterStagger: 30 }, number: '113', numberAll: true, number2At: 30, numberColor: '#ff6a7f' } },
   counter_stance: { hero: 'samurai', now: { recipe: 'focusStance', move: 'hop' },
     new: { charge: 'samuraiCharge', recipe: 'counterStanceNew', move: null, hit: { at: 1160, shake: 2, shakeMs: 150, stopMs: 60, jitterPx: 7, jitterMs: 180 }, foeLunge: { at: 860, px: 12, ms: 260 }, number: '54', numberColor: '#ff6a7f', text: { s: 'COUNTER!', at: 1170, color: '#ff6a7f', self: true } } },
+  alch_barrage: { hero: 'alchemist', now: { recipe: 'nowBarrage', move: null, volley: { every: 250, n: 5, flyMs: 450, order: [0, 1, 0, 1, 0], number: '14', splash: '7' } },
+    new: { charge: 'alchCharge', tremble: true, recipe: 'barrageNew', move: null, volley: { every: 250, flyMs: 380, order: [0, 1, 0, 1, 0], number: '14', throwPx: 5, shake: 2, jitterPx: 6 } } },
+  alch_brew: { hero: 'alchemist', ally: true, squadTargets: true, brew: true, now: { recipe: 'nowBrew', move: null, volley: { every: 250, flyMs: 450, order: [1, 1, 0, 1], kinds: ['heal', 'shield', 'speed', 'heal'], heal: '+27' } },
+    new: { charge: 'alchCharge', tremble: true, recipe: 'brewNew', move: null, volley: { every: 250, flyMs: 380, order: [1, 1, 0, 1], kinds: ['heal', 'shield', 'speed', 'heal'], heal: '+27', throwPx: 4 }, text: { s: '+40% SPD', at: 1300, color: '#ffe94d', self: true } } },
   blood_feast: { hero: 'berserker', now: { recipe: 'bloodPact', move: 'hop' }, new: { charge: 'berserkerCharge', tremble: true, recipe: 'bloodFeast', move: { type: 'hop', liftPx: 10 } } },
 };

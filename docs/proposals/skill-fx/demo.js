@@ -310,7 +310,7 @@ export class Demo {
       h.dy = 1; h.dx = -1;
       if (look === 'new') {
         if (L.tremble) h.dx += Math.round(Math.sin(et / 23) * (et / P.cast) * 1.4);
-        play(L.charge, et / P.cast, { caster: body(hero, h.dx, h.dy), targets: [], squad: [], enemies: [], song: SP.song });
+        play(L.charge, et / P.cast, { caster: body(hero, h.dx, h.dy), targets: [], squad: [], enemies: [], song: SP.song, brew: SP.brew });
       }
       return;
     }
@@ -340,7 +340,7 @@ export class Demo {
     const land = mv.type === 'leap' ? { x: body(hero).x + (E0.x - body(hero).x) * (mv.share || 0.8), y: body(hero).y } : null; // where he lands: fixed
     const M0 = this.minions.map((m, i) => body(m, st.mins[i].dx, st.mins[i].dy));
     if (L.minionsGone != null) st.mins.forEach((m, i) => { const gt = since - L.minionsGone; if (gt >= 0 && (!L.minionsFade || gt > 300)) m.gone = true; else if (gt >= 0) m.alpha = 1 - gt / 300; if (!m.gone && L.minionsShake && since >= 0) m.dx = Math.round(Math.sin(et / 25 + i) * 0.8); });
-    const c = { caster: C0, targets: SP.squadTargets ? [C0, ...(A0 ? [A0] : [])] : A0 ? [A0] : self ? [C0] : [E0], squad: A0 ? [C0, A0] : [C0], enemies: [E0, E1], minions: M0, hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius, land, song: SP.song, ...(L.rain && sk.channel ? { every: L.rain.every, waves: sk.channel.waves.length } : {}) };
+    const c = { caster: C0, targets: SP.squadTargets ? [C0, ...(A0 ? [A0] : [])] : A0 ? [A0] : self ? [C0] : [E0], squad: A0 ? [C0, A0] : [C0], enemies: [E0, E1], minions: M0, hitMs: L.hit ? L.hit.at : (mv.config ? FX.dash[mv.config].inMs : 0), radius, land, song: SP.song, brew: SP.brew, volley: L.volley, ...(L.rain && sk.channel ? { every: L.rain.every, waves: sk.channel.waves.length } : {}) };
     if (L.hit && L.hit.knockPx && land) { // enemies inside the landing area are thrown back, away from where he lands
       const ht = et - P.impact;
       if (ht >= 0) for (const [a, s] of foes) { const e = body(a); if (Math.hypot(e.x - land.x, (e.y - land.y) * 1.4) > radius) continue; const k = (L.hit.knockPx / Z) * easeOut(ph(ht, 0, 90)) * (1 - easeOut(ph(ht, 200, 600))); s.dx = Math.sign(e.x - land.x || 1) * k; }
@@ -365,6 +365,26 @@ export class Demo {
       if (f > 0.22 && f < 0.36) { const mx = (E0.x + E1.x) / 2, my = (E0.mid + E1.mid) / 2; for (let i = 0; i < 6; i++) { const an = (i / 6) * Math.PI * 2, d = 2 + 5 * (f - 0.22) / 0.14; st.over.px(mx + Math.cos(an) * d, my + Math.sin(an) * d, i % 2 ? 0xffffff : 0xff7ac8, 1); } }
     }
     if (L.foeLunge) { const ft = since - L.foeLunge.at; if (ft >= 0 && ft < L.foeLunge.ms) { const f = ft / L.foeLunge.ms; st.foe.dx = -(L.foeLunge.px / Z) * (f < 0.4 ? easeOut(f / 0.4) : 1 - ph(f, 0.4, 1)); } } // an enemy swings at the hero
+    if (L.volley) { // thrown one by one (Flask Barrage / Mystery Brew): a throw each `every`, each lands `flyMs` later
+      const V = L.volley, ally = SP.squadTargets;
+      V.order.forEach((ti, w) => {
+        const tt = since - w * V.every; if (tt < 0) return;
+        if (V.throwPx && tt < 200) h.dx = -1 + (V.throwPx / Z) * (tt < 60 ? easeOut(tt / 60) : 1 - ph(tt, 60, 200)); // the throw: he leans in
+        const ht = tt - V.flyMs; if (ht < 0) return;
+        if (ally) { // a brew lands on a hero
+          const kind = V.kinds[w], isAlly = ti === 1 && A0;
+          if (kind === 'heal' && isAlly) { st.ally.hp = Math.min(30, (st.ally.hp ?? 13) + Math.round(8 * easeOut(ph(ht, 0, 300)))); this.number(st, V.heal, { ...A0, top: A0.top - w * 2 }, ht, false, '#6dff8f'); }
+          if (kind === 'shield' && isAlly) st.ally.shield = easeOut(ph(ht, 0, 200)) * (1 - ph(since, 2600, 3000));
+          return;
+        }
+        if (V.shake && ht < 100) st.cam.shake = Math.max(st.cam.shake, V.shake * (1 - ht / 100));
+        foes.forEach(([a, s2], i) => {
+          const hitIt = i === ti; if (!hitIt && !V.splash) return;
+          if (hitIt && V.jitterPx && ht < 150) { const j = ht / 150; s2.dx = Math.round((Math.sin(j * Math.PI * 6) * V.jitterPx * (1 - j)) / Z); }
+          const e = body(a); this.number(st, hitIt ? V.number : V.splash, { ...e, top: e.top - (w >> 1) * 3 }, ht - (hitIt ? 0 : 40), true);
+        });
+      });
+    }
     if (L.squadShield) { const at = since - (L.hit ? L.hit.at : 0); if (at >= 0) { const v = easeOut(ph(at, 0, 200)) * (1 - ph(at, 2500, 3000)); h.shield = v; if (A0) st.ally.shield = v; } }
     if (L.text) { const tt = since - L.text.at, E = L.text.self ? C0 : c.targets[0]; if (tt >= 0 && tt < 1100) st.numbers.push({ text: L.text.s, x: clampX(E.x * Z, L.text.s, 14), y: (E.top - 10) * Z - Math.round(ph(tt, 0, 1100) * 24), size: 14, color: L.text.color, alpha: ph(tt, 0, 100) * (1 - ph(tt, 800, 1100)) }); }
     // rain waves (Arrow Rain): every wave lands on all enemies inside the area: a small shake, they jitter, a number each

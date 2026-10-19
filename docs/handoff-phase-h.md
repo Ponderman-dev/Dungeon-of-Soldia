@@ -3,6 +3,12 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
+## START HERE (session 12): ALL HERO SKILL LOOKS ARE IN THE GAME
+User approved every hero on the demo page and asked to build them in: done (docs/systems/effects.md 'HERO LOOKS v2';
+src/systems/heroLooks.js; combat.json skillFx.charge/look/wave/flask/counter; BattleScene.showEvents holds a look's hit
+numbers until it lands). Game page rebuilt and republished. NEXT: ask the user to play and note anything off (timing of the
+held numbers, Wind Cutter's sweep across the enemy row, the Archer's aim). The demo page keeps its own frozen copies.
+
 ## START HERE (session 11): SKILL LOOKS, demo page hero by hero. ALL 10 HEROES IN THE DEMO. NEXT = the user's last OKs, then BUILD ALL INTO THE GAME
 Demo page: https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN (source docs/proposals/skill-fx/, build
 `node docs/proposals/skill-fx/make.mjs <scratchpad>/soldia-skill-fx.html`, republish to the SAME url, omit capabilities).

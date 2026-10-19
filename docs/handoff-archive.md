@@ -1,5 +1,16 @@
-# Handoff ARCHIVE (sessions 2-12, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-13, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## (session 13, 2026-10-19)
+- DONE: all 10 heroes' skill looks are in the game (docs/systems/effects.md 'HERO LOOKS v2'); game page republished.
+  Workflow cleanup: this file shortened, CLAUDE.md rules for reusing pages and publishing.
+- NEXT (user's order):
+  1. BUGS, GLITCHES, VISUAL POLISH pass. First one: Grukk (boss) looks like he FLOATS instead of walking.
+  2. HERO REDRAW (user is almost there): in the Character Studio (docs/systems/studio.md), apply with scripts/apply-designs.mjs.
+- LATER: sounds (user: 'we need to work on the sounds, but not now'; docs/systems/sound.md; the new skill looks have no
+  sounds of their own yet).
+- Ask the user to play and note anything off with the new skill looks (held hit numbers, Wind Cutter's sweep, Archer aim).
+
 
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).

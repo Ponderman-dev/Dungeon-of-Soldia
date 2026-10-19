@@ -67,6 +67,9 @@ def convert(src, out, maxs):
     subprocess.run(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-i', tmp, '-af', f'volume={-1 - float(peak.group(1)) if peak else 0}dB', '-b:a', '64k', out], check=True)
     os.remove(tmp)
 idx = json.load(open(f'{OPT}/options.json'))
+# Re-runs: take every Pixabay option out first, so the new ones are lettered right after the old options (removing them
+# one by one and lettering by count gave two sounds the same letter, e.g. Puzzle solved P + P).
+for cue in idx: idx[cue] = [o for o in idx[cue] if not o['file'].startswith('pixabay_')]
 credits, seen, added = [], set(), 0
 for f in sorted(os.listdir(SRC)):
     if not f.endswith('.mp3') or ' (1)' in f: continue  # '(1)' = a second download of the same file
@@ -81,7 +84,7 @@ for f in sorted(os.listdir(SRC)):
     opt = {'desc': f'PIXABAY {name}', 'file': out, 'yours': True}
     for cue in cues or ['_library']:
         if cue not in idx and cue != '_library': sys.exit(f'add-pixabay.py: no board row {cue} (run add-skills.py first)')
-        rows = idx[cue] = [o for o in idx.get(cue, []) if o['file'] != out]
+        rows = idx.setdefault(cue, [])
         rows.append({'id': letter(len(rows)), **opt})
         added += 1
     credits.append({'name': name, 'title': slug.replace('-', ' '), 'author': author, 'id': pid, 'file': out, 'source': f, 'url': f'https://pixabay.com/sound-effects/{slug}-{pid}/'})

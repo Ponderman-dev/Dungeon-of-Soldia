@@ -325,7 +325,7 @@ groupsEl.addEventListener('click', async (e) => {
   if (e.target.closest('.pad') && opt) flash(e.target.closest('.pad'), await playOption(cue, opt.dataset.id));
   if (e.target.closest('.pick') && opt) {
     const id = opt.dataset.id;
-    picks[cue] = picks[cue] && picks[cue].pick === id ? null : { pick: id, file: id === 'mine' ? (mineBufs[cue] || {}).name : '' };
+    picks[cue] = picks[cue] && picks[cue].pick === id ? null : { pick: id, file: id === 'mine' ? (mineBufs[cue] || {}).name : (cueByName[cue].options.find((x) => x.id === id) || {}).file || '' };
     if (!picks[cue]) delete picks[cue];
     drawPicks();
     savePick(cue);

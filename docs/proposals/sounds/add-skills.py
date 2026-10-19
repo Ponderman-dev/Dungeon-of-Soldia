@@ -37,7 +37,7 @@ def letter(i):
 lib = {}
 for v in opts.values():
     for o in v:
-        if o.get('yours'): lib.setdefault(o['file'], o['desc'])
+        if o.get('yours') and not o['file'].startswith('pixabay_'): lib.setdefault(o['file'], o['desc'])  # add-pixabay.py adds those
 # A = what every skill plays today (the shared skillCast cue).
 now = snd['cues']['skillCast']
 now_file = 'skillCast_now.mp3'

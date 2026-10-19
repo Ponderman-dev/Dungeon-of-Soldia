@@ -70,15 +70,56 @@
     "shakeIntensity": 0.006,
     "hitStopMs": 70,
     "charge": {
-      "_about": "The CHARGE beat: skill id -> recipe in src/systems/skillFx.js that plays on the hero during the wind-up (castMs). Heroes not listed have no charge look yet (done hero by hero).",
+      "_about": "The CHARGE beat: skill id (a rotation spell: 'skillId:SHORT') -> recipe in src/systems/skillFx.js / heroLooks.js that plays on the hero during the wind-up (castMs). An object { recipe, tremble } also trembles the hero side to side (tremble = px at the end of the wind-up).",
       "defense_bash": "knightCharge",
       "challenge": "knightCharge",
       "multistrike": "rogueCharge",
-      "smoke_bomb": "rogueCharge"
+      "smoke_bomb": "rogueCharge",
+      "brawl_leap": { "recipe": "berserkerCharge", "tremble": 4 },
+      "blood_feast": { "recipe": "berserkerCharge", "tremble": 4 },
+      "holy_nova": "clericCharge",
+      "sanctuary": "clericCharge",
+      "death_coil3": "necroCharge",
+      "bone_sacrifice": "necroCharge",
+      "arrow_rain": "archerChargeUp",
+      "hunters_mark": "archerChargeAim",
+      "mage_rotation:FB": "mageChargeFire",
+      "mage_rotation:FN": "mageChargeIce",
+      "mage_rotation:CL": "mageChargeElec",
+      "mage_ward": "mageChargeArcane",
+      "discord": "bardCharge",
+      "change_song": "bardChargeSong",
+      "wind_cutter3": "samuraiCharge",
+      "counter_stance": "samuraiCharge",
+      "alch_barrage": { "recipe": "alchCharge", "tremble": 2 },
+      "alch_brew": { "recipe": "alchChargeBrew", "tremble": 2 }
     },
+    "look": {
+      "_about": "HERO SKILL LOOKS v2 (heroLooks.js, user-approved demo): per skill id (rotation spell 'skillId:SHORT') WHEN the look hits and how the scene plays it. hitMs = the moment it lands: the skill's damage numbers, heals and kills WAIT for it (only the drawing waits, the rules are unchanged), + staggerMs per target in the cast's own target order. At the hit: shakeMs/shakeIntensity, stopMs (hit-stop) and the hit enemies jitter (jitterPx/jitterMs). move: recoil (px > 0 = rocks back from the target, < 0 = steps in). leap: Savage Leap's slam (up/hold/back ms, liftPx, share of the way, knockPx on the enemies in the landing area). allHit = the look draws the cast's own targets. targets 'squad' = the look gets the whole squad. radius: 'area' | 'landSplash' | 'holyNova' (the skill's own radius). swallow = projectile kinds the look already draws. aim = the look gets where the enemies are. A skill listed here skips the plain shake + hit-stop at the cast. holy_nova's smite waits for skillFx.wave.holy_nova.",
+      "brawl_leap": { "hitMs": 260, "stopMs": 120, "shakeMs": 280, "shakeIntensity": 0.023, "radius": "landSplash", "leap": { "upMs": 260, "holdMs": 200, "backMs": 320, "liftPx": 54, "share": 0.8, "knockPx": 15 } },
+      "blood_feast": {  },
+      "holy_nova": { "hitMs": 220, "shakeMs": 120, "shakeIntensity": 0.005, "radius": "holyNova" },
+      "sanctuary": { "hitMs": 200 },
+      "death_coil3": { "hitMs": 420, "stopMs": 60, "shakeMs": 160, "shakeIntensity": 0.008, "jitterPx": 6, "jitterMs": 160, "swallow": ["darkbolt"] },
+      "bone_sacrifice": { "targets": "squad", "minions": true },
+      "arrow_rain": { "move": { "type": "recoil", "px": 9 }, "aim": true },
+      "hunters_mark": { "hitMs": 140, "shakeMs": 100, "shakeIntensity": 0.004, "move": { "type": "recoil", "px": 6 } },
+      "mage_rotation:FB": { "hitMs": 300, "stopMs": 70, "shakeMs": 200, "shakeIntensity": 0.01, "jitterPx": 8, "jitterMs": 180, "move": { "type": "recoil", "px": 6 }, "swallow": ["fireball"] },
+      "mage_rotation:FN": { "hitMs": 160, "stopMs": 60, "shakeMs": 160, "shakeIntensity": 0.008, "jitterPx": 6, "jitterMs": 160, "allHit": true, "radius": "area" },
+      "mage_rotation:CL": { "hitMs": 1, "staggerMs": 120, "stopMs": 50, "shakeMs": 220, "shakeIntensity": 0.008, "jitterPx": 9, "jitterMs": 230, "allHit": true, "move": { "type": "recoil", "px": 5 }, "swallow": ["lightning"] },
+      "mage_ward": { "hitMs": 380 },
+      "discord": { "hitMs": 320, "staggerMs": 40, "stopMs": 40, "shakeMs": 120, "shakeIntensity": 0.005, "jitterPx": 5, "jitterMs": 150, "allHit": true, "radius": "area", "move": { "type": "recoil", "px": 4 }, "swallow": ["note"] },
+      "change_song": { "hitMs": 400, "targets": "squad" },
+      "wind_cutter3": { "hitMs": 520, "staggerMs": 30, "stopMs": 90, "shakeMs": 220, "shakeIntensity": 0.01, "jitterPx": 9, "jitterMs": 220, "allHit": true, "move": { "type": "recoil", "px": -12 }, "swallow": ["crescent"] },
+      "counter_stance": {  }
+    },
+    "flask": { "_about": "Alchemist's flasks thrown one by one (Flask Barrage, Mystery Brew: a 'flask' event with a named flask): each plays this recipe and its hit waits hitMs (the shatter).", "recipe": "flaskThrow", "hitMs": 380, "shakeMs": 80, "shakeIntensity": 0.004, "jitterPx": 6, "jitterMs": 150 },
+    "counter": { "_about": "Samurai's counter-cut thrown back from far away (Counter Stance): a clang, a crescent flies back, it cuts at hitMs.", "recipe": "counterCut", "hitMs": 260, "stopMs": 60, "shakeMs": 150, "shakeIntensity": 0.005, "jitterPx": 7, "jitterMs": 180 },
     "wave": {
       "_about": "A channel skill's look PER WAVE: skill id -> recipe in skillFx.js played on the wave's targets (the recipe gets c.wave / c.waves). Replaces the yellow wave ring. shakeMs/shakeIntensity per wave, lastShake* on the final wave; targetShakePx/Ms = the hit enemy itself jitters side to side (user: 'the enemy should be shaking during the shanking').",
-      "multistrike": { "recipe": "rogueSlash", "shakeMs": 50, "shakeIntensity": 0.002, "lastShakeMs": 130, "lastShakeIntensity": 0.006, "targetShakePx": 7, "targetShakeMs": 160, "lastTargetShakePx": 12 }
+      "multistrike": { "recipe": "rogueSlash", "shakeMs": 50, "shakeIntensity": 0.002, "lastShakeMs": 130, "lastShakeIntensity": 0.006, "targetShakePx": 7, "targetShakeMs": 160, "lastTargetShakePx": 12 },
+      "arrow_rain": { "recipe": "arrowRainWave", "hitMs": 150, "shakeMs": 90, "shakeIntensity": 0.005, "lastShakeMs": 130, "lastShakeIntensity": 0.01, "targetShakePx": 5, "targetShakeMs": 150, "lastTargetShakePx": 10, "swallow": ["rain"] },
+      "holy_nova": { "none": true, "hitMs": 280, "staggerMs": 70 }
     },
     "dash": {
       "_about": "An aggressive dash for a skill (user: 'more aggressive movement'): the hero shoots at its target from wherever it stands (forward = distance to the target minus stopPx, between minPx and maxPx) in inMs, holds, comes back in outMs. At the hit (inMs) the target is knocked back knockPx and the screen shakes (shakeMs, shakeIntensity); 0 = none. Replaces the small lunge for that skill.",
@@ -94,7 +135,7 @@
       "holdMs": 700,
       "outMs": 300,
       "defaultColor": "#ffffff",
-      "heroColors": { "knight": "#9cc8ff", "berserker": "#ff8a7a", "rogue": "#7fe8ff", "cleric": "#ffe08a", "necromancer": "#a8f08a" }
+      "heroColors": { "knight": "#9cc8ff", "berserker": "#ff8a7a", "rogue": "#7fe8ff", "cleric": "#ffe08a", "necromancer": "#a8f08a", "archer": "#b8f07a", "mage": "#c8a8ff", "bard": "#ff9ad8", "samurai": "#ff6a7f", "alchemist": "#7ae0b0" }
     },
     "areaColor": "0xffb27a",
     "areaMs": 520

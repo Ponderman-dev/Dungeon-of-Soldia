@@ -1,22 +1,19 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 14, 2026-10-19)
-- SOUND DONE (parallel session on claude/screen-review-notes-zk4cfb, merged in): sound board round 6/7 (a row per hero
-  skill, page 2 = all sounds, the user's 40 PIXABAY sounds, credits docs/credits-sounds.md) and the picks APPLIED: every
-  skill plays its own `skill_<id>` sound (Mystery Brew not picked yet). Details: docs/systems/sound.md 'ROUND 6' .. 'APPLIED'.
-- NEXT (user): SOUND. Read docs/systems/sound.md first. Open sound work: the new skill looks (HERO LOOKS v2) have no
-  sounds of their own; older cue notes in sound.md. GETTING FILES: this cloud session could reach ONLY its own GitHub repo
-  (itch.io, kenney.nl, opengameart, other GitHub repos all blocked/refused), so ask the user to UPLOAD CC0 packs (as with
-  Kenney before); ffmpeg trims/converts. Show/let the user hear picks on the existing review page before building in.
-- DONE this session: bug hunt (bots 480 runs + browser auto-player with glitch detectors: no crashes); fixes: Grukk float
-  (hop only at own walking pace), bosses swing from their own edge (retuned Brood Mother 6 atk, Frost Warden 10, Grukk 7),
-  Morthul max 2 comebacks (fights could never end), bosscheck tool revives protected heroes, tremble offset, golden-book
-  banner wrap, pop-up word pile, bars on screen at walls, skill names stack, reward sheet fade, elite shield before slide-in.
-  ART, ONE PIXEL SIZE (3) everywhere (docs/systems/floors-rooms.md): floor + wall one stone style ("option B, no highlight"),
-  pixel doors (doorArt.js) and torches (torchArt.js, on the pillars), room props redrawn (scripts/art/room-props-v2.py),
-  pixel puddles/glows, heroes darken in doorways, squad bench fades at the edges.
-- PARKED: HERO REDRAW proposal (pictures were sent in chat): chunky heroic body, 3/4 view facing the target, BIG weapons;
-  open question to the user: keep 3 parts or go to 6 (head, body, back leg, front leg, weapon+hand, off-hand).
+## START HERE (session 15, 2026-10-19)
+- LATEST BRANCH: `claude/screen-review-notes-zk4cfb` has EVERYTHING (session 14's ccr-a98ebfed-s4fhg6 merged in). Start
+  the next session from it. LESSON: before building/publishing the game, `git fetch` and check other session branches are
+  merged (`git merge-base --is-ancestor`); a build from a stale branch once wiped the skill looks off the game page.
+- SOUND DONE: sound board https://claude.ai/artifact/2pLgb918eNpVWUy2ePTSw8 (page 1 = moments + a row per hero skill,
+  page 2 = every sound with a moment drop-down, 'All my sounds' = drop-down; the user's 40 PIXABAY sounds; credits
+  docs/credits-sounds.md). Picks APPLIED: each skill plays its own `skill_<id>` sound (fallback skillCast); Mystery Brew
+  (alch_brew) has none yet. How to re-apply / add sounds: docs/systems/sound.md 'ROUND 6' .. 'APPLIED'.
+- SKILL LOOKS: all approved and in the game (heroLooks.js). Checked this session: all 20 skills cast in real fights, no
+  errors, every look draws. Death Coil's demo note still says 'change' (round 2 hit is in; ask the user to re-mark it).
+- OPEN (offered, not done): Bone Sacrifice pops 'Sacrifice!' 3-4 times stacked (one per skeleton) -> show it once?
+- PARKED: HERO REDRAW proposal: chunky heroic body, 3/4 view, BIG weapons; open question: keep 3 parts or go to 6.
+- Test helper (scratchpad, throwaway): Playwright + vite dev; `window.__game`, registry `squadIds`, `?floor=5&room=fight`,
+  `sc.castFromUI(uid, i)` after zeroing cooldowns, wrap `sc.playSkillFx` to log looks.
 
 ## How we work with this user
 - Beginner, vibe coding: explain simply, small steps, ask before design changes; 4 ideas via the question tool for picks.

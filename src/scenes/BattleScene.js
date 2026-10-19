@@ -52,6 +52,7 @@ const DUNGEON_ID = 'A';
 const SLOT_Y = 720;
 const ENEMY_Y = 340;
 const BAR_WIDTH = 44;
+const POP_REPEAT_MS = 600; // the same word over one fighter is not popped again within this time
 const WALL_H = 200; // the back wall (with the door) fills the top of each floor
 const DOOR_X = GAME_WIDTH / 2;
 const T = combatRules.transition;
@@ -1144,11 +1145,14 @@ export default class BattleScene extends Phaser.Scene {
   // Keeps a fighter's health bar attached to it while it moves.
   syncBar(view, baseY = view.ch.y + view.ch.hopOffset) {
     const y = baseY - view.unit.def.height * Math.abs(view.ch.scaleY) - 10;
-    view.bg.setPosition(view.ch.x, y).setAlpha(view.ch.alpha);
-    view.fill.setPosition(view.ch.x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
-    view.shieldFill.setPosition(view.ch.x - BAR_WIDTH / 2, y - 5).setAlpha(view.ch.alpha);
-    view.chipBox.setPosition(view.ch.x, y - 18).setAlpha(view.ch.alpha);
-    if (view.lvl) view.lvl.setPosition(view.ch.x - BAR_WIDTH / 2 - 3, y).setAlpha(view.bg.alpha);
+    // The bar (and the Lv label left of it) stays on screen when the fighter stands at a side wall.
+    const left = BAR_WIDTH / 2 + (view.lvl ? view.lvl.width + 5 : 2);
+    const x = Phaser.Math.Clamp(view.ch.x, left, GAME_WIDTH - BAR_WIDTH / 2 - 2);
+    view.bg.setPosition(x, y).setAlpha(view.ch.alpha);
+    view.fill.setPosition(x - BAR_WIDTH / 2, y).setAlpha(view.ch.alpha);
+    view.shieldFill.setPosition(x - BAR_WIDTH / 2, y - 5).setAlpha(view.ch.alpha);
+    view.chipBox.setPosition(x, y - 18).setAlpha(view.ch.alpha);
+    if (view.lvl) view.lvl.setPosition(x - BAR_WIDTH / 2 - 3, y).setAlpha(view.bg.alpha);
     this.blinkIcons(view);
   }
 
@@ -2400,6 +2404,15 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   popText(view, text, color, big = false, sizePx = null) {
+    // The same WORD (Counter!, Blocked!) already floating over this fighter is not shown again: a Samurai
+    // countering a lot made an unreadable pile. Numbers always show.
+    const now = this.time.now;
+    view.recentPops = view.recentPops || {};
+    if (/[a-z]/i.test(text)) {
+      const last = view.recentPops[text];
+      if (last && now - last < POP_REPEAT_MS) return;
+      view.recentPops[text] = now;
+    }
     // Pop-ups that appear together stack upwards instead of overlapping.
     view.popSlot = ((view.popSlot ?? -1) + 1) % 4;
     // Above where the fighter is right now (a hero may be away at an enemy).

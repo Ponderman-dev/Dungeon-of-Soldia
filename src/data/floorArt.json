@@ -57,7 +57,7 @@
     "edgeShade": 15
   },
   "torch": {
-    "_about": "The wall torches (squad screen) as pixel art: systems/torchArt.js. holder rows from the handle top down; flames = frames shown in turn (frameMs); glow = dithered warm pixels round the flame.",
+    "_about": "The wall torches (squad screen) as pixel art: systems/torchArt.js. holder rows from the handle top down; flames = frames shown in turn (frameMs); glow = a few solid rings of warm light round the flame (glowSteps).",
     "holder": ["..w..", ".wWw.", ".wWw.", ".wWw.", "iiiii", "..i..", "..i.."],
     "flames": [
       ["..r..", "..o..", ".ooo.", ".oyo.", "oyyyo", "oyYyo", ".oyo."],
@@ -65,9 +65,10 @@
       ["...r.", "..oo.", ".ooo.", ".oyoo", "oyyyo", "oyYyo", ".oyo."]
     ],
     "frameMs": 130,
-    "glowRadius": 12,
+    "glowRadius": 10,
     "glowDrop": 4,
-    "glowAlpha": 0.35,
+    "glowAlpha": 0.16,
+    "glowSteps": 3,
     "colors": { "w": "0x5a3a24", "W": "0x74502f", "i": "0x3c3833", "r": "0xc9452a", "o": "0xff9a30", "y": "0xffd75a", "Y": "0xfff2b0", "glow": "0xff9a40" }
   },
   "door": {

@@ -1,5 +1,5 @@
 // A wall torch as pixel art (no Phaser): the iron bracket and wooden handle, a flame in a few frames (it flickers by
-// switching frames) and a warm glow on the wall (dithered pixels, fading out). Colours / sizes: floorArt.json `torch`.
+// switching frames) and a warm glow on the wall (a few solid rings). Colours / sizes: floorArt.json `torch`.
 // Each layer: { w, h, ax, ay, pixels } with (ax, ay) = the top of the handle; pixels = 0xrrggbb or -1, glow also alpha.
 const num = (c) => (typeof c === 'number' ? c : Number(c));
 
@@ -14,14 +14,14 @@ export function torchLayers(T) {
   const col = T.colors;
   const holder = grid(T.holder, col, Math.floor(T.holder[0].length / 2), 0);
   const flames = T.flames.map((f) => grid(f, col, Math.floor(f[0].length / 2), f.length));
-  // The glow: every other pixel in a circle, brighter in the middle (alpha per pixel).
+  // The glow: a few solid rings of warm light (no dither), each step a little brighter towards the flame.
   const r = T.glowRadius, w = r * 2 + 1;
   const pixels = new Int32Array(w * w).fill(-1), alpha = new Float32Array(w * w);
   for (let y = 0; y < w; y++) for (let x = 0; x < w; x++) {
     const d = Math.hypot(x - r, (y - r) * 1.15) / r;
-    if (d >= 1 || (x + y) % 2) continue;
+    if (d >= 1) continue;
     pixels[y * w + x] = num(col.glow);
-    alpha[y * w + x] = T.glowAlpha * (1 - d);
+    alpha[y * w + x] = T.glowAlpha * (Math.floor((1 - d) * T.glowSteps) + 1) / T.glowSteps;
   }
   return { holder, flames, glow: { w, h: w, ax: r, ay: r + T.glowDrop, pixels, alpha } };
 }

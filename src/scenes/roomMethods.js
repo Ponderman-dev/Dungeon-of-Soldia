@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { layerTexture } from '../entities/pixelLayer.js';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
 import { drawWindow } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
@@ -16,6 +17,21 @@ import { roomForFloor } from '../systems/rooms.js';
 // squad walks on as after a fight.
 
 const PROP_Y = 360; // where the props stand (the enemies' line)
+
+// A flat oval glow made of `steps` solid rings (r = radius in art pixels), as a texture made once per look.
+function glowTexture(scene, r, color, alpha, steps = 3) {
+  const key = `room-glow-${r}-${color}-${alpha}`;
+  if (scene.textures.exists(key)) return key;
+  const w = r * 2 + 1, h = Math.max(3, Math.round(r * 1.1)) * 2 + 1, ry = (h - 1) / 2;
+  const pixels = new Int32Array(w * h).fill(-1), alphas = new Float32Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const d = Math.hypot((x - r) / r, (y - ry) / ry);
+    if (d >= 1) continue;
+    pixels[y * w + x] = color;
+    alphas[y * w + x] = (alpha * (Math.floor((1 - d) * steps) + 1)) / steps;
+  }
+  return layerTexture(scene, key, { w, h, pixels, alpha: alphas });
+}
 
 export const roomMethods = {
   // Which room (or null = a fight) floor n is. Never two rooms in a row.
@@ -58,14 +74,20 @@ export const roomMethods = {
     if (!R) return;
     const g = this.add.graphics();
     container.add(g);
+    // Puddles: pixel ellipses on the floor's pixel grid (a wet dark rim, water, a glint).
+    const p = D.px;
     for (const [x, y, w, h] of R.puddles || []) {
-      g.fillStyle(0x16304e, 0.9).fillEllipse(x, y, w + 2, h + 2); // wet dark edge
-      g.fillStyle(0x2f5f98, 0.85).fillEllipse(x, y, w, h);
-      g.fillStyle(0x8fc8ff, 0.7).fillRect(Math.round(x - w / 4), Math.round(y - 1), Math.round(w / 3), 2); // a glint
+      const rx = Math.max(2, Math.round(w / 2 / p)), ry = Math.max(1, Math.round(h / 2 / p));
+      const cx = Math.round(x / p), cy = Math.round(y / p);
+      for (let j = -ry - 1; j <= ry + 1; j++) for (let i = -rx - 1; i <= rx + 1; i++) {
+        const d = (i / (rx + 0.5)) ** 2 + (j / (ry + 0.5)) ** 2;
+        const rim = (i / (rx + 1.5)) ** 2 + (j / (ry + 1.5)) ** 2;
+        if (d <= 1) g.fillStyle(j === 0 && i < 0 && i > -rx ? 0x8fc8ff : 0x2f5f98, 0.9).fillRect((cx + i) * p, (cy + j) * p, p, p);
+        else if (rim <= 1) g.fillStyle(0x16304e, 0.9).fillRect((cx + i) * p, (cy + j) * p, p, p);
+      }
     }
     for (const [name, x, y] of R.items || []) {
       const art = D.sprites[name];
-      const p = D.px;
       const w = art.rows[0].length;
       const top = y - art.rows.length * p;
       art.rows.forEach((row, r) => [...row].forEach((c, k) => {
@@ -74,8 +96,8 @@ export const roomMethods = {
       }));
     }
     for (const [x, y, radius, color, alpha] of R.glows || []) {
-      // Two flat layers (a wide faint one and a small brighter core) so the light looks soft on the floor.
-      const glow = this.add.container(x, y, [this.add.ellipse(0, 0, radius * 2, radius * 1.1, Number(color), alpha * 0.5), this.add.ellipse(0, 0, radius, radius * 0.55, Number(color), alpha)]);
+      // A few solid rings of light on the pixel grid (like the torches), brighter towards the middle.
+      const glow = this.add.image(x, y, glowTexture(this, Math.max(2, Math.round(radius / p)), Number(color), alpha)).setScale(p);
       glow.setAlpha(0.7);
       container.add(glow);
       this.tweens.add({ targets: glow, alpha: 1, scale: 1.12, duration: 600 + Math.random() * 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });

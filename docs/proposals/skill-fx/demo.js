@@ -364,6 +364,7 @@ export class Demo {
       if (f > 0.22 && f < 0.5) { const j = (f - 0.22) / 0.28; vic.dx = Math.round(Math.sin(j * Math.PI * 4) * 1.5 * (1 - j)); }
       if (f > 0.22 && f < 0.36) { const mx = (E0.x + E1.x) / 2, my = (E0.mid + E1.mid) / 2; for (let i = 0; i < 6; i++) { const an = (i / 6) * Math.PI * 2, d = 2 + 5 * (f - 0.22) / 0.14; st.over.px(mx + Math.cos(an) * d, my + Math.sin(an) * d, i % 2 ? 0xffffff : 0xff7ac8, 1); } }
     }
+    if (L.foeLunge) { const ft = since - L.foeLunge.at; if (ft >= 0 && ft < L.foeLunge.ms) { const f = ft / L.foeLunge.ms; st.foe.dx = -(L.foeLunge.px / Z) * (f < 0.4 ? easeOut(f / 0.4) : 1 - ph(f, 0.4, 1)); } } // an enemy swings at the hero
     if (L.squadShield) { const at = since - (L.hit ? L.hit.at : 0); if (at >= 0) { const v = easeOut(ph(at, 0, 200)) * (1 - ph(at, 2500, 3000)); h.shield = v; if (A0) st.ally.shield = v; } }
     if (L.text) { const tt = since - L.text.at, E = L.text.self ? C0 : c.targets[0]; if (tt >= 0 && tt < 1100) st.numbers.push({ text: L.text.s, x: clampX(E.x * Z, L.text.s, 14), y: (E.top - 10) * Z - Math.round(ph(tt, 0, 1100) * 24), size: 14, color: L.text.color, alpha: ph(tt, 0, 100) * (1 - ph(tt, 800, 1100)) }); }
     // rain waves (Arrow Rain): every wave lands on all enemies inside the area: a small shake, they jitter, a number each
@@ -407,8 +408,8 @@ export class Demo {
       if (L.number) for (const [a, E] of [[this.foe, E0], [this.foe2, E1]]) if (Math.hypot(E.x - A0.x, (E.y - A0.y) * 1.4) <= radius) this.number(st, L.number, E, at - 60, true);
     } else if (L.number) {
       const at = since - (L.hit ? L.hit.at : L.numberAt || 0);
-      this.number(st, L.number, E0, at, true);
-      if (L.numberAll) this.number(st, L.number2 || L.number, E1, at - (L.number2At ?? 40), true);
+      this.number(st, L.number, E0, at, true, L.numberColor);
+      if (L.numberAll) this.number(st, L.number2 || L.number, E1, at - (L.number2At ?? 40), true, L.numberColor);
     }
   }
 

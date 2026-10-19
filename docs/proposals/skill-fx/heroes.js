@@ -158,6 +158,26 @@ const HEART = ['.#.#.', '#####', '#####', '.###.', '..#..'];
 function heartPx(g, x, y, c, a) { HEART.forEach((row, j) => [...row].forEach((ch, i) => { if (ch === '#') g.px(x + i - 2, y + j - 2, (i === 1 && j === 1) ? C.white : c, a); })); }
 const luteAt = (u) => ({ x: u.x + u.hw, y: u.mid + 1 });
 
+// ---- Samurai: steel white, a crimson accent, sakura petals; one clean sword arc, then the delayed cut ----
+const SAM = { steel: 0xe8eef8, blue: 0xb8d8ff, red: 0xff4a5a, red2: 0xb01e2e, petal: 0xffb8d0, petal2: 0xff8ab0 };
+// A crescent (the arc a sword swing leaves): opening towards -dir, `r` tall-ish, white outer edge, pale blue inside.
+function crescentPx(g, cx, cy, r, th, dir, a) {
+  if (a <= 0) return;
+  for (let an = -1.15; an <= 1.15; an += 0.04) {
+    const w = th * Math.cos(an * 1.1); // thick in the middle, thin at the tips
+    const ox = cx + dir * Math.cos(an) * r, oy = cy + Math.sin(an) * r * 1.5;
+    g.px(ox, oy, C.white, a);
+    for (let k = 1; k <= w; k++) g.px(ox - dir * k, oy, k < 2 ? SAM.steel : SAM.blue, a * (1 - k / (w + 1)) * 0.9);
+  }
+}
+// A sakura petal: 2 px, a darker tip, flipping as it turns.
+function petalPx(g, x, y, t, i, a) { const f = Math.floor(t / 120 + i) % 2; g.px(x, y, SAM.petal, a); g.px(x + (f ? 1 : 0), y + (f ? 0 : 1), SAM.petal2, a); }
+// A clean diagonal cut across a body: a long thin white line with a crimson edge, growing from one end.
+function cutPx(g, e, p, a, big = 1) {
+  const L = (e.hw + 6) * big, x0 = e.x - L, y0 = e.mid - L * 0.6, x1 = e.x + L, y1 = e.mid + L * 0.6, k = easeOut(Math.min(1, p));
+  g.line(x0, y0, x0 + (x1 - x0) * k, y0 + (y1 - y0) * k, C.white, a); g.line(x0, y0 + 1, x0 + (x1 - x0) * k, y0 + 1 + (y1 - y0) * k, SAM.red, a * 0.8);
+}
+
 const n0 = (j) => j * 30; // each hero's beat starts a little after the one before
 export const RECIPES = {
   // CHARGE: he shakes with rage (the demo trembles him), glows red with a fast heartbeat, hot breath puffs rise from
@@ -573,6 +593,67 @@ export const RECIPES = {
   },
   // Today's Discord: the game's note shot to every enemy.
   nowDiscord(q, c, t) { const k = c.caster; if (!k) return []; const out = []; c.enemies.forEach((e, i) => out.push(...shotFx('note', q, luteAt(k), { x: e.x, y: e.mid }, t, i))); return out; },
+  // ---- Samurai ----
+  // CHARGE: he goes still, hand on the hilt: a glint of light runs up his blade, thin air streaks are drawn in towards
+  // him, a few sakura petals drift past; at the very end his eyes flash.
+  samuraiCharge(q, c, t) {
+    const g = pen(); const u = c.caster, bx = u.x + u.hw + 1;
+    const gp = (q * 2) % 1; g.px(bx + 1 - gp * 3, u.mid + 4 - gp * 14, C.white, 1); g.px(bx + 1 - gp * 3, u.mid + 5 - gp * 14, SAM.blue, 0.8); // the glint on the blade
+    for (let i = 0; i < 4; i++) { const s = (q * 1.4 + i / 4) % 1, y = u.top + 4 + i * 4, x = u.x + 26 - s * 22; g.line(x, y, x + 5, y, SAM.steel, (1 - s) * 0.5); }
+    for (let i = 0; i < 3; i++) { const s = ((t / 1600) + i / 3) % 1; petalPx(g, u.x + 18 - s * 34, u.top - 6 + s * 14 + Math.sin(t / 200 + i) * 2, t, i, 0.9); }
+    if (q > 0.85) { g.px(u.x - 1, u.top + 5, C.white, 1); g.px(u.x + 2, u.top + 5, C.white, 1); }
+    return { draws: g.out, tints: [['caster', 0, q > 0.85 ? [C.white, 0.3] : null]] };
+  },
+  // WIND CUTTER: one fast draw: a big white sword arc flashes right in front of him, and a tall crescent of wind flies
+  // across the whole row, sweeping petals and air streaks along. As it passes each enemy a thin white CUT flashes
+  // across them (they freeze white for a moment); then, a beat after the wind has gone, the cuts open BIG (crimson
+  // edge, red drops, petals burst) and the crit numbers come (spec): the delayed cut.
+  windCutterNew(q, c, t) {
+    const g = pen(); const k = c.caster; if (!k) return g.out;
+    const ms = q * CAST_MS_NEW.windCutterNew, SPEED = 0.32, x0 = k.x + k.hw + 4, y = k.mid, open = c.openMs || 520;
+    if (ms < 110) crescentPx(g, x0, y, 9 + ms / 20, 4, 1, 1 - ms / 110); // the draw: a sword arc right in front of him
+    const cx = x0 + ms * SPEED, fade = 1 - ph(cx, 128, 150);
+    if (cx < 150) {
+      crescentPx(g, cx, y, 12, 4, 1, fade);
+      for (let i = 0; i < 6; i++) { const yy = y - 14 + i * 5.5, len = 10 + rnd(i) * 10; g.line(cx - 6 - len, yy, cx - 6, yy, i % 2 ? SAM.steel : SAM.blue, 0.55 * fade); }
+      for (let i = 0; i < 5; i++) petalPx(g, cx - 4 - rnd(i * 3) * 18, y - 12 + rnd(i * 5) * 24 + Math.sin(t / 90 + i) * 2, t, i, fade);
+    }
+    const tints = c.enemies.map((e, i) => ['enemies', i, null]);
+    c.enemies.forEach((e, i) => {
+      const pass = (e.x - x0) / SPEED, ht = ms - pass; if (ht < 0) return;
+      if (ht < 160) cutPx(g, e, ht / 60, 1 - ph(ht, 100, 160)); // the first, thin cut as the wind passes
+      const ot = ms - open - i * 30; // the delayed cut opens
+      if (ot >= 0) {
+        const p = ph(ot, 0, 500); if (p < 1) { cutPx(g, e, 1, 1 - p, 1.5); if (ot < 90) g.disc(e.x, e.mid, 4 + ot / 10, C.white, 1 - ot / 90); }
+        const sp = ph(ot, 0, 550); if (sp < 1) for (let j = 0; j < 10; j++) { const an = -0.6 + (j / 10) * 1.8 + (j % 2 ? 3.14 : 0), d = 4 + 12 * easeOut(sp); const px = e.x + Math.cos(an) * d, py = e.mid + Math.sin(an) * d * 0.7 + sp * sp * 10; if (j % 3) g.rect(px, py, 1, 1, j % 2 ? SAM.red : SAM.red2, 1 - sp); else petalPx(g, px, py - 4, t, j, 1 - sp); }
+      }
+      tints[i] = ['enemies', i, ht < 70 ? [C.white, 0.9] : ot >= 0 && ot < 80 ? [C.white, 0.9] : ot >= 0 && ot < 380 ? [SAM.red, 0.4 * (1 - (ot - 80) / 300)] : null];
+    });
+    return { draws: g.out, tints };
+  },
+  // COUNTER STANCE: he raises his blade level and a ring of sakura petals swirls in and circles him calmly, a white
+  // edge flickers on his outline (ready). Then the demo shows a counter: the goblin swings at him from afar (red swipe),
+  // a bright CLANG on his blade (white star, sparks), and a thin white crescent flies back and CUTS the goblin.
+  counterStanceNew(q, c, t) {
+    const g = pen(); const k = c.caster, e = c.enemies[0]; if (!k) return g.out;
+    const ms = q * CAST_MS_NEW.counterStanceNew, A = c.attackMs || 900, END = CAST_MS_NEW.counterStanceNew, fade = 1 - ph(ms, END - 300, END);
+    for (let i = 0; i < 8; i++) { // petals swirl in and then circle him
+      const r = 8 + 16 * (1 - easeOut(ph(ms, 0, 450))), an = t / 400 + (i * Math.PI * 2) / 8;
+      petalPx(g, k.x + Math.cos(an) * (k.hw + r * 0.5 + 3), k.mid + Math.sin(an) * (6 + r * 0.3), t, i, fade);
+    }
+    const bx = k.x + k.hw + 2, by = k.mid - 3;
+    if (ms < A) { const gp = (ms / 500) % 1; g.px(bx + gp * 6, by, C.white, 1); } // a glint slides along the level blade
+    if (e && ms >= A && ms < A + 160) { const p = (ms - A) / 160; for (let j = 0; j < 3; j++) g.line(bx + 4, by - 4 + j * 4, bx + 10 - p * 4, by - 6 + j * 4 + p * 4, SAM.red, 1 - p); } // the incoming hit
+    const ct = ms - A - 60; // CLANG: he parries
+    if (ct >= 0 && ct < 300) { const p = ct / 300; if (ct < 120) g.disc(bx + 2, by, 2 + ct / 30, C.white, 1 - ct / 120); for (let j = 0; j < 8; j++) { const an = (j / 8) * Math.PI * 2, d = 3 + 9 * easeOut(p); g.px(bx + 2 + Math.cos(an) * d, by + Math.sin(an) * d, j % 2 ? C.white : 0xffe066, 1 - p); } }
+    if (e) { // the counter flies back and cuts the goblin
+      const ft = ms - A - 140, fly = 120;
+      if (ft >= 0 && ft < fly) crescentPx(g, bx + (e.x - bx) * (ft / fly), by + (e.mid - by) * (ft / fly), 7, 3, 1, 1);
+      const hit = ft - fly; if (hit >= 0 && hit < 500) { cutPx(g, e, hit / 60, 1 - ph(hit, 250, 500), 1.2); if (hit < 80) g.disc(e.x, e.mid, 3 + hit / 12, C.white, 1 - hit / 80); }
+    }
+    const edge = ms < END - 200 && Math.floor(t / 90) % 3 !== 0 ? [C.white, 0.18] : null;
+    return { draws: g.out, tints: [['caster', 0, ct >= 0 && ct < 90 ? [C.white, 0.7] : edge], ['enemies', 0, e && ms - A - 260 >= 0 && ms - A - 260 < 90 ? [C.white, 0.85] : null]] };
+  },
   // Today's Death Coil: just the game's dark bolt shot.
   nowDarkbolt(q, c, t) {
     const k = c.caster, u = c.targets[0]; if (!k || !u) return [];
@@ -585,9 +666,9 @@ export const RECIPES = {
     return g.out;
   },
 };
-export const CAST_MS_NEW = { necroCharge: 700, deathCoilNew: 1100, boneSacrificeNew: 1700, nowDarkbolt: 520, clericCharge: 700, holyNovaNew: 1300, sanctuaryNew: 1800, berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400, archerChargeUp: 500, archerChargeAim: 400, arrowRainNew: 3000, huntersMarkNew: 1900, nowArrowRain: 2300, mageChargeFire: 800, mageChargeIce: 700, mageChargeElec: 700, mageChargeArcane: 600, fireballNew: 1900, frostNovaNew: 1700, chainNew: 1200, arcaneWardNew: 2100, nowFireball: 720, nowChain: 520, bardCharge: 600, discordNew: 2300, marchNew: 1700, balladNew: 2200, nowDiscord: 320 };
+export const CAST_MS_NEW = { necroCharge: 700, deathCoilNew: 1100, boneSacrificeNew: 1700, nowDarkbolt: 520, clericCharge: 700, holyNovaNew: 1300, sanctuaryNew: 1800, berserkerCharge: 600, savageLeapNew: 1300, bloodFeast: 1700, oldSmokeBomb: 1400, archerChargeUp: 500, archerChargeAim: 400, arrowRainNew: 3000, huntersMarkNew: 1900, nowArrowRain: 2300, mageChargeFire: 800, mageChargeIce: 700, mageChargeElec: 700, mageChargeArcane: 600, fireballNew: 1900, frostNovaNew: 1700, chainNew: 1200, arcaneWardNew: 2100, nowFireball: 720, nowChain: 520, bardCharge: 600, discordNew: 2300, marchNew: 1700, balladNew: 2200, nowDiscord: 320, samuraiCharge: 700, windCutterNew: 1500, counterStanceNew: 2400 };
 // Name colours for heroes the game has none for yet (combat.json skillFx.name.heroColors gets them when they are built).
-export const NAME_COLORS = { archer: '#b8f07a', mage: '#c8a8ff', bard: '#ff9ad8' };
+export const NAME_COLORS = { archer: '#b8f07a', mage: '#c8a8ff', bard: '#ff9ad8', samurai: '#ff6a7f' };
 
 // How the demo plays each skill (besides the Knight, who has his own code in demo.js).
 //   now: { recipe, ms, move: 'lunge'|'leap'|'hop'|null, rings: per-wave yellow rings, number }
@@ -625,5 +706,9 @@ export const SPECS = {
     new: { charge: 'bardCharge', recipe: 'marchNew', move: { type: 'hop', liftPx: 8 }, hit: { at: 300, shake: 0, shakeMs: 0, stopMs: 0 }, text: { s: 'MARCH: +15% SPD', at: 1000, color: '#ffc84d', self: true } } },
   'change_song:ballad': { hero: 'bard', ally: true, squadTargets: true, song: 'ballad', now: { recipe: 'changeSong', move: 'hop', text: { s: 'Ballad!', at: 0, color: '#6dff8f', self: true } },
     new: { charge: 'bardCharge', recipe: 'balladNew', move: { type: 'hop', liftPx: 6 }, hit: { at: 500, shake: 0, shakeMs: 0, stopMs: 0 }, heal: '+8', text: { s: 'BALLAD: REGEN', at: 1000, color: '#7dffa0', self: true } } },
+  wind_cutter3: { hero: 'samurai', now: { recipe: 'windCutter', move: null, number: '113', numberAll: true, numberAt: 250 },
+    new: { charge: 'samuraiCharge', recipe: 'windCutterNew', move: { type: 'recoil', px: -12 }, hit: { at: 520, shake: 4, shakeMs: 220, stopMs: 90, jitterPx: 9, jitterMs: 220, jitterAll: true, jitterStagger: 30 }, number: '113', numberAll: true, number2At: 30, numberColor: '#ff6a7f' } },
+  counter_stance: { hero: 'samurai', now: { recipe: 'focusStance', move: 'hop' },
+    new: { charge: 'samuraiCharge', recipe: 'counterStanceNew', move: null, hit: { at: 1160, shake: 2, shakeMs: 150, stopMs: 60, jitterPx: 7, jitterMs: 180 }, foeLunge: { at: 860, px: 12, ms: 260 }, number: '54', numberColor: '#ff6a7f', text: { s: 'COUNTER!', at: 1170, color: '#ff6a7f', self: true } } },
   blood_feast: { hero: 'berserker', now: { recipe: 'bloodPact', move: 'hop' }, new: { charge: 'berserkerCharge', tremble: true, recipe: 'bloodFeast', move: { type: 'hop', liftPx: 10 } } },
 };

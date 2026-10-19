@@ -180,6 +180,8 @@
     "stepHeight": 6,
     "slideMs": 1000,
     "doorFadePx": 70,
+    "doorDarken": 0.9,
+    "doorFadeLate": 2.2,
     "squadEnter": {
       "_about": "The squad screen's BEGIN DESCENT (SquadScene.descend): the entrance gate opens (floorArt.json door.anim), then the squad waits waitMs before walking in (one after another, staggerMs apart), and the screen fades to black over fadeMs once the last one is through.",
       "waitMs": 1000,

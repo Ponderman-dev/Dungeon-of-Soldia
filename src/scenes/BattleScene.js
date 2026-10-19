@@ -1291,7 +1291,11 @@ export default class BattleScene extends Phaser.Scene {
         if (step !== view.lastStep) { view.lastStep = step; if (step > 0 && ch.alpha > 0.3) sfx.play('step'); } // a footstep each landing
         ch.setScale(scaleAt(y));
         ch.setDepth(DEPTH.hero + y / 10000);
-        if (fadeLastPx) ch.setAlpha(Phaser.Math.Clamp((total - walked) / fadeLastPx, 0, 1)); // fades out stepping through the door
+        if (fadeLastPx) { // stepping through the door: the hero goes dark in the doorway's shadow, then fades out
+          const k = Phaser.Math.Clamp((total - walked) / fadeLastPx, 0, 1);
+          ch.setWash(0x000000, Math.round((1 - k) * T.doorDarken * 10) / 10);
+          ch.setAlpha(Phaser.Math.Clamp(k * T.doorFadeLate, 0, 1));
+        }
       },
       onComplete: () => {
         const last = points[points.length - 1];
@@ -1314,6 +1318,8 @@ export default class BattleScene extends Phaser.Scene {
     if (!left) return done();
     living.forEach((v, i) => {
       v.ch.setScale(CHAR_SCALE).setAlpha(1).setVisible(true).setPosition(DOOR_X, GAME_HEIGHT + 90);
+      v.ch.setWash(0x000000, 0); // out of the last doorway's shadow
+      this.drawMoraleWash(); // (and the morale wash back on)
       this.setBarsVisible(v, false);
       this.walkPath(
         v,

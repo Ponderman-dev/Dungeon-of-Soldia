@@ -518,7 +518,9 @@ export default class SquadScene extends Phaser.Scene {
           const hop = Math.abs(Math.sin(((tw.getValue() * total) / T.stepLenPx) * Math.PI)) * T.stepHeight;
           f.ch.setPosition(x, y - hop).setDepth(DEPTH.hero + y / 10000);
           f.ch.setScale(CHAR_SCALE * Phaser.Math.Clamp(0.55 + 0.45 * ((y - doorY) / (SLOTS[0].y - doorY)), 0.55, 1));
-          f.ch.setAlpha(Phaser.Math.Clamp(((1 - tw.getValue()) * total) / T.doorFadePx, 0, 1)); // fades out in the doorway
+          const left = Phaser.Math.Clamp(((1 - tw.getValue()) * total) / T.doorFadePx, 0, 1); // 1 -> 0 over the last doorFadePx
+          f.ch.setWash(0x000000, Math.round((1 - left) * T.doorDarken * 10) / 10); // goes dark in the doorway's shadow
+          f.ch.setAlpha(Phaser.Math.Clamp(left * T.doorFadeLate, 0, 1)); // then fades out
         },
         onComplete: () => {
           f.ch.setVisible(false);

@@ -1,6 +1,6 @@
 // The pixel art of a door in the back wall (no Phaser), at the floor's pixel size, in the wall's stone: an arch of
 // worn wedge stones with a keystone, two wooden halves of planks with iron bands and rivets, and the dark doorway
-// behind them (a hint of steps going down). The big entrance adds a skull keystone, portcullis teeth, chains and bones.
+// behind them (a hint of steps going down). The big entrance adds a skull keystone, chains and bones.
 // doorArtLayers(D, big) returns { frame, leaf, hole, extras } layers: { w, h, ax, ay, pixels } where (ax, ay) is
 // the door's middle at the floor line inside the layer (the leaf: its hinge at the floor line), pixels = 0xrrggbb
 // numbers or -1 (empty), row by row. Sizes and colours: floorArt.json `door` (`art.small` / `art.big`).
@@ -116,7 +116,7 @@ export function doorArtLayers(D, big) {
   for (const [dx, dy] of [[-3, 0], [-2, -1], [-2, 1], [-1, 0]]) leaf.set(halfW + dx, S.ring + dy, C.ironLight); // ring handle
   if (big) for (let k = 0; k < 3; k++) for (let t = 0; t < 7; t++) leaf.set(4 + k * 2 + Math.floor(t / 3), -30 + t, C.woodDark); // claw marks
 
-  // The entrance's extras: skull keystone, chains beside the arch, bones on the floor; teeth go with the doorway.
+  // The entrance's extras: skull keystone, chains beside the arch, bones on the floor.
   const extras = big ? layer(frame.w, frame.h, frame.ax, frame.ay) : null;
   if (big) {
     const SK = [' ##### ', '#######', '#..#..#', '#..#..#', '###.###', ' ##### ', ' #.#.# '];
@@ -134,7 +134,6 @@ export function doorArtLayers(D, big) {
       for (let t = 0; t < 5; t++) extras.set(bx + t, by, C.bone);
       for (const [dx, dy] of [[-1, -1], [-1, 1], [5, -1], [5, 1]]) extras.set(bx + dx, by + dy, C.bone);
     }
-    for (let i = -halfW + 1; i < halfW; i += 3) for (let t = 0; t < 4; t++) if (inOpen(i, top - archH + 3 + t)) hole.set(i, top - archH + 3 + t, t < 3 ? C.ironLight : C.iron); // portcullis teeth
   }
   return { frame, leaf, hole, extras, size: S };
 }

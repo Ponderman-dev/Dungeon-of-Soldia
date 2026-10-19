@@ -46,20 +46,38 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
   // course of long foundation stones with a lit ledge, so the wall stands ON the floor (user: the old cut row + long
   // soft shadow looked disconnected).
   const brickBottom = wallH - W.baseH;
-  for (let top = brickBottom - Math.ceil(brickBottom / W.brickH) * W.brickH, row = 0; top < brickBottom; top += W.brickH, row++) {
-    let x = -between([0, W.brickW[1]]);
-    while (x < width) {
+  // Bricks are drawn by the SAME rules as the floor stones (one art style): a 1-pixel mortar gap, worn corners, lit
+  // top edge, shaded bottom/right edge, a little grain; some bricks darker, some chipped.
+  const bricks = [];
+  for (let top = brickBottom - Math.ceil(brickBottom / W.brickH) * W.brickH; top < brickBottom; top += W.brickH) {
+    for (let x = -between([0, W.brickW[1]]); x < width; ) {
       const w = between(W.brickW);
-      const c = tinted(pick(W.stone));
+      const c = shade(tinted(pick(W.stone)), rnd() < W.darkShare ? -10 : 0);
+      const chip = rnd() < W.chipShare ? (rnd() < 0.5 ? 'tl' : 'br') : null;
       for (let y = Math.max(0, top); y < Math.min(top + W.brickH, brickBottom); y++) {
         for (let i = x; i < x + w; i++) {
           if (i < 0 || i >= width) continue;
-          const edge = y === top || i === x; // the mortar line round each brick
-          set(i, y, edge ? mortar : y === top + 1 ? shade(c, W.highlight) : y === top + W.brickH - 1 ? shade(c, -6) : c);
+          const gapPx = y === top || i === x;
+          const corner = (y === top + 1 || y === top + W.brickH - 1) && (i === x + 1 || i === x + w - 1);
+          const chipped = (chip === 'tl' && y <= top + 2 && i <= x + 2) || (chip === 'br' && y >= top + W.brickH - 2 && i >= x + w - 3);
+          if (gapPx || corner || chipped) { set(i, y, mortar); continue; }
+          const v = y === top + 1 ? W.highlight : y === top + W.brickH - 1 || i === x + w - 1 ? -W.shade : 0;
+          set(i, y, shade(c, v + (rnd() < 0.12 ? (rnd() < 0.5 ? -5 : 5) : 0)));
         }
       }
+      bricks.push({ x, y: top, w, h: W.brickH });
       x += w;
     }
+  }
+  // Cracks in the bricks, and damp stains running down the wall (dithered, so they stay pixel-art).
+  for (let i = 0; i < W.cracks; i++) {
+    const b = pick(bricks);
+    let x = b.x + 2 + Math.floor(rnd() * Math.max(1, b.w - 4)), y = Math.max(1, b.y + 1);
+    for (let k = between([3, 6]); k > 0; k--, y++) { if (get(x, y) !== mortar) set(x, y, shade(get(x, y), -18)); if (rnd() < 0.5) x += rnd() < 0.5 ? 1 : -1; }
+  }
+  for (let i = 0; i < W.stains; i++) {
+    const x0 = Math.floor(rnd() * width), y0 = Math.floor(rnd() * brickBottom * 0.6), len = between(W.stainLen), sw = between([2, 4]);
+    for (let y = y0; y < Math.min(brickBottom, y0 + len); y++) for (let x = x0; x < x0 + sw; x++) if ((x + y) % 2 === 0 && get(x, y) !== mortar) set(x, y, shade(get(x, y), -9));
   }
   // The foundation course: long blocks, a bright ledge on top, a dark foot.
   for (let x = -between([0, W.baseBlockW[1]]); x < width; ) {
@@ -68,23 +86,25 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
     for (let y = brickBottom; y < wallH; y++) {
       for (let i = x; i < x + w; i++) {
         if (i < 0 || i >= width) continue;
-        set(i, y, i === x ? mortar : y === brickBottom ? shade(c, W.highlight + 8) : y === wallH - 1 ? shade(c, -14) : c);
+        set(i, y, i === x ? mortar : y === brickBottom ? shade(c, W.highlight + 8) : y === wallH - 1 ? shade(c, -6) : shade(c, rnd() < 0.12 ? -5 : 0));
       }
     }
     x += w;
   }
   // Moss creeping up from the foot of the wall.
   for (let i = 0; i < W.mossBase; i++) {
-    const x = Math.floor(rnd() * width);
-    const h = between([1, 5]);
-    for (let y = wallH - h; y < wallH; y++) if (rnd() < 0.8) set(x, y, tinted(pick(F.moss)));
+    const cx = Math.floor(rnd() * width), w = between([2, 6]), h = between([1, 4]);
+    for (let x = cx; x < cx + w; x++) {
+      const top = wallH - Math.max(1, h - Math.abs(x - cx - w / 2));
+      for (let y = top; y < wallH; y++) if (rnd() < 0.75) set(x, y, tinted(pick(F.moss)));
+    }
   }
 
   // --- The floor: rows of worn flagstones with dirt between them.
   const gap = tinted(F.gap);
   for (let y = wallH; y < height; y++) for (let x = 0; x < width; x++) set(x, y, gap);
   const stones = []; // { x, y, w, h } of every flagstone (cracks and grass use them)
-  for (let top = wallH; top < height; ) {
+  for (let top = wallH - 1; top < height; ) {
     const h = between(F.rowH);
     let x = -between([0, F.stoneW[1]]);
     while (x < width) {
@@ -219,11 +239,22 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
   }
 
   // Light: the wall's shadow on the floor, and darker side edges.
-  // A short, crisp contact shadow under the wall: a solid dark row, then a dithered one (no long soft band).
-  for (let x = 0; x < width; x++) {
-    set(x, wallH, shade(get(x, wallH), -F.wallShadow));
-    if (x % 2 === 0 && wallH + 1 < height) set(x, wallH + 1, shade(get(x, wallH + 1), -Math.round(F.wallShadow / 2)));
+  // The seam between wall and floor: no dark line. Dirt drifts, rubble and grass cross it, so the wall and the floor
+  // read as one place.
+  for (let i = 0; i < F.seamDirt; i++) {
+    const cx = Math.floor(rnd() * width), w = between([3, 9]), base = tinted(pick(F.dirt));
+    for (let x = cx; x < cx + w; x++) {
+      const h = Math.max(1, Math.round(2.5 - Math.abs(x - cx - w / 2) / 2));
+      for (let y = wallH - 1; y < wallH - 1 + h; y++) if (rnd() < 0.85) set(x, y, rnd() < 0.15 ? shade(base, 8) : base);
+    }
   }
+  for (let i = 0; i < F.seamRubble; i++) {
+    const x = Math.floor(rnd() * width), y = wallH - 1 + between([0, 2]), c = tinted(pick(W.stone));
+    const w = between([1, 3]);
+    for (let k = 0; k < w; k++) set(x + k, y, k === 0 ? shade(c, W.highlight) : c);
+    if (w > 1) set(x + 1, y + 1, shade(c, -12));
+  }
+  for (let i = 0; i < F.seamTufts; i++) tuft(Math.floor(rnd() * width), wallH + between([0, 2]));
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const e = Math.min(x, width - 1 - x) / (width * 0.18);

@@ -2090,13 +2090,24 @@ export default class BattleScene extends Phaser.Scene {
     const N = FX.name;
     const hero = caster.unit.def && caster.unit.def.id;
     const color = (caster.unit.side === 'hero' && N.heroColors[hero]) || N.defaultColor;
-    const y = Math.round(caster.ch.y + caster.ch.hopOffset - caster.unit.def.height * charScale(caster.unit.def) - N.abovePx);
+    let y = Math.round(caster.ch.y + caster.ch.hopOffset - caster.unit.def.height * charScale(caster.unit.def) - N.abovePx);
+    // Never on top of another skill name or the 'Floor cleared!' banner: it goes above them instead.
+    this.nameLabels = (this.nameLabels || []).filter((o) => o.t.active);
+    const blocks = this.nameLabels.map((o) => o.box);
+    if (this.banner.text) blocks.push(this.banner.getBounds());
+    const w = name.length * N.sizePx + 12, h = N.sizePx + 8, x0 = Phaser.Math.Clamp(caster.ch.x, w / 2 + 6, GAME_WIDTH - w / 2 - 6);
+    for (let i = 0; i < 6; i++) {
+      const hit = blocks.find((b) => Math.abs(b.centerX - x0) < (b.width + w) / 2 && Math.abs(b.centerY - y) < (b.height + h) / 2);
+      if (!hit) break;
+      y = Math.round(hit.y - h / 2 - 2);
+    }
     const t = this.add
       .text(caster.ch.x, y + N.risePx, name.toUpperCase(), { fontFamily: UI.font, fontSize: `${N.sizePx}px`, color, stroke: '#000000', strokeThickness: 4 })
       .setOrigin(0.5)
       .setDepth(DEPTH.popup + 1)
       .setAlpha(0);
     t.x = Math.round(Phaser.Math.Clamp(t.x, t.width / 2 + 6, GAME_WIDTH - t.width / 2 - 6)); // keep it on screen
+    this.nameLabels.push({ t, box: new Phaser.Geom.Rectangle(t.x - t.width / 2, y - t.height / 2, t.width, t.height) });
     this.tweens.add({ targets: t, y, alpha: 1, duration: N.inMs, ease: 'Quad.easeOut' });
     this.tweens.add({ targets: t, y: y - N.risePx, alpha: 0, delay: N.inMs + N.holdMs, duration: N.outMs, onComplete: () => t.destroy() });
   }

@@ -102,6 +102,16 @@ export default class RewardScene extends Phaser.Scene {
     if (this.sheetTween) this.sheetTween.stop();
     if (this.top === null) draw(top, bottom);
     else {
+      // The new step's content (made right after this call) waits hidden until the sheet has its new size, then
+      // fades in (it used to show at once on top of the still-moving sheet: title over the banner).
+      this.events.once('prerender', () => {
+        for (const o of this.stepObjects) {
+          if (o.alpha === undefined) continue;
+          const a = o.alpha;
+          o.setAlpha(0);
+          this.tweens.add({ targets: o, alpha: a, delay: 160, duration: 120 });
+        }
+      });
       const from = { t: this.top, b: this.bottom };
       this.sheetTween = this.tweens.add({ targets: from, t: top, b: bottom, duration: 160, ease: 'Quad.easeOut', onUpdate: () => draw(Math.round(from.t), Math.round(from.b)) });
     }

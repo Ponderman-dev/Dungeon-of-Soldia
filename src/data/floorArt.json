@@ -56,6 +56,20 @@
     "seamTufts": 16,
     "edgeShade": 15
   },
+  "torch": {
+    "_about": "The wall torches (squad screen) as pixel art: systems/torchArt.js. holder rows from the handle top down; flames = frames shown in turn (frameMs); glow = dithered warm pixels round the flame.",
+    "holder": ["..w..", ".wWw.", ".wWw.", ".wWw.", "iiiii", "..i..", "..i.."],
+    "flames": [
+      ["..r..", "..o..", ".ooo.", ".oyo.", "oyyyo", "oyYyo", ".oyo."],
+      [".r...", ".oo..", ".ooo.", "ooyo.", "oyyyo", "oyYyo", ".oyo."],
+      ["...r.", "..oo.", ".ooo.", ".oyoo", "oyyyo", "oyYyo", ".oyo."]
+    ],
+    "frameMs": 130,
+    "glowRadius": 12,
+    "glowDrop": 4,
+    "glowAlpha": 0.35,
+    "colors": { "w": "0x5a3a24", "W": "0x74502f", "i": "0x3c3833", "r": "0xc9452a", "o": "0xff9a30", "y": "0xffd75a", "Y": "0xfff2b0", "glow": "0xff9a40" }
+  },
   "door": {
     "_about": "The door in the back wall (entities/Door.js): a stone arch (blocks, a lighter keystone), a dark wooden door of planks with two iron bands and rivets and a ring handle. Open = a black doorway.",
     "stone": "0x4c4954",
@@ -70,6 +84,14 @@
     "dust": "0x6a6258",
     "bone": "0xcfc6b0",
     "eyes": "0xff3020",
+    "art": {
+      "_about": "The doors as pixel art (systems/doorArt.js) at the floor's pixel size: sizes in art pixels (y up from the floor line), colours of the wall's stone family.",
+      "grain": 0.1,
+      "small": { "halfW": 6, "openH": 17, "archH": 5, "frameW": 3, "block": 4, "plank": 3, "bands": [-5, -13], "ring": -9 },
+      "big": { "halfW": 15, "openH": 37, "archH": 11, "frameW": 7, "block": 5, "plank": 3, "bands": [-8, -21, -33], "ring": -19, "chainOut": 3, "bonesBelow": 8 },
+      "colors": { "stone": "0x4a453f", "stoneLight": "0x5f5951", "stoneDark": "0x302c28", "mortar": "0x17130f", "hole": "0x040303", "holeEdge": "0x100c0a", "step": "0x181411", "stepFar": "0x0e0b09",
+        "wood": "0x5a3a24", "woodDark": "0x3a2416", "woodLight": "0x74502f", "iron": "0x35322f", "ironLight": "0x6f6a63", "rivet": "0x9a948a", "bone": "0xd8cfb8", "boneDark": "0x9a927e" }
+    },
     "small": { "halfW": 18, "openH": 52, "archH": 14, "frameW": 9, "block": 10, "plank": 6, "bands": [-14, -40], "ring": -27 },
     "big": {
       "_about": "The squad screen's dungeon ENTRANCE (user: 'very big door, very intimidating'): same parts, bigger, plus a skull keystone (skullPx = pixel size), portcullis spikes over the doorway (teeth), chains beside the arch, claw marks, bones on the floor and red eyes that blink in the dark when it opens. shakeMul / dustMul = a heavier slam.",

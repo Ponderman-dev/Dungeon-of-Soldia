@@ -6,6 +6,8 @@ import Door from '../entities/Door.js';
 import { skillIconKey } from '../entities/skillIconTexture.js';
 import floorArt from '../data/floorArt.json';
 import { floorTextureKey, FLOOR_PIXEL } from '../entities/floorTexture.js';
+import { layerTexture } from '../entities/pixelLayer.js';
+import { torchLayers } from '../systems/torchArt.js';
 import heroDefs from '../data/heroes.json';
 import skillDefs from '../data/skills.json';
 import unlocks from '../data/unlocks.json';
@@ -94,15 +96,18 @@ export default class SquadScene extends Phaser.Scene {
     this.add.image(0, 0, floorTextureKey(this, dungeons.A.tileColors[0], 0, WALL_H)).setOrigin(0).setScale(FLOOR_PIXEL).setDepth(DEPTH.floor); // as on the battle floors
     // The door into the dungeon: closed until the squad sets off.
     this.door = new Door(this, this.add.container(0, 0).setDepth(DEPTH.floor), DOOR_X, WALL_H, { big: true }); // the dungeon entrance
-    // Two torches beside the door.
-    const g = this.add.graphics().setDepth(DEPTH.floor);
+    // Two torches beside the door: pixel art (systems/torchArt.js), the flame flickers by switching frames.
+    const T = floorArt.torch, L = torchLayers(T), P = FLOOR_PIXEL;
+    const img = (lay, key, x, y) => this.add.image(x, y, layerTexture(this, key, lay)).setOrigin(lay.ax / lay.w, lay.ay / lay.h).setScale(P).setDepth(DEPTH.floor);
+    const flameKeys = L.flames.map((f, i) => layerTexture(this, `torch-flame-${i}`, f));
     for (const x of [DOOR_X - 100, DOOR_X + 100]) {
-      g.fillStyle(0x3c3b42, 1).fillRect(x - 5, WALL_H - 92, 10, 4).fillRect(x - 2, WALL_H - 88, 4, 6); // iron bracket
-      g.fillStyle(0x5a3a22, 1).fillRect(x - 3, WALL_H - 110, 6, 20);
-      const glow = this.add.circle(x, WALL_H - 116, 26, 0xff8a30, 0.12).setDepth(DEPTH.floor);
-      this.tweens.add({ targets: glow, alpha: 0.2, scale: 1.1, duration: 260, yoyo: true, repeat: -1 });
-      const flame = this.add.ellipse(x, WALL_H - 116, 12, 18, 0xffb347).setDepth(DEPTH.floor);
-      this.tweens.add({ targets: flame, scaleY: 1.25, scaleX: 0.85, alpha: 0.8, duration: 180 + Math.random() * 120, yoyo: true, repeat: -1 });
+      const y = WALL_H - 33 * P; // the top of the handle
+      const glow = img(L.glow, 'torch-glow', x, y);
+      this.tweens.add({ targets: glow, alpha: 0.75, duration: 300 + Math.random() * 120, yoyo: true, repeat: -1 });
+      img(L.holder, 'torch-holder', x, y);
+      const flame = img(L.flames[0], 'torch-flame-0', x, y);
+      let f = Math.floor(Math.random() * flameKeys.length);
+      this.time.addEvent({ delay: T.frameMs, loop: true, callback: () => { f = (f + 1 + Math.floor(Math.random() * 2)) % flameKeys.length; flame.setTexture(flameKeys[f]); } });
     }
   }
 

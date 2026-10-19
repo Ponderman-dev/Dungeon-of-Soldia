@@ -4,6 +4,7 @@ Mobile auto-battler roguelike. Phaser + Vite + plain JavaScript (ES modules, no 
 Will be wrapped for Android later (Solana Seeker dApp Store).
 Full design: `docs/game-design-recap.md`. Read it before designing features.
 HANDOFF (latest session): read the START HERE section of `docs/handoff-phase-h.md` first.
+Update the handoff ONLY when the user asks for a handoff (commits + `docs/systems/*.md` are the running record).
 Item numbers: `docs/item-decisions.md` is the current truth (overrides `docs/item-list.md` and older notes).
 
 ## About the user

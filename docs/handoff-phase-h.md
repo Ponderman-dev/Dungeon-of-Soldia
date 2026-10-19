@@ -3,6 +3,14 @@
 Read `CLAUDE.md` first, then this file. Every item decision of this phase is in `docs/item-decisions.md`
 (it overrides older item numbers in CLAUDE.md and docs/item-list.md).
 
+## START HERE (session 12): SOUND BOARD ROUND 6, waiting for the user's picks
+User asked (a side job; the skill looks demo in session 11 below is still the main track): every skill its own sound, and a page 2
+listing all 205 sounds with a drop-down to give each one a moment. DONE: board https://claude.ai/artifact/2pLgb918eNpVWUy2ePTSw8
+(details + rebuild in docs/systems/sound.md 'ROUND 6'). NEXT: read db `picks` (page 1) and `assign` (page 2, wins) with
+ArtifactData, then apply: skill_<id> cues in sounds.json, BattleScene plays the skill's cue on cast (fallback skillCast),
+apply-picks.py for `assign` (several files per cue), sounds.test.mjs, rebuild + republish the game.
+Then back to the session 11 plan below (skill looks demo, NEXT = Archer).
+
 ## START HERE (session 11): SKILL LOOKS, demo page hero by hero. NEXT = Archer
 Demo page: https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN (source docs/proposals/skill-fx/, build
 `node docs/proposals/skill-fx/make.mjs <scratchpad>/soldia-skill-fx.html`, republish to the SAME url, omit capabilities).
@@ -60,7 +68,6 @@ text after the shout). NEXT: build name style B in
 BattleScene.skillBurst (and drop the castStart name popText), then the Knight's 3-beat look in the game (recipes in
 demo.js are in character pixels like skillFx.js: charge aura/particles, release flash/camera kick/speed lines/hit-stop,
 impact square shockwaves/debris/floor mark), then 2-3 heroes per session with a showcase page each.
-
 ## START HERE (session 9): SKILL EFFECTS + SKILL NAME TEXT (user's answers are in)
 User: skills 'still not visually powerful / eye catchy, not different enough from other visuals'; 'text messy and too stretchy'.
 ANSWERS: the text = ONLY the SKILL NAMES (other popups are fine). Cut-in bar or floating name: user wants to SEE it first.

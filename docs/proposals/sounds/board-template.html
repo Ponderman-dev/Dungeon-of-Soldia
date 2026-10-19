@@ -75,15 +75,54 @@ code { font: 500 12px var(--mono); color: var(--gold); }
 nav.jump { display: flex; flex-wrap: wrap; gap: 6px; }
 nav.jump a { font: 500 12px var(--mono); color: var(--soft); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
 nav.jump a:hover, nav.jump a:focus-visible { border-color: var(--gold); color: var(--ink); outline: none; }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.tabs button[aria-selected="true"] { background: var(--gold); border-color: var(--gold); color: #18122a; }
+.fromList { font: 500 12px var(--mono); color: var(--green); }
+.libTools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.libTools input[type=search] { font: 400 15px var(--body); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; min-height: 40px; width: min(320px, 100%); }
+.libTools input[type=search]:focus-visible { border-color: var(--gold); outline: none; }
+.libTools label { font-size: 14px; color: var(--soft); display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.libList { display: grid; gap: 6px; }
+.libRow { display: grid; grid-template-columns: 40px minmax(0, 1fr) minmax(0, 220px); gap: 10px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; }
+.libRow.used { border-color: var(--green); }
+.libRow .nm { min-width: 0; display: grid; gap: 4px; }
+.libRow .nm b { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
+.libRow .game { font-size: 12px; color: var(--mute); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { font: 600 11px var(--mono); color: #18122a; background: var(--green); border: 0; border-radius: 999px; padding: 3px 9px; cursor: pointer; min-height: 22px; }
+.chip:hover, .chip:focus-visible { background: var(--gold); outline: none; }
+.libRow select { font: 500 13px var(--body); color: var(--ink); background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 0 8px; min-height: 40px; width: 100%; min-width: 0; }
+.libRow select:focus-visible { border-color: var(--gold); outline: none; }
+@media (max-width: 560px) { .libRow { grid-template-columns: 40px minmax(0, 1fr); } .libRow select { grid-column: 1 / -1; } }
 </style>
 
 <div class="wrap">
   <header>
-    <p class="eyebrow">Dungeon of Soldia · sounds, round 5</p>
+    <p class="eyebrow">Dungeon of Soldia · sounds, round 6</p>
     <h1>Sound board</h1>
+    <p class="lead"><b>NEW in round 6:</b> every hero skill has its own row (<b>Hero skills</b> group), so each skill can get its own sound. And <b>page 2</b> lists ALL the sounds in one long list: pick a moment from the drop-down next to any sound to use it there. A moment can get several sounds from page 2 (the game then plays one at random each time), and a sound can go to several moments. Page 2 choices win over page 1 picks.</p>
     <p class="lead">Every game sound now has 5 options. <b>A</b> is what the game plays now. <b>B to E</b> are deeper and heavier versions, made by layering two Kenney sounds, lowering the pitch and adding a little stone-room echo. Tap a pad to hear it, tap <b>Pick</b> on the one you like. Options with a <b style="color:var(--green)">green letter</b> are the sounds you sent me ("Yours") and, NEW, about 180 free CC0 sounds I found on GitHub ("New": Kenney packs, RPG, impact, magic, water, UI; free for games, no credit needed). New rows at the bottom: skills, special rooms, menus. Under every sound, <b>All my sounds</b> lets you flip through ALL of your sounds with the arrows and pick any of them. You can also try a sound or music file from your own device.</p>
   </header>
 
+  <div class="tabs" role="tablist" aria-label="Pages">
+    <button class="btn" type="button" role="tab" id="tab1" aria-selected="true" aria-controls="page1">Page 1: Moments</button>
+    <button class="btn" type="button" role="tab" id="tab2" aria-selected="false" aria-controls="page2">Page 2: All sounds</button>
+  </div>
+
+  <div id="page2" role="tabpanel" aria-labelledby="tab2" hidden style="display:grid;gap:14px">
+    <div>
+      <h2>All sounds</h2>
+      <p class="sub">Tap ▶ to hear a sound. Choose a moment in its drop-down to use it there; tap a green chip to take it off again. "In the game now" says where the game already plays it.</p>
+    </div>
+    <div class="libTools">
+      <input type="search" id="libSearch" placeholder="Search sounds (sword, glass, magic...)" aria-label="Search sounds">
+      <label><input type="checkbox" id="libUsed"> Only sounds I gave a moment</label>
+      <span class="status" id="libCount"></span>
+    </div>
+    <div class="libList" id="libList"></div>
+  </div>
+
+  <div id="page1" role="tabpanel" aria-labelledby="tab1" style="display:grid;gap:30px">
   <div class="bar">
     <button class="btn go" id="fight" type="button">▶ Play a short fight with my picks</button>
     <button class="btn" id="copy" type="button">Copy my picks</button>
@@ -137,6 +176,7 @@ nav.jump a:hover, nav.jump a:focus-visible { border-color: var(--gold); color: v
       <div><b>Licence</b>The GDC bundle is royalty-free for games, no credit needed. Kenney is CC0. Both are fine for the Seeker store.</div>
     </div>
   </section>
+  </div>
 </div>
 
 <script>
@@ -212,6 +252,7 @@ for (const g of DATA.groups) {
     card.dataset.cue = r.cue;
     card.innerHTML = `
       <div class="cardHead"><div><h3>${r.name}</h3><p class="when">${r.when}</p></div><span class="picked"></span></div>
+      <p class="fromList" hidden></p>
       <div class="opts">${r.options.map((o) => `
         <div class="opt${o.yours ? ' yours' : ''}" data-id="${o.id}">
           <button class="pad" type="button" aria-label="Play option ${o.id}: ${o.desc}">${o.id}</button>
@@ -253,6 +294,9 @@ function drawPicks() {
     const browse = card.querySelector('.browse');
     browse.classList.toggle('sel', !!p && p.pick === 'lib' && p.file === LIB[libIdx[card.dataset.cue] || 0].file);
     card.querySelector('.picked').textContent = p ? `Picked: ${p.pick === 'mine' ? 'my file' + (p.file ? ' (' + p.file + ')' : '') : p.pick === 'lib' ? libName(p.file) : p.pick}` : 'Game now: A';
+    const fromList = filesFor(card.dataset.cue), fl = card.querySelector('.fromList');
+    fl.hidden = !fromList.length;
+    fl.textContent = fromList.length ? `From page 2 (these win): ${fromList.map(libName).join(', ')}` : '';
   }
 }
 groupsEl.addEventListener('click', async (e) => {
@@ -294,12 +338,19 @@ groupsEl.addEventListener('change', (e) => {
 
 // A short made-up fight with the current picks (or A).
 const SCRIPT = [[0, 'hitMelee'], [300, 'hitRanged'], [650, 'hitMelee'], [900, 'miss'], [1200, 'hitFire'], [1450, 'itemProc'], [1500, 'hitIce'], [1800, 'hitMelee'], [1800, 'crit'], [2150, 'stun'], [2400, 'hitElectric'], [2700, 'block'], [2950, 'hitMelee'], [3150, 'enemyDeath'], [3500, 'doorOpen'], [3900, 'step'], [4150, 'step'], [4400, 'step']];
-function playFight() { audio(); for (const [t, cue] of SCRIPT) setTimeout(() => playOption(cue, (picks[cue] || {}).pick || 'A'), t); }
+function playFight() {
+  audio();
+  for (const [t, cue] of SCRIPT) setTimeout(() => {
+    const fl = filesFor(cue);
+    if (fl.length) playBuf(optionBuf(fl[Math.floor(Math.random() * fl.length)]), cueByName[cue].volume);
+    else playOption(cue, (picks[cue] || {}).pick || 'A');
+  }, t);
+}
 document.getElementById('fight').addEventListener('click', playFight);
 
 // Copy picks as text (to paste in chat if saving is not possible).
 document.getElementById('copy').addEventListener('click', async () => {
-  const text = Object.entries(cueByName).map(([cue, r]) => `${r.name}: ${picks[cue] ? (picks[cue].pick === 'mine' ? 'my file ' + (picks[cue].file || '') : picks[cue].pick === 'lib' ? libName(picks[cue].file) : picks[cue].pick) : 'A (no pick)'}`).join('\n');
+  const text = Object.entries(cueByName).map(([cue, r]) => `${r.name}: ${filesFor(cue).length ? 'page 2: ' + filesFor(cue).map(libName).join(', ') : picks[cue] ? (picks[cue].pick === 'mine' ? 'my file ' + (picks[cue].file || '') : picks[cue].pick === 'lib' ? libName(picks[cue].file) : picks[cue].pick) : 'A (no pick)'}`).join('\n');
   try { await navigator.clipboard.writeText(text); setState('Picks copied. Paste them in chat.', true); }
   catch { setState('Copy was blocked here. Your picks are saved on the page anyway.'); }
 });
@@ -342,6 +393,94 @@ drawJ();
 document.getElementById('jtabs').addEventListener('click', (e) => { const b = e.target.closest('[data-s]'); if (b) { style = b.dataset.s; drawJ(); } });
 document.getElementById('jgrid').addEventListener('click', async (e) => { const b = e.target.closest('[data-j]'); if (b) flash(b, await playBuf(bufferFrom(b.dataset.j, () => bytesOf(JINGLES[b.dataset.j])), 0.6)); });
 
+// ---------- page 2: every library sound, each can be given to any moments (db collection `assign`, doc = file)
+const assign = {}; // file -> [cue, ...]
+const LOCAL2 = 'soldia-sound-assign';
+function filesFor(cue) { return Object.keys(assign).filter((f) => assign[f].includes(cue)); }
+const momentName = (cue) => (cueByName[cue] || { name: cue }).name;
+const libList = document.getElementById('libList');
+const momentOptions = (() => {
+  let html = '<option value="">+ Use for a moment...</option>', group = null;
+  for (const m of DATA.moments) {
+    if (m.group !== group) { if (group) html += '</optgroup>'; group = m.group; html += `<optgroup label="${m.group}">`; }
+    html += `<option value="${m.cue}">${m.name}</option>`;
+  }
+  return html + '</optgroup>';
+})();
+LIB.forEach((f, i) => {
+  const row = document.createElement('div');
+  row.className = 'libRow';
+  row.dataset.file = f.file;
+  row.dataset.search = (f.name + ' ' + (f.inGame || []).map(momentName).join(' ')).toLowerCase();
+  row.innerHTML = `<button class="pad" type="button" aria-label="Play ${f.name}">▶</button>
+    <div class="nm"><b>${i + 1}. ${f.name}</b>${f.inGame ? `<span class="game">In the game now: ${f.inGame.map(momentName).join(', ')}</span>` : ''}<div class="chips"></div></div>
+    <select aria-label="Use ${f.name} for a moment">${momentOptions}</select>`;
+  libList.appendChild(row);
+});
+function drawAssign() {
+  for (const row of libList.children) {
+    const cues = assign[row.dataset.file] || [];
+    row.classList.toggle('used', cues.length > 0);
+    row.querySelector('.chips').innerHTML = cues.map((c) => `<button class="chip" type="button" data-cue="${c}" aria-label="Remove from ${momentName(c)}">${momentName(c)} ✕</button>`).join('');
+  }
+  filterLib();
+  drawPicks();
+}
+function filterLib() {
+  const q = document.getElementById('libSearch').value.trim().toLowerCase(), only = document.getElementById('libUsed').checked;
+  let n = 0;
+  for (const row of libList.children) {
+    const show = (!q || row.dataset.search.includes(q)) && (!only || (assign[row.dataset.file] || []).length > 0);
+    row.hidden = !show; if (show) n++;
+  }
+  const used = Object.values(assign).filter((c) => c.length).length;
+  document.getElementById('libCount').textContent = `${n} of ${LIB.length} sounds shown · ${used} given a moment`;
+}
+async function saveAssign(file) {
+  try { localStorage.setItem(LOCAL2, JSON.stringify(assign)); } catch {}
+  if (!db) { setState('Saved on this device only. Use "Copy my picks" and paste them in chat.'); return; }
+  try {
+    const cues = assign[file] || [];
+    if (cues.length) await db.collection('assign').doc(file).set({ file, cues, at: Date.now() });
+    else await db.collection('assign').doc(file).delete();
+    setState('Saved. Claude can read it.', true);
+  } catch (e) { setState('Could not save to the page (' + (e && e.code || 'error') + '). Saved on this device.'); }
+}
+libList.addEventListener('click', async (e) => {
+  const row = e.target.closest('.libRow');
+  if (!row) return;
+  const pad = e.target.closest('.pad');
+  if (pad) { const cue = (assign[row.dataset.file] || [])[0]; flash(pad, await playBuf(optionBuf(row.dataset.file), cue ? cueByName[cue].volume : 0.4)); }
+  const chip = e.target.closest('.chip');
+  if (chip) {
+    assign[row.dataset.file] = (assign[row.dataset.file] || []).filter((c) => c !== chip.dataset.cue);
+    if (!assign[row.dataset.file].length) delete assign[row.dataset.file];
+    drawAssign(); saveAssign(row.dataset.file);
+  }
+});
+libList.addEventListener('change', (e) => {
+  const sel = e.target.closest('select');
+  if (!sel || !sel.value) return;
+  const file = sel.closest('.libRow').dataset.file, list = assign[file] || [];
+  if (!list.includes(sel.value)) list.push(sel.value);
+  assign[file] = list;
+  sel.value = '';
+  drawAssign(); saveAssign(file);
+});
+document.getElementById('libSearch').addEventListener('input', filterLib);
+document.getElementById('libUsed').addEventListener('change', filterLib);
+for (const [tab, page] of [['tab1', 'page1'], ['tab2', 'page2']]) {
+  document.getElementById(tab).addEventListener('click', () => {
+    for (const [t, p] of [['tab1', 'page1'], ['tab2', 'page2']]) {
+      document.getElementById(t).setAttribute('aria-selected', String(t === tab));
+      document.getElementById(p).hidden = p !== page;
+    }
+    try { localStorage.setItem('soldia-sound-tab', tab); } catch {}
+  });
+}
+try { if (localStorage.getItem('soldia-sound-tab') === 'tab2') document.getElementById('tab2').click(); } catch {}
+try { Object.assign(assign, JSON.parse(localStorage.getItem(LOCAL2) || '{}')); } catch {}
+
 // ---------- start: local picks first, then the page's database (Claude reads it)
 localLoad();
 function libInit() {
@@ -352,7 +491,7 @@ function libInit() {
   }
 }
 libInit();
-drawPicks();
+drawAssign();
 setState('Picks are saved on this device.');
 (async () => {
   try { db = await window.claude?.use?.('db'); } catch { db = null; }
@@ -365,5 +504,11 @@ setState('Picks are saved on this device.');
     libInit();
     drawPicks();
   }, () => setState('Could not read saved picks. Picks stay on this device.'));
+  db.collection('assign').onSnapshot((snap) => {
+    for (const k of Object.keys(assign)) delete assign[k];
+    for (const d of snap.docs) { const v = d.data(); if (v && v.file && Array.isArray(v.cues) && v.cues.length) assign[v.file] = v.cues.filter((c) => cueByName[c]); }
+    try { localStorage.setItem(LOCAL2, JSON.stringify(assign)); } catch {}
+    drawAssign();
+  }, () => {});
 })();
 </script>

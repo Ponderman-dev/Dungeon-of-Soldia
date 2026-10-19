@@ -5,6 +5,9 @@
   "tintShare": 0.3,
   "wall": {
     "brickH": 5,
+    "baseH": 4,
+    "baseBlockW": [18, 30],
+    "baseLight": 8,
     "brickW": [7,  13],
     "stone": ["0x34323a", "0x2e2c34", "0x3a3740", "0x29272f"],
     "mortar": "0x141217",
@@ -42,7 +45,7 @@
     "mossSpecks": 116,
     "pebbles": 40,
     "pebble": ["0x5a5650", "0x4a4640"],
-    "wallShadow": 7,
+    "wallShadow": 24,
     "edgeShade": 15
   },
   "door": {

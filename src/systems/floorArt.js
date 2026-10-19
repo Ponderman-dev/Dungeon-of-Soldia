@@ -42,12 +42,16 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
 
   // --- The back wall: rows of stone bricks, each a slightly different stone, lit along its top edge.
   const mortar = tinted(W.mortar);
-  for (let top = 0, row = 0; top < wallH; top += W.brickH, row++) {
+  // Bricks are laid from the wall's BASE upward (whole rows at the bottom, any cut row at the top), and the base is a
+  // course of long foundation stones with a lit ledge, so the wall stands ON the floor (user: the old cut row + long
+  // soft shadow looked disconnected).
+  const brickBottom = wallH - W.baseH;
+  for (let top = brickBottom - Math.ceil(brickBottom / W.brickH) * W.brickH, row = 0; top < brickBottom; top += W.brickH, row++) {
     let x = -between([0, W.brickW[1]]);
     while (x < width) {
       const w = between(W.brickW);
       const c = tinted(pick(W.stone));
-      for (let y = top; y < Math.min(top + W.brickH, wallH); y++) {
+      for (let y = Math.max(0, top); y < Math.min(top + W.brickH, brickBottom); y++) {
         for (let i = x; i < x + w; i++) {
           if (i < 0 || i >= width) continue;
           const edge = y === top || i === x; // the mortar line round each brick
@@ -56,6 +60,18 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
       }
       x += w;
     }
+  }
+  // The foundation course: long blocks, a bright ledge on top, a dark foot.
+  for (let x = -between([0, W.baseBlockW[1]]); x < width; ) {
+    const w = between(W.baseBlockW);
+    const c = shade(tinted(pick(W.stone)), W.baseLight);
+    for (let y = brickBottom; y < wallH; y++) {
+      for (let i = x; i < x + w; i++) {
+        if (i < 0 || i >= width) continue;
+        set(i, y, i === x ? mortar : y === brickBottom ? shade(c, W.highlight + 8) : y === wallH - 1 ? shade(c, -14) : c);
+      }
+    }
+    x += w;
   }
   // Moss creeping up from the foot of the wall.
   for (let i = 0; i < W.mossBase; i++) {
@@ -204,9 +220,10 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
   }
 
   // Light: the wall's shadow on the floor, and darker side edges.
-  for (let y = wallH; y < wallH + F.wallShadow && y < height; y++) {
-    const k = 1 - (y - wallH) / F.wallShadow;
-    for (let x = 0; x < width; x++) set(x, y, shade(get(x, y), -Math.round(28 * k)));
+  // A short, crisp contact shadow under the wall: a solid dark row, then a dithered one (no long soft band).
+  for (let x = 0; x < width; x++) {
+    set(x, wallH, shade(get(x, wallH), -F.wallShadow));
+    if (x % 2 === 0 && wallH + 1 < height) set(x, wallH + 1, shade(get(x, wallH + 1), -Math.round(F.wallShadow / 2)));
   }
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {

@@ -101,3 +101,13 @@ const starts = (ev, u) => ev.filter((e) => e.type === 'attackStart' && e.attacke
   const n = run(s, 10000).filter((e) => e.type === 'attack' && e.attacker === knight).length;
   const expected = 10000 / s.interval(knight);
   ok('attack speed sets how often a melee hero hits once there', Math.abs(n - expected) <= 1, `${n} vs ${expected.toFixed(1)}`); }
+
+// `speed` = its OWN walking pace (the scene hops only then): a fighter that is only shoved has speed 0
+// (bug: Grukk, jostled by his goblins, hung mid-hop and looked like he floated).
+{ const { s, es, h } = mk(['knight'], ['goblin']); const [knight] = h, [g] = es;
+  run(s, 200);
+  ok('a walking fighter has its walking speed', Math.abs(knight.speed - M.walkSpeedPxPerSec) < 1, String(knight.speed));
+  g.stats.attack = 0; run(s, 4000);
+  knight.x = g.x + 1; knight.y = g.y; knight.pending = { target: g }; // busy swinging, standing on the goblin: only pushed
+  s.move(20);
+  ok('a fighter that is only shoved has speed 0', knight.moving && knight.speed === 0, `${knight.moving} ${knight.speed}`); }

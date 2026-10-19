@@ -490,6 +490,7 @@ export default class BattleState {
       const d = Math.min(step, len);
       u.x += (dx / len) * d;
       u.y += (dy / len) * d;
+      u.speed = dt > 0 ? (d * 1000) / dt : 0;
       walking.add(u);
     }
     // Push apart. Ranged fighters hold their ground (only the other one moves).
@@ -542,6 +543,7 @@ export default class BattleState {
       const b = before.get(u);
       const moved = Math.hypot(u.x - b.x, u.y - b.y);
       u.moving = moved > 0.05;
+      if (!walking.has(u)) u.speed = 0; // its OWN walking pace (px/s); being shoved is not a step, so the scene doesn't hop it
       u.walked += moved;
     }
   }

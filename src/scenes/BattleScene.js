@@ -915,7 +915,13 @@ export default class BattleScene extends Phaser.Scene {
       const u = v.unit;
       if (!u.alive || u.x === undefined || v.ch.lunging) continue;
       const hover = u.flying ? u.def.hover || 0 : 0;
-      v.ch.hopOffset = u.moving ? Math.abs(Math.sin((u.walked / M.hopLengthPx) * Math.PI)) * M.hopHeight : 0;
+      // Hop only at walking pace: a crowd's small shoves don't lift it (Grukk used to hang mid-hop, 'floating'),
+      // and the hop sinks smoothly back to the ground when it stops.
+      const full = combatRules.movement.walkSpeedPxPerSec * M.hopFullSpeedShare;
+      const want = u.moving ? Math.min(1, (u.speed || 0) / full) : 0;
+      const was = v.hopAmt || 0;
+      v.hopAmt = was + (want - was) * Math.min(1, this.game.loop.delta / (want > was ? M.hopStartMs : M.hopEaseMs)); // starts slowly: a one-frame step doesn't lift it
+      v.ch.hopOffset = Math.abs(Math.sin((u.walked / M.hopLengthPx) * Math.PI)) * M.hopHeight * v.hopAmt;
       v.ch.setPosition(u.x + (v.leapX || 0), u.y + (v.leapY || 0) - hover - v.ch.hopOffset - v.ch.castLift - (v.leapLift || 0));
       // Look at whoever it is fighting (so the weapon swings towards it).
       const foe = (u.pending && u.pending.target) || (this.views.get(u.foe) || {}).unit || v.lookAt;

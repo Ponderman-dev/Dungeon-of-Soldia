@@ -167,6 +167,9 @@
   "attackMotion": {
     "hopHeight": 7,
     "hopLengthPx": 38,
+    "hopFullSpeedShare": 0.6,
+    "hopStartMs": 220,
+    "hopEaseMs": 90,
     "arrowColor": "0xe6e6b8"
   },
   "transition": {

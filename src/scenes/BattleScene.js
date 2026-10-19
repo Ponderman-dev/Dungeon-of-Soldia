@@ -430,6 +430,9 @@ export default class BattleScene extends Phaser.Scene {
       try { look = statusLook(kinds, v.box, now + (u.uid % 7) * 137, TUNE); } // each fighter a little out of step
       catch (err) { console.error(err); continue; } // a broken effect must never stop the fight
       v.ch.setStatusLook(v.hitTint || look.tint, look.ice);
+      // Still sliding in with its floor (an elite's shield at the start): the screen-space effects wait until it
+      // has arrived, or they were drawn at its final spot before the enemy got there.
+      if (v.ch.parentContainer) continue;
       this.nudge(v, look.dx * Math.abs(v.ch.scaleY));
       this.paintFx(g, v, look.draws);
     }

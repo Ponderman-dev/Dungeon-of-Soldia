@@ -11,7 +11,7 @@ export default class BootScene extends Phaser.Scene {
     // The interface font must be ready before any text is drawn (else the first screen shows the fallback font).
     loadUiFont().then(() => {
       this.scene.start('Squad');
-      this.scene.launch('Debug'); // test button, always on top
+      if (import.meta.env.VITE_TESTER !== '1') this.scene.launch('Debug'); // test buttons, always on top (not in the playtest build, npm run build:itch)
     });
   }
 }

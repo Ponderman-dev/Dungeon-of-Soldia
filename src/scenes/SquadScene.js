@@ -16,6 +16,7 @@ import combatRules from '../data/combat.json';
 import defaultSquad from '../data/squad.json';
 import demoSquad from '../data/demoSquad.json'; // the Monster House demo page's saved squad
 const DEMO = import.meta.env.VITE_DEMO === 'house';
+const TESTER = import.meta.env.VITE_TESTER === '1'; // the playtest build for itch.io: no test buttons
 import { perkMods } from '../systems/party.js';
 import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
@@ -153,10 +154,11 @@ export default class SquadScene extends Phaser.Scene {
       sfx.play('tap');
     });
     if (this.lastRun && (this.lastRun.newly || []).length) this.time.delayedCall(400, () => sfx.play('unlock'));
-    // One short line at the top: the last run, or what to do.
-    const info = this.lastRun ? `Last run: floor ${this.lastRun.floor}` : 'Choose 3 heroes';
-    drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 8, 196, 26);
-    this.add.text(20, 21, info, { fontFamily: FONT, fontSize: '8px', color: this.lastRun ? UI.gold : INK }).setOrigin(0, 0.5).setDepth(DEPTH.ui);
+    // One short line at the top after a run: how deep it got (no 'Choose 3 heroes' hint any more, user 2026-10-20).
+    if (this.lastRun) {
+      drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 8, 196, 26);
+      this.add.text(20, 21, `Last run: floor ${this.lastRun.floor}`, { fontFamily: FONT, fontSize: '8px', color: UI.gold }).setOrigin(0, 0.5).setDepth(DEPTH.ui);
+    }
 
     // "Begin descent": only when all 3 slots are filled, at the bottom over RANDOM.
     this.begin = this.add.container(DOOR_X, BEGIN_Y).setDepth(DEPTH.ui);
@@ -172,6 +174,7 @@ export default class SquadScene extends Phaser.Scene {
     drawWindow(rb, GAME_WIDTH / 2 - 70, 754, 140, 38);
     this.add.text(GAME_WIDTH / 2, 774, 'RANDOM', { fontFamily: FONT, fontSize: '16px', color: INK }).setOrigin(0.5).setDepth(DEPTH.ui);
     this.add.zone(GAME_WIDTH / 2, 773, 140, 40).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.pickRandom());
+    if (TESTER) return; // the playtest build (npm run build:itch) has no test toggle
     this.toggleText = this.add.text(GAME_WIDTH / 2, 818, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
     this.add.zone(GAME_WIDTH / 2, 818, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
   }
@@ -248,7 +251,7 @@ export default class SquadScene extends Phaser.Scene {
     });
     const ready = this.ready() && !this.leaving;
     this.begin.setVisible(ready);
-    this.toggleText.setText(`${this.progress.unlockAll ? '[X]' : '[ ]'} test: unlock every hero`).setColor(this.progress.unlockAll ? UI.green : MUTE);
+    if (this.toggleText) this.toggleText.setText(`${this.progress.unlockAll ? '[X]' : '[ ]'} test: unlock every hero`).setColor(this.progress.unlockAll ? UI.green : MUTE);
   }
 
   // ---- input ---------------------------------------------------------------------------------

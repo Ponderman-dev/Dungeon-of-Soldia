@@ -532,7 +532,10 @@ export default class BattleState {
         const amount = Math.min(push, (1 - d) * M.separateX * k);
         let wa = share(a, b);
         let wb = share(b, a);
-        if (wa + wb === 0) wa = wb = 1;
+        if (wa + wb === 0) {
+          if (a.def.object !== b.def.object) continue; // a boss next to its own object (eggs): neither budges
+          wa = wb = 1;
+        }
         // Two fighters both standing still only drift apart slowly (no jostling while they swing).
         const calm = wa < 1 && wb < 1 ? M.settledPairPush ?? 1 : 1;
         const fa = (amount * calm * wa) / (wa + wb);

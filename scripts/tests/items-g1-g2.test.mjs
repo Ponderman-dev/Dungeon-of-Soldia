@@ -37,14 +37,18 @@ ok('Siege Cannon is legendary, Feather Boots / Lucky Coin / Dice / Totem / Bulwa
   ok('...and an item hit does not trigger the target\'s thorns', k.hp === 1000); }
 
 // ================= G2
-// Sucker Punch Glove
-{ const { s, es, k } = mk(['goblin', 'goblin']); give(s, k, 'sucker_punch_glove');
-  const first = basicHit(s, k, es[0]).amount, second = basicHit(s, k, es[0]).amount, other = basicHit(s, k, es[1]).amount;
-  ok('Sucker Punch: the first basic attack on each enemy deals +50%', Math.abs(first / second - 1.5) < 0.05 && Math.abs(other / second - 1.5) < 0.05, `${first}/${second}/${other}`);
-  const sk = s.strike(k, es[1], [], {}).amount; ok('...skills / item hits do not count', Math.abs(sk / second - 1) < 0.05);
-  give(s, k, 'sucker_punch_glove'); const { s: s2, es: e2, k: k2 } = mk(['goblin']); give(s2, k2, 'sucker_punch_glove', 2);
-  const f2 = basicHit(s2, k2, e2[0]).amount, n2 = basicHit(s2, k2, e2[0]).amount; ok('...two gloves: +100%', Math.abs(f2 / n2 - 2) < 0.08);
-  s2.spawnEnemies(['goblin'], 2); const e3 = s2.enemies[0]; e3.stats.defense = 0; ok('...a new floor, new enemies: it works again', Math.abs(basicHit(s2, k2, e3).amount / n2 - 2) < 0.08); }
+// Sucker Punch Glove (session 18): ANY hit (attack, skill, item) on an enemy above `above`% health gets +percent% per glove
+{ const eff = itemDefs.sucker_punch_glove.effects[0], pct = eff.percent, above = eff.above;
+  const { s, es, k } = mk(['goblin', 'goblin']); const { s: s0, es: e0, k: k0 } = mk(['goblin']);
+  for (const e of [...es, ...e0]) { e.hp = e.maxHp = 1e7; }
+  const base = basicHit(s0, k0, e0[0]).amount; give(s, k, 'sucker_punch_glove');
+  ok('Sucker Punch: a hit on a (nearly) full-health enemy deals +' + pct + '%', Math.abs(basicHit(s, k, es[0]).amount / base - (1 + pct / 100)) < 0.05);
+  const skill = s.strike(k, es[0], [], { multiplier: 2 }).amount, skill0 = s0.strike(k0, e0[0], [], { multiplier: 2 }).amount;
+  ok('...skills and item hits count too', Math.abs(skill / skill0 - (1 + pct / 100)) < 0.05, `${skill0} -> ${skill}`);
+  es[1].hp = es[1].maxHp * (above - 1) / 100; e0[0].hp = e0[0].maxHp * (above - 1) / 100;
+  ok('...not once the enemy is under ' + above + '% health', Math.abs(basicHit(s, k, es[1]).amount / basicHit(s0, k0, e0[0]).amount - 1) < 0.05);
+  const { s: s2, es: e2, k: k2 } = mk(['goblin']); e2[0].hp = e2[0].maxHp = 1e7; give(s2, k2, 'sucker_punch_glove', 2);
+  ok('...two gloves: +' + 2 * pct + '%', Math.abs(basicHit(s2, k2, e2[0]).amount / base - (1 + (2 * pct) / 100)) < 0.08); }
 // Bandage Roll
 // Bandage Roll (phase H rework): every 8s a toss of 1-3 bandages at the most hurt heroes, 5 flat health per roll each.
 { const toss = (rolls, rngVal) => { const { s, k, h } = mk(['goblin']); give(s, k, 'bandage_roll', rolls); s.rng = () => rngVal;

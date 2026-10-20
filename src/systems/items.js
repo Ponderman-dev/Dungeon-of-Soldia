@@ -53,6 +53,7 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
       if (e.unique) specials[e.special] = e.percent;
       else specials[e.special] = Math.min(e.cap ?? Infinity, (specials[e.special] || 0) + e.percent * factor);
       if (e.below !== undefined) specials[e.special + 'Below'] = e.below;
+      if (e.above !== undefined) specials[e.special + 'Above'] = e.above; // e.g. suckerPunchAbove (health %)
       if (e.cooldownMs) specials[e.special + 'CooldownMs'] = e.cooldownMs; // e.g. blockCooldownMs
       if (e.debuffs) specials[e.special + 'List'] = e.debuffs; // e.g. critDebuffList
     } else if (e.damageBonus) {

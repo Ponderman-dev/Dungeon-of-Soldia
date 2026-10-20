@@ -112,7 +112,6 @@ export default class BattleState {
       steady: false, // Steady Aim is active
       floor: {}, // flags that reset every floor
       xpScale, // fodder give less XP (enemyTiers)
-      firstHits: new Set(),
       sigilHits: new Set(),
       streak: { uid: null, count: 0 },
       spawnTimer: 0, // minion spawner (def.spawner): ms until the next minion
@@ -297,7 +296,6 @@ export default class BattleState {
     this.thunders = []; // Thunderstruck circles growing under enemies
     for (const h of this.heroes) {
       h.floor = {}; // per-floor flags (Tough Skin used, Second Wind used...)
-      h.firstHits = new Set(); // enemies this hero has already hit with a basic attack (Sucker Punch)
       h.sigilHits = new Set(); // enemies this hero has already marked (Hunter's Sigil)
       h.streak = { uid: null, count: 0 }; // Brawler's Streak
       h.pending = null; // attacks aimed at the last floor's enemies are gone
@@ -1856,16 +1854,16 @@ export default class BattleState {
   }
 
   // Extra damage % from the ATTACKER's item specials for this hit.
-  //  - suckerPunch: the first BASIC attack on each enemy.   - fullVigor: while the attacker is above 90% health.
+  //  - suckerPunch: ANY hit (attack, skill, item) on an enemy above `suckerPunchAbove`% health.
+  //  - fullVigor: while the attacker is above 90% health.
   //  - brawlerMax: +2% per basic hit in a row (any enemy), up to the item's max; lost on stun/freeze/fear.
   itemDamageBonus(attacker, target, opts) {
     const sp = attacker.specials;
     this.bonusItems = []; // items that boosted this hit (the scene shows them: Sucker Punch, Executioner's Axe)
     if (!sp || attacker.side !== 'hero' || attacker.minion) return 0;
     let bonus = 0;
+    if (sp.suckerPunch && target.side === 'enemy' && target.hp >= (target.maxHp * (sp.suckerPunchAbove ?? 90)) / 100) { bonus += sp.suckerPunch; this.bonusItems.push(['sucker_punch_glove', 'Sucker Punch!']); }
     if (opts.basic) {
-      if (sp.suckerPunch && !attacker.firstHits.has(target.uid)) { bonus += sp.suckerPunch; this.bonusItems.push(['sucker_punch_glove', 'Sucker Punch!']); }
-      attacker.firstHits.add(target.uid);
       if (sp.brawlerMax) {
         const st = attacker.streak;
         // A COMBO of the holder's basic hits on ANY enemy; lost when the holder is stunned, frozen or feared (applyStatus).

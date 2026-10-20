@@ -416,14 +416,15 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "The first basic attack on each enemy deals +50%.",
+    "description": "Enemies above 90% health take +50% damage from this hero (attacks, skills and items).",
     "effects": [
       {
         "special": "suckerPunch",
-        "percent": 50
+        "percent": 50,
+        "above": 90
       }
     ],
-    "perStack": "+50% first hit"
+    "perStack": "+50% vs enemies above 90% health"
   },
   "bandage_roll": {
     "name": "Bandage Roll",

@@ -292,3 +292,6 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   holder lives EVERY enemy has 8 less defense per copy (`assaultShred` special; an aura worked out at each hit in
   `BattleState.assaultShred()` -> computeDamage `opts.defenseShred`, physical hits only, can go below 0 like Armor Break;
   no icon on the enemies). Tests: `items-s18.test.mjs`.
+- Sucker Punch Glove v2 (user: 'skills and other damage count; several gloves can one-shot with skills'): ANY hit from the
+  holder (basic attack, skill, item hit) on an enemy above 90% health (`above` in the effect -> `suckerPunchAbove`) deals
+  +50% per glove. Was: the first basic attack on each enemy (+50%). `firstHits` removed.

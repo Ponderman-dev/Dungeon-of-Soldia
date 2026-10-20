@@ -1,28 +1,33 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 16, 2026-10-20): NEXT = ENEMY ADJUSTMENTS
-- LATEST BRANCH: `ccr-6323ff2c-ctwhz9` has EVERYTHING (claude/screen-review-notes-zk4cfb and session 14 merged in). Start
-  the next session from it. Before building/publishing: `git fetch` and check newer session branches are merged
-  (`git merge-base --is-ancestor`); the old ccr-a59eab7b / ccr-a7ab1d1c / phase-h-tuning / scaffold / quick-gloves branches
-  are pre-squash history, already in (ignore them).
+## START HERE (session 17, 2026-10-20): NEXT = ITEM ADJUSTMENTS
+- LATEST BRANCH: `ccr-f0fe918e-fdbp68` has EVERYTHING (session 16's ccr-6323ff2c-ctwhz9 is in). Start the next session
+  from it. Before building/publishing: `git fetch` and check newer session branches are merged (`git merge-base
+  --is-ancestor`); ccr-a59eab7b / ccr-a7ab1d1c / phase-h-tuning / scaffold / quick-gloves = old history, ignore.
 - DONE this session (user played and asked):
-  - Heroes tougher: +10% defense/resist, once-per-run DEATH SAVE (first killing hit does 50%, still lethal = dies; NO
-    'SAVED!' pop-up, user's choice). combat.json `heroDefense`, `deathSave`; docs/systems/combat.md.
-  - Danger look: red low-health glow at the bottom edge under the hero (<30%), a fallen hero tips over, POOFs into a
-    tombstone, '<NAME> FELL'. combat.json `heroDanger`.
-  - Fixes: heroes now really fade out in the entrance door (SquadScene.placeBench kept resetting them); the passive text
-    closes on any tap.
-  - FIRST ENEMY ADJUSTMENT: Shieldbearer nerfed (Guard shield 20% -> 12% of its health, never on itself). docs/systems/enemies.md.
-- NEXT TASK (user): ENEMY ADJUSTMENTS. Ask which enemies feel bad in play (user plays on phone and reports). Smart curve
-  now: median floor 37, mean 47.5, alive after 20/40: 84%/41%. Top killers: BOSS Grukk (floor 20), BOSS Brood Mother,
-  mimic, Monster House. Read docs/systems/enemies.md (roster, traits, director) / bosses.md first. Tools:
-  `node scripts/tests/curve.mjs 3 smart` before/after every change; `scripts/tests/tune-enemies.mjs`; enemy tests
-  enemies-batch1/2, enemy-traits, dungeon-roster. Enemy abilities = boss format (`abilities`, bosses.js abilityTargets).
-- OPEN (offered, not done): Bone Sacrifice pops 'Sacrifice!' 3-4 times stacked; Mystery Brew (alch_brew) has no sound;
-  Death Coil demo note still says 'change' (ask the user to re-mark it).
+  - Enemy scaling: floors 25-35 hit too hard -> enemy growth per 3 floors +50% health / +42% attack (was +35% / +52.5%),
+    Orc Brute attack 12 -> 9 (a hero health buff was tried and REMOVED: user wants it no easier). Smart curve median 37 -> 40.
+  - Movement: minions make way (never block a hero / shove an enemy), standing minions let walkers pass through, bosses
+    are not pushed by small fighters or their own eggs. PARKED: 'bosses should NEVER be shoved' (movement.md).
+  - Hero death: red screen pulse + low bell (`heroDeath` cue). Sound board round 8: rows heroDeath, descend, gateSlam
+    (`add-rows.py`); user has NOT picked yet -> 'apply the sound picks' = apply-picks.py (sound.md).
+  - Playtest: `npm run build:itch` = itch-page.html without test buttons (user uploads to itch.io); 'Choose 3 heroes' box
+    gone; sound button = pixel speaker icon.
+  - Skills: Defense Bash / Multistrike / Savage Leap STAY where they hit (rules move, `staysAtImpact`); every melee basic
+    attack STEPS IN to the target at the hit (`attackMotion.meleeStep`, view only). Both just applied: ask how they feel
+    (step size/speed, heroes only?).
+- NEXT TASK (user): ITEM ADJUSTMENTS. Ask which items feel bad/weak/too strong in play. Read docs/systems/items.md and
+  docs/item-decisions.md (the truth for item numbers) first. Item review page (user notes in db `notes`):
+  https://claude.ai/artifact/S7cbuLJoStsdi5hpg2SBef (read its notes with ArtifactData). Tools: `node scripts/tests/itemruns.mjs`
+  (one item), `node scripts/tests/review.mjs 4 all` (heroes/items), curve.mjs before/after. Item tests use the frozen
+  fixture: changing NUMBERS needs no test edits (CLAUDE.md).
+- OPEN (offered, not done): Necromancer got stronger once minions stopped blocking (watch); Bone Sacrifice pops
+  'Sacrifice!' 3-4 times stacked; Mystery Brew (alch_brew) has no sound; Death Coil demo note still says 'change'.
 - PARKED: HERO REDRAW proposal (chunky heroic body, 3/4 view, BIG weapons; keep 3 parts or go to 6).
-- Test helper (scratchpad, throwaway): Playwright + vite dev on its own port from a git worktree copy; the squad screen
-  shows first: set registry `squadIds`, stop 'Squad', start 'Battle'; `window.__game`, `?floor=5&room=fight`.
+- Test helper (scratchpad, throwaway): Playwright (/opt/node22/lib/node_modules/playwright) + `npx vite --port 51xx`
+  (log to the scratchpad); squad screen first: set registry `squadIds`, stop 'Squad', start 'Battle'; `window.__game`,
+  `?floor=5&room=fight`; poll in a loop (page.waitForFunction with polling was flaky). Balance probes used this session
+  (scaling per floor, big hits by source, shove per fight) were scratch scripts: rewrite if needed.
 
 ## How we work with this user
 - Beginner, vibe coding: explain simply, small steps, ask before design changes; 4 ideas via the question tool for picks.

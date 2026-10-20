@@ -516,6 +516,8 @@ export default class BattleState {
       for (let j = i + 1; j < units.length; j++) {
         const a = units[i];
         const b = units[j];
+        const ghost = (m, o) => m.minion && !walking.has(m) && walking.has(o); // a minion standing still lets walkers pass through it
+        if (ghost(a, b) || ghost(b, a)) continue;
         const k = ((a.size || 1) + (b.size || 1)) / 2; // big bodies (bosses) keep others further away
         const d = Math.hypot((b.x - a.x) / (M.separateX * k), (b.y - a.y) / (M.separateY * (1 + (k - 1) * 0.5))); // < 1 = too close
         if (d >= 1) continue;

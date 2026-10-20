@@ -1010,19 +1010,29 @@
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "Electric hits on a Chilled or Frozen enemy shatter it: ice damage on it and its neighbours (uses up the cold).",
+    "description": "Electric hits add a small ice hit (30%) and 1 Chill. At 3 Chill (or Frozen) the enemy shatters: 150% ice on it and its neighbours.",
     "effects": [
       {
         "special": "frozenThunderbolt",
         "percent": 150
+      },
+      {
+        "special": "thunderIce",
+        "percent": 30
+      },
+      {
+        "special": "thunderShatterAt",
+        "percent": 3,
+        "unique": true
       }
     ],
     "dropWeight": 70,
     "needs": "electric",
     "provides": [
-      "ice"
+      "ice",
+      "cc"
     ],
-    "perStack": "+150% ice burst"
+    "perStack": "+30% ice hit, +150% shatter"
   },
   "warding_charm": {
     "name": "Warding Charm",

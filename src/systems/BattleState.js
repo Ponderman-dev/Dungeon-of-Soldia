@@ -1779,7 +1779,7 @@ export default class BattleState {
 
   // Item effects that react to a hit that connected (the attacker's items).
   //  - Shatter Hammer: the hit breaks a freeze.   - Hunter's Sigil: the first hit on each enemy Marks it.
-  //  - Frozen Thunderbolt: an electric hit on a chilled / frozen enemy shatters into ice on it and its neighbours (a burst triggers nothing).
+  //  - Frozen Thunderbolt: electric hits add ice + Chill; at 3 Chill / frozen the enemy shatters into ice on it and its neighbours.
   afterItemHit(attacker, target, opts, events) {
     const sp = attacker.specials;
     if (!sp || attacker.side !== 'hero' || attacker.minion || !target.alive) return;
@@ -1796,16 +1796,21 @@ export default class BattleState {
       const copies = Math.max(1, attacker.items.filter((id) => id === 'hunters_sigil').length);
       this.applyStatus(target, { status: 'mark', durationMs: 5000 + 2500 * (copies - 1), damageTakenPercent: sp.hunterSigil }, attacker, `sigil_${attacker.uid}`, events);
     }
-    const cold = sp.frozenThunderbolt && target.statuses.filter((st) => st.type === 'chill' || st.type === 'freeze');
-    if (cold && cold.length && (opts.damageType || attacker.damageType) === 'electric' && !opts.burst) {
-      // An electric hit on a CHILLED or FROZEN enemy shatters it: an ice burst on it and its neighbours, the cold is used up.
-      events.push({ type: 'proc', unit: attacker, label: 'Thunderbolt!', itemId: 'frozen_thunderbolt', target });
-      for (const e of [target, ...this.neighbours(target)]) if (e.alive) this.strike(attacker, e, events, { multiplier: sp.frozenThunderbolt / 100, damageType: 'ice', item: true, burst: true });
-      for (const st of cold) {
-        const i = target.statuses.indexOf(st);
-        if (i < 0) continue; // already gone (Shatter Hammer broke the freeze)
-        target.statuses.splice(i, 1);
-        events.push({ type: 'status', unit: target, change: 'expire', status: st });
+    if (sp.frozenThunderbolt && (opts.damageType || attacker.damageType) === 'electric' && !opts.burst) {
+      // Frozen Thunderbolt: every electric hit adds a small ICE hit and 1 Chill; at `thunderShatterAt` Chill (or Frozen)
+      // the target shatters: an ice burst on it and its neighbours, the cold is used up.
+      if (sp.thunderIce) this.strike(attacker, target, events, { multiplier: sp.thunderIce / 100, damageType: 'ice', item: true, burst: true });
+      if (target.alive) this.applyStatus(target, { status: 'chill', durationMs: 5000 }, attacker, 'thunderbolt', events);
+      const cold = target.statuses.filter((st) => st.type === 'chill' || st.type === 'freeze');
+      if (target.alive && (cold.some((st) => st.type === 'freeze') || this.stacks(target, 'chill') >= (sp.thunderShatterAt || 3))) {
+        events.push({ type: 'proc', unit: attacker, label: 'Thunderbolt!', itemId: 'frozen_thunderbolt', target });
+        for (const e of [target, ...this.neighbours(target)]) if (e.alive) this.strike(attacker, e, events, { multiplier: sp.frozenThunderbolt / 100, damageType: 'ice', item: true, burst: true });
+        for (const st of cold) {
+          const i = target.statuses.indexOf(st);
+          if (i < 0) continue; // already gone (Shatter Hammer broke the freeze)
+          target.statuses.splice(i, 1);
+          events.push({ type: 'status', unit: target, change: 'expire', status: st });
+        }
       }
     }
   }

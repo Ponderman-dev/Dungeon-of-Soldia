@@ -253,4 +253,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - itemruns (6/squad, copies 0/1/3; noisy, base moved 31 -> 36 between runs): Gargoyle +1.7/+4.2, Phoenix +3.5/+4.5,
   Ice Knight +2.2/-0.8, Imp +3.5/+8.9, Wisp -0.4/+6.3, Frozen Thunderbolt -0.9/+1.2 (weak now), Shadow Charm +0.3/-0.6.
   Smart curve median 43 -> 41. Tests: items-g4 (Thunderbolt), items-g7 (Phoenix, element share), damage-types (poison).
+- Frozen Thunderbolt v2 (user: 'should apply freeze damage as well and apply chill'): every electric hit also adds a 30% ice
+  hit (`thunderIce`, per copy) and 1 Chill; at 3 Chill (`thunderShatterAt`, unique) or Frozen -> the 150% shatter above.
+  itemruns 1/3 copies: -1.1/+2.2 (it still needs electric hits: Mage, Storm Charm, Static Crystal). Curve median 41.
 - NEXT (user list): Flame Spirit -> Dark Spirit look + name; 1-2 new dark synergy items; Mimic ideas; Ice Knight look.

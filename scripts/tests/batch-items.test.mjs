@@ -21,15 +21,15 @@ const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker 
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'fire_bombs'); const [e] = dummy(s); s.rng = () => 0.001; k.stats.crit = 0; const ev = []; s.rollProcs(k, 'onAttack', ev, { target: e });
   const a = attacks(ev, k)[0]; ok('bomb is fire, 300% of attack', a && a.damageType === 'fire' && a.result.amount === Math.round(k.stats.attack * 3), JSON.stringify(a && a.result));
   ok('bomb draws a projectile', ev.some((x) => x.type === 'projectile' && x.kind === 'bomb')); }
-// Chill Band: every attack adds a 10% ice hit per band (stacks) AND 1 Chill stack (does not grow with more bands); 5 Chill = Freeze
+// Chill Band: every attack adds a 10% ice hit per band (copies merge into one hit) AND 1 Chill stack (does not grow with more bands); 5 Chill = Freeze
 { const s = mk(); const k = s.heroes[0]; s.giveItem(k.uid, 'chill_band'); const [e] = dummy(s); s.rng = () => 0.001; k.stats.crit = 0;
   let ev = []; s.rollProcs(k, 'onAttack', ev, { target: e, hit: true });
   const ice = (x) => attacks(x, k).filter((a) => a.damageType === 'ice');
   ok('one band: one ice hit of 10% attack', ice(ev).length === 1 && ice(ev)[0].result.amount === Math.max(1, Math.round(k.stats.attack * 0.1)));
   ok('...and 1 Chill stack on the target', s.stacks(e, 'chill') === 1);
   ok('ice hit and chill make no popup', ev.filter((x) => x.type === 'proc').length === 0);
-  s.giveItem(k.uid, 'chill_band'); e.statuses = []; ev = []; s.rollProcs(k, 'onAttack', ev, { target: e, hit: true });
-  ok('two bands: two ice hits (stacks)', ice(ev).length === 2);
+  s.giveItem(k.uid, 'chill_band'); k.stats.crit = 0; e.statuses = []; ev = []; s.rollProcs(k, 'onAttack', ev, { target: e, hit: true });
+  ok('two bands: ONE ice hit of double size (copies merge, one number)', ice(ev).length === 1 && ice(ev)[0].result.amount === Math.max(1, Math.round(k.stats.attack * 0.2)), `${ice(ev).map((a) => a.result.amount)}`);
   ok('two bands: still ONE chill stack per attack', k.procs.filter((p) => p.unique).length === 1 && s.stacks(e, 'chill') === 1);
   e.statuses = []; for (let i = 0; i < 5; i++) s.rollProcs(k, 'onAttack', [], { target: e, hit: true });
   ok('5 attacks = 5 Chill = Freeze (chill used up)', s.isStunned(e) && e.statuses.some((x) => x.type === 'freeze') && s.stacks(e, 'chill') === 0);

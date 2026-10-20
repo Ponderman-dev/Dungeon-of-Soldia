@@ -43,7 +43,10 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
       // `chancePerExtra` (with `unique`): ONE roll whose chance grows with every extra copy (Hex Doll: 8%, 12%, 16%...).
       const n = holder ? holder.items.filter((i) => i === e.itemId).length : 1;
       const chance = e.chancePerExtra ? e.chance + e.chancePerExtra * (n - 1) : e.chance * factor;
-      if (holder === hero && !(e.unique && procs.some((p) => p.unique && p.itemId === e.itemId))) procs.push({ ...e, chance, itemId: e.itemId, copies: n });
+      // `mergeCopies` (sure extra hits: element charms, Chill Band): the copies add up into ONE bigger hit (one number).
+      const same = e.mergeCopies && procs.find((p) => p.mergeCopies && p.itemId === e.itemId && p.label === e.label);
+      if (holder === hero && same) same.strike = { ...same.strike, damageMultiplier: same.strike.damageMultiplier + e.strike.damageMultiplier };
+      else if (holder === hero && !(e.unique && procs.some((p) => p.unique && p.itemId === e.itemId))) procs.push({ ...e, chance, itemId: e.itemId, copies: n });
     } else if (e.special) {
       // `unique`: the value does NOT grow with more copies (e.g. the Second Wind heal); `cap`: the total stops here.
       if (e.unique) specials[e.special] = e.percent;

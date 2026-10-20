@@ -321,7 +321,8 @@
         "strike": {
           "damageMultiplier": 0.1,
           "damageType": "ice"
-        }
+        },
+        "mergeCopies": true
       },
       {
         "proc": "onAttack",
@@ -527,7 +528,8 @@
         "strike": {
           "damageMultiplier": 0.15,
           "damageType": "fire"
-        }
+        },
+        "mergeCopies": true
       }
     ],
     "perStack": "+15% fire hit, +15% fire damage",
@@ -554,7 +556,8 @@
         "strike": {
           "damageMultiplier": 0.15,
           "damageType": "ice"
-        }
+        },
+        "mergeCopies": true
       }
     ],
     "perStack": "+15% ice hit, +15% ice damage",
@@ -581,7 +584,8 @@
         "strike": {
           "damageMultiplier": 0.15,
           "damageType": "electric"
-        }
+        },
+        "mergeCopies": true
       }
     ],
     "perStack": "+15% electric hit, +15% electric damage",
@@ -608,7 +612,8 @@
         "strike": {
           "damageMultiplier": 0.15,
           "damageType": "dark"
-        }
+        },
+        "mergeCopies": true
       }
     ],
     "perStack": "+15% dark hit, +15% dark damage",

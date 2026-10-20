@@ -113,11 +113,11 @@ ok('Siege Cannon is legendary, Feather Boots / Lucky Coin / Dice / Totem / Bulwa
   ok('Ghastly Fire (needs fire) is x0.25 without a fire source and normal with the Mage', w(sq(['knight', 'rogue', 'archer']), 'ghastly_fire') * 4 === w(sq(['mage', 'knight', 'rogue']), 'ghastly_fire'));
   const sqi = sq(['knight', 'rogue', 'archer']); sqi.giveItem(sqi.heroes[0].uid, 'kindling');
   ok('...an owned Kindling counts as a fire source', w(sqi, 'ghastly_fire') === w(sq(['mage', 'knight', 'rogue']), 'ghastly_fire')); }
-// Element charms: every attack adds a small hit of the charm's element (one per copy), silent
+// Element charms: every attack adds a small hit of the charm's element (copies merge into one bigger hit), silent
 for (const id of ['kindling', 'frost_charm', 'storm_charm', 'shadow_charm']) {
-  const { s, es, k } = mk(['goblin']); const type = itemDefs[id].effects.find((e) => e.strike).strike.damageType;
-  give(s, k, id, 2); const ev = []; s.rollProcs(k, 'onAttack', ev, { target: es[0], hit: true });
-  const hits = ev.filter((x) => x.type === 'attack' && x.attacker === k && x.damageType === type);
-  ok(`${itemDefs[id].name}: 2 copies = 2 ${type} hits on a basic attack, no popup`, hits.length === 2 && !ev.some((x) => x.type === 'proc'), `${hits.length}`);
+  const type = itemDefs[id].effects.find((e) => e.strike).strike.damageType;
+  const one = (n) => { const { s, es, k } = mk(['goblin']); give(s, k, id, n); const ev = []; s.rollProcs(k, 'onAttack', ev, { target: es[0], hit: true }); return { ev, hits: ev.filter((x) => x.type === 'attack' && x.attacker === k && x.damageType === type) }; };
+  const a = one(1), b = one(3);
+  ok(`${itemDefs[id].name}: 3 copies = ONE bigger ${type} hit on a basic attack (one number), no popup`, a.hits.length === 1 && b.hits.length === 1 && b.hits[0].result.amount > a.hits[0].result.amount * 2.5 && !b.ev.some((x) => x.type === 'proc'), `${a.hits.map((h) => h.result.amount)} -> ${b.hits.map((h) => h.result.amount)}`);
 }
 ok('every new G2 item exists with a rarity, a type and a description', ['sucker_punch_glove', 'bandage_roll', 'second_wind_flask', 'full_vigor', 'brawlers_streak', 'tough_skin', 'kindling', 'frost_charm', 'storm_charm', 'shadow_charm', 'mage_cloak', 'hourglass'].every((id) => itemDefs[id] && itemDefs[id].rarity === 'common' && itemDefs[id].type && itemDefs[id].description));

@@ -283,4 +283,8 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   THUNDERBOLT hits it for 700% electric. The bolt can't be dodged (`sure`) and is a real hit: lifesteal, thorns and the
   holder's on-hit items go off (not Thunderstruck itself). One circle per holder at a time; if the marked enemy dies first
   the bolt hits the next strongest. Look: itemFx `thunderMarkFx` (circle) + `thunderstruckFx` (bolt), new item icon.
-  Tests: `thunderstruck.test.mjs`.
+  Tests: `items-s18.test.mjs`.
+- NEW EPIC Guardian's Banner (id guardians_banner, user: more defense items; 'epic, a bit higher stats'): squad item, every
+  hero gets +15 defense and +15 resist while the holder lives (type/scope `squad`, so Bard's Hymn makes it stronger).
+  Tests: `items-s18.test.mjs`. Other defense ideas offered, not built: Stoneheart (a hit takes at most 20% max health),
+  Aegis of Dawn (legendary, shield on the most hurt hero every 15s), Spellward Robe (+30 resist, first magic hit blocked).

@@ -1,4 +1,4 @@
-// Thunderstruck (legendary, electric): 5% on attack, a circle grows under the strongest enemy, then a giant bolt hits it
+// Session 18 items. Thunderstruck (legendary, electric): 5% on attack, a circle grows under the strongest enemy, then a giant bolt hits it
 // (can't be dodged) and sets off the holder's on-hit items. One circle at a time, never stacks.
 import fs from 'fs';
 import { noPerks, frozenItems } from './util.mjs';
@@ -47,3 +47,10 @@ ok('Thunderstruck exists: legendary, electric, offered once per run', itemDefs.t
   ok('if the marked enemy dies first, the bolt hits the next strongest', ev.some((e) => e.type === 'thunderstruck' && e.target !== es[1] && e.target.alive)); }
 { const { s, es, k } = mk(); s.giveItem(k.uid, 'thunderstruck'); s.giveItem(k.uid, 'thunderstruck');
   ok('two copies still roll ONE chance (does not stack)', k.procs.filter((p) => p.itemId === 'thunderstruck').length === 1); }
+// Guardian's Banner (epic, squad): every living hero gets its defense and resist while the holder lives
+{ const { s, k } = mk(); const eff = itemDefs.guardians_banner.effects, def = eff.find((e) => e.stat === 'defense').flat, res = eff.find((e) => e.stat === 'resist').flat;
+  const before = s.heroes.map((h) => [h.stats.defense, h.stats.resist]); s.giveItem(k.uid, 'guardians_banner');
+  ok('Guardian\'s Banner: all 3 heroes get its defense and resist', s.heroes.every((h, i) => h.stats.defense === before[i][0] + def && h.stats.resist === before[i][1] + res), JSON.stringify(s.heroes.map((h) => [h.stats.defense, h.stats.resist])));
+  const fall = (state) => { state.heroes[0].alive = false; state.heroes[0].hp = 0; state.refreshStats(); return [state.heroes[1].stats.defense, state.heroes[1].stats.resist]; };
+  const { s: s0 } = mk(); const plain = fall(s0), got = fall(s);
+  ok('...and lose it when the holder falls (same as a squad without it)', got[0] === plain[0] && got[1] === plain[1], JSON.stringify([plain, got])); }

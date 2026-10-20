@@ -1933,5 +1933,23 @@
     ],
     "oncePerRun": true,
     "perStack": "does not stack"
+  },
+  "guardians_banner": {
+    "name": "Guardian's Banner",
+    "rarity": "epic",
+    "type": "squad",
+    "scope": "squad",
+    "description": "The whole squad gets +15 defense and +15 resist (while this hero lives).",
+    "effects": [
+      {
+        "stat": "defense",
+        "flat": 15
+      },
+      {
+        "stat": "resist",
+        "flat": 15
+      }
+    ],
+    "perStack": "+15 defense, +15 resist for the squad"
   }
 }

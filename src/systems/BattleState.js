@@ -2128,22 +2128,6 @@ export default class BattleState {
     return { lost: left, absorbed, immune: false, broken, burnShield };
   }
 
-  // Last Stand Banner (rally): the first time in a fight that any hero drops below `rallyBelow`% (30) health, every
-  // living hero gets a shield of `rallyShield`% max health and +`rallyAttack`% attack for `rallyMs` (6s); both per
-  // banner (each holder rallies once per fight, `floor.rallied`).
-  tryRally(hurt, events) {
-    for (const h of this.heroes) {
-      const sp = h.alive && h.specials;
-      if (!sp || !sp.rallyShield || h.floor.rallied || hurt.hp >= (hurt.maxHp * (sp.rallyBelow || 30)) / 100) continue;
-      h.floor.rallied = true;
-      events.push({ type: 'proc', unit: h, label: 'Last Stand!', itemId: 'last_stand_banner' });
-      for (const x of this.heroes.filter((u) => u.alive)) {
-        this.applyStatus(x, { status: 'shield', percentMaxHp: sp.rallyShield, durationMs: sp.rallyMs || 6000 }, h, 'last_stand', events);
-        this.applyStatus(x, { status: 'buff', durationMs: sp.rallyMs || 6000, mods: [{ stat: 'attack', percent: sp.rallyAttack }] }, h, 'last_stand', events);
-      }
-    }
-  }
-
   // Soul Lantern: every `lanternEvery` (8) enemies the squad defeats, each holder gains +1% attack and max health per
   // lantern for the rest of the run, with NO limit (`hero.lanternGain`, used in statUpkeep()).
   // Every kill feeds the lantern (`soulFeed` event: green lines swirl round the holder); every 8th pops its icon.
@@ -2239,7 +2223,6 @@ export default class BattleState {
     if (!events || target.side !== 'hero' || target.minion || target.hp <= 0) return;
     this.tryIntercept(target, events); // Knight: jumps in front of a hero who drops low
     this.tryBodyguard(target, events); // Martyr's Shield: its holder takes every hit on a hero who drops low
-    this.tryRally(target, events); // Last Stand Banner: the squad rallies when a hero drops low
     this.tryTriage(target, events); // Aid Kit: patches a hero who drops low
     // Second Wind Flask: below its threshold ONE flask is used up and heals (once per floor per holder).
     const below = target.specials.secondWindBelow;

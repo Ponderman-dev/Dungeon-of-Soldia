@@ -18,7 +18,7 @@ const mk = (ids = ['knight', 'rogue', 'archer'], enemyIds = ['goblin'], rng = ()
 };
 const give = (s, u, id, n = 1) => { for (let i = 0; i < n; i++) s.giveItem(u.uid, id); };
 const near = (v, t, tol = 0.03) => Math.abs(v / t - 1) < tol;
-const NEW = ['quiver_of_plenty', 'spotters_lens', 'giantslayers_brand', 'catalyst_vial', 'scholars_bookmark', 'last_stand_banner', 'mirror_buckler', 'soul_lantern', 'phoenix_feather', 'iron_will_talisman'];
+const NEW = ['quiver_of_plenty', 'spotters_lens', 'giantslayers_brand', 'catalyst_vial', 'scholars_bookmark', 'mirror_buckler', 'soul_lantern', 'phoenix_feather', 'iron_will_talisman'];
 ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('itemIcons.json')[id]));
 
 // Quiver of Plenty
@@ -54,16 +54,6 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
 // Scholar's Bookmark
 { const { s, k } = mk(); give(s, k, 'scholars_bookmark', 3); k.skills[0].pages = [{ kind: 'stat' }, { kind: 'stat' }, { kind: 'modifier' }]; k.skills[1].pages = [{ kind: 'modifier' }];
   ok('Scholar\'s Bookmark: 3 copies x (2 stat + 2 modifier x2 = 6 pages) = +144% skill damage', s.bookmarkBonus(k) === 144, `${s.bookmarkBonus(k)}`); }
-// Last Stand Banner (session 18, rally): the first time in a fight a hero drops below `rallyBelow`%, every living hero
-// gets a `rallyShield`% shield and +`rallyAttack`% attack for `rallyMs`; per banner.
-{ const E = (k) => itemDefs.last_stand_banner.effects.find((e) => e.special === k).percent, below = E('rallyBelow'), shield = E('rallyShield'), atk = E('rallyAttack');
-  const { s, h } = mk(); give(s, h[0], 'last_stand_banner', 2); h[2].hp = h[2].maxHp * (below + 10) / 100; const ev0 = []; s.afterDamage(h[2], ev0);
-  ok('Last Stand Banner: nothing while every hero is above ' + below + '%', !ev0.some((e) => e.itemId === 'last_stand_banner'));
-  h[2].hp = h[2].maxHp * (below - 5) / 100; const ev = []; s.afterDamage(h[2], ev);
-  const sh = h[1].statuses.find((x) => x.type === 'shield'), bf = h[1].statuses.find((x) => x.type === 'buff');
-  ok('...a hero under ' + below + '%: the squad gets a shield and an attack buff (2 banners = double)', ev.some((e) => e.itemId === 'last_stand_banner') && sh && near(sh.amount, h[1].maxHp * 2 * shield / 100, 0.05) && bf && bf.mods[0].percent === 2 * atk, `${sh && sh.amount} ${bf && bf.mods[0].percent}`);
-  const ev2 = []; s.afterDamage(h[1], ev2); h[1].hp = 1; s.afterDamage(h[1], ev2);
-  ok('...only once per fight', !ev2.some((e) => e.itemId === 'last_stand_banner')); }
 // Mirror Buckler
 { const { s, es, k } = mk(['knight', 'rogue', 'archer'], ['skeletonArcher'], () => 0); give(s, k, 'mirror_buckler'); const e = es[0]; const hp = k.hp, ehp = e.hp;
   const res = s.strike(e, k, [], {}); ok('Mirror Buckler: a ranged hit bounces back, the holder takes nothing', res.reflected && k.hp === hp && e.hp < ehp); }

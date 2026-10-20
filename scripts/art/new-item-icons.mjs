@@ -35,7 +35,7 @@ const CUSTOM = {
     p.disc(8, 11, 2.2, 'G'); p.px(8, 8, 'G'); p.px(8, 7, 'P'); p.px(7, 12, 'w');
   },
 };
-const MAP = { quiver_of_plenty: 'quiver', spotters_lens: 'lens', giantslayers_brand: 'giant', catalyst_vial: 'vial', scholars_bookmark: 'bookmark', last_stand_banner: 'banner', mirror_buckler: 'buckler', soul_lantern: 'lantern', phoenix_feather: 'feather', iron_will_talisman: 'talisman' };
+const MAP = { quiver_of_plenty: 'quiver', spotters_lens: 'lens', giantslayers_brand: 'giant', catalyst_vial: 'vial', scholars_bookmark: 'bookmark', mirror_buckler: 'buckler', soul_lantern: 'lantern', phoenix_feather: 'feather', iron_will_talisman: 'talisman' };
 const path = new URL('../../src/data/itemIcons.json', import.meta.url);
 const icons = JSON.parse(fs.readFileSync(path, 'utf8'));
 const ALL = { ...Object.fromEntries(Object.entries(MAP).map(([id, name]) => [id, ICONS[name]])), ...CUSTOM };

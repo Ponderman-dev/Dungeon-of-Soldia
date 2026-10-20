@@ -27,7 +27,7 @@ const pick = (a, rng) => a[Math.floor(rng() * a.length)];
 
 // Which items protect (go to the hero who gets hit most) and which add damage (go to the strongest attacker).
 const DEFENSIVE = new Set(['padded_vest', 'heart_charm', 'shield_totem', 'bulwark_plate', 'tough_skin', 'mage_cloak', 'iron_will_talisman', 'warding_charm', 'spite_mail', 'martyrs_shield', 'provokers_horn', 'phoenix_feather', 'second_wind_flask', 'mirror_buckler', 'spirit_axe', 'fire_heart', 'overheal_ring', 'heart_of_the_beast', 'feather_boots', 'spiked_aegis', 'lost_clerics_grimoire']);
-const TEAM = new Set(['war_banner', 'jolly_banner', 'spotters_lens', 'last_stand_banner', 'aid_kit', 'bandage_roll', 'soul_lantern', 'giantslayers_brand']);
+const TEAM = new Set(['war_banner', 'jolly_banner', 'spotters_lens', 'aid_kit', 'bandage_roll', 'soul_lantern', 'giantslayers_brand']);
 const SKILLY = new Set(['hourglass', 'conductors_baton', 'echo_rune', 'scholars_bookmark', 'siege_cannon']);
 const ELEMENT = { kindling: 'fire', frost_charm: 'ice', storm_charm: 'electric', shadow_charm: 'dark' };
 const SKILL_HEROES = { mage: 1.3, cleric: 1.2, alchemist: 1.3, bard: 1.2, archer: 1.1, necromancer: 1.1 };

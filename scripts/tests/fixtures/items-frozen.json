@@ -1695,35 +1695,6 @@
     "dropWeight": 80,
     "perStack": "+8% per page"
   },
-  "last_stand_banner": {
-    "name": "Last Stand Banner",
-    "rarity": "epic",
-    "type": "special",
-    "scope": "self",
-    "description": "When any hero drops below 30% health, the squad gets a 15% shield and +25% attack for 6s (once per fight).",
-    "effects": [
-      {
-        "special": "rallyShield",
-        "percent": 15
-      },
-      {
-        "special": "rallyAttack",
-        "percent": 25
-      },
-      {
-        "special": "rallyBelow",
-        "percent": 30,
-        "unique": true
-      },
-      {
-        "special": "rallyMs",
-        "percent": 6000,
-        "unique": true
-      }
-    ],
-    "dropWeight": 90,
-    "perStack": "+15% shield, +25% attack"
-  },
   "mirror_buckler": {
     "name": "Mirror Buckler",
     "rarity": "rare",

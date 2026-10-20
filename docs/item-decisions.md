@@ -301,6 +301,5 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
     first) and heals 3% max health; per roll +1 kind and +3% (`bandageCure`, `bandageCount`, `bandageCureEveryMs`).
   - Martyr's Shield = BODYGUARD: +20 defense; an ally under 30% -> the holder takes ALL enemy hits on them for 3s (+1s per
     extra shield), 20s cooldown, GUARD icon on the ally (`tryBodyguard()`, `martyrFor()`; the old 8% chance is gone).
-  - Last Stand Banner = RALLY (cheat death was tried first, dropped: Phoenix Feather already does that): the first time in
-    a fight any hero drops below 30%, the squad gets a 15% shield + 25% attack for 6s, per banner (`tryRally()`).
-    itemruns 1/3: +4.0/+10.1. Old 'a hero fell' rally + halved morale loss removed. Curve median 43.
+  - Last Stand Banner REMOVED (user): tried cheat death (= Phoenix Feather) and a low-health rally (overlapped Aid Kit,
+    Second Wind Flask, Martyr's Shield, and there are 4 other banners). Demo squad got Guardian's Banner instead.

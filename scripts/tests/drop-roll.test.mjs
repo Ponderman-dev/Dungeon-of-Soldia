@@ -10,18 +10,19 @@ const itemDefs = loadItems(r('items.json')), rw = r('rewards.json');
 const heroDefs = noPerks(r('heroes.json'));
 const mk = (ids) => new BattleState({ heroDefs: ids.map((id) => heroDefs.find((h) => h.id === id)), enemyDefs: r('enemies.json'), itemDefs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
 
-ok('floor 1-10 odds', rarityOddsFor(1, rw).legendary === 1.5 && rarityOddsFor(10, rw).legendary === 1.5);
-ok('floor 11-30 odds', rarityOddsFor(11, rw).legendary === 3 && rarityOddsFor(30, rw).epic === 13);
-ok('floor 31+ odds', rarityOddsFor(31, rw).legendary === 5 && rarityOddsFor(200, rw).common === 42);
+const band = (i) => rw.rarityOdds[i].odds; // the numbers come from rewards.json (tuning needs no test edits)
+ok('floor 1-10 odds', rarityOddsFor(1, rw).legendary === band(0).legendary && rarityOddsFor(10, rw).legendary === band(0).legendary);
+ok('floor 11-30 odds', rarityOddsFor(11, rw).legendary === band(1).legendary && rarityOddsFor(30, rw).epic === band(1).epic);
+ok('floor 31+ odds', rarityOddsFor(31, rw).legendary === band(2).legendary && rarityOddsFor(200, rw).common === band(2).common);
 
 // Rarity mix matches the odds (each card). Measured on many rolls.
 const mix = (floor) => { const s = mk(['knight', 'rogue', 'archer']); const t = {}; let n = 0;
   for (let i = 0; i < 20000; i++) for (const it of rollChoices({ itemDefs, rules: rw, floor, count: 1, heroes: s.heroes })) { t[it.rarity] = (t[it.rarity] || 0) + 1; n++; }
   return Object.fromEntries(Object.entries(t).map(([k, v]) => [k, (100 * v) / n])); };
 const m1 = mix(1), m31 = mix(31);
-ok('floor 1 card is ~62% common', Math.abs(m1.common - 62) < 1.5, m1.common.toFixed(1));
-ok('floor 1 card is ~1.5% legendary', Math.abs(m1.legendary - 1.5) < 0.5, m1.legendary.toFixed(2));
-ok('floor 31 card is ~5% legendary', Math.abs(m31.legendary - 5) < 0.8, m31.legendary.toFixed(2));
+ok('floor 1 card matches the common odds', Math.abs(m1.common - band(0).common) < 1.5, m1.common.toFixed(1));
+ok('floor 1 card matches the legendary odds', Math.abs(m1.legendary - band(0).legendary) < 0.5, m1.legendary.toFixed(2));
+ok('floor 31 card matches the legendary odds', Math.abs(m31.legendary - band(2).legendary) < 0.8, m31.legendary.toFixed(2));
 
 // No duplicate cards, 3 cards.
 { const s = mk(['knight', 'rogue', 'archer']); let dup = 0;

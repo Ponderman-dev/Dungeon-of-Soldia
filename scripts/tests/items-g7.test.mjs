@@ -17,6 +17,7 @@ const mk = (ids = ['knight', 'rogue', 'archer'], rng = () => 0.99) => {
   for (const u of s.heroes) u.hp = u.maxHp;
   return { s, es, h: s.heroes, a: s.heroes[0] };
 };
+const near = (v, t, tol) => Math.abs(v - t) <= tol;
 const give = (s, u, id, n = 1) => { for (let i = 0; i < n; i++) s.giveItem(u.uid, id); };
 const ids = ['rat_cage', 'wisp_lantern', 'fire_imp_brazier', 'mimic_chest', 'gargoyle_idol', 'spirit_knight_banner', 'phoenix_hatchling', 'bone_charm', 'overseers_whistle', 'grave_dust', 'necro_crown'];
 ok('all 11 G7 items exist', ids.every((id) => itemDefs[id] && itemDefs[id].description));
@@ -33,9 +34,15 @@ ok('all 11 G7 items exist', ids.every((id) => itemDefs[id] && itemDefs[id].descr
 // Phoenix
 { const { s, es, a, h } = mk(); give(s, a, 'phoenix_hatchling'); s.startFloor([]);
   const ph = s.minions.find((m) => m.def.id === 'phoenix'); ok('Phoenix is summoned at fight start', !!ph);
-  h[1].hp = h[1].maxHp * 0.5; const before = h[1].hp; s.strike(es[0], ph, []);
-  ok('Phoenix: being hit heals the squad', h[1].hp > before);
-  const mid = h[1].hp; s.strike(es[0], ph, []); ok('...with a cooldown', h[1].hp === mid); }
+  ph.hp = ph.maxHp / 2; const hp = ph.hp; s.update(1000);
+  ok('Phoenix heals itself (regenPercent of max health per second)', near(ph.hp - hp, ph.maxHp * ph.def.regenPercent / 100, 1), `${hp} -> ${ph.hp}`);
+  s.landAttack(ph, es[0], []); ok('...its hits Burn', es[0].statuses.some((x) => x.type === 'burn')); }
+// Element minions get holderElementShare of their hero's +% for their element; melee minions get none
+{ const { s, a } = mk(); give(s, a, 'fire_imp_brazier'); give(s, a, 'kindling', 2); give(s, a, 'spirit_knight_banner'); s.startFloor([]); s.tickSpawner(a, 1e6, []);
+  const imp = s.minions.find((m) => m.def.id === 'imp'), kn = s.minions.find((m) => m.def.id === 'spirit_knight');
+  ok('Imp: half of its hero\'s +fire damage', near(imp.damageBonus.fire, a.damageBonus.fire * imp.def.holderElementShare, 0.01), JSON.stringify(imp.damageBonus));
+  const ev = []; s.landAttack(kn, s.enemies[0], ev);
+  ok('Ice Spirit Knight walks in as melee but its hits are ice, no fire bonus', kn.damageType === 'melee' && ev.some((e) => e.type === 'attack' && e.attacker === kn && e.damageType === 'ice') && !kn.damageBonus.fire); }
 
 // Imp / Gargoyle on-hit statuses
 { const { s, es, a } = mk(); give(s, a, 'fire_imp_brazier'); s.startFloor([]); s.tickSpawner(a, 1e6, []);

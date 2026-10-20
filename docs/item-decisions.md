@@ -240,3 +240,17 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - itemruns (6/squad, copies 0/1/3) before: Kindling -2.1/-0.5, Storm +0.7/+0.3 (useless). After: Kindling +4.0/+8.0,
   Storm +3.6/+5.0, Frost +3.3/+6.5, Shadow +1.5/+3.7 (Whetstone +4.8/+6.6, Sharp Edge +2.8/+5.4 same runs).
   Smart curve median 40 -> 43. Tests: `items-g1-g2.test.mjs` (charms).
+
+## Session 17 (2): minions get their element, Phoenix / Frozen Thunderbolt rework (user's list)
+- Gargoyle defense 8 -> 14.
+- Imp, Wisp, Phoenix, Ice Spirit Knight: `holderElementShare` 0.5 = half of their hero's +% for their element (Kindling
+  +15% -> Imp +7.5%). Only the +% boosts (user's pick), not charm hits or payoff items. Melee minions get nothing.
+- Spirit Knight -> ICE Spirit Knight: walks and swings as melee, its hits are ICE (`hitType: 'ice'`). New look: NOT done yet.
+- Phoenix: hits Burn (like the Imp), heals ITSELF 2% max health per second (`regenPercent`); no more squad heal when hit.
+- Shadow Charm no longer boosts Poison (statuses.json poison `typeBonus: false`). Kindling still boosts Burn.
+- Frozen Thunderbolt REWORK: an electric hit on a CHILLED or FROZEN enemy shatters: 150% ice on it AND its neighbours, the
+  chill/freeze on the target is used up (no more chill from it). Needs a chill source (Chill Band, Mage, Gambler's Dice).
+- itemruns (6/squad, copies 0/1/3; noisy, base moved 31 -> 36 between runs): Gargoyle +1.7/+4.2, Phoenix +3.5/+4.5,
+  Ice Knight +2.2/-0.8, Imp +3.5/+8.9, Wisp -0.4/+6.3, Frozen Thunderbolt -0.9/+1.2 (weak now), Shadow Charm +0.3/-0.6.
+  Smart curve median 43 -> 41. Tests: items-g4 (Thunderbolt), items-g7 (Phoenix, element share), damage-types (poison).
+- NEXT (user list): Flame Spirit -> Dark Spirit look + name; 1-2 new dark synergy items; Mimic ideas; Ice Knight look.

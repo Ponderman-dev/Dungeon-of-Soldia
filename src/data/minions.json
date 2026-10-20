@@ -1,5 +1,5 @@
 {
-  "_about": "Minions: extra fighters on the hero side. They are NOT heroes (no XP, perks, morale, never count as living heroes). kind 'weak': many at once (cap per source), vanish when the floor ends or their holder dies. kind 'greater' (later): one per item, persists across floors. Same shape as enemies.json (stats, parts, height, flying) plus kind.",
+  "_about": "Minions: extra fighters on the hero side. They are NOT heroes (no XP, perks, morale, never count as living heroes). kind 'weak': many at once (cap per source), vanish when the floor ends or their holder dies. kind 'greater' (later): one per item, persists across floors. Same shape as enemies.json (stats, parts, height, flying) plus kind. hitType: the element of its hits when it differs from how it moves (damageType). holderElementShare: share of its hero's +% for its element. regenPercent: max health healed per second.",
   "skeleton": {
     "name": "Skeleton",
     "kind": "weak",
@@ -97,7 +97,7 @@
     "stats": {
       "health": 140,
       "attack": 7,
-      "defense": 8,
+      "defense": 14,
       "attackEfficiency": 70
     },
     "parts": {
@@ -247,7 +247,8 @@
           "duration": 420
         }
       }
-    }
+    },
+    "holderElementShare": 0.5
   },
   "imp": {
     "name": "Imp",
@@ -341,7 +342,8 @@
           "duration": 600
         }
       }
-    }
+    },
+    "holderElementShare": 0.5
   },
   "mimic": {
     "name": "Mimic",
@@ -425,9 +427,10 @@
     }
   },
   "spirit_knight": {
-    "name": "Spirit Knight",
+    "name": "Ice Spirit Knight",
     "kind": "greater",
     "damageType": "melee",
+    "hitType": "ice",
     "flying": false,
     "height": 21,
     "weak": [],
@@ -544,7 +547,8 @@
         }
       }
     },
-    "alpha": 0.8
+    "alpha": 0.8,
+    "holderElementShare": 0.5
   },
   "phoenix": {
     "name": "Phoenix",
@@ -564,10 +568,6 @@
       "attackEfficiency": 110
     },
     "copyStatBonus": 0.25,
-    "onHitHeal": {
-      "percentMaxHp": 1.5,
-      "cooldownMs": 1000
-    },
     "parts": {
       "body": {
         "x": 0,
@@ -630,6 +630,16 @@
           "duration": 200
         }
       }
-    }
+    },
+    "holderElementShare": 0.5,
+    "onAttackApply": [
+      {
+        "status": "burn",
+        "durationMs": 3000,
+        "damageMultiplier": 0.2,
+        "damageType": "fire"
+      }
+    ],
+    "regenPercent": 2
   }
 }

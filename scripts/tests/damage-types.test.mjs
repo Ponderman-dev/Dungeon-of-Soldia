@@ -24,13 +24,15 @@ ok('weak to "magical" does not cover melee', hit('melee', unit({}, { weak: ['mag
 ok('resists "physical" covers ranged', hit('ranged', unit({}, { resists: ['physical'] })) === 50);
 ok('damage over time also uses weak/resist', computeDotDamage(unit({}, { weak: ['dark'] }), 10, 'dark', rules, damageTypes) === 15);
 
-// A +50% dark bonus makes the caster's poison ticks 50% bigger.
+// A +50% fire bonus makes the caster's Burn ticks 50% bigger; a dark bonus does NOT boost Poison (statuses.json typeBonus: false).
 { const s = new BattleState({ heroDefs: noPerks(r('heroes.json')), enemyDefs: r('enemies.json'), itemDefs: {}, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules, damageTypes, leveling: r('leveling.json') });
   const [g] = s.spawnEnemies(['goblin'], 1); const rogue = s.heroes[2];
-  const spec = { status: 'poison', durationMs: 6000, damageMultiplier: 0.5, damageType: 'dark' };
-  s.applyStatus(g, spec, rogue, 'a', []); const plain = g.statuses[0].damage;
-  rogue.damageBonus = { dark: 50 }; s.applyStatus(g, spec, rogue, 'b', []); const boosted = g.statuses[1].damage;
-  ok('dark bonus boosts poison', boosted === Math.round(rogue.stats.attack * 0.5 * 1.5) && boosted > plain, `${plain} -> ${boosted}`); }
+  const tick = (spec, key) => { s.applyStatus(g, spec, rogue, key, []); return g.statuses[g.statuses.length - 1].damage; };
+  const burn = { status: 'burn', durationMs: 6000, damageMultiplier: 0.5, damageType: 'fire' }, poison = { status: 'poison', durationMs: 6000, damageMultiplier: 0.5, damageType: 'dark' };
+  const b0 = tick(burn, 'a'), p0 = tick(poison, 'b');
+  rogue.damageBonus = { fire: 50, dark: 50 }; const b1 = tick(burn, 'c'), p1 = tick(poison, 'd');
+  ok('fire bonus boosts burn', b1 > b0, `${b0} -> ${b1}`);
+  ok('dark bonus does not boost poison', p1 === p0, `${p0} -> ${p1}`); }
 
 // Data check: everything named in the JSON is a real damage type.
 const data = { heroDefs: r('heroes.json'), enemyDefs: r('enemies.json'), statusDefs: r('statuses.json'), skillDefs: r('skills.json'), itemDefs: loadItems(r('items.json')) };

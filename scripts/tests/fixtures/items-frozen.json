@@ -594,7 +594,7 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "Every attack adds a small dark hit (15%). +15% dark damage (Poison too).",
+    "description": "Every attack adds a small dark hit (15%). +15% dark damage.",
     "effects": [
       {
         "damageBonus": "dark",
@@ -1010,21 +1010,19 @@
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "Electric hits make an ice burst on nearby enemies: ice damage and 2 Chill.",
+    "description": "Electric hits on a Chilled or Frozen enemy shatter it: ice damage on it and its neighbours (uses up the cold).",
     "effects": [
       {
         "special": "frozenThunderbolt",
-        "percent": 70
+        "percent": 150
       }
     ],
     "dropWeight": 70,
     "needs": "electric",
     "provides": [
-      "freeze",
-      "ice",
-      "cc"
+      "ice"
     ],
-    "perStack": "bigger ice burst"
+    "perStack": "+150% ice burst"
   },
   "warding_charm": {
     "name": "Warding Charm",
@@ -1294,7 +1292,7 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "A flying Wisp (shock bolts) joins every fight, then another every 15s.",
+    "description": "A flying Wisp (shock bolts) joins every fight, then another every 15s. Wisps get half this hero's +electric damage.",
     "effects": [
       {
         "minionSpawner": {
@@ -1320,7 +1318,7 @@
     "rarity": "epic",
     "type": "minion",
     "scope": "self",
-    "description": "A fire Imp (its hits Burn) joins every fight, then another every 10s.",
+    "description": "A fire Imp (its hits Burn) joins every fight, then another every 10s. Imps get half this hero's +fire damage.",
     "effects": [
       {
         "minionSpawner": {
@@ -1390,7 +1388,7 @@
     "rarity": "epic",
     "type": "minion",
     "scope": "self",
-    "description": "Summons a Spirit Knight that grows stronger every floor it survives.",
+    "description": "Summons an Ice Spirit Knight (ice hits) that grows stronger every floor it survives. It gets half this hero's +ice damage.",
     "effects": [
       {
         "greaterMinion": "spirit_knight"
@@ -1398,7 +1396,8 @@
     ],
     "dropWeight": 90,
     "provides": [
-      "minion"
+      "minion",
+      "ice"
     ],
     "perStack": "Spirit Knight +50% stronger"
   },
@@ -1407,7 +1406,7 @@
     "rarity": "legendary",
     "type": "minion",
     "scope": "self",
-    "description": "Summons a flying Phoenix that heals the squad a little when it is hit.",
+    "description": "Summons a flying Phoenix whose fire hits Burn. It heals itself 2% per second and gets half this hero's +fire damage.",
     "effects": [
       {
         "greaterMinion": "phoenix"
@@ -1417,7 +1416,7 @@
     "provides": [
       "minion",
       "fire",
-      "heal"
+      "burn"
     ],
     "perStack": "Phoenix +50% stronger"
   },

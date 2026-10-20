@@ -818,6 +818,7 @@ export default class BattleState {
     }
     const m = this.makeUnit({ id, ...def, stats: { ...def.stats } }, 'hero', 1);
     m.minion = true;
+    if (def.hitType) m.hitType = def.hitType; // Ice Spirit Knight: moves as melee, its hits are ice
     m.greater = src.kind === 'greater';
     m.holderUid = holder.uid;
     m.sourceKey = src.key;
@@ -955,6 +956,10 @@ export default class BattleState {
     stats.attackEfficiency = Math.max(10, stats.attackEfficiency);
     stats.health = m.maxHp; // buffs never change a minion's health
     m.stats = stats;
+    // Element minions (Imp, Wisp, Phoenix, Ice Spirit Knight) get `holderElementShare` of their hero's +% for their element.
+    const share = m.def.holderElementShare || 0;
+    const type = m.def.hitType || m.def.damageType;
+    m.damageBonus = share && holder && holder.damageBonus && holder.damageBonus[type] ? { [type]: holder.damageBonus[type] * share } : {};
   }
 
   // Moves the fight forward by dt milliseconds. Returns events for the scene to show.
@@ -962,7 +967,6 @@ export default class BattleState {
     const events = [];
     this.tickStatuses(dt, events);
     this.move(dt);
-    for (const m of this.minions) if (m.healCd > 0) m.healCd -= dt; // Phoenix heal cooldown
     this.tickTornados(dt, events);
     this.tickDelays(dt, events); // Flame Spirit / Moonlight Twinblade hits on their way
     this.tickBookTimers(dt, events); // skill book Aftershock pulses
@@ -970,6 +974,8 @@ export default class BattleState {
     this.tickElites(dt, events); // elite regen and shields (elites.js)
     if (this.teamElementsMs > 0) this.teamElementsMs -= dt; // Arcane Ward's Team Elements
 
+    // Minions with their own regen (Phoenix: `regenPercent` of max health per second).
+    for (const m of this.minions) if (m.alive && m.def.regenPercent && m.hp < m.maxHp) m.hp = Math.min(m.maxHp, m.hp + (m.maxHp * m.def.regenPercent * dt) / 100000);
     // Health regenerates (Heart Charm) and skill cooldowns run down.
     for (const hero of this.heroes) {
       if (!hero.alive) continue;
@@ -1773,7 +1779,7 @@ export default class BattleState {
 
   // Item effects that react to a hit that connected (the attacker's items).
   //  - Shatter Hammer: the hit breaks a freeze.   - Hunter's Sigil: the first hit on each enemy Marks it.
-  //  - Frozen Thunderbolt: an electric hit bursts into ice on the enemies next to the target (a burst triggers nothing).
+  //  - Frozen Thunderbolt: an electric hit on a chilled / frozen enemy shatters into ice on it and its neighbours (a burst triggers nothing).
   afterItemHit(attacker, target, opts, events) {
     const sp = attacker.specials;
     if (!sp || attacker.side !== 'hero' || attacker.minion || !target.alive) return;
@@ -1790,11 +1796,16 @@ export default class BattleState {
       const copies = Math.max(1, attacker.items.filter((id) => id === 'hunters_sigil').length);
       this.applyStatus(target, { status: 'mark', durationMs: 5000 + 2500 * (copies - 1), damageTakenPercent: sp.hunterSigil }, attacker, `sigil_${attacker.uid}`, events);
     }
-    if (sp.frozenThunderbolt && (opts.damageType || attacker.damageType) === 'electric' && !opts.burst) {
-      if (this.neighbours(target).length) events.push({ type: 'proc', unit: attacker, label: 'Thunderbolt!', itemId: 'frozen_thunderbolt', target });
-      for (const e of this.neighbours(target)) {
-        this.strike(attacker, e, events, { multiplier: sp.frozenThunderbolt / 100, damageType: 'ice', item: true, burst: true });
-        if (e.alive) this.applyStatus(e, { status: 'chill', durationMs: 5000, stacks: 2 }, attacker, 'thunderbolt', events);
+    const cold = sp.frozenThunderbolt && target.statuses.filter((st) => st.type === 'chill' || st.type === 'freeze');
+    if (cold && cold.length && (opts.damageType || attacker.damageType) === 'electric' && !opts.burst) {
+      // An electric hit on a CHILLED or FROZEN enemy shatters it: an ice burst on it and its neighbours, the cold is used up.
+      events.push({ type: 'proc', unit: attacker, label: 'Thunderbolt!', itemId: 'frozen_thunderbolt', target });
+      for (const e of [target, ...this.neighbours(target)]) if (e.alive) this.strike(attacker, e, events, { multiplier: sp.frozenThunderbolt / 100, damageType: 'ice', item: true, burst: true });
+      for (const st of cold) {
+        const i = target.statuses.indexOf(st);
+        if (i < 0) continue; // already gone (Shatter Hammer broke the freeze)
+        target.statuses.splice(i, 1);
+        events.push({ type: 'status', unit: target, change: 'expire', status: st });
       }
     }
   }
@@ -2194,19 +2205,13 @@ export default class BattleState {
   }
 
   // Item reactions to a kill (killer = the unit that dealt the last blow, if known).
-  // A friendly was hit by an enemy: Mimic Chest (10% a Mimic pops out of the holder) and Phoenix (heals the squad a little).
+  // A friendly was hit by an enemy: Spirit Axe, Mimic Chest (10% a Mimic pops out of the holder).
   onHeroHit(target, events) {
     this.trySpiritAxe(target, events);
     if (!target.minion && target.alive && target.specials.mimic && this.rng() * 100 < target.specials.mimic) {
       const src = { key: 'mimic_chest', kind: 'weak', capGroup: 'items', upkeep: true, upkeepScale: this.rules.minions.upkeepWeakScale ?? 0.5, spec: { minion: 'mimic' }, copies: target.specials.mimicCopies || 1 };
       events.push({ type: 'proc', unit: target, label: 'Mimic!', itemId: 'mimic_chest' });
       this.spawnMinion(target, src, events);
-    }
-    const ph = target.minion && target.alive && target.def.onHitHeal;
-    if (ph && !(target.healCd > 0)) {
-      target.healCd = ph.cooldownMs;
-      const pct = ph.percentMaxHp * (1 + 0.25 * ((target.copies || 1) - 1));
-      for (const h of this.heroes) if (h.alive) this.healUnit(h, (h.maxHp * pct) / 100 / this.regenAura().factor, events);
     }
   }
 
@@ -2364,8 +2369,8 @@ export default class BattleState {
         status.sourceUid = source.uid; // who applied this stack (kill credit, Plague Flask, Thousand Cuts, Magma Core)
         status.damageType = spec.damageType || info.damageType || 'dark';
         status.ignoresArmor = spec.ignoresArmor ?? !!info.ignoresArmor;
-        // Damage-type items boost damage over time of that type too (e.g. +15% dark boosts poison).
-        const bonus = ((source.damageBonus && source.damageBonus[status.damageType]) || 0) / 100;
+        // Damage-type items boost damage over time of that type too (e.g. +15% fire boosts Burn; not Poison).
+        const bonus = info.typeBonus === false ? 0 : ((source.damageBonus && source.damageBonus[status.damageType]) || 0) / 100; // Poison: `typeBonus: false`
         const magma = spec.status === 'burn' && source.side === 'hero' && source.specials ? source.specials.magmaBurn || 0 : 0; // Magma Core: burns tick harder
         status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus) * cat.dot * (1 + ((source.side === 'hero' && source.specials && source.specials.dotDamage) || 0) / 100) * (1 + magma / 100)));
         if (!(spec.status in target.dotClocks)) target.dotClocks[spec.status] = 0; // first stack: start the tick clock

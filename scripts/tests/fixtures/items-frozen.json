@@ -667,7 +667,8 @@
             "status": "burn",
             "durationMs": 3000,
             "damageMultiplier": 0.2,
-            "damageType": "fire"
+            "damageType": "fire",
+            "damagePerExtraPercent": 10
           }
         ],
         "unique": true,
@@ -677,7 +678,7 @@
     "provides": [
       "burn"
     ],
-    "perStack": "+6% burn chance"
+    "perStack": "+6% burn chance, +10% burn damage"
   },
   "venom_fang": {
     "name": "Venom Fang",
@@ -696,7 +697,8 @@
             "status": "poison",
             "durationMs": 5000,
             "damageMultiplier": 0.3,
-            "damageType": "dark"
+            "damageType": "dark",
+            "damagePerExtraPercent": 10
           }
         ],
         "unique": true,
@@ -706,7 +708,7 @@
     "provides": [
       "poison"
     ],
-    "perStack": "+8% chance"
+    "perStack": "+8% chance, +10% poison damage"
   },
   "rusty_nails": {
     "name": "Rusty Nails",
@@ -995,7 +997,8 @@
           {
             "status": "bleed",
             "durationMs": 4000,
-            "damageMultiplier": 0.42
+            "damageMultiplier": 0.42,
+            "damagePerExtraPercent": 10
           }
         ],
         "unique": true,
@@ -1013,7 +1016,7 @@
     "provides": [
       "bleed"
     ],
-    "perStack": "+8% chance, bigger knife burst"
+    "perStack": "+8% chance, +10% bleed damage, bigger knife burst"
   },
   "frozen_thunderbolt": {
     "name": "Frozen Thunderbolt",

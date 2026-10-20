@@ -266,5 +266,5 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   gives it to heroes with no dark damage); curve median 40. Tests: `dark-items.test.mjs`.
 - Element charm / Chill Band copies MERGE into one bigger hit (one number). Ember Charm, Venom Fang, Thousand Cuts' bleed:
   ONE roll per attack, chance grows per copy (`unique` + `chancePerExtra` = base chance; user: 'more copies = more chance, not
-  more stacks'); Ember's +10% burn per extra copy removed.
+  more stacks'); each extra copy ALSO makes the status 10% stronger (`damagePerExtraPercent`; user: 'each copy boosts damage and chance').
 - NEXT (user list): Flame Spirit -> Dark Spirit look + name; 1-2 new dark synergy items; Mimic ideas; Ice Knight look.

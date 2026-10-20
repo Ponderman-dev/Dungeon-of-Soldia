@@ -667,16 +667,17 @@
             "status": "burn",
             "durationMs": 3000,
             "damageMultiplier": 0.2,
-            "damageType": "fire",
-            "damagePerExtraPercent": 10
+            "damageType": "fire"
           }
-        ]
+        ],
+        "unique": true,
+        "chancePerExtra": 6
       }
     ],
     "provides": [
       "burn"
     ],
-    "perStack": "+6% chance, +10% burn damage"
+    "perStack": "+6% burn chance"
   },
   "venom_fang": {
     "name": "Venom Fang",
@@ -697,7 +698,9 @@
             "damageMultiplier": 0.3,
             "damageType": "dark"
           }
-        ]
+        ],
+        "unique": true,
+        "chancePerExtra": 8
       }
     ],
     "provides": [
@@ -994,7 +997,9 @@
             "durationMs": 4000,
             "damageMultiplier": 0.42
           }
-        ]
+        ],
+        "unique": true,
+        "chancePerExtra": 8
       },
       {
         "special": "thousandCuts",

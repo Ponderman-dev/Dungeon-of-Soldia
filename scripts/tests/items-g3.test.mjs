@@ -47,7 +47,10 @@ ok('...2 copies: ONE roll of 15%', within(rate('serrated_edge', 2, 'bleed', 1000
 // stacking rules
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'venom_fang', 3);
   s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true });
-  ok('every proc adds a Poison STACK (3 copies, all roll: 3 stacks)', s.stacks(es[0], 'poison') === 3); }
+  ok('3 Venom Fangs = ONE roll per attack: one Poison stack, one popup (user: copies stack into one)', s.stacks(es[0], 'poison') === 1); }
+for (const id of ['ember_charm', 'venom_fang', 'thousand_cuts']) {
+  const e = itemDefs[id].effects[0]; const { s, k } = mk(['goblin']); give(s, k, id, 3); const p = k.procs.filter((x) => x.itemId === id && x.apply);
+  ok(`${itemDefs[id].name}: 3 copies = one proc whose chance grows per copy`, p.length === 1 && p[0].chance === e.chance + 2 * e.chancePerExtra, `${p.map((x) => x.chance)}`); }
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'rusty_nails', 2); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true });
   s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true });
   ok('Armor Break STACKS with every proc hit (2 procs = 2 stacks = -30 defense)', es[0].statuses.filter((x) => x.type === 'armorBreak').length === 2);
@@ -57,9 +60,9 @@ ok('...2 copies: ONE roll of 15%', within(rate('serrated_edge', 2, 'bleed', 1000
   ok('Curse stacks too (4 procs = 4 stacks)', es[0].statuses.filter((x) => x.type === 'curse').length === 4); }
 { const dur = (n) => { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'dread_bell', n); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true }); return es[0].statuses.find((x) => x.type === 'fear').total; };
   ok('Dread Bell: fear 1s, +0.2s per extra bell', dur(1) === 1000 && dur(3) === 1400, `${dur(1)} ${dur(3)}`); }
-{ const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'ember_charm'); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true }); const one = es[0].statuses.find((x) => x.type === 'burn').damage;
-  const { s: s2, es: e2, k: k2 } = mk(['goblin'], () => 0); give(s2, k2, 'ember_charm', 2); s2.rollProcs(k2, 'onAttack', [], { target: e2[0], hit: true }); const two = e2[0].statuses.filter((x) => x.type === 'burn').map((x) => x.damage);
-  ok('Ember Charm: burn damage +10% per extra charm (2 copies: each stack 1.1x)', two.length === 2 && two.every((d) => Math.abs(d / one - 1.1) < 0.02), `${one} vs ${two}`); }
+{ const burnOf = (n) => { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'ember_charm', n); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true }); return es[0].statuses.filter((x) => x.type === 'burn').map((x) => x.damage); };
+  const one = burnOf(1), three = burnOf(3);
+  ok('Ember Charm: 3 charms = still one Burn of the same size (only the chance grows)', three.length === 1 && three[0] === one[0], `${one} vs ${three}`); }
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'ember_charm'); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: false });
   ok('a missed attack applies nothing', es[0].statuses.length === 0); }
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'dread_bell'); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true });

@@ -264,4 +264,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   flies to 2-3 random enemies: DOOM (new status, statuses.json) for 4s = 350% attack dark per second (`eclipse`, per copy)
   + 50% slower attacks. Look: Dark Spirit orb + Curse swirl, new item icon + DOOM status icon. itemruns ~0 (the test player
   gives it to heroes with no dark damage); curve median 40. Tests: `dark-items.test.mjs`.
+- Element charm / Chill Band copies MERGE into one bigger hit (one number). Ember Charm, Venom Fang, Thousand Cuts' bleed:
+  ONE roll per attack, chance grows per copy (`unique` + `chancePerExtra` = base chance; user: 'more copies = more chance, not
+  more stacks'); Ember's +10% burn per extra copy removed.
 - NEXT (user list): Flame Spirit -> Dark Spirit look + name; 1-2 new dark synergy items; Mimic ideas; Ice Knight look.

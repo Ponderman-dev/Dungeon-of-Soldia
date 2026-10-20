@@ -44,7 +44,7 @@
     "damagePercent": 50
   },
   "floorScaling": {
-    "hpPerStep": 0.42,
+    "hpPerStep": 0.5,
     "hpStepFloors": 3,
     "attackPerStep": 0.42,
     "attackStepFloors": 3

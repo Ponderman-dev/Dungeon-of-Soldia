@@ -212,6 +212,40 @@ export default class BattleState {
     for (let i = 0; i < 3; i++) this.later(300 + 120 * i, (ev) => { if (foe.alive && hero.alive) this.strike(hero, foe, ev, { multiplier: mult, damageType: 'ranged', item: true }); });
   }
 
+  // THUNDERSTRUCK (legendary, `thunderstruck: { damageMultiplier, damageType, delayMs }`): a circle grows under the
+  // STRONGEST enemy (boss, then elite, then most max health) for `delayMs`, then a giant bolt hits it. The bolt is a
+  // real hit (it can't be dodged): lifesteal, thorns and the holder's on-hit items all go off (not Thunderstruck itself).
+  // One circle per holder at a time. If the marked enemy dies first, the bolt hits the next strongest.
+  strongestEnemy() {
+    const foes = this.targetableEnemies();
+    const rank = (u) => (u.def.boss ? 2e9 : 0) + (u.elite ? 1e9 : 0) + u.maxHp;
+    return foes.reduce((best, u) => (!best || rank(u) > rank(best) ? u : best), null);
+  }
+
+  markThunder(hero, spec, events) {
+    const target = this.strongestEnemy();
+    if (!target) return false;
+    const t = { uid: this.nextUid++, holder: hero, target, spec, remaining: spec.delayMs, total: spec.delayMs };
+    (this.thunders = this.thunders || []).push(t);
+    events.push({ type: 'proc', unit: hero, label: 'Thunderstruck!', itemId: 'thunderstruck', target });
+    return true;
+  }
+
+  tickThunders(dt, events) {
+    if (!this.thunders || !this.thunders.length) return;
+    for (const t of [...this.thunders]) {
+      t.remaining -= dt;
+      if (t.remaining > 0) continue;
+      this.thunders = this.thunders.filter((x) => x !== t);
+      const hero = t.holder;
+      const target = t.target.alive && !this.untargetable(t.target) ? t.target : this.strongestEnemy();
+      if (!hero.alive || !target) continue;
+      events.push({ type: 'thunderstruck', unit: hero, target });
+      const hit = this.strike(hero, target, events, { multiplier: t.spec.damageMultiplier, damageType: t.spec.damageType, sure: true, noImpact: true });
+      this.rollProcs(hero, 'onAttack', events, { target, hit: !hit.dodged, skipItem: 'thunderstruck' });
+    }
+  }
+
   // Things that happen a little later (Flame Spirit fireballs, Moonlight hits): `this.delays`, ticked in update().
   later(ms, fn) {
     (this.delays = this.delays || []).push({ remaining: ms, fn });
@@ -254,6 +288,7 @@ export default class BattleState {
     this.teamElementsMs = 0;
     this.tornados = [];
     this.bombs = []; // Kobold Sapper bombs on the floor
+    this.thunders = []; // Thunderstruck circles growing under enemies
     for (const h of this.heroes) {
       h.floor = {}; // per-floor flags (Tough Skin used, Second Wind used...)
       h.firstHits = new Set(); // enemies this hero has already hit with a basic attack (Sucker Punch)
@@ -759,6 +794,7 @@ export default class BattleState {
     this.delays = []; // nor do fireballs / crescents still on their way
     for (const b of this.bombs || []) events.push({ type: 'bombFizzle', bomb: b }); // a Sapper bomb still lit when the floor is won goes out
     this.bombs = [];
+    this.thunders = []; // a Thunderstruck circle still growing when the floor is won just goes away
     for (const h of this.heroes) h.axeLeft = 0;
     for (const m of [...this.minions]) {
       if (!m.greater) this.vanishMinion(m, 'floorEnd', events);
@@ -884,7 +920,7 @@ export default class BattleState {
     const B = skill.boneSacrifice;
     const bones = this.minions.filter((m) => m.alive && m.holderUid === hero.uid && m.def.id === B.minion);
     for (const m of bones) {
-      events.push({ type: 'proc', unit: m, label: 'Sacrifice!' });
+      // no per-skeleton pop-up: they stand close and the words piled up (the skill name already shows)
       m.hp = 0;
       this.killUnit(m, events);
     }
@@ -963,6 +999,7 @@ export default class BattleState {
     this.move(dt);
     this.tickTornados(dt, events);
     this.tickDelays(dt, events); // Flame Spirit / Moonlight Twinblade hits on their way
+    this.tickThunders(dt, events); // Thunderstruck circles, then the bolt
     this.tickBookTimers(dt, events); // skill book Aftershock pulses
     this.tickBosses(dt, events); // boss moves, eggs, heat, revives... (bosses.js)
     this.tickElites(dt, events); // elite regen and shields (elites.js)
@@ -1741,7 +1778,7 @@ export default class BattleState {
     }
     if (!result.dodged && target.def.adapt && target.alive && target.hp > 0) this.adaptTo(target, opts.damageType || attacker.hitType || attacker.damageType, events); // Crystal Sentinel
     if (opts.projectile) events.push({ type: 'projectile', from: opts.from || attacker, to: target, kind: opts.projectile });
-    events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic, ghastly: !!opts.ghastly });
+    events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic, ghastly: !!opts.ghastly, noImpact: !!opts.noImpact }); // noImpact: the scene draws its own look (Thunderstruck)
     if (dealt) this.breakEffects(target, dealt.broken, events);
     if (!result.dodged) this.afterItemHit(attacker, target, opts, events);
     if (!result.dodged && (opts.damageType || attacker.hitType || attacker.damageType) === 'dark') this.storeDark(attacker, result.amount - (result.absorbed || 0), events);
@@ -1832,7 +1869,6 @@ export default class BattleState {
     if (sp.fullVigor && attacker.hp >= attacker.maxHp * 0.9) bonus += sp.fullVigor; // Full Vigor: above 90% health
     // Bonuses against what the target is suffering from or how hurt it is.
     const kinds = new Set(target.statuses.filter((st) => this.statusDefs[st.type] && this.statusDefs[st.type].debuff).map((st) => st.type));
-    if (sp.magmaCore && kinds.has('burn')) bonus += sp.magmaCore; // Magma Core
     if (sp.bloodChalice && kinds.has('bleed')) bonus += sp.bloodChalice; // Blood Chalice
     if (sp.shatterHammer && kinds.has('freeze')) bonus += sp.shatterHammer; // Shatter Hammer (the freeze is broken after the hit)
     else if (sp.shatterChill && kinds.has('chill')) bonus += sp.shatterChill; // ...and a smaller bonus vs chilled enemies
@@ -1859,13 +1895,15 @@ export default class BattleState {
       const chance = (debuffs ? this.debuffChance(hero, base) : base) * (ctx.chanceMult || 1); // Opportunist: his debuffs are likelier; Savage Leap: x chanceMult
       if (proc.meleeOnly && hero.damageType !== 'melee') continue; // Thousand Cuts: melee hits only
       if (proc.rangedOnly && hero.damageType === 'melee') continue; // Moonlight Twinblade: ranged attacks only
+      if (ctx.skipItem && proc.itemId === ctx.skipItem) continue; // Thunderstruck's bolt never calls another bolt
+      if (proc.thunderstruck && (this.thunders || []).some((t) => t.holder === hero)) continue; // one circle at a time
       if (proc.proc !== trigger || (!ctx.force && this.rng() * 100 >= chance)) continue; // ctx.force: every proc goes off
       const enemy = ctx.target && ctx.target.alive ? ctx.target : null;
       let landed = ctx.hit !== false; // statuses on the target need the attack to have connected
       // Damage from a proc (extra hit, bomb, bolt, tornado) is never wasted: if the attack just killed its
       // enemy it goes to the enemy nearest to it instead. Statuses on the target still need the hit enemy.
       const foe = enemy || (ctx.target ? this.nearest(ctx.target, this.targetableEnemies()) : null);
-      const damages = !!(proc.doubleHit || proc.strike || proc.chain || proc.tornado || proc.flameSpirit || proc.moonlight);
+      const damages = !!(proc.doubleHit || proc.strike || proc.chain || proc.tornado || proc.flameSpirit || proc.moonlight || proc.thunderstruck);
       const targets = proc.targets === 'squad' ? this.squadUnits() : proc.targets === 'target' ? (enemy && landed ? [enemy] : []) : [hero];
       // A status spec can pick its own receivers with `to` (self / squad / target), e.g. a proc that taunts
       // the enemy hit AND gives the holder a defense buff.
@@ -1891,6 +1929,7 @@ export default class BattleState {
       if (proc.chain && foe) this.chainHit(hero, foe, proc.chain.jumpsPerExtra ? { ...proc.chain, jumps: proc.chain.jumps + proc.chain.jumpsPerExtra * extra } : proc.chain, events);
       // Excalibur: tornadoes hit `damagePerExtraPercent` harder per extra copy. A tornado also comes on a miss.
       if (proc.flameSpirit && foe) this.conjureSpirit(hero, events, proc.damageMultiplier || 0.8);
+      if (proc.thunderstruck && foe) this.markThunder(hero, proc.thunderstruck, events);
       if (proc.moonlight && foe) this.moonCrescent(hero, foe, proc.copies || 1, events, proc.hitMultiplier);
       if (proc.tornado && foe) this.spawnTornado(hero, proc.tornado.damagePerExtraPercent ? { ...proc.tornado, damageMultiplier: proc.tornado.damageMultiplier * (1 + (proc.tornado.damagePerExtraPercent * extra) / 100) } : proc.tornado, foe, events);
       for (const spec of proc.apply || []) {
@@ -2049,7 +2088,7 @@ export default class BattleState {
     const broken = [];
     for (const shield of [...target.statuses]) {
       if (shield.type !== 'shield' || left <= 0) continue;
-      const take = Math.min(shield.amount, left);
+      const take = Math.min(Math.ceil(shield.amount), left); // whole points, so the numbers stay whole (shields can hold decimals)
       if (shield.burns) burnShield = true;
       shield.amount -= take;
       left -= take;
@@ -2373,7 +2412,7 @@ export default class BattleState {
         status.ignoresArmor = spec.ignoresArmor ?? !!info.ignoresArmor;
         // Damage-type items boost damage over time of that type too (e.g. +15% fire boosts Burn; not Poison).
         const bonus = info.typeBonus === false ? 0 : ((source.damageBonus && source.damageBonus[status.damageType]) || 0) / 100; // Poison: `typeBonus: false`
-        const magma = spec.status === 'burn' && source.side === 'hero' && source.specials ? source.specials.magmaBurn || 0 : 0; // Magma Core: burns tick harder
+        const magma = spec.status === 'burn' && source.side === 'hero' && source.specials ? source.specials.magmaBurn || 0 : 0; // Magma Core: burns deal more damage
         status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus) * cat.dot * (1 + ((source.side === 'hero' && source.specials && source.specials.dotDamage) || 0) / 100) * (1 + magma / 100)));
         if (!(spec.status in target.dotClocks)) target.dotClocks[spec.status] = 0; // first stack: start the tick clock
       }
@@ -2446,9 +2485,7 @@ export default class BattleState {
         continue;
       }
       const tickMs = (this.statusDefs[type] && this.statusDefs[type].tickMs) || 1000;
-      // Magma Core: burn ticks faster when the holder who set it burning has the core (burnSpeed, up to +100%).
-      const src = type === 'burn' ? this.heroes.find((h) => h.uid === stacks[0].sourceUid) : null;
-      unit.dotClocks[type] += dt * (1 + ((src && src.specials.burnSpeed) || 0) / 100);
+      unit.dotClocks[type] += dt;
       while (unit.dotClocks[type] >= tickMs && unit.alive) {
         unit.dotClocks[type] -= tickMs;
         // Catalyst Vial: each DIFFERENT damage over time on this enemy makes the holder's stacks tick `dotMix`% harder.

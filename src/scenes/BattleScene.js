@@ -442,6 +442,7 @@ export default class BattleScene extends Phaser.Scene {
     }
     this.drawElites(now);
     this.drawBombs(now);
+    this.drawThunders(now);
     this.drawOrders();
     // Ice breaking off a fighter whose Freeze just ended.
     this.iceBreaks = (this.iceBreaks || []).filter((b) => now - b.start < 400 && b.view.ch.active);
@@ -570,6 +571,21 @@ export default class BattleScene extends Phaser.Scene {
       const blink = Math.sin(now / (120 - 90 * p)) > 0; // the spark blinks faster near the end
       top.fillStyle(blink ? 0xffffff : 0xffe066, 1).fillRect(x + 3 * P, y - 10 * P, P, P);
       if (blink) top.fillStyle(0xff7a2a, 1).fillRect(x + 4 * P, y - 10 * P, P, P).fillRect(x + 3 * P, y - 11 * P, P, P).fillRect(x + 2 * P, y - 10 * P, P, P);
+    }
+  }
+
+  // Thunderstruck (BattleState.thunders): an electric circle grows on the floor under the marked enemy and follows it;
+  // the bolt itself is the `thunderstruck` event (itemFx.thunderstruckFx).
+  drawThunders(now) {
+    if (!this.thunderG) this.thunderG = this.add.graphics().setDepth(DEPTH.hero - 0.001); // on the floor, behind fighters
+    const g = this.thunderG, P = CHAR_SCALE;
+    g.clear();
+    for (const t of this.state.thunders || []) {
+      const v = this.views.get(t.target.uid);
+      if (!v || !v.ch.active) continue;
+      const f = { x: v.ch.x / P, y: (v.ch.y + v.ch.hopOffset + (v.groundY - v.ch.homeY) + 2) / P };
+      const draws = itemFx.thunderMarkFx(1 - t.remaining / t.total, f, t.target.def.boss ? 24 : 15, now, t.uid);
+      for (const [x, y, w, h, c, a] of draws) g.fillStyle(c, a).fillRect(x * P, y * P, w * P, h * P);
     }
   }
 
@@ -1542,7 +1558,7 @@ export default class BattleScene extends Phaser.Scene {
       }
       const { amount, crit, mult } = e.result;
       const mark = mult > 1 ? '!' : mult < 1 ? '…' : '';
-      if (!e.skill && t && !e.ghastly) this.addImpact(e, a, t); // the hit's own look, per damage type (systems/hitFx.js)
+      if (!e.skill && t && !e.ghastly && !e.noImpact) this.addImpact(e, a, t); // the hit's own look, per damage type (systems/hitFx.js)
       if (e.skill) {
         // A skill hit: flashes in the skill colour and shows a big coloured number that pops.
         t.ch.flash(Phaser.Display.Color.HexStringToColor(FX.attackColor).color, FX.flashMs);
@@ -1625,6 +1641,14 @@ export default class BattleScene extends Phaser.Scene {
       const g = this.add.container(at ? at.ch.x : GAME_WIDTH / 2, at ? at.ch.y : SLOT_Y - 200).setDepth(DEPTH.popup - 2);
       this.tornadoViews.set(e.tornado.id, { g, t: e.tornado });
       this.puff(g.x, g.y, 0xcfe8ff, 4);
+    } else if (e.type === 'thunderstruck') {
+      // Thunderstruck: a giant bolt from the top of the screen onto the marked enemy, with a small shake.
+      const tv = this.views.get(e.target.uid);
+      if (tv) {
+        const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
+        this.addFx(itemFx.ITEM_MS.thunderstruck, (q, now) => (tv.ch.active ? itemFx.thunderstruckFx(q, this.fxBody(tv), now, seed) : []), ['item', 'thunderstruck']);
+        this.cameras.main.shake(120, 0.004);
+      }
     } else if (e.type === 'bombFizzle') {
       this.puff(e.bomb.x, e.bomb.y, 0x4a4a52, 4); // a Sapper bomb goes out with the floor: a little grey smoke
     } else if (e.type === 'tornadoEnd') {

@@ -311,7 +311,7 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "Every attack adds a small ice hit (10%) and 1 Chill. 5 Chill = Freeze.",
+    "description": "Every attack adds an ice hit (20%) and 1 Chill. 5 Chill = Freeze.",
     "effects": [
       {
         "proc": "onAttack",
@@ -319,7 +319,7 @@
         "label": "Ice hit",
         "silent": true,
         "strike": {
-          "damageMultiplier": 0.1,
+          "damageMultiplier": 0.2,
           "damageType": "ice"
         },
         "mergeCopies": true
@@ -344,7 +344,7 @@
       "freeze",
       "cc"
     ],
-    "perStack": "+10% ice hit"
+    "perStack": "+20% ice hit"
   },
   "static_crystal": {
     "name": "Static Crystal",
@@ -514,11 +514,11 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "Every attack adds a small fire hit (15%). +15% fire damage (Burn too).",
+    "description": "Every attack adds a small fire hit (10%). +10% fire damage (Burn too).",
     "effects": [
       {
         "damageBonus": "fire",
-        "percent": 15
+        "percent": 10
       },
       {
         "proc": "onAttack",
@@ -526,13 +526,13 @@
         "label": "Fire hit",
         "silent": true,
         "strike": {
-          "damageMultiplier": 0.15,
+          "damageMultiplier": 0.1,
           "damageType": "fire"
         },
         "mergeCopies": true
       }
     ],
-    "perStack": "+15% fire hit, +15% fire damage",
+    "perStack": "+10% fire hit, +10% fire damage",
     "provides": [
       "fire"
     ]
@@ -542,11 +542,11 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "Every attack adds a small ice hit (15%). +15% ice damage.",
+    "description": "Every attack adds a small ice hit (10%). +10% ice damage.",
     "effects": [
       {
         "damageBonus": "ice",
-        "percent": 15
+        "percent": 10
       },
       {
         "proc": "onAttack",
@@ -554,13 +554,13 @@
         "label": "Ice hit",
         "silent": true,
         "strike": {
-          "damageMultiplier": 0.15,
+          "damageMultiplier": 0.1,
           "damageType": "ice"
         },
         "mergeCopies": true
       }
     ],
-    "perStack": "+15% ice hit, +15% ice damage",
+    "perStack": "+10% ice hit, +10% ice damage",
     "provides": [
       "ice"
     ]
@@ -570,11 +570,11 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "Every attack adds a small electric hit (15%). +15% electric damage.",
+    "description": "Every attack adds a small electric hit (10%). +10% electric damage.",
     "effects": [
       {
         "damageBonus": "electric",
-        "percent": 15
+        "percent": 10
       },
       {
         "proc": "onAttack",
@@ -582,13 +582,13 @@
         "label": "Shock hit",
         "silent": true,
         "strike": {
-          "damageMultiplier": 0.15,
+          "damageMultiplier": 0.1,
           "damageType": "electric"
         },
         "mergeCopies": true
       }
     ],
-    "perStack": "+15% electric hit, +15% electric damage",
+    "perStack": "+10% electric hit, +10% electric damage",
     "provides": [
       "electric"
     ]
@@ -598,11 +598,11 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "Every attack adds a small dark hit (15%). +15% dark damage.",
+    "description": "Every attack adds a small dark hit (10%). +10% dark damage.",
     "effects": [
       {
         "damageBonus": "dark",
-        "percent": 15
+        "percent": 10
       },
       {
         "proc": "onAttack",
@@ -610,13 +610,13 @@
         "label": "Shadow hit",
         "silent": true,
         "strike": {
-          "damageMultiplier": 0.15,
+          "damageMultiplier": 0.1,
           "damageType": "dark"
         },
         "mergeCopies": true
       }
     ],
-    "perStack": "+15% dark hit, +15% dark damage",
+    "perStack": "+10% dark hit, +10% dark damage",
     "provides": [
       "dark"
     ]
@@ -868,27 +868,31 @@
   "magma_core": {
     "name": "Magma Core",
     "rarity": "epic",
-    "type": "special",
+    "type": "onhit",
     "scope": "self",
-    "description": "+35% damage to burning enemies. Burns tick 40% faster.",
+    "description": "Every attack adds a fire hit (35%). Burns deal +40% damage.",
     "effects": [
       {
-        "special": "magmaCore",
-        "percent": 35
-      },
-      {
-        "special": "burnSpeed",
-        "percent": 40,
-        "unique": true
+        "proc": "onAttack",
+        "chance": 100,
+        "label": "Fire hit",
+        "silent": true,
+        "strike": {
+          "damageMultiplier": 0.35,
+          "damageType": "fire"
+        },
+        "mergeCopies": true
       },
       {
         "special": "magmaBurn",
-        "percent": 15
+        "percent": 40
       }
     ],
     "dropWeight": 90,
-    "needs": "burn",
-    "perStack": "+35% damage, +15% burn damage"
+    "perStack": "+35% fire hit, +40% burn damage",
+    "provides": [
+      "fire"
+    ]
   },
   "shatter_hammer": {
     "name": "Shatter Hammer",
@@ -1903,5 +1907,31 @@
     ],
     "perStack": "+350% Doom damage per second",
     "dropWeight": 90
+  },
+  "thunderstruck": {
+    "name": "Thunderstruck",
+    "rarity": "legendary",
+    "type": "onhit",
+    "scope": "self",
+    "description": "5% on attack: a circle grows under the strongest enemy, then a giant THUNDERBOLT hits it for 700% (sets off your on-hit items).",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 5,
+        "unique": true,
+        "silent": true,
+        "label": "Thunderstruck!",
+        "thunderstruck": {
+          "damageMultiplier": 7,
+          "damageType": "electric",
+          "delayMs": 1500
+        }
+      }
+    ],
+    "provides": [
+      "electric"
+    ],
+    "oncePerRun": true,
+    "perStack": "does not stack"
   }
 }

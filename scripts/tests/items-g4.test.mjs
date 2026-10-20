@@ -31,16 +31,17 @@ ok('all 9 G4 items exist', ['executioners_axe', 'magma_core', 'shatter_hammer', 
   es[0].hp = es[0].maxHp * 0.3; ok('...not at 30%', near(dmg(s, k, es[0]) / full, 1)); }
 { const { s, es, k } = mk(); give(s, k, 'executioners_axe', 3); es[0].hp = 1; const x = dmg(s, k, es[0]); const { s: s0, es: e0, k: k0 } = mk(); e0[0].hp = 1; const base = dmg(s0, k0, e0[0]);
   ok('...extra copies add a little less each (30 + 28.5 + 27 = +85.5%)', near(x / base, 1.855, 0.04), `${x / base}`); }
-// Magma Core
-{ const { s, es, k } = mk(); give(s, k, 'magma_core'); const clean = dmg(s, k, es[0]); burn(s, es[0], k); const hot = dmg(s, k, es[0]);
-  ok('Magma Core: burning enemies take +35% damage from the holder', near(hot / clean, 1.35), `${clean} -> ${hot}`);
-  ok('...only from the holder', near(dmg(s, s.heroes[1], es[0]) / dmg(mk().s, mk().k, mk().es[0]) , 1, 0.2)); }
-{ const tickRate = (n) => { const { s, es, k } = mk(); give(s, k, 'magma_core', n); es[0].hp = es[0].maxHp; s.applyStatus(es[0], { status: 'burn', durationMs: 60000, damageMultiplier: 0.001, damageType: 'fire' }, k, 'b', []); let ticks = 0; for (let t = 0; t < 5000; t += 20) ticks += s.update(20).filter((e) => e.type === 'dot').length; return ticks; };
-  const base = tickRate(0), one = tickRate(1), five = tickRate(5);
-  ok('...burn ticks 40% faster', near(one / base, 1.4, 0.06), `${base} -> ${one}`);
-  ok('...and the speed does NOT grow with more cores', near(five / base, 1.4, 0.06), `${five / base}`); }
-{ const burn = (n) => { const { s, es, k } = mk(); give(s, k, 'magma_core', n); s.applyStatus(es[0], { status: 'burn', durationMs: 3000, damageMultiplier: 1, damageType: 'fire' }, k, 'b', []); return es[0].statuses.find((x) => x.type === 'burn').damage; };
-  const b0 = burn(0); ok('...burn ticks +15% harder per core (3 cores = +45%)', near(burn(3) / b0, 1.45, 0.03), `${b0} ${burn(3)}`); }
+// Magma Core (v2): a sure fire hit on every attack + harder burns
+{ const core = itemDefs.magma_core.effects, hit = core.find((e) => e.strike).strike.damageMultiplier, burnPct = core.find((e) => e.special === 'magmaBurn').percent;
+  const { s, es, k } = mk(); give(s, k, 'magma_core'); const ev = []; s.rollProcs(k, 'onAttack', ev, { target: es[0], hit: true });
+  const fire = ev.filter((e) => e.type === 'attack' && e.attacker === k && e.damageType === 'fire');
+  ok('Magma Core: every attack adds ONE fire hit', fire.length === 1, `${fire.length}`);
+  const { s: s0, es: e0, k: k0 } = mk(); const plain = dmg(s0, k0, e0[0], { multiplier: hit, damageType: 'fire', item: true });
+  ok('...worth the data\'s share of attack', fire[0] && near(fire[0].result.amount, plain, 0.06), `${fire[0] && fire[0].result.amount} vs ${plain}`);
+  const burnDmg = (n) => { const { s, es, k } = mk(); give(s, k, 'magma_core', n); s.applyStatus(es[0], { status: 'burn', durationMs: 3000, damageMultiplier: 1, damageType: 'fire' }, k, 'b', []); return es[0].statuses.find((x) => x.type === 'burn').damage; };
+  const b0 = burnDmg(0); ok('...burns deal +' + burnPct + '% per core', near(burnDmg(1) / b0, 1 + burnPct / 100, 0.03) && near(burnDmg(2) / b0, 1 + (2 * burnPct) / 100, 0.03), `${b0} ${burnDmg(1)} ${burnDmg(2)}`);
+  const { s: s2, es: e2, k: k2 } = mk(); give(s2, k2, 'magma_core'); give(s2, k2, 'kindling'); const ev2 = []; s2.rollProcs(k2, 'onAttack', ev2, { target: e2[0], hit: true });
+  ok('...its fire hit MERGES with Kindling\'s (one number)', ev2.filter((e) => e.type === 'attack' && e.attacker === k2 && e.damageType === 'fire').length === 1); }
 // Shatter Hammer
 { const { s, es, k } = mk(); give(s, k, 'shatter_hammer'); const clean = dmg(s, k, es[0]);
   s.applyStatus(es[0], { status: 'freeze', durationMs: 5000 }, k, 'f', []); const ev = []; const hit = s.strike(k, es[0], ev, {});

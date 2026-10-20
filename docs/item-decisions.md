@@ -268,3 +268,19 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   ONE roll per attack, chance grows per copy (`unique` + `chancePerExtra` = base chance; user: 'more copies = more chance, not
   more stacks'); each extra copy ALSO makes the status 10% stronger (`damagePerExtraPercent`; user: 'each copy boosts damage and chance').
 - NEXT (user list): Flame Spirit -> Dark Spirit look + name; 1-2 new dark synergy items; Mimic ideas; Ice Knight look.
+
+## Session 18: charm vs band, Magma Core, Thunderstruck (user: 'frost charm and chill band have too little difference')
+- Element charms (Kindling, Frost, Storm, Shadow): every attack adds a 10% hit of the charm's element per charm (was 15%), AND
+  +10% damage of that element per charm (was 15%; kept after a try without it). Same element adds up: 3 Kindling + 1 Frost +
+  2 Storm = 30% fire + 10% ice + 20% electric hits, +30% fire / +10% ice / +20% electric damage.
+- Chill Band: ice hit 10% -> 20% per band, + 1 Chill (unchanged).
+- Same-element sure hits from DIFFERENT items now merge into ONE hit too (`mergeCopies`, matched by damage type): Frost
+  Charm 10% + Chill Band 20% = one 30% ice hit; Kindling + Magma Core = one fire hit.
+- Magma Core v2 (user: 'more clearer'): every attack adds a 35% fire hit (merges with Kindling) + Burns deal +40% damage
+  per core (`magmaBurn`). Gone: +35% vs burning (`magmaCore`), burns tick 40% faster (`burnSpeed`), `needs: burn`.
+- NEW LEGENDARY Thunderstruck (user's design, id thunderstruck, electric, `oncePerRun`, does not stack): 5% on attack, a
+  circle grows for 1.5s under the STRONGEST enemy (boss > elite > most max health; it follows the enemy), then a giant
+  THUNDERBOLT hits it for 700% electric. The bolt can't be dodged (`sure`) and is a real hit: lifesteal, thorns and the
+  holder's on-hit items go off (not Thunderstruck itself). One circle per holder at a time; if the marked enemy dies first
+  the bolt hits the next strongest. Look: itemFx `thunderMarkFx` (circle) + `thunderstruckFx` (bolt), new item icon.
+  Tests: `thunderstruck.test.mjs`.

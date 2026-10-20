@@ -120,4 +120,8 @@ for (const id of ['kindling', 'frost_charm', 'storm_charm', 'shadow_charm']) {
   const a = one(1), b = one(3);
   ok(`${itemDefs[id].name}: 3 copies = ONE bigger ${type} hit on a basic attack (one number), no popup`, a.hits.length === 1 && b.hits.length === 1 && b.hits[0].result.amount > a.hits[0].result.amount * 2.5 && !b.ev.some((x) => x.type === 'proc'), `${a.hits.map((h) => h.result.amount)} -> ${b.hits.map((h) => h.result.amount)}`);
 }
+// Different items' sure hits of the SAME element merge too (Frost Charm + Chill Band = one ice hit, bigger than either)
+{ const ice = (ids) => { const { s, es, k } = mk(['goblin']); for (const id of ids) give(s, k, id); const ev = []; s.rollProcs(k, 'onAttack', ev, { target: es[0], hit: true }); return ev.filter((x) => x.type === 'attack' && x.attacker === k && x.damageType === 'ice'); };
+  const both = ice(['frost_charm', 'chill_band']), c = ice(['frost_charm']), b = ice(['chill_band']);
+  ok('Frost Charm + Chill Band: ONE ice hit worth both', both.length === 1 && both[0].result.amount > c[0].result.amount && both[0].result.amount > b[0].result.amount, `${c[0].result.amount} + ${b[0].result.amount} -> ${both.map((h) => h.result.amount)}`); }
 ok('every new G2 item exists with a rarity, a type and a description', ['sucker_punch_glove', 'bandage_roll', 'second_wind_flask', 'full_vigor', 'brawlers_streak', 'tough_skin', 'kindling', 'frost_charm', 'storm_charm', 'shadow_charm', 'mage_cloak', 'hourglass'].every((id) => itemDefs[id] && itemDefs[id].rarity === 'common' && itemDefs[id].type && itemDefs[id].description));

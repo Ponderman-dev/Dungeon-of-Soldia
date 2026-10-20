@@ -12,7 +12,7 @@ const lerp = (a, b, p) => a + (b - a) * p;
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const BOMB = 0x4a4a5a, KNIFE = 0xe4e8f0, HILT = 0x6b4a2a, BANNER = 0xf2d03a, GREEN = 0x3aa84a, GREEN2 = 0xc8ffd0;
 
-export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 3000, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340 };
+export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 3000, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340, thunderstruck: 520 };
 export const ITEM_FX = Object.keys(ITEM_MS);
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -289,5 +289,46 @@ export function mimicFx(q, x, y, t) {
     if (open) { g.rect(x - 4, yy - 4, 9, 1, C.blood, a); for (const k of [-3, -1, 1, 3]) g.px(x + k, yy - 3, C.white, a); }
     g.px(x, yy - 5 - (open ? 1 : 0), C.gold, a);
   }
+  return g.out;
+}
+
+// THUNDERSTRUCK, part 1 (drawn every frame while it charges, not an ITEM_MS effect): an electric circle on the floor
+// under the marked enemy that grows from a dot to full size (p 0..1), with a filling glow and a few sparks crawling on it.
+// f = the enemy's feet (pen pixels), r = full radius.
+export function thunderMarkFx(p, f, r, t, seed = 0) {
+  const g = pen();
+  const ry = r * 0.4, k = 0.2 + 0.8 * easeOut(p), rr = r * k, rry = ry * k;
+  for (let y = -Math.ceil(rry); y <= rry; y++) { // a glow on the floor that fills in and brightens
+    const w = Math.round(rr * Math.sqrt(Math.max(0, 1 - (y * y) / (rry * rry + 0.01))));
+    if (w > 0) g.rect(f.x - w, f.y + y, w * 2, 1, C.elec, 0.12 + 0.3 * p);
+  }
+  g.ring(f.x, f.y, r, C.elec, 0.3, ry); // where it will end
+  g.ring(f.x, f.y, rr, C.elec, 0.7 + 0.3 * p, rry); // the edge: double, bright
+  g.ring(f.x, f.y, rr + 1, C.elec, 0.5 + 0.5 * p, rry + 1);
+  g.ring(f.x, f.y, Math.max(0.5, rr - 1), C.white, 0.3 + 0.6 * p, Math.max(0.5, rry - 1));
+  for (let i = 0; i < 6; i++) {
+    const a = t / 220 + (i / 6) * Math.PI * 2 + rnd(seed + i);
+    const x = f.x + Math.cos(a) * rr, y = f.y + Math.sin(a) * rry;
+    g.px(x, y, C.white, 1); g.px(x, y - 1 - (Math.floor(t / 70 + i) % 3), C.elec, 0.8); // sparks jumping up off the edge
+  }
+  return g.out;
+}
+// THUNDERSTRUCK, part 2: a GIANT bolt from the top of the screen onto the enemy (three bolts side by side = thick, with a
+// white core), a flash on its body, a ring rolling out on the floor and sparks. u = the enemy's body (fxBody).
+export function thunderstruckFx(q, u, t, seed = 0) {
+  const g = pen();
+  const top = { x: u.x + (rnd(seed) - 0.5) * 10, y: -4 }, hit = { x: u.x, y: u.y };
+  if (q < 0.55 && Math.floor(t / 50) % 3 !== 2) {
+    const s = seed + Math.floor(t / 100);
+    bolt(g, { x: top.x - 1, y: top.y }, { x: hit.x - 1, y: hit.y }, C.elec, s, 10, 5);
+    bolt(g, { x: top.x + 1, y: top.y }, { x: hit.x + 1, y: hit.y }, C.elec, s, 10, 5);
+    bolt(g, top, hit, C.white, s, 10, 5);
+    bolt(g, { x: top.x + 9, y: top.y }, { x: (top.x + hit.x) / 2 + 12, y: hit.y * 0.55 }, C.elec, s + 9, 4, 4); // a side branch
+  }
+  const f = ph(q, 0, 0.3);
+  if (f > 0 && f < 1) { g.disc(u.x, u.mid, (u.hw + 4) * (1 - f * 0.5), C.white, 0.7 * (1 - f)); }
+  const e = ph(q, 0.05, 0.9);
+  if (e > 0 && e < 1) { g.ring(hit.x, hit.y, 4 + e * 26, C.elec, 1 - e, (4 + e * 26) * 0.4); g.ring(hit.x, hit.y, 2 + e * 16, C.white, (1 - e) * 0.7, (2 + e * 16) * 0.4); }
+  burst(g, hit.x, hit.y - 4, 16, [C.elec, C.white], ph(q, 0.05, 0.8), 18, seed + 3, -0.2);
   return g.out;
 }

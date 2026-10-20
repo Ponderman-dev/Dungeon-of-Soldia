@@ -43,8 +43,9 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
       // `chancePerExtra` (with `unique`): ONE roll whose chance grows with every extra copy (Hex Doll: 8%, 12%, 16%...).
       const n = holder ? holder.items.filter((i) => i === e.itemId).length : 1;
       const chance = e.chancePerExtra ? e.chance + e.chancePerExtra * (n - 1) : e.chance * factor;
-      // `mergeCopies` (sure extra hits: element charms, Chill Band): the copies add up into ONE bigger hit (one number).
-      const same = e.mergeCopies && procs.find((p) => p.mergeCopies && p.itemId === e.itemId && p.label === e.label);
+      // `mergeCopies` (sure extra hits: element charms, Chill Band, Magma Core): copies AND other items' hits of the same
+      // element add up into ONE bigger hit (one number), e.g. Frost Charm 10% + Chill Band 20% = one 30% ice hit.
+      const same = e.mergeCopies && procs.find((p) => p.mergeCopies && p.strike.damageType === e.strike.damageType);
       if (holder === hero && same) same.strike = { ...same.strike, damageMultiplier: same.strike.damageMultiplier + e.strike.damageMultiplier };
       else if (holder === hero && !(e.unique && procs.some((p) => p.unique && p.itemId === e.itemId))) procs.push({ ...e, chance, itemId: e.itemId, copies: n });
     } else if (e.special) {

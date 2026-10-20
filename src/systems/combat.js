@@ -47,7 +47,7 @@ function armourCut(defender, type, rules, damageTypes) {
 export function computeDamage(attacker, defender, rules, damageTypes, rng, opts = {}) {
   const type = opts.damageType || attacker.damageType;
   const evasion = Math.min(defender.stats.evasion, rules.caps.evasion);
-  if (rng() * 100 < evasion) return { dodged: true, crit: false, amount: 0, mult: 1 };
+  if (!opts.sure && rng() * 100 < evasion) return { dodged: true, crit: false, amount: 0, mult: 1 }; // opts.sure: can't be dodged (Thunderstruck)
 
   // Parry (Samurai's Focus Stance): every hit is stopped completely.
   if (defender.statuses && defender.statuses.some((st) => st.type === 'parry')) return { dodged: true, blocked: true, parried: true, crit: false, amount: 0, mult: 1 };

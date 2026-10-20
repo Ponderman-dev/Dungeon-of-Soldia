@@ -2014,6 +2014,21 @@ export default class BattleScene extends Phaser.Scene {
     });
   }
 
+  // The whole screen pulses red when a hero falls (combat.json heroDanger deathFlash*): in fast, out slower.
+  deathFlash() {
+    const D = combatRules.heroDanger;
+    const color = Phaser.Display.Color.HexStringToColor(D.deathFlashColor).color;
+    const r = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, color).setAlpha(0).setDepth(DEPTH.popup - 1);
+    this.tweens.chain({
+      targets: r,
+      tweens: [
+        { alpha: D.deathFlashAlpha, duration: D.deathFlashInMs, ease: 'Quad.easeOut' },
+        { alpha: 0, duration: D.deathFlashOutMs, ease: 'Quad.easeIn' },
+      ],
+      onComplete: () => r.destroy(),
+    });
+  }
+
   // A hero fell (combat.json heroDanger): a white flash, it tips over (towards the middle of the screen), lies still a
   // moment, then POOF: a cloud of smoke bursts over the body and it is replaced by a tombstone. '<NAME> FELL' shows
   // over it and its column of the danger glow flares.
@@ -2021,6 +2036,8 @@ export default class BattleScene extends Phaser.Scene {
     const D = combatRules.heroDanger;
     v.fellAt = this.time.now;
     v.ch.flash(0xffffff, 160);
+    this.deathFlash();
+    sfx.play('heroDeath'); // a low bell toll, over the fall thud
     const back = v.ch.homeX < GAME_WIDTH / 2 ? -1 : 1; // its body falls towards the middle of the screen, never off the edge
     this.tweens.add({ targets: v.ch, angle: -90 * back, duration: D.fallMs, ease: 'Bounce.easeOut' });
     // Where the lying body is: half its height along the floor from its feet.

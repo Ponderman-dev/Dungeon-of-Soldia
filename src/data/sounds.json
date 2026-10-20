@@ -198,6 +198,11 @@
       "minGapMs": 80,
       "source": "yours_falling-hit-on-gravel-756.mp3"
     },
+    "heroDeath": {
+      "file": "kenney/impactBell_heavy_001",
+      "volume": 0.9,
+      "pitch": 0.6
+    },
     "heroFall": {
       "volume": 0.5,
       "file": "picked/heroFall",

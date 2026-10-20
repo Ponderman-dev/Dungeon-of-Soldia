@@ -1,33 +1,32 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 17, 2026-10-20): NEXT = ITEM ADJUSTMENTS
-- LATEST BRANCH: `ccr-f0fe918e-fdbp68` has EVERYTHING (session 16's ccr-6323ff2c-ctwhz9 is in). Start the next session
-  from it. Before building/publishing: `git fetch` and check newer session branches are merged (`git merge-base
-  --is-ancestor`); ccr-a59eab7b / ccr-a7ab1d1c / phase-h-tuning / scaffold / quick-gloves = old history, ignore.
-- DONE this session (user played and asked):
-  - Enemy scaling: floors 25-35 hit too hard -> enemy growth per 3 floors +50% health / +42% attack (was +35% / +52.5%),
-    Orc Brute attack 12 -> 9 (a hero health buff was tried and REMOVED: user wants it no easier). Smart curve median 37 -> 40.
-  - Movement: minions make way (never block a hero / shove an enemy), standing minions let walkers pass through, bosses
-    are not pushed by small fighters or their own eggs. PARKED: 'bosses should NEVER be shoved' (movement.md).
-  - Hero death: red screen pulse + low bell (`heroDeath` cue). Sound board round 8: rows heroDeath, descend, gateSlam
-    (`add-rows.py`); user has NOT picked yet -> 'apply the sound picks' = apply-picks.py (sound.md).
-  - Playtest: `npm run build:itch` = itch-page.html without test buttons (user uploads to itch.io); 'Choose 3 heroes' box
-    gone; sound button = pixel speaker icon.
-  - Skills: Defense Bash / Multistrike / Savage Leap STAY where they hit (rules move, `staysAtImpact`); every melee basic
-    attack STEPS IN to the target at the hit (`attackMotion.meleeStep`, view only). Both just applied: ask how they feel
-    (step size/speed, heroes only?).
-- NEXT TASK (user): ITEM ADJUSTMENTS. Ask which items feel bad/weak/too strong in play. Read docs/systems/items.md and
-  docs/item-decisions.md (the truth for item numbers) first. Item review page (user notes in db `notes`):
-  https://claude.ai/artifact/S7cbuLJoStsdi5hpg2SBef (read its notes with ArtifactData). Tools: `node scripts/tests/itemruns.mjs`
-  (one item), `node scripts/tests/review.mjs 4 all` (heroes/items), curve.mjs before/after. Item tests use the frozen
-  fixture: changing NUMBERS needs no test edits (CLAUDE.md).
-- OPEN (offered, not done): Necromancer got stronger once minions stopped blocking (watch); Bone Sacrifice pops
-  'Sacrifice!' 3-4 times stacked; Mystery Brew (alch_brew) has no sound; Death Coil demo note still says 'change'.
-- PARKED: HERO REDRAW proposal (chunky heroic body, 3/4 view, BIG weapons; keep 3 parts or go to 6).
-- Test helper (scratchpad, throwaway): Playwright (/opt/node22/lib/node_modules/playwright) + `npx vite --port 51xx`
-  (log to the scratchpad); squad screen first: set registry `squadIds`, stop 'Squad', start 'Battle'; `window.__game`,
-  `?floor=5&room=fight`; poll in a loop (page.waitForFunction with polling was flaky). Balance probes used this session
-  (scaling per floor, big hits by source, shove per fight) were scratch scripts: rewrite if needed.
+## START HERE (session 18, 2026-10-20): NEXT = more ITEM COMBOS / DARK ITEMS (user picks)
+- LATEST BRANCH: `ccr-f0fe918e-fdbp68` has EVERYTHING. Before building/publishing: `git fetch` and check newer session
+  branches are merged (`git merge-base --is-ancestor`); old branches = history, ignore.
+- DONE session 17 (item adjustments; numbers + itemruns in docs/item-decisions.md 'Session 17'):
+  - Element charms ADD their element: every basic attack + a 15% fire/ice/electric/dark hit, +15% boost kept, no `needs`.
+    Copies MERGE into one bigger hit (`mergeCopies`, also Chill Band). Shadow Charm no longer boosts Poison (`typeBonus`).
+  - Debuff procs (Ember, Venom Fang, Thousand Cuts): ONE roll per attack, each copy = more chance AND +10% status damage.
+  - Minions: Imp/Wisp/Phoenix/Ice Spirit Knight get half the hero's +% for their element (`holderElementShare`);
+    Spirit Knight hits ICE (`hitType`, look kept: 'blue enough'); Phoenix burns + 2%/s self regen (no squad heal);
+    Gargoyle defense 14; Mimic = BAIT (never attacks, taunts nearby, 14 hp, explodes). minions.md.
+  - Frozen Thunderbolt v2: electric hits add a 30% ice hit + 1 Chill; 3 Chill / Frozen = shatter 150% ice on it + neighbours.
+  - Flame Spirit renamed DARK SPIRIT. NEW legendary ECLIPSE IDOL (stores dark damage, at 10x attack Dooms 2-3 enemies:
+    350% dark/s + 50% slow, 4s; new DOOM status). Screenshots shown; look = Dark Spirit orb + Curse swirl (offered a
+    unique Doom look, not asked yet).
+  - Sapper bomb: nobody avoids/walks out of its circle any more (it blocked walking).
+  - Curve median ~41-42 throughout (40 at session start).
+- OPEN / offered: more dark legendaries (user: 'we need more legendary dark items'; ideas offered: Doom Crown, Soul Reaper,
+  Shade Lantern); Electric has no own legendary, Ice only Thunderbolt; Shadow Charm and Mimic Chest score ~0; Eclipse Idol
+  ~0 in itemruns (smartbot gives it to non-dark heroes). Older OPEN: Bone Sacrifice popups, Mystery Brew sound, Death Coil note.
+- Session lessons (user asked 'why failures every prompt'): update the old tests IN THE SAME STEP as a rule change (no
+  visible FAIL round), check a test file's helpers (`near`, `mk`) before using them, never `pkill -f` a pattern that matches
+  your own shell. PUBLISH QUIRK: first publish per session is refused ('not viewed'); an identical resend is refused again
+  unless you first compare one changed line of the saved live copy (sed -n Np | grep) -> then publish goes through.
+  User wants the CLAUDE.md preview note fixed with these exact steps (asked: handoff first, do it next).
+- Test helper (scratchpad, throwaway): Playwright (/opt/node22/lib/node_modules/playwright, executablePath
+  /opt/pw-browsers/chromium) + `node_modules/.bin/vite <repo> --port 5177` started FROM the scratchpad; set registry
+  `squadIds`, stop 'Squad', start 'Battle'; `window.__game.scene.getScene('Battle').state` = BattleState (giveItem etc.).
 
 ## How we work with this user
 - Beginner, vibe coding: explain simply, small steps, ask before design changes; 4 ideas via the question tool for picks.

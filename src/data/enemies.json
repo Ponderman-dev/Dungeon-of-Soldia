@@ -3147,9 +3147,9 @@
         "minor": true,
         "everyMs": 8000,
         "firstMs": 2000,
-        "target": "lowestAlly",
+        "target": "lowestOtherAlly",
         "shield": {
-          "percentOwnHp": 20,
+          "percentOwnHp": 12,
           "durationMs": 8000
         }
       }

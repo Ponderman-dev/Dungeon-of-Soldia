@@ -67,7 +67,18 @@ ok('the Golem is strong and at most one per fight', defs.golem.tier === 'strong'
   es[1].hp = es[1].maxHp * 0.5;
   run(s, 2100);
   const sh = es[1].statuses.find((st) => st.type === 'shield');
-  ok('Shieldbearer: shields the most hurt enemy for 20% of ITS OWN health', sh && Math.abs(sh.amount - es[0].maxHp * 0.2) < 1);
+  const pct = defs.shieldbearer.abilities.find((a) => a.shield).shield.percentOwnHp / 100;
+  ok('Shieldbearer: shields the most hurt enemy for a share of ITS OWN health', sh && Math.abs(sh.amount - es[0].maxHp * pct) < 1);
+}
+{
+  const { s, es } = mk(['shieldbearer', 'goblin']);
+  freeze(s);
+  es[0].hp = es[0].maxHp * 0.2; es[1].hp = es[1].maxHp * 0.6; // it is the most hurt, but never shields itself
+  run(s, 2100);
+  ok('...never itself: the most hurt OTHER enemy gets it', !es[0].statuses.some((st) => st.type === 'shield') && es[1].statuses.some((st) => st.type === 'shield'));
+  const { s: s2, es: e2 } = mk(['shieldbearer']);
+  freeze(s2); e2[0].hp = e2[0].maxHp * 0.5; run(s2, 2100);
+  ok('...alone: no shield at all', !e2[0].statuses.some((st) => st.type === 'shield'));
 }
 {
   const { s, es, h } = mk(['sapper', 'goblin']);

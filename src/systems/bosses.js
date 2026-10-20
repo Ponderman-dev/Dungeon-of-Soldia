@@ -11,7 +11,7 @@
 //       channel: { intervalMs, ticks, target, damageMultiplier, damageType, apply, drain: { percentMaxHp } },
 //       clones: { statPercent }, shatterClones: { multiplier } }
 //     minor: true = a normal enemy's small move (a popup, no red banner); needsHurt: waits until an enemy is hurt;
-//     target also 'lowestAlly' (most hurt enemy) / 'otherAllies'; shield: { percentOwnHp, durationMs } on the target
+//     target also 'lowestAlly' (most hurt enemy) / 'lowestOtherAlly' (not itself) / 'otherAllies'; shield: { percentOwnHp, durationMs } on the target
 //     burrow: { ms, stunMs, damageMultiplier } (Cave Worm), blink: true (Blink Imp: appears next to its target first)
 //   raise: { radius, into }                  Bone Acolyte: the first enemy dying near it comes back as `into`
 //   adapt: { ms }                            Crystal Sentinel: resists the last damage type that hit it, weak to the rest
@@ -242,8 +242,9 @@ export const bossMethods = {
       case 'self': return [u];
       case 'allies': return this.enemies.filter((e) => e.alive);
       case 'otherAllies': return this.enemies.filter((e) => e.alive && e !== u && !e.def.object); // Lava Hound's howl
-      case 'lowestAlly': { // the most hurt enemy (by health %): Goblin Shaman heals, Shieldbearer shields
-        const live = this.enemies.filter((e) => e.alive && !e.def.object && !this.untargetable(e));
+      case 'lowestAlly': // the most hurt enemy (by health %): Goblin Shaman heals
+      case 'lowestOtherAlly': { // the same, never itself: Shieldbearer shields
+        const live = this.enemies.filter((e) => e.alive && !e.def.object && !this.untargetable(e) && (target === 'lowestAlly' || e !== u));
         return live.length ? [live.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a))] : [];
       }
       default: return [];
@@ -259,6 +260,7 @@ export const bossMethods = {
     }
     if (a.burrow) return this.startBurrow(u, a.burrow, events); // Cave Worm
     const targets = this.abilityTargets(u, a.target, a.radius);
+    if (a.target === 'lowestOtherAlly' && !targets.length) return; // a Shieldbearer alone: no one to guard, no popup
     // Blink Imp: it appears next to its target first (then the hit below).
     if (a.blink && targets[0] && this.hasPositions(u) && this.hasPositions(targets[0])) {
       const t = targets[0], L = this.rules.movement.layout;

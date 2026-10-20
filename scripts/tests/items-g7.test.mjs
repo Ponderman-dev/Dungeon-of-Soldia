@@ -44,6 +44,12 @@ ok('all 11 G7 items exist', ids.every((id) => itemDefs[id] && itemDefs[id].descr
   const ev = []; s.landAttack(kn, s.enemies[0], ev);
   ok('Ice Spirit Knight walks in as melee but its hits are ice, no fire bonus', kn.damageType === 'melee' && ev.some((e) => e.type === 'attack' && e.attacker === kn && e.damageType === 'ice') && !kn.damageBonus.fire); }
 
+// Mimic: a bait, never attacks; on its attack turns it taunts the enemies around it
+{ const { s, es, a } = mk(); give(s, a, 'mimic_chest'); s.spawnMinion(a, { key: 'mimic_chest', kind: 'weak', capGroup: 'items', spec: { minion: 'mimic' } }, []);
+  const mi = s.minions.find((m) => m.def.id === 'mimic'); es[0].x = mi.x + 20; es[0].y = mi.y; const hp = es[0].hp; mi.timer = 1e6;
+  s.update(16);
+  ok('Mimic deals no damage and taunts the enemy next to it', es[0].hp === hp && es[0].statuses.some((x) => x.type === 'taunt' && x.sourceUid === mi.uid), JSON.stringify(es[0].statuses.map((x) => x.type))); }
+
 // Imp / Gargoyle on-hit statuses
 { const { s, es, a } = mk(); give(s, a, 'fire_imp_brazier'); s.startFloor([]); s.tickSpawner(a, 1e6, []);
   const imp = s.minions.find((m) => m.def.id === 'imp'); s.landAttack(imp, es[0], []);

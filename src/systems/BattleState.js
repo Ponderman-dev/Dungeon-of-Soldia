@@ -404,6 +404,16 @@ export default class BattleState {
 
   // A unit just got taunted while an attack of its was on the way to someone else: a melee swing is
   // dropped (it walks over to the taunter instead), an arrow bends towards the taunter.
+  // A bait minion (Mimic, `def.bait`: { radius, durationMs }) deals no damage: on each of its attack turns it taunts every
+  // enemy around it, so they hit it instead of the heroes (then it dies and explodes).
+  baitTaunt(unit, events) {
+    const { radius, durationMs } = unit.def.bait;
+    for (const e of this.enemies) {
+      if (!e.alive || (this.hasPositions(e) && this.hasPositions(unit) && this.distance(e, unit) > radius)) continue;
+      this.applyStatus(e, { status: 'taunt', durationMs }, unit, `bait_${unit.uid}`, events);
+    }
+  }
+
   redirectToTaunter(unit, events) {
     const taunter = this.tauntedBy(unit);
     if (!taunter || !unit.pending || unit.pending.target === taunter) return;
@@ -1056,6 +1066,7 @@ export default class BattleState {
         continue;
       }
       unit.timer -= interval;
+      if (unit.def.bait) { this.baitTaunt(unit, events); continue; } // Mimic: never attacks, taunts the enemies around it
 
       // The attack starts now and lands after `hitDelay` (melee: the swing, ranged: the shot's
       // flight). With a delay of 0 it lands at once.

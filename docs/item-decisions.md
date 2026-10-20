@@ -256,4 +256,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Frozen Thunderbolt v2 (user: 'should apply freeze damage as well and apply chill'): every electric hit also adds a 30% ice
   hit (`thunderIce`, per copy) and 1 Chill; at 3 Chill (`thunderShatterAt`, unique) or Frozen -> the 150% shatter above.
   itemruns 1/3 copies: -1.1/+2.2 (it still needs electric hits: Mage, Storm Charm, Static Crystal). Curve median 41.
+- Mimic = BAIT (user): never attacks; on its attack turns it taunts every enemy within 110px for 2.5s (`bait` in
+  minions.json, `baitTaunt()`); health 30 -> 14, defense 2 -> 0; explosion 300% kept. itemruns ~0 before and after (weak item).
+- Flame Spirit renamed DARK SPIRIT (id stays flame_spirit). Ice Spirit Knight keeps its look (user: blue enough).
 - NEXT (user list): Flame Spirit -> Dark Spirit look + name; 1-2 new dark synergy items; Mimic ideas; Ice Knight look.

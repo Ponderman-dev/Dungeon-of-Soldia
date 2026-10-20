@@ -1,5 +1,5 @@
 {
-  "_about": "Minions: extra fighters on the hero side. They are NOT heroes (no XP, perks, morale, never count as living heroes). kind 'weak': many at once (cap per source), vanish when the floor ends or their holder dies. kind 'greater' (later): one per item, persists across floors. Same shape as enemies.json (stats, parts, height, flying) plus kind. hitType: the element of its hits when it differs from how it moves (damageType). holderElementShare: share of its hero's +% for its element. regenPercent: max health healed per second.",
+  "_about": "Minions: extra fighters on the hero side. They are NOT heroes (no XP, perks, morale, never count as living heroes). kind 'weak': many at once (cap per source), vanish when the floor ends or their holder dies. kind 'greater' (later): one per item, persists across floors. Same shape as enemies.json (stats, parts, height, flying) plus kind. hitType: the element of its hits when it differs from how it moves (damageType). holderElementShare: share of its hero's +% for its element. regenPercent: max health healed per second. bait: { radius, durationMs } = never attacks, taunts the enemies around it on its attack turns (Mimic).",
   "skeleton": {
     "name": "Skeleton",
     "kind": "weak",
@@ -354,15 +354,19 @@
     "weak": [],
     "resists": [],
     "stats": {
-      "health": 30,
+      "health": 14,
       "attack": 6,
-      "defense": 2,
+      "defense": 0,
       "attackEfficiency": 90
     },
     "copyStatBonus": 0.5,
     "explode": {
       "damageMultiplier": 3,
       "radius": 120
+    },
+    "bait": {
+      "radius": 110,
+      "durationMs": 2500
     },
     "parts": {
       "body": {

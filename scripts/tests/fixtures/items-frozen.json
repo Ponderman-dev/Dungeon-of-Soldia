@@ -1352,7 +1352,7 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "10% when this hero is hit: a Mimic pops out and explodes when it dies.",
+    "description": "10% when this hero is hit: a Mimic pops out. It never attacks: it taunts the enemies around it, then explodes when it dies.",
     "effects": [
       {
         "special": "mimic",

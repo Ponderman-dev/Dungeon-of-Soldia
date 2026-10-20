@@ -166,6 +166,8 @@ export default class BattleScene extends Phaser.Scene {
       .text(GAME_WIDTH / 2, 520, '', { fontFamily: UI.font, fontSize: '24px', color: '#ffffff', stroke: '#000000', strokeThickness: 4, align: 'center' })
       .setOrigin(0.5)
       .setDepth(DEPTH.hud);
+    // Any tap closes an open passive text (not the tap that opened it: same moment).
+    this.input.on('pointerdown', () => { if (this.passiveTip && this.passiveTip.active && this.time.now !== this.passiveTip.shownAt) this.hidePassive(); });
     this.dangerGlow = this.add.graphics().setDepth(DEPTH.heroBar - 0.5); // low-health glow at the bottom edge (drawDangerGlow)
     this.focusMarker = this.add.ellipse(0, 0, 70, 18).setStrokeStyle(2, 0xff4d4d).setVisible(false).setDepth(DEPTH.marker);
 
@@ -981,18 +983,28 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // A tap on a passive icon: its name and what it does, in a small black window over the squad for a few seconds.
+  // Any other tap closes it at once (that tap still does its normal job); tapping the same icon again closes it too.
   showPassive(view) {
     const p = view.unit.def.passive;
     if (!p) return;
+    const again = this.passiveTip && this.passiveTip.active && this.passiveTip.view === view;
+    this.hidePassive();
+    if (again) return;
     sfx.play('tap');
-    if (this.passiveTip) this.passiveTip.destroy();
     const t = this.add.text(GAME_WIDTH / 2, 0, `${p.name}\n${p.description}`, { fontFamily: UI.font, fontSize: '8px', color: UI.text, lineSpacing: 5, align: 'left', wordWrap: { width: GAME_WIDTH - 52, useAdvancedWrap: true } }).setOrigin(0.5, 1);
     const y = SKILL_Y - SKILL_H / 2 - 92;
     t.setY(y);
     const g = drawWindow(this.add.graphics(), GAME_WIDTH / 2 - t.width / 2 - 12, y - t.height - 12, t.width + 24, t.height + 24, { line: 0xf2b632 });
     this.passiveTip = this.add.container(0, 0, [g, t]).setDepth(DEPTH.hud + 1);
     const tip = this.passiveTip;
+    tip.view = view;
+    tip.shownAt = this.time.now;
     this.time.delayedCall(3500, () => { if (tip.active) this.tweens.add({ targets: tip, alpha: 0, duration: 250, onComplete: () => tip.destroy() }); });
+  }
+
+  hidePassive() {
+    if (this.passiveTip && this.passiveTip.active) this.passiveTip.destroy();
+    this.passiveTip = null;
   }
 
   // Taps on a skill square.

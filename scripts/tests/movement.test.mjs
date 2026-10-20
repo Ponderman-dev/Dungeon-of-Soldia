@@ -124,3 +124,23 @@ for (const bossId of ['grukk', 'frost_warden', 'ignatius']) {
   const d = Math.hypot((boss.x - knight.x) / (M.separateX * k), (boss.y - knight.y) / (M.separateY * (1 + (k - 1) * 0.5)));
   ok(`${bossId} stops at the hero's edge, not inside him`, s.inReach(boss, knight) && d >= 0.95, d.toFixed(2));
   ok(`...and stands still there (no walk-in / push-out jitter)`, moves < 5, String(moves)); }
+
+// Minions make way (user, floor 40 Brood Mother: a crowd of skeletons/imps kept the Berserker away and shoved the boss
+// around): a melee hero gets through its own minion crowd to the boss, and small fighters never push a boss.
+{ const heroes = r('heroes.json');
+  const s = new BattleState({ heroDefs: ['berserker', 'necromancer'].map((id) => heroes.find((h) => h.id === id)), enemyDefs: r('enemies.json'), itemDefs: {}, skillDefs: r('skills.json'), minionDefs: r('minions.json'), statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng: (() => { let x = 7; return () => ((x = (x * 16807) % 2147483647) / 2147483647); })() });
+  const [boss] = s.spawnEnemies(['brood_mother'], 40);
+  s.placeLines(); s.startFloor();
+  const [ber, nec] = s.heroes;
+  for (let i = 0; i < 10; i++) s.spawnMinion(nec, { kind: 'greater', minion: ['skeleton', 'imp', 'rat'][i % 3], key: 'm' + i }, []);
+  const tough = () => { for (const u of [...s.heroes, boss, ...s.minions]) u.hp = u.maxHp = 1e9; };
+  const pin = () => { tough(); for (const e of s.enemies) if (e.alive && e !== boss) s.killUnit(e, []); s.setFocus(boss.uid); };
+  run(s, 3000, pin);
+  let inReach = 0, steps = 0;
+  run(s, 6000, () => { pin(); steps++; if (s.inReach(ber, boss)) inReach++; });
+  ok('a melee hero gets through its own minion crowd to the boss', inReach / steps > 0.95, `${((100 * inReach) / steps).toFixed(0)}% of the time in reach`);
+  boss.casting = true; // busy: it stands still, so any move is a shove
+  const b0 = { x: boss.x, y: boss.y };
+  run(s, 2000, pin);
+  const shoved = Math.hypot(boss.x - b0.x, boss.y - b0.y);
+  ok('small fighters never push the boss', shoved < 1, shoved.toFixed(1) + 'px'); }

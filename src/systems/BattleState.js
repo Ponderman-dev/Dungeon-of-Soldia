@@ -501,6 +501,8 @@ export default class BattleState {
     const settled = M.settledPushShare ?? 1;
     const share = (u, other) => {
       if (u.def.object) return 0; // objects (War Drum, eggs) never budge
+      if (u.minion !== other.minion) return u.minion ? 1 : 0; // minions always make way (they never block a hero or shove an enemy)
+      if ((u.size || 1) >= (other.size || 1) * M.bigHoldRatio) return 0; // a big body (boss) is not shoved around by small ones
       if (u.damageType !== 'melee' && other.damageType === 'melee') return 0; // ranged hold their ground
       return walking.has(u) || u.knock ? 1 : settled;
     };

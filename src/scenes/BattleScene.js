@@ -443,6 +443,12 @@ export default class BattleScene extends Phaser.Scene {
     this.drawElites(now);
     this.drawBombs(now);
     this.drawThunders(now);
+    // Assault Breastplate's ARMOR DOWN icon comes and goes with its holder (item given, holder fell): redraw enemy icons.
+    const shred = this.assaultCopies();
+    for (const e of this.state.enemies) {
+      const ev = this.views.get(e.uid);
+      if (ev && e.alive && ev.shredShown !== shred) { ev.shredShown = shred; this.drawChips(ev); } // new enemies get it too
+    }
     this.drawOrders();
     // Ice breaking off a fighter whose Freeze just ended.
     this.iceBreaks = (this.iceBreaks || []).filter((b) => now - b.start < 400 && b.view.ch.active);
@@ -1199,6 +1205,11 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // Redraws the status tags on a fighter: one tag per kind of status it has right now.
+  // How many Assault Breastplates the living heroes hold (its enemy icon shows this number).
+  assaultCopies() {
+    return this.state.heroes.reduce((n, h) => n + (h.alive ? h.items.filter((id) => id === 'assault_breastplate').length : 0), 0);
+  }
+
   drawChips(view) {
     view.chipBox.removeAll(true);
     const kinds = [...new Set(view.unit.statuses.map((st) => st.type))];
@@ -1211,7 +1222,10 @@ export default class BattleScene extends Phaser.Scene {
     // up above them). Stacking statuses (bleed, burn, poison, chill) show their
     // stack count just right of the icon. The icon pops up a little when it arrives or gains a stack.
     const S = CHAR_SCALE;
-    const list = iconList(statusIcons, kinds, (k) => (statusInfo[k] && (statusInfo[k].dot || statusInfo[k].stacking) ? this.state.stacks(view.unit, k) : 1), view.unit.steady ? ['steady'] : []);
+    // Assault Breastplate's aura (not a status): an ARMOR DOWN icon on every enemy, its number = copies held.
+    const shredCopies = view.unit.side === 'enemy' && view.unit.alive ? this.assaultCopies() : 0;
+    const extra = [...(view.unit.steady ? ['steady'] : []), ...(shredCopies ? ['assaultShred'] : [])];
+    const list = iconList(statusIcons, kinds, (k) => (k === 'assaultShred' ? shredCopies : statusInfo[k] && (statusInfo[k].dot || statusInfo[k].stacking) ? this.state.stacks(view.unit, k) : 1), extra);
     const before = view.iconCounts || {};
     view.iconCounts = {};
     view.icons = [];

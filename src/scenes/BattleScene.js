@@ -1544,10 +1544,12 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'attack') {
       const a = this.views.get(e.attacker.uid);
       const t = this.views.get(e.target.uid);
+      if (!t) return;
+      // `a` can be gone: a Kobold Sapper's bomb goes off after the Sapper's body has faded (user bug: the game froze).
       if (e.basic) {
         // The walk/swing or the arrow already showed this attack. Melee fighters STAY where they are.
-        this.landArrow(a); // the arrow reaches its target exactly as the damage lands
-      } else if (!a.ch.moveTween) {
+        if (a) this.landArrow(a); // the arrow reaches its target exactly as the damage lands
+      } else if (a && !a.ch.moveTween) {
         a.ch.lunge(t.ch.x, t.ch.y); // skills and item hits: a small jab (only from its own spot)
       }
       if (e.result.invulnerable) {

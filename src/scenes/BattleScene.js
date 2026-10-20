@@ -930,7 +930,7 @@ export default class BattleScene extends Phaser.Scene {
       const was = v.hopAmt || 0;
       v.hopAmt = was + (want - was) * Math.min(1, this.game.loop.delta / (want > was ? M.hopStartMs : M.hopEaseMs)); // starts slowly: a one-frame step doesn't lift it
       v.ch.hopOffset = Math.abs(Math.sin((u.walked / M.hopLengthPx) * Math.PI)) * M.hopHeight * v.hopAmt;
-      v.ch.setPosition(u.x + (v.leapX || 0), u.y + (v.leapY || 0) - hover - v.ch.hopOffset - v.ch.castLift - (v.leapLift || 0));
+      v.ch.setPosition(u.x + (v.leapX || 0) + (v.stepX || 0), u.y + (v.leapY || 0) + (v.stepY || 0) - hover - v.ch.hopOffset - v.ch.castLift - (v.leapLift || 0));
       // Look at whoever it is fighting (so the weapon swings towards it).
       const foe = (u.pending && u.pending.target) || (this.views.get(u.foe) || {}).unit || v.lookAt;
       if (foe && foe.alive && foe.x !== undefined && Math.abs(foe.x - u.x) > 6) v.ch.face(foe.x < u.x ? -1 : 1);
@@ -1502,7 +1502,7 @@ export default class BattleScene extends Phaser.Scene {
       const lob = e.attacker.def.passive && e.attacker.def.passive.lobbed;
       if (lob) this.lobFlask(a, t, e.hitInMs, Number(lob.color)); // Alchemist: his shots are flasks
       else if (e.attacker.damageType !== 'melee') this.shootArrow(a, t, e.hitInMs);
-      else a.ch.swing(e.hitInMs);
+      else { a.ch.swing(e.hitInMs); this.stepIn(a, t, e.hitInMs); }
     } else if (e.type === 'attackRetarget') {
       // Its target died while the arrow was flying: the arrow bends towards the new target.
       const a = this.views.get(e.attacker.uid);
@@ -2123,6 +2123,24 @@ export default class BattleScene extends Phaser.Scene {
         else if (L.jitterPx) this.time.delayedCall((L.staggerMs || 0) * i, () => this.jitter(v, L.jitterPx, L.jitterMs));
       });
     });
+  }
+
+  // A melee basic attack steps in to the target (combat.json attackMotion.meleeStep): the fighter stands at reach, so
+  // its view moves towards the target, arrives as the hit lands, holds, then steps back. Rules position unchanged.
+  stepIn(a, t, hitInMs) {
+    const S = combatRules.attackMotion.meleeStep;
+    const u = a.unit, o = t.unit;
+    if (!S || !S.sides.includes(u.side) || u.x == null || o.x == null) return;
+    const dx = o.x - u.x, dy = o.y - u.y, len = Math.hypot(dx, dy) || 1;
+    const k = ((u.size || 1) + (o.size || 1)) / 2;
+    const px = Phaser.Math.Clamp(len - S.contactPx * k, 0, S.maxPx);
+    if (px < 2) return;
+    if (a.stepTween) a.stepTween.stop();
+    const st = { p: 0 };
+    const set = () => { if (a.ch.active) { a.stepX = (dx / len) * px * st.p; a.stepY = (dy / len) * px * st.p; } };
+    a.stepTween = this.tweens.add({ targets: st, p: 1, duration: Math.max(60, hitInMs), ease: 'Quad.easeIn', onUpdate: set,
+      onComplete: () => { a.stepTween = this.tweens.add({ targets: st, p: 0, delay: S.holdMs, duration: S.backMs, ease: 'Quad.easeOut', onUpdate: set,
+        onComplete: () => { a.stepX = a.stepY = 0; a.stepTween = null; } }); } });
   }
 
   // A fighter jitters side to side (a hard hit); uses the leap offset.

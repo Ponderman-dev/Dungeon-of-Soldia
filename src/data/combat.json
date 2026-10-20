@@ -203,7 +203,15 @@
     "hopFullSpeedShare": 0.6,
     "hopStartMs": 220,
     "hopEaseMs": 90,
-    "arrowColor": "0xe6e6b8"
+    "arrowColor": "0xe6e6b8",
+    "meleeStep": {
+      "_about": "Melee basic attacks step IN to the target (user 2026-10-20: the knight swung at the air). The fighter stands at reach, so on each swing its view moves towards the target (rules position unchanged): it arrives at the hit, holds holdMs, steps back in backMs. Step = distance minus contactPx (x the two body sizes, averaged), at most maxPx. sides: who does it (hero = heroes and minions, enemy).",
+      "contactPx": 50,
+      "maxPx": 40,
+      "holdMs": 90,
+      "backMs": 200,
+      "sides": ["hero", "enemy"]
+    }
   },
   "transition": {
     "clearPauseMs": 900,

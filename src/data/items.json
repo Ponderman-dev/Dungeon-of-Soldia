@@ -660,11 +660,11 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "6% on attack: Burn the enemy for 3s.",
+    "description": "20% on attack: Burn the enemy for 3s.",
     "effects": [
       {
         "proc": "onAttack",
-        "chance": 6,
+        "chance": 20,
         "label": "Burn!",
         "targets": "target",
         "apply": [
@@ -677,13 +677,13 @@
           }
         ],
         "unique": true,
-        "chancePerExtra": 6
+        "chancePerExtra": 10
       }
     ],
     "provides": [
       "burn"
     ],
-    "perStack": "+6% burn chance, +10% burn damage"
+    "perStack": "+10% burn chance, +10% burn damage"
   },
   "venom_fang": {
     "name": "Venom Fang",

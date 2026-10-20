@@ -49,19 +49,21 @@ ok('Siege Cannon is legendary, Feather Boots / Lucky Coin / Dice / Totem / Bulwa
   ok('...not once the enemy is under ' + above + '% health', Math.abs(basicHit(s, k, es[1]).amount / basicHit(s0, k0, e0[0]).amount - 1) < 0.05);
   const { s: s2, es: e2, k: k2 } = mk(['goblin']); e2[0].hp = e2[0].maxHp = 1e7; give(s2, k2, 'sucker_punch_glove', 2);
   ok('...two gloves: +' + 2 * pct + '%', Math.abs(basicHit(s2, k2, e2[0]).amount / base - (1 + (2 * pct) / 100)) < 0.08); }
-// Bandage Roll
-// Bandage Roll (phase H rework): every 8s a toss of 1-3 bandages at the most hurt heroes, 5 flat health per roll each.
-{ const toss = (rolls, rngVal) => { const { s, k, h } = mk(['goblin']); give(s, k, 'bandage_roll', rolls); s.rng = () => rngVal;
-    h[0].hp = h[0].maxHp - 50; h[1].hp = h[1].maxHp * 0.3; h[2].hp = h[2].maxHp * 0.6; const before = h.map((x) => x.hp);
-    const ev = []; s.tickBandages(k, 7990, ev); const early = ev.length; s.tickBandages(k, 20, ev);
-    return { gained: h.map((x, i) => x.hp - before[i]), early, flasks: ev.filter((e) => e.type === 'flask').length }; };
-  const one = toss(1, 0.99), few = toss(1, 0), two = toss(2, 0.99);
-  ok('Bandage Roll: nothing before 8s, then a toss', one.early === 0 && one.flasks === 3);
-  ok('...3 bandages: every hurt hero +5 health', one.gained.every((g) => Math.abs(g - 5) < 0.01), one.gained.join());
-  ok('...1 bandage goes to the MOST hurt hero', few.flasks === 1 && Math.abs(few.gained[1] - 5) < 0.01 && few.gained[0] === 0 && few.gained[2] === 0, few.gained.join());
-  ok('...2 rolls: 10 health per bandage (only the heal grows)', two.flasks === 3 && two.gained.every((g) => Math.abs(g - 10) < 0.01), two.gained.join()); }
+// Bandage Roll (session 18, cure): every `bandageCureEveryMs` the most hurt hero loses 1 bleed/poison/burn kind per roll
+// and heals `bandageCure`% of max health per roll.
+{ const eff = itemDefs.bandage_roll.effects, every = eff.find((e) => e.special === 'bandageCureEveryMs').percent, pct = eff.find((e) => e.special === 'bandageCure').percent;
+  const cure = (rolls) => { const { s, k, h } = mk(['goblin']); give(s, k, 'bandage_roll', rolls);
+    h[0].hp = h[0].maxHp * 0.9; h[1].hp = h[1].maxHp * 0.3; h[2].hp = h[2].maxHp * 0.6;
+    for (const kind of ['poison', 'poison', 'burn']) s.applyStatus(h[1], { status: kind, durationMs: 60000, damageMultiplier: 0.001, damageType: kind === 'burn' ? 'fire' : 'dark' }, s.enemies[0], 'x', []);
+    const before = h.map((x) => x.hp); const ev = []; s.tickBandages(k, every - 10, ev); const early = ev.length; s.tickBandages(k, 20, ev);
+    return { gained: h.map((x, i) => x.hp - before[i]), early, max: h[1].maxHp, left: [...new Set(h[1].statuses.map((x) => x.type))] }; };
+  const one = cure(1), two = cure(2);
+  ok('Bandage Roll: nothing before its timer, then the MOST hurt hero is bandaged', one.early === 0 && one.gained[1] > 0 && one.gained[0] === 0 && one.gained[2] === 0, one.gained.join());
+  ok('...heals ' + pct + '% of max health', Math.abs(one.gained[1] - (one.max * pct) / 100) < 1, `${one.gained[1]}`);
+  ok('...and removes 1 kind (the one with most stacks: poison)', one.left.join() === 'burn', one.left.join());
+  ok('...2 rolls: removes 2 kinds and heals twice as much', two.left.length === 0 && Math.abs(two.gained[1] - (two.max * 2 * pct) / 100) < 1, `${two.left} ${two.gained[1]}`); }
 { const { s, k } = mk(['goblin']); give(s, k, 'bandage_roll'); s.heroes.forEach((x) => (x.hp = x.maxHp)); const ev = []; s.tickBandages(k, 8000, ev);
-  ok('...nobody hurt: no toss', !ev.length); }
+  ok('...nobody hurt or poisoned: no bandage', !ev.length); }
 // Second Wind Flask
 { const { s, es, k } = mk(['goblin']); give(s, k, 'second_wind_flask', 2); k.hp = k.maxHp; const maxHp = k.maxHp;
   k.hp = maxHp * 0.25; const ev0 = []; s.dealDamage(k, maxHp * 0.03, ev0);

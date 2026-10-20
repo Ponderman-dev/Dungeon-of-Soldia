@@ -295,3 +295,12 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Sucker Punch Glove v2 (user: 'skills and other damage count; several gloves can one-shot with skills'): ANY hit from the
   holder (basic attack, skill, item hit) on an enemy above 90% health (`above` in the effect -> `suckerPunchAbove`) deals
   +50% per glove. Was: the first basic attack on each enemy (+50%). `firstHits` removed.
+- Weak-item rework (user's picks, all stacking): itemruns 4/squad copies 1/3 after: Bandage Roll +3.1/+7.8, Martyr's Shield
+  +5.8/+8.2, Last Stand Banner +5.9/+10.6 (before ~0 for all three). Curve median 41 -> 44.
+  - Bandage Roll = CURE: every 6s the most hurt hero (hurt or with a DoT) loses 1 bleed/poison/burn kind (most stacks
+    first) and heals 3% max health; per roll +1 kind and +3% (`bandageCure`, `bandageCount`, `bandageCureEveryMs`).
+  - Martyr's Shield = BODYGUARD: +20 defense; an ally under 30% -> the holder takes ALL enemy hits on them for 3s (+1s per
+    extra shield), 20s cooldown, GUARD icon on the ally (`tryBodyguard()`, `martyrFor()`; the old 8% chance is gone).
+  - Last Stand Banner = CHEAT DEATH (user: 'cooldown 5 floors'): the first hero who would die stays at 1 health, 2s
+    invulnerable, squad +30% attack 6s; each banner = one save with its own 5-floor cooldown (`lastStandSave()`, runs
+    before Phoenix Feather). Old 'survivors rally' + halved morale loss removed.

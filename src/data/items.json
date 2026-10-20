@@ -431,22 +431,26 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Every 8s in a fight, bandages the most hurt heroes for 5 health.",
+    "description": "Every 6s, the most hurt hero loses 1 bleed, poison or burn and heals 3% of max health.",
     "effects": [
       {
-        "special": "bandageToss",
-        "percent": 5
+        "special": "bandageCure",
+        "percent": 3
       },
       {
-        "special": "bandageTossEveryMs",
-        "percent": 8000,
+        "special": "bandageCount",
+        "percent": 1
+      },
+      {
+        "special": "bandageCureEveryMs",
+        "percent": 6000,
         "unique": true
       }
     ],
     "provides": [
       "heal"
     ],
-    "perStack": "+5 health"
+    "perStack": "+1 bleed/poison/burn removed, +3% heal"
   },
   "second_wind_flask": {
     "name": "Second Wind Flask",
@@ -1170,24 +1174,30 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "+10 defense. 8% chance to take a hit meant for another hero.",
+    "description": "+20 defense. When an ally drops below 30% health, this hero takes all hits meant for them for 3s (20s cooldown).",
     "effects": [
       {
         "stat": "defense",
-        "flat": 10
+        "flat": 20
       },
       {
-        "special": "martyr",
-        "percent": 8,
-        "perExtra": 4
+        "special": "bodyguardMs",
+        "percent": 3000,
+        "perExtra": 1000
       },
       {
-        "special": "martyrCopies",
-        "percent": 1
+        "special": "bodyguardCdMs",
+        "percent": 20000,
+        "unique": true
+      },
+      {
+        "special": "bodyguardBelow",
+        "percent": 30,
+        "unique": true
       }
     ],
     "dropWeight": 90,
-    "perStack": "+10 defense, +4% chance"
+    "perStack": "+20 defense, +1s guard"
   },
   "fire_heart": {
     "name": "Fire Heart",
@@ -1688,17 +1698,22 @@
   "last_stand_banner": {
     "name": "Last Stand Banner",
     "rarity": "epic",
-    "type": "squad",
+    "type": "special",
     "scope": "self",
-    "description": "When a hero falls, survivors get a 20% shield and +30% attack for 8s. This hero feels half the morale loss.",
+    "description": "Once every 5 floors, the first hero who would die stays at 1 health, is invulnerable for 2s, and the squad gets +30% attack for 6s.",
     "effects": [
       {
-        "special": "lastStand",
+        "special": "lastStandSaves",
         "percent": 1
+      },
+      {
+        "special": "lastStandCdFloors",
+        "percent": 5,
+        "unique": true
       }
     ],
     "dropWeight": 90,
-    "perStack": "+20% shield, +30% attack, less morale loss"
+    "perStack": "+1 save (each with its own 5-floor cooldown)"
   },
   "mirror_buckler": {
     "name": "Mirror Buckler",

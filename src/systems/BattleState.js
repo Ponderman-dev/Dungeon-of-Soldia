@@ -661,7 +661,6 @@ export default class BattleState {
       this.acolyteRaise(target, events); // a Bone Acolyte nearby raises it (bosses.js)
     }
     else {
-      this.lastStand(target, events); // Last Stand Banner: the survivors rally
       this.removeMinionsOf(target, 'holderDied', events); // minions vanish when their holder dies
       this.refreshStats();
       if (this.morale !== was) events.push({ type: 'morale', tier: this.morale });
@@ -1031,7 +1030,8 @@ export default class BattleState {
       this.tickSteadyAim(hero, dt);
       if (hero.interceptCd > 0) hero.interceptCd -= dt; // Knight's Intercept cooldown
       this.tickTaunting(hero);
-      if (hero.floor.martyrCd > 0) hero.floor.martyrCd -= dt;
+      if (hero.floor.guardCd > 0) hero.floor.guardCd -= dt; // Martyr's Shield (Bodyguard) cooldown
+      if (hero.floor.guard && (hero.floor.guard.remaining -= dt) <= 0) hero.floor.guard = null;
       hero.shareCd = Math.max(0, hero.shareCd - dt);
       if (hero.soulCd > 0) hero.soulCd -= dt; // Grimoire fireball cooldown
       if (hero.triageCd > 0) hero.triageCd -= dt; // Aid Kit triage cooldown
@@ -1235,22 +1235,30 @@ export default class BattleState {
     return bonus;
   }
 
-  // Bandage Roll: every `bandageTossEveryMs` (8s) of a fight the holder throws 1-3 bandages (random) at the most hurt
-  // living heroes (one each, most hurt first); each heals `bandageToss` FLAT health (5 per roll). Only hurt heroes get one.
+  // Bandage Roll (cure): every `bandageCureEveryMs` (6s) of a fight the most hurt living hero (lowest health %, hurt
+  // or suffering a bleed/poison/burn) loses `bandageCount` damage-over-time kinds (1 per roll, all stacks of a kind,
+  // the biggest first) and heals `bandageCure`% of max health (3 per roll).
   tickBandages(hero, dt, events) {
-    const heal = hero.specials.bandageToss || 0;
+    const heal = hero.specials.bandageCure || 0;
     if (!heal || !this.enemies.some((e) => e.alive)) return;
     hero.bandageTimer = (hero.bandageTimer || 0) + dt;
-    if (hero.bandageTimer < (hero.specials.bandageTossEveryMs || 8000)) return;
+    if (hero.bandageTimer < (hero.specials.bandageCureEveryMs || 6000)) return;
     hero.bandageTimer = 0;
-    const hurt = this.heroes.filter((h) => h.alive && h.hp < h.maxHp).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
-    const count = Math.min(hurt.length, 1 + Math.floor(this.rng() * 3));
-    if (!count) return;
+    const dots = (u) => u.statuses.filter((st) => this.statusDefs[st.type] && this.statusDefs[st.type].dot);
+    const needy = this.heroes.filter((h) => h.alive && (h.hp < h.maxHp || dots(h).length));
+    if (!needy.length) return;
+    const ally = needy.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a));
     events.push({ type: 'proc', unit: hero, label: 'Bandage!', itemId: 'bandage_roll' });
-    for (const ally of hurt.slice(0, count)) {
-      events.push({ type: 'flask', unit: hero, target: ally, flask: { color: '0xf2e6cc' } }); // drawn as a lobbed bandage
-      this.healUnit(ally, heal, events, { aura: false });
+    events.push({ type: 'flask', unit: hero, target: ally, flask: { color: '0xf2e6cc' } }); // drawn as a lobbed bandage
+    for (let i = 0; i < (hero.specials.bandageCount || 1); i++) {
+      const kinds = dots(ally).map((st) => st.type);
+      if (!kinds.length) break;
+      const kind = kinds.sort((x, y) => kinds.filter((k) => k === y).length - kinds.filter((k) => k === x).length)[0]; // most stacks first
+      for (const st of ally.statuses.filter((x) => x.type === kind)) events.push({ type: 'status', unit: ally, change: 'expire', status: st });
+      ally.statuses = ally.statuses.filter((x) => x.type !== kind);
+      delete ally.dotClocks[kind];
     }
+    this.healUnit(ally, (ally.maxHp * heal) / 100, events, { aura: false });
   }
 
   // Warding Charm: a shield of `wardPulse`% max health (8, does not grow with copies; Warding Charm's own shield bonus
@@ -1294,7 +1302,7 @@ export default class BattleState {
   // The Knight takes his share of a hit on a guarded ally. Returns the amount the ally still takes.
   interceptHit(attacker, target, amount, events) {
     const g = target.statuses.find((st) => st.type === 'guarded');
-    const k = g && this.heroes.find((h) => h.uid === g.sourceUid && h.alive && h !== target);
+    const k = g && this.heroes.find((h) => h.uid === g.sourceUid && h.alive && h !== target && h.def.passive && h.def.passive.intercept); // not a Martyr's Shield guard
     if (!k) return amount;
     const part = Math.round((amount * k.def.passive.intercept.sharePercent) / 100);
     if (part <= 0) return amount;
@@ -1564,18 +1572,25 @@ export default class BattleState {
     return { dur: 1 + dur / 100, dot: 1 + dot / 100 };
   }
 
-  // Martyr's Shield: 8% (fixed) that a living hero holding it, who is not the target and is off cooldown, steps in.
-  martyrFor(target) {
+  // Martyr's Shield (Bodyguard): when an ally drops below `bodyguardBelow`% (30) health, a living holder off cooldown
+  // guards them for `bodyguardMs` (3s, +1s per extra shield): EVERY enemy hit on that ally goes to the holder instead
+  // (see strike). Cooldown `bodyguardCdMs` (20s). The ally shows the GUARD icon.
+  tryBodyguard(ally, events) {
     for (const h of this.heroes) {
-      if (h === target || !h.alive || !h.specials.martyr || (h.floor.martyrCd || 0) > 0) continue;
-      if (this.rng() * 100 < h.specials.martyr) return h;
+      const sp = h.specials;
+      if (h === ally || !h.alive || !sp || !sp.bodyguardMs || (h.floor.guardCd || 0) > 0 || h.floor.guard) continue;
+      if (ally.hp >= (ally.maxHp * (sp.bodyguardBelow || 30)) / 100) return;
+      h.floor.guardCd = sp.bodyguardCdMs || 20000;
+      h.floor.guard = { uid: ally.uid, remaining: sp.bodyguardMs };
+      this.applyStatus(ally, { status: 'guarded', durationMs: sp.bodyguardMs }, h, 'bodyguard', events);
+      events.push({ type: 'proc', unit: h, label: 'Bodyguard!', itemId: 'martyrs_shield', target: ally });
+      return;
     }
-    return null;
   }
 
-  // Martyr's cooldown in ms: 6s, 20% shorter for every extra copy.
-  martyrCooldown(copies) {
-    return 6000 * Math.pow(0.8, copies - 1);
+  // The living holder who is guarding `target` right now (Martyr's Shield), or null.
+  martyrFor(target) {
+    return this.heroes.find((h) => h !== target && h.alive && h.floor.guard && h.floor.guard.uid === target.uid) || null;
   }
 
   // Spite Mail: while the holder has a taunted enemy (it taunted one that still lives) he gets +defense and reflect.
@@ -1719,15 +1734,10 @@ export default class BattleState {
       events.push({ type: 'attack', attacker, target, result: miss, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic });
       return miss;
     }
-    // Martyr's Shield: when an enemy hits a hero, another hero holding it may take the hit instead.
+    // Martyr's Shield (Bodyguard): an enemy hit on a guarded hero goes to the guarding holder instead.
     if (attacker.side === 'enemy' && target.side === 'hero' && !target.minion) {
       const martyr = this.martyrFor(target);
-      if (martyr) {
-        target = martyr;
-        events.push({ type: 'proc', unit: martyr, label: 'Martyr!', itemId: 'martyrs_shield' });
-        const copies = martyr.specials.martyrCopies || 1;
-        martyr.floor.martyrCd = this.martyrCooldown(copies); // no health cost any more (phase H); the item gives defense instead
-      }
+      if (martyr) target = martyr; // the bodyguard takes the whole hit
     }
     // Opportunist (Rogue): more damage and crit against enemies that have any debuff.
     // Focus Stance (Samurai): his next BASIC attack is a sure crit, then the status is used up.
@@ -2105,7 +2115,7 @@ export default class BattleState {
     }
     if (left >= target.hp && left > 0) left = this.deathSave(target, left, events || []);
     target.hp = Math.max(0, target.hp - left);
-    if (target.hp <= 0) this.phoenixSave(target, events || []); // Phoenix Feather: one feather is used up instead of dying
+    if (target.hp <= 0 && !this.lastStandSave(target, events || [])) this.phoenixSave(target, events || []); // Last Stand Banner first (it recharges), then a Phoenix Feather is used up
     if (left > 0 && target.def.passive && target.def.passive.rage) this.gainRage(target, target.def.passive.rage.perHitTaken, events); // Berserker: hits taken fill Rage
     if (left > 0 || absorbed > 0) {
       target.sinceHit = 0; // being hit resets Steady Aim
@@ -2118,17 +2128,25 @@ export default class BattleState {
     return { lost: left, absorbed, immune: false, broken, burnShield };
   }
 
-  // Last Stand Banner: when a hero falls every survivor gets a shield of 20% max health and +30% attack for 8s, both per
-  // banner held by living heroes (`lastStand` = copies). The holder's morale penalty shrinks too (items.js).
-  lastStand(fallen, events) {
-    const copies = this.heroes.filter((h) => h.alive && h !== fallen).reduce((n, h) => n + ((h.specials && h.specials.lastStand) || 0), 0);
-    if (!copies) return;
-    const holder = this.heroes.find((h) => h.alive && h.specials && h.specials.lastStand);
-    events.push({ type: 'proc', unit: holder, label: 'Last Stand!', itemId: 'last_stand_banner' });
-    for (const h of this.heroes.filter((x) => x.alive && x !== fallen)) {
-      this.applyStatus(h, { status: 'shield', percentMaxHp: 20 * copies, durationMs: 8000 }, h, 'last_stand', events);
-      this.applyStatus(h, { status: 'buff', durationMs: 8000, mods: [{ stat: 'attack', percent: 30 * copies }] }, h, 'last_stand', events);
+  // Last Stand Banner (cheat death): when a hero would die, a living holder with a save ready keeps them at 1 health,
+  // invulnerable for 2s, and the whole squad gets +30% attack for 6s. Every banner is one save with its own cooldown
+  // of `lastStandCdFloors` (5) floors (`hero.lastStandUsed` = the floors its saves were used on). Returns true if saved.
+  lastStandSave(target, events) {
+    if (target.side !== 'hero' || target.minion || !target.alive) return false;
+    for (const h of this.heroes) {
+      const n = h.alive && h.specials ? h.specials.lastStandSaves || 0 : 0;
+      if (!n) continue;
+      const cd = h.specials.lastStandCdFloors || 5;
+      h.lastStandUsed = (h.lastStandUsed || []).filter((f) => (this.floorNo || 0) - f < cd);
+      if (h.lastStandUsed.length >= n) continue;
+      h.lastStandUsed.push(this.floorNo || 0);
+      target.hp = 1;
+      events.push({ type: 'proc', unit: h, label: 'Last Stand!', itemId: 'last_stand_banner', target });
+      this.applyStatus(target, { status: 'invulnerable', durationMs: 2000 }, h, 'last_stand', events);
+      for (const x of this.heroes.filter((u) => u.alive)) this.applyStatus(x, { status: 'buff', durationMs: 6000, mods: [{ stat: 'attack', percent: 30 }] }, h, 'last_stand', events);
+      return true;
     }
+    return false;
   }
 
   // Soul Lantern: every `lanternEvery` (8) enemies the squad defeats, each holder gains +1% attack and max health per
@@ -2225,6 +2243,7 @@ export default class BattleState {
   afterDamage(target, events) {
     if (!events || target.side !== 'hero' || target.minion || target.hp <= 0) return;
     this.tryIntercept(target, events); // Knight: jumps in front of a hero who drops low
+    this.tryBodyguard(target, events); // Martyr's Shield: its holder takes every hit on a hero who drops low
     this.tryTriage(target, events); // Aid Kit: patches a hero who drops low
     // Second Wind Flask: below its threshold ONE flask is used up and heals (once per floor per holder).
     const below = target.specials.secondWindBelow;

@@ -75,22 +75,22 @@ ok('all 8 G5 items exist', ['warding_charm', 'overheal_ring', 'spiked_aegis', 'p
 { const { s, es, k, h } = mk(['goblin']); give(s, k, 'spite_mail'); s.applyStatus(es[0], { status: 'taunt', durationMs: 5000 }, h[1], 't', []); s.update(20);
   ok('...a taunt by someone else does not count', !k.taunting); }
 
-// Martyr's Shield
-{ const { s, es, k, h } = mk(['goblin'], () => 0); give(s, h[1], 'martyrs_shield'); const ally = h[2]; const hp0 = ally.hp, m0 = h[1].hp;
-  const ev = hitMe(s, es[0], ally, 1000);
-  ok('Martyr\'s Shield: the holder takes the hit instead of the ally', ally.hp === hp0 && h[1].hp < m0 && ev.some((e) => e.type === 'proc' && e.label === 'Martyr!'));
-  ok('...with NO extra health cost (phase H), and the holder has +10 defense', m0 - h[1].hp <= 1000 && itemDefs.martyrs_shield.effects.some((e) => e.stat === 'defense' && e.flat === 10), `${m0 - h[1].hp}`); }
-{ const { s, es, k, h } = mk(['goblin'], () => 0); give(s, h[1], 'martyrs_shield'); const ally = h[2];
-  hitMe(s, es[0], ally, 100); const hp1 = ally.hp; hitMe(s, es[0], ally, 100);
-  ok('...then a cooldown: the next hit lands on the ally', ally.hp < hp1);
-  for (let t = 0; t < 6200; t += 50) s.update(50); const hp2 = ally.hp; hitMe(s, es[0], ally, 100); ok('...after the cooldown it steps in again', ally.hp === hp2); }
-{ const { s, es, h } = mk(['goblin'], () => 0); give(s, h[1], 'martyrs_shield'); const hp0 = h[1].hp; hitMe(s, es[0], h[1], 100);
-  ok('...never for himself (he is the target)', h[1].hp === hp0 - 100 || h[1].hp < hp0); }
-{ const n = (r) => { const { s, es, h } = mk(['goblin'], Math.random); give(s, h[1], 'martyrs_shield'); s.rng = Math.random; let c = 0; for (let i = 0; i < 6000; i++) { h[1].floor.martyrCd = 0; const ev = hitMe(s, es[0], h[2], 1); if (ev.some((e) => e.label === 'Martyr!')) c++; h[1].hp = h[1].maxHp; } return c / 6000; };
-  ok('...the chance is 8%', Math.abs(n() - 0.08) < 0.015); }
-{ const cd = (c) => { const { s } = mk(); return s.martyrCooldown(c); };
-  ok('...more copies shorten the cooldown and the cost', cd(2) < cd(1) && cd(3) < cd(2)); const { s, es, h } = mk(['goblin'], () => 0); give(s, h[1], 'martyrs_shield', 3); const m0 = h[1].hp; hitMe(s, es[0], h[2], 0.0001);
-  ok('...(3 copies: the health cost is smaller, chance 8% +4% per extra = 16%)', m0 - h[1].hp < Math.round(h[1].maxHp * 0.03) && h[1].specials.martyr === 16); }
+// Martyr's Shield (session 18, Bodyguard): an ally under `bodyguardBelow`% health -> the holder takes ALL enemy hits
+// on them for `bodyguardMs` (+1s per extra shield), then a `bodyguardCdMs` cooldown.
+{ const eff = itemDefs.martyrs_shield.effects, ms = eff.find((e) => e.special === 'bodyguardMs').percent, below = eff.find((e) => e.special === 'bodyguardBelow').percent;
+  const { s, es, h } = mk(['goblin'], () => 0); give(s, h[1], 'martyrs_shield'); const ally = h[2];
+  ally.hp = ally.maxHp; const m0 = h[1].hp; hitMe(s, es[0], ally, 10);
+  ok('Martyr\'s Shield: no guard while the ally is healthy', ally.hp < ally.maxHp && h[1].hp === m0);
+  ally.hp = (ally.maxHp * (below - 5)) / 100; const ev = []; s.afterDamage(ally, ev);
+  ok('...ally under ' + below + '%: the holder starts guarding (GUARD icon)', ev.some((e) => e.label === 'Bodyguard!') && ally.statuses.some((x) => x.type === 'guarded'));
+  const a1 = ally.hp, m1 = h[1].hp; hitMe(s, es[0], ally, 100); hitMe(s, es[0], ally, 100);
+  ok('...EVERY hit on the ally goes to the holder', ally.hp === a1 && h[1].hp < m1);
+  for (let t = 0; t < ms + 100; t += 50) s.update(50); const a2 = ally.hp; hitMe(s, es[0], ally, 100);
+  ok('...the guard ends after its time', ally.hp < a2);
+  const ev2 = []; s.afterDamage(ally, ev2); ok('...and has a cooldown', !ev2.some((e) => e.label === 'Bodyguard!'));
+  ok('...+' + eff.find((e) => e.stat === 'defense').flat + ' defense', eff.some((e) => e.stat === 'defense')); }
+{ const { s, h } = mk(['goblin'], () => 0); give(s, h[1], 'martyrs_shield', 3);
+  ok('...3 shields guard 2s longer', h[1].specials.bodyguardMs === itemDefs.martyrs_shield.effects.find((e) => e.special === 'bodyguardMs').percent + 2 * itemDefs.martyrs_shield.effects.find((e) => e.special === 'bodyguardMs').perExtra); }
 
 // Fire Heart
 { const { s, es, k } = mk(['goblin']); give(s, k, 'fire_heart'); s.startFloor();

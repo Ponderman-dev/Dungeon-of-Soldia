@@ -1700,20 +1700,29 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "Once every 5 floors, the first hero who would die stays at 1 health, is invulnerable for 2s, and the squad gets +30% attack for 6s.",
+    "description": "When any hero drops below 30% health, the squad gets a 15% shield and +25% attack for 6s (once per fight).",
     "effects": [
       {
-        "special": "lastStandSaves",
-        "percent": 1
+        "special": "rallyShield",
+        "percent": 15
       },
       {
-        "special": "lastStandCdFloors",
-        "percent": 5,
+        "special": "rallyAttack",
+        "percent": 25
+      },
+      {
+        "special": "rallyBelow",
+        "percent": 30,
+        "unique": true
+      },
+      {
+        "special": "rallyMs",
+        "percent": 6000,
         "unique": true
       }
     ],
     "dropWeight": 90,
-    "perStack": "+1 save (each with its own 5-floor cooldown)"
+    "perStack": "+15% shield, +25% attack"
   },
   "mirror_buckler": {
     "name": "Mirror Buckler",

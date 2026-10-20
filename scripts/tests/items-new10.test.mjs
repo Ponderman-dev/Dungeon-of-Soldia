@@ -54,19 +54,16 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
 // Scholar's Bookmark
 { const { s, k } = mk(); give(s, k, 'scholars_bookmark', 3); k.skills[0].pages = [{ kind: 'stat' }, { kind: 'stat' }, { kind: 'modifier' }]; k.skills[1].pages = [{ kind: 'modifier' }];
   ok('Scholar\'s Bookmark: 3 copies x (2 stat + 2 modifier x2 = 6 pages) = +144% skill damage', s.bookmarkBonus(k) === 144, `${s.bookmarkBonus(k)}`); }
-// Last Stand Banner (session 18, cheat death): a hero who would die stays at 1 health, 2s invulnerable, squad +attack;
-// every banner = one save with its own cooldown of `lastStandCdFloors` floors.
-{ const cdFloors = itemDefs.last_stand_banner.effects.find((e) => e.special === 'lastStandCdFloors').percent;
-  const { s, h } = mk(); give(s, h[0], 'last_stand_banner'); s.floorNo = 10; const ev = []; s.dealDamage(h[2], h[2].hp + 500, ev);
-  ok('Last Stand Banner: the dying hero stays at 1 health, invulnerable', h[2].hp === 1 && h[2].statuses.some((x) => x.type === 'invulnerable') && ev.some((e) => e.itemId === 'last_stand_banner'));
-  ok('...and the whole squad gets an attack buff', h.every((x) => x.statuses.some((st) => st.type === 'buff')));
-  h[2].statuses = []; s.dealDamage(h[2], 500, []); ok('...one save, then it is on cooldown', h[2].hp === 0);
-  const { s: s2, h: g } = mk(); give(s2, g[0], 'last_stand_banner'); s2.floorNo = 10; s2.dealDamage(g[1], g[1].hp + 9, []); g[1].statuses = [];
-  s2.floorNo = 10 + cdFloors - 1; s2.dealDamage(g[2], g[2].hp + 9, []); const early = g[2].hp; g[2].hp = g[2].maxHp;
-  s2.floorNo = 10 + cdFloors; s2.dealDamage(g[2], g[2].hp + 9, []);
-  ok('...ready again ' + cdFloors + ' floors later', early === 0 && g[2].hp === 1, `${early} ${g[2].hp}`);
-  const { s: s3, h: k3 } = mk(); give(s3, k3[0], 'last_stand_banner', 2); s3.floorNo = 3; s3.dealDamage(k3[1], k3[1].hp + 9, []); s3.dealDamage(k3[2], k3[2].hp + 9, []);
-  ok('...2 banners = 2 saves', k3[1].hp === 1 && k3[2].hp === 1); }
+// Last Stand Banner (session 18, rally): the first time in a fight a hero drops below `rallyBelow`%, every living hero
+// gets a `rallyShield`% shield and +`rallyAttack`% attack for `rallyMs`; per banner.
+{ const E = (k) => itemDefs.last_stand_banner.effects.find((e) => e.special === k).percent, below = E('rallyBelow'), shield = E('rallyShield'), atk = E('rallyAttack');
+  const { s, h } = mk(); give(s, h[0], 'last_stand_banner', 2); h[2].hp = h[2].maxHp * (below + 10) / 100; const ev0 = []; s.afterDamage(h[2], ev0);
+  ok('Last Stand Banner: nothing while every hero is above ' + below + '%', !ev0.some((e) => e.itemId === 'last_stand_banner'));
+  h[2].hp = h[2].maxHp * (below - 5) / 100; const ev = []; s.afterDamage(h[2], ev);
+  const sh = h[1].statuses.find((x) => x.type === 'shield'), bf = h[1].statuses.find((x) => x.type === 'buff');
+  ok('...a hero under ' + below + '%: the squad gets a shield and an attack buff (2 banners = double)', ev.some((e) => e.itemId === 'last_stand_banner') && sh && near(sh.amount, h[1].maxHp * 2 * shield / 100, 0.05) && bf && bf.mods[0].percent === 2 * atk, `${sh && sh.amount} ${bf && bf.mods[0].percent}`);
+  const ev2 = []; s.afterDamage(h[1], ev2); h[1].hp = 1; s.afterDamage(h[1], ev2);
+  ok('...only once per fight', !ev2.some((e) => e.itemId === 'last_stand_banner')); }
 // Mirror Buckler
 { const { s, es, k } = mk(['knight', 'rogue', 'archer'], ['skeletonArcher'], () => 0); give(s, k, 'mirror_buckler'); const e = es[0]; const hp = k.hp, ehp = e.hp;
   const res = s.strike(e, k, [], {}); ok('Mirror Buckler: a ranged hit bounces back, the holder takes nothing', res.reflected && k.hp === hp && e.hp < ehp); }

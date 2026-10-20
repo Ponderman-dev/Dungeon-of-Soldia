@@ -2115,7 +2115,7 @@ export default class BattleState {
     }
     if (left >= target.hp && left > 0) left = this.deathSave(target, left, events || []);
     target.hp = Math.max(0, target.hp - left);
-    if (target.hp <= 0 && !this.lastStandSave(target, events || [])) this.phoenixSave(target, events || []); // Last Stand Banner first (it recharges), then a Phoenix Feather is used up
+    if (target.hp <= 0) this.phoenixSave(target, events || []); // Phoenix Feather: one feather is used up instead of dying
     if (left > 0 && target.def.passive && target.def.passive.rage) this.gainRage(target, target.def.passive.rage.perHitTaken, events); // Berserker: hits taken fill Rage
     if (left > 0 || absorbed > 0) {
       target.sinceHit = 0; // being hit resets Steady Aim
@@ -2128,25 +2128,20 @@ export default class BattleState {
     return { lost: left, absorbed, immune: false, broken, burnShield };
   }
 
-  // Last Stand Banner (cheat death): when a hero would die, a living holder with a save ready keeps them at 1 health,
-  // invulnerable for 2s, and the whole squad gets +30% attack for 6s. Every banner is one save with its own cooldown
-  // of `lastStandCdFloors` (5) floors (`hero.lastStandUsed` = the floors its saves were used on). Returns true if saved.
-  lastStandSave(target, events) {
-    if (target.side !== 'hero' || target.minion || !target.alive) return false;
+  // Last Stand Banner (rally): the first time in a fight that any hero drops below `rallyBelow`% (30) health, every
+  // living hero gets a shield of `rallyShield`% max health and +`rallyAttack`% attack for `rallyMs` (6s); both per
+  // banner (each holder rallies once per fight, `floor.rallied`).
+  tryRally(hurt, events) {
     for (const h of this.heroes) {
-      const n = h.alive && h.specials ? h.specials.lastStandSaves || 0 : 0;
-      if (!n) continue;
-      const cd = h.specials.lastStandCdFloors || 5;
-      h.lastStandUsed = (h.lastStandUsed || []).filter((f) => (this.floorNo || 0) - f < cd);
-      if (h.lastStandUsed.length >= n) continue;
-      h.lastStandUsed.push(this.floorNo || 0);
-      target.hp = 1;
-      events.push({ type: 'proc', unit: h, label: 'Last Stand!', itemId: 'last_stand_banner', target });
-      this.applyStatus(target, { status: 'invulnerable', durationMs: 2000 }, h, 'last_stand', events);
-      for (const x of this.heroes.filter((u) => u.alive)) this.applyStatus(x, { status: 'buff', durationMs: 6000, mods: [{ stat: 'attack', percent: 30 }] }, h, 'last_stand', events);
-      return true;
+      const sp = h.alive && h.specials;
+      if (!sp || !sp.rallyShield || h.floor.rallied || hurt.hp >= (hurt.maxHp * (sp.rallyBelow || 30)) / 100) continue;
+      h.floor.rallied = true;
+      events.push({ type: 'proc', unit: h, label: 'Last Stand!', itemId: 'last_stand_banner' });
+      for (const x of this.heroes.filter((u) => u.alive)) {
+        this.applyStatus(x, { status: 'shield', percentMaxHp: sp.rallyShield, durationMs: sp.rallyMs || 6000 }, h, 'last_stand', events);
+        this.applyStatus(x, { status: 'buff', durationMs: sp.rallyMs || 6000, mods: [{ stat: 'attack', percent: sp.rallyAttack }] }, h, 'last_stand', events);
+      }
     }
-    return false;
   }
 
   // Soul Lantern: every `lanternEvery` (8) enemies the squad defeats, each holder gains +1% attack and max health per
@@ -2244,6 +2239,7 @@ export default class BattleState {
     if (!events || target.side !== 'hero' || target.minion || target.hp <= 0) return;
     this.tryIntercept(target, events); // Knight: jumps in front of a hero who drops low
     this.tryBodyguard(target, events); // Martyr's Shield: its holder takes every hit on a hero who drops low
+    this.tryRally(target, events); // Last Stand Banner: the squad rallies when a hero drops low
     this.tryTriage(target, events); // Aid Kit: patches a hero who drops low
     // Second Wind Flask: below its threshold ONE flask is used up and heals (once per floor per holder).
     const below = target.specials.secondWindBelow;

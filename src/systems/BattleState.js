@@ -1812,6 +1812,7 @@ export default class BattleState {
     // Fire Heart: an enemy that hits the fire shield catches fire.
     if (dealt && dealt.absorbed > 0 && dealt.burnShield && attacker.alive && attacker.side === 'enemy') this.applyStatus(attacker, { status: 'burn', durationMs: 3000, damageMultiplier: 0.15, damageType: 'fire' }, target, 'fireheart', events);
     if (!result.dodged && !result.fullyAbsorbed && !opts.item) this.afterHit(attacker, target, result.amount - (result.absorbed || 0), events, result);
+    if (!result.dodged && !opts.item) this.aegisSpikes(attacker, target, result, events);
     const rage = attacker.def.passive && attacker.def.passive.rage;
     if (rage && !result.dodged && opts.basic) this.gainRage(attacker, rage.perHitDealt * (result.crit ? rage.critMultiplier : 1), events); // Berserker: his hits fill Rage (crits twice)
     if (react.overload && !result.dodged) {
@@ -2077,6 +2078,19 @@ export default class BattleState {
     }
   }
 
+  // Spiked Aegis (`shieldThorns`, 40% per copy): a MELEE hit on the holder while a shield is up (it soaked some of this
+  // hit, or one is still left) sends that % of the WHOLE hit back at the attacker, even when the shield took all of it.
+  aegisSpikes(attacker, target, result, events) {
+    const pct = target.side === 'hero' && target.specials ? target.specials.shieldThorns || 0 : 0;
+    if (!pct || attacker.damageType !== 'melee' || !attacker.alive || !(result.absorbed > 0 || this.shieldAmount(target) > 0)) return;
+    const back = Math.max(1, Math.round((result.amount * pct) / 100));
+    const d = this.dealDamage(attacker, back, events);
+    if (!d.immune) events.push({ type: 'thorns', unit: attacker, amount: back - d.absorbed, holder: target });
+    this.addGrudge(target, events);
+    this.breakEffects(attacker, d.broken, events);
+    if (attacker.hp <= 0 && attacker.alive) this.killUnit(attacker, events);
+  }
+
   // Knight's GRUDGE (passive.grudge): every hit he reflects (thorns, Spite Mail, Mirror Buckler) charges his next
   // Shield Bash by `perReflectPercent`, up to `maxStacks`; the Bash uses the charge up (skillHit, `grudgeCharged`).
   addGrudge(holder, events) {
@@ -2307,11 +2321,6 @@ export default class BattleState {
   breakEffects(unit, broken, events) {
     for (const shield of broken) {
       events.push({ type: 'shieldBreak', unit, status: shield });
-      // Spiked Aegis: a shield of the holder broken by damage explodes (item damage on every enemy).
-      if (unit.side === 'hero' && !unit.minion && unit.specials.spikedAegis) {
-        events.push({ type: 'proc', unit, label: 'Aegis blast!', itemId: 'spiked_aegis' });
-        for (const foe of this.enemies.filter((e) => e.alive)) this.strike(unit, foe, events, { multiplier: unit.specials.spikedAegis / 100, damageType: 'melee', item: true });
-      }
       if (!shield.onBreak) continue;
       const caster = this.allUnits().find((u) => u.uid === shield.sourceUid && u.alive) || unit;
       const foes = unit.side === 'hero' ? this.enemies.filter((u) => u.alive) : this.defenders();
@@ -2491,14 +2500,21 @@ export default class BattleState {
       unit.dotClocks[type] += dt;
       while (unit.dotClocks[type] >= tickMs && unit.alive) {
         unit.dotClocks[type] -= tickMs;
-        // Catalyst Vial: each DIFFERENT damage over time on this enemy makes the holder's stacks tick `dotMix`% harder.
-        const kinds = unit.side === 'enemy' ? new Set(unit.statuses.filter((s) => s.stack).map((s) => s.type)).size : 0;
-        const mix = (s) => { const h = kinds && this.heroes.find((x) => x.uid === s.sourceUid && x.alive); return h && h.specials.dotMix ? 1 + (h.specials.dotMix * kinds) / 100 : 1; };
-        const total = stacks.reduce((sum, s) => sum + s.damage * mix(s), 0);
+        // Catalyst Vial (`dotCrit`): a holder's share of the tick can CRIT (one roll per holder per tick, the holder's
+        // crit chance); a crit share deals the normal crit multiplier + `dotCrit`% (25 per copy).
+        let crit = false;
+        const share = (h) => {
+          if (!h || !h.alive || !h.specials || !h.specials.dotCrit || this.rng() * 100 >= Math.min(h.stats.crit, this.rules.caps.crit)) return 1;
+          crit = true;
+          return this.rules.critMultiplier + ((h.specials.critDamage || 0) + h.specials.dotCrit) / 100;
+        };
+        const mults = new Map();
+        const mult = (s) => { if (!mults.has(s.sourceUid)) mults.set(s.sourceUid, unit.side === 'enemy' ? share(this.heroes.find((x) => x.uid === s.sourceUid)) : 1); return mults.get(s.sourceUid); };
+        const total = stacks.reduce((sum, s) => sum + s.damage * mult(s), 0);
         const { damageType, ignoresArmor } = stacks[0];
         const amount = computeDotDamage(unit, total, damageType, this.rules, this.damageTypes, { ignoresArmor });
         const d = this.dealDamage(unit, amount, events);
-        events.push({ type: 'dot', unit, amount: d.immune ? 0 : amount - d.absorbed, absorbed: d.absorbed, immune: d.immune, damageType, status: type, stacks: stacks.length });
+        events.push({ type: 'dot', unit, amount: d.immune ? 0 : amount - d.absorbed, absorbed: d.absorbed, immune: d.immune, damageType, status: type, stacks: stacks.length, crit });
         if (damageType === 'dark' && type !== 'doom' && !d.immune) for (const h of this.heroes) { const mine = stacks.filter((x) => x.sourceUid === h.uid).reduce((n, x) => n + x.damage, 0); if (mine) this.storeDark(h, ((amount - d.absorbed) * mine) / total, events); }
         if (type === 'burn' && unit.alive && unit.hp > 0) this.ghastlyBurn(unit, stacks, events); // Ghastly Fire: burns also deal dark damage
         this.breakEffects(unit, d.broken, events);

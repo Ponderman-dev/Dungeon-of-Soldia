@@ -1755,7 +1755,7 @@ export default class BattleScene extends Phaser.Scene {
       if (e.absorbed > 0) this.popText(v, `Shield -${e.absorbed}`, '#6fd0ff');
       if (e.amount > 0) {
         v.ch.flash();
-        this.popText(v, String(e.amount), damageTypes[e.damageType].color);
+        this.popText(v, e.crit ? `${e.amount}!` : String(e.amount), e.crit ? '#ffd24d' : damageTypes[e.damageType].color, e.crit); // Catalyst Vial: a crit tick is big and gold
       }
     } else if (e.type === 'morale') {
       this.drawMoraleWash();

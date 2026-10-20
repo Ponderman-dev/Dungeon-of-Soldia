@@ -44,13 +44,15 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
 { const wind = (n) => { const { s, k } = mk(['knight', 'rogue', 'archer'], ['grukk']); if (n) give(s, k, 'giantslayers_brand', n); const boss = s.enemies.find((e) => e.def.boss);
     const ab = boss.def.abilities.find((a) => a.castMs); s.startAbility(boss, ab, []); return [boss.bossCast.total, ab.castMs]; };
   const [w5, base] = wind(5); ok('...a real boss wind-up (Grukk) is twice as long with 5 brands', w5 === base * 2 && wind(0)[0] === base, `${w5} vs ${base}`); }
-// Catalyst Vial
-{ const tick = (vials, kinds) => { const { s, es, k } = mk(); if (vials) give(s, k, 'catalyst_vial', vials); const e = es[0];
-    const specs = { bleed: { status: 'bleed', durationMs: 60000, damageMultiplier: 1 }, burn: { status: 'burn', durationMs: 60000, damageMultiplier: 1, damageType: 'fire' }, poison: { status: 'poison', durationMs: 60000, damageMultiplier: 1, damageType: 'dark' } };
-    for (const kd of kinds) s.applyStatus(e, specs[kd], k, 't', []);
-    let dmg = 0; for (let t = 0; t < 1000; t += 50) for (const ev of s.update(50)) if (ev.type === 'dot' && ev.unit === e && ev.status === 'poison') dmg += ev.amount; return dmg; };
-  const plain = tick(0, ['poison']), one = tick(1, ['poison']), three = tick(1, ['bleed', 'burn', 'poison']), four = tick(4, ['bleed', 'burn', 'poison']);
-  ok('Catalyst Vial: 1 vial + 1 kind = +21%; 3 kinds = +63%; 4 vials with 3 kinds = +252%', near(one / plain, 1.21, 0.06) && near(three / plain, 1.63, 0.06) && near(four / plain, 3.52, 0.06), `${plain} ${one} ${three} ${four}`); }
+// Catalyst Vial (session 18): the holder's DoT ticks can crit (crit chance); a crit = critMultiplier + `dotCrit`% per vial
+{ const extra = itemDefs.catalyst_vial.effects[0].percent, cm = r('combat.json').critMultiplier;
+  const tick = (vials, crit) => { const { s, es, k } = mk(); k.baseStats.crit = crit; s.refreshStats(); if (vials) give(s, k, 'catalyst_vial', vials); s.rng = () => 0.5; const e = es[0]; e.hp = e.maxHp = 1e9;
+    s.applyStatus(e, { status: 'poison', durationMs: 60000, damageMultiplier: 1, damageType: 'dark' }, k, 't', []);
+    const ev = []; for (let t = 0; t < 1000; t += 50) ev.push(...s.update(50)); return ev.find((x) => x.type === 'dot' && x.unit === e); };
+  const plain = tick(0, 100), one = tick(1, 100), two = tick(2, 100), never = tick(1, 0);
+  ok('Catalyst Vial: with full crit chance a tick crits for x' + (cm + extra / 100), one.crit && near(one.amount / plain.amount, cm + extra / 100, 0.05), `${plain.amount} -> ${one.amount}`);
+  ok('...2 vials: +' + 2 * extra + '% on the crit', near(two.amount / plain.amount, cm + (2 * extra) / 100, 0.05));
+  ok('...no crit chance = no crit; without a vial ticks never crit', !never.crit && !plain.crit); }
 // Scholar's Bookmark
 { const { s, k } = mk(); give(s, k, 'scholars_bookmark', 3); k.skills[0].pages = [{ kind: 'stat' }, { kind: 'stat' }, { kind: 'modifier' }]; k.skills[1].pages = [{ kind: 'modifier' }];
   ok('Scholar\'s Bookmark: 3 copies x (2 stat + 2 modifier x2 = 6 pages) = +144% skill damage', s.bookmarkBonus(k) === 144, `${s.bookmarkBonus(k)}`); }

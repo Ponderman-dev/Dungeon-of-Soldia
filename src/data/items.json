@@ -1106,16 +1106,16 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "When this hero's shield breaks, it explodes and hits all enemies.",
+    "description": "While this hero has a shield, melee attackers take 40% of their hit back.",
     "effects": [
       {
-        "special": "spikedAegis",
-        "percent": 110
+        "special": "shieldThorns",
+        "percent": 40
       }
     ],
     "dropWeight": 80,
     "needs": "shield",
-    "perStack": "bigger explosion"
+    "perStack": "+40% reflected while shielded"
   },
   "provokers_horn": {
     "name": "Provoker's Horn",
@@ -1670,15 +1670,20 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "Each different damage over time on an enemy makes this hero's ticks 21% stronger.",
+    "description": "This hero's burn, poison and bleed ticks can crit (crit chance) and crits deal +25% more.",
     "effects": [
       {
-        "special": "dotMix",
-        "percent": 21
+        "special": "dotCrit",
+        "percent": 25
       }
     ],
     "dropWeight": 90,
-    "perStack": "+21%"
+    "perStack": "+25% tick crit damage",
+    "needs": [
+      "burn",
+      "poison",
+      "bleed"
+    ]
   },
   "scholars_bookmark": {
     "name": "Scholar's Bookmark",

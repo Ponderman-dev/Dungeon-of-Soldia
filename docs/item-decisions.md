@@ -303,3 +303,11 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
     extra shield), 20s cooldown, GUARD icon on the ally (`tryBodyguard()`, `martyrFor()`; the old 8% chance is gone).
   - Last Stand Banner REMOVED (user): tried cheat death (= Phoenix Feather) and a low-health rally (overlapped Aid Kit,
     Second Wind Flask, Martyr's Shield, and there are 4 other banners). Demo squad got Guardian's Banner instead.
+- Spiked Aegis v2 (user's pick): while the holder has a shield (or this hit broke one), a MELEE attacker takes 40% of its
+  WHOLE hit back, even when the shield soaked it all; +40% per copy (`shieldThorns`, `aegisSpikes()`). The old
+  explosion on a broken shield is gone. Needs: shield.
+- Catalyst Vial v2 (user's pick): the holder's burn/poison/bleed ticks can CRIT (one roll per holder per tick, the holder's
+  crit chance); a crit tick = critMultiplier + 25% per vial (`dotCrit`), shown big and gold with '!'. Old +21% per
+  different DoT gone. `needs` can now be a LIST (any one): Catalyst needs burn, poison or bleed.
+- itemruns (front hero gets the item, often with no shield / no DoT of its own) shows ~0 or below for both: not a fair
+  test for synergy items (curve median 41, unchanged).

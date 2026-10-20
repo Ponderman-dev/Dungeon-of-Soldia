@@ -37,18 +37,14 @@ ok('all 8 G5 items exist', ['warding_charm', 'overheal_ring', 'spiked_aegis', 'p
   ok('...more copies convert more (3 copies: 100%)', Math.abs(s.shieldAmount(k) - 1000) < 2, `${s.shieldAmount(k)}`); }
 { const { s, k } = mk(); k.hp = k.maxHp - 100; s.healUnit(k, 600, [], { aura: false }); ok('...without the ring there is no shield', s.shieldAmount(k) === 0); }
 
-// Spiked Aegis
-{ const { s, es, k } = mk(['goblin', 'goblin']); give(s, k, 'spiked_aegis'); s.applyStatus(k, { status: 'shield', amount: 50, durationMs: 9000 }, k, 'sh', []);
-  const hp0 = es.map((e) => e.hp); hitMe(s, es[0], k, 5000);
-  ok('Spiked Aegis: a shield BROKEN by damage explodes on all enemies (110% attack)', es.every((e, i) => near(hp0[i] - e.hp, k.stats.attack * 1.1, 0.05)), `${hp0[0] - es[0].hp}`); }
-{ const { s, es, k } = mk(['goblin']); give(s, k, 'spiked_aegis'); s.applyStatus(k, { status: 'shield', amount: 50, durationMs: 500 }, k, 'sh', []);
-  const hp0 = es[0].hp; for (let t = 0; t < 700; t += 50) s.update(50);
-  ok('...a shield that just runs out does NOT explode', es[0].hp === hp0); }
-{ const { s, es, k, h } = mk(['goblin']); give(s, k, 'spiked_aegis'); s.applyStatus(k, { status: 'shield', amount: 50 }, h[1], 'sh', []); const hp0 = es[0].hp; hitMe(s, es[0], k, 5000);
-  ok('...also a shield from ANOTHER hero (e.g. Arcane Ward) explodes', hp0 - es[0].hp > 0); }
-{ const { s, es, k, h } = mk(['goblin']); give(s, k, 'spiked_aegis'); s.applyStatus(k, { status: 'shield', amount: 5000, durationMs: 9000 }, k, 'sh', []); const hp0 = es[0].hp; hitMe(s, es[0], k, 100);
-  ok('...a shield only damaged but not broken does not explode', es[0].hp === hp0); }
-
+// Spiked Aegis (session 18): while the holder has a shield, MELEE attackers take `shieldThorns`% of their whole hit back
+{ const pct = itemDefs.spiked_aegis.effects[0].percent;
+  const back = (shield, melee = true, n = 1) => { const { s, es, k } = mk(['goblin']); give(s, k, 'spiked_aegis', n); const e = es[0]; e.hp = e.maxHp = 1e7; e.damageType = melee ? 'melee' : 'ranged';
+    if (shield) s.applyStatus(k, { status: 'shield', amount: shield, durationMs: 9000 }, k, 'sh', []); const hp0 = e.hp; hitMe(s, e, k, 1000); return hp0 - e.hp; };
+  ok('Spiked Aegis: shielded, a melee attacker takes ' + pct + '% of the hit back (even if the shield soaked it all)', near(back(1e6), 1000 * pct / 100, 0.05), `${back(1e6)}`);
+  ok('...also when the hit breaks the shield', near(back(50), 1000 * pct / 100, 0.05));
+  ok('...nothing without a shield, nothing for ranged attackers', back(0) === 0 && back(1e6, false) === 0);
+  ok('...2 copies reflect twice as much', near(back(1e6, true, 2), 2 * 1000 * pct / 100, 0.05)); }
 // Provoker's Horn
 { const { s, es, k } = mk(['goblin'], () => 0); give(s, k, 'provokers_horn'); s.rollProcs(k, 'onAttack', [], { target: es[0], hit: true });
   ok('Provoker\'s Horn: any holder gets a 10% taunt chance (the target must attack him)', s.tauntedBy(es[0]) === k); }

@@ -9,7 +9,7 @@ export function rarityOddsFor(floor, rules) {
 
 // What the squad can already "make": the damage types of its living heroes (melee / ranged),
 // anything a living hero `provides` (heroes.json), and anything the items of living heroes provide.
-// An item that `needs` something the squad can't make yet shows up less often (but can still show up).
+// An item that `needs` something (or one of a list) the squad can't make yet shows up less often (but can still show up).
 export function squadSources(heroes, itemDefs) {
   const sources = new Set();
   for (const hero of heroes) {
@@ -24,7 +24,7 @@ export function squadSources(heroes, itemDefs) {
 // How likely an item is to be picked inside its rarity.
 export function dropWeight(item, sources, rules) {
   const weight = item.dropWeight ?? rules.defaultDropWeight;
-  return item.needs && !sources.has(item.needs) ? weight * rules.needsMissingFactor : weight;
+  return item.needs && ![].concat(item.needs).some((n) => sources.has(n)) ? weight * rules.needsMissingFactor : weight; // `needs` can list several: any one is enough
 }
 
 // Picks one entry from a list using weights (`weightOf`). Returns its index.

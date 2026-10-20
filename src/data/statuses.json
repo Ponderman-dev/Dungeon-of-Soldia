@@ -32,6 +32,17 @@
     "typeBonus": false,
     "debuff": true
   },
+  "doom": {
+    "popup": false,
+    "label": "DOOM",
+    "color": "#8a4dff",
+    "textColor": "#ffffff",
+    "dot": true,
+    "tickMs": 1000,
+    "damageType": "dark",
+    "attackSpeedPercent": -50,
+    "debuff": true
+  },
   "chill": {
     "popup": false,
     "label": "CHILL",

@@ -186,6 +186,7 @@ const LOOPS = {
     }
   },
 };
+LOOPS.doom = LOOPS.curse; // Eclipse Idol's Doom: the same dark swirl as Curse (no new art yet)
 export const LOOPING = Object.keys(LOOPS);
 
 // Body colour per status (the whole sprite is mixed towards it). The first one in this list that the

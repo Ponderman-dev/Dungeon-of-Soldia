@@ -259,4 +259,9 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Mimic = BAIT (user): never attacks; on its attack turns it taunts every enemy within 110px for 2.5s (`bait` in
   minions.json, `baitTaunt()`); health 30 -> 14, defense 2 -> 0; explosion 300% kept. itemruns ~0 before and after (weak item).
 - Flame Spirit renamed DARK SPIRIT (id stays flame_spirit). Ice Spirit Knight keeps its look (user: blue enough).
+- NEW LEGENDARY Eclipse Idol (user's design, id eclipse_idol, needs dark): stores the holder's DARK damage (hits, Dark
+  Spirit orbs, Shadow Charm hits, Poison/dark ticks, Ghastly dark; not Doom). At 1000% of attack (`eclipseCharge`) a dark orb
+  flies to 2-3 random enemies: DOOM (new status, statuses.json) for 4s = 350% attack dark per second (`eclipse`, per copy)
+  + 50% slower attacks. Look: Dark Spirit orb + Curse swirl, new item icon + DOOM status icon. itemruns ~0 (the test player
+  gives it to heroes with no dark damage); curve median 40. Tests: `dark-items.test.mjs`.
 - NEXT (user list): Flame Spirit -> Dark Spirit look + name; 1-2 new dark synergy items; Mimic ideas; Ice Knight look.

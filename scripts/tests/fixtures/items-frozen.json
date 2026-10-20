@@ -1855,5 +1855,40 @@
       "dark"
     ],
     "perStack": "+28% dark, +2% slow"
+  },
+  "eclipse_idol": {
+    "name": "Eclipse Idol",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "Stores this hero's dark damage. When full, 2-3 random enemies are Doomed for 4s: 50% slower attacks and 350% dark damage every second.",
+    "effects": [
+      {
+        "special": "eclipse",
+        "percent": 350
+      },
+      {
+        "special": "eclipseCharge",
+        "percent": 1000,
+        "unique": true
+      },
+      {
+        "special": "eclipseSlow",
+        "percent": 50,
+        "unique": true
+      },
+      {
+        "special": "eclipseMs",
+        "percent": 4000,
+        "unique": true
+      }
+    ],
+    "needs": "dark",
+    "provides": [
+      "dark",
+      "cc"
+    ],
+    "perStack": "+350% Doom damage per second",
+    "dropWeight": 90
   }
 }

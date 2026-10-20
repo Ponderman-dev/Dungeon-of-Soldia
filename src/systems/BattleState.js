@@ -148,6 +148,7 @@ export default class BattleState {
     const chill = this.statusDefs.chill || {};
     let change = -this.stacks(unit, 'chill') * (chill.slowPerStackPercent || 0);
     for (const s of unit.statuses) if (s.type === 'shock') change += s.attackSpeedPercent;
+    change += Math.min(0, ...unit.statuses.filter((s) => s.type === 'doom').map((s) => s.attackSpeedPercent || 0)); // Eclipse Idol's Doom: the strongest slow only
     // Bloodrage (Berserker): faster the more health he is missing.
     const rage = unit.def.passive && unit.def.passive.bloodrage;
     if (rage) change += rage.attackSpeedPercentPerMissing * (100 - (100 * unit.hp) / unit.maxHp);
@@ -234,6 +235,7 @@ export default class BattleState {
       const amount = Math.max(1, Math.round(computeDotDamage(unit, (mine * pct) / 100, 'dark', this.rules, this.damageTypes, {})));
       const d = this.dealDamage(unit, amount, events);
       events.push({ type: 'dot', unit, amount: d.immune ? 0 : amount - d.absorbed, absorbed: d.absorbed, immune: d.immune, damageType: 'dark', status: 'burn', stacks: 0 });
+      if (!d.immune) this.storeDark(h, amount - d.absorbed, events);
       this.breakEffects(unit, d.broken, events);
     }
   }
@@ -1760,6 +1762,7 @@ export default class BattleState {
     events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic, ghastly: !!opts.ghastly });
     if (dealt) this.breakEffects(target, dealt.broken, events);
     if (!result.dodged) this.afterItemHit(attacker, target, opts, events);
+    if (!result.dodged && (opts.damageType || attacker.hitType || attacker.damageType) === 'dark') this.storeDark(attacker, result.amount - (result.absorbed || 0), events);
     // Ghastly Fire: the holder's fire hits also deal `ghastly`% (20 per copy) of the damage as DARK (it triggers nothing).
     const gf = attacker.side === 'hero' && !attacker.minion && attacker.specials ? attacker.specials.ghastly || 0 : 0;
     if (gf && !result.dodged && !opts.ghastly && (opts.damageType || attacker.damageType) === 'fire' && target.alive && target.hp > 0 && result.amount > 0) {
@@ -2380,6 +2383,7 @@ export default class BattleState {
         status.fumbleChance = spec.fumbleChance ?? info.fumbleChance ?? 0;
         status.fumbleStunMs = spec.fumbleStunMs ?? info.fumbleStunMs ?? 300;
       }
+      if (spec.status === 'doom') status.attackSpeedPercent = spec.attackSpeedPercent ?? info.attackSpeedPercent ?? 0;
       if (info.dot) {
         status.stack = true;
         status.sourceUid = source.uid; // who applied this stack (kill credit, Plague Flask, Thousand Cuts, Magma Core)
@@ -2473,6 +2477,7 @@ export default class BattleState {
         const amount = computeDotDamage(unit, total, damageType, this.rules, this.damageTypes, { ignoresArmor });
         const d = this.dealDamage(unit, amount, events);
         events.push({ type: 'dot', unit, amount: d.immune ? 0 : amount - d.absorbed, absorbed: d.absorbed, immune: d.immune, damageType, status: type, stacks: stacks.length });
+        if (damageType === 'dark' && type !== 'doom' && !d.immune) for (const h of this.heroes) { const mine = stacks.filter((x) => x.sourceUid === h.uid).reduce((n, x) => n + x.damage, 0); if (mine) this.storeDark(h, ((amount - d.absorbed) * mine) / total, events); }
         if (type === 'burn' && unit.alive && unit.hp > 0) this.ghastlyBurn(unit, stacks, events); // Ghastly Fire: burns also deal dark damage
         this.breakEffects(unit, d.broken, events);
         if (unit.hp <= 0 && unit.alive) this.killUnit(unit, events);
@@ -3142,6 +3147,28 @@ export default class BattleState {
     unit.soulCd = 100;
     events.push({ type: 'proc', unit, label: 'Grimoire!', itemId: 'lost_clerics_grimoire', target });
     this.strike(unit, target, events, { multiplier: damage / Math.max(1, unit.stats.attack), damageType: 'fire', projectile: 'greenfire', item: true });
+  }
+
+  // Eclipse Idol: the holder's DARK damage (hits, Dark Spirit orbs, Poison and other dark ticks; not Doom itself) is
+  // stored. At `eclipseCharge`% of its attack it is cast: 2-3 random enemies get DOOM for `eclipseMs` (a dark DoT of
+  // `eclipse`% attack per second and `eclipseSlow`% slower attacks). Doom is item damage (it never refills the idol).
+  storeDark(unit, amount, events) {
+    const sp = unit.specials;
+    if (!sp || !sp.eclipse || unit.side !== 'hero' || unit.minion || !unit.alive || !(amount > 0)) return;
+    unit.voidStore = (unit.voidStore || 0) + amount;
+    if (unit.voidStore < (unit.stats.attack * (sp.eclipseCharge || 1000)) / 100) return;
+    const foes = this.targetableEnemies();
+    if (!foes.length) return;
+    unit.voidStore = 0;
+    const picks = [...foes].sort(() => this.rng() - 0.5).slice(0, 2 + Math.floor(this.rng() * 2));
+    events.push({ type: 'proc', unit, label: 'Eclipse!', itemId: 'eclipse_idol', target: picks[0] });
+    for (const t of picks) {
+      events.push({ type: 'projectile', from: unit, to: t, kind: 'spiritfire' }); // the Dark Spirit orb flies to it
+      this.later(900, (ev) => {
+        if (!t.alive || !unit.alive) return;
+        this.applyStatus(t, { status: 'doom', durationMs: sp.eclipseMs || 4000, damageMultiplier: sp.eclipse / 100, damageType: 'dark', attackSpeedPercent: -(sp.eclipseSlow || 50) }, unit, `doom_${unit.uid}`, ev);
+      });
+    }
   }
 
   // All enemies in a chain order: from `first`, always to the nearest one not yet hit.

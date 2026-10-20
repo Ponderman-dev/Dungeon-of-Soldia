@@ -231,3 +231,12 @@ Full-run test (itemruns.mjs 3/squad, copies 0/1/3) showed these rares adding ~0 
 - Fire Bombs 5% -> 8%, 250% -> 300%. Conductor's Baton extra copies +8% -> +15%. Spotter's Lens +12% -> +20%, also on drag-ordered enemies.
 - Fire Arrows extra hit 20% -> 35%. Quiver of Plenty 15% -> 25%.
 Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Horn, Wisp Lantern, Mirror Buckler. Tests: `rares-s5.test.mjs`.
+
+## Session 17: element charms add their element (user: 'it only helps mage and proc hit, basic attack is worthless')
+- Kindling / Frost Charm / Storm Charm / Shadow Charm: every basic attack ALSO adds a small hit of that element (15% of
+  attack per charm, silent `strike` proc like Chill Band; one hit per copy) AND keep +15% to that element. No `needs`
+  any more (normal drop weight for every squad); each `provides` its element (counts as a source for Ghastly Fire etc.).
+  The extra hits are fire/ice/electric/dark item hits: Magma Core / Ghastly Fire / Frozen Thunderbolt / Mage reactions see them.
+- itemruns (6/squad, copies 0/1/3) before: Kindling -2.1/-0.5, Storm +0.7/+0.3 (useless). After: Kindling +4.0/+8.0,
+  Storm +3.6/+5.0, Frost +3.3/+6.5, Shadow +1.5/+3.7 (Whetstone +4.8/+6.6, Sharp Edge +2.8/+5.4 same runs).
+  Smart curve median 40 -> 43. Tests: `items-g1-g2.test.mjs` (charms).

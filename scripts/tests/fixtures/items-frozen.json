@@ -511,62 +511,110 @@
   "kindling": {
     "name": "Kindling",
     "rarity": "common",
-    "type": "stat",
+    "type": "onhit",
     "scope": "self",
-    "description": "+15% fire damage (Burn too).",
+    "description": "Every attack adds a small fire hit (15%). +15% fire damage (Burn too).",
     "effects": [
       {
         "damageBonus": "fire",
         "percent": 15
+      },
+      {
+        "proc": "onAttack",
+        "chance": 100,
+        "label": "Fire hit",
+        "silent": true,
+        "strike": {
+          "damageMultiplier": 0.15,
+          "damageType": "fire"
+        }
       }
     ],
-    "needs": "fire",
-    "perStack": "+15% fire damage"
+    "perStack": "+15% fire hit, +15% fire damage",
+    "provides": [
+      "fire"
+    ]
   },
   "frost_charm": {
     "name": "Frost Charm",
     "rarity": "common",
-    "type": "stat",
+    "type": "onhit",
     "scope": "self",
-    "description": "+15% ice damage.",
+    "description": "Every attack adds a small ice hit (15%). +15% ice damage.",
     "effects": [
       {
         "damageBonus": "ice",
         "percent": 15
+      },
+      {
+        "proc": "onAttack",
+        "chance": 100,
+        "label": "Ice hit",
+        "silent": true,
+        "strike": {
+          "damageMultiplier": 0.15,
+          "damageType": "ice"
+        }
       }
     ],
-    "needs": "ice",
-    "perStack": "+15% ice damage"
+    "perStack": "+15% ice hit, +15% ice damage",
+    "provides": [
+      "ice"
+    ]
   },
   "storm_charm": {
     "name": "Storm Charm",
     "rarity": "common",
-    "type": "stat",
+    "type": "onhit",
     "scope": "self",
-    "description": "+15% electric damage.",
+    "description": "Every attack adds a small electric hit (15%). +15% electric damage.",
     "effects": [
       {
         "damageBonus": "electric",
         "percent": 15
+      },
+      {
+        "proc": "onAttack",
+        "chance": 100,
+        "label": "Shock hit",
+        "silent": true,
+        "strike": {
+          "damageMultiplier": 0.15,
+          "damageType": "electric"
+        }
       }
     ],
-    "needs": "electric",
-    "perStack": "+15% electric damage"
+    "perStack": "+15% electric hit, +15% electric damage",
+    "provides": [
+      "electric"
+    ]
   },
   "shadow_charm": {
     "name": "Shadow Charm",
     "rarity": "common",
-    "type": "stat",
+    "type": "onhit",
     "scope": "self",
-    "description": "+15% dark damage (Poison too).",
+    "description": "Every attack adds a small dark hit (15%). +15% dark damage (Poison too).",
     "effects": [
       {
         "damageBonus": "dark",
         "percent": 15
+      },
+      {
+        "proc": "onAttack",
+        "chance": 100,
+        "label": "Shadow hit",
+        "silent": true,
+        "strike": {
+          "damageMultiplier": 0.15,
+          "damageType": "dark"
+        }
       }
     ],
-    "needs": "dark",
-    "perStack": "+15% dark damage"
+    "perStack": "+15% dark hit, +15% dark damage",
+    "provides": [
+      "dark"
+    ]
   },
   "mage_cloak": {
     "name": "Mage Cloak",

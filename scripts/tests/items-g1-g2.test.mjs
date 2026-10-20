@@ -109,8 +109,15 @@ ok('Siege Cannon is legendary, Feather Boots / Lucky Coin / Dice / Totem / Bulwa
   void mage; }
 { const real = r('heroes.json'); const sq = (ids) => new BattleState({ heroDefs: ids.map((id) => real.find((x) => x.id === id)), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
   const rw = r('rewards.json'); const w = (st, id) => dropWeight(itemDefs[id], squadSources(st.heroes, itemDefs), rw);
-  ok('Kindling is x0.25 without a fire source and normal with the Mage', w(sq(['knight', 'rogue', 'archer']), 'kindling') === 25 && w(sq(['mage', 'knight', 'rogue']), 'kindling') === 100);
-  ok('Shadow Charm: dark comes from the Necromancer; Frost Charm from the Mage or Chill Band', w(sq(['necromancer', 'knight', 'rogue']), 'shadow_charm') === 100 && w(sq(['mage', 'knight', 'rogue']), 'frost_charm') === 100);
-  const sqi = sq(['knight', 'rogue', 'archer']); sqi.giveItem(sqi.heroes[0].uid, 'chill_band');
-  ok('...an owned Chill Band also counts as an ice source', w(sqi, 'frost_charm') === 100); }
+  ok('Element charms work for anyone: normal drop weight without a source', ['kindling', 'frost_charm', 'storm_charm', 'shadow_charm'].every((id) => w(sq(['knight', 'rogue', 'archer']), id) === w(sq(['mage', 'knight', 'rogue']), id)));
+  ok('Ghastly Fire (needs fire) is x0.25 without a fire source and normal with the Mage', w(sq(['knight', 'rogue', 'archer']), 'ghastly_fire') * 4 === w(sq(['mage', 'knight', 'rogue']), 'ghastly_fire'));
+  const sqi = sq(['knight', 'rogue', 'archer']); sqi.giveItem(sqi.heroes[0].uid, 'kindling');
+  ok('...an owned Kindling counts as a fire source', w(sqi, 'ghastly_fire') === w(sq(['mage', 'knight', 'rogue']), 'ghastly_fire')); }
+// Element charms: every attack adds a small hit of the charm's element (one per copy), silent
+for (const id of ['kindling', 'frost_charm', 'storm_charm', 'shadow_charm']) {
+  const { s, es, k } = mk(['goblin']); const type = itemDefs[id].effects.find((e) => e.strike).strike.damageType;
+  give(s, k, id, 2); const ev = []; s.rollProcs(k, 'onAttack', ev, { target: es[0], hit: true });
+  const hits = ev.filter((x) => x.type === 'attack' && x.attacker === k && x.damageType === type);
+  ok(`${itemDefs[id].name}: 2 copies = 2 ${type} hits on a basic attack, no popup`, hits.length === 2 && !ev.some((x) => x.type === 'proc'), `${hits.length}`);
+}
 ok('every new G2 item exists with a rarity, a type and a description', ['sucker_punch_glove', 'bandage_roll', 'second_wind_flask', 'full_vigor', 'brawlers_streak', 'tough_skin', 'kindling', 'frost_charm', 'storm_charm', 'shadow_charm', 'mage_cloak', 'hourglass'].every((id) => itemDefs[id] && itemDefs[id].rarity === 'common' && itemDefs[id].type && itemDefs[id].description));

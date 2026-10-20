@@ -214,6 +214,7 @@ export default class SquadScene extends Phaser.Scene {
       const fade = Phaser.Math.Clamp((Math.min(x, GAME_WIDTH - x) - BENCH.fadeFrom) / BENCH.fadePx, 0, 1);
       // An empty spot shows where a picked hero will come back to.
       if (fade > 0) this.benchSpots.fillStyle(0x000000, (onBench ? 0.28 : 0.14) * fade).fillEllipse(x, BENCH.feetY, 50, 13); // a soft shadow (faint = its hero is in a slot)
+      if (this.leaving && this.slots.includes(f.def.id)) continue; // walking into the door: descend() darkens, fades and hides it
       if (onBench) f.ch.setPosition(x, BENCH.feetY);
       f.name.setPosition(f.ch.x, f.ch.y + (inSlot ? 13 : 9)).setVisible(!this.walkers.has(f.def.id) && !(this.leaving && this.slots.includes(f.def.id)));
       f.name.setColor(inSlot ? INK : this.unlocked(f.def.id) ? '#d0d0dc' : '#6a6a7a');

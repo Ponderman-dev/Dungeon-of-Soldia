@@ -132,7 +132,7 @@
       }
     },
     "growthPercent": {
-      "health": 6,
+      "health": 7,
       "attack": 3,
       "mana": 2
     },
@@ -305,7 +305,7 @@
       }
     },
     "growthPercent": {
-      "health": 4,
+      "health": 5,
       "attack": 5,
       "mana": 2
     },
@@ -464,7 +464,7 @@
       }
     },
     "growthPercent": {
-      "health": 3,
+      "health": 4,
       "attack": 4,
       "mana": 2
     },
@@ -653,7 +653,7 @@
       }
     },
     "growthPercent": {
-      "health": 3,
+      "health": 4,
       "attack": 5,
       "mana": 2
     },
@@ -709,7 +709,7 @@
       "attackEfficiency": 70
     },
     "growthPercent": {
-      "health": 3,
+      "health": 4,
       "attack": 5
     },
     "growthFlat": {
@@ -879,7 +879,7 @@
       "attackEfficiency": 90
     },
     "growthPercent": {
-      "health": 3,
+      "health": 4,
       "attack": 5
     },
     "growthFlat": {
@@ -1068,7 +1068,7 @@
       "attackEfficiency": 95
     },
     "growthPercent": {
-      "health": 3,
+      "health": 4,
       "attack": 3
     },
     "growthFlat": {
@@ -1253,7 +1253,7 @@
       "attackEfficiency": 90
     },
     "growthPercent": {
-      "health": 3,
+      "health": 4,
       "attack": 4
     },
     "growthFlat": {
@@ -1430,7 +1430,7 @@
       "attackEfficiency": 100
     },
     "growthPercent": {
-      "health": 3,
+      "health": 4,
       "attack": 3
     },
     "growthFlat": {
@@ -1663,7 +1663,7 @@
       "attackEfficiency": 95
     },
     "growthPercent": {
-      "health": 3,
+      "health": 4,
       "attack": 4
     },
     "growthFlat": {

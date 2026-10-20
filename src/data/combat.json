@@ -40,9 +40,9 @@
     "damagePercent": 50
   },
   "floorScaling": {
-    "hpPerStep": 0.35,
+    "hpPerStep": 0.5,
     "hpStepFloors": 3,
-    "attackPerStep": 0.525,
+    "attackPerStep": 0.42,
     "attackStepFloors": 3
   },
   "meleeVsFlyingMissPercent": 15,

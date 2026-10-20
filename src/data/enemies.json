@@ -566,7 +566,7 @@
     "resists": [],
     "stats": {
       "health": 420,
-      "attack": 12,
+      "attack": 9,
       "defense": 10,
       "attackEfficiency": 60
     },

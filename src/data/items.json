@@ -1748,16 +1748,16 @@
     "perStack": "+6 resist, 25% of what is left"
   },
   "flame_spirit": {
-    "name": "Flame Spirit",
+    "name": "Dark Spirit",
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "8% on attack: 3-5 dark fireballs strike random enemies (500% each).",
+    "description": "8% on attack: 3-5 dark spirit orbs strike random enemies (500% each).",
     "effects": [
       {
         "proc": "onAttack",
         "chance": 8,
-        "label": "Flame Spirit!",
+        "label": "Dark Spirit!",
         "silent": true,
         "targets": "self",
         "flameSpirit": true,

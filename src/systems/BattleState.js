@@ -192,7 +192,7 @@ export default class BattleState {
   // Flame Spirit: launches 3-5 slow dark fireballs, one after another, at random enemies (`damageMultiplier` each, 300%; item damage).
   conjureSpirit(hero, events, mult = 0.8) {
     const n = 3 + Math.floor(this.rng() * 3);
-    events.push({ type: 'proc', unit: hero, label: 'Flame Spirit!', itemId: 'flame_spirit' });
+    events.push({ type: 'proc', unit: hero, label: 'Dark Spirit!', itemId: 'flame_spirit' });
     for (let i = 0; i < n; i++) this.later(250 * i, (ev) => {
       if (!hero.alive) return;
       const foes = this.targetableEnemies();

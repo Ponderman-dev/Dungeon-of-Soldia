@@ -660,11 +660,11 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "20% on attack: Burn the enemy for 3s.",
+    "description": "12% on attack: Burn the enemy for 3s.",
     "effects": [
       {
         "proc": "onAttack",
-        "chance": 20,
+        "chance": 12,
         "label": "Burn!",
         "targets": "target",
         "apply": [

@@ -314,3 +314,4 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Fire Arrows REMOVED (user, session 19): a weaker Magma Core/Kindling for ranged heroes only (and its burn never worked).
 - Ember Charm v2 (user: 'bigger chance'): 6% -> 20% burn chance, +10% per extra charm (was +6%), burn damage +10% per extra
   as before. itemruns 6/squad (copies 1/3): before ~0; after +0.2/+2.0 (Kindling +0.3/+3.8, Venom +1.8, Serrated +2.2 at 3). Curve median 44.
+  Then set to 12% (user), +10% per extra charm kept.

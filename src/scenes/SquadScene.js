@@ -141,13 +141,22 @@ export default class SquadScene extends Phaser.Scene {
   }
 
   drawUi() {
-    // Sound on/off (small, under the test button); saved in the progress.
-    const sx = GAME_WIDTH - 30, sy = 56;
-    drawWindow(this.add.graphics().setDepth(DEPTH.ui), sx - 104, sy - 13, 110, 26);
-    this.soundBtn = this.add.text(sx - 49, sy, '', { fontFamily: FONT, fontSize: '8px', color: INK }).setOrigin(0.5).setDepth(DEPTH.ui);
-    const drawSound = () => this.soundBtn.setText(sfx.isMuted() ? 'SOUND OFF' : 'SOUND ON').setColor(sfx.isMuted() ? UI.dim : INK);
+    // Sound on/off: a small pixel speaker icon top right (waves = on, a cross = off); saved in the progress.
+    const sx = GAME_WIDTH - 30, sy = TESTER ? 30 : 92, P = 2; // centre (under the TEST buttons when they are there), pixel size
+    drawWindow(this.add.graphics().setDepth(DEPTH.ui), sx - 18, sy - 18, 36, 36);
+    this.soundIcon = this.add.graphics().setDepth(DEPTH.ui);
+    const px = (g, x, y, w = 1, h = 1) => g.fillRect(sx + x * P, sy + y * P, w * P, h * P); // on a 2px grid around the centre
+    const drawSound = () => {
+      const g = this.soundIcon.clear(), off = sfx.isMuted();
+      g.fillStyle(Phaser.Display.Color.HexStringToColor(off ? UI.dim : INK).color, 1);
+      px(g, -6, -2, 3, 4); // the box
+      px(g, -3, -3, 1, 6); px(g, -2, -4, 1, 8); px(g, -1, -5, 1, 10); // the cone
+      if (off) { for (let i = 0; i < 5; i++) { px(g, 2 + i, -2 + i); px(g, 6 - i, -2 + i); } } // a cross
+      else { px(g, 1, -1, 1, 2); px(g, 3, -3, 1, 1); px(g, 4, -2, 1, 4); px(g, 3, 2, 1, 1); px(g, 5, -5, 1, 1); px(g, 6, -4, 1, 8); px(g, 5, 4, 1, 1); } // sound waves
+    };
     drawSound();
-    this.soundBtn.setInteractive().on('pointerdown', () => {
+    this.soundBtn = this.add.zone(sx, sy, 44, 44).setInteractive().setDepth(DEPTH.ui);
+    this.soundBtn.on('pointerdown', () => {
       sfx.setMuted(!sfx.isMuted());
       this.progress.settings = { ...(this.progress.settings || {}), muted: sfx.isMuted() }; // keep the scene's copy of the save in step
       drawSound();

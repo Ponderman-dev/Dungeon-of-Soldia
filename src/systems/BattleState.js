@@ -557,6 +557,29 @@ export default class BattleState {
     }
   }
 
+  // A dash or leap skill (skills.json `staysAtImpact`: Defense Bash, Multistrike, Savage Leap) really moves the hero to
+  // where it hits, and it stays there (user 2026-10-20: no walking back to its spot). How far is the skill's look
+  // (combat.json skillFx): a dash goes the distance minus `stopPx`, between `minPx` and `maxPx`; a leap goes `share` of
+  // the way, but never past the target's push-apart edge. Returns where it came from (the scene slides it over from
+  // there), or null without positions.
+  moveToImpact(hero, target, skillId) {
+    const M = this.rules.movement, F = this.rules.skillFx || {};
+    if (!M || !this.hasPositions(hero) || !this.hasPositions(target)) return null;
+    const dash = F.dash && F.dash[skillId], leap = F.look && F.look[skillId] && F.look[skillId].leap;
+    if (!dash && !leap) return null;
+    const dx = target.x - hero.x, dy = target.y - hero.y, len = Math.hypot(dx, dy);
+    if (len < 1) return null;
+    let go = dash ? Math.min(dash.maxPx, Math.max(dash.minPx, len - dash.stopPx)) : len * leap.share;
+    // Never into the target's body: stop at the push-apart edge (else he is slowly shoved back out = looks like going back).
+    const ux = dx / len, uy = dy / len, k = ((hero.size || 1) + (target.size || 1)) / 2;
+    const edge = 1 / Math.hypot(ux / (M.separateX * k), uy / (M.separateY * (1 + (k - 1) * 0.5)));
+    go = Math.max(0, Math.min(go, len - edge - 1));
+    const from = { x: hero.x, y: hero.y }, L = M.layout;
+    hero.x = Math.min(L.width - L.marginX, Math.max(L.marginX, hero.x + ux * go));
+    hero.y = Math.min(L.heroY, Math.max(L.enemyY + L.topMarginY, hero.y + uy * go));
+    return from;
+  }
+
   // Where a fighter goes to get out of a bomb's blast: straight away from it, kept inside the field; if the field's
   // edge is in the way (heroes stand at the bottom), the nearest way out sideways instead.
   bombEscape(u, b) {
@@ -2590,7 +2613,8 @@ export default class BattleState {
       }
     }
 
-    events.push({ type: 'cast', unit: hero, skill, skillId: slot.id, targets, zone }); // skillId: the skill's own sound (skill_<id>)
+    const moved = skill.staysAtImpact && targets[0] ? this.moveToImpact(hero, targets[0], slot.id) : null; // dash / leap: he stays where he hit
+    events.push({ type: 'cast', unit: hero, skill, skillId: slot.id, targets, zone, moved }); // skillId: the skill's own sound (skill_<id>); moved = where he came from
     if (!echo) this.bookCast(hero, skill, book.mods, events, targets);
     this.castPages = book.mods.length ? { hero, mods: book.mods } : null; // on-hit modifiers (Inks, Siphon) for this cast's hits
     // Blood Pact: the skill costs the caster some of their own health.

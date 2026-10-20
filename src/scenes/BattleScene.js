@@ -1578,9 +1578,9 @@ export default class BattleScene extends Phaser.Scene {
       const look = e.unit.side === 'hero' ? LOOK_BY_NAME[e.skill.name] : null;
       if (look) this.lookMoves(caster, e, look); // before the burst: the look wants to know where he lands
       this.skillBurst(caster, e);
-      if (e.skill.leap && e.targets[0] && !(look && look.leap)) this.leapAt(caster, this.views.get(e.targets[0].uid)); // Savage Leap
+      if (e.skill.leap && e.targets[0] && !(look && look.leap)) this.leapAt(caster, this.views.get(e.targets[0].uid), null, e.moved); // Savage Leap
       const dash = DASH_BY_NAME[e.skill.name];
-      if (dash && e.targets[0]) this.dashAt(caster, this.views.get(e.targets[0].uid), dash); // Defense Bash
+      if (dash && e.targets[0]) this.dashAt(caster, this.views.get(e.targets[0].uid), dash, e.moved); // Defense Bash, Multistrike
       caster.ch.castRelease(e.skill.kind); // the skill's own animation (not the normal swing)
       if ((e.skill.target === 'enemy' || e.skill.target === 'allEnemies') && e.targets[0] && !e.skill.leap && !dash && !look) {
         const t = this.views.get(e.targets[0].uid);
@@ -2064,8 +2064,19 @@ export default class BattleScene extends Phaser.Scene {
   // Savage Leap: the hero jumps at the target in an arc and lands back in his spot.
   // With `S` (combat.json skillFx.look.brawl_leap.leap) it is the v2 SLAM: up fast and high (liftPx), hangs, slams down
   // at upMs, holds holdMs, comes back in backMs.
-  leapAt(caster, target, S = null) {
+  leapAt(caster, target, S = null, from = null) {
     if (!target) return;
+    if (from) { // the rules already put him where he lands (skills.json staysAtImpact): fly over from where he was, stay there
+      const u = caster.unit, ox = from.x - u.x, oy = from.y - u.y, lift = S ? S.liftPx : 26, j = { p: 0 };
+      const setF = () => {
+        caster.leapX = ox * (1 - j.p);
+        caster.leapY = oy * (1 - j.p);
+        caster.leapLift = S ? Math.sin(Math.pow(j.p, 0.6) * Math.PI) * lift : Math.sin(j.p * Math.PI) * 26;
+      };
+      setF();
+      this.tweens.add({ targets: j, p: 1, duration: S ? S.upMs : 230, ease: S ? 'Linear' : 'Quad.easeOut', onUpdate: setF, onComplete: () => { caster.leapX = caster.leapY = caster.leapLift = 0; } });
+      return;
+    }
     const share = S ? S.share : 0.8;
     const dx = (target.ch.x - caster.ch.x) * share;
     const dy = (target.ch.y - caster.ch.y) * share;
@@ -2086,9 +2097,10 @@ export default class BattleScene extends Phaser.Scene {
   lookMoves(caster, e, L) {
     const t0 = e.targets[0] && this.views.get(e.targets[0].uid);
     if (L.leap && t0) {
-      this.leapAt(caster, t0, L.leap);
-      const a = this.fxBody(caster), b = this.fxBody(t0);
-      e.land = { x: a.x + (b.x - a.x) * L.leap.share, y: a.y + (b.y - a.y) * L.leap.share }; // where he lands: it never moves
+      const a = this.fxBody(caster), b = this.fxBody(t0); // before the leap: he is still drawn where he takes off
+      this.leapAt(caster, t0, L.leap, e.moved);
+      e.land = e.moved ? { x: a.x + (e.unit.x - e.moved.x) / CHAR_SCALE, y: a.y + (e.unit.y - e.moved.y) / CHAR_SCALE } // where the rules put him
+        : { x: a.x + (b.x - a.x) * L.leap.share, y: a.y + (b.y - a.y) * L.leap.share }; // where he lands: it never moves
     }
     if (L.move && L.move.type === 'recoil') {
       const to = t0 ? t0.ch : { x: caster.ch.x, y: caster.ch.y - 100 }; // no target: rock back down (enemies are above)
@@ -2165,8 +2177,24 @@ export default class BattleScene extends Phaser.Scene {
 
   // An aggressive skill dash (combat.json skillFx.dash): the hero shoots at its target from wherever it stands, the
   // target is knocked back at the hit with a small shake, then both settle back. Uses the same view offsets as leapAt.
-  dashAt(caster, target, D) {
+  dashAt(caster, target, D, from = null) {
     if (!target || !target.ch.active) return;
+    if (from) { // the rules already put him at the hit (skills.json staysAtImpact): shoot over from where he was, stay there
+      const u = caster.unit, ox = from.x - u.x, oy = from.y - u.y, olen = Math.hypot(ox, oy) || 1, go = { p: 0 };
+      const setF = () => { caster.leapX = ox * (1 - go.p); caster.leapY = oy * (1 - go.p); };
+      setF();
+      this.tweens.add({ targets: go, p: 1, duration: D.inMs, ease: 'Quad.easeIn', onUpdate: setF,
+        onComplete: () => {
+          caster.leapX = caster.leapY = 0;
+          if (D.shakeMs) this.cameras.main.shake(D.shakeMs, D.shakeIntensity);
+          if (!D.knockPx || !target.ch.active) return;
+          const ux = -ox / olen, uy = -oy / olen, kb = { p: 0 };
+          const setK = () => { target.leapX = ux * D.knockPx * kb.p; target.leapY = uy * D.knockPx * kb.p; };
+          this.tweens.add({ targets: kb, p: 1, duration: D.knockMs, ease: 'Quad.easeOut', onUpdate: setK,
+            onComplete: () => this.tweens.add({ targets: kb, p: 0, duration: D.knockBackMs, ease: 'Quad.easeInOut', onUpdate: setK, onComplete: () => { target.leapX = target.leapY = 0; } }) });
+        } });
+      return;
+    }
     const dx = target.ch.x - caster.ch.x, dy = target.ch.y - caster.ch.y, len = Math.hypot(dx, dy) || 1;
     const reach = Phaser.Math.Clamp(len - D.stopPx, D.minPx, D.maxPx);
     const ux = dx / len, uy = dy / len;

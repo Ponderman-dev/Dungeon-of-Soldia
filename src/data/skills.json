@@ -1034,6 +1034,7 @@
     "target": "enemy",
     "cooldownMs": 9000,
     "castMs": 500,
+    "staysAtImpact": true,
     "damageMultiplier": 1,
     "apply": [
       {
@@ -1106,6 +1107,7 @@
     "target": "enemy",
     "cooldownMs": 9000,
     "castMs": 600,
+    "staysAtImpact": true,
     "damageMultiplier": 3.5,
     "leap": true,
     "landSplash": {
@@ -1164,6 +1166,7 @@
     "target": "enemy",
     "cooldownMs": 7000,
     "castMs": 400,
+    "staysAtImpact": true,
     "damageMultiplier": 0.5,
     "channel": {
       "intervalMs": 120,

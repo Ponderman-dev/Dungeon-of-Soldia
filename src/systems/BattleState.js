@@ -487,14 +487,11 @@ export default class BattleState {
       }
       if (this.isStunned(u) || u.pending || u.casting || u.bossCast || u.def.object || u.dust || u.burrowed) continue; // frozen in place, busy, an object, underground
       let goal = null;
-      // A lit bomb nearby (Kobold Sapper): heroes and minions walk out of its blast first.
-      const bomb = u.side === 'hero' && (this.bombs || []).find((b) => Math.hypot(u.x - b.x, u.y - b.y) < b.radius + 12);
-      if (bomb) goal = this.bombEscape(u, bomb);
-      else if (this.has(u, 'fear')) goal = { x: u.homeX, y: u.homeY, stop: 0 };
+      // A lit Kobold Sapper bomb is NOT avoided (user: it blocked walking and the bomb never hit): fighters keep going.
+      if (this.has(u, 'fear')) goal = { x: u.homeX, y: u.homeY, stop: 0 };
       else if (u.damageType === 'melee') {
         const target = this.pickTarget(u);
-        const blast = u.side === 'hero' && target && (this.bombs || []).some((b) => Math.hypot(target.x - b.x, target.y - b.y) < b.radius + 12); // don't walk into a bomb
-        if (target && !blast && !this.inReach(u, target)) goal = { x: target.x, y: target.y };
+        if (target && !this.inReach(u, target)) goal = { x: target.x, y: target.y };
       }
       if (!goal) continue;
       const dx = goal.x - u.x;
@@ -592,21 +589,6 @@ export default class BattleState {
     return from;
   }
 
-  // Where a fighter goes to get out of a bomb's blast: straight away from it, kept inside the field; if the field's
-  // edge is in the way (heroes stand at the bottom), the nearest way out sideways instead.
-  bombEscape(u, b) {
-    const L = this.rules.movement.layout;
-    const clampX = (x) => Math.min(L.width - L.marginX, Math.max(L.marginX, x));
-    const clampY = (y) => Math.min(L.heroY, Math.max(L.enemyY + L.topMarginY, y));
-    const out = b.radius + 20;
-    const dx = u.x - b.x, dy = u.y - b.y, d = Math.hypot(dx, dy);
-    const away = d > 1 ? { x: clampX(b.x + (dx / d) * out), y: clampY(b.y + (dy / d) * out) } : null;
-    const safe = (p) => Math.hypot(p.x - b.x, p.y - b.y) >= b.radius + 12;
-    const options = [away, { x: clampX(b.x - out), y: clampY(u.y) }, { x: clampX(b.x + out), y: clampY(u.y) }, { x: clampX(u.x), y: clampY(b.y - out) }].filter((p) => p && safe(p));
-    if (!options.length) return null;
-    return options.reduce((a, p) => (Math.hypot(p.x - u.x, p.y - u.y) < Math.hypot(a.x - u.x, a.y - u.y) ? p : a));
-  }
-
   // Marks a unit dead. Enemies give XP; a dead hero's items stop working.
   killUnit(target, events, killer = null) {
     if (target.def.phylactery && !target.finalDeath) return this.turnToDust(target, events); // Morthul: his crystal appears
@@ -651,8 +633,8 @@ export default class BattleState {
   // the Puffshroom's poison cloud): every living hero and minion within `radius` px gets the statuses
   // (everyone when there are no positions). Event `deathBurst` (the scene draws the cloud).
   deathBurst(enemy, spec, events) {
-    // A delayed burst (Kobold Sapper): a lit bomb is left on the floor and goes off after `delayMs`; heroes and
-    // minions in its radius walk out of it (move()). Its blast = `damageMultiplier` x the enemy's attack.
+    // A delayed burst (Kobold Sapper): a lit bomb is left on the floor and goes off after `delayMs`; whoever still
+    // stands in its radius then is hit (nobody walks around it). Its blast = `damageMultiplier` x the enemy's attack.
     if (spec.delayMs && !spec.lit) {
       const bomb = { uid: this.nextUid++, x: enemy.x, y: enemy.y, radius: spec.radius, remaining: spec.delayMs, total: spec.delayMs, color: spec.color };
       (this.bombs = this.bombs || []).push(bomb);

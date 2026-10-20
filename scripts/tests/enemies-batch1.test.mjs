@@ -84,13 +84,14 @@ ok('the Golem is strong and at most one per fight', defs.golem.tier === 'strong'
   const { s, es, h } = mk(['sapper', 'goblin']);
   const sap = es[0];
   sap.x = h[0].x; sap.y = h[0].y - 30; // it dies right next to the Knight
+  es[1].x = h[0].x + 10; es[1].y = h[0].y - 25; // ...who is busy with a goblin in the same spot
   const ev = []; s.killUnit(sap, ev);
   ok('Sapper: dies and leaves a lit bomb (no blast yet)', s.bombs.length === 1 && ev.some((e) => e.type === 'bombDrop') && !ev.some((e) => e.type === 'deathBurst'));
   const hp0 = h[0].hp;
   const ev2 = run(s, 1400);
-  ok('...the heroes walk out of the blast', Math.hypot(h[0].x - s.bombs[0].x, h[0].y - s.bombs[0].y) > 75 && !ev2.some((e) => e.type === 'deathBurst'));
+  ok('...nobody walks out of the blast (user: the circle must not block walking)', Math.hypot(h[0].x - s.bombs[0].x, h[0].y - s.bombs[0].y) < 75 && !ev2.some((e) => e.type === 'deathBurst'));
   const ev3 = run(s, 200);
-  ok('...and it goes off after 1.5s', s.bombs.length === 0 && ev3.some((e) => e.type === 'deathBurst' && e.explosive));
+  ok('...and it goes off after 1.5s and hits the Knight standing in it', s.bombs.length === 0 && ev3.some((e) => e.type === 'deathBurst' && e.explosive && e.targets.includes(h[0])));
   // A hero who stays in it gets hurt (no positions: the blast hits everyone).
   const t = mk(['sapper']);
   for (const u of [...t.s.heroes, ...t.s.enemies]) u.x = u.y = undefined;

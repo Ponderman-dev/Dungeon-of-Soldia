@@ -246,6 +246,12 @@ export default class BattleState {
     }
   }
 
+  // Assault Breastplate (`assaultShred` special, per copy): while its holder lives, EVERY enemy has that much less
+  // defense (an aura, adds up over copies and holders; it can go below 0 = more damage, like Armor Break).
+  assaultShred() {
+    return this.heroes.reduce((sum, h) => sum + (h.alive && h.specials ? h.specials.assaultShred || 0 : 0), 0);
+  }
+
   // Things that happen a little later (Flame Spirit fireballs, Moonlight hits): `this.delays`, ticked in update().
   later(ms, fn) {
     (this.delays = this.delays || []).push({ remaining: ms, fn });
@@ -1750,7 +1756,8 @@ export default class BattleState {
     // Rogue's DIRTY FIGHTING (passive.dirtyFighting): an enemy he has debuffed misses some of its attacks on HIM.
     const dirty = attacker.side === 'enemy' && target.def.passive && target.def.passive.dirtyFighting;
     if (dirty && attacker.debuffedBy && attacker.debuffedBy.has(target.uid)) opts = { ...opts, extraMissPercent: (opts.extraMissPercent || 0) + dirty.missPercent };
-    const result = forced ? { dodged: true, blocked: true, parried: true, crit: false, amount: 0, mult: 1 } : computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, opts);
+    const shred = target.side === 'enemy' ? this.assaultShred() : 0; // Assault Breastplate: every enemy has less defense
+    const result = forced ? { dodged: true, blocked: true, parried: true, crit: false, amount: 0, mult: 1 } : computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, shred ? { ...opts, defenseShred: shred } : opts);
     if (!result.dodged && attacker.side === 'enemy' && target.side === 'hero') result.amount = this.interceptHit(attacker, target, result.amount, events); // Knight takes his share
     if (!result.dodged && target.side === 'enemy') {
       result.amount = this.plateHit(target, result.amount, opts.damageType || attacker.damageType, events); // Frost Warden's ice plates

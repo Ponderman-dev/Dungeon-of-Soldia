@@ -288,3 +288,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   hero gets +15 defense and +15 resist while the holder lives (type/scope `squad`, so Bard's Hymn makes it stronger).
   Tests: `items-s18.test.mjs`. Other defense ideas offered, not built: Stoneheart (a hit takes at most 20% max health),
   Aegis of Dawn (legendary, shield on the most hurt hero every 15s), Spellward Robe (+30 resist, first magic hit blocked).
+- NEW EPIC Assault Breastplate (id assault_breastplate, user's design): +35 defense per copy for the holder, and while the
+  holder lives EVERY enemy has 8 less defense per copy (`assaultShred` special; an aura worked out at each hit in
+  `BattleState.assaultShred()` -> computeDamage `opts.defenseShred`, physical hits only, can go below 0 like Armor Break;
+  no icon on the enemies). Tests: `items-s18.test.mjs`.

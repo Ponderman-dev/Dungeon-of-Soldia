@@ -1951,5 +1951,23 @@
       }
     ],
     "perStack": "+15 defense, +15 resist for the squad"
+  },
+  "assault_breastplate": {
+    "name": "Assault Breastplate",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "+35 defense. Every enemy has 8 less defense while this hero lives.",
+    "effects": [
+      {
+        "stat": "defense",
+        "flat": 35
+      },
+      {
+        "special": "assaultShred",
+        "percent": 8
+      }
+    ],
+    "perStack": "+35 defense, enemies -8 defense"
   }
 }

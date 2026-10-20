@@ -33,10 +33,11 @@ export function armorPercent(points, rules) {
 
 // Physical hits are cut by Defense, magical hits by Resist (same curve for both).
 // Armor Break lowers defense, Curse lowers resist (they can go below 0: then the hit does MORE damage).
-function armourCut(defender, type, rules, damageTypes) {
+// shred: defense taken off by an aura (Assault Breastplate), physical hits only.
+function armourCut(defender, type, rules, damageTypes, shred = 0) {
   const physical = damageTypes[type].category === 'physical';
   const points = physical
-    ? defender.stats.defense + statusSum(defender, 'armorBreak', 'defenseFlat')
+    ? defender.stats.defense + statusSum(defender, 'armorBreak', 'defenseFlat') - shred
     : defender.stats.resist + statusSum(defender, 'curse', 'resistFlat');
   return armorPercent(points, rules);
 }
@@ -76,7 +77,7 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
   const mult = weakResistMultiplier(defender, type, rules, damageTypes);
   amount *= mult;
   amount *= 1 + ((attacker.damageBonus && attacker.damageBonus[type]) || 0) / 100;
-  if (!opts.ignoreArmor) amount *= 1 - armourCut(defender, type, rules, damageTypes) / 100; // Headshot ignores defense
+  if (!opts.ignoreArmor) amount *= 1 - armourCut(defender, type, rules, damageTypes, opts.defenseShred || 0) / 100; // Headshot ignores defense
   amount *= markMultiplier(defender);
   amount *= 1 + (opts.damagePercent || 0) / 100; // e.g. the Rogue's Opportunist vs debuffed enemies
 

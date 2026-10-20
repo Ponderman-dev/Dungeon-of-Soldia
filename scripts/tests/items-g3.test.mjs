@@ -26,9 +26,9 @@ const rate = (id, copies, status, N = 6000, heroIdx = 0, heroIds = null) => {
 };
 const within = (v, t, tol) => Math.abs(v - t) <= tol;
 
-{ const need = ['ember_charm', 'venom_fang', 'rusty_nails', 'serrated_edge', 'hex_doll', 'dread_bell', 'gag_rune', 'fire_arrows'];
-  ok('all 8 G3 items exist with a description', need.every((id) => itemDefs[id] && itemDefs[id].description));
-  ok('rarities: commons Ember/Venom/Rusty, rares the rest', ['ember_charm', 'venom_fang', 'rusty_nails'].every((i) => itemDefs[i].rarity === 'common') && ['serrated_edge', 'hex_doll', 'dread_bell', 'fire_arrows'].every((i) => itemDefs[i].rarity === 'rare') && itemDefs.gag_rune.rarity === 'epic'); }
+{ const need = ['ember_charm', 'venom_fang', 'rusty_nails', 'serrated_edge', 'hex_doll', 'dread_bell', 'gag_rune'];
+  ok('all 7 G3 items (Fire Arrows removed) exist with a description', need.every((id) => itemDefs[id] && itemDefs[id].description));
+  ok('rarities: commons Ember/Venom/Rusty, rares the rest', ['ember_charm', 'venom_fang', 'rusty_nails'].every((i) => itemDefs[i].rarity === 'common') && ['serrated_edge', 'hex_doll', 'dread_bell'].every((i) => itemDefs[i].rarity === 'rare') && itemDefs.gag_rune.rarity === 'epic'); }
 
 // ---- the chance appliers
 ok('Ember Charm: 6% Burn per attack', within(rate('ember_charm', 1, 'burn'), 0.06, 0.012));
@@ -89,20 +89,3 @@ for (const [id, st] of [['ember_charm', 'burn'], ['venom_fang', 'poison'], ['tho
   for (let i = 0; i < 5; i++) s.applyStatus(es[0], { status: 'chill', durationMs: 5000 }, k, 'c', []);
   ok('a freeze from 5 Chill stacks also gags (Chill sources count)', es[0].statuses.some((x) => x.type === 'freeze') && es[0].statuses.some((x) => x.type === 'silence')); }
 
-// Fire Arrows
-{ const { s, es, k } = mk(['goblin'], () => 0.1, ['archer', 'knight', 'rogue']); const a = s.heroes[0]; give(s, a, 'fire_arrows');
-  const ev = []; s.landAttack(a, es[0], ev); const fire = ev.filter((e) => e.type === 'attack' && e.damageType === 'fire');
-  ok('Fire Arrows: a ranged attack can add an extra fire hit (35% of attack)', fire.length === 1 && Math.abs(fire[0].result.amount - a.stats.attack * 0.35) < 3, `${fire[0] && fire[0].result.amount}`); }
-{ const { s, es } = mk(['goblin'], () => 0.1, ['archer', 'knight', 'rogue']); const a = s.heroes[0]; give(s, a, 'fire_arrows', 3);
-  const ev = []; s.landAttack(a, es[0], ev); const fire = ev.filter((e) => e.type === 'attack' && e.damageType === 'fire');
-  ok('...more copies: the chance stays 50% but the fire hit grows (3 copies = 105%)', fire.length === 1 && Math.abs(fire[0].result.amount - a.stats.attack * 1.05) < 5, `${fire[0] && fire[0].result.amount}`); }
-{ const { s, es } = mk(['goblin'], Math.random, ['archer', 'knight', 'rogue']); const a = s.heroes[0]; give(s, a, 'fire_arrows'); s.rng = Math.random; let n = 0; const N = 5000;
-  for (let i = 0; i < N; i++) { const ev = []; s.landAttack(a, es[0], ev); if (ev.some((e) => e.damageType === 'fire')) n++; }
-  ok('...50% of attacks', within(n / N, 0.5, 0.03)); }
-{ const { s, es, k } = mk(['goblin'], () => 0.1); give(s, k, 'fire_arrows'); const ev = []; s.landAttack(k, es[0], ev);
-  ok('a MELEE holder gets nothing from Fire Arrows', !ev.some((e) => e.type === 'attack' && e.damageType === 'fire')); }
-{ const { s, es } = mk(['goblin'], () => 0.1, ['archer', 'knight', 'rogue']); const a = s.heroes[0]; give(s, a, 'fire_arrows'); a.specials.lifesteal = 100; a.hp = 1;
-  s.landAttack(a, es[0], []); const afterBasic = a.hp;
-  ok('item fire hits do no lifesteal (only the basic hit does)', afterBasic > 1); }
-{ const { s } = mk(['goblin']); const real = kitsV1(r('heroes.json')); const rw = r('rewards.json');
-  ok('Fire Arrows needs a ranged source', itemDefs.fire_arrows.needs === 'ranged'); }

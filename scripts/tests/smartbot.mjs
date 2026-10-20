@@ -45,7 +45,7 @@ export function scoreFor(item, hero, s, sources) {
   if (item.needs) v *= [].concat(item.needs).some((n) => sources.has(n)) ? 1.3 : 0.15;
   const melee = hero.def.damageType === 'melee';
   if (['sharp_edge', 'excalibur'].includes(item.id) && !melee) return 0.05;
-  if (['eagle_eye', 'fire_arrows', 'quiver_of_plenty'].includes(item.id) && hero.def.damageType !== 'ranged') return 0.05;
+  if (['eagle_eye', 'quiver_of_plenty'].includes(item.id) && hero.def.damageType !== 'ranged') return 0.05;
   if (ELEMENT[item.id]) v *= hero.def.damageType === ELEMENT[item.id] || (hero.def.provides || []).includes(ELEMENT[item.id]) ? 1.3 : 0.9; // charms add their element to every attack: good on anyone
   const living = s.heroes.filter((h) => h.alive);
   const maxDps = Math.max(...living.map(dps));

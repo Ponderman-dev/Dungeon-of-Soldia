@@ -737,7 +737,7 @@ export default class BattleScene extends Phaser.Scene {
   // (src/data/itemFx.json says which; systems/itemFx.js draws it).
   itemProc(e, v) {
     const spec = itemFxData[e.itemId];
-    if (!(spec && spec.noPop)) { // frequent simple procs (Fire Arrows, Quiver, Metronome) stay quiet: no icon, no sound
+    if (!(spec && spec.noPop)) { // frequent simple procs (Quiver, Metronome) stay quiet: no icon, no sound
       sfx.play('itemProc');
       this.iconPop(v, e.itemId);
     }
@@ -1928,18 +1928,6 @@ export default class BattleScene extends Phaser.Scene {
   showProjectile(from, to, kind) {
     if (!from || !to) return;
     if (kind === 'arrow') return this.shootArrow(from, to, 200); // Quiver of Plenty's extra arrow: a normal shot
-    // Fire Arrows: a burning arrow (projectileFx 'firearrow', systems/hitFx.js) that flies on its own beside the normal one.
-    if (kind === 'firearrow') {
-      const a = this.fxPoint(from);
-      let b = this.fxPoint(to);
-      const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
-      this.addFx(240, (q, now) => {
-        if (to.ch.active) b = this.fxPoint(to);
-        const head = { x: a.x + (b.x - a.x) * q, y: a.y + (b.y - a.y) * q };
-        return TUNE.paint('shot', 'firearrow', projectileFx('firearrow', a, head, now * TUNE.speed('shot', 'firearrow'), seed));
-      }, ['shot', 'firearrow']);
-      return;
-    }
     const start = this.center(from);
     // Skill shots in pixels (systems/skillFx.js); they aim at where the target is NOW.
     if (SHOT_MS[kind] || kind === 'crescent') {

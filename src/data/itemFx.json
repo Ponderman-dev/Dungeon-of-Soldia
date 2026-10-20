@@ -1,5 +1,5 @@
 {
-  "_about": "Item effects (user's choice: each item's own effect AND its icon pops over the holder). When an item goes off (a proc event with its itemId) the item's icon pops over the holder; `effect` names an extra effect recipe in src/systems/itemFx.js. Items not listed only pop their icon (their hits already show the normal hit of their damage type). Projectile looks (bomb, lightning, greenfire) and thorns / lifesteal / tornado are drawn from their own events. iconPop: size and timing of the icon pop. noPop: true = this item does NOT pop its icon or play the proc sound (user: frequent simple procs: Fire Arrows, Quiver of Plenty, Metronome; and the debuff procs, whose status icon already shows: Venom Fang, Ember Charm, Rusty Nails, Hex Doll, Serrated Edge, Dread Bell, Thousand Cuts, Provoker's Horn).",
+  "_about": "Item effects (user's choice: each item's own effect AND its icon pops over the holder). When an item goes off (a proc event with its itemId) the item's icon pops over the holder; `effect` names an extra effect recipe in src/systems/itemFx.js. Items not listed only pop their icon (their hits already show the normal hit of their damage type). Projectile looks (bomb, lightning, greenfire) and thorns / lifesteal / tornado are drawn from their own events. iconPop: size and timing of the icon pop. noPop: true = this item does NOT pop its icon or play the proc sound (user: frequent simple procs: Quiver of Plenty, Metronome; and the debuff procs, whose status icon already shows: Venom Fang, Ember Charm, Rusty Nails, Hex Doll, Serrated Edge, Dread Bell, Thousand Cuts, Provoker's Horn).",
   "iconPop": {
     "scale": 2,
     "ms": 700,
@@ -46,9 +46,6 @@
   },
   "spirit_axe": {
     "effect": "spiritAxe"
-  },
-  "fire_arrows": {
-    "noPop": true
   },
   "quiver_of_plenty": {
     "noPop": true

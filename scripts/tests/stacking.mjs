@@ -15,7 +15,7 @@ const COPIES = (process.argv[4] || '1,5,10,20').split(',').map(Number);
 const FLOOR = 18, LEVEL = 12, LIMIT = 240000;
 // Who holds the item: a hero who can actually use it.
 const HOLDER = {
-  archer: ['eagle_eye', 'fire_arrows'],
+  archer: ['eagle_eye'],
   mage: ['kindling', 'frost_charm', 'storm_charm', 'frozen_thunderbolt', 'magma_core', 'echo_rune', 'hourglass', 'siege_cannon', 'metronome'],
   necromancer: ['shadow_charm', 'plague_flask', 'bone_charm', 'overseers_whistle', 'grave_dust', 'necro_crown'],
   bard: ['conductors_baton'],

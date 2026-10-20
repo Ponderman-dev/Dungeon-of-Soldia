@@ -1167,7 +1167,6 @@ export default class BattleState {
       if (target.alive && !hit.dodged) for (const spec of (el ? el.apply : c.apply) || []) this.applyStatus(target, spec, unit, `counter_${f.holder.uid}`, events);
     }
     this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, force: empower.some((f) => f.counter.forceProcs) });
-    this.fireArrows(unit, target, events);
     this.extraArrows(unit, target, events);
     this.volley(unit, target, events); // Archer: every Nth shot fires at more enemies
   }
@@ -1182,8 +1181,8 @@ export default class BattleState {
   }
 
   // Archer's VOLLEY (passive.volley): every `every`th basic shot also fires at `arrows`-1 other enemies (the nearest
-  // to her target), +`perQuiver` per Quiver of Plenty she holds. Each arrow is a full shot that rolls her on-hit items
-  // (and Fire Arrows). The count is kept for the whole run.
+  // to her target), +`perQuiver` per Quiver of Plenty she holds. Each arrow is a full shot that rolls her on-hit items.
+  // The count is kept for the whole run.
   volley(unit, target, events) {
     const V = unit.def.passive && unit.def.passive.volley;
     if (!V || unit.side !== 'hero') return;
@@ -1201,7 +1200,6 @@ export default class BattleState {
       if (n-- <= 0) break;
       const res = this.strike(unit, e, events, { multiplier: V.damageMultiplier, projectile: 'arrow' });
       this.rollProcs(unit, 'onAttack', events, { target: e, hit: !res.dodged });
-      this.fireArrows(unit, e, events);
     }
   }
 
@@ -1273,15 +1271,6 @@ export default class BattleState {
     if (hero.wardTimer < (hero.specials.wardPulseEveryMs || 10000)) return;
     hero.wardTimer = 0;
     this.wardShield(hero, events);
-  }
-
-  // Fire Arrows: ranged attacks have a 50% chance (it does not stack) for an extra fire hit; more copies hit harder.
-  fireArrows(unit, target, events) {
-    const fa = unit.specials && unit.specials.fireArrows;
-    if (fa && unit.damageType !== 'melee' && target.alive && this.rng() < 0.5) {
-      events.push({ type: 'proc', unit, label: 'Fire Arrow!', itemId: 'fire_arrows', target });
-      this.strike(unit, target, events, { multiplier: fa / 100, damageType: 'fire', projectile: 'firearrow', item: true }); // a flaming arrow, not a bomb
-    }
   }
 
   // ---- hero rework v2: signature mechanics (all numbers in the hero's passive in heroes.json) ----------
@@ -2743,10 +2732,9 @@ export default class BattleState {
         for (const spec of skill.finisher.applyAtMax || []) this.applyStatus(target, spec, hero, `${slot.id}_max`, events);
         this.rollProcs(hero, 'onAttack', events, { target, hit: true, force: true });
       }
-      // Headshot (`triggersOnHit`): counts as a basic attack for on-hit items (and Fire Arrows).
+      // Headshot (`triggersOnHit`): counts as a basic attack for on-hit items.
       if (skill.triggersOnHit && res && target.alive) {
         this.rollProcs(hero, 'onAttack', events, { target, hit: !res.dodged });
-        this.fireArrows(hero, target, events);
       }
       // Savage Leap v3 (`procBoost`): every enemy it hits rolls his on-hit items, at `procBoost` times their chance.
       if (skill.procBoost && res && target.alive) this.rollProcs(hero, 'onAttack', events, { target, hit: !res.dodged, chanceMult: skill.procBoost });
@@ -3051,10 +3039,9 @@ export default class BattleState {
     for (const t of targets) {
       const res = this.skillHit(hero, { ...ch.skill, apply: null, onCrit: ch.skill.onCrit }, ch.slotId, t, events, { multiplier: mult });
       if (res && !res.dodged && t.alive) for (const spec of ch.skill.waveApply || []) if (this.rng() * 100 < (spec.chance ?? 100)) this.applyStatus(t, spec, hero, ch.slotId, events);
-      // Arrow Rain (`waveOnHit`): every wave rolls the caster's on-hit items (and Fire Arrows) on each enemy it hits.
+      // Arrow Rain (`waveOnHit`): every wave rolls the caster's on-hit items on each enemy it hits.
       if (ch.skill.waveOnHit && res && t.alive) {
         this.rollProcs(hero, 'onAttack', events, { target: t, hit: !res.dodged });
-        this.fireArrows(hero, t, events);
       }
     }
     this.castPages = null;

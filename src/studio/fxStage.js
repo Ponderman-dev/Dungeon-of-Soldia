@@ -24,7 +24,7 @@ export function catalog() {
   for (const k of HIT_TYPES) list.push({ group: 'hit', name: k, label: `${nice(k)} hit`, ms: IMPACT_MS[k] });
   list.push({ group: 'hit', name: 'crit', label: 'Critical hit', ms: CRIT_MS });
   for (const [k, l] of [['dodge', 'Miss / dodge'], ['block', 'Block'], ['soak', 'Shield soaks a hit'], ['shieldBreak', 'Shield breaks'], ['heal', 'Heal'], ['puff', 'Enemy dies (smoke)']]) list.push({ group: 'hit', name: k, label: l, ms: MOMENT_MS[k] });
-  for (const k of ['ranged', 'firearrow', 'fire', 'ice', 'electric', 'dark', 'holy']) list.push({ group: 'shot', name: k, label: `${nice(k)} shot`, ms: 300 });
+  for (const k of ['ranged', 'fire', 'ice', 'electric', 'dark', 'holy']) list.push({ group: 'shot', name: k, label: `${nice(k)} shot`, ms: 300 });
   for (const k of SHOT_FX) list.push({ group: 'shot', name: k, label: `${nice(k)} (skill)`, ms: SHOT_MS[k] });
   for (const k of itemFx.ITEM_FX) list.push({ group: 'item', name: k, label: nice(k), ms: itemFx.ITEM_MS[k], on: HERO_ITEM_FX.includes(k) ? 'hero' : 'enemy' });
   list.push({ group: 'item', name: 'tornado', label: 'Excalibur tornado', ms: 2000 });

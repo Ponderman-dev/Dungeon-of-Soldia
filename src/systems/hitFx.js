@@ -66,19 +66,6 @@ export function projectileFx(type, start, head, t, seed = 0) {
   } else if (type === 'holy') {
     for (let i = 1; i < 4; i++) { const [x, y] = back(i * 1.5); g.px(x, y, C.holy, 1 - i / 4); }
     g.disc(head.x, head.y, 1, C.gold); g.px(head.x, head.y, C.white);
-  } else if (type === 'firearrow') { // Fire Arrows (item): a real arrow whose head burns
-    const flick = Math.floor(t / 55);
-    const [sx, sy] = back(9); g.line(sx, sy, head.x - ux * 2, head.y - uy * 2, ARROW); // wooden shaft
-    g.px(sx - uy, sy + ux, C.white); g.px(sx + uy, sy - ux, C.white); // feathers at the back
-    // A ball of fire on the head: orange outside, yellow inside, with tongues of flame streaming back and up.
-    g.disc(head.x - ux, head.y - uy, 2, C.fire);
-    g.px(head.x - ux, head.y - uy, C.fire2); g.px(head.x, head.y, C.fire2); g.px(head.x - ux * 2, head.y - uy * 2, C.fire2);
-    for (let i = 0; i < 4; i++) {
-      const [x, y] = back(2 + i * 1.3);
-      const w = (rnd(i * 7 + flick) - 0.5) * 3;
-      g.px(x - uy * w, y + ux * w - 1 - rnd(i + flick * 3) * 2, i < 2 ? C.fire2 : C.fire, 1 - i / 5);
-    }
-    for (let i = 1; i < 5; i++) { const [x, y] = back(9 + i * 1.8); g.px(x, y - rnd(i + flick) * 2, i < 2 ? C.fire2 : C.fire, 0.9 - i / 5); } // embers trailing
   } else { // ranged: an arrow, shaft trailing behind a white tip
     const [x, y] = back(5); g.line(x, y, head.x - ux, head.y - uy, ARROW); g.px(head.x, head.y, C.white);
   }

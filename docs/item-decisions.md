@@ -311,3 +311,4 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   different DoT gone. `needs` can now be a LIST (any one): Catalyst needs burn, poison or bleed.
 - itemruns (front hero gets the item, often with no shield / no DoT of its own) shows ~0 or below for both: not a fair
   test for synergy items (curve median 41, unchanged).
+- Fire Arrows REMOVED (user, session 19): a weaker Magma Core/Kindling for ranged heroes only (and its burn never worked).

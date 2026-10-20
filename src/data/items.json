@@ -836,25 +836,6 @@
     "needs": "cc",
     "perStack": "+1s silence"
   },
-  "fire_arrows": {
-    "name": "Fire Arrows",
-    "rarity": "rare",
-    "type": "onhit",
-    "scope": "self",
-    "description": "Ranged attacks: 50% chance of an extra fire hit for 35% damage.",
-    "effects": [
-      {
-        "special": "fireArrows",
-        "percent": 35
-      }
-    ],
-    "needs": "ranged",
-    "provides": [
-      "fire",
-      "burn"
-    ],
-    "perStack": "+35% fire hit damage"
-  },
   "executioners_axe": {
     "name": "Executioner's Axe",
     "rarity": "rare",

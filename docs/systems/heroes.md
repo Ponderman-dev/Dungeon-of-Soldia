@@ -36,9 +36,9 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
     - **Archer** VOLLEY GUNNER (built session 6): Steady Aim + pierce REMOVED from her (the `steadyAim` code stays, unused by
       real heroes). VOLLEY (`passive.volley`, `volley()` at the end of landAttack): every `every` 4th basic shot also fires at
       `arrows`-1 = 2 other enemies (nearest to her target), +`perQuiver` 1 per Quiver of Plenty; each arrow is a full strike
-      that rolls her on-hit items + Fire Arrows; count `hero.volleyCount` kept for the run. ARROW RAIN (`arrow_rain`, replaces
+      that rolls her on-hit items; count `hero.volleyCount` kept for the run. ARROW RAIN (`arrow_rain`, replaces
       Headshot; `headshot` stays in skills.json): channel 6 waves of 60% every 333ms on a circle 110 that follows her target,
-      cooldown 10s, `waveOnHit` = every wave rolls her on-hit items + Fire Arrows on each enemy hit (in `fireWave()`).
+      cooldown 10s, `waveOnHit` = every wave rolls her on-hit items on each enemy hit (in `fireWave()`).
       Balance: review.mjs 3 all avg floor ~25 (old kit) -> ~24.3, still LAST; her share of squad damage 46% -> ~29% (lost
       the 60% pierce on every shot and Steady Aim). Tried: volley 4 arrows, every 3rd, rain 70%: little change in review
       (runs end at the floor-20 boss, where volley has no 2nd target). User: leave her as is for now (try in game first). Then user: attack speed a bit higher -> base attackEfficiency 100 -> 115: avg floor ~24.3 -> ~25.3.

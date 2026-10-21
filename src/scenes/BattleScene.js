@@ -2709,10 +2709,10 @@ export default class BattleScene extends Phaser.Scene {
     if (!v) return 0;
     if (this.speech) this.speech.c.destroy();
     const R = dialogue.rules;
-    const t = uiText(this, 0, 0, s.text, R.sizePx, UI.text, { align: 'center', wordWrap: { width: R.maxWidthPx - 2 * R.padPx } }).setOrigin(0.5, 1);
+    const t = uiText(this, 0, 0, s.text, R.sizePx, R.textColor, { align: 'center', wordWrap: { width: R.maxWidthPx - 2 * R.padPx } }).setOrigin(0.5, 1);
     const w = Math.ceil((t.width + 2 * R.padPx) / 2) * 2, h = Math.ceil((t.height + 2 * R.padPx) / 2) * 2;
     t.setPosition(0, -R.tailPx - R.padPx + 2);
-    const box = drawWindow(this.add.graphics(), -w / 2, -R.tailPx - h, w, h);
+    const box = drawWindow(this.add.graphics(), -w / 2, -R.tailPx - h, w, h, { fill: R.fill, line: R.line }); // white bubble, black line: not like the black UI windows
     const tail = this.add.graphics();
     const c = this.add.container(0, 0, [box, tail, t]).setDepth(DEPTH.popup + 3).setScale(0.6).setAlpha(0);
     this.speech = { c, v, box, tail, w };
@@ -2738,8 +2738,8 @@ export default class BattleScene extends Phaser.Scene {
     S.tail.clear();
     for (let r = 0; r < R.tailPx + 2; r += 2) {
       const half = R.tailPx + 2 - r;
-      S.tail.fillStyle(UI.line, 1).fillRect(dx - half, -R.tailPx - 2 + r, half * 2, 2);
-      if (half > 2) S.tail.fillStyle(UI.window, 1).fillRect(dx - half + 2, -R.tailPx - 2 + r, half * 2 - 4, 2);
+      S.tail.fillStyle(R.line, 1).fillRect(dx - half, -R.tailPx - 2 + r, half * 2, 2);
+      if (half > 2) S.tail.fillStyle(R.fill, 1).fillRect(dx - half + 2, -R.tailPx - 2 + r, half * 2 - 4, 2);
     }
   }
 

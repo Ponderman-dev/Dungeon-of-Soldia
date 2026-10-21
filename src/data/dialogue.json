@@ -9,7 +9,10 @@
     "sizePx": 8,
     "abovePx": 24,
     "padPx": 8,
-    "tailPx": 6
+    "tailPx": 6,
+    "fill": 16777215,
+    "line": 0,
+    "textColor": "#000000"
   },
   "heroes": {
     "knight": {

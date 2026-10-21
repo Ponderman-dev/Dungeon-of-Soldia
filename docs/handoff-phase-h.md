@@ -1,19 +1,19 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 20, 2026-10-21): no task picked; offer the OPEN list below
-- BRANCH: `main` has EVERYTHING (made in session 20; the old branches were deleted). See the Git rule in CLAUDE.md.
-- DONE session 19:
-  - Fire Arrows REMOVED (user). Ember Charm burn 6% -> 12% (+10% per extra charm). Spirit Axe v2: spins ONCE when the
-    holder is hit, 14% per copy, 400% to every enemy within 110px (itemruns 3 copies +9.0: watch it). docs/item-decisions.md.
-  - BUG FIX: the game froze when a Kobold Sapper's late bomb hit something (scene lunged a faded attacker; BattleScene
-    'attack' event now skips a missing attacker view).
-  - NEW FONT: IRONSLAB, the user's OWN pixel font (`src/assets/fonts/ironslab.ttf`, 10px grid). Scenes still ask for
-    8/16/24px; uiKit maps them to 10/20/30 (`UI.fontGrid`). Missing chars: `$ ; @ \ ^ _ { | } ~`. If the user sends a new
-    .ttf: check grid + characters (session 19 used small node scripts), swap the file, screenshot. ui.md has it all.
-    Jacquard 24 and ~20 Google pixel fonts were tried and turned DOWN.
-  - Death Coil: user says it's fine; its 'change' note on the skill-fx page (db notes/look:death_coil3) is now 'ok'.
-- OPEN: Electric has no payoff epic (Shock); Eclipse Idol ~0 in itemruns (bot); more dark legendaries (Doom Crown, Soul
-  Reaper, Shade Lantern offered). Defense ideas not built: Stoneheart (hit cap 20%), Aegis of Dawn, Spellward Robe.
+## START HERE (session 21, 2026-10-21): NEXT = OPENING TITLE PAGE (user's pick)
+- BRANCH: `main` has EVERYTHING (session 20 work merged in). See the Git rule in CLAUDE.md.
+- NEXT TASK: an opening TITLE PAGE before the squad screen. Today BootScene starts 'Squad' directly (src/main.js scene
+  list: Boot, Squad, Battle, Reward, Puzzle, Debug). Nothing designed yet: ask the user first (game name 'Dungeon of
+  Soldia' look, what's on it: tap to start / continue, background art, music is ON HOLD). Follow docs/systems/ui.md
+  (black windows, white lines, Ironslab font) and the ART rule below (show it in the game first, screenshots).
+- DONE session 20: SPEECH BUBBLES (user idea, purely for show): a hero says a line in a WHITE bubble (black line + text)
+  at the run's start and after every cleared floor; boss / fallen-friend / close call (<=25% hp) / hurt (<=50%) lines;
+  10 heroes x 6 kinds in `src/data/dialogue.json`, logic `systems/dialogue.js`, test `dialogue.test.mjs`. The clear pause
+  is ~2.4s now (bubble time). 'Floor N cleared!' moved up to the centre (combat.json `transition.clearBannerY` 422).
+  Details: ui.md 'Speech bubbles'. The user may still want to edit lines.
+- OPEN (older ideas): Electric has no payoff epic (Shock); Eclipse Idol ~0 in itemruns (bot); more dark legendaries
+  (Doom Crown, Soul Reaper, Shade Lantern offered). Defense ideas not built: Stoneheart (hit cap 20%), Aegis of Dawn,
+  Spellward Robe.
 - itemruns gives the item to the FRONT hero: unfair for synergy items (shield, DoT, ranged): say so with its numbers.
   It is noisy at 6/squad: use 16/squad and compare old vs new on the same dice (git worktree of HEAD) before judging.
 - Test helper (scratchpad, throwaway): Playwright (/opt/node22/lib/node_modules/playwright, executablePath

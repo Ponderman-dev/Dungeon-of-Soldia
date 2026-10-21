@@ -32,7 +32,7 @@ On itch.io: your profile menu -> **Upload new project**.
 2. Repeat step 1 (build, rename, zip).
 3. On the itch.io project: Edit game -> Uploads -> **Replace** the old zip (or upload the new one and delete the
    old one), keep "played in the browser" ticked, Save.
-4. Optional: write a short devlog post (itch.io 'Devlog' tab) saying what changed.
+4. Optional: post a devlog (itch.io Devlog tab). Drafts live in `docs/devlog/` (one file per update).
 
 ## What playtesters will see (current build)
 - Title screen (forest from above) -> tap -> the camp, a random unlocked hero walks in.

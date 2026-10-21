@@ -2691,14 +2691,14 @@ export default class BattleScene extends Phaser.Scene {
     const someoneFell = this.livingHeroViews().length < (this.aliveAtStart ?? 0);
     const bossFloor = !!(this.dungeon.bosses && this.dungeon.bosses[this.floor]);
     const said = clearSpeech(dialogue, this.state.heroes, { bossFloor, someoneFell });
-    const sayMs = this.sayLine(said.kind, said.heroes);
+    this.sayLine(said.kind, said.heroes); // never waited for: the bubble stays up over the reward screen and fades
     for (const { unit, amount } of this.state.winHeal(combatRules.winHealPercent)) {
       const v = this.views.get(unit.uid);
       this.setBar(v);
       if (Math.round(amount) > 0) this.popText(v, `+${Math.round(amount)}`, '#6dff8f');
     }
 
-    this.time.delayedCall(Math.max(T.clearPauseMs, sayMs), () => {
+    this.time.delayedCall(T.clearPauseMs, () => {
       this.banner.setText('').setY(BANNER_Y);
       this.showReward(() => this.goToNextFloor());
     });

@@ -48,13 +48,13 @@ export const roomMethods = {
   // After the heroes walked in: a fight, or the room's props wake up.
   beginFloor() {
     const go = () => (this.layer.room ? this.startRoom() : this.startFighting());
-    // The first floor of a run: a hero says something before the fight starts (purely for show, BattleScene.sayLine).
+    // The first floor of a run: a hero says something as the fight starts (purely for show, BattleScene.sayLine; the
+    // fight does not wait for it).
     const first = !this.saidStart;
     this.saidStart = true;
     this.enterHeroes(() => {
-      const ms = first ? this.sayLine('start') : 0;
-      if (ms) this.time.delayedCall(ms, go);
-      else go();
+      if (first) this.sayLine('start');
+      go();
     });
   },
 

@@ -26,9 +26,9 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
 - **Pop-ups and bars at the edges (2026-10-19):** the same WORD popped over one fighter again within `POP_REPEAT_MS` (600) is skipped (a Samurai's 'Counter! Blocked! Counter!' pile); numbers always show. Health bars (+ Lv label, shields, chips) are clamped inside the screen when a fighter stands at a side wall (`BattleScene.syncBar`). Skill names (`BattleScene.skillName`) never land on another skill name or the 'Floor cleared!' banner: they go above them. Reward sheet: when a step changes the sheet's size, the new step's content waits hidden until the sheet has resized, then fades in (no title over the banner while it moves).
 - **Speech bubbles (session 20, user idea, purely for show):** a hero says a short line in a small WHITE window (black line, black text: unlike the black UI windows, user) with
   a stepped tail over its head (`BattleScene.sayLine` / `placeSpeech`, the bubble follows the hero). When: the run's
-  first floor after the walk-in (`start`, the fight waits for it), and every cleared floor (`clear`; `boss` after a
+  first floor after the walk-in (`start`, the fight starts at once), and every cleared floor (`clear`; `boss` after a
   boss, `fallen` when a squad mate fell that floor, `close` / `hurt` when a hero ended the floor at or below 25% / 50%
   health: that hero says it; order boss > fallen > close > hurt > clear, `dialogue.clearSpeech`, health read before the
-  win heal). 'Floor N cleared!' sits higher (combat.json `transition.clearBannerY`, 422) so it misses the bubbles. The clear pause becomes as long as the bubble (~2.4s instead of
-  0.9s). Lines + timings in `src/data/dialogue.json` (per hero; a missing kind uses `clear`); `systems/dialogue.js`
+  win heal). 'Floor N cleared!' sits higher (combat.json `transition.clearBannerY`, 422) so it misses the bubbles. Nothing waits for a bubble (user, session 21: the wait broke the pace): the clear pause is
+  the normal 0.9s and the bubble stays up over the reward screen while it fades. Lines + timings in `src/data/dialogue.json` (per hero; a missing kind uses `clear`); `systems/dialogue.js`
   picks a living hero (not the last speaker) and goes through all its lines before repeating. Test: `dialogue.test.mjs`.

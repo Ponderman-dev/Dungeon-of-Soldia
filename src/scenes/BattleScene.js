@@ -35,6 +35,8 @@ import { statusLook, iceBreak, bodyBox } from '../systems/statusFx.js';
 import { eliteGlow, crownPixels } from '../systems/eliteFx.js';
 import { projectileFx, impactFx, critFx, IMPACT_MS, CRIT_MS, MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, deathPuffFx } from '../systems/hitFx.js';
 import BattleState from '../systems/BattleState.js';
+import dialogue from '../data/dialogue.json';
+import { pickSpeech, clearKind } from '../systems/dialogue.js';
 import { validateDungeon, validateHeroSkills, validateDamageTypes } from '../systems/validate.js';
 import { enemiesForFloor, monsterHouse } from '../systems/dungeon.js';
 import { enemySpots } from '../systems/formation.js';
@@ -99,6 +101,9 @@ export default class BattleScene extends Phaser.Scene {
 
   create() {
     this.lastKiller = null; // the enemy that felled the last hero (defeat screen)
+    this.speech = null; // the speech bubble on screen (sayLine)
+    this.speechMemory = {}; // who spoke last, lines already said (systems/dialogue.js), for the whole run
+    this.saidStart = false; // the run's first floor gets a 'start' line (roomMethods.beginFloor)
     // Drawing layers made on first use: a new run (scene started again) must make new ones, the old ones were destroyed
     // with the last run (bug: on a second run status effects, hits, elites, bombs... were drawn on dead layers).
     for (const k of ['arrowG', 'bombG', 'bombTopG', 'castBars', 'crownG', 'eliteG', 'heroHud', 'hitG', 'orderG', 'statusG', 'tauntLines']) this[k] = null;
@@ -214,6 +219,7 @@ export default class BattleScene extends Phaser.Scene {
       return;
     }
     this.bossIntroDone = false;
+    this.aliveAtStart = this.livingHeroViews().length; // after the fight: did a squad mate fall? (the 'fallen' lines)
     this.showSlots(true);
     // Enemy health bars and tags leave their floor (they slid in with it) and go on top of every
     // fighter, like the heroes' bars, so a character never covers a bar.
@@ -1436,6 +1442,7 @@ export default class BattleScene extends Phaser.Scene {
 
   update(time, delta) {
     this.refreshHud();
+    this.placeSpeech();
     this.drawDangerGlow();
     if (this.mode !== 'fighting') {
       this.drawStatusFx();
@@ -2685,10 +2692,55 @@ export default class BattleScene extends Phaser.Scene {
       if (Math.round(amount) > 0) this.popText(v, `+${Math.round(amount)}`, '#6dff8f');
     }
 
-    this.time.delayedCall(T.clearPauseMs, () => {
+    const someoneFell = this.livingHeroViews().length < (this.aliveAtStart ?? 0);
+    const bossFloor = !!(this.dungeon.bosses && this.dungeon.bosses[this.floor]);
+    const sayMs = this.sayLine(clearKind({ bossFloor, someoneFell })); // a hero says something about the floor
+    this.time.delayedCall(Math.max(T.clearPauseMs, sayMs), () => {
       this.banner.setText('');
       this.showReward(() => this.goToNextFloor());
     });
+  }
+
+  // A speech bubble over a living hero (purely for show; lines in data/dialogue.json, picked by systems/dialogue.js).
+  // kind = 'start' | 'clear' | 'boss' | 'fallen'. Returns how long the bubble stays (ms), 0 = no bubble.
+  sayLine(kind) {
+    const s = pickSpeech(dialogue, this.state.heroes, kind, Math.random, this.speechMemory);
+    const v = s && this.views.get(s.uid);
+    if (!v) return 0;
+    if (this.speech) this.speech.c.destroy();
+    const R = dialogue.rules;
+    const t = uiText(this, 0, 0, s.text, R.sizePx, UI.text, { align: 'center', wordWrap: { width: R.maxWidthPx - 2 * R.padPx } }).setOrigin(0.5, 1);
+    const w = Math.ceil((t.width + 2 * R.padPx) / 2) * 2, h = Math.ceil((t.height + 2 * R.padPx) / 2) * 2;
+    t.setPosition(0, -R.tailPx - R.padPx + 2);
+    const box = drawWindow(this.add.graphics(), -w / 2, -R.tailPx - h, w, h);
+    const tail = this.add.graphics();
+    const c = this.add.container(0, 0, [box, tail, t]).setDepth(DEPTH.popup + 3).setScale(0.6).setAlpha(0);
+    this.speech = { c, v, box, tail, w };
+    this.placeSpeech();
+    this.tweens.add({ targets: c, scale: 1, alpha: 1, duration: R.inMs, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: c, alpha: 0, delay: R.inMs + R.holdMs, duration: R.outMs, onComplete: () => c.destroy() });
+    return R.inMs + R.holdMs + R.outMs;
+  }
+
+  // Keeps the speech bubble over its hero's head (heroes walk home after a win) and inside the screen; the tail
+  // always points at the hero.
+  placeSpeech() {
+    const S = this.speech;
+    if (!S || !S.c.active) return;
+    const R = dialogue.rules, ch = S.v.ch;
+    const headY = ch.y + (ch.hopOffset || 0) - S.v.unit.def.height * charScale(S.v.unit.def) - R.abovePx;
+    const x = Math.round(Phaser.Math.Clamp(ch.x, S.w / 2 + 6, GAME_WIDTH - S.w / 2 - 6));
+    S.c.setPosition(x, Math.round(headY));
+    // The tail: a small stepped point under the window, pointing at the hero (moves along the bottom when clamped).
+    const dx = Math.round(Phaser.Math.Clamp(ch.x - x, -S.w / 2 + 10, S.w / 2 - 10) / 2) * 2;
+    if (S.tailDx === dx) return;
+    S.tailDx = dx;
+    S.tail.clear();
+    for (let r = 0; r < R.tailPx + 2; r += 2) {
+      const half = R.tailPx + 2 - r;
+      S.tail.fillStyle(UI.line, 1).fillRect(dx - half, -R.tailPx - 2 + r, half * 2, 2);
+      if (half > 2) S.tail.fillStyle(UI.window, 1).fillRect(dx - half + 2, -R.tailPx - 2 + r, half * 2 - 4, 2);
+    }
   }
 
   // Shows the reward screen. When it is done, the hero gets the item and `next` runs.

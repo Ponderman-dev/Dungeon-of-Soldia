@@ -15,7 +15,8 @@ User's sketch + picks (2026-10-21). Flow: Title -> walk into the dungeon -> one 
 
 ## 3. Base = campfire camp in the first cave (BaseScene)
 - Campfire in the middle (the hero stands by it), tents and crates, cave tunnel at the TOP with an arrow
-  and 'To dungeon' -> opens the Squad screen.
+  and 'To dungeon'. Tap it: the hero walks up and out through the top tunnel, then the screen SLIDES UP
+  into the Squad (hero selection) screen.
 - 4 NPCs (2 left, 2 right), tap = window 'Coming soon': Glossary, Heroes, Leaderboard, Shop (merchant).
 - Top right: player profile button (achievements, records, stats, items later) -> 'Coming soon'.
 - After a run ends: back to the SQUAD screen as today (not the Base).

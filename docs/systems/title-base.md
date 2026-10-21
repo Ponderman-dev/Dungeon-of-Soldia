@@ -49,3 +49,14 @@ User's sketch + picks (2026-10-21). Flow: Title -> walk into the dungeon -> one 
 1. Camp (Base) visual DONE  2. Base NPCs + 'coming soon' windows + profile + 'To dungeon' DONE  3. Hero walk-in DONE
 4. Title night scene DONE  5. Title -> camp transition + Boot wiring DONE.
 Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settings.
+
+## 4. HUB REWORK (2026-10-21, user's sketch: 'more of a mobile game menu') — BUILT
+- No more walk-in from the bottom: from the title the camp just fades in (`hero.fadeMs`; Title starts Base with `fromTitle`).
+- Middle: the campfire (fire.y 372, light moved with it) with 3 random unlocked heroes (`hero.spots`) that idly wander
+  (`wander()`: a random spot within `radiusPx` of home, `speed` px/s, then face the fire, pause `pauseMs`).
+- Top left: Settings gear (`uiKit.drawGear`, shared with the title). Top right: profile = name box ('Adventurer') + round
+  portrait (`uiKit.pixelDisc`), tap = 'Coming soon'.
+- TO EXPEDITION (`ui.expedition`, big window, bobbing arrows): the screen slides up into the squad screen (no walk-out).
+- Bottom row: 4 square buttons (`ui.menu.buttons`: Glossary, Heroes, Leaders, Shop) with 12x12 pixel icons
+  (book, helmet, trophy, coin bag), each 'Coming soon'. The NPCs are no longer drawn (`npcs` kept for later screens);
+  `exit` removed. Props moved clear of the buttons.

@@ -547,7 +547,7 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "Every attack adds a small ice hit (10%). +10% ice damage.",
+    "description": "+10% ice damage, inflict ice damage on attacks.",
     "effects": [
       {
         "damageBonus": "ice",
@@ -565,7 +565,7 @@
         "mergeCopies": true
       }
     ],
-    "perStack": "+10% ice hit, +10% ice damage",
+    "perStack": "+10% ice damage, +10% ice hit",
     "provides": [
       "ice"
     ]

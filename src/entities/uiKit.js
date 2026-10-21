@@ -121,6 +121,23 @@ export function drawWindow(g, x, y, w, h, { fill = UI.window, line = UI.line, al
   return g;
 }
 
+// A gear (white, 28px across) centred on (m, n), for a Settings button. Returns g.
+export function drawGear(g, m, n) {
+  g.fillStyle(0xffffff, 1).fillRect(m - 9, n - 9, 18, 18).fillRect(m - 3, n - 14, 6, 28).fillRect(m - 14, n - 3, 28, 6);
+  g.fillStyle(0x000000, 1).fillRect(m - 3, n - 3, 6, 6);
+  return g;
+}
+
+// A filled disc made of 2px rows (crisp pixel edges, no smoothing), centred on (cx, cy). Returns g.
+export function pixelDisc(g, cx, cy, r, color) {
+  g.fillStyle(color, 1);
+  for (let y = -r; y < r; y += 2) {
+    const half = Math.round(Math.sqrt(Math.max(0, r * r - (y + 1) * (y + 1))) / 2) * 2;
+    g.fillRect(Math.round(cx - half), Math.round(cy + y), half * 2, 2);
+  }
+  return g;
+}
+
 // The ▶ cursor (4 wide, 7 tall, in 2px steps when `px` is 2), with its left edge at x and centred on y.
 export function drawCursor(g, x, y, color = UI.line, px = 2) {
   g.fillStyle(color, 1);

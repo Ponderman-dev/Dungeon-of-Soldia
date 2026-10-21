@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc } from '../entities/uiKit.js';
 import camp from '../data/camp.json';
 import { openFloor, darkLayer, lightTint, fireLayers, propLayer } from '../systems/campArt.js';
 import floorArt from '../data/floorArt.json';
@@ -13,8 +13,8 @@ import { loadProgress, unlockedIds } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
 
 // The Base: a campfire camp on the dungeon's flagstones (docs/systems/title-base.md). Pixel art: systems/campArt.js,
-// camp.json. NPCs and the profile open 'Coming soon' for now; 'To dungeon' walks the hero out and slides up into the
-// squad screen. Reached from the title screen (a random unlocked hero walks in from the bottom).
+// camp.json. A mobile-game hub (user's sketch, 2026-10-21): 3 heroes idle round the fire in the middle, settings and
+// profile at the top, TO EXPEDITION (slides up into the squad screen) and a row of menu buttons ('Coming soon') below.
 const P = camp.pixel;
 const U = camp.ui;
 const DEPTH = { ui: 2000, modal: 3000 };
@@ -25,53 +25,64 @@ export default class BaseScene extends Phaser.Scene {
   }
 
   init(data) {
-    this.walkIn = !!(data && data.walkIn); // from the title screen: the hero walks in
+    this.fromTitle = !!(data && data.fromTitle); // from the title screen: the camp fades in
     this.modal = null;
+    this.leaving = false;
   }
 
   create() {
     const width = Math.ceil(GAME_WIDTH / P), height = Math.ceil(GAME_HEIGHT / P);
-    // The same stone floor as the battle rooms, with no wall: the top stays open, the way deeper ('To dungeon').
+    // The same stone floor as the battle rooms, with no wall: the top stays open, the way deeper.
     const floor = openFloor(floorArt, camp, { width, height, tint: dungeons.A.tileColors[0] });
     this.add.image(0, 0, layerTexture(this, 'camp-floor', floor)).setOrigin(0).setScale(P).setDepth(0);
     this.add.image(0, 0, layerTexture(this, 'camp-dark', darkLayer(camp, { width, height }))).setOrigin(0).setScale(P).setDepth(0.5);
     this.drawProps();
     this.drawFire();
-    // One random unlocked hero by the fire. Coming from the title it walks in from the bottom first (the NPCs and
-    // TO DUNGEON wait until it has arrived).
-    const H = camp.hero, open = unlockedIds(heroes, loadProgress(), unlocks);
-    const def = heroes.find((h) => h.id === Phaser.Utils.Array.GetRandom(open)) || heroes[0];
-    this.hero = this.add.existing(new Character(this, H.x, H.y, def).setDepth(H.y));
-    this.leaving = false;
-    if (this.walkIn) {
-      this.leaving = true;
-      this.hero.setPosition(H.from[0], H.from[1]);
-      this.cameras.main.fadeIn(H.fadeMs, 0, 0, 0);
-      this.time.delayedCall(H.waitMs, () => this.walkPath([[H.x, H.y]], () => { this.hero.face(1); this.leaving = false; }));
-    }
-    this.drawNpcs();
+    this.drawHeroes();
     this.drawUi();
+    if (this.fromTitle) this.cameras.main.fadeIn(camp.hero.fadeMs, 0, 0, 0);
   }
 
-  // The camp's NPCs (camp.json npcs): each faces the fire, has its name under it and opens its window when tapped.
-  drawNpcs() {
-    for (const n of camp.npcs) {
-      const ch = this.add.existing(new Character(this, n.x, n.y, n.def).setDepth(n.y));
-      ch.face(n.face);
-      // The name floats over the head in a small black window (its bottom tagUp px above the feet).
-      const tag = uiText(this, n.x, 0, n.name, U.tagSize).setOrigin(0.5, 0).setDepth(DEPTH.ui + 1);
-      const boxH = tag.height + U.tagPad[1] * 2, top = n.y - U.tagUp - boxH;
-      tag.setY(top + U.tagPad[1]);
-      drawWindow(this.add.graphics().setDepth(DEPTH.ui), n.x - tag.width / 2 - U.tagPad[0], top, tag.width + U.tagPad[0] * 2, boxH);
-      this.add.zone(n.x, n.y - U.hit[1] / 2, U.hit[0], U.hit[1]).setInteractive().on('pointerup', () => this.comingSoon(n.name, n.who));
-    }
+  // Up to 3 random unlocked heroes round the fire, each idly wandering near its spot (camp.json hero).
+  drawHeroes() {
+    const H = camp.hero, open = Phaser.Utils.Array.Shuffle(unlockedIds(heroes, loadProgress(), unlocks).slice());
+    const defs = open.map((id) => heroes.find((h) => h.id === id)).filter(Boolean).slice(0, H.spots.length);
+    this.heroes = defs.map((def, i) => {
+      const [x, y] = H.spots[i];
+      const ch = this.add.existing(new Character(this, x, y, def).setDepth(y));
+      ch.face(x <= camp.fire.x ? 1 : -1);
+      this.time.delayedCall(Phaser.Math.Between(...H.pauseMs) * (0.3 + 0.4 * i), () => this.wander(ch, x, y));
+      return ch;
+    });
   }
 
-  // 'To dungeon' (a bobbing arrow at the top) and the profile button (top right).
+  // One idle stroll: a few steps to a random spot near home, a look at the fire, a pause, then again.
+  wander(ch, homeX, homeY) {
+    if (!ch.active) return;
+    const H = camp.hero, a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random());
+    const to = { x: homeX + Math.cos(a) * r * H.radiusPx[0], y: homeY + Math.sin(a) * r * H.radiusPx[1] };
+    const dist = Math.hypot(to.x - ch.x, to.y - ch.y);
+    const next = () => this.time.delayedCall(Phaser.Math.Between(...H.pauseMs), () => this.wander(ch, homeX, homeY));
+    if (dist < 4) return next();
+    ch.face(to.x < ch.x ? -1 : 1);
+    ch.setWalking(true);
+    const from = { x: ch.x, y: ch.y };
+    this.tweens.addCounter({ from: 0, to: 1, duration: (dist / H.speed) * 1000, onUpdate: (tw) => {
+      const t = tw.getValue();
+      ch.setPosition(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t).setDepth(ch.y);
+    }, onComplete: () => {
+      ch.setWalking(false);
+      ch.face(ch.x <= camp.fire.x ? 1 : -1); // back to watching the fire
+      next();
+    } });
+  }
+
+  // Settings gear (top left), profile (top right), TO EXPEDITION and the row of menu buttons at the bottom.
   drawUi() {
-    // 'To dungeon': the biggest thing on screen. A black window with the words in big letters and a white pixel
-    // up-arrow on each side, bobbing.
-    const T = U.toDungeon, cx = GAME_WIDTH / 2;
+    const ui = [];
+    // TO EXPEDITION: the biggest thing on screen. A black window with big letters and a white pixel up-arrow on each
+    // side, bobbing.
+    const T = U.expedition, cx = GAME_WIDTH / 2;
     const box = this.add.container(cx, T.y).setDepth(DEPTH.ui);
     box.add(drawWindow(this.add.graphics(), -T.w / 2, -T.h / 2, T.w, T.h));
     box.add(uiText(this, 0, 0, T.text, 'big').setOrigin(0.5));
@@ -84,15 +95,37 @@ export default class BaseScene extends Phaser.Scene {
       box.add(arrow);
       this.tweens.add({ targets: arrow, y: arrow.y - T.bob, duration: T.bobMs, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
-    this.add.zone(cx, T.y, T.w + 20, T.h + 20).setInteractive().on('pointerup', () => this.toDungeon());
-    this.exitMark = box;
+    this.add.zone(cx, T.y, T.w, T.h).setInteractive().on('pointerup', () => this.toExpedition());
 
-    const Pr = U.profile, g = this.add.graphics().setDepth(DEPTH.ui);
-    drawWindow(g, Pr.x, Pr.y, Pr.size, Pr.size);
-    // A little person: head and shoulders in white pixels.
-    const m = Pr.x + Pr.size / 2, t = Pr.y + 9;
-    g.fillStyle(0xffffff, 1).fillRect(m - 5, t, 10, 10).fillRect(m - 11, t + 13, 22, 4).fillRect(m - 13, t + 17, 26, 6);
-    this.add.zone(Pr.x + Pr.size / 2, Pr.y + Pr.size / 2, Pr.size + 8, Pr.size + 8).setInteractive().on('pointerup', () => this.comingSoon(Pr.name, Pr.who));
+    // The menu row: square buttons with a pixel icon and a name; each opens its 'Coming soon' window for now.
+    const M = U.menu, n = M.buttons.length, w = Math.floor((GAME_WIDTH - M.side * 2 - M.gap * (n - 1)) / n);
+    M.buttons.forEach((b, i) => {
+      const x = M.side + i * (w + M.gap);
+      ui.push(drawWindow(this.add.graphics(), x, M.y, w, M.h));
+      const icon = propLayer(b.icon, false);
+      ui.push(this.add.image(x + w / 2, M.y + M.iconY, layerTexture(this, `camp-icon-${b.id}`, icon)).setScale(M.iconPx));
+      ui.push(uiText(this, x + w / 2, M.y + M.labelY, b.label, M.labelSize).setOrigin(0.5));
+      this.add.zone(x + w / 2, M.y + M.h / 2, w, M.h).setInteractive().on('pointerup', () => this.comingSoon(b.label, b.who));
+    });
+
+    // Settings (top left): a gear in a small window.
+    const G = U.settings;
+    ui.push(drawGear(drawWindow(this.add.graphics(), G.x, G.y, G.size, G.size), G.x + G.size / 2, G.y + G.size / 2));
+    this.add.zone(G.x + G.size / 2, G.y + G.size / 2, G.size + 8, G.size + 8).setInteractive().on('pointerup', () => this.comingSoon(G.name, G.who));
+
+    // Profile (top right): a name box tucked under a round portrait (a little person for now).
+    const Pr = U.profile, d = Pr.portrait, px = GAME_WIDTH - Pr.right - d, barX = px - Pr.barW + d / 2;
+    const g = this.add.graphics();
+    drawWindow(g, barX, Pr.y + (d - Pr.barH) / 2, Pr.barW, Pr.barH);
+    ui.push(g, uiText(this, barX + 12, Pr.y + d / 2, Pr.name, 'small').setOrigin(0, 0.5));
+    const c = this.add.graphics();
+    pixelDisc(c, px + d / 2, Pr.y + d / 2, d / 2, 0xffffff);
+    pixelDisc(c, px + d / 2, Pr.y + d / 2, d / 2 - 2, 0x000000);
+    const m = px + d / 2, t = Pr.y + 13;
+    c.fillStyle(0xffffff, 1).fillRect(m - 5, t, 10, 10).fillRect(m - 11, t + 13, 22, 4).fillRect(m - 13, t + 17, 26, 6);
+    ui.push(c);
+    this.add.zone(px + d / 2 - Pr.barW / 2 + d / 4, Pr.y + d / 2, Pr.barW + d / 2, d).setInteractive().on('pointerup', () => this.comingSoon(Pr.title, Pr.who));
+    for (const o of ui) o.setDepth(DEPTH.ui);
   }
 
   // A 'Coming soon' window (uiKit). Tap anywhere to close.
@@ -101,47 +134,19 @@ export default class BaseScene extends Phaser.Scene {
     this.modal = comingSoonWindow(this, title, who, { w: U.soon.w, h: U.soon.h, depth: DEPTH.modal, onClose: () => { this.modal = null; } });
   }
 
-  // To dungeon: the hero walks round the fire and out of the top, then the screen slides up into the squad screen.
-  toDungeon() {
+  // TO EXPEDITION: the screen slides up into the squad screen.
+  toExpedition() {
     if (this.leaving || this.modal) return;
-    sfx.play('tap');
-    this.tweens.add({ targets: this.exitMark, alpha: 0, duration: 200 });
-    this.walkOut(() => {
-      const squad = this.scene.get('Squad');
-      squad.events.once(Phaser.Scenes.Events.CREATE, () => {
-        const cam = squad.cameras.main, mine = this.cameras.main;
-        cam.scrollY = GAME_HEIGHT; // the squad screen starts just above this one
-        this.tweens.add({ targets: cam, scrollY: 0, duration: U.slideMs, ease: 'Sine.easeInOut' });
-        this.tweens.add({ targets: mine, scrollY: -GAME_HEIGHT, duration: U.slideMs, ease: 'Sine.easeInOut', onComplete: () => this.scene.stop() });
-      });
-      this.scene.launch('Squad');
-    });
-  }
-
-  // The hero walks the exit path (camp.json exit): round the fire, then up and off the top of the screen.
-  walkOut(done) {
     this.leaving = true;
-    this.walkPath(camp.exit.path, done);
-  }
-
-  // The hero walks from where it stands through the points ([x, y] screen px), a little hop each step.
-  walkPath(path, done) {
-    const E = camp.exit, ch = this.hero;
-    const points = [{ x: ch.x, y: ch.y }, ...path.map(([x, y]) => ({ x, y }))];
-    let walked = 0, lastStep = 0;
-    const leg = (i) => {
-      if (i >= points.length - 1) { ch.setWalking(false); if (done) done(); return; }
-      const a = points[i], b = points[i + 1], dist = Math.hypot(b.x - a.x, b.y - a.y);
-      if (b.x !== a.x) ch.face(b.x < a.x ? -1 : 1);
-      ch.setWalking(true);
-      this.tweens.addCounter({ from: 0, to: 1, duration: (dist / E.speed) * 1000, onUpdate: (tw) => {
-        const t = tw.getValue(), hop = Math.abs(Math.sin(((walked + t * dist) / E.stepLenPx) * Math.PI)) * E.stepHeight;
-        const step = Math.floor((walked + t * dist) / E.stepLenPx);
-        if (step !== lastStep) { lastStep = step; sfx.play('step'); } // a footstep each landing
-        ch.setPosition(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t - hop).setDepth(a.y + (b.y - a.y) * t);
-      }, onComplete: () => { walked += dist; leg(i + 1); } });
-    };
-    leg(0);
+    sfx.play('tap');
+    const squad = this.scene.get('Squad');
+    squad.events.once(Phaser.Scenes.Events.CREATE, () => {
+      const cam = squad.cameras.main, mine = this.cameras.main;
+      cam.scrollY = GAME_HEIGHT; // the squad screen starts just above this one
+      this.tweens.add({ targets: cam, scrollY: 0, duration: U.slideMs, ease: 'Sine.easeInOut' });
+      this.tweens.add({ targets: mine, scrollY: -GAME_HEIGHT, duration: U.slideMs, ease: 'Sine.easeInOut', onComplete: () => this.scene.stop() });
+    });
+    this.scene.launch('Squad');
   }
 
   // A pixel layer as an image at screen (x, y), placed by its anchor.

@@ -4,13 +4,13 @@ import title from '../data/title.json';
 import pkg from '../../package.json';
 import { skyLayer, twinkleSpots, moonLayers, cloudLayer, canopyLayer } from '../systems/titleArt.js';
 import { layerTexture } from '../entities/pixelLayer.js';
-import { drawWindow, uiText, comingSoonWindow } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawGear } from '../entities/uiKit.js';
 import { loadProgress } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
 
 // The title screen (docs/systems/title-base.md): a thick night forest seen from above with the dungeon tower far away,
 // full moon, drifting clouds, twinkling stars, the logo (stand-in text), TAP TO START, best floor, settings, version.
-// Tap: the camera flies to the tower and fades into the camp (Base), where a hero walks in. Pixel art: systems/titleArt.js, title.json.
+// Tap: the camera flies to the tower and fades into the camp (Base), the hub with 3 heroes by the fire. Pixel art: systems/titleArt.js, title.json.
 const P = title.pixel;
 const DEPTH = { sky: 0, moon: 1, clouds: 2, forest: 3, ui: 10, modal: 20 };
 
@@ -78,8 +78,7 @@ export default class TitleScene extends Phaser.Scene {
     const G = title.settings, g = this.add.graphics();
     drawWindow(g, G.x, G.y, G.size, G.size);
     const m = G.x + G.size / 2, n = G.y + G.size / 2;
-    g.fillStyle(0xffffff, 1).fillRect(m - 9, n - 9, 18, 18).fillRect(m - 3, n - 14, 6, 28).fillRect(m - 14, n - 3, 28, 6);
-    g.fillStyle(0x000000, 1).fillRect(m - 3, n - 3, 6, 6);
+    drawGear(g, m, n);
     ui.push(g);
     this.add.zone(G.x + G.size / 2, G.y + G.size / 2, G.size + 10, G.size + 10).setInteractive().on('pointerup', (p, x, y, ev) => {
       ev.stopPropagation();
@@ -100,6 +99,6 @@ export default class TitleScene extends Phaser.Scene {
     cam.pan(this.door.x, this.door.y, Z.ms, 'Sine.easeIn');
     cam.zoomTo(Z.scale, Z.ms, 'Sine.easeIn');
     this.time.delayedCall(Z.ms - Z.fadeMs, () => cam.fadeOut(Z.fadeMs, 0, 0, 0));
-    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start('Base', { walkIn: true }));
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start('Base', { fromTitle: true }));
   }
 }

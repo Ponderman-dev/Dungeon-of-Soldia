@@ -5,10 +5,14 @@
   "minGapMs": 40,
   "cues": {
     "tap": {
-      "file": "picked/tap",
       "volume": 0.5,
       "pitchJitter": 0.05,
-      "source": "new_kenney-interfacesounds-audio-select-002.mp3"
+      "source": "new_100-cc0-sfx-2-sfx100v2-door-05.mp3, pixabay_button-394464.mp3, yours_video-game-retro-click-237.mp3",
+      "files": [
+        "picked/tap_1",
+        "picked/tap_2",
+        "picked/tap_3"
+      ]
     },
     "heroPick": {
       "file": "select",
@@ -35,9 +39,9 @@
       "source": "new_bb-books-paper-writing-jan-2021-page-turn-1.mp3"
     },
     "descend": {
-      "file": "picked/descend",
       "volume": 0.8,
-      "source": "new_100-cc0-sfx-gong-01.mp3"
+      "source": "pixabay_appear-magic-384915.mp3",
+      "file": "picked/descend"
     },
     "rewardUp": {
       "file": "picked/rewardUp",
@@ -324,8 +328,8 @@
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
-      "file": "picked/skill_alch_barrage",
-      "source": "new_75-cc0-breaking-falling-hit-sfx-bfh1-glass-breaking-01.mp3"
+      "source": "new_75-cc0-breaking-falling-hit-sfx-bfh1-glass-breaking-06.mp3",
+      "file": "picked/skill_alch_barrage"
     },
     "skill_alch_brew": {
       "volume": 0.3,

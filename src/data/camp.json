@@ -195,16 +195,40 @@
     }
   },
   "place": [
-    ["tent", 72, 300, false],
-    ["tent", 318, 300, true],
-    ["bedroll", 62, 616, false],
-    ["crate", 350, 612, false],
-    ["crate", 346, 567, false],
-    ["barrel", 300, 606, false],
-    ["sack", 372, 648, false],
-    ["woodpile", 52, 786, false],
-    ["barrel", 348, 784, false]
+    ["tent", 72, 272, false], ["tent", 318, 272, true],
+    ["barrel", 24, 668, false], ["woodpile", 30, 700, false],
+    ["crate", 364, 700, false], ["crate", 364, 655, false], ["barrel", 364, 610, false]
   ],
+  "npcs": [
+    {"id": "glossary", "name": "Glossary", "who": "Old Scholar", "x": 78, "y": 412, "face": 1, "def": { "height": 24, "parts": {
+        "body": {"x": 0, "y": -7, "w": 10, "h": 14, "anchor": [5, 7], "idle": {"dy": -1, "duration": 520}, "art": {"palette": ["0x3a6a4a", "0xd8b048", "0xf2c9a0", "0x2a4a34"], "rows": ["..000000..", ".00011000.", "0000110000", "0000110000", "2000110002", "0000110000", "0000110000", "0300110030", "0300110030", "0300110030", "0300110030", "0300110030", "0300110030", "1111111111"]}},
+        "head": {"x": 0, "y": -19, "w": 10, "h": 10, "anchor": [5, 10], "idle": {"dy": -1.5, "duration": 520, "delay": 120}, "art": {"palette": ["0xf2c9a0", "0xd0d0d8", "0x1a1020", "0xeeeaf4", "0x5a3a7a", "0xf2c544"], "rows": ["...4444...", "..444444.5", ".44444444.", ".11000011.", ".10000001.", ".02000020.", ".00000000.", ".33333333.", "..333333..", "...3333..."]}},
+        "weapon": {"x": 4.5, "y": -8, "w": 6, "h": 5, "anchor": [3, 2.5], "idle": {"angle": 3, "duration": 900}, "art": {"palette": ["0x8a2a2a", "0xe8e0c8", "0xf2c544"], "rows": ["000000", "011110", "011112", "011110", "000000"]}}
+      } } },
+    {"id": "heroes", "name": "Heroes", "who": "Captain", "x": 314, "y": 394, "face": -1, "def": { "height": 24, "parts": {
+        "body": {"x": 0, "y": -7, "w": 10, "h": 14, "anchor": [5, 7], "idle": {"dy": -1, "duration": 520}, "art": {"palette": ["0x8a8f9c", "0xc83a3a", "0xf2c9a0", "0x5a5f6a", "0x6b4a2a"], "rows": ["..000000..", ".00111100.", "1001111001", "1001111001", "2001111002", "1001111001", "1044444401", "1001111001", "1101111011", ".30....03.", ".30....03.", ".30....03.", ".44....44.", ".44....44."]}},
+        "head": {"x": 0, "y": -19, "w": 10, "h": 10, "anchor": [5, 10], "idle": {"dy": -1.5, "duration": 520, "delay": 120}, "art": {"palette": ["0x9aa0ac", "0xc83a3a", "0xf2c9a0", "0x1a1020", "0x6a4a3a", "0x6a707c"], "rows": ["....11....", "...1111...", "..000000..", ".00000000.", ".05555550.", ".02222220.", ".02322320.", ".02222220.", ".02444420.", "..222222.."]}},
+        "weapon": {"x": 5.5, "y": -12, "w": 7, "h": 16, "anchor": [3, 12], "idle": {"angle": 4, "duration": 800}, "art": {"palette": ["0xc8c8d0", "0x6b4a2a", "0xc83a3a", "0xf2c544"], "rows": ["...0...", "..000..", "...1...", "...1222", "...1232", "...1222", "...122.", "...12..", "...1...", "...1...", "...1...", "...1...", "...1...", "...1...", "...1...", "...1..."]}}
+      } } },
+    {"id": "leaderboard", "name": "Leaderboard", "who": "Herald", "x": 98, "y": 752, "face": 1, "def": { "height": 24, "parts": {
+        "body": {"x": 0, "y": -7, "w": 10, "h": 14, "anchor": [5, 7], "idle": {"dy": -1, "duration": 520}, "art": {"palette": ["0x3a4ab0", "0xf2c544", "0xf2c9a0", "0x283478", "0xe8e4f0"], "rows": ["..000000..", ".00011000.", "0001111000", "0011001100", "2011001102", "0011111100", "0001111000", "0000110000", ".00011000.", ".33....33.", ".44....44.", ".44....44.", ".44....44.", ".33....33."]}},
+        "head": {"x": 0, "y": -19, "w": 10, "h": 10, "anchor": [5, 10], "idle": {"dy": -1.5, "duration": 520, "delay": 120}, "art": {"palette": ["0x3a4ab0", "0xffffff", "0xf2c9a0", "0x1a1020", "0x8a5a2a"], "rows": [".......1..", "......11..", "..000011..", ".00000000.", "0000000000", ".44222244.", ".42322324.", ".42222224.", "..222222..", "...2222..."]}},
+        "weapon": {"x": 5, "y": -8, "w": 4, "h": 8, "anchor": [2, 4], "idle": {"angle": 4, "duration": 850}, "art": {"palette": ["0xe8e0c8", "0xb09a70", "0xc83a3a"], "rows": [".11.", "1001", "0000", "0000", "0020", "0000", "1001", ".11."]}}
+      } } },
+    {"id": "shop", "name": "Shop", "who": "Merchant", "x": 318, "y": 734, "face": -1, "def": { "height": 24, "parts": {
+        "body": {"x": 0, "y": -7, "w": 10, "h": 14, "anchor": [5, 7], "idle": {"dy": -1, "duration": 520}, "art": {"palette": ["0x7a5232", "0xd8b048", "0xf2c9a0", "0x5a3a24", "0x4a7a3a"], "rows": ["..000000..", ".00010000.", "0000000000", "0000000000", "2004444002", "0000000000", "0003000000", "0030000000", "0000000300", "0000003000", "0300000030", "0300000030", "0300000030", "3333333333"]}},
+        "head": {"x": 0, "y": -19, "w": 10, "h": 10, "anchor": [5, 10], "idle": {"dy": -1.5, "duration": 520, "delay": 120}, "art": {"palette": ["0x7a5232", "0x5a3a24", "0xf2c9a0", "0x1a1020", "0xb07a50"], "rows": ["...0000...", "..000000..", ".00000000.", "0011111100", "0122222210", "0123223210", "0122442210", "0122222210", ".01222210.", "..111111.."]}},
+        "weapon": {"x": 5, "y": -6, "w": 5, "h": 6, "anchor": [2.5, 1], "idle": {"angle": 5, "duration": 700}, "art": {"palette": ["0x8a6a42", "0xf2c544", "0x5a3a24"], "rows": [".222.", "..2..", ".000.", "00100", "00000", ".000."]}}
+      } } }
+  ],
+  "ui": {
+    "_about": "Base screen interface (screen px). tag = name OVER an NPC in a small black window (its bottom tagUp px above the feet, pad x/y); hit = the tap box over an NPC (w, h above the feet). toDungeon = the big black window at the top (the thing that stands out most), arrows bobbing on both sides (tap = the hero walks out, then the screen slides up into the squad screen in slideMs). profile = the button in the top right. soon = the 'Coming soon' window.",
+    "tagUp": 82, "tagSize": "normal", "tagPad": [10, 6], "hit": [70, 130],
+    "toDungeon": { "y": 110, "w": 350, "h": 76, "text": "TO DUNGEON", "cell": 5, "arrowInset": 24, "bob": 4, "bobMs": 600 },
+    "slideMs": 700,
+    "profile": { "x": 336, "y": 14, "size": 42, "name": "Profile", "who": "Achievements, records, stats" },
+    "soon": { "w": 280, "h": 160 }
+  },
   "exit": {
     "_about": "To dungeon: the hero walks round the fire (right side) and up out of the top. Screen px; speed px/s.",
     "path": [
@@ -213,7 +237,7 @@
       [195, 330],
       [195, -80]
     ],
-    "speed": 150,
+    "speed": 220,
     "stepLenPx": 34,
     "stepHeight": 4
   },

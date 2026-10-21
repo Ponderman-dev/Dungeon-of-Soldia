@@ -23,3 +23,9 @@ ok('fire: 2+ flame frames, all one size', F.flames.length >= 2 && F.flames.every
 ok('fire: glow alpha between 0 and 1', [...F.glow.alpha].every((v) => v >= 0 && v <= 1));
 ok('flip mirrors a prop', propLayer(camp.props.tent, true).pixels[0] === propLayer(camp.props.tent).pixels[propLayer(camp.props.tent).w - 1]);
 ok('exit path ends above the screen', camp.exit.path.at(-1)[1] < 0);
+for (const n of camp.npcs) {
+  const parts = Object.entries(n.def.parts);
+  ok(`npc ${n.id}: every part's rows match its size`, parts.every(([, p]) => p.art.rows.length === p.h && p.art.rows.every((r) => r.length === p.w)));
+  ok(`npc ${n.id}: colours exist`, parts.every(([, p]) => [...p.art.rows.join('')].every((ch) => ch === '.' || p.art.palette[Number(ch)])));
+}
+ok('4 NPCs with different names', camp.npcs.length === 4 && new Set(camp.npcs.map((n) => n.name)).size === 4);

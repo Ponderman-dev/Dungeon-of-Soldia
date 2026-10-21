@@ -21,6 +21,13 @@ User's sketch + picks (2026-10-21). Flow: Title -> walk into the dungeon -> one 
   props as pixel rows (tents, crates, barrels, sack, bedroll, woodpile), tinted by the light; `exit.path` = the walk
   round the RIGHT of the fire, between the tents, off the top (`walkOut()`). Placeholder: knight by the fire, tap
   anywhere = walk out (until step 2/3). Not wired into Boot yet.
+- STEP 2 BUILT: 4 NPCs (camp.json `npcs`, Character parts: Old Scholar = Glossary, Captain = Heroes, Herald =
+  Leaderboard, Merchant = Shop), names in small black windows OVER their heads (ui.tagUp), placed slightly
+  staggered and away from the hero (user: 'not natural' as a grid). Tap = 'Coming soon' window (tap to close).
+  Profile button top right (same window). TO DUNGEON = big black window at the top, the most visible thing (user),
+  arrows bobbing both sides; tap = walkOut(), then both cameras slide (Squad comes from above, ui.slideMs).
+  Floor tidier than battle floors (room.floor overrides: no dirt patches, less grass). Props: tents + one small
+  stack each side. User: 'we'll get back to this later' (more polish possible).
 - Campfire in the middle (the hero stands by it), tents and crates, the open top with an arrow
   and 'To dungeon'. Tap it: the hero walks up and out through the top tunnel, then the screen SLIDES UP
   into the Squad (hero selection) screen.
@@ -30,5 +37,5 @@ User's sketch + picks (2026-10-21). Flow: Title -> walk into the dungeon -> one 
 - All numbers (positions, colours, speeds) in a JSON file; scenes only draw.
 
 ## Build order (show screenshots before each goes into the game)
-1. Camp (Base) visual  2. Base NPCs + 'coming soon' windows + profile + 'To dungeon'  3. Hero walk-in
+1. Camp (Base) visual DONE  2. Base NPCs + 'coming soon' windows + profile + 'To dungeon' DONE  3. Hero walk-in
 4. Title night scene  5. Title -> camp transition + Boot wiring.

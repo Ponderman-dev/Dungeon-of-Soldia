@@ -40,7 +40,8 @@ export function lightTint(art, x, y) {
 // top of the screen stays open floor (the way deeper). Returns a layer.
 export function openFloor(floorArt, art, { width, height, tint }) {
   const R = art.room, cut = R.wallArt + R.cutBelow;
-  const full = floorArtPixels(floorArt, { width, height: height + cut, wallH: R.wallArt, tint, seed: R.seed });
+  const look = { ...floorArt, floor: { ...floorArt.floor, ...R.floor } }; // a tidier floor (less dirt and grass)
+  const full = floorArtPixels(look, { width, height: height + cut, wallH: R.wallArt, tint, seed: R.seed });
   return { w: width, h: height, ax: 0, ay: 0, pixels: Int32Array.from(full.pixels.subarray(cut * width, (cut + height) * width)) };
 }
 

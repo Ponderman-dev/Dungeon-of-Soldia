@@ -1,8 +1,7 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
 ## START HERE (session 20, 2026-10-21): no task picked; offer the OPEN list below
-- LATEST BRANCH: `ccr-90aacd64-ir2cer` has EVERYTHING (it contains `ccr-f0fe918e-fdbp68`). Before building/publishing:
-  `git fetch` and check newer session branches are merged (`git merge-base --is-ancestor`).
+- BRANCH: `main` has EVERYTHING (made in session 20; the old branches were deleted). See the Git rule in CLAUDE.md.
 - DONE session 19:
   - Fire Arrows REMOVED (user). Ember Charm burn 6% -> 12% (+10% per extra charm). Spirit Axe v2: spins ONCE when the
     holder is hit, 14% per copy, 400% to every enemy within 110px (itemruns 3 copies +9.0: watch it). docs/item-decisions.md.

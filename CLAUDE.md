@@ -21,11 +21,16 @@ and suggest a fresh session per task.
   in scene code; scenes only read it. All tuning numbers go in JSON/config.
 - **Rules vs scene:** game logic lives in `src/systems/` (no Phaser; BattleState and friends), scenes only draw.
 - **Art:** characters are pixel-art parts (head, body, weapon...) so each part can be replaced; see `docs/systems/art.md`.
-- **Git:** work on the branch the session names, commit after every working step with a clear message, never
-  commit broken code. Do not open PRs unless asked.
+- **Git:** `main` is the one branch with everything. Work on the branch the session names (start it from `main`),
+  commit after every working step with a clear message, never commit broken code. When the task is done and the user
+  OKs it, bring `main` up to the session branch. Do not open PRs unless asked.
 - **Small steps:** one step at a time, then stop and tell the user how to see it.
-- **After every change:** `npm test`, a full-run check when balance is touched, commit, push, `npm run build:page`,
-  republish the preview (below).
+- **After every change:** run the related test file(s) while working (`node scripts/tests/<name>.test.mjs`), full
+  `npm test` before each commit, a full-run check when balance is touched, commit, push.
+- **Preview only on request:** `npm run build:page` + republish (below) ONLY when the user says "show me", or once at
+  the end of a batch of visible changes. Number/doc/logic-only changes: no rebuild, no republish.
+- **One task per session:** suggest a fresh session when the topic changes; batch the user's small tweaks into one round.
+- **Screenshots** (scratchpad copy + Playwright) only for art/look changes, never for number changes.
 - **Tests vs tuning:** item mechanic tests use a frozen copy (`scripts/tests/fixtures/items-frozen.json`, `frozenItems()`
   in util.mjs), so changing item NUMBERS in items.json needs no test edits. Copy an item into the fixture only when it
   is new or its effect shape changes. New tests: check the mechanic, read numbers from the data, don't retype them.

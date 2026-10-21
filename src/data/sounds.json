@@ -7,12 +7,8 @@
     "tap": {
       "volume": 0.5,
       "pitchJitter": 0.05,
-      "source": "new_100-cc0-sfx-2-sfx100v2-door-05.mp3, pixabay_button-394464.mp3, yours_video-game-retro-click-237.mp3",
-      "files": [
-        "picked/tap_1",
-        "picked/tap_2",
-        "picked/tap_3"
-      ]
+      "source": "pixabay_button-394464.mp3",
+      "file": "picked/tap"
     },
     "heroPick": {
       "file": "select",

@@ -214,7 +214,7 @@
     }
   },
   "transition": {
-    "clearPauseMs": 900,
+    "clearPauseMs": 1200,
     "clearBannerY": 422,
     "walkSpeedPxPerSec": 420,
     "lineGapPx": 80,

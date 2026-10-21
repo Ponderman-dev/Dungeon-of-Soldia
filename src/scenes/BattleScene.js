@@ -1604,6 +1604,7 @@ export default class BattleScene extends Phaser.Scene {
       if (bv) { this.popText(bv, e.skill.name, '#ff7a6a', true); bv.ch.flash(0xff4a3a, 140); }
     } else if (e.type === 'castStart') {
       // The hero winds up and a charge bar fills (see drawCastBars); its name shows when it goes off (skillName).
+      this.stopStep(this.views.get(e.unit.uid)); // the skill cuts the attack short (Character.stopAttack: the swing)
       this.views.get(e.unit.uid).ch.castWindUp(e.castMs);
       this.playCharge(this.views.get(e.unit.uid), e); // crouch and raise the weapon
     } else if (e.type === 'castCancel') {
@@ -1613,6 +1614,7 @@ export default class BattleScene extends Phaser.Scene {
       if (e.reason === 'interrupted') { this.popText(this.views.get(e.unit.uid), 'Interrupted!', '#ff8a5c', true); sfx.play('interrupted'); }
     } else if (e.type === 'cast') {
       const caster = this.views.get(e.unit.uid);
+      this.stopStep(caster); // an instant skill also cuts the attack short
       if (e.unit.side === 'hero' && !e.unit.minion) sfx.play(sfx.has(`skill_${e.skillId}`) ? `skill_${e.skillId}` : 'skillCast'); // each skill its own sound
       if (e.zone) this.showZone(e.zone, FX.areaMs);
       const look = e.unit.side === 'hero' ? LOOK_BY_NAME[e.skill.name] : null;
@@ -2177,6 +2179,14 @@ export default class BattleScene extends Phaser.Scene {
     a.stepTween = this.tweens.add({ targets: st, p: 1, duration: Math.max(60, hitInMs), ease: 'Quad.easeIn', onUpdate: set,
       onComplete: () => { a.stepTween = this.tweens.add({ targets: st, p: 0, delay: S.holdMs, duration: S.backMs, ease: 'Quad.easeOut', onUpdate: set,
         onComplete: () => { a.stepX = a.stepY = 0; a.stepTween = null; } }); } });
+  }
+
+  // A skill starts: a melee step-in that is still going stops, and the fighter is back on its spot at once.
+  stopStep(a) {
+    if (!a || !a.stepTween) return;
+    a.stepTween.stop();
+    a.stepTween = null;
+    a.stepX = a.stepY = 0;
   }
 
   // A fighter jitters side to side (a hard hit); uses the leap offset.

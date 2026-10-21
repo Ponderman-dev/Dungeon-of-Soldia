@@ -37,5 +37,5 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   boss, `fallen` when a squad mate fell that floor, `close` / `hurt` when a hero ended the floor at or below 25% / 50%
   health: that hero says it; order boss > fallen > close > hurt > clear, `dialogue.clearSpeech`, health read before the
   win heal). 'Floor N cleared!' sits higher (combat.json `transition.clearBannerY`, 422) so it misses the bubbles. Nothing waits for a bubble (user, session 21: the wait broke the pace): the clear pause is
-  the normal 0.9s; the bubble is removed `goneAfterRewardMs` (0.2s) after the reward screen pops up, never seen after it. Lines + timings in `src/data/dialogue.json` (per hero; a missing kind uses `clear`); `systems/dialogue.js`
+  1.2s (`clearPauseMs`, user 2026-10-21: the bubble needs 1.2s before the reward screen); the bubble is removed `goneAfterRewardMs` (0.2s) after the reward screen pops up, never seen after it. Lines + timings in `src/data/dialogue.json` (per hero; a missing kind uses `clear`); `systems/dialogue.js`
   picks a living hero (not the last speaker) and goes through all its lines before repeating. Test: `dialogue.test.mjs`.

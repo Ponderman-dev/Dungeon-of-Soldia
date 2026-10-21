@@ -219,6 +219,7 @@ export default class Character extends Phaser.GameObjects.Container {
   // ---- skill animation (different from a normal attack) ---------------------------------------
   // Wind-up: the hero crouches and raises its weapon high over `ms`.
   castWindUp(ms) {
+    this.stopAttack();
     this.castReset();
     if (this.playClip('windup', ms, true)) return; // held at its end until the release
     const w = this.parts.weapon;
@@ -229,6 +230,7 @@ export default class Character extends Phaser.GameObjects.Container {
   // The skill goes off. Attack skill: a big overhead slash with a leap forward. Support skill: it
   // jumps up with the weapon held high, then settles.
   castRelease(kind) {
+    this.stopAttack();
     this.castReset(true);
     if (this.playClip(kind === 'attack' ? 'skillAttack' : 'skillSupport')) {
       // The clip starts from its own crouch / cocked pose: drop the built-in wind-up pose.
@@ -259,6 +261,23 @@ export default class Character extends Phaser.GameObjects.Container {
     const w = this.parts.weapon;
     if (w) this.scene.tweens.add({ targets: w, angle: w.restAngle, duration: 150 });
     this.scene.tweens.add({ targets: this, castLift: 0, duration: 150 });
+  }
+
+  // A skill cuts the normal attack short (user: the hero stops its swing and starts the skill at once).
+  stopAttack() {
+    if (this.action && this.action.id === 'attack') this.action = null;
+    if (this.swingTween) {
+      this.swingTween.stop();
+      this.swingTween = null;
+      if (this.parts.weapon) this.parts.weapon.angle = this.parts.weapon.restAngle;
+    }
+    if (this.lungeTween) {
+      this.lungeTween.stop();
+      this.lungeTween = null;
+      this.lunging = false;
+      this.x = this.homeX;
+      this.y = this.homeY;
+    }
   }
 
   castReset(keepWeapon = false) {

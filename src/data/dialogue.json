@@ -14,6 +14,7 @@
     "inMs": 150,
     "holdMs": 2000,
     "outMs": 250,
+    "goneAfterRewardMs": 200,
     "maxWidthPx": 210,
     "sizePx": 8,
     "abovePx": 24,

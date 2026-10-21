@@ -2691,7 +2691,7 @@ export default class BattleScene extends Phaser.Scene {
     const someoneFell = this.livingHeroViews().length < (this.aliveAtStart ?? 0);
     const bossFloor = !!(this.dungeon.bosses && this.dungeon.bosses[this.floor]);
     const said = clearSpeech(dialogue, this.state.heroes, { bossFloor, someoneFell });
-    this.sayLine(said.kind, said.heroes); // never waited for: the bubble stays up over the reward screen and fades
+    this.sayLine(said.kind, said.heroes); // never waited for: the bubble goes away just after the reward screen opens
     for (const { unit, amount } of this.state.winHeal(combatRules.winHealPercent)) {
       const v = this.views.get(unit.uid);
       this.setBar(v);
@@ -2770,6 +2770,10 @@ export default class BattleScene extends Phaser.Scene {
 
   // The reward sheet with these cards; `next` runs after the pick has been applied.
   openRewardSheet(choices, next, banner = null) {
+    // A speech bubble goes away just after the reward screen pops up (user: never seen after the reward). The battle is
+    // paused under the reward screen, so the reward screen's clock removes it.
+    const bubble = this.speech && this.speech.c.active ? this.speech : null;
+    if (bubble) this.scene.get('Reward').events.once('create', (rs) => rs.time.delayedCall(dialogue.rules.goneAfterRewardMs, () => bubble.c.destroy()));
     this.scene.launch('Reward', {
       state: this.state,
       choices,

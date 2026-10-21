@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow } from '../entities/uiKit.js';
 import camp from '../data/camp.json';
 import { openFloor, darkLayer, lightTint, fireLayers, propLayer } from '../systems/campArt.js';
 import floorArt from '../data/floorArt.json';
@@ -8,10 +8,12 @@ import dungeons from '../data/dungeons.json';
 import { layerTexture } from '../entities/pixelLayer.js';
 import Character from '../entities/Character.js';
 import heroes from '../data/heroes.json';
+import unlocks from '../data/unlocks.json';
+import { loadProgress, unlockedIds } from '../systems/progress.js';
 
 // The Base: a campfire camp on the dungeon's flagstones (docs/systems/title-base.md). Pixel art: systems/campArt.js,
 // camp.json. NPCs and the profile open 'Coming soon' for now; 'To dungeon' walks the hero out and slides up into the
-// squad screen. Not reached from the game yet (Boot still opens 'Squad'); the walk-in comes next.
+// squad screen. Reached from the title screen (a random unlocked hero walks in from the bottom).
 const P = camp.pixel;
 const U = camp.ui;
 const DEPTH = { ui: 2000, modal: 3000 };
@@ -19,6 +21,11 @@ const DEPTH = { ui: 2000, modal: 3000 };
 export default class BaseScene extends Phaser.Scene {
   constructor() {
     super('Base');
+  }
+
+  init(data) {
+    this.walkIn = !!(data && data.walkIn); // from the title screen: the hero walks in
+    this.modal = null;
   }
 
   create() {
@@ -29,9 +36,18 @@ export default class BaseScene extends Phaser.Scene {
     this.add.image(0, 0, layerTexture(this, 'camp-dark', darkLayer(camp, { width, height }))).setOrigin(0).setScale(P).setDepth(0.5);
     this.drawProps();
     this.drawFire();
-    // Placeholder until step 3 (the walk-in): one hero by the fire, so the camp can be judged at the right size.
-    const H = camp.previewHero;
-    this.hero = this.add.existing(new Character(this, H.x, H.y, heroes[0]).setDepth(H.y));
+    // One random unlocked hero by the fire. Coming from the title it walks in from the bottom first (the NPCs and
+    // TO DUNGEON wait until it has arrived).
+    const H = camp.hero, open = unlockedIds(heroes, loadProgress(), unlocks);
+    const def = heroes.find((h) => h.id === Phaser.Utils.Array.GetRandom(open)) || heroes[0];
+    this.hero = this.add.existing(new Character(this, H.x, H.y, def).setDepth(H.y));
+    this.leaving = false;
+    if (this.walkIn) {
+      this.leaving = true;
+      this.hero.setPosition(H.from[0], H.from[1]);
+      this.cameras.main.fadeIn(H.fadeMs, 0, 0, 0);
+      this.time.delayedCall(H.waitMs, () => this.walkPath([[H.x, H.y]], () => { this.hero.face(1); this.leaving = false; }));
+    }
     this.drawNpcs();
     this.drawUi();
   }
@@ -78,21 +94,10 @@ export default class BaseScene extends Phaser.Scene {
     this.add.zone(Pr.x + Pr.size / 2, Pr.y + Pr.size / 2, Pr.size + 8, Pr.size + 8).setInteractive().on('pointerup', () => this.comingSoon(Pr.name, Pr.who));
   }
 
-  // A black window in the middle: the name, who it is, 'Coming soon'. Tap anywhere to close.
+  // A 'Coming soon' window (uiKit). Tap anywhere to close.
   comingSoon(title, who) {
     if (this.modal || this.leaving) return;
-    const W = U.soon, x = (GAME_WIDTH - W.w) / 2, y = (GAME_HEIGHT - W.h) / 2;
-    const shade = this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.55).setOrigin(0).setInteractive();
-    const g = drawWindow(this.add.graphics(), x, y, W.w, W.h);
-    const cx = GAME_WIDTH / 2;
-    const texts = [
-      uiText(this, cx, y + 26, title, 'normal').setOrigin(0.5, 0),
-      uiText(this, cx, y + 56, who, 'small', UI.dim, { align: 'center', wordWrap: { width: W.w - 40 } }).setOrigin(0.5, 0),
-      uiText(this, cx, y + 92, 'Coming soon', 'normal', UI.gold).setOrigin(0.5, 0),
-      uiText(this, cx, y + W.h - 22, 'Tap to close', 'small', UI.dim).setOrigin(0.5, 0),
-    ];
-    this.modal = this.add.container(0, 0, [shade, g, ...texts]).setDepth(DEPTH.modal);
-    this.time.delayedCall(150, () => shade.once('pointerup', () => { this.modal.destroy(); this.modal = null; }));
+    this.modal = comingSoonWindow(this, title, who, { w: U.soon.w, h: U.soon.h, depth: DEPTH.modal, onClose: () => { this.modal = null; } });
   }
 
   // To dungeon: the hero walks round the fire and out of the top, then the screen slides up into the squad screen.
@@ -113,9 +118,14 @@ export default class BaseScene extends Phaser.Scene {
 
   // The hero walks the exit path (camp.json exit): round the fire, then up and off the top of the screen.
   walkOut(done) {
-    const E = camp.exit, ch = this.hero;
     this.leaving = true;
-    const points = [{ x: ch.x, y: ch.y }, ...E.path.map(([x, y]) => ({ x, y }))];
+    this.walkPath(camp.exit.path, done);
+  }
+
+  // The hero walks from where it stands through the points ([x, y] screen px), a little hop each step.
+  walkPath(path, done) {
+    const E = camp.exit, ch = this.hero;
+    const points = [{ x: ch.x, y: ch.y }, ...path.map(([x, y]) => ({ x, y }))];
     let walked = 0;
     const leg = (i) => {
       if (i >= points.length - 1) { ch.setWalking(false); if (done) done(); return; }

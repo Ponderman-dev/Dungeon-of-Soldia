@@ -63,7 +63,7 @@ and suggest a fresh session per task.
 - `docs/systems/saving-squad.md`: saving (`progress.js`), unlocks, squad select screen.
 - `docs/systems/sound.md`: `sfx.js`, cues, sound board and applying picks (sound is ON HOLD).
 - `docs/systems/art.md`: pixel-art parts, sprites, keyframe animation clips.
-- `docs/systems/title-base.md`: title page + Base camp hub (PLAN, build order).
+- `docs/systems/title-base.md`: title page (forest from above) + Base camp hub (NPCs, walk-in, To dungeon).
 - `docs/systems/ui.md`: interface look (black windows, white lines, Press Start 2P), `entities/uiKit.js`.
 - `docs/systems/studio.md`: Character Studio page (draw, animate, effects editor, applying studio designs).
 - Older plans: `docs/big-update-plan.md` (phases A-H), `docs/item-list.md` (old 72-item list).

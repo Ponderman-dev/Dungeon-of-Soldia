@@ -102,3 +102,21 @@ export function uiButton(scene, x, y, w, h, label, { size = 'normal', selected =
     setEnabled: (v) => { enabled = v; draw(); },
   };
 }
+
+// A 'Coming soon' window in the middle of the screen (black, over a dark shade): a title, a dim line saying what it
+// will be, 'Coming soon' in gold. Tap anywhere to close; onClose runs then. Returns the container.
+export function comingSoonWindow(scene, title, who, { w = 280, h = 160, depth = 3000, onClose = null } = {}) {
+  const W = scene.scale.width, H = scene.scale.height, x = (W - w) / 2, y = (H - h) / 2, cx = W / 2;
+  const shadeRect = scene.add.rectangle(0, 0, W, H, 0x000000, 0.55).setOrigin(0).setInteractive();
+  const box = scene.add.container(0, 0, [
+    shadeRect,
+    drawWindow(scene.add.graphics(), x, y, w, h),
+    uiText(scene, cx, y + 26, title, 'normal').setOrigin(0.5, 0),
+    uiText(scene, cx, y + 56, who, 'small', UI.dim, { align: 'center', wordWrap: { width: w - 40 } }).setOrigin(0.5, 0),
+    uiText(scene, cx, y + 92, 'Coming soon', 'normal', UI.gold).setOrigin(0.5, 0),
+    uiText(scene, cx, y + h - 22, 'Tap to close', 'small', UI.dim).setOrigin(0.5, 0),
+  ]).setDepth(depth);
+  // A short wait, so the tap that opened it does not close it at once.
+  scene.time.delayedCall(150, () => shadeRect.once('pointerup', () => { box.destroy(); if (onClose) onClose(); }));
+  return box;
+}

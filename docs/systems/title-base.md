@@ -1,8 +1,16 @@
-# Title page + Base (camp hub) — PLAN + progress (session 21)
+# Title page + Base (camp hub) — BUILT (session 21)
 
 User's sketch + picks (2026-10-21). Flow: Title -> walk into the dungeon -> one hero walks in -> Base -> 'To dungeon' -> Squad.
 
-## 1. Title page (new TitleScene, Boot starts it instead of 'Squad')
+## 1. Title page (TitleScene; Boot starts 'Title') — BUILT
+- User's pick F (after rejecting a far 'pointy pines + castle' view and 3 other designs: user wants a THICK forest seen
+  FROM ABOVE, round tree tops, not uniform/pointy; the tower far away; logo not at the top; Slay the Spire feel).
+- Code: `scenes/TitleScene.js`, `systems/titleArt.js` (skyLayer, twinkleSpots, moonLayers, cloudLayer, canopyLayer),
+  `data/title.json`, test `title-art.test.mjs`. Canopy = rows of domed tree tops (round shading, drop shadows, hazier
+  far away), mountains + mist on the horizon, a lone tower on the left. Logo = stand-in text in the middle.
+- Tap anywhere: UI fades, camera pans + zooms to the tower, fades out, starts 'Base' with { walkIn: true }.
+- Settings (gear, top left) and the camp's NPCs/profile use `comingSoonWindow()` (entities/uiKit.js).
+- Old plan notes for the title (kept for history):
 - Night scene, far view from outside: night sky, full moon, clouds drifting slowly, stars twinkling softly,
   forest all around, the dungeon entrance small in the middle. Pixel art made in code (layers), user tweaks.
 - Logo up in the sky near the moon. Stand-in = Ironslab text; the user will draw the real logo in the Studio later.
@@ -10,8 +18,9 @@ User's sketch + picks (2026-10-21). Flow: Title -> walk into the dungeon -> one 
   settings button (empty, sound on hold), tiny version number.
 
 ## 2. Transition into the dungeon
-- Tap -> move toward the dungeon entrance and fade into the camp (calm, no flash).
-- A RANDOM UNLOCKED hero walks up from the bottom to the middle of the camp (existing Character parts + walk).
+- Tap -> move toward the dungeon entrance and fade into the camp (calm, no flash). BUILT (zoom to the tower).
+- A RANDOM UNLOCKED hero walks up from the bottom to the middle of the camp (existing Character parts + walk). BUILT
+  (camp.json `hero`: from, waitMs, fadeMs; NPCs and TO DUNGEON wait until it arrives).
 
 ## 3. Base = campfire camp (BaseScene) — LOOK BUILT (step 1)
 - User: same look as the dungeon (a cave was 'too different'), NO wall/gate (the open top is the exit), no log seats.
@@ -37,5 +46,6 @@ User's sketch + picks (2026-10-21). Flow: Title -> walk into the dungeon -> one 
 - All numbers (positions, colours, speeds) in a JSON file; scenes only draw.
 
 ## Build order (show screenshots before each goes into the game)
-1. Camp (Base) visual DONE  2. Base NPCs + 'coming soon' windows + profile + 'To dungeon' DONE  3. Hero walk-in
-4. Title night scene  5. Title -> camp transition + Boot wiring.
+1. Camp (Base) visual DONE  2. Base NPCs + 'coming soon' windows + profile + 'To dungeon' DONE  3. Hero walk-in DONE
+4. Title night scene DONE  5. Title -> camp transition + Boot wiring DONE.
+Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settings.

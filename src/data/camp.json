@@ -1,5 +1,5 @@
 {
-  "_about": "The Base: a campfire camp on the battle floors' flagstones (systems/campArt.js draws it, scenes/BaseScene.js shows it). pixel = screen pixels per art pixel. room = the floor: drawn with a wall wallArt art px tall, then the wall (+cutBelow rows) cut off, so the top is open floor (the way deeper). light = the campfire (art px): a dark layer over the room, see-through near the fire in solid rings (steps); ambient = how bright the far corners stay. Props (rows like roomProps) are tinted by the light where they stand. place = [prop, x, y, flip] in SCREEN px (bottom centre). exit = the hero's walk round the fire and out of the top. previewHero = placeholder until the walk-in (step 3).",
+  "_about": "The Base: a campfire camp on the battle floors' flagstones (systems/campArt.js draws it, scenes/BaseScene.js shows it). pixel = screen pixels per art pixel. room = the floor: drawn with a wall wallArt art px tall, then the wall (+cutBelow rows) cut off, so the top is open floor (the way deeper). light = the campfire (art px): a dark layer over the room, see-through near the fire in solid rings (steps); ambient = how bright the far corners stay. Props (rows like roomProps) are tinted by the light where they stand. place = [prop, x, y, flip] in SCREEN px (bottom centre). exit = the hero's walk round the fire and out of the top. hero = the random unlocked hero by the fire and its walk-in.",
   "pixel": 3,
   "room": {
     "wallArt": 60,
@@ -241,8 +241,5 @@
     "stepLenPx": 34,
     "stepHeight": 4
   },
-  "previewHero": {
-    "x": 195,
-    "y": 580
-  }
+  "hero": { "_about": "A random unlocked hero stands by the fire at x, y; from the title it walks in from `from` after waitMs (the screen fades in over fadeMs).", "x": 195, "y": 580, "from": [195, 900], "waitMs": 300, "fadeMs": 600 }
 }

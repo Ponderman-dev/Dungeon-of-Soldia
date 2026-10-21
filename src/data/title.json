@@ -1,0 +1,156 @@
+{
+  "_about": "The title screen (scenes/TitleScene.js, art: systems/titleArt.js), user's pick F (session 21): a thick moonlit forest seen from above, a lone dungeon tower far away on the left, the logo in the middle over the trees. pixel = screen px per art px; sizes in ART px. sky = colour bands down to `horizon`; stars = dim fixed dots; twinkle = brighter stars that softly blink. moon = full moon (craters, solid rings of glow). clouds drift slowly (speed screen px/s) and wrap. canopy = the forest: rows of round tree tops from the horizon (rMin) to the bottom (rMax, growth), spacing/rowGap between them, each a few domed lumps lit by `light` (x, y, z; bands = brightness steps), a drop shadow (shadowDrop, shadowAlpha), tinted (tints, tintShare) and hazier far away (haze, hazeFar); mountains + mist on the horizon; tower = the dungeon (behind = how far into the trees it stands). logo = stand-in text until the user's drawn logo. start = the TAP TO START window. zoom = the tap: the camera flies to the tower, then fades into the camp.",
+  "pixel": 3,
+  "seed": 23,
+  "sky": {
+    "horizon": 190,
+    "colors": ["0x080a1c", "0x0a0d22", "0x0d1128", "0x10152e", "0x131a35", "0x171f3c", "0x1b2443", "0x1f294a", "0x242f52", "0x29355a", "0x2e3b62", "0x34426a"]
+  },
+  "stars": {
+    "count": 90,
+    "maxY": 95,
+    "colors": ["0x4a5488", "0x6a74a8", "0x8e98c8"]
+  },
+  "twinkle": {
+    "count": 22,
+    "maxY": 90,
+    "color": "0xeef0ff",
+    "ms": [900, 2200],
+    "minAlpha": 0.15
+  },
+  "moon": {
+    "x": 100,
+    "y": 40,
+    "r": 15,
+    "colors": {
+      "base": "0xf2ead0",
+      "shade": "0xd6cdab",
+      "crater": "0xc2b893",
+      "rim": "0xfffbea"
+    },
+    "craters": [
+      [-4, -3, 3],
+      [3, 2, 2],
+      [-2, 5, 2],
+      [5, -5, 1]
+    ],
+    "glow": {
+      "r": 34,
+      "steps": 4,
+      "alpha": 0.1,
+      "color": "0xb8c8ff"
+    }
+  },
+  "clouds": {
+    "body": "0x2c3560",
+    "light": "0x46527e",
+    "dark": "0x222a4e",
+    "alpha": 0.92,
+    "list": [
+      {
+        "x": 10,
+        "y": 30,
+        "w": 36,
+        "h": 12,
+        "speed": 5
+      },
+      {
+        "x": 70,
+        "y": 70,
+        "w": 32,
+        "h": 11,
+        "speed": 6
+      },
+      {
+        "x": 104,
+        "y": 14,
+        "w": 24,
+        "h": 9,
+        "speed": 4
+      }
+    ]
+  },
+  "canopy": {
+    "horizon": 100,
+    "ground": "0x03060a",
+    "haze": "0x3a4a78",
+    "hazeFar": 0.75,
+    "tintShare": 0.35,
+    "tints": ["0x2e5a2a", "0x3a5a24", "0x1e4a40"],
+    "colors": {
+      "shadow": "0x060c0a",
+      "mid": "0x12241a",
+      "lit": "0x24402a",
+      "highlight": "0x46683a"
+    },
+    "rMin": 3,
+    "rMax": 26,
+    "growth": 1.25,
+    "spacing": 1.45,
+    "rowGap": 0.62,
+    "holes": 0.0,
+    "mountains": {
+      "h": 12,
+      "freq": 0.09,
+      "color": "0x1f2a50",
+      "rim": "0x34427a"
+    },
+    "mist": {
+      "h": 14,
+      "alpha": 0.45,
+      "color": "0x4a5a8a"
+    },
+    "tower": {
+      "x": 30,
+      "base": 110,
+      "behind": 2,
+      "w": 5,
+      "h": 24,
+      "roofH": 6,
+      "windows": [16, 8],
+      "stone": "0x3a4060",
+      "lit": "0x6a74a0",
+      "dark": "0x22263c",
+      "mortar": "0x2c3150",
+      "roof": "0x1c2038",
+      "roofLit": "0x3a4470",
+      "warm": "0xd07a32",
+      "warmBright": "0xffbe5c"
+    },
+    "shadowDrop": 0.22,
+    "shadowAlpha": 0.55,
+    "light": [0.45, -0.55, 0.7],
+    "bands": [0.15, 0.5, 0.82]
+  },
+  "logo": {
+    "small": "Dungeon of",
+    "big": "SOLDIA",
+    "smallY": 420,
+    "bigY": 468,
+    "bigScale": 2
+  },
+  "start": {
+    "y": 720,
+    "w": 280,
+    "h": 64,
+    "text": "TAP TO START",
+    "blinkMs": 700,
+    "blinkAlpha": 0.2
+  },
+  "best": {
+    "y": 790,
+    "text": "Best floor: {n}"
+  },
+  "settings": {
+    "x": 14,
+    "y": 14,
+    "size": 42,
+    "name": "Settings",
+    "who": "Sound and options"
+  },
+  "zoom": {
+    "ms": 1500,
+    "scale": 5,
+    "fadeMs": 450
+  }
+}

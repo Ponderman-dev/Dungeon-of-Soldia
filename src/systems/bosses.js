@@ -117,8 +117,7 @@ export const bossMethods = {
     if (u.burrowed.remaining > 0) return;
     const spec = u.burrowed.spec;
     u.burrowed = null;
-    const pool = this.frontDefenders();
-    const t = pool[Math.floor(this.rng() * pool.length)];
+    const t = this.defenders().length ? this.pickWeighted(this.defenders()) : null;
     if (t && this.hasPositions(t) && this.hasPositions(u)) {
       const L = this.rules.movement.layout;
       u.x = Math.min(L.width - L.marginX, Math.max(L.marginX, t.x + (this.rng() < 0.5 ? -1 : 1) * 30));
@@ -296,9 +295,9 @@ export const bossMethods = {
       }
     }
     if (a.daggers) {
-      const pool = this.frontDefenders();
+      const pool = this.defenders();
       for (let i = 0; i < a.daggers.count && pool.length; i++) {
-        const t = pool[Math.floor(this.rng() * pool.length)];
+        const t = this.pickWeighted(pool);
         if (!t.alive) continue;
         this.strike(u, t, events, { multiplier: a.daggers.damageMultiplier, projectile: 'knife', ability: true });
         if (t.alive) for (const spec of a.daggers.apply || []) this.applyStatus(t, spec, u, `boss_${a.id}_dagger`, events);
@@ -482,7 +481,7 @@ export const bossMethods = {
 
   shatterClones(u, multiplier, events) {
     for (const c of this.enemies.filter((e) => e.alive && e.def.glass)) {
-      const t = this.nearest(c, this.frontDefenders(c));
+      const t = this.nearest(c, this.frontDefenders());
       if (t) this.strike(c, t, events, { multiplier, damageType: 'ice', ability: true, projectile: 'knife' });
       c.xpless = true;
       this.killUnit(c, events);
@@ -502,8 +501,8 @@ export const bossMethods = {
       u.skyStrike = (u.skyStrike || 0) - dt;
       if (u.skyStrike <= 0) {
         u.skyStrike += s.strikeEveryMs;
-        const pool = this.frontDefenders();
-        const t = pool[Math.floor(this.rng() * pool.length)];
+        const pool = this.defenders();
+        const t = pool.length ? this.pickWeighted(pool) : null;
         if (t) {
           events.push({ type: 'bossAbility', unit: u, ability: { id: 'lightning', name: 'Lightning' }, targets: [t], quiet: true });
           this.strike(u, t, events, { multiplier: s.strike.damageMultiplier, damageType: s.strike.damageType, projectile: 'lightning', ability: true });

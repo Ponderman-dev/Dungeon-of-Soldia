@@ -62,13 +62,14 @@
     "retargetMinMs": 200
   },
   "minions": {
-    "_about": "Minion rules (D4b). upkeep: while a hero's MINION ITEMS have live minions the holder pays this per minion item (percent of the level stat, like item effects; hero passives like the Necromancer's skeletons cost nothing). revivalFloors: a dead greater minion comes back after this many floors are cleared. copyStatBonus: each extra copy of a greater-minion item adds this share of its health and attack (no second minion). itemWeakCap: the shared cap of weak minions from a hero's items. upkeepWeakScale: weak spawner items cost this much of the full upkeep (greater = full). Boosters (Bone Charm, Overseer's Whistle, Grave Dust, Necro Crown) cost nothing and reach every minion.",
+    "_about": "Minion rules (D4b). upkeep: while a hero's MINION ITEMS have live minions the holder pays this per minion item (percent of the level stat, like item effects; hero passives like the Necromancer's skeletons cost nothing). revivalFloors: a dead greater minion comes back after this many floors are cleared. copyStatBonus: each extra copy of a greater-minion item adds this share of its health and attack (no second minion). itemWeakCap: the shared cap of weak minions from a hero's items. upkeepWeakScale: weak spawner items cost this much of the full upkeep (greater = full). rangedTargetWeight: in an enemy's random target pick a RANGED minion counts as this much of a normal target (user: half as often). Boosters (Bone Charm, Overseer's Whistle, Grave Dust, Necro Crown) cost nothing and reach every minion.",
     "upkeepAttackSpeedPercent": -12,
     "upkeepDefensePercent": -12,
     "revivalFloors": 2,
     "copyStatBonus": 0.5,
     "itemWeakCap": 4,
-    "upkeepWeakScale": 0.5
+    "upkeepWeakScale": 0.5,
+    "rangedTargetWeight": 0.5
   },
   "books": {
     "_about": "Skill book limits per skill (pages in skillBooks.json): stat pages may repeat, a modifier only once per skill; a new modifier on a full skill replaces one the player picks.",

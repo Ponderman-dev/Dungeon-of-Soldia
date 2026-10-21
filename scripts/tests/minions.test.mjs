@@ -89,17 +89,22 @@ const run = (s, ms) => { const ev = []; for (let t = 0; t < ms; t += 20) ev.push
   s.applyStatus(m, { status: 'shield', amount: 100 }, m, 's', []);
   ok('statuses (shields...) work on minions', s.shieldAmount(m) === 100); }
 
-// Enemies skip RANGED minions (Wisp, Imp...) while a hero or melee minion stands (user: they shot the wisp at the back
-// instead of the hero in front). Only when nothing else is left do they go for them.
-{ const wisp = { ...SPAWNER, minion: 'wisp' };
-  const { s, h } = mk(wisp, ['goblin', 'skeletonArcher']); s.startFloor();
-  const w = s.minions[0];
+// RANGED minions (Wisp, Imp...) are picked LESS by enemies (user: they shot the wisp at the back instead of the hero in
+// front, but should still hit it sometimes): weight `minions.rangedTargetWeight`; a melee enemy never walks to one.
+{ const W = rules.minions.rangedTargetWeight;
+  const { s, h } = mk({ ...SPAWNER, minion: 'wisp' }, ['goblin', 'skeletonArcher']); s.startFloor();
+  const w = s.minions[0], [melee, archer] = s.enemies;
   ok('a ranged minion (wisp) rose', w && w.damageType !== 'melee');
-  let picked = 0;
-  for (const e of s.enemies) for (let i = 0; i < 200; i++) { e.foe = null; if (s.pickTarget(e) === w) picked++; }
-  ok('enemies never pick the ranged minion while heroes live', picked === 0);
+  let shot = 0; const N = 4000;
+  for (let i = 0; i < N; i++) if (s.pickTarget(archer) === w) shot++;
+  const want = W / (h.length + W);
+  ok('a ranged enemy shoots the ranged minion less often (weighted)', Math.abs(shot / N - want) < 0.03, `${(shot / N * 100).toFixed(1)}% want ${(want * 100).toFixed(1)}%`);
+  let walked = 0;
+  for (let i = 0; i < 200; i++) { melee.foe = null; if (s.pickTarget(melee) === w) walked++; }
+  ok('a melee enemy never walks over to a far ranged minion', walked === 0);
   for (const hero of h) hero.alive = false;
-  ok('...but do once it is the only one left', s.enemies.every((e) => { e.foe = null; return s.pickTarget(e) === w; })); }
+  melee.foe = null;
+  ok('...but does once it is the only one left', s.pickTarget(melee) === w && s.pickTarget(archer) === w); }
 
 // ...but a ranged minion an enemy is standing next to can be hit: a melee enemy picks at random among everyone in reach.
 { const { s, h } = mk({ ...SPAWNER, minion: 'wisp' }, ['goblin']); s.startFloor();

@@ -345,14 +345,27 @@ export default class BattleState {
     return [...this.heroes, ...this.minions].filter((u) => u.alive);
   }
 
-  // Who an enemy picks as a target: the defenders minus RANGED minions (Wisp, Imp, Phoenix stay at the back and shoot;
-  // user: enemies went for them instead of the heroes in front). A ranged minion the enemy is already standing next to
-  // (in its reach) does count (user: once they reach the back they may hit it, by chance). Only when nobody else is
-  // left do the far ones become targets. Taunt still pulls enemies to them, and area hits still reach them.
-  frontDefenders(unit = null) {
+  // RANGED minions (Wisp, Imp, Phoenix) stay at the back and shoot. User: enemies went for them instead of the heroes
+  // in front, but should still hit them sometimes. So in a random pick they count as `minions.rangedTargetWeight`
+  // (0.5) of a normal target, a melee enemy never walks over to one on purpose (`frontDefenders()` for the nearest
+  // pick), and one standing in a melee enemy's reach is fair game (random pick among everyone in reach).
+  backMinion(u) {
+    return !!u.minion && u.damageType !== 'melee';
+  }
+
+  frontDefenders() {
     const all = this.defenders();
-    const front = all.filter((u) => !(u.minion && u.damageType !== 'melee') || (unit && this.hasPositions(unit) && this.inReach(unit, u)));
+    const front = all.filter((u) => !this.backMinion(u));
     return front.length ? front : all;
+  }
+
+  // A random enemy-side pick from `list`, ranged minions weighted down (see above).
+  pickWeighted(list) {
+    const w = (this.rules.minions && this.rules.minions.rangedTargetWeight) ?? 1;
+    const weight = (u) => (this.backMinion(u) ? w : 1);
+    let roll = this.rng() * list.reduce((sum, u) => sum + weight(u), 0);
+    for (const u of list) if ((roll -= weight(u)) < 0) return u;
+    return list[list.length - 1];
   }
 
   // Puts a fighter at a spot (its feet). This is also its home spot (fear sends it back there).
@@ -407,7 +420,7 @@ export default class BattleState {
   //  - Heroes: the tapped enemy if there is one. Melee heroes keep their opponent (`foe`) until it
   //    dies, then take the NEAREST enemy. Ranged heroes pick any enemy at random.
   //  - Melee enemies keep their opponent too, and a new one is always the NEAREST hero (melee or
-  //    ranged). Ranged enemies pick at random. Enemies skip ranged minions (`frontDefenders()`).
+  //    ranged). Ranged enemies pick at random. Ranged minions are picked less (`pickWeighted()`).
   pickTarget(unit) {
     // Charmed (Bard's Discord): an enemy attacks the nearest OTHER enemy instead.
     if (unit.side === 'enemy' && this.has(unit, 'charm')) {
@@ -416,7 +429,7 @@ export default class BattleState {
     }
     const taunter = this.tauntedBy(unit);
     if (taunter) return taunter;
-    const foes = (unit.side === 'hero' ? this.targetableEnemies() : this.frontDefenders(unit));
+    const foes = (unit.side === 'hero' ? this.targetableEnemies() : this.defenders());
     if (!foes.length) return null;
     if (unit.side === 'hero' && !unit.minion) { // minions ignore tap focus and orders
       const order = this.orderOf(unit);
@@ -424,13 +437,15 @@ export default class BattleState {
       const focus = foes.find((e) => e.uid === this.focusUid);
       if (focus) return this.setFoe(unit, focus);
     }
-    if (unit.damageType !== 'melee') return foes[Math.floor(this.rng() * foes.length)];
+    const enemy = unit.side === 'enemy';
+    if (unit.damageType !== 'melee') return enemy ? this.pickWeighted(foes) : foes[Math.floor(this.rng() * foes.length)];
     const current = foes.find((u) => u.uid === unit.foe);
     if (current) return current;
-    // A melee enemy with a ranged minion in reach picks at random among everyone in its reach (not always the minion).
-    const close = unit.side === 'enemy' && foes.some((u) => u.minion && u.damageType !== 'melee') && this.hasPositions(unit) ? foes.filter((u) => this.inReach(unit, u)) : [];
-    if (close.length) return this.setFoe(unit, close[Math.floor(this.rng() * close.length)]);
-    return this.setFoe(unit, this.nearest(unit, foes));
+    if (!enemy) return this.setFoe(unit, this.nearest(unit, foes));
+    // A melee enemy with a ranged minion in its reach picks at random among everyone in reach (not always the minion).
+    const close = this.hasPositions(unit) && foes.some((u) => this.backMinion(u) && this.inReach(unit, u)) ? foes.filter((u) => this.inReach(unit, u)) : [];
+    if (close.length) return this.setFoe(unit, this.pickWeighted(close));
+    return this.setFoe(unit, this.nearest(unit, this.frontDefenders()));
   }
 
   // Who a unit is taunted by: the most recent taunter that is still alive (an older taunt takes over

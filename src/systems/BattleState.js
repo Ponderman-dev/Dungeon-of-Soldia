@@ -167,26 +167,14 @@ export default class BattleState {
     return Math.min(75, slow);
   }
 
-  // Spirit Axe: `spiritAxe`% (8 per copy) when the holder is hit: a ghostly axe spins around it for 3s, hitting every
-  // enemy within `spiritAxeRadius` (110 px) every 0.5s for `spiritAxeDamage`% (items.json) of the holder's attack (item damage). One spin at a time.
+  // Spirit Axe (user v2: spin ONCE): `spiritAxe`% (8 per copy) when the holder is hit: a ghostly axe spins once around it
+  // and hits every enemy within `spiritAxeRadius` px for `spiritAxeDamage`% (400) of the holder's attack (item damage).
   trySpiritAxe(target, events) {
-    const ch = (target.specials && target.specials.spiritAxe) || 0;
-    if (!ch || target.minion || !target.alive || (target.axeLeft || 0) > 0 || this.rng() * 100 >= ch) return;
-    target.axeLeft = 3000;
-    target.axeTick = 0;
+    const sp = target.specials || {};
+    if (!sp.spiritAxe || target.minion || !target.alive || this.rng() * 100 >= sp.spiritAxe) return;
     events.push({ type: 'proc', unit: target, label: 'Spirit Axe!', itemId: 'spirit_axe' });
-  }
-
-  tickSpiritAxe(hero, dt, events) {
-    if (!(hero.axeLeft > 0)) return;
-    hero.axeLeft -= dt;
-    hero.axeTick -= dt;
-    while (hero.axeTick <= 0 && hero.axeLeft > 0) { // a pulse at once, then every 0.5s: 6 pulses in 3s
-      hero.axeTick += 500;
-      const near = this.targetableEnemies().filter((e) => !this.hasPositions(hero) || !this.hasPositions(e) || Math.hypot(e.x - hero.x, e.y - hero.y) <= 110);
-      for (const e of near) this.strike(hero, e, events, { multiplier: (hero.specials.spiritAxeDamage || 35) / 100, damageType: 'melee', item: true });
-    }
-    if (hero.axeLeft <= 0) hero.axeLeft = 0;
+    const near = this.targetableEnemies().filter((e) => !this.hasPositions(target) || !this.hasPositions(e) || Math.hypot(e.x - target.x, e.y - target.y) <= sp.spiritAxeRadius);
+    for (const e of near) this.strike(target, e, events, { multiplier: sp.spiritAxeDamage / 100, damageType: 'melee', item: true });
   }
 
   // Flame Spirit: launches 3-5 slow dark fireballs, one after another, at random enemies (`damageMultiplier` each, 300%; item damage).
@@ -798,7 +786,6 @@ export default class BattleState {
     for (const b of this.bombs || []) events.push({ type: 'bombFizzle', bomb: b }); // a Sapper bomb still lit when the floor is won goes out
     this.bombs = [];
     this.thunders = []; // a Thunderstruck circle still growing when the floor is won just goes away
-    for (const h of this.heroes) h.axeLeft = 0;
     for (const m of [...this.minions]) {
       if (!m.greater) this.vanishMinion(m, 'floorEnd', events);
       else m.floors++; // a greater minion that survived the floor (Spirit Knight grows)
@@ -1041,7 +1028,6 @@ export default class BattleState {
       this.tickGrace(hero, dt, events);
       this.tickLute(hero, dt, events);
       this.tickWard(hero, dt, events);
-      this.tickSpiritAxe(hero, dt, events);
       this.tickSpawner(hero, dt, events);
       for (const slot of hero.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - dt);
       this.tickCasting(hero, dt, events);

@@ -1774,7 +1774,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "8% when this hero is hit: a ghost axe spins around them for 3s, hitting nearby enemies.",
+    "description": "8% when this hero is hit: a ghost axe spins once around them, hitting every nearby enemy for 400% damage.",
     "effects": [
       {
         "special": "spiritAxe",
@@ -1782,7 +1782,12 @@
       },
       {
         "special": "spiritAxeDamage",
-        "percent": 50,
+        "percent": 400,
+        "unique": true
+      },
+      {
+        "special": "spiritAxeRadius",
+        "percent": 110,
         "unique": true
       }
     ],

@@ -12,7 +12,7 @@ const lerp = (a, b, p) => a + (b - a) * p;
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const BOMB = 0x4a4a5a, KNIFE = 0xe4e8f0, HILT = 0x6b4a2a, BANNER = 0xf2d03a, GREEN = 0x3aa84a, GREEN2 = 0xc8ffd0;
 
-export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 3000, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340, thunderstruck: 520 };
+export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 700, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340, thunderstruck: 520 };
 export const ITEM_FX = Object.keys(ITEM_MS);
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -144,14 +144,14 @@ export function thunderboltFx(q, u) {
 }
 // Spiked Aegis: the broken shield bursts into big spikes all around the holder.
 export function aegisBlastFx(q, u) { const g = pen(); spikes(g, u, q, 1.6); burst(g, u.x, u.mid, 10, [C.grey, C.shield], q, 14, 4); return g.out; }
-// Spirit Axe (user: spin flat on the screen, so you see it hit): a big ghostly green axe whirls around the holder like a
-// wheel (a full circle in the screen plane, wide enough to reach the enemies it hits), its blade leading, with a
+// Spirit Axe (user: spin flat on the screen, so you see it hit; v2: it spins ONCE): a big ghostly green axe makes one
+// fast full turn around the holder like a wheel (wide enough to reach the enemies it hits), its blade leading, with a
 // fading trail of past positions and sparks at the blade tip.
 export function spiritAxeFx(q, u, t) {
   const g = pen();
   const fade = q < 0.08 ? q / 0.08 : q > 0.9 ? (1 - q) / 0.1 : 1;
   const cx = u.x, cy = u.mid, R = 24, RY = 15; // R = sweep radius (character px), flattened a little for the floor view
-  const spin = t / 120;
+  const spin = -Math.PI / 2 + (1 - (1 - q) * (1 - q)) * Math.PI * 2; // one turn, fast then easing out
   for (let k = 7; k >= 0; k--) { // the trail: older positions fade
     const a = spin - k * 0.13; const x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * RY;
     if (k) { g.px(x, y, C.poison, fade * (0.5 - k * 0.06)); g.px(x, y + 1, C.heal, fade * (0.3 - k * 0.04)); continue; }

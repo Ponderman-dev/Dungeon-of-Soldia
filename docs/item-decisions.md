@@ -315,3 +315,6 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Ember Charm v2 (user: 'bigger chance'): 6% -> 20% burn chance, +10% per extra charm (was +6%), burn damage +10% per extra
   as before. itemruns 6/squad (copies 1/3): before ~0; after +0.2/+2.0 (Kindling +0.3/+3.8, Venom +1.8, Serrated +2.2 at 3). Curve median 44.
   Then set to 12% (user), +10% per extra charm kept.
+- Spirit Axe v2 (user, session 19): spins ONCE instead of 3s: 8% (+8% per copy) when the holder is hit, one hit on
+  every enemy within `spiritAxeRadius` 110 px for `spiritAxeDamage` 400% (was 6 pulses x 50%). Look = one fast turn
+  (700ms). itemruns 16/squad (copies 1/3) old -1.3/+3.3, new 0.0/+1.4 (noisy; front hero holds it).

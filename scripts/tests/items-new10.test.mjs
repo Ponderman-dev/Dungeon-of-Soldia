@@ -78,10 +78,12 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
   const balls = all.filter((e) => e.type === 'projectile' && e.kind === 'spiritfire').length, hits = all.filter((e) => e.type === 'attack' && e.damageType === 'dark' && e.attacker === k).length;
   ok('Flame Spirit: 3-5 dark fireballs fly one after another and each hits (300% dark)', balls >= 3 && balls <= 5 && hits === balls && all.filter((e) => e.itemId === 'flame_spirit').length === 1, `${balls} ${hits}`); }
 // Spirit Axe
-{ const { s, es, k } = mk(['knight', 'rogue', 'archer'], ['goblin', 'goblin'], () => 0); give(s, k, 'spirit_axe'); es.forEach((e, i) => { e.x = k.x + 40 * (i ? 1 : -1); e.y = k.y; }); s.onHeroHit(k, []);
-  ok('Spirit Axe: being hit can start the spin (3s)', k.axeLeft === 3000);
-  let hits = 0; for (let t = 0; t < 3000; t += 50) { const ev = []; s.tickSpiritAxe(k, 50, ev); hits += ev.filter((e) => e.type === 'attack').length; }
-  ok('...it hits every nearby enemy every 0.5s (2 enemies x 6 pulses)', hits === 12, `${hits}`); }
+{ const { s, es, k } = mk(['knight', 'rogue', 'archer'], ['goblin', 'goblin'], () => 0); give(s, k, 'spirit_axe'); es.forEach((e, i) => { e.x = k.x + 40 * (i ? 1 : -1); e.y = k.y; });
+  const ev = []; s.onHeroHit(k, ev); const hits = ev.filter((e) => e.type === 'attack' && e.attacker === k);
+  ok('Spirit Axe: being hit can spin it ONCE: one hit on every nearby enemy (item numbers)', hits.length === 2 && ev.filter((e) => e.itemId === 'spirit_axe').length === 1, `${hits.length}`);
+  ok('...for spiritAxeDamage% of attack', hits.every((e) => Math.abs(e.result.amount - k.stats.attack * k.specials.spiritAxeDamage / 100 * (e.result.crit ? s.rules.critMultiplier : 1)) < 3), hits.map((e) => e.result.amount).join(' '));
+  es[1].x = k.x + k.specials.spiritAxeRadius + 30; const ev2 = []; s.onHeroHit(k, ev2);
+  ok('...an enemy past spiritAxeRadius is not hit', ev2.filter((e) => e.type === 'attack' && e.attacker === k).length === 1); }
 // Heart of the Beast
 { const { s, k } = mk(); give(s, k, 'heart_of_the_beast'); k.hp = 1; const got = s.healUnit(k, 50, [], { aura: false }); ok('Heart of the Beast: healing received +30%', got === 65, `${got}`);
   s.enemies.forEach((e) => (e.timer = -1e9)); k.hp = 10; const before = k.hp; for (let t = 0; t < 1000; t += 50) s.update(50);

@@ -1,8 +1,8 @@
 // Speech bubbles (purely for show, no effect on the fight): which hero says which line at the start of a run and after
 // a cleared floor. Lines live in data/dialogue.json; the scene only draws the bubble (BattleScene.sayLine).
 
-// Picks a speaker and a line. kind = 'start' | 'clear' | 'boss' | 'fallen'. `heroes` = the squad (living ones speak),
-// `memory` = an object kept for the whole run (last speaker, lines already said) so lines and speakers don't repeat.
+// Picks a speaker and a line. kind = 'start' | 'clear' | 'boss' | 'fallen' | 'hurt' | 'close'. `heroes` = the squad
+// (living ones speak), `memory` = an object kept for the whole run (last speaker, lines already said) so lines and speakers don't repeat.
 // Returns { uid, text } or null (nobody alive, the chance roll missed, or no lines).
 export function pickSpeech(data, heroes, kind, rng = Math.random, memory = {}) {
   const chance = data.rules.chance[kind] ?? 1;
@@ -29,9 +29,16 @@ export function pickSpeech(data, heroes, kind, rng = Math.random, memory = {}) {
   return { uid: hero.uid, text };
 }
 
-// Which kind of line fits a cleared floor: a boss beats a fallen friend, a fallen friend beats a normal clear.
-export function clearKind({ bossFloor, someoneFell }) {
-  if (bossFloor) return 'boss';
-  if (someoneFell) return 'fallen';
-  return 'clear';
+// The line after a cleared floor: { kind, heroes } (the heroes who may speak). A boss beats a fallen friend, a fallen
+// friend beats a close call. A close call (a hero at or below rules.closePercent health) or a hurt hero (at or below
+// rules.hurtPercent) says it themselves; the lowest one speaks. Health is read BEFORE the win heal.
+export function clearSpeech(data, heroes, { bossFloor, someoneFell }) {
+  const alive = heroes.filter((h) => h.alive);
+  if (bossFloor) return { kind: 'boss', heroes: alive };
+  if (someoneFell) return { kind: 'fallen', heroes: alive };
+  const pct = (h) => (100 * h.hp) / h.maxHp;
+  const lowest = alive.slice().sort((a, b) => pct(a) - pct(b))[0];
+  if (lowest && pct(lowest) <= data.rules.closePercent) return { kind: 'close', heroes: [lowest] };
+  if (lowest && pct(lowest) <= data.rules.hurtPercent) return { kind: 'hurt', heroes: [lowest] };
+  return { kind: 'clear', heroes: alive };
 }

@@ -36,7 +36,7 @@ import { eliteGlow, crownPixels } from '../systems/eliteFx.js';
 import { projectileFx, impactFx, critFx, IMPACT_MS, CRIT_MS, MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, deathPuffFx } from '../systems/hitFx.js';
 import BattleState from '../systems/BattleState.js';
 import dialogue from '../data/dialogue.json';
-import { pickSpeech, clearKind } from '../systems/dialogue.js';
+import { pickSpeech, clearSpeech } from '../systems/dialogue.js';
 import { validateDungeon, validateHeroSkills, validateDamageTypes } from '../systems/validate.js';
 import { enemiesForFloor, monsterHouse } from '../systems/dungeon.js';
 import { enemySpots } from '../systems/formation.js';
@@ -86,6 +86,7 @@ const SKILL_H = 44;
 
 // Depth order: floor < slots < hero < hero bars < popups < banner/HUD
 // How big one character pixel is on screen (bosses use finer pixels: `drawScale` in enemies.json).
+const BANNER_Y = 520; // the big banner text (rooms); 'Floor N cleared!' goes higher (combat.json transition.clearBannerY)
 const charScale = (def) => def.drawScale ?? CHAR_SCALE;
 
 const DEPTH = { floor: 0, slot: 1, marker: 2, hero: 5, heroBar: 6, doorFront: 7, popup: 10, hud: 20 };
@@ -168,7 +169,7 @@ export default class BattleScene extends Phaser.Scene {
       .setOrigin(0, 0.5)
       .setDepth(DEPTH.hud);
     this.banner = this.add
-      .text(GAME_WIDTH / 2, 520, '', { fontFamily: UI.font, fontSize: '24px', color: '#ffffff', stroke: '#000000', strokeThickness: 4, align: 'center' })
+      .text(GAME_WIDTH / 2, BANNER_Y, '', { fontFamily: UI.font, fontSize: '24px', color: '#ffffff', stroke: '#000000', strokeThickness: 4, align: 'center' })
       .setOrigin(0.5)
       .setDepth(DEPTH.hud);
     // Any tap closes an open passive text (not the tap that opened it: same moment).
@@ -2663,7 +2664,7 @@ export default class BattleScene extends Phaser.Scene {
     if (this.tauntLines) this.tauntLines.clear();
     this.drawBossHud(); // mode is 'won': the boss bar goes away
     this.focusMarker.setVisible(false);
-    this.banner.setText(`Floor ${this.floor}\ncleared!`); // two lines (user): one line ran off the screen on floor 10+
+    this.banner.setY(T.clearBannerY).setText(`Floor ${this.floor}\ncleared!`); // two lines (user): one line ran off the screen on floor 10+
     this.layer.setDoorOpen(true);
 
     this.state.clearStatuses();
@@ -2686,25 +2687,28 @@ export default class BattleScene extends Phaser.Scene {
         this.runHome(mv); // a greater minion walks back to its waiting spot too
       }
     }
+    // A hero says something about the floor (before the win heal: a close call reads the health it ended with).
+    const someoneFell = this.livingHeroViews().length < (this.aliveAtStart ?? 0);
+    const bossFloor = !!(this.dungeon.bosses && this.dungeon.bosses[this.floor]);
+    const said = clearSpeech(dialogue, this.state.heroes, { bossFloor, someoneFell });
+    const sayMs = this.sayLine(said.kind, said.heroes);
     for (const { unit, amount } of this.state.winHeal(combatRules.winHealPercent)) {
       const v = this.views.get(unit.uid);
       this.setBar(v);
       if (Math.round(amount) > 0) this.popText(v, `+${Math.round(amount)}`, '#6dff8f');
     }
 
-    const someoneFell = this.livingHeroViews().length < (this.aliveAtStart ?? 0);
-    const bossFloor = !!(this.dungeon.bosses && this.dungeon.bosses[this.floor]);
-    const sayMs = this.sayLine(clearKind({ bossFloor, someoneFell })); // a hero says something about the floor
     this.time.delayedCall(Math.max(T.clearPauseMs, sayMs), () => {
-      this.banner.setText('');
+      this.banner.setText('').setY(BANNER_Y);
       this.showReward(() => this.goToNextFloor());
     });
   }
 
   // A speech bubble over a living hero (purely for show; lines in data/dialogue.json, picked by systems/dialogue.js).
-  // kind = 'start' | 'clear' | 'boss' | 'fallen'. Returns how long the bubble stays (ms), 0 = no bubble.
-  sayLine(kind) {
-    const s = pickSpeech(dialogue, this.state.heroes, kind, Math.random, this.speechMemory);
+  // kind = 'start' | 'clear' | 'boss' | 'fallen' | 'hurt' | 'close'; `heroes` = who may speak (default: the squad).
+  // Returns how long the bubble stays (ms), 0 = no bubble.
+  sayLine(kind, heroes = this.state.heroes) {
+    const s = pickSpeech(dialogue, heroes, kind, Math.random, this.speechMemory);
     const v = s && this.views.get(s.uid);
     if (!v) return 0;
     if (this.speech) this.speech.c.destroy();

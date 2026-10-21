@@ -1,8 +1,7 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
 ## START HERE (session 22): no task picked yet: ask the user
-- BRANCH: session 21's work is on `claude/jolly-davinci-ifsnil` and NOT yet in `main` (the user had not OK'd the merge
-  when the session ended): first ask 'bring main up to the session 21 branch?' (Git rule in CLAUDE.md).
+- BRANCH: `main` has EVERYTHING (session 21 work merged in). See the Git rule in CLAUDE.md.
 - DONE session 21 (details: docs/systems/title-base.md, ui.md, sound.md):
   - TITLE SCREEN (`TitleScene`, `systems/titleArt.js`, `title.json`; Boot starts 'Title'): user's pick F after many
     rejected designs (wants a THICK forest seen FROM ABOVE, round tree tops, a far tower, logo mid-screen, Slay the

@@ -1,38 +1,33 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 22): no task picked yet: ask the user
-- BRANCH: `main` has EVERYTHING (session 21 work merged in). See the Git rule in CLAUDE.md.
-- DONE session 21 (details: docs/systems/title-base.md, ui.md, sound.md):
-  - TITLE SCREEN (`TitleScene`, `systems/titleArt.js`, `title.json`; Boot starts 'Title'): user's pick F after many
-    rejected designs (wants a THICK forest seen FROM ABOVE, round tree tops, a far tower, logo mid-screen, Slay the
-    Spire feel). Logo = stand-in text (the user may draw one in the Studio). Settings gear = 'Coming soon'.
-  - CAMP / BASE (`BaseScene`, `systems/campArt.js`, `camp.json`): campfire on the dungeon flagstones (no wall: the
-    open top is the exit), a random unlocked hero walks in from the bottom, 4 NPCs with names OVER their heads
-    (Glossary, Heroes, Leaderboard, Shop) + Profile = 'Coming soon' windows (`uiKit.comingSoonWindow`), big TO DUNGEON
-    window at the top: the hero walks round the fire and out, the screen slides up into the squad screen. After a run
-    you still go back to the squad screen. User: 'we'll get back to this later' (NPC screens, polish).
-  - Sounds: tap on TAP TO START / TO DUNGEON, footsteps on the camp walks, card open/close on the windows.
-  - Speech bubbles never hold the game: the first fight starts at once, clear pause back to 0.9s; the bubble is
-    removed 0.2s after the reward screen opens (`dialogue.json rules.goneAfterRewardMs`, done on the Reward scene's
-    clock because Battle is paused under it).
-  - SMALL TEXT FONT: text asked for at 8px or less is Press Start 2P at 8px (`UI.smallFont`; uiKit draws it letter by
-    letter on whole pixels and snaps edges); bigger text stays Ironslab. Pixelify Sans and Tiny5 were tried and dropped.
-  - itch.io: dev notes `docs/itch-publish.md` (build:itch, rename to index.html, zip, embed 390x844 portrait) and a
-    devlog draft `docs/devlog/2026-10-21-title-and-camp.md` (everything since the first itch build, 2026-10-20). The
-    zip given to the user predates the bubble/sound/font changes: rebuild before they upload.
-- OPEN: NPC screens (Glossary, Heroes, Leaderboard, Shop, Profile, Settings) are placeholders; the user's own logo;
-  older item ideas: Electric payoff epic (Shock), Eclipse Idol ~0 in itemruns (bot), more dark legendaries (Doom Crown,
-  Soul Reaper, Shade Lantern), defense ideas (Stoneheart hit cap 20%, Aegis of Dawn, Spellward Robe).
-- itemruns gives the item to the FRONT hero: unfair for synergy items (shield, DoT, ranged): say so with its numbers.
-  It is noisy at 6/squad: use 16/squad and compare old vs new on the same dice (git worktree of HEAD) before judging.
+## START HERE (session 23): NEXT = more MENU tweaks (the camp hub); ask the user what to change
+- BRANCH: the session 22 work is on `claude/wonderful-fermat-fg4jn0` (NOT on main yet: ask the user, then bring main
+  up to it). See the Git rule in CLAUDE.md.
+- CAMP HUB REWORK (session 22, user's sketch 'more of a mobile game menu'; details docs/systems/title-base.md
+  section 4): `BaseScene` = campfire in the middle with 3 random unlocked heroes idly wandering (`camp.json hero`),
+  Settings gear top left, profile (name box 'Adventurer' + round portrait, `uiKit.pixelDisc`) top right, big
+  TO EXPEDITION window (slides up into the squad screen), bottom row of 4 square buttons with 12x12 pixel icons
+  (`ui.menu`: Glossary, Heroes, Leaders, Shop) = all 'Coming soon'. No walk-in from the bottom, no NPCs drawn
+  (`npcs` data kept for later screens). Likely next asks: the screens behind the buttons, the profile name/portrait,
+  settings (sound on/off lives on the squad screen today), polish. In the dev/preview build the yellow TEST buttons
+  sit over the profile (not in the itch build).
+- Also DONE session 22: clear pause 1.2s (bubble shows first); a skill cuts the attack swing/step short
+  (`Character.stopAttack`, `stopStep`); neater 'Who gets it?' hero rows; sound board round 9 (Menus rows, `add-menus.py`)
+  + picks applied (tap = 3 random takes, cardOpen page turn, cardClose card place, scroll, descend = appear magic,
+  Flask Barrage glass); element charms / Chill Band / Magma Core ride INSIDE the attack (one number, `riders` in
+  combat.js, not boosted by +element %: grows evenly; items.md 'ONE HIT'); charm texts simpler.
+- itch.io: the zip given to the user predates the hub / charms / page-2 sounds: `npm run build:itch` again before an
+  upload, and add those to the devlog draft `docs/devlog/2026-10-21-title-and-camp.md` (version still 0.1.0: ask
+  whether testers played the old build; then bump to 0.2.0).
 - Test helper (scratchpad, throwaway): Playwright (/opt/node22/lib/node_modules/playwright, executablePath
-  /opt/pw-browsers/chromium) + `node_modules/.bin/vite <repo> --port 5177` run FROM the scratchpad (a git worktree in
-  the scratchpad + a node_modules symlink = a quick look copy). The game opens on 'Title' now: wait for it, then stop
-  scenes and start 'Battle' (registry `squadIds`) or 'Base'; Battle modes: entering / fighting / won / lost.
-  NPCs and TO DUNGEON ignore taps while the hero walks in (~3.5s after the title tap). Stop vite with
-  `pkill -f "[v]ite.*--port 5177"`.
+  /opt/pw-browsers/chromium) + `node_modules/.bin/vite <copy> --port 5177` run FROM the scratchpad (a git worktree in
+  the scratchpad + a node_modules symlink; run `npm install` first if node_modules is missing). Dev build exposes
+  `window.__game`: wait for 'Title', stop scenes, `scene.start('Base')` or 'Battle' (registry `squadIds`). Remove the
+  worktree after (`git worktree remove --force`). Stop vite with `pkill -f "[v]ite.*--port 5177"`.
 - PUBLISH: the first publish per session may be refused ('not viewed'): Read 1-8 lines of the saved live copy, then
   publish again (if refused again as 'identical', publish once more: it goes through).
+- Sound board picks: page 1 = db `picks` (apply-picks.py), page 2 = db `assign` (WINS; several files = random takes;
+  applied by hand so far). Compare with the db copies to spot what is new.
 
 ## How we work with this user
 - Beginner, vibe coding: explain simply, small steps, ask before design changes. Picks: use the QUESTION TOOL (user asks

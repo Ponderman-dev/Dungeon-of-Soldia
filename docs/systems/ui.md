@@ -13,8 +13,8 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   8px tall), so it is only crisp at 10 / 20 / 30 / 40px. Scenes still ask for 8 / 16 / 24 / 32px; `uiKit.js` patches
   Phaser's TextStyle once (`gridPx()`, `UI.fontGrid` {px 10, scale 1.25}) so any UI.font size becomes x1.25 rounded to
   the grid (8 -> 10, 16 -> 20, 24 -> 30): same letter height as before, no scene changes. Line spacing ~half the size.
-  Characters: letters, digits, space ! % ' ( ) + , - . / : ? only; `< > [ ] & # * " = ;` etc. are MISSING (they fall
-  back to a smooth monospace: avoid them in UI text or ask the user to add them to the font). Jacquard 24 and ~20
+  Characters: letters, digits, space ! " # % & ' ( ) * + , - . / : < = > ? [ ] (v2 added " # & * < = > [ ]);
+  `$ ; @ \ ^ _ ` { | } ~` are MISSING (they fall back to a smooth monospace: avoid them in UI text or ask the user). Jacquard 24 and ~20
   Google pixel fonts were tried first and turned down.
 - Code: `src/config.js` `UI` (font, sizes, colours); `src/entities/uiKit.js`: `drawWindow(g, x, y, w, h, {fill, line,
   alpha})`, `drawCursor(g, x, y)`, `uiText()`, `uiStyle()`, `uiButton()` (window + label + cursor + pressed = white).

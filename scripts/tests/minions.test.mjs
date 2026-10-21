@@ -100,3 +100,13 @@ const run = (s, ms) => { const ev = []; for (let t = 0; t < ms; t += 20) ev.push
   ok('enemies never pick the ranged minion while heroes live', picked === 0);
   for (const hero of h) hero.alive = false;
   ok('...but do once it is the only one left', s.enemies.every((e) => { e.foe = null; return s.pickTarget(e) === w; })); }
+
+// ...but a ranged minion an enemy is standing next to can be hit: a melee enemy picks at random among everyone in reach.
+{ const { s, h } = mk({ ...SPAWNER, minion: 'wisp' }, ['goblin']); s.startFloor();
+  const w = s.minions[0], g = s.enemies[0];
+  s.place(w, 200, 600); s.place(h[0], 240, 600); s.place(g, 220, 560);
+  for (const x of h.slice(1)) s.place(x, 40, 800);
+  let wisp = 0, hero = 0;
+  for (let i = 0; i < 300; i++) { g.foe = null; const t = s.pickTarget(g); if (t === w) wisp++; else if (t === h[0]) hero++; }
+  ok('an enemy next to a ranged minion sometimes hits it', wisp > 50, `${wisp}/300`);
+  ok('...and sometimes the hero next to it (random, not always the minion)', hero > 50, `${hero}/300`); }

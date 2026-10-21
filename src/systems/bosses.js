@@ -482,7 +482,7 @@ export const bossMethods = {
 
   shatterClones(u, multiplier, events) {
     for (const c of this.enemies.filter((e) => e.alive && e.def.glass)) {
-      const t = this.nearest(c, this.frontDefenders());
+      const t = this.nearest(c, this.frontDefenders(c));
       if (t) this.strike(c, t, events, { multiplier, damageType: 'ice', ability: true, projectile: 'knife' });
       c.xpless = true;
       this.killUnit(c, events);

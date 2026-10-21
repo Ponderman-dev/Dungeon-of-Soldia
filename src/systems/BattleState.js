@@ -346,11 +346,12 @@ export default class BattleState {
   }
 
   // Who an enemy picks as a target: the defenders minus RANGED minions (Wisp, Imp, Phoenix stay at the back and shoot;
-  // user: enemies went for them instead of the heroes in front). Only when nobody else is left do they become targets.
-  // Taunt still pulls enemies to them, and area hits still reach them.
-  frontDefenders() {
+  // user: enemies went for them instead of the heroes in front). A ranged minion the enemy is already standing next to
+  // (in its reach) does count (user: once they reach the back they may hit it, by chance). Only when nobody else is
+  // left do the far ones become targets. Taunt still pulls enemies to them, and area hits still reach them.
+  frontDefenders(unit = null) {
     const all = this.defenders();
-    const front = all.filter((u) => !(u.minion && u.damageType !== 'melee'));
+    const front = all.filter((u) => !(u.minion && u.damageType !== 'melee') || (unit && this.hasPositions(unit) && this.inReach(unit, u)));
     return front.length ? front : all;
   }
 
@@ -415,7 +416,7 @@ export default class BattleState {
     }
     const taunter = this.tauntedBy(unit);
     if (taunter) return taunter;
-    const foes = (unit.side === 'hero' ? this.targetableEnemies() : this.frontDefenders());
+    const foes = (unit.side === 'hero' ? this.targetableEnemies() : this.frontDefenders(unit));
     if (!foes.length) return null;
     if (unit.side === 'hero' && !unit.minion) { // minions ignore tap focus and orders
       const order = this.orderOf(unit);
@@ -426,6 +427,9 @@ export default class BattleState {
     if (unit.damageType !== 'melee') return foes[Math.floor(this.rng() * foes.length)];
     const current = foes.find((u) => u.uid === unit.foe);
     if (current) return current;
+    // A melee enemy with a ranged minion in reach picks at random among everyone in its reach (not always the minion).
+    const close = unit.side === 'enemy' && foes.some((u) => u.minion && u.damageType !== 'melee') && this.hasPositions(unit) ? foes.filter((u) => this.inReach(unit, u)) : [];
+    if (close.length) return this.setFoe(unit, close[Math.floor(this.rng() * close.length)]);
     return this.setFoe(unit, this.nearest(unit, foes));
   }
 

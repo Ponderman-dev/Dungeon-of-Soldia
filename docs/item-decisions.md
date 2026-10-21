@@ -318,3 +318,4 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Spirit Axe v2 (user, session 19): spins ONCE instead of 3s: 8% (+8% per copy) when the holder is hit, one hit on
   every enemy within `spiritAxeRadius` 110 px for `spiritAxeDamage` 400% (was 6 pulses x 50%). Look = one fast turn
   (700ms). itemruns 16/squad (copies 1/3) old -1.3/+3.3, new 0.0/+1.4 (noisy; front hero holds it).
+  Then chance 8% -> 14% per copy (user): itemruns 16/squad +0.1 / +9.0 (3 copies = 42%).

@@ -1774,11 +1774,11 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "8% when this hero is hit: a ghost axe spins once around them, hitting every nearby enemy for 400% damage.",
+    "description": "14% when this hero is hit: a ghost axe spins once around them, hitting every nearby enemy for 400% damage.",
     "effects": [
       {
         "special": "spiritAxe",
-        "percent": 8
+        "percent": 14
       },
       {
         "special": "spiritAxeDamage",
@@ -1792,7 +1792,7 @@
       }
     ],
     "dropWeight": 90,
-    "perStack": "+8% chance"
+    "perStack": "+14% chance"
   },
   "heart_of_the_beast": {
     "name": "Heart of the Beast",

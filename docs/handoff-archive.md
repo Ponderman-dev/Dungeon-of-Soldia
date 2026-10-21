@@ -1,5 +1,18 @@
-# Handoff ARCHIVE (sessions 2-19, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-20, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## (session 20 start note, 2026-10-21: no task picked)
+- BRANCH: `main` has EVERYTHING (made in session 20; the old branches were deleted). See the Git rule in CLAUDE.md.
+- DONE session 19:
+  - Fire Arrows REMOVED (user). Ember Charm burn 6% -> 12% (+10% per extra charm). Spirit Axe v2: spins ONCE when the
+    holder is hit, 14% per copy, 400% to every enemy within 110px (itemruns 3 copies +9.0: watch it). docs/item-decisions.md.
+  - BUG FIX: the game froze when a Kobold Sapper's late bomb hit something (scene lunged a faded attacker; BattleScene
+    'attack' event now skips a missing attacker view).
+  - NEW FONT: IRONSLAB, the user's OWN pixel font (`src/assets/fonts/ironslab.ttf`, 10px grid). Scenes still ask for
+    8/16/24px; uiKit maps them to 10/20/30 (`UI.fontGrid`). Missing chars: `$ ; @ \ ^ _ { | } ~`. If the user sends a new
+    .ttf: check grid + characters (session 19 used small node scripts), swap the file, screenshot. ui.md has it all.
+    Jacquard 24 and ~20 Google pixel fonts were tried and turned DOWN.
+  - Death Coil: user says it's fine; its 'change' note on the skill-fx page (db notes/look:death_coil3) is now 'ok'.
 
 ## (session 19 start note, 2026-10-20: NEXT = Ember Charm + Fire Arrows)
 - LATEST BRANCH: `ccr-f0fe918e-fdbp68` has EVERYTHING. Before building/publishing: `git fetch` and check newer session

@@ -18,7 +18,7 @@ const COLORS = { gold: 0xffd84a, dim: 0x4a4a5a };
 const INK = UI.text;
 const MUTE = '#c8c8d4'; // descriptions: a light grey so the white names stand out
 const FONT = UI.font;
-// Press Start 2P stays crisp on its 8px grid: every old size becomes 8 (small text) or 16 (titles, names, buttons).
+// Text sizes stay on the 8 / 16 grid (config.js fontGrid turns them into crisp Ironslab sizes): every old size becomes 8 (small text) or 16 (titles, names, buttons).
 const px = (size) => (size >= 16 ? 16 : 8);
 const SHEET_TOP = 44; // the highest the sheet ever goes; it is only as tall as each step needs and sits in the MIDDLE of the screen (screen review)
 const HEAD = 52; // the sheet's top row (FLOOR N CLEARED, the Back pill); a step's content starts this far down

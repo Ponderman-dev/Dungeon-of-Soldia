@@ -7,10 +7,15 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   Colour only where it means something: gold (`UI.gold`) = chosen / rarity / stacks / important numbers, red = attack,
   green = support / heals, grey (`UI.dim`) = disabled. The chosen card gets a GOLD line; a ready button gets the
   blinking ▶ cursor. No rounded rectangles, no gradients, no smooth fonts.
-- Font: Press Start 2P (OFL, `src/assets/fonts/press-start-2p.woff2` + licence), packed into the code with `?inline` and
-  loaded by `loadUiFont()` in BootScene before the first screen (FontFace from bytes, never fetch: the preview frame
-  blocks it). Sizes ONLY 8 / 16 / 24 / 32 px (its 8px grid; in-between sizes blur): small text 8, names/titles/buttons
-  16, big titles 24. Line spacing ~half the size. The font has plain ASCII only: no ‹ › → · ✕ ♪ ☑ in UI text.
+- Font: IRONSLAB (user's own pixel font, session 19, `src/assets/fonts/ironslab.ttf`; was Press Start 2P, whose file is
+  kept for the skill-fx proposal page). Packed into the code with `?inline` and loaded by `loadUiFont()` in BootScene
+  before the first screen (FontFace from bytes, never fetch: the preview frame blocks it). Its grid is 10px (capitals
+  8px tall), so it is only crisp at 10 / 20 / 30 / 40px. Scenes still ask for 8 / 16 / 24 / 32px; `uiKit.js` patches
+  Phaser's TextStyle once (`gridPx()`, `UI.fontGrid` {px 10, scale 1.25}) so any UI.font size becomes x1.25 rounded to
+  the grid (8 -> 10, 16 -> 20, 24 -> 30): same letter height as before, no scene changes. Line spacing ~half the size.
+  Characters: letters, digits, space ! % ' ( ) + , - . / : ? only; `< > [ ] & # * " = ;` etc. are MISSING (they fall
+  back to a smooth monospace: avoid them in UI text or ask the user to add them to the font). Jacquard 24 and ~20
+  Google pixel fonts were tried first and turned down.
 - Code: `src/config.js` `UI` (font, sizes, colours); `src/entities/uiKit.js`: `drawWindow(g, x, y, w, h, {fill, line,
   alpha})`, `drawCursor(g, x, y)`, `uiText()`, `uiStyle()`, `uiButton()` (window + label + cursor + pressed = white).
 - Screens done: fight HUD (floor window, skill buttons = windows with red/green letters, cooldown = grey fill draining

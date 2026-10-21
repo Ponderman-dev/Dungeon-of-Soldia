@@ -13,10 +13,12 @@ export const SKILL_COLORS = {
 };
 
 // The interface look (user's pick, session 6: "Classic RPG Window"): black windows with a white 2px line and stepped
-// corners, white Press Start 2P text, colour only where it means something. Drawing helpers: src/entities/uiKit.js.
+// corners, white Ironslab text (the game's own pixel font), colour only where it means something. Drawing helpers: src/entities/uiKit.js.
 export const UI = {
-  font: "'Press Start 2P', monospace", // the font file is packed into the game (src/assets/fonts), so it works offline
-  // Press Start 2P is drawn on an 8-pixel grid: keep text sizes to multiples of 8 so every pixel stays even.
+  font: "'Ironslab', monospace", // the game's own pixel font, packed into the game (src/assets/fonts), so it works offline
+  // Scenes ask for 8 / 16 / 24px (the old Press Start 2P sizes); entities/uiKit.js gridPx() turns them into Ironslab's
+  // crisp sizes: x scale, rounded to the px grid (8 -> 10, 16 -> 20, 24 -> 30).
+  fontGrid: { px: 10, scale: 1.25 },
   size: { small: 8, normal: 16, big: 24, huge: 32 },
   window: 0x000000, // window fill
   line: 0xffffff, // window line

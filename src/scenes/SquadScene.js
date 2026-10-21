@@ -22,7 +22,7 @@ import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describ
 import * as sfx from '../audio/sfx.js';
 import { slotsFrom, addToSlots, removeFromSlots, isFull, squadOrder } from '../systems/squadSlots.js';
 
-// The interface look (config.js UI, entities/uiKit.js): black windows, white lines, Press Start 2P at 8 / 16 / 24px.
+// The interface look (config.js UI, entities/uiKit.js): black windows, white lines, Ironslab text (sizes 8 / 16 / 24 = 10 / 20 / 30px, see config.js fontGrid).
 const INK = UI.text;
 const MUTE = '#a8a8b8';
 const FONT = UI.font;

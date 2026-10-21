@@ -1,22 +1,46 @@
 // The shared interface look ("Classic RPG Window"): black windows with a white 2px line and stepped corners, a blinking
-// ▶ cursor and Press Start 2P text. Every screen draws its windows, buttons and text through these helpers.
+// ▶ cursor and Ironslab text (the game's own pixel font). Every screen draws its windows, buttons and text through these helpers.
 import Phaser from 'phaser';
-import fontUrl from '../assets/fonts/press-start-2p.woff2?inline';
+import fontUrl from '../assets/fonts/ironslab.ttf?inline';
 import { UI } from '../config.js';
 
 // Loads the packed font before the first screen draws. The font comes from its data: URL with atob, never fetch():
 // the claude.ai preview frame blocks fetch (the same trick as the sounds). If it fails the game uses monospace.
 export function loadUiFont() {
+  installFontGrid();
   try {
     const bin = atob(fontUrl.split(',')[1]);
     const bytes = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    const face = new FontFace('Press Start 2P', bytes.buffer);
+    const face = new FontFace('Ironslab', bytes.buffer);
     document.fonts.add(face);
     return face.load().catch(() => null);
   } catch {
     return Promise.resolve(null);
   }
+}
+
+// Ironslab is drawn on a 10px grid (capitals 8px tall), so it is only crisp at 10 / 20 / 30px. The scenes keep asking
+// for the old Press Start 2P sizes (8 / 16 / 24px); every size is scaled by UI.fontGrid.scale and rounded to the grid
+// (8 -> 10, 16 -> 20, 24 -> 30: the letters stay the same height). Done once, in Phaser's text style.
+export function gridPx(size) {
+  const G = UI.fontGrid;
+  return Math.max(1, Math.round((parseFloat(size) * G.scale) / G.px)) * G.px;
+}
+let gridInstalled = false;
+function installFontGrid() {
+  if (gridInstalled) return;
+  gridInstalled = true;
+  const TS = Phaser.GameObjects.TextStyle.prototype;
+  const setStyle = TS.setStyle;
+  TS.setStyle = function (style, updateText, setDefaults) {
+    if (style && style.fontFamily === UI.font && style.fontSize != null) style = { ...style, fontSize: `${gridPx(style.fontSize)}px` };
+    return setStyle.call(this, style, updateText, setDefaults);
+  };
+  const setFontSize = TS.setFontSize;
+  TS.setFontSize = function (size) {
+    return setFontSize.call(this, this.fontFamily === UI.font ? gridPx(size) : size);
+  };
 }
 
 // A text style in the interface font. `size` is a UI.size key or a number of pixels (keep it a multiple of 8).

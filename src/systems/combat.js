@@ -81,7 +81,20 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
   amount *= markMultiplier(defender);
   amount *= 1 + (opts.damagePercent || 0) / 100; // e.g. the Rogue's Opportunist vs debuffed enemies
 
-  return { dodged: false, crit, amount: Math.max(1, Math.round(amount)), mult };
+  // Riders (element charms, Chill Band, Magma Core): extra element damage ADDED INTO this same hit (user: one number,
+  // not a second small hit). Each is `multiplier` x attack in its own element: same crit roll, its own weak/resist and
+  // resist cut. NOT boosted by +element damage % (user: 10 charms = 3x a hit was too much; now it grows evenly).
+  const riders = [];
+  for (const r of opts.riders || []) {
+    let part = attack * r.multiplier * (crit ? critMultiplier : 1);
+    part *= weakResistMultiplier(defender, r.damageType, rules, damageTypes);
+    if (!opts.ignoreArmor) part *= 1 - armourCut(defender, r.damageType, rules, damageTypes, opts.defenseShred || 0) / 100;
+    part *= markMultiplier(defender) * (1 + (opts.damagePercent || 0) / 100);
+    riders.push({ damageType: r.damageType, amount: part });
+    amount += part;
+  }
+
+  return { dodged: false, crit, amount: Math.max(1, Math.round(amount)), mult, ...(riders.length ? { riders } : {}) };
 }
 
 // Damage over time (poison...): can't be dodged or crit, but weakness, resist and armour still apply.

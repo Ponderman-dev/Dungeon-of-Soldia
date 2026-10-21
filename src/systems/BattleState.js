@@ -1127,7 +1127,7 @@ export default class BattleState {
     }
     const empower = fired.filter((f) => f.counter.effect === 'empower');
     const metro = this.metronomeBeat(unit, target, events); // Metronome: every 4th basic attack of the holder hits harder
-    const hit = this.strike(unit, target, events, metro ? { basic: true, damagePercent: metro, ...(unit.hitType ? { damageType: unit.hitType } : {}) } : unit.hitType ? { basic: true, damageType: unit.hitType } : { basic: true }); // an elite hits with its element
+    const hit = this.strike(unit, target, events, { basic: true, riders: true, ...(metro ? { damagePercent: metro } : {}), ...(unit.hitType ? { damageType: unit.hitType } : {}) }); // an elite hits with its element; riders = element charms in the same hit
     if (unit.elite) this.eliteAfterAttack(unit, target, hit, events); // Storm: every 4th hit jumps
     this.cycleElement(unit); // Mage: the next basic attack is the next element
     if (!hit.dodged) this.addCombo(unit, target, 1, events);
@@ -1152,7 +1152,7 @@ export default class BattleState {
       if (c.strike && target.alive) this.strike(unit, target, events, { multiplier: c.strike.damageMultiplier, damageType: el ? el.damageType : c.strike.damageType });
       if (target.alive && !hit.dodged) for (const spec of (el ? el.apply : c.apply) || []) this.applyStatus(target, spec, unit, `counter_${f.holder.uid}`, events);
     }
-    this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, force: empower.some((f) => f.counter.forceProcs) });
+    this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, folded: true, force: empower.some((f) => f.counter.forceProcs) });
     this.extraArrows(unit, target, events);
     this.volley(unit, target, events); // Archer: every Nth shot fires at more enemies
   }
@@ -1184,8 +1184,8 @@ export default class BattleState {
     others.sort((a, b) => (this.hasPositions(a) ? this.distance(a, from) - this.distance(b, from) : 0));
     for (const e of others) {
       if (n-- <= 0) break;
-      const res = this.strike(unit, e, events, { multiplier: V.damageMultiplier, projectile: 'arrow' });
-      this.rollProcs(unit, 'onAttack', events, { target: e, hit: !res.dodged });
+      const res = this.strike(unit, e, events, { multiplier: V.damageMultiplier, projectile: 'arrow', riders: true });
+      this.rollProcs(unit, 'onAttack', events, { target: e, hit: !res.dodged, folded: true });
     }
   }
 
@@ -1202,8 +1202,8 @@ export default class BattleState {
       const other = others[Math.floor(this.rng() * others.length)];
       hit.add(other);
       events.push({ type: 'proc', unit, label: 'Extra arrow!', itemId: 'quiver_of_plenty', target: other });
-      const res = this.strike(unit, other, events, { projectile: 'arrow' });
-      this.rollProcs(unit, 'onAttack', events, { target: other, hit: !res.dodged });
+      const res = this.strike(unit, other, events, { projectile: 'arrow', riders: true });
+      this.rollProcs(unit, 'onAttack', events, { target: other, hit: !res.dodged, folded: true });
     }
   }
 
@@ -1515,8 +1515,8 @@ export default class BattleState {
     if (!stance && this.hasPositions(samurai) && this.hasPositions(attacker) && !this.inReach(samurai, attacker)) return; // too far to cut back
     events.push({ type: 'proc', unit: samurai, label: 'Counter!' });
     // v3 `counterCrit`: the counter-cut is a sure crit, so it uses his CRIT DAMAGE.
-    const res = this.strike(samurai, attacker, events, { multiplier: ia.counterMultiplier, counter: true, critBonus: ia.counterCrit ? 100 : 0, ...(stance && !this.inReach(samurai, attacker) ? { projectile: 'crescent' } : {}) });
-    this.rollProcs(samurai, 'onAttack', events, { target: attacker, hit: !res.dodged });
+    const res = this.strike(samurai, attacker, events, { multiplier: ia.counterMultiplier, counter: true, critBonus: ia.counterCrit ? 100 : 0, ...(stance && !this.inReach(samurai, attacker) ? { projectile: 'crescent' } : {}), riders: true });
+    this.rollProcs(samurai, 'onAttack', events, { target: attacker, hit: !res.dodged, folded: true });
   }
 
   // ---- passives that change over time or need a living hero --------------------------------------
@@ -1724,6 +1724,9 @@ export default class BattleState {
         events.push({ type: 'status', unit: attacker, change: 'expire', status: sure });
       }
     }
+    // opts.riders: this hit carries the attacker's sure extra element hits (computeDamage adds them in; rollProcs then
+    // skips their own strike, see `folded`).
+    if (opts.riders) opts = { ...opts, riders: this.riders(attacker) };
     // Item damage bonuses of the attacker (Sucker Punch, Full Vigor, Brawler's Streak...).
     const bonus = this.itemDamageBonus(attacker, target, opts);
     if (bonus) opts = { ...opts, damagePercent: (opts.damagePercent || 0) + bonus };
@@ -1732,6 +1735,14 @@ export default class BattleState {
     // Mage's reactions: a different element on top of the last one.
     const react = this.reaction(attacker, target, opts.damageType || attacker.damageType, events);
     if (react.damagePercent) opts = { ...opts, damagePercent: (opts.damagePercent || 0) + react.damagePercent };
+    // A rider's element reacts too (Chill Band ice on a fire mark), after the hit's own element; Shatter grows only its part.
+    if (opts.riders && opts.riders.length) {
+      opts = { ...opts, riders: opts.riders.map((r) => {
+        const rr = this.reaction(attacker, target, r.damageType, events);
+        if (rr.overload && !react.overload) react.overload = rr.overload;
+        return rr.damagePercent ? { ...r, multiplier: r.multiplier * (1 + rr.damagePercent / 100) } : r;
+      }) };
+    }
     // Samurai's Iaido: every Nth hit on him is parried outright.
     const ia = attacker.side === 'enemy' ? this.iaido(target) : null;
     let forced = false;
@@ -1878,6 +1889,13 @@ export default class BattleState {
   //   chain      - a bolt that jumps to other enemies { jumps, damageMultiplier, damageType } (Static Crystal)
   //   apply      - give statuses to `targets`: self, squad or target (the hit enemy; only if the attack connected)
   //   silent     - no popup (for effects that go off on every attack)
+  // The attacker's sure extra element hits (`mergeCopies` onAttack strikes, already merged per element by items.js):
+  // [{ damageType, multiplier }], folded into the hit itself (computeDamage riders).
+  riders(unit) {
+    if (unit.side !== 'hero' || !unit.procs) return [];
+    return unit.procs.filter((p) => p.proc === 'onAttack' && p.mergeCopies && p.strike).map((p) => ({ damageType: p.strike.damageType, multiplier: p.strike.damageMultiplier }));
+  }
+
   rollProcs(hero, trigger, events, ctx = {}) {
     if (hero.side !== 'hero' || !hero.alive) return;
     for (const proc of [...hero.procs]) {
@@ -1906,7 +1924,7 @@ export default class BattleState {
       if (!proc.silent) events.push({ type: 'proc', unit: hero, label: proc.label, itemId: proc.itemId, target: foe || ctx.target || null });
       if (proc.doubleHit && foe) { const dh = this.strike(hero, foe, events); if (!dh.dodged) this.addCombo(hero, foe, 1, events); }
       if (debuffs && enemy && ctx.hit !== false && !String(proc.itemId).startsWith('passive_')) this.addCombo(hero, enemy, 1, events); // Rogue: a debuff item proc = a combo point
-      if (proc.strike && foe) {
+      if (proc.strike && foe && !(ctx.folded && proc.mergeCopies)) { // folded: already inside the hit (riders)
         const hit = this.strike(hero, foe, events, {
           multiplier: proc.strike.damageMultiplier,
           damageType: proc.strike.damageType,
@@ -2713,23 +2731,23 @@ export default class BattleState {
         hero.combo = { uid: target.uid, points: 0 };
         events.push({ type: 'combo', unit: hero, target, points: 0, spent: pts });
       }
-      const res = this.skillHit(hero, skill, slot.id, target, events, { jumpFrom: skill.chain && !first ? targets[targets.indexOf(target) - 1] : null, scale: echo ? echo.power : 1, multiplier: fin ? fin.multiplier : undefined, critBonus: fin ? fin.critBonus : 0 });
+      const res = this.skillHit(hero, skill, slot.id, target, events, { jumpFrom: skill.chain && !first ? targets[targets.indexOf(target) - 1] : null, scale: echo ? echo.power : 1, multiplier: fin ? fin.multiplier : undefined, critBonus: fin ? fin.critBonus : 0, riders: !!(skill.triggersOnHit || skill.procBoost) }); // on-hit skills carry the element charms in the hit
       if (fin && fin.full && target.alive && res && !res.dodged) {
         for (const spec of skill.finisher.applyAtMax || []) this.applyStatus(target, spec, hero, `${slot.id}_max`, events);
         this.rollProcs(hero, 'onAttack', events, { target, hit: true, force: true });
       }
       // Headshot (`triggersOnHit`): counts as a basic attack for on-hit items.
       if (skill.triggersOnHit && res && target.alive) {
-        this.rollProcs(hero, 'onAttack', events, { target, hit: !res.dodged });
+        this.rollProcs(hero, 'onAttack', events, { target, hit: !res.dodged, folded: true });
       }
       // Savage Leap v3 (`procBoost`): every enemy it hits rolls his on-hit items, at `procBoost` times their chance.
-      if (skill.procBoost && res && target.alive) this.rollProcs(hero, 'onAttack', events, { target, hit: !res.dodged, chanceMult: skill.procBoost });
+      if (skill.procBoost && res && target.alive) this.rollProcs(hero, 'onAttack', events, { target, hit: !res.dodged, chanceMult: skill.procBoost, folded: true });
       // Savage Leap (`landSplash`): a shockwave hits the other enemies near where he lands.
       if (skill.landSplash && first) {
         const near = this.enemies.filter((e) => e.alive && e !== target && (this.hasPositions(e) && this.hasPositions(target) ? this.distance(e, target) <= skill.landSplash.radius : this.neighbours(target).includes(e)));
         for (const e of near) {
-          const r = this.skillHit(hero, { ...skill, apply: null, doubleIf: null, landSplash: null }, slot.id, e, events, { multiplier: skill.landSplash.damageMultiplier });
-          if (skill.procBoost && r && e.alive) this.rollProcs(hero, 'onAttack', events, { target: e, hit: !r.dodged, chanceMult: skill.procBoost });
+          const r = this.skillHit(hero, { ...skill, apply: null, doubleIf: null, landSplash: null }, slot.id, e, events, { multiplier: skill.landSplash.damageMultiplier, riders: !!skill.procBoost });
+          if (skill.procBoost && r && e.alive) this.rollProcs(hero, 'onAttack', events, { target: e, hit: !r.dodged, chanceMult: skill.procBoost, folded: true });
         }
       }
       first = false;
@@ -2982,6 +3000,7 @@ export default class BattleState {
         skill,
         projectile: skill.chain ? 'lightning' : skill.projectile,
         from: opts.jumpFrom || undefined,
+        riders: !!opts.riders,
       });
       // Smite: the most hurt ally heals for a share of the damage that got through.
       if (skill.healShare && !result.dodged) {

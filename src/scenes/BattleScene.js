@@ -1583,6 +1583,11 @@ export default class BattleScene extends Phaser.Scene {
       const { amount, crit, mult } = e.result;
       const mark = mult > 1 ? '!' : mult < 1 ? '…' : '';
       if (!e.skill && t && !e.ghastly && !e.noImpact) this.addImpact(e, a, t); // the hit's own look, per damage type (systems/hitFx.js)
+      // Element charms ride inside the hit (one number): their element's hit look and sound play with it.
+      for (const r of e.result.riders || []) {
+        if (t) this.addImpact({ ...e, damageType: r.damageType, result: { ...e.result, crit: false } }, a, t);
+        this.hitSound({ ...e, damageType: r.damageType, result: { crit: false } });
+      }
       if (e.skill) {
         // A skill hit: flashes in the skill colour and shows a big coloured number that pops.
         t.ch.flash(Phaser.Display.Color.HexStringToColor(FX.attackColor).color, FX.flashMs);

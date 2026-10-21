@@ -1,8 +1,7 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
 ## START HERE (session 23): NEXT = more MENU tweaks (the camp hub); ask the user what to change
-- BRANCH: the session 22 work is on `claude/wonderful-fermat-fg4jn0` (NOT on main yet: ask the user, then bring main
-  up to it). See the Git rule in CLAUDE.md.
+- BRANCH: `main` has EVERYTHING (session 22 work merged in). See the Git rule in CLAUDE.md (every handoff updates main).
 - CAMP HUB REWORK (session 22, user's sketch 'more of a mobile game menu'; details docs/systems/title-base.md
   section 4): `BaseScene` = campfire in the middle with 3 random unlocked heroes idly wandering (`camp.json hero`),
   Settings gear top left, profile (name box 'Adventurer' + round portrait, `uiKit.pixelDisc`) top right, big

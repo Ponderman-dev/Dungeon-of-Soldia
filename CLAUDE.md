@@ -23,7 +23,7 @@ and suggest a fresh session per task.
 - **Art:** characters are pixel-art parts (head, body, weapon...) so each part can be replaced; see `docs/systems/art.md`.
 - **Git:** `main` is the one branch with everything. Work on the branch the session names (start it from `main`),
   commit after every working step with a clear message, never commit broken code. When the task is done and the user
-  OKs it, bring `main` up to the session branch. Do not open PRs unless asked.
+  OKs it, bring `main` up to the session branch. EVERY handoff (user rule): also bring `main` up to the session branch. Do not open PRs unless asked.
 - **Small steps:** one step at a time, then stop and tell the user how to see it.
 - **After every change:** run the related test file(s) while working (`node scripts/tests/<name>.test.mjs`), full
   `npm test` before each commit, a full-run check when balance is touched, commit, push.

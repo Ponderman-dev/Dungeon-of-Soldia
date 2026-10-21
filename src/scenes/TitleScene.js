@@ -6,6 +6,7 @@ import { skyLayer, twinkleSpots, moonLayers, cloudLayer, canopyLayer } from '../
 import { layerTexture } from '../entities/pixelLayer.js';
 import { drawWindow, uiText, comingSoonWindow } from '../entities/uiKit.js';
 import { loadProgress } from '../systems/progress.js';
+import * as sfx from '../audio/sfx.js';
 
 // The title screen (docs/systems/title-base.md): a thick night forest seen from above with the dungeon tower far away,
 // full moon, drifting clouds, twinkling stars, the logo (stand-in text), TAP TO START, best floor, settings, version.
@@ -92,6 +93,7 @@ export default class TitleScene extends Phaser.Scene {
   start() {
     if (this.busy || this.modal) return;
     this.busy = true;
+    sfx.play('tap');
     const Z = title.zoom, cam = this.cameras.main;
     this.tweens.killTweensOf(this.ui); // stop the blink, so the fade wins
     this.tweens.add({ targets: this.ui, alpha: 0, duration: 250 });

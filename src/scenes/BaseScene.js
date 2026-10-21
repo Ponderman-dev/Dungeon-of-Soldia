@@ -10,6 +10,7 @@ import Character from '../entities/Character.js';
 import heroes from '../data/heroes.json';
 import unlocks from '../data/unlocks.json';
 import { loadProgress, unlockedIds } from '../systems/progress.js';
+import * as sfx from '../audio/sfx.js';
 
 // The Base: a campfire camp on the dungeon's flagstones (docs/systems/title-base.md). Pixel art: systems/campArt.js,
 // camp.json. NPCs and the profile open 'Coming soon' for now; 'To dungeon' walks the hero out and slides up into the
@@ -103,6 +104,7 @@ export default class BaseScene extends Phaser.Scene {
   // To dungeon: the hero walks round the fire and out of the top, then the screen slides up into the squad screen.
   toDungeon() {
     if (this.leaving || this.modal) return;
+    sfx.play('tap');
     this.tweens.add({ targets: this.exitMark, alpha: 0, duration: 200 });
     this.walkOut(() => {
       const squad = this.scene.get('Squad');
@@ -126,7 +128,7 @@ export default class BaseScene extends Phaser.Scene {
   walkPath(path, done) {
     const E = camp.exit, ch = this.hero;
     const points = [{ x: ch.x, y: ch.y }, ...path.map(([x, y]) => ({ x, y }))];
-    let walked = 0;
+    let walked = 0, lastStep = 0;
     const leg = (i) => {
       if (i >= points.length - 1) { ch.setWalking(false); if (done) done(); return; }
       const a = points[i], b = points[i + 1], dist = Math.hypot(b.x - a.x, b.y - a.y);
@@ -134,6 +136,8 @@ export default class BaseScene extends Phaser.Scene {
       ch.setWalking(true);
       this.tweens.addCounter({ from: 0, to: 1, duration: (dist / E.speed) * 1000, onUpdate: (tw) => {
         const t = tw.getValue(), hop = Math.abs(Math.sin(((walked + t * dist) / E.stepLenPx) * Math.PI)) * E.stepHeight;
+        const step = Math.floor((walked + t * dist) / E.stepLenPx);
+        if (step !== lastStep) { lastStep = step; sfx.play('step'); } // a footstep each landing
         ch.setPosition(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t - hop).setDepth(a.y + (b.y - a.y) * t);
       }, onComplete: () => { walked += dist; leg(i + 1); } });
     };

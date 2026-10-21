@@ -3,6 +3,7 @@
 import Phaser from 'phaser';
 import fontUrl from '../assets/fonts/ironslab.ttf?inline';
 import { UI } from '../config.js';
+import * as sfx from '../audio/sfx.js';
 
 // Loads the packed font before the first screen draws. The font comes from its data: URL with atob, never fetch():
 // the claude.ai preview frame blocks fetch (the same trick as the sounds). If it fails the game uses monospace.
@@ -116,7 +117,8 @@ export function comingSoonWindow(scene, title, who, { w = 280, h = 160, depth = 
     uiText(scene, cx, y + 92, 'Coming soon', 'normal', UI.gold).setOrigin(0.5, 0),
     uiText(scene, cx, y + h - 22, 'Tap to close', 'small', UI.dim).setOrigin(0.5, 0),
   ]).setDepth(depth);
+  sfx.play('cardOpen');
   // A short wait, so the tap that opened it does not close it at once.
-  scene.time.delayedCall(150, () => shadeRect.once('pointerup', () => { box.destroy(); if (onClose) onClose(); }));
+  scene.time.delayedCall(150, () => shadeRect.once('pointerup', () => { sfx.play('cardClose'); box.destroy(); if (onClose) onClose(); }));
   return box;
 }

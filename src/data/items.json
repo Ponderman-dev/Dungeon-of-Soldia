@@ -344,7 +344,7 @@
       "freeze",
       "cc"
     ],
-    "perStack": "+20% ice hit"
+    "perStack": "+20% of attack as ice"
   },
   "static_crystal": {
     "name": "Static Crystal",
@@ -537,7 +537,7 @@
         "mergeCopies": true
       }
     ],
-    "perStack": "+10% fire damage, +10% fire hit",
+    "perStack": "+10% fire damage, +10% of attack as fire",
     "provides": [
       "fire"
     ]
@@ -565,7 +565,7 @@
         "mergeCopies": true
       }
     ],
-    "perStack": "+10% ice damage, +10% ice hit",
+    "perStack": "+10% ice damage, +10% of attack as ice",
     "provides": [
       "ice"
     ]
@@ -593,7 +593,7 @@
         "mergeCopies": true
       }
     ],
-    "perStack": "+10% electric damage, +10% electric hit",
+    "perStack": "+10% electric damage, +10% of attack as electric",
     "provides": [
       "electric"
     ]
@@ -621,7 +621,7 @@
         "mergeCopies": true
       }
     ],
-    "perStack": "+10% dark damage, +10% dark hit",
+    "perStack": "+10% dark damage, +10% of attack as dark",
     "provides": [
       "dark"
     ]
@@ -875,7 +875,7 @@
       }
     ],
     "dropWeight": 90,
-    "perStack": "+35% fire hit, +40% burn damage",
+    "perStack": "+35% of attack as fire, +40% burn damage",
     "provides": [
       "fire"
     ]

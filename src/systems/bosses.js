@@ -117,7 +117,7 @@ export const bossMethods = {
     if (u.burrowed.remaining > 0) return;
     const spec = u.burrowed.spec;
     u.burrowed = null;
-    const pool = this.defenders();
+    const pool = this.frontDefenders();
     const t = pool[Math.floor(this.rng() * pool.length)];
     if (t && this.hasPositions(t) && this.hasPositions(u)) {
       const L = this.rules.movement.layout;
@@ -296,7 +296,7 @@ export const bossMethods = {
       }
     }
     if (a.daggers) {
-      const pool = this.defenders();
+      const pool = this.frontDefenders();
       for (let i = 0; i < a.daggers.count && pool.length; i++) {
         const t = pool[Math.floor(this.rng() * pool.length)];
         if (!t.alive) continue;
@@ -482,7 +482,7 @@ export const bossMethods = {
 
   shatterClones(u, multiplier, events) {
     for (const c of this.enemies.filter((e) => e.alive && e.def.glass)) {
-      const t = this.nearest(c, this.defenders());
+      const t = this.nearest(c, this.frontDefenders());
       if (t) this.strike(c, t, events, { multiplier, damageType: 'ice', ability: true, projectile: 'knife' });
       c.xpless = true;
       this.killUnit(c, events);
@@ -502,7 +502,7 @@ export const bossMethods = {
       u.skyStrike = (u.skyStrike || 0) - dt;
       if (u.skyStrike <= 0) {
         u.skyStrike += s.strikeEveryMs;
-        const pool = this.defenders();
+        const pool = this.frontDefenders();
         const t = pool[Math.floor(this.rng() * pool.length)];
         if (t) {
           events.push({ type: 'bossAbility', unit: u, ability: { id: 'lightning', name: 'Lightning' }, targets: [t], quiet: true });

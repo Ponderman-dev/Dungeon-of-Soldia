@@ -88,3 +88,15 @@ const run = (s, ms) => { const ev = []; for (let t = 0; t < ms; t += 20) ev.push
 { const { s } = mk(); s.startFloor(); const m = s.minions[0];
   s.applyStatus(m, { status: 'shield', amount: 100 }, m, 's', []);
   ok('statuses (shields...) work on minions', s.shieldAmount(m) === 100); }
+
+// Enemies skip RANGED minions (Wisp, Imp...) while a hero or melee minion stands (user: they shot the wisp at the back
+// instead of the hero in front). Only when nothing else is left do they go for them.
+{ const wisp = { ...SPAWNER, minion: 'wisp' };
+  const { s, h } = mk(wisp, ['goblin', 'skeletonArcher']); s.startFloor();
+  const w = s.minions[0];
+  ok('a ranged minion (wisp) rose', w && w.damageType !== 'melee');
+  let picked = 0;
+  for (const e of s.enemies) for (let i = 0; i < 200; i++) { e.foe = null; if (s.pickTarget(e) === w) picked++; }
+  ok('enemies never pick the ranged minion while heroes live', picked === 0);
+  for (const hero of h) hero.alive = false;
+  ok('...but do once it is the only one left', s.enemies.every((e) => { e.foe = null; return s.pickTarget(e) === w; })); }

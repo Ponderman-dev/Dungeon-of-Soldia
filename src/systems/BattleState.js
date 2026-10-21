@@ -345,6 +345,15 @@ export default class BattleState {
     return [...this.heroes, ...this.minions].filter((u) => u.alive);
   }
 
+  // Who an enemy picks as a target: the defenders minus RANGED minions (Wisp, Imp, Phoenix stay at the back and shoot;
+  // user: enemies went for them instead of the heroes in front). Only when nobody else is left do they become targets.
+  // Taunt still pulls enemies to them, and area hits still reach them.
+  frontDefenders() {
+    const all = this.defenders();
+    const front = all.filter((u) => !(u.minion && u.damageType !== 'melee'));
+    return front.length ? front : all;
+  }
+
   // Puts a fighter at a spot (its feet). This is also its home spot (fear sends it back there).
   place(unit, x, y) {
     unit.x = unit.homeX = x;
@@ -397,7 +406,7 @@ export default class BattleState {
   //  - Heroes: the tapped enemy if there is one. Melee heroes keep their opponent (`foe`) until it
   //    dies, then take the NEAREST enemy. Ranged heroes pick any enemy at random.
   //  - Melee enemies keep their opponent too, and a new one is always the NEAREST hero (melee or
-  //    ranged). Ranged enemies pick at random.
+  //    ranged). Ranged enemies pick at random. Enemies skip ranged minions (`frontDefenders()`).
   pickTarget(unit) {
     // Charmed (Bard's Discord): an enemy attacks the nearest OTHER enemy instead.
     if (unit.side === 'enemy' && this.has(unit, 'charm')) {
@@ -406,7 +415,7 @@ export default class BattleState {
     }
     const taunter = this.tauntedBy(unit);
     if (taunter) return taunter;
-    const foes = (unit.side === 'hero' ? this.targetableEnemies() : this.defenders());
+    const foes = (unit.side === 'hero' ? this.targetableEnemies() : this.frontDefenders());
     if (!foes.length) return null;
     if (unit.side === 'hero' && !unit.minion) { // minions ignore tap focus and orders
       const order = this.orderOf(unit);

@@ -519,7 +519,7 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "Every attack adds a small fire hit (10%). +10% fire damage (Burn too).",
+    "description": "+10% fire damage (Burn too), inflict fire damage on attacks.",
     "effects": [
       {
         "damageBonus": "fire",
@@ -537,7 +537,7 @@
         "mergeCopies": true
       }
     ],
-    "perStack": "+10% fire hit, +10% fire damage",
+    "perStack": "+10% fire damage, +10% fire hit",
     "provides": [
       "fire"
     ]
@@ -575,7 +575,7 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "Every attack adds a small electric hit (10%). +10% electric damage.",
+    "description": "+10% electric damage, inflict electric damage on attacks.",
     "effects": [
       {
         "damageBonus": "electric",
@@ -593,7 +593,7 @@
         "mergeCopies": true
       }
     ],
-    "perStack": "+10% electric hit, +10% electric damage",
+    "perStack": "+10% electric damage, +10% electric hit",
     "provides": [
       "electric"
     ]
@@ -603,7 +603,7 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "Every attack adds a small dark hit (10%). +10% dark damage.",
+    "description": "+10% dark damage, inflict dark damage on attacks.",
     "effects": [
       {
         "damageBonus": "dark",
@@ -621,7 +621,7 @@
         "mergeCopies": true
       }
     ],
-    "perStack": "+10% dark hit, +10% dark damage",
+    "perStack": "+10% dark damage, +10% dark hit",
     "provides": [
       "dark"
     ]

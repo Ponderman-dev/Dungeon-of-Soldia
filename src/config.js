@@ -19,6 +19,10 @@ export const UI = {
   // Scenes ask for 8 / 16 / 24px (the old Press Start 2P sizes); entities/uiKit.js gridPx() turns them into Ironslab's
   // crisp sizes: x scale, rounded to the px grid (8 -> 10, 16 -> 20, 24 -> 30).
   fontGrid: { px: 10, scale: 1.25 },
+  // Small text (asked for at maxPx or less) uses Tiny5 instead (user, session 21: Ironslab is hard to read small).
+  // Tiny5 is drawn on an 8px grid, so it is only crisp at 8 / 16 / 24px; px 16 = capitals 10px tall. Letters are
+  // drawn one by one on whole pixels and every edge pixel is snapped (alpha >= snap), so nothing blurs.
+  smallFont: { family: "'Tiny5', monospace", maxPx: 8, px: 16, snap: 110, letterSpacing: 0.01 },
   size: { small: 8, normal: 16, big: 24, huge: 32 },
   window: 0x000000, // window fill
   line: 0xffffff, // window line

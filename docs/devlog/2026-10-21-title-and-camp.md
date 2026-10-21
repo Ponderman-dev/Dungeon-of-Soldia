@@ -35,6 +35,7 @@ appears, when a friend falls, or when they barely survive.
 ## Everything else since the last build
 
 ### Combat
+- Tapping a skill now cuts the hero's normal attack short: the skill animation starts right away.
 - Melee heroes now step in to their target when they hit.
 - Defense Bash, Multistrike and Savage Leap: the hero now stays where they land instead of hopping back.
 - The **Mimic** is now bait: it never attacks, it draws the enemies around it to itself, and it still explodes.
@@ -67,9 +68,17 @@ appears, when a friend falls, or when they barely survive.
 - Epic and legendary items drop less often, so each one feels special.
 
 ### Look
+- "Who gets it?" (choosing which hero gets an item) has tidier hero rows: name and level on one line, then what
+  changes, then the hero's items.
+- After a floor, the hero's speech bubble now stays up a little longer (1.2 s) before the reward screen.
 - New pixel font for the whole interface.
 - The sound on/off button is now a little speaker icon.
 - "Floor cleared!" now shows in the middle of the screen.
+
+### Sound
+- New menu sounds: button taps, menu windows opening (a page turn) and closing, scrolling the hero list, and a deep
+  gong when you tap BEGIN DESCENT.
+- The title screen and the camp now have sound too (taps, footsteps).
 
 ### Fixes
 - Fixed a freeze when a Kobold Sapper's bomb landed after the Sapper was already gone.
@@ -77,7 +86,7 @@ appears, when a friend falls, or when they barely survive.
 
 ## Good to know
 - Your progress (best floor, unlocked heroes) is saved in your browser.
-- Sound is still a work in progress.
+- Sound effects are in; music is not yet.
 - Best played on a phone in portrait mode (or use the fullscreen button).
 
 ## Tell us!

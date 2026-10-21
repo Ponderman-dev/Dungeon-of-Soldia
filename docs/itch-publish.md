@@ -37,7 +37,7 @@ On itch.io: your profile menu -> **Upload new project**.
 ## What playtesters will see (current build)
 - Title screen (forest from above) -> tap -> the camp, a random unlocked hero walks in.
 - Camp: TO DUNGEON opens the squad screen. Glossary, Heroes, Leaderboard, Shop, Profile and Settings say
-  'Coming soon'. Sound is on hold.
+  'Coming soon'. Sound effects are in (menus, camp, fights); no music yet.
 - Runs, unlocks and best floor are saved in the player's browser (clearing site data resets them).
 
 ## Good to ask testers

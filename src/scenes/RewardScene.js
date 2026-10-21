@@ -26,6 +26,8 @@ const SHEET_MAX_BOTTOM = GAME_HEIGHT - 8; // the lowest its bottom edge ever goe
 const PAD = 16;
 const CARD_W = GAME_WIDTH - PAD * 2;
 const ROW_ITEM_LINES = 3; // a hero row on 'Who gets it?' grows for up to this many lines of item icons
+const ROW_NAME_H = 14; // hero row: the name's height down to its baseline (the level sits on it)
+const ROW_GAP = 8; // hero row: the gap under the name and under the change line
 const TEXT_X = 112; // where a card's text starts (right of the icon)
 const ICON_W = 98; // the icon column
 const DESC_PX = 8; // description text size
@@ -476,13 +478,21 @@ export default class RewardScene extends Phaser.Scene {
       ch.setScale(2.5).setAlpha(alpha);
       this.track(ch);
 
-      const name = this.text(PAD + 74, y + 12, hero.name, 17, INK, true).setAlpha(alpha);
-      this.text(PAD + 74 + name.width + 8, y + 16, `Lv ${hero.level}`, 13, MUTE).setAlpha(alpha);
+      // Name with the level on its baseline, a gap, the change line, a gap, the items; the block is centred in the row.
       const line = ok ? this.changeLine(hero, item) : hero.alive ? 'Can\'t take more' : 'Fallen';
-      if (line) this.text(PAD + 74, y + 34, line, 8, ok ? '#6dff8f' : MUTE).setAlpha(alpha);
+      const iconsH = Math.min(ROW_ITEM_LINES, Math.max(1, Math.ceil(new Set(hero.items).size / perLine))) * (FRAMED_SIZE + 3) - 3;
+      const blockH = ROW_NAME_H + (line ? ROW_GAP + 8 : 0) + ROW_GAP + iconsH;
+      let ty = Math.round(y + Math.max(10, (rowH - blockH) / 2));
+      const name = this.text(PAD + 74, ty - 3, hero.name, 17, INK, true).setAlpha(alpha);
+      this.text(PAD + 74 + name.width + 8, ty + ROW_NAME_H - 8, `Lv ${hero.level}`, 8, MUTE).setAlpha(alpha);
+      ty += ROW_NAME_H;
+      if (line) {
+        this.text(PAD + 74, ty + ROW_GAP, line, 8, ok ? '#6dff8f' : MUTE).setAlpha(alpha);
+        ty += ROW_GAP + 8;
+      }
 
       // Items this hero already has: every icon shown, up to 3 lines, smaller when they do not fit.
-      const top = y + 50;
+      const top = ty + ROW_GAP;
       this.drawIconGrid(hero, PAD + 74, top, CARD_W - 74 - 10, y + rowH - 8 - top, alpha);
 
       if (ok) this.track(this.add.zone(PAD + CARD_W / 2, y + rowH / 2, CARD_W, rowH).setInteractive()).on('pointerdown', () => this.selectHero(i));

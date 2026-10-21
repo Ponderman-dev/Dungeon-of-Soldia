@@ -16,13 +16,13 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   Characters: letters, digits, space ! " # % & ' ( ) * + , - . / : < = > ? [ ] (v2 added " # & * < = > [ ]);
   `$ ; @ \ ^ _ ` { | } ~` are MISSING (they fall back to a smooth monospace: avoid them in UI text or ask the user). Jacquard 24 and ~20
   Google pixel fonts were tried first and turned down.
-- SMALL TEXT = TINY5 (session 21, user: Ironslab is hard to read small; Pixelify Sans was tried: it is on an 11px grid
-  with slanted corners, rough at the wanted size). Any UI.font text asked for at 8px or less (`UI.smallFont.maxPx`)
-  is drawn in Tiny5 (`src/assets/fonts/tiny5.woff2`, OFL, `LICENSE-tiny5.txt`) at 16px (`UI.smallFont.px`; Tiny5's
-  grid is 8px: crisp at 8 / 16 / 24, capitals 10px tall at 16). uiKit patches TextStyle (family + size swap) and
-  Text.updateText for the small font: letters drawn one by one (letterSpacing 0.01, no 'fl' joins) on whole pixels
-  (measureText widths rounded up, fillText x/y rounded), then every pixel snapped to full/empty and to its fill or
-  stroke colour (`snapCanvas`). Bigger sizes stay Ironslab.
+- SMALL TEXT = PRESS START 2P (session 21, user: Ironslab is hard to read small; Pixelify Sans (11px grid, slanted
+  corners, rough) and Tiny5 (at 16px) were tried first). Any UI.font text asked for at 8px or less
+  (`UI.smallFont.maxPx`) is drawn in Press Start 2P (`src/assets/fonts/press-start-2p.woff2`, OFL) at 8px
+  (`UI.smallFont.px`; its grid is 8px: crisp at 8 / 16 / 24). uiKit patches TextStyle (family + size swap) and
+  Text.updateText for the small font: letters drawn one by one (letterSpacing 0.01) on whole pixels (measureText
+  widths rounded up, fillText x/y rounded), then every pixel snapped to full/empty and to its fill or stroke colour
+  (`snapCanvas`). Bigger sizes stay Ironslab.
 - Code: `src/config.js` `UI` (font, sizes, colours); `src/entities/uiKit.js`: `drawWindow(g, x, y, w, h, {fill, line,
   alpha})`, `drawCursor(g, x, y)`, `uiText()`, `uiStyle()`, `uiButton()` (window + label + cursor + pressed = white).
 - Screens done: fight HUD (floor window, skill buttons = windows with red/green letters, cooldown = grey fill draining

@@ -1,8 +1,8 @@
 // The shared interface look ("Classic RPG Window"): black windows with a white 2px line and stepped corners, a blinking
-// ▶ cursor and Ironslab text (the game's own pixel font; small text in Tiny5). Every screen draws its windows, buttons and text through these helpers.
+// ▶ cursor and Ironslab text (the game's own pixel font; small text in Press Start 2P). Every screen draws its windows, buttons and text through these helpers.
 import Phaser from 'phaser';
 import fontUrl from '../assets/fonts/ironslab.ttf?inline';
-import smallFontUrl from '../assets/fonts/tiny5.woff2?inline';
+import smallFontUrl from '../assets/fonts/press-start-2p.woff2?inline';
 import { UI } from '../config.js';
 import * as sfx from '../audio/sfx.js';
 
@@ -22,7 +22,7 @@ export function loadUiFont() {
       return Promise.resolve(null);
     }
   };
-  return Promise.all([load('Ironslab', fontUrl), load('Tiny5', smallFontUrl)]);
+  return Promise.all([load('Ironslab', fontUrl), load('PressStart2P', smallFontUrl)]);
 }
 
 // Ironslab is drawn on a 10px grid (capitals 8px tall), so it is only crisp at 10 / 20 / 30px. The scenes keep asking
@@ -32,7 +32,7 @@ export function gridPx(size) {
   const G = UI.fontGrid;
   return Math.max(1, Math.round((parseFloat(size) * G.scale) / G.px)) * G.px;
 }
-// Small sizes (UI.smallFont.maxPx or less) switch to the small font (Tiny5) at its own size.
+// Small sizes (UI.smallFont.maxPx or less) switch to the small font (Press Start 2P) at its own size.
 const SMALL = UI.smallFont;
 const isSmall = (size) => parseFloat(size) <= SMALL.maxPx;
 let gridInstalled = false;

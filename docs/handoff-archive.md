@@ -1,5 +1,33 @@
-# Handoff ARCHIVE (sessions 2-22, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-23, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## (session 23 start note, 2026-10-21: session 22 work = camp hub rework, skill cuts swing, sounds round 9)
+- BRANCH: `main` has EVERYTHING (session 22 work merged in). See the Git rule in CLAUDE.md (every handoff updates main).
+- CAMP HUB REWORK (session 22, user's sketch 'more of a mobile game menu'; details docs/systems/title-base.md
+  section 4): `BaseScene` = campfire in the middle with 3 random unlocked heroes idly wandering (`camp.json hero`),
+  Settings gear top left, profile (name box 'Adventurer' + round portrait, `uiKit.pixelDisc`) top right, big
+  TO EXPEDITION window (slides up into the squad screen), bottom row of 4 square buttons with 12x12 pixel icons
+  (`ui.menu`: Glossary, Heroes, Leaders, Shop) = all 'Coming soon'. No walk-in from the bottom, no NPCs drawn
+  (`npcs` data kept for later screens). Likely next asks: the screens behind the buttons, the profile name/portrait,
+  settings (sound on/off lives on the squad screen today), polish. In the dev/preview build the yellow TEST buttons
+  sit over the profile (not in the itch build).
+- Also DONE session 22: clear pause 1.2s (bubble shows first); a skill cuts the attack swing/step short
+  (`Character.stopAttack`, `stopStep`); neater 'Who gets it?' hero rows; sound board round 9 (Menus rows, `add-menus.py`)
+  + picks applied (tap = 3 random takes, cardOpen page turn, cardClose card place, scroll, descend = appear magic,
+  Flask Barrage glass); element charms / Chill Band / Magma Core ride INSIDE the attack (one number, `riders` in
+  combat.js, not boosted by +element %: grows evenly; items.md 'ONE HIT'); charm texts simpler.
+- itch.io: the zip given to the user predates the hub / charms / page-2 sounds: `npm run build:itch` again before an
+  upload, and add those to the devlog draft `docs/devlog/2026-10-21-title-and-camp.md` (version still 0.1.0: ask
+  whether testers played the old build; then bump to 0.2.0).
+- Test helper (scratchpad, throwaway): Playwright (/opt/node22/lib/node_modules/playwright, executablePath
+  /opt/pw-browsers/chromium) + `node_modules/.bin/vite <copy> --port 5177` run FROM the scratchpad (a git worktree in
+  the scratchpad + a node_modules symlink; run `npm install` first if node_modules is missing). Dev build exposes
+  `window.__game`: wait for 'Title', stop scenes, `scene.start('Base')` or 'Battle' (registry `squadIds`). Remove the
+  worktree after (`git worktree remove --force`). Stop vite with `pkill -f "[v]ite.*--port 5177"`.
+- PUBLISH: the first publish per session may be refused ('not viewed'): Read 1-8 lines of the saved live copy, then
+  publish again (if refused again as 'identical', publish once more: it goes through).
+- Sound board picks: page 1 = db `picks` (apply-picks.py), page 2 = db `assign` (WINS; several files = random takes;
+  applied by hand so far). Compare with the db copies to spot what is new.
 
 ## (session 22 start note, 2026-10-21: session 21 work = title, camp, sounds, bubbles, small font)
 - BRANCH: `main` has EVERYTHING (session 21 work merged in). See the Git rule in CLAUDE.md.

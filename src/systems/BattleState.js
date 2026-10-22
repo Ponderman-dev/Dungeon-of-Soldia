@@ -235,8 +235,9 @@ export default class BattleState {
 
   // Assault Breastplate (`assaultShred` special, per copy): while its holder lives, EVERY enemy has that much less
   // defense (an aura, adds up over copies and holders; it can go below 0 = more damage, like Armor Break).
+  // It starts `assaultDelayMs` (0.5s) into each floor (`floorMs`, counted from startFloor).
   assaultShred() {
-    return this.heroes.reduce((sum, h) => sum + (h.alive && h.specials ? h.specials.assaultShred || 0 : 0), 0);
+    return this.heroes.reduce((sum, h) => sum + (h.alive && h.specials && (this.floorMs || 0) >= (h.specials.assaultDelayMs || 0) ? h.specials.assaultShred || 0 : 0), 0);
   }
 
   // Things that happen a little later (Flame Spirit fireballs, Moonlight hits): `this.delays`, ticked in update().
@@ -773,6 +774,7 @@ export default class BattleState {
   // spawn timers start over.
   startFloor(events = []) {
     this.hasStarted = true;
+    this.floorMs = 0; // time into this floor (Assault Breastplate waits a moment)
     // Rest fountain blessing (rooms.json fountain): a regen buff on every living hero for the next few FIGHTS.
     const bless = this.blessing && this.blessing.fights > 0 ? this.blessing : null;
     if (bless) bless.fights--;
@@ -1013,6 +1015,7 @@ export default class BattleState {
   // Moves the fight forward by dt milliseconds. Returns events for the scene to show.
   update(dt) {
     const events = [];
+    this.floorMs = (this.floorMs || 0) + dt;
     this.tickStatuses(dt, events);
     this.move(dt);
     this.tickTornados(dt, events);
@@ -1030,7 +1033,7 @@ export default class BattleState {
       if (!hero.alive) continue;
       // Regen (Heart Charm) and the Cleric's aura: every hero regenerates a little, and regen/heals from items are stronger.
       const aura = this.regenAura();
-      const regen = (((hero.specials && hero.specials.regen) || 0) * aura.factor + aura.base + this.songRegen()) * (1 + ((hero.specials && hero.specials.healAmp) || 0) / 100); // % of max health per second
+      const regen = ((hero.specials && hero.specials.regen) || 0) * aura.factor + aura.base + this.songRegen(); // % of max health per second
       if (regen > 0) {
         const gain = Math.min(hero.maxHp - hero.hp, (hero.maxHp * regen * dt) / 100000);
         hero.hp += gain;
@@ -1248,29 +1251,29 @@ export default class BattleState {
   }
 
   // Bandage Roll (cure): every `bandageCureEveryMs` (6s) of a fight the most hurt living hero (lowest health %, hurt
-  // or suffering a bleed/poison/burn) loses `bandageCount` damage-over-time kinds (1 per roll, all stacks of a kind,
-  // the biggest first) and heals `bandageCure`% of max health (3 per roll).
+  // or debuffed) loses `bandageCount` debuffs of any kind (1 per roll, all stacks of a kind, the biggest first) and
+  // gets +`bandageArmor` defense (8 per roll) for `bandageArmorMs` (6s).
   tickBandages(hero, dt, events) {
-    const heal = hero.specials.bandageCure || 0;
-    if (!heal || !this.enemies.some((e) => e.alive)) return;
+    const armor = hero.specials.bandageArmor || 0;
+    if (!armor || !this.enemies.some((e) => e.alive)) return;
     hero.bandageTimer = (hero.bandageTimer || 0) + dt;
     if (hero.bandageTimer < (hero.specials.bandageCureEveryMs || 6000)) return;
     hero.bandageTimer = 0;
-    const dots = (u) => u.statuses.filter((st) => this.statusDefs[st.type] && this.statusDefs[st.type].dot);
-    const needy = this.heroes.filter((h) => h.alive && (h.hp < h.maxHp || dots(h).length));
+    const debuffs = (u) => u.statuses.filter((st) => this.statusDefs[st.type] && this.statusDefs[st.type].debuff);
+    const needy = this.heroes.filter((h) => h.alive && (h.hp < h.maxHp || debuffs(h).length));
     if (!needy.length) return;
     const ally = needy.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a));
     events.push({ type: 'proc', unit: hero, label: 'Bandage!', itemId: 'bandage_roll' });
     events.push({ type: 'flask', unit: hero, target: ally, flask: { color: '0xf2e6cc' } }); // drawn as a lobbed bandage
     for (let i = 0; i < (hero.specials.bandageCount || 1); i++) {
-      const kinds = dots(ally).map((st) => st.type);
+      const kinds = debuffs(ally).map((st) => st.type);
       if (!kinds.length) break;
       const kind = kinds.sort((x, y) => kinds.filter((k) => k === y).length - kinds.filter((k) => k === x).length)[0]; // most stacks first
       for (const st of ally.statuses.filter((x) => x.type === kind)) events.push({ type: 'status', unit: ally, change: 'expire', status: st });
       ally.statuses = ally.statuses.filter((x) => x.type !== kind);
       delete ally.dotClocks[kind];
     }
-    this.healUnit(ally, (ally.maxHp * heal) / 100, events, { aura: false });
+    this.applyStatus(ally, { status: 'buff', durationMs: hero.specials.bandageArmorMs || 6000, mods: [{ stat: 'defense', flat: armor }] }, hero, `bandage_${hero.uid}`, events);
   }
 
   // Warding Charm: a shield of `wardPulse`% max health (8, does not grow with copies; Warding Charm's own shield bonus
@@ -2437,7 +2440,10 @@ export default class BattleState {
         status.fumbleChance = spec.fumbleChance ?? info.fumbleChance ?? 0;
         status.fumbleStunMs = spec.fumbleStunMs ?? info.fumbleStunMs ?? 300;
       }
-      if (spec.status === 'doom') status.attackSpeedPercent = spec.attackSpeedPercent ?? info.attackSpeedPercent ?? 0;
+      if (spec.status === 'doom') {
+        status.attackSpeedPercent = spec.attackSpeedPercent ?? info.attackSpeedPercent ?? 0;
+        status.resistCutPercent = spec.resistCutPercent || 0; // Eclipse Idol: % of resist taken off (the biggest one counts)
+      }
       if (info.dot) {
         status.stack = true;
         status.sourceUid = source.uid; // who applied this stack (kill credit, Plague Flask, Thousand Cuts, Magma Core)
@@ -2445,7 +2451,8 @@ export default class BattleState {
         status.ignoresArmor = spec.ignoresArmor ?? !!info.ignoresArmor;
         // Damage-type items boost damage over time of that type too (e.g. +15% fire boosts Burn; not Poison).
         const bonus = info.typeBonus === false ? 0 : ((source.damageBonus && source.damageBonus[status.damageType]) || 0) / 100; // Poison: `typeBonus: false`
-        const magma = spec.status === 'burn' && source.side === 'hero' && source.specials ? source.specials.magmaBurn || 0 : 0; // Magma Core: burns deal more damage
+        const sp = source.side === 'hero' && source.specials ? source.specials : {};
+        const magma = spec.status === 'burn' ? sp.magmaBurn || 0 : spec.status === 'poison' ? sp.plaguePoison || 0 : 0; // Magma Core: burns, Plague Flask: poison deal more damage
         status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus) * cat.dot * (1 + ((source.side === 'hero' && source.specials && source.specials.dotDamage) || 0) / 100) * (1 + magma / 100)));
         if (!(spec.status in target.dotClocks)) target.dotClocks[spec.status] = 0; // first stack: start the tick clock
       }
@@ -3157,36 +3164,17 @@ export default class BattleState {
   }
 
   // Heals a unit. `amount` is made stronger by the Cleric's aura (unless opts.aura is false: the caller already did it).
-  // Healing that would go above full health is "overheal" (Overheal Ring turns it into a shield). A heal
-  // that really restored health is a "heal received": the Lost Cleric's Grimoire reacts to it.
+  // A heal that really restored health is a "heal received": the Lost Cleric's Grimoire reacts to it.
   // Returns the health restored.
   healUnit(unit, amount, events, opts = {}) {
-    const amp = 1 + ((unit.specials && unit.specials.healAmp) || 0) / 100; // Heart of the Beast: all healing received is stronger
-    const raw = Math.round(amount * amp * (opts.aura === false ? 1 : this.regenAura().factor));
+    const raw = Math.round(amount * (opts.aura === false ? 1 : this.regenAura().factor));
     const room = unit.maxHp - unit.hp;
     const got = Math.min(room, raw);
-    if (raw - got > 0) this.overheal(unit, raw - got, events);
     if (got <= 0) return 0;
     unit.hp += got;
     events.push({ type: 'heal', unit, amount: got });
     this.onHealed(unit, got, events);
     return got;
-  }
-
-  // Overheal Ring: a share of the healing above full health becomes a shield, up to 25% of max health in total.
-  overheal(unit, over, events) {
-    const pct = unit.specials && unit.specials.overhealRing;
-    if (!pct || unit.minion) return;
-    const cap = unit.maxHp * 0.25 * (unit.specials.overhealCopies || 1); // +25% max health per ring
-    const add = Math.min(cap, over * (Math.min(100, pct) / 100) * (1 + (unit.specials.shieldBonus || 0) / 100));
-    if (add < 1) return;
-    let st = unit.statuses.find((x) => x.key === 'shield:overheal');
-    if (st) st.amount = Math.min(cap, st.amount + add);
-    else {
-      st = { key: 'shield:overheal', type: 'shield', amount: Math.min(cap, add), maxAmount: cap, remaining: Infinity, total: Infinity, sourceUid: unit.uid, onBreak: null };
-      unit.statuses.push(st);
-    }
-    events.push({ type: 'status', unit, change: 'apply', status: st });
   }
 
   // The unit was healed for `got` health: Lost Cleric's Grimoire launches green fire at a random enemy
@@ -3224,7 +3212,7 @@ export default class BattleState {
       events.push({ type: 'projectile', from: unit, to: t, kind: 'spiritfire' }); // the Dark Spirit orb flies to it
       this.later(900, (ev) => {
         if (!t.alive || !unit.alive) return;
-        this.applyStatus(t, { status: 'doom', durationMs: sp.eclipseMs || 4000, damageMultiplier: sp.eclipse / 100, damageType: 'dark', attackSpeedPercent: -(sp.eclipseSlow || 50) }, unit, `doom_${unit.uid}`, ev);
+        this.applyStatus(t, { status: 'doom', durationMs: sp.eclipseMs || 4000, damageMultiplier: sp.eclipse / 100, damageType: 'dark', attackSpeedPercent: -(sp.eclipseSlow || 50), resistCutPercent: sp.eclipseResistCut || 0 }, unit, `doom_${unit.uid}`, ev);
       });
     }
   }

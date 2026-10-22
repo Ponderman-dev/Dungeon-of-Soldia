@@ -432,7 +432,7 @@ export default class BattleScene extends Phaser.Scene {
         kinds.fireShield = kinds.shield;
         if (!u.statuses.some((st) => st.type === 'shield' && st.key !== 'shield:fireheart')) delete kinds.shield;
       }
-      if (u.side === 'hero' && u.specials && u.specials.healAmp && this.state.enemies.some((en) => en.alive)) { // Heart of the Beast: orange regen wins
+      if (u.side === 'hero' && u.items && u.items.includes('heart_of_the_beast') && this.state.enemies.some((en) => en.alive)) { // Heart of the Beast: orange regen wins
         kinds.beastRegen = kinds.regenBoost || { stacks: 1, age: 1e9 };
         delete kinds.regenBoost;
       }
@@ -1214,6 +1214,7 @@ export default class BattleScene extends Phaser.Scene {
   // Redraws the status tags on a fighter: one tag per kind of status it has right now.
   // How many Assault Breastplates the living heroes hold (its enemy icon shows this number).
   assaultCopies() {
+    if (!(this.state.assaultShred() > 0)) return 0; // not yet (0.5s into the floor) or nobody holds one
     return this.state.heroes.reduce((n, h) => n + (h.alive ? h.items.filter((id) => id === 'assault_breastplate').length : 0), 0);
   }
 

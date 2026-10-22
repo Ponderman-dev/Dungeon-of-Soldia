@@ -37,7 +37,10 @@ const doomed = (es) => es.filter((e) => e.statuses.some((x) => x.type === 'doom'
   ok('...a Doomed enemy attacks at half speed', near(slow / plain, 1 / (1 - fx.eclipseSlow / 100), 0.05), `${plain} ${slow}`);
   const hp = d[0].hp; s.tickDots(d[0], 1000, []);
   ok('...it ticks dark damage every second', d[0].hp < hp);
-  ok('...and Doom never refills the idol', !k.voidStore); }
+  ok('...and Doom never refills the idol', !k.voidStore);
+  const t = d[0]; t.stats.resist = 40; const doomedHit = s.strike(s.heroes[1], t, [], { damageType: 'fire' }).amount;
+  t.statuses = t.statuses.filter((x) => x.type !== 'doom'); t.stats.resist = 40 * (1 - fx.eclipseResistCut / 100); const cutHit = s.strike(s.heroes[1], t, [], { damageType: 'fire' }).amount;
+  ok('...a Doomed enemy has ' + fx.eclipseResistCut + '% less resist', doomedHit === cutHit && doomedHit > 0, `${doomedHit} ${cutHit}`); }
 // Poison (dark) ticks fill it too
 { const { s, es, k } = mk(['goblin']); give(s, k, 'eclipse_idol');
   s.applyStatus(es[0], { status: 'poison', durationMs: 5000, damageMultiplier: 0.5 }, k, 'p', []); s.tickDots(es[0], 1000, []);

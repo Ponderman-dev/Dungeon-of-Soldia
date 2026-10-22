@@ -56,9 +56,10 @@ ok('Thunderstruck exists: legendary, electric, offered once per run', itemDefs.t
   ok('...and lose it when the holder falls (same as a squad without it)', got[0] === plain[0] && got[1] === plain[1], JSON.stringify([plain, got])); }
 // Assault Breastplate (epic): +defense for the holder, and EVERY enemy has less defense (aura, per copy) while it lives
 { const eff = itemDefs.assault_breastplate.effects, def = eff.find((e) => e.stat === 'defense').flat, shred = eff.find((e) => e.special === 'assaultShred').percent;
-  const hitWith = (n, enemyDef = 40, dead = false) => { const { s, es, k } = mk(); for (let i = 0; i < n; i++) s.giveItem(k.uid, 'assault_breastplate'); es[1].stats.defense = enemyDef; es[1].hp = es[1].maxHp = 1e7; if (dead) { k.alive = false; k.hp = 0; } return { s, k, amount: s.strike(s.heroes[1], es[1], [], { damageType: 'melee' }).amount }; };
+  const hitWith = (n, enemyDef = 40, dead = false, early = false) => { const { s, es, k } = mk(); for (let i = 0; i < n; i++) s.giveItem(k.uid, 'assault_breastplate'); es[1].stats.defense = enemyDef; es[1].hp = es[1].maxHp = 1e7; s.floorMs = early ? 0 : 1000; if (dead) { k.alive = false; k.hp = 0; } return { s, k, amount: s.strike(s.heroes[1], es[1], [], { damageType: 'melee' }).amount }; };
   const { s: s0, k: k0 } = mk(); const d0 = k0.stats.defense; const { k: k2 } = hitWith(2);
   ok('Assault Breastplate: +defense per copy for its holder', Math.abs(k2.stats.defense - d0 - 2 * def) < 0.01, `${d0} -> ${k2.stats.defense}`);
   const plain = hitWith(0).amount, one = hitWith(1).amount, two = hitWith(2).amount, same = hitWith(0, 40 - shred).amount, same2 = hitWith(0, 40 - 2 * shred).amount;
   ok('...an ALLY\'s hit on an enemy goes through ' + shred + ' less defense per copy', one === same && two === same2 && two > one && one > plain, `${plain} ${one}=${same} ${two}=${same2}`);
-  ok('...gone when the holder is dead', hitWith(1, 40, true).amount === plain); }
+  ok('...gone when the holder is dead', hitWith(1, 40, true).amount === plain);
+  ok('...not in the first ' + eff.find((e) => e.special === 'assaultDelayMs').percent + 'ms of a floor', hitWith(1, 40, false, true).amount === plain); }

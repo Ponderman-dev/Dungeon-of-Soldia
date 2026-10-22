@@ -253,7 +253,7 @@
  "overheal_ring": [
   [
    "status",
-   "shield"
+   "regenBoost"
   ]
  ],
  "spiked_aegis": [

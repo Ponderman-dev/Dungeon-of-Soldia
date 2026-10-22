@@ -28,14 +28,12 @@ ok('all 8 G5 items exist', ['warding_charm', 'overheal_ring', 'spiked_aegis', 'p
   ok('Warding Charm: shields the holder receives are 20% bigger', s.shieldAmount(k) - base === 120);
   give(s, k, 'warding_charm'); s.applyStatus(k, { status: 'shield', amount: 100 }, k, 'c', []); ok('...+20% per copy (2 = +40%)', s.shieldAmount(k) - base - 120 === 140); }
 
-// Overheal Ring
-{ const { s, k } = mk(); give(s, k, 'overheal_ring'); k.hp = k.maxHp - 100; const ev = []; s.healUnit(k, 600, ev, { aura: false });
-  ok('Overheal Ring: healing above full health becomes a shield (40% of the extra 500 = 200)', k.hp === k.maxHp && Math.abs(s.shieldAmount(k) - 200) < 2, `${s.shieldAmount(k)}`); }
-{ const { s, k } = mk(); give(s, k, 'overheal_ring'); s.healUnit(k, 1e6, [], { aura: false });
-  ok('...the shield is capped at 25% of max health', s.shieldAmount(k) <= k.maxHp * 0.25 + 1 && s.shieldAmount(k) >= k.maxHp * 0.25 - 1); }
-{ const { s, k } = mk(); give(s, k, 'overheal_ring', 3); s.healUnit(k, 1000, [], { aura: false });
-  ok('...more copies convert more (3 copies: 100%)', Math.abs(s.shieldAmount(k) - 1000) < 2, `${s.shieldAmount(k)}`); }
-{ const { s, k } = mk(); k.hp = k.maxHp - 100; s.healUnit(k, 600, [], { aura: false }); ok('...without the ring there is no shield', s.shieldAmount(k) === 0); }
+// Vital Band (was Overheal Ring): regen per copy, healing above full health no longer makes a shield
+{ const pct = itemDefs.overheal_ring.effects.find((e) => e.special === 'regen').percent;
+  const base = (mk().k.specials.regen || 0); const { s, k } = mk(); give(s, k, 'overheal_ring', 2);
+  ok('Vital Band: +' + pct + '% regen per copy', Math.abs((k.specials.regen || 0) - base - 2 * pct) < 1e-9, `${k.specials.regen}`);
+  k.hp = k.maxHp - 100; s.healUnit(k, 600, [], { aura: false }); ok('...no shield from overhealing', s.shieldAmount(k) === 0); }
+{ const { s, k } = mk(); k.hp = k.maxHp - 100; s.healUnit(k, 600, [], { aura: false }); ok('...and none without it either', s.shieldAmount(k) === 0); }
 
 // Spiked Aegis (session 18): while the holder has a shield, MELEE attackers take `shieldThorns`% of their whole hit back
 { const pct = itemDefs.spiked_aegis.effects[0].percent;

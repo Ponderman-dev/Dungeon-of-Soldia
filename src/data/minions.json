@@ -359,7 +359,7 @@
       "defense": 0,
       "attackEfficiency": 90
     },
-    "copyStatBonus": 0.5,
+    "copyStatBonus": 0,
     "explode": {
       "damageMultiplier": 3,
       "radius": 120

@@ -146,26 +146,26 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "6% chance to block a hit completely.",
+    "description": "6% chance to block a hit completely. Block from all items stops at 60%.",
     "effects": [
       {
         "special": "block",
         "percent": 6,
-        "falloffRatio": 0.933333
+        "cap": 60
       }
     ],
-    "perStack": "more block (max 90%)"
+    "perStack": "+6% block (max 60%)"
   },
   "quick_gloves": {
     "name": "Quick Gloves",
     "rarity": "epic",
     "type": "stat",
     "scope": "self",
-    "description": "+18% attack speed. 8% on attack: hit twice.",
+    "description": "+24% attack speed. 8% on attack: hit twice.",
     "effects": [
       {
         "stat": "attackEfficiency",
-        "percent": 18
+        "percent": 24
       },
       {
         "proc": "onAttack",
@@ -175,33 +175,37 @@
         "unique": true
       }
     ],
-    "perStack": "+18% attack speed"
+    "perStack": "+24% attack speed"
   },
   "bulwark_plate": {
     "name": "Bulwark Plate",
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "+35 defense. Reflects 25% of melee damage taken.",
+    "description": "+35 defense, 8% chance to block a hit completely, -15 evasion. Block from all items stops at 60%.",
     "effects": [
       {
         "stat": "defense",
         "flat": 35
       },
       {
-        "special": "thorns",
-        "percent": 25,
-        "unique": true
+        "special": "block",
+        "percent": 8,
+        "cap": 60
+      },
+      {
+        "stat": "evasion",
+        "flat": -15
       }
     ],
-    "perStack": "+35 defense"
+    "perStack": "+35 defense, +8% block, -15 evasion"
   },
   "siege_cannon": {
     "name": "Siege Cannon",
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Skills deal +110% damage. 15% chance a skill also hits nearby enemies.",
+    "description": "Skills deal +110% damage. 20% chance a skill also hits nearby enemies.",
     "effects": [
       {
         "special": "skillDamage",
@@ -209,10 +213,10 @@
       },
       {
         "special": "skillSplash",
-        "percent": 15
+        "percent": 20
       }
     ],
-    "perStack": "+110% skill damage, +15% splash chance"
+    "perStack": "+110% skill damage, +20% splash chance"
   },
   "bloodlust_mask": {
     "name": "Bloodlust Mask",
@@ -242,7 +246,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "+20 crit chance. Crits deal +70% and add a random debuff.",
+    "description": "+20% crit chance. Crits deal +70% and add a random debuff.",
     "effects": [
       {
         "stat": "crit",
@@ -280,7 +284,7 @@
     "provides": [
       "cc"
     ],
-    "perStack": "+20 crit, +70% crit damage"
+    "perStack": "+20% crit chance, +70% crit damage"
   },
   "fire_bombs": {
     "name": "Fire Bombs",
@@ -431,11 +435,16 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Every 6s, the most hurt hero loses 1 bleed, poison or burn and heals 3% of max health.",
+    "description": "Every 6s, the most hurt hero loses 1 debuff and gets +8 defense for 6s.",
     "effects": [
       {
-        "special": "bandageCure",
-        "percent": 3
+        "special": "bandageArmor",
+        "percent": 8
+      },
+      {
+        "special": "bandageArmorMs",
+        "percent": 6000,
+        "unique": true
       },
       {
         "special": "bandageCount",
@@ -450,7 +459,7 @@
     "provides": [
       "heal"
     ],
-    "perStack": "+1 bleed/poison/burn removed, +3% heal"
+    "perStack": "+1 debuff removed, +8 defense"
   },
   "second_wind_flask": {
     "name": "Second Wind Flask",
@@ -474,15 +483,15 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "+15% damage while this hero is above 90% health.",
+    "description": "+20% damage while this hero is above 90% health.",
     "effects": [
       {
         "special": "fullVigor",
-        "percent": 15
+        "percent": 20
       }
     ],
     "dropWeight": 90,
-    "perStack": "+15% damage"
+    "perStack": "+20% damage"
   },
   "brawlers_streak": {
     "name": "Brawler's Streak",
@@ -504,15 +513,15 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Every hit on this hero deals 2 less (never below 1).",
+    "description": "Every hit on this hero deals 3 less (never below 1).",
     "effects": [
       {
         "special": "toughSkin",
-        "percent": 2
+        "percent": 3
       }
     ],
     "dropWeight": 80,
-    "perStack": "2 less damage"
+    "perStack": "3 less damage"
   },
   "kindling": {
     "name": "Kindling",
@@ -631,26 +640,26 @@
     "rarity": "common",
     "type": "stat",
     "scope": "self",
-    "description": "+12 resist.",
+    "description": "+15 resist.",
     "effects": [
       {
         "stat": "resist",
-        "flat": 12
+        "flat": 15
       }
     ],
-    "perStack": "+12 resist"
+    "perStack": "+15 resist"
   },
   "hourglass": {
     "name": "Hourglass",
     "rarity": "common",
     "type": "skill",
     "scope": "self",
-    "description": "Skill cooldowns 5% shorter.",
+    "description": "Skill cooldowns 7% shorter.",
     "effects": [
       {
         "special": "cooldown",
-        "percent": 5,
-        "falloffRatio": 0.95
+        "percent": 7,
+        "falloffRatio": 0.93
       }
     ],
     "perStack": "5% of what is left"
@@ -885,7 +894,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "+85% damage to frozen enemies (breaks the freeze), +14% to chilled ones.",
+    "description": "+85% damage to frozen enemies (breaks the freeze), +24% to chilled ones.",
     "effects": [
       {
         "special": "shatterHammer",
@@ -893,12 +902,12 @@
       },
       {
         "special": "shatterChill",
-        "percent": 14
+        "percent": 24
       }
     ],
     "dropWeight": 90,
     "needs": "freeze",
-    "perStack": "+85% / +14%"
+    "perStack": "+85% / +24%"
   },
   "blood_chalice": {
     "name": "Blood Chalice",
@@ -926,7 +935,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "When a poisoned enemy dies, 15% of its Poison spreads to another enemy.",
+    "description": "Poison deals +28% damage. When a poisoned enemy dies, 15% of its Poison spreads to another enemy.",
     "effects": [
       {
         "special": "plagueFlask",
@@ -935,11 +944,15 @@
       {
         "special": "plagueShare",
         "percent": 15
+      },
+      {
+        "special": "plaguePoison",
+        "percent": 28
       }
     ],
     "dropWeight": 80,
     "needs": "poison",
-    "perStack": "+15% Poison, +1 enemy"
+    "perStack": "+28% poison damage, +15% Poison, +1 enemy"
   },
   "exploiters_lens": {
     "name": "Exploiter's Lens",
@@ -1059,28 +1072,18 @@
     "perStack": "+20% shield size"
   },
   "overheal_ring": {
-    "name": "Overheal Ring",
-    "rarity": "rare",
+    "name": "Vital Band",
+    "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Healing above full health becomes a shield (up to 25% of max health).",
+    "description": "Heals 0.2% of max health per second in fights.",
     "effects": [
       {
-        "special": "overhealRing",
-        "percent": 40,
-        "cap": 100
-      },
-      {
-        "special": "overhealCopies",
-        "percent": 1
+        "special": "regen",
+        "percent": 0.2
       }
     ],
-    "dropWeight": 80,
-    "needs": "heal",
-    "provides": [
-      "shield"
-    ],
-    "perStack": "+25% shield cap"
+    "perStack": "+0.2% regen"
   },
   "spiked_aegis": {
     "name": "Spiked Aegis",
@@ -1585,7 +1588,7 @@
         "tornado": {
           "durationMs": 5000,
           "tickMs": 500,
-          "damageMultiplier": 0.85,
+          "damageMultiplier": 1.0625,
           "max": 3,
           "hopEvery": 2,
           "damagePerExtraPercent": 20
@@ -1605,12 +1608,13 @@
     "effects": [
       {
         "special": "extraArrow",
-        "percent": 25
+        "percent": 25,
+        "perExtra": 8
       }
     ],
     "dropWeight": 90,
     "needs": "ranged",
-    "perStack": "+25% chance"
+    "perStack": "+8% chance"
   },
   "spotters_lens": {
     "name": "Spotter's Lens",
@@ -1799,22 +1803,22 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Heals 2% of max health per second in fights. All healing on this hero is 30% stronger.",
+    "description": "+100 max health. Heals 1% of max health per second in fights.",
     "effects": [
       {
-        "special": "regen",
-        "percent": 2
+        "stat": "health",
+        "flat": 100
       },
       {
-        "special": "healAmp",
-        "percent": 30
+        "special": "regen",
+        "percent": 1
       }
     ],
     "dropWeight": 90,
     "provides": [
       "heal"
     ],
-    "perStack": "+2% regen, +30% healing"
+    "perStack": "+100 health, +1% regen"
   },
   "moonlight_twinblade": {
     "name": "Moonlight Twinblade",
@@ -1865,7 +1869,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Stores this hero's dark damage. When full, 2-3 random enemies are Doomed for 4s: 50% slower attacks and 350% dark damage every second.",
+    "description": "Stores this hero's dark damage. When full, 2-3 random enemies are Doomed for 4s: 50% slower attacks, 35% less resist and 350% dark damage every second.",
     "effects": [
       {
         "special": "eclipse",
@@ -1884,6 +1888,11 @@
       {
         "special": "eclipseMs",
         "percent": 4000,
+        "unique": true
+      },
+      {
+        "special": "eclipseResistCut",
+        "percent": 35,
         "unique": true
       }
     ],
@@ -1944,7 +1953,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "+35 defense. Every enemy has 8 less defense while this hero lives.",
+    "description": "+35 defense. From 0.5s into each floor, every enemy has 8 less defense while this hero lives.",
     "effects": [
       {
         "stat": "defense",
@@ -1953,6 +1962,11 @@
       {
         "special": "assaultShred",
         "percent": 8
+      },
+      {
+        "special": "assaultDelayMs",
+        "percent": 500,
+        "unique": true
       }
     ],
     "perStack": "+35 defense, enemies -8 defense"

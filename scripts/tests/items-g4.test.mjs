@@ -64,6 +64,9 @@ ok('all 9 G4 items exist', ['executioners_axe', 'magma_core', 'shatter_hammer', 
   ok('...+15% per extra flask (4 flasks = 60%: 10 stacks -> 6)', s.stacks(es[1], 'poison') === 6, `${s.stacks(es[1], 'poison')}`); }
 { const { s, es, k } = mk(['goblin', 'goblin']); give(s, k, 'plague_flask', 10); for (let i = 0; i < 4; i++) poison(s, es[0], k); es[0].hp = 1; s.strike(k, es[0], [], {});
   ok('...can pass 100% (10 flasks = 150%: 4 stacks -> 6)', s.stacks(es[1], 'poison') === 6, `${s.stacks(es[1], 'poison')}`); }
+{ const pd = itemDefs.plague_flask.effects.find((e) => e.special === 'plaguePoison').percent;
+  const dmg = (n) => { const { s, es, k } = mk(['goblin']); give(s, k, 'plague_flask', n); s.applyStatus(es[0], { status: 'poison', durationMs: 9000, damageMultiplier: 20, damageType: 'dark' }, k, 'p', []); return es[0].statuses.find((x) => x.type === 'poison').damage; };
+  ok('...its holder\'s poison deals +' + pd + '% per flask', Math.abs(dmg(1) / dmg(0) - (1 + pd / 100)) < 0.02 && Math.abs(dmg(2) / dmg(0) - (1 + (2 * pd) / 100)) < 0.02, `${dmg(0)} ${dmg(1)} ${dmg(2)}`); }
 { const { s, es, k } = mk(['goblin', 'goblin', 'goblin']); give(s, k, 'plague_flask', 2); for (let i = 0; i < 4; i++) poison(s, es[0], k); es[0].hp = 1; s.strike(k, es[0], [], {});
   ok('...+1 enemy per copy (2 copies: both others get 30% of 4 = 1 stack)', es.slice(1).every((e) => s.stacks(e, 'poison') === 1)); }
 { const { s, es, k } = mk(['goblin']); give(s, k, 'plague_flask'); for (let i = 0; i < 4; i++) poison(s, es[0], k); es[0].hp = 1; const ev = [];

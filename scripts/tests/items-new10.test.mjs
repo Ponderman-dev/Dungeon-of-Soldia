@@ -84,10 +84,13 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
   ok('...for spiritAxeDamage% of attack', hits.every((e) => Math.abs(e.result.amount - k.stats.attack * k.specials.spiritAxeDamage / 100 * (e.result.crit ? s.rules.critMultiplier : 1)) < 3), hits.map((e) => e.result.amount).join(' '));
   es[1].x = k.x + k.specials.spiritAxeRadius + 30; const ev2 = []; s.onHeroHit(k, ev2);
   ok('...an enemy past spiritAxeRadius is not hit', ev2.filter((e) => e.type === 'attack' && e.attacker === k).length === 1); }
-// Heart of the Beast
-{ const { s, k } = mk(); give(s, k, 'heart_of_the_beast'); k.hp = 1; const got = s.healUnit(k, 50, [], { aura: false }); ok('Heart of the Beast: healing received +30%', got === 65, `${got}`);
+// Heart of the Beast: +max health and regen (no healing boost any more)
+{ const ef = itemDefs.heart_of_the_beast.effects, hp = ef.find((e) => e.stat === 'health').flat, rg = ef.find((e) => e.special === 'regen').percent;
+  const { s, k } = mk(); const hp0 = k.maxHp; give(s, k, 'heart_of_the_beast');
+  ok('Heart of the Beast: +' + hp + ' max health', k.maxHp === hp0 + hp, `${hp0} -> ${k.maxHp}`);
+  k.hp = 1; ok('...healing is not boosted', s.healUnit(k, 50, [], { aura: false }) === 50);
   s.enemies.forEach((e) => (e.timer = -1e9)); k.hp = 10; const before = k.hp; for (let t = 0; t < 1000; t += 50) s.update(50);
-  ok('...and about 2.6% max health per second regen (2% x 1.3)', Math.abs((k.hp - before) / k.maxHp - 0.026) < 0.005, `${((k.hp - before) / k.maxHp).toFixed(3)}`); }
+  ok('...and about ' + rg + '% max health per second regen', Math.abs((k.hp - before) / k.maxHp - rg / 100) < 0.003, `${((k.hp - before) / k.maxHp).toFixed(4)}`); }
 // Moonlight Twinblade
 { const { s, es, h } = mk(['archer', 'knight', 'rogue'], ['goblin'], () => 0); const a = h[0]; give(s, a, 'moonlight_twinblade', 2); const ev = []; s.rollProcs(a, 'onAttack', ev, { target: es[0], hit: true, force: true });
   const all = [...ev]; for (let t = 0; t < 1000; t += 50) all.push(...s.update(50)); const cres = all.filter((e) => e.type === 'attack' && e.attacker === a && e.result && e.result.amount > 0 && e.target === es[0] && !e.basic);

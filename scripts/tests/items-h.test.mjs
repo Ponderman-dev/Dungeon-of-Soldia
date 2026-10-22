@@ -19,13 +19,13 @@ const near = (v, t, tol = 0.03) => Math.abs(v / t - 1) < tol;
 // Feather Boots / Shield Totem: slowly closer to their limit, no max stacks
 { const ev = (n) => { const { s, k } = mk(); const e0 = k.stats.evasion; give(s, k, 'feather_boots', n); return k.stats.evasion - e0; };
   ok('Feather Boots: +8, then a bit less per pair, closer to 70', ev(1) === 8 && ev(5) < 40 && ev(5) > 30 && ev(30) < 70 && ev(30) > 60, `${ev(5).toFixed(1)} ${ev(30).toFixed(1)}`); }
-{ const bl = (n) => { const { s, k } = mk(); give(s, k, 'shield_totem', n); return k.specials.block; };
-  ok('Shield Totem: 6%, 6 = 31%, 20 = 67% (towards 90%)', bl(1) === 6 && Math.abs(bl(6) - 30.5) < 0.2 && Math.abs(bl(20) - 67.4) < 0.2, `${bl(6)} ${bl(20)}`); }
+{ const bl = (n) => { const { s, k } = mk(); give(s, k, 'shield_totem', n); return k.specials.block; }; const t = itemDefs.shield_totem.effects[0];
+  ok('Shield Totem: +' + t.percent + '% per totem, stops at ' + t.cap + '%', bl(1) === t.percent && bl(3) === 3 * t.percent && bl(20) === t.cap, `${bl(3)} ${bl(20)}`); }
+// Mimic Chest: more chests make the explosion bigger, NOT the Mimic tougher
+{ const mimicHp = (n) => { const { s, k } = mk(); give(s, k, 'mimic_chest', n); s.spawnMinion(k, { key: 'mimic_chest', kind: 'weak', capGroup: 'items', upkeep: true, spec: { minion: 'mimic' }, copies: k.specials.mimicCopies || 1 }, []); return s.minions[s.minions.length - 1].maxHp; };
+  ok('Mimic Chest: 3 chests do not make the Mimic tougher', mimicHp(3) === mimicHp(1), `${mimicHp(1)} ${mimicHp(3)}`); }
 // Gambler's Dice: no max, +50% crit damage per die
 { const { s, k } = mk(); give(s, k, 'gamblers_dice', 5); ok('Gambler\'s Dice: 5 dice = +100 crit and +350% crit damage', k.specials.critDamage === 350); }
-// Overheal Ring: shield cap +25% per ring
-{ const cap = (n) => { const { s, k } = mk(); give(s, k, 'overheal_ring', n); k.hp = k.maxHp; s.healUnit(k, k.maxHp * 10, [], { aura: false }); return s.shieldAmount(k) / k.maxHp; };
-  ok('Overheal Ring: shield cap 25% max health per ring (1 = 25%, 4 = 100%)', near(cap(1), 0.25) && near(cap(4), 1), `${cap(1)} ${cap(4)}`); }
 // Necro Crown
 { const { s, k } = mk(); give(s, k, 'necro_crown', 2);
   ok('Necro Crown: +20% minion stats per crown (boneCharm), weak minions 50% faster, no cap bonus', s.minionBoost().bone === 40 && s.minionBoost().spawnSpeed === 50 && s.minionBoost().weakCap === 0);

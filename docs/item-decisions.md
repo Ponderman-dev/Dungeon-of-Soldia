@@ -319,3 +319,22 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   every enemy within `spiritAxeRadius` 110 px for `spiritAxeDamage` 400% (was 6 pulses x 50%). Look = one fast turn
   (700ms). itemruns 16/squad (copies 1/3) old -1.3/+3.3, new 0.0/+1.4 (noisy; front hero holds it).
   Then chance 8% -> 14% per copy (user): itemruns 16/squad +0.1 / +9.0 (3 copies = 42%).
+
+## ITEM OPTIMIZATION round 2 (session 24, user notes on the item review page, db `notes2`) [built]
+- Numbers: Full Vigor +20% dmg; Hourglass 7% (falloff 0.93); Mage Cloak +15 resist; Quick Gloves +24% atk speed;
+  Tough Skin 3 less; Siege Cannon splash 20%; Shatter Hammer +24% vs chilled; Quiver of Plenty extra copy +8% (was +25%).
+- Gambler's Dice: text only ('+20% crit chance').
+- Assault Breastplate: the enemy defense aura (and its ARMOR DOWN icon) starts 0.5s into each floor (`assaultDelayMs`, `floorMs`).
+- Bandage Roll: no heal. Every 6s the most hurt (or debuffed) hero loses 1 debuff of ANY kind (+1 per copy) and gets
+  +8 defense for 6s (+8 per copy) (`bandageArmor`, `bandageArmorMs`).
+- Bulwark Plate: reflect removed; per copy +35 defense, +8% block, -15 evasion. Shield Totem: flat +6% block per copy.
+  ALL block from items stops at 60% (shared `cap` on the `block` special).
+- Eclipse Idol: Doom also takes 35% of the enemy's resist (`eclipseResistCut`, doom `resistCutPercent`; the biggest cut counts, no stacking).
+- Excalibur: base tornado +25% (damageMultiplier 0.85 -> 1.0625); extra copies still +20%.
+- Heart of the Beast: now +100 max health and 1% regen per copy (no +30% healing; healAmp code removed). Orange regen
+  look now keys on holding the item.
+- Overheal Ring -> VITAL BAND (id stays `overheal_ring`), common, 0.2% regen per copy. Overheal shield code removed.
+- Plague Flask: + `plaguePoison` 28% poison damage per copy (spread unchanged).
+- Mimic Chest: extra chests no longer make the Mimic tougher (`copyStatBonus` 0); +3% chance and +25% explosion per copy stay.
+- Curve 3 smart (same seeds): mean 52.9 -> 48.8, median 40 -> 40, alive at 20: 93% -> 88% (more early deaths). Open: user to
+  pick commit as is / find the cause / tweak numbers.

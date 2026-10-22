@@ -38,8 +38,13 @@ function armourCut(defender, type, rules, damageTypes, shred = 0) {
   const physical = damageTypes[type].category === 'physical';
   const points = physical
     ? defender.stats.defense + statusSum(defender, 'armorBreak', 'defenseFlat') - shred
-    : defender.stats.resist + statusSum(defender, 'curse', 'resistFlat');
+    : defender.stats.resist * (1 - doomResistCut(defender) / 100) + statusSum(defender, 'curse', 'resistFlat');
   return armorPercent(points, rules);
+}
+
+// Eclipse Idol: a Doomed unit loses a % of its resist (the biggest cut counts, cuts do not add up).
+function doomResistCut(unit) {
+  return (unit.statuses || []).reduce((m, st) => (st.type === 'doom' ? Math.max(m, st.resistCutPercent || 0) : m), 0);
 }
 
 // Works out one hit. Returns { dodged, crit, amount, mult }.

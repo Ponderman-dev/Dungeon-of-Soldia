@@ -225,7 +225,7 @@
     "_about": "Base screen interface (screen px). expedition = the big black window (tap = the screen slides up into the squad screen in slideMs), arrows bobbing on both sides. menu = the row of square buttons at the bottom (each opens 'Coming soon' for now): icon = pixel rows drawn iconPx per art px. settings = the gear top left. profile = the name box + round portrait top right. soon = the 'Coming soon' window.",
     "slideMs": 700,
     "soon": {"w": 280, "h": 160},
-    "expedition": {"y": 628, "w": 366, "h": 80, "text": "TO EXPEDITION", "cell": 5, "arrowInset": 16, "bob": 4, "bobMs": 600},
+    "expedition": {"y": 628, "w": 366, "h": 80, "text": "TO EXPEDITION", "size": "normal", "cell": 5, "arrowInset": 16, "bob": 4, "bobMs": 600},
     "settings": {"x": 12, "y": 14, "size": 44, "name": "Settings", "who": "Sound, language, controls"},
     "profile": {
       "right": 12,

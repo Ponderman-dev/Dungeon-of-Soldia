@@ -15,6 +15,7 @@ import dungeons from '../data/dungeons.json';
 import combatRules from '../data/combat.json';
 import defaultSquad from '../data/squad.json';
 import demoSquad from '../data/demoSquad.json'; // the Monster House demo page's saved squad
+import camp from '../data/camp.json'; // slideMs: the slide back down to the camp
 const DEMO = import.meta.env.VITE_DEMO === 'house';
 const TESTER = import.meta.env.VITE_TESTER === '1'; // the playtest build for itch.io: no test buttons
 import { perkMods } from '../systems/party.js';
@@ -28,7 +29,7 @@ const MUTE = '#a8a8b8';
 const FONT = UI.font;
 const WALL_H = 200; // the back wall with the door, as on the battle floors
 const DOOR_X = GAME_WIDTH / 2;
-const BEGIN_Y = 712; // the 'Begin descent' button, at the bottom over RANDOM (screen review: thumb reach, the gate stays clear)
+const BEGIN_Y = 700; // the 'Begin descent' button, at the bottom over RANDOM (screen review: thumb reach, the gate stays clear)
 // Where the 3 picked heroes stand (their feet): the orange slots. Slot order = battle order.
 const SLOTS = [{ x: 92, y: 392 }, { x: GAME_WIDTH / 2, y: 342 }, { x: GAME_WIDTH - 92, y: 392 }]; // the squad stands before the gate (screen review)
 // The bench: every hero stands on a purple strip at the bottom that scrolls left and right.
@@ -122,7 +123,7 @@ export default class SquadScene extends Phaser.Scene {
       // A small "Send back" button under a filled slot (the hero walks back to the bench).
       const back = this.add.container(s.x, s.y + 42).setDepth(DEPTH.ui);
       const bg = this.add.graphics();
-      drawWindow(bg, -44, -12, 88, 24);
+      drawWindow(bg, -52, -15, 104, 30); // roomy (user: more space between box and text)
       back.add([bg, this.add.text(0, 0, 'Send back', { fontFamily: FONT, fontSize: '8px', color: INK }).setOrigin(0.5)]);
       return { shadow, ring, num, back };
     });
@@ -172,17 +173,20 @@ export default class SquadScene extends Phaser.Scene {
     // "Begin descent": only when all 3 slots are filled, at the bottom over RANDOM.
     this.begin = this.add.container(DOOR_X, BEGIN_Y).setDepth(DEPTH.ui);
     const bg = this.add.graphics();
-    drawWindow(bg, -132, -22, 264, 44);
-    const cur = drawCursor(this.add.graphics(), -120, 0); // the blinking ▶ cursor: everything is ready
+    drawWindow(bg, -150, -28, 300, 56);
+    const cur = drawCursor(this.add.graphics(), -128, 0); // the blinking ▶ cursor: everything is ready
     this.time.addEvent({ delay: 500, loop: true, callback: () => cur.setVisible(!cur.visible) });
     this.begin.add([bg, cur, this.add.text(8, 1, 'BEGIN DESCENT', { fontFamily: FONT, fontSize: '16px', color: INK }).setOrigin(0.5)]);
-    this.add.zone(DOOR_X, BEGIN_Y, 230, 50).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.descend());
+    this.add.zone(DOOR_X, BEGIN_Y, 300, 56).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.descend());
 
-    // RANDOM under the bench, and the small test toggle at the very bottom.
+    // The bottom row: '< CAMP' (back to the camp hub, user: at the bottom for the flow) and RANDOM; then the small test
+    // toggle at the very bottom.
     const rb = this.add.graphics().setDepth(DEPTH.ui);
-    drawWindow(rb, GAME_WIDTH / 2 - 70, 754, 140, 38);
-    this.add.text(GAME_WIDTH / 2, 774, 'RANDOM', { fontFamily: FONT, fontSize: '16px', color: INK }).setOrigin(0.5).setDepth(DEPTH.ui);
-    this.add.zone(GAME_WIDTH / 2, 773, 140, 40).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.pickRandom());
+    [['< CAMP', 30, () => this.toCamp()], ['RANDOM', GAME_WIDTH - 180, () => this.pickRandom()]].forEach(([label, x, onTap]) => {
+      drawWindow(rb, x, 744, 150, 46);
+      this.add.text(x + 75, 767, label, { fontFamily: FONT, fontSize: '16px', color: INK }).setOrigin(0.5).setDepth(DEPTH.ui);
+      this.add.zone(x + 75, 767, 150, 46).setInteractive().setDepth(DEPTH.ui).on('pointerdown', onTap);
+    });
     if (TESTER) return; // the playtest build (npm run build:itch) has no test toggle
     this.toggleText = this.add.text(GAME_WIDTH / 2, 818, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
     this.add.zone(GAME_WIDTH / 2, 818, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
@@ -272,7 +276,7 @@ export default class SquadScene extends Phaser.Scene {
       if (p.y >= BENCH.top && p.y <= BENCH.bottom) drag = { x: p.x, y: p.y, scroll: this.scroll, moved: 0 };
       else {
         // The small "Send back" button under a slot.
-        const back = SLOTS.findIndex((s, i) => this.slots[i] && Math.abs(p.x - s.x) < 40 && Math.abs(p.y - (s.y + 42)) < 16);
+        const back = SLOTS.findIndex((s, i) => this.slots[i] && Math.abs(p.x - s.x) < 52 && Math.abs(p.y - (s.y + 42)) < 16);
         if (back >= 0 && !this.walkers.has(this.slots[back])) return this.sendBack(this.slots[back]);
         // A hero standing in a slot: tap to see its card.
         const hit = SLOTS.findIndex((s) => Math.abs(p.x - s.x) < 44 && p.y > s.y - 86 && p.y < s.y + 30);
@@ -492,6 +496,21 @@ export default class SquadScene extends Phaser.Scene {
   // ---- start the run -------------------------------------------------------------------------
 
   // The squad walks into the door one after another (smaller as they go deeper), then the run starts.
+  // '< CAMP': the screen slides down back into the camp hub (the reverse of BaseScene.toExpedition).
+  toCamp() {
+    if (this.panel || this.leaving) return;
+    this.leaving = true;
+    sfx.play('tap');
+    const base = this.scene.get('Base');
+    base.events.once(Phaser.Scenes.Events.CREATE, () => {
+      const cam = base.cameras.main, mine = this.cameras.main, ms = camp.ui.slideMs;
+      cam.scrollY = -GAME_HEIGHT; // the camp starts just below this screen
+      this.tweens.add({ targets: cam, scrollY: 0, duration: ms, ease: 'Sine.easeInOut' });
+      this.tweens.add({ targets: mine, scrollY: GAME_HEIGHT, duration: ms, ease: 'Sine.easeInOut', onComplete: () => this.scene.stop() });
+    });
+    this.scene.launch('Base');
+  }
+
   descend() {
     if (!this.ready() || this.panel || this.leaving || this.walkers.size) return;
     sfx.play('descend');

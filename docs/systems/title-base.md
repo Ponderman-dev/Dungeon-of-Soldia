@@ -60,3 +60,4 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
 - Bottom row: 4 square buttons (`ui.menu.buttons`: Glossary, Heroes, Leaders, Shop) with 12x12 pixel icons
   (book, helmet, trophy, coin bag), each 'Coming soon'. The NPCs are no longer drawn (`npcs` kept for later screens);
   `exit` removed. Props moved clear of the buttons.
+- TO EXPEDITION text is 'normal' size (`camp.json ui.expedition.size`, was 'big'; user 2026-10-22: room between box and text). '< CAMP' on the squad screen slides back down to the hub.

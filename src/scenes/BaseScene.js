@@ -85,7 +85,7 @@ export default class BaseScene extends Phaser.Scene {
     const T = U.expedition, cx = GAME_WIDTH / 2;
     const box = this.add.container(cx, T.y).setDepth(DEPTH.ui);
     box.add(drawWindow(this.add.graphics(), -T.w / 2, -T.h / 2, T.w, T.h));
-    box.add(uiText(this, 0, 0, T.text, 'big').setOrigin(0.5));
+    box.add(uiText(this, 0, 0, T.text, T.size).setOrigin(0.5)); // 'normal' (user: room between box and text)
     const cell = T.cell;
     for (const side of [-1, 1]) {
       const arrow = this.add.graphics().fillStyle(0xffffff, 1);

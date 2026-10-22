@@ -15,10 +15,10 @@
     "holdMs": 2000,
     "outMs": 250,
     "goneAfterRewardMs": 200,
-    "maxWidthPx": 210,
+    "maxWidthPx": 140,
     "sizePx": 8,
     "abovePx": 24,
-    "padPx": 8,
+    "padPx": 6,
     "tailPx": 6,
     "fill": 16777215,
     "line": 0,
@@ -26,84 +26,84 @@
   },
   "heroes": {
     "knight": {
-      "start": ["Stay behind me. All of you.", "Shields up. We go down together.", "Soldia's dark awaits. So do I."],
-      "clear": ["Hold the line. Next floor.", "Not a scratch on this shield. Almost.", "Is everyone still standing?", "Good. Keep together.", "My armour has seen worse.", "Onward, and stay close."],
-      "boss": ["That one hit hard. I hit harder.", "The beast is down. Breathe."],
-      "fallen": ["I should have stood in front.", "I will carry your name down there."],
-      "hurt": ["A dent or two. I'll manage.", "Shield's holding. Barely.", "I've had worse. I think."],
-      "close": ["That... was too close.", "Still standing. Just.", "My armour saved my life. Again."]
+      "start": ["Stay behind me.", "Shields up.", "Together, then."],
+      "clear": ["Hold the line.", "Barely a scratch.", "All standing?", "Good. Stay close.", "Onward.", "Armour holds."],
+      "boss": ["I hit harder.", "Beast down. Breathe."],
+      "fallen": ["I should have been there.", "I carry your name."],
+      "hurt": ["A dent or two.", "Shield's holding. Barely.", "I've had worse."],
+      "close": ["Too close.", "Still standing. Just.", "Armour saved me."]
     },
     "berserker": {
-      "start": ["Finally! Something to smash!", "Point me at the monsters!", "Let's make some noise!"],
-      "clear": ["MORE! Bring me more!", "That's it? I'm just warming up!", "Ha! Too easy!", "My axe is still hungry.", "Who's next?!", "I barely broke a sweat!"],
-      "boss": ["BIG ONE DOWN! WHO'S NEXT?!", "Now THAT was a fight!"],
-      "fallen": ["They'll pay for that. ALL of them.", "Rest, friend. I'll rage for two."],
-      "hurt": ["Pain just makes me angrier!", "Is that blood mine? Ha!", "Barely felt it!"],
-      "close": ["Hah... almost had me...", "I'm not done! Not yet...", "Ugh. Okay, that one hurt."]
+      "start": ["Smash time!", "Point me at them!", "Let's get loud!"],
+      "clear": ["MORE!", "Just warming up!", "Ha! Too easy!", "Axe still hungry.", "Who's next?!", "No sweat!"],
+      "boss": ["BIG ONE DOWN!", "THAT was a fight!"],
+      "fallen": ["They'll ALL pay.", "I'll rage for two."],
+      "hurt": ["Pain makes me angry!", "My blood? Ha!", "Barely felt it!"],
+      "close": ["Almost had me...", "Not done yet!", "Okay, that hurt."]
     },
     "rogue": {
-      "start": ["Quiet now. Follow my steps.", "I smell treasure down there.", "In and out. Easy money."],
-      "clear": ["Check their pockets.", "Nobody saw that coming.", "Clean work. No witnesses.", "Shh. More of them below.", "Too slow, all of them.", "Mine was the killing blow, by the way."],
-      "boss": ["Big ones bleed too.", "And it never saw me coming."],
-      "fallen": ["Should have watched your back. Sorry.", "That one wasn't part of the plan."],
-      "hurt": ["Just a scratch. Don't look.", "Note to self: dodge more.", "They got a lucky hit."],
-      "close": ["Whew. Nearly lost my head.", "That was way too close.", "I need a healer. Now."]
+      "start": ["Quiet now.", "I smell treasure.", "Easy money."],
+      "clear": ["Check their pockets.", "Never saw me.", "Clean work.", "Shh. More below.", "Too slow.", "My kill, by the way."],
+      "boss": ["Big ones bleed too.", "Never saw me coming."],
+      "fallen": ["Sorry, friend.", "Not part of the plan."],
+      "hurt": ["Just a scratch.", "Dodge more. Noted.", "Lucky hit."],
+      "close": ["Nearly lost my head.", "Way too close.", "Healer. Now."]
     },
     "archer": {
-      "start": ["Bowstring tight. Eyes open.", "I'll cover you from the back.", "Plenty of arrows. Let's go."],
-      "clear": ["Every shot counts.", "Clear. I'll pick up my arrows.", "Right between the eyes.", "Steady breathing. Next.", "Nothing moves out there now.", "Down in one. Mostly."],
-      "boss": ["Big target. Hard to miss.", "Got it. Right in the heart."],
-      "fallen": ["I was too slow to cover you.", "One less voice in the dark."],
-      "hurt": ["Arm's shaking. I can still shoot.", "They got closer than I like.", "Need a moment to steady up."],
-      "close": ["Too close. Far too close.", "I can barely draw my bow.", "Keep them away from me..."]
+      "start": ["Eyes open.", "I'll cover you.", "Plenty of arrows."],
+      "clear": ["Every shot counts.", "Clear.", "Between the eyes.", "Steady. Next.", "Nothing moves.", "One shot. Mostly."],
+      "boss": ["Hard to miss.", "Right in the heart."],
+      "fallen": ["Too slow to cover you.", "One voice less."],
+      "hurt": ["I can still shoot.", "Too close for me.", "Need a moment."],
+      "close": ["Far too close.", "Can barely draw...", "Keep them off me!"]
     },
     "samurai": {
-      "start": ["The blade is ready. So am I.", "We descend with honour.", "One step. Then another."],
-      "clear": ["Sheathe. Breathe. Continue.", "A clean cut.", "The path goes deeper.", "Discipline wins the fight.", "The blade remembers.", "Calm mind. Sharp edge."],
-      "boss": ["A worthy foe. Rest now.", "Strength bows to the blade."],
-      "fallen": ["You fought with honour.", "I will finish this path for you."],
-      "hurt": ["A wound is a lesson.", "Pain is only a teacher.", "My stance slipped. Not again."],
-      "close": ["The blade nearly failed me.", "I stand. That is enough.", "One more breath. Then onward."]
+      "start": ["The blade is ready.", "With honour.", "One step at a time."],
+      "clear": ["Sheathe. Breathe.", "A clean cut.", "Deeper still.", "Discipline wins.", "Calm mind.", "Sharp edge."],
+      "boss": ["A worthy foe.", "Strength bows."],
+      "fallen": ["You fought well.", "I finish this for you."],
+      "hurt": ["A wound is a lesson.", "Pain teaches.", "My stance slipped."],
+      "close": ["Nearly failed me.", "I stand. Enough.", "Breathe. Onward."]
     },
     "mage": {
-      "start": ["Try not to stand in my spells.", "The arcane hums down there.", "Shall we? I have spells to test."],
-      "clear": ["Elementary.", "Fascinating. Burnt, but fascinating.", "My mana is fine. Thanks for asking.", "Another floor, another lesson.", "Hmm. Weaker than I expected.", "Note to self: that worked."],
-      "boss": ["Brute force loses to theory.", "Remarkable. And now, ashes."],
-      "fallen": ["No spell can undo that.", "This was not in my calculations."],
-      "hurt": ["Ow. That was rude.", "I need a better shield spell.", "My robes are ruined."],
-      "close": ["Remind me why I came down here?", "That nearly ended my career.", "I felt my life flash by. Boring."]
+      "start": ["Mind my spells.", "The arcane hums.", "Spells to test!"],
+      "clear": ["Elementary.", "Burnt. Fascinating.", "Mana's fine, thanks.", "Another lesson.", "Weaker than expected.", "That worked. Noted."],
+      "boss": ["Theory wins.", "And now, ashes."],
+      "fallen": ["No spell fixes that.", "Not in my maths."],
+      "hurt": ["Ow. Rude.", "Need a better shield.", "My robes!"],
+      "close": ["Why am I here?", "Nearly my last spell.", "Life flashed. Boring."]
     },
     "cleric": {
-      "start": ["May the light guide our steps.", "I will keep you all alive.", "Bless this squad. Let's go."],
-      "clear": ["Is anyone hurt? Come here.", "The light protects us.", "Rest a moment. Then onward.", "Bless you all.", "Breathe. You did well.", "Patch up before the next floor."],
-      "boss": ["The light shines brighter now.", "Darkness falls. We stand."],
-      "fallen": ["Rest in the light, friend.", "I couldn't save you. I'm sorry."],
-      "hurt": ["Heal thyself, as they say.", "The light dims, but holds.", "Just a moment. Let me pray."],
-      "close": ["The light kept me, barely.", "Blessings... I needed that one.", "Too close to meeting the gods."]
+      "start": ["Light guide us.", "I'll keep you alive.", "Blessings. Let's go."],
+      "clear": ["Anyone hurt?", "The light protects.", "Rest a moment.", "Bless you all.", "Well done.", "Patch up, all."],
+      "boss": ["The light shines.", "Darkness falls."],
+      "fallen": ["Rest in the light.", "I'm so sorry."],
+      "hurt": ["Heal thyself.", "The light holds.", "A quick prayer."],
+      "close": ["Barely kept.", "Needed that blessing.", "Nearly met the gods."]
     },
     "necromancer": {
-      "start": ["So many restless dead below.", "The dark is cosy, really.", "Death walks with us. Literally."],
-      "clear": ["More bodies for my collection.", "Rise... no, not yet.", "The dead whisper. They're angry.", "Such lovely silence now.", "They'll make fine servants.", "Mm. That smells of grave dirt."],
-      "boss": ["Its bones will serve me well.", "Even the mighty end up still."],
-      "fallen": ["Don't worry. Death isn't the end.", "I could bring you back. Shall I?"],
-      "hurt": ["My blood is cold anyway.", "Hm. Death came sniffing.", "Pain is a fleeting thing."],
-      "close": ["I almost joined my servants.", "Death and I nearly shook hands.", "Not yet, old friend. Not yet."]
+      "start": ["So many dead below.", "The dark is cosy.", "Death walks with us."],
+      "clear": ["More for my collection.", "Rise... not yet.", "The dead whisper.", "Lovely silence.", "Fine servants.", "Grave dirt. Mm."],
+      "boss": ["Its bones are mine.", "Even giants go still."],
+      "fallen": ["Death isn't the end.", "Shall I bring you back?"],
+      "hurt": ["My blood's cold anyway.", "Death came sniffing.", "Pain fades."],
+      "close": ["Nearly joined them.", "Death waved at me.", "Not yet, old friend."]
     },
     "bard": {
-      "start": ["Every legend needs a song!", "Let's give them a tale to tell!", "Tune up! The show begins."],
-      "clear": ["That'll make a fine verse!", "Encore! Next floor!", "Hold on, I'm writing this down.", "What a performance!", "La la la... still alive!", "The crowd goes wild! Well, the dead ones."],
-      "boss": ["The ballad of the fallen beast!", "Now THAT is a chorus line!"],
-      "fallen": ["I'll sing your song forever.", "A sad verse. But a brave one."],
-      "hurt": ["Ouch! Off-key, that one.", "The show must go on!", "A bruise for the ballad!"],
-      "close": ["That was nearly my last song.", "Hold the applause... I need rest.", "Dramatic! Too dramatic..."]
+      "start": ["A song begins!", "Give them a tale!", "Showtime!"],
+      "clear": ["Fine verse, that!", "Encore!", "Writing this down!", "What a show!", "La la... alive!", "The crowd goes wild!"],
+      "boss": ["A ballad for this!", "What a chorus!"],
+      "fallen": ["I'll sing your song.", "A brave verse."],
+      "hurt": ["Ouch! Off-key.", "The show goes on!", "A bruise for the ballad!"],
+      "close": ["Nearly my last song.", "Hold the applause...", "Too dramatic!"]
     },
     "alchemist": {
-      "start": ["My flasks are full. Let's test them.", "Stand back. Science time.", "Down we go! Bring the samples."],
-      "clear": ["Ooh, that one went BOOM.", "Note: more fire next time.", "Smells like a successful test.", "Hmm, needs more acid.", "Results: very explosive!", "Don't touch that green puddle."],
-      "boss": ["Big beast, bigger bang!", "The formula was perfect!"],
-      "fallen": ["No potion fixes that. I tried.", "I'll find a cure. For next time."],
-      "hurt": ["Note: wear thicker gloves.", "Ow. Where's my red flask?", "That hurt. For science."],
-      "close": ["Someone pass me ANY potion!", "Experiment nearly failed. Me.", "I'm fine! I'm... mostly fine."]
+      "start": ["Flasks are full!", "Science time.", "Bring the samples!"],
+      "clear": ["That went BOOM.", "More fire next time.", "Test: success!", "Needs more acid.", "Very explosive!", "Don't touch that."],
+      "boss": ["Bigger bang!", "Perfect formula!"],
+      "fallen": ["No potion for that.", "I'll find a cure."],
+      "hurt": ["Thicker gloves. Noted.", "Where's my red flask?", "Ow. For science."],
+      "close": ["ANY potion, please!", "Experiment nearly failed.", "Mostly fine!"]
     }
   }
 }

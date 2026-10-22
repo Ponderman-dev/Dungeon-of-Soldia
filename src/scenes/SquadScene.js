@@ -531,7 +531,8 @@ export default class SquadScene extends Phaser.Scene {
   descend() {
     if (!this.ready() || this.panel || this.leaving || this.walkers.size) return;
     sfx.play('descend');
-    this.leaving = true;
+    this.leaving = this.shifting = true;
+    uiShift(this, this.uiParts, false, { ms: camp.ui.uiShiftMs }); // every button leaves (user: not only BEGIN DESCENT)
     const ids = squadOrder(this.slots);
     this.progress.lastSquad = [...ids];
     this.progress.seenUnlocked = this.openIds(); // the NEW tags are gone next time

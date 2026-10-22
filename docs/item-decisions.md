@@ -338,3 +338,12 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Mimic Chest: extra chests no longer make the Mimic tougher (`copyStatBonus` 0); +3% chance and +25% explosion per copy stay.
 - Curve 3 smart (same seeds): mean 52.9 -> 48.8, median 40 -> 40, alive at 20: 93% -> 88% (more early deaths). Open: user to
   pick commit as is / find the cause / tweak numbers.
+
+## NEW ITEMS session 24 [built, balance OPEN]
+- Riposte Cloak (rare): +5 evasion; after a DODGE (not block/miss) strikes back for 120% (+60% per extra copy) (`riposte`).
+- Last Stand (epic): below 30% health +40% damage (+20 per copy) and +20% attack speed (+10 per copy) (`lastStand`, `lastStandSpeed`).
+- Harvest Scythe (rare, user's idea): crits heal 15% of the damage (+15 per copy) (`critHeal`).
+- Killing Mask (rare, user's idea): 8% lifesteal per copy.
+- Icons drawn (first draft) in itemIcons.json. Tests: items-s24.test.mjs.
+- OPEN: curve 3 smart with them: median 40 -> 52, mean 48.8 -> 88 (Scythe + Mask most picked, lifesteal stacks with no
+  limit). Halving them (4% / 8%) still gives median 44, mean 69. User to pick: shrinking copies / healing cap / rarer / max copies.

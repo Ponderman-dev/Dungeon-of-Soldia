@@ -151,6 +151,9 @@ export default class BattleState {
     // Bloodrage (Berserker): faster the more health he is missing.
     const rage = unit.def.passive && unit.def.passive.bloodrage;
     if (rage) change += rage.attackSpeedPercentPerMissing * (100 - (100 * unit.hp) / unit.maxHp);
+    // Last Stand: faster below `lastStandBelow`% (30) health.
+    const ls = unit.side === 'hero' && unit.specials ? unit.specials.lastStandSpeed || 0 : 0;
+    if (ls && unit.hp < (unit.maxHp * (unit.specials.lastStandBelow ?? 30)) / 100) change += ls;
     if (unit.side === 'enemy') change += this.auraSpeed(unit) - this.ghastlySlow(unit); // War Drum; Ghastly Fire burns slow
     const speed = (unit.stats.attackEfficiency / 100) * Math.max(0.2, 1 + change / 100);
     return this.rules.baseAttackIntervalMs / speed;
@@ -1538,6 +1541,14 @@ export default class BattleState {
     return (target.def.passive && target.def.passive.iaido) || null;
   }
 
+  // Riposte Cloak: the holder strikes back at whoever it dodged for `riposte`% (120, +60 per extra copy) of its attack,
+  // whatever the distance (a ranged hero shoots back).
+  riposte(hero, attacker, events) {
+    if (!hero.alive || !attacker.alive || attacker.hp <= 0 || this.isStunned(hero)) return;
+    events.push({ type: 'proc', unit: hero, label: 'Riposte!', itemId: 'riposte_cloak', target: attacker });
+    this.strike(hero, attacker, events, { multiplier: hero.specials.riposte / 100, counter: true });
+  }
+
   counterCut(samurai, attacker, events) {
     const ia = this.iaido(samurai);
     if (!ia || !samurai.alive || !attacker.alive || this.isStunned(samurai)) return;
@@ -1840,6 +1851,8 @@ export default class BattleState {
     if (target.hp <= 0 && target.alive) this.killUnit(target, events, attacker);
     // Iaido: a parried / blocked / dodged hit on the Samurai is answered (not a blind miss, not his own counter).
     if (ia && result.dodged && !result.missed && !opts.counter) this.counterCut(target, attacker, events);
+    // Riposte Cloak: a hit the holder DODGED (evasion only: not a block, a blind miss or invulnerability) is answered.
+    if (result.dodged && !result.missed && !result.blocked && !result.invulnerable && !opts.counter && target.side === 'hero' && !target.minion && target.specials.riposte) this.riposte(target, attacker, events);
     return result;
   }
 
@@ -1900,6 +1913,7 @@ export default class BattleState {
       }
     }
     if (sp.fullVigor && attacker.hp >= attacker.maxHp * 0.9) bonus += sp.fullVigor; // Full Vigor: above 90% health
+    if (sp.lastStand && attacker.hp < (attacker.maxHp * (sp.lastStandBelow ?? 30)) / 100) bonus += sp.lastStand; // Last Stand: below 30% health
     // Bonuses against what the target is suffering from or how hurt it is.
     const kinds = new Set(target.statuses.filter((st) => this.statusDefs[st.type] && this.statusDefs[st.type].debuff).map((st) => st.type));
     if (sp.bloodChalice && kinds.has('bleed')) bonus += sp.bloodChalice; // Blood Chalice
@@ -2083,6 +2097,12 @@ export default class BattleState {
         events.push({ type: 'proc', unit: attacker, label: 'Life Share!', itemId: 'bloodlust_mask' });
         for (const ally of hurt) this.healUnit(ally, base, events, { aura: false });
       }
+    }
+    // Harvest Scythe: a crit heals the attacker `critHeal`% (15 per copy) of the damage it dealt.
+    const reap = (attacker.specials && attacker.specials.critHeal) || 0;
+    if (result.crit && reap > 0 && attacker.alive && attacker.side === 'hero') {
+      const heal = Math.max(1, Math.round(((amount * reap) / 100) * this.regenAura().factor));
+      if (this.healUnit(attacker, heal, events, { aura: false }) > 0) events.push({ type: 'lifesteal', unit: attacker, from: target });
     }
     // Gambler's Dice: a crit also gives the enemy a random debuff.
     const dice = attacker.specials && attacker.specials.critDebuffList;

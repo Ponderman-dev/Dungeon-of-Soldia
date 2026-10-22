@@ -1969,5 +1969,73 @@
       }
     ],
     "perStack": "+35 defense, enemies -8 defense"
+  },
+  "riposte_cloak": {
+    "name": "Riposte Cloak",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "+5 evasion. After this hero dodges a hit, it strikes back for 120% damage.",
+    "effects": [
+      {
+        "stat": "evasion",
+        "flat": 5
+      },
+      {
+        "special": "riposte",
+        "percent": 120,
+        "perExtra": 60
+      }
+    ],
+    "perStack": "+5 evasion, +60% strike-back damage"
+  },
+  "last_stand": {
+    "name": "Last Stand",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "Below 30% health: +40% damage and +20% attack speed.",
+    "effects": [
+      {
+        "special": "lastStand",
+        "percent": 40,
+        "perExtra": 20,
+        "below": 30
+      },
+      {
+        "special": "lastStandSpeed",
+        "percent": 20,
+        "perExtra": 10
+      }
+    ],
+    "perStack": "+20% damage, +10% attack speed"
+  },
+  "harvest_scythe": {
+    "name": "Harvest Scythe",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "Critical hits heal this hero 15% of the damage dealt.",
+    "effects": [
+      {
+        "special": "critHeal",
+        "percent": 15
+      }
+    ],
+    "perStack": "+15% of crit damage healed"
+  },
+  "killing_mask": {
+    "name": "Killing Mask",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "Heals 8% of damage dealt (lifesteal).",
+    "effects": [
+      {
+        "special": "lifesteal",
+        "percent": 8
+      }
+    ],
+    "perStack": "+8% lifesteal"
   }
 }

@@ -403,5 +403,19 @@
    "item",
    "soulLantern"
   ]
+ ],
+ "riposte_cloak": [],
+ "last_stand": [],
+ "harvest_scythe": [
+  [
+   "item",
+   "lifesteal"
+  ]
+ ],
+ "killing_mask": [
+  [
+   "item",
+   "lifesteal"
+  ]
  ]
 }

@@ -61,3 +61,4 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   (book, helmet, trophy, coin bag), each 'Coming soon'. The NPCs are no longer drawn (`npcs` kept for later screens);
   `exit` removed. Props moved clear of the buttons.
 - TO EXPEDITION text is 'normal' size (`camp.json ui.expedition.size`, was 'big'; user 2026-10-22: room between box and text). '< CAMP' on the squad screen slides back down to the hub.
+- 2026-10-22 (user): TO EXPEDITION arrows are real arrows (`ui.expedition.arrow` {head, stemW, stemH} in `cell` px; the old 3-row one read as '+'), inset 36. Everything keeps 24px from the screen sides (user: 'buttons hug the sides'): expedition w 342, menu `side` 24 / `gap` 6 / h 100, settings x 24, profile right 24.

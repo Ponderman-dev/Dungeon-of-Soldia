@@ -89,9 +89,11 @@ export default class BaseScene extends Phaser.Scene {
     const cell = T.cell;
     for (const side of [-1, 1]) {
       const arrow = this.add.graphics().fillStyle(0xffffff, 1);
-      for (let i = 0; i < 3; i++) arrow.fillRect(-(i + 0.5) * cell, i * cell, (2 * i + 1) * cell, cell);
-      arrow.fillRect(-cell / 2, 3 * cell, cell, cell * 2);
-      arrow.setPosition(side * (T.w / 2 - T.arrowInset), -2.5 * cell);
+      // A real up-arrow (user: the old 3-row one read as a '+'): a wide head, then a thick stem.
+      const A = T.arrow;
+      for (let i = 0; i < A.head; i++) arrow.fillRect(-(i + 0.5) * cell, i * cell, (2 * i + 1) * cell, cell);
+      arrow.fillRect(-(A.stemW / 2) * cell, A.head * cell, A.stemW * cell, A.stemH * cell);
+      arrow.setPosition(side * (T.w / 2 - T.arrowInset), -((A.head + A.stemH) / 2) * cell);
       box.add(arrow);
       this.tweens.add({ targets: arrow, y: arrow.y - T.bob, duration: T.bobMs, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }

@@ -51,12 +51,14 @@ canvas { image-rendering: pixelated; display: block; }
 .see b { color: var(--fg); font-weight: 600; }
 .per { font-size: 13px; color: var(--note); }
 label { font: 10px var(--display); color: var(--muted); letter-spacing: .06em; }
-textarea { width: 100%; min-height: 64px; resize: vertical; font: 14px/1.45 var(--body); color: var(--fg); background: #15101f; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+textarea { width: 100%; min-height: 130px; resize: vertical; font: 14px/1.45 var(--body); color: var(--fg); background: #15101f; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
 textarea::placeholder { color: #6e6385; }
 .saved { font-size: 12px; color: var(--muted); min-height: 1em; }
 .saved.ok { color: var(--ok); }
 .saved.bad { color: var(--warn); }
 .empty { color: var(--muted); padding: 24px 0; }
+.general { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.general textarea { min-height: 200px; }
 @media (prefers-reduced-motion: no-preference) { .legendary canvas.big { animation: glint 2.4s ease-in-out infinite; } }
 @keyframes glint { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.15) drop-shadow(0 0 6px rgba(242,182,50,.5)); } }
 </style>
@@ -64,11 +66,15 @@ textarea::placeholder { color: #6e6385; }
 <div class="wrap">
   <header>
     <h1>Item Review</h1>
-    <p class="lede">Every item in the game with its icon exactly as the game draws it (big as on the reward card, small as under a hero in a fight) and, under it, what it shows in a fight, played with the game's own effect code. The 15 items marked NEW have never been reviewed. Write what you want changed about the icon or the effect in the box under an item; it saves by itself.</p>
+    <p class="lede">Round 2: item optimization. Every item in the game with its icon, its text and what it shows in a fight. Write anything in the box under an item (too strong, too weak, confusing text, merge or cut it, change the look…). Big thoughts go in the box at the top. Everything saves by itself.</p>
   </header>
+  <div class="general">
+    <label for="note-general">GENERAL NOTES (about all items, ideas, anything)</label>
+    <textarea id="note-general" placeholder="e.g. too many shield items, fire items feel weak, I never pick rings…"></textarea>
+    <div class="saved" id="saved-general"></div>
+  </div>
   <div class="bar" role="toolbar" aria-label="Filter">
-    <button class="chip" id="f-new" data-f="new" aria-pressed="true">New <span class="n"></span></button>
-    <button class="chip" id="f-all" data-f="all" aria-pressed="false">All items <span class="n"></span></button>
+    <button class="chip" id="f-all" data-f="all" aria-pressed="true">All items <span class="n"></span></button>
     <button class="chip" id="f-notes" data-f="notes" aria-pressed="false">With notes <span class="n"></span></button>
     <span class="status" id="status" aria-live="polite">Connecting…</span>
   </div>
@@ -84,7 +90,8 @@ const FXCAT = FX.catalog();
 const STAGE = new FX.FxStage();
 const SZ = 2; // screen pixels per character pixel on the little stages
 const notes = {}; // item id -> text (from the database, or typed here)
-let filter = 'new';
+let filter = 'all';
+const COL = 'notes2'; // round 2 notes (round 1 stays in `notes`)
 let db = null;
 
 // One framed icon onto a canvas, `s` screen pixels per icon pixel.
@@ -108,8 +115,8 @@ function makeCard(it) {
   el.innerHTML = `<div class="top"><div class="icons"><canvas class="big"></canvas><canvas class="small"></canvas><span class="cap">battle size</span></div>
     <div class="info"><div class="nm"></div><div class="tags"><span class="tag rar"></span><span class="tag type"></span></div><div class="desc"></div><div class="per"></div></div></div>
     <div class="fight"><label>IN A FIGHT</label><canvas class="scene" width="240" height="120" role="img"></canvas><p class="see"></p></div>
-    <label for="note-${it.id}">WHAT TO TWEAK (icon or effect)</label>
-    <textarea id="note-${it.id}" placeholder="e.g. make the blade brighter, the icon reads like a spoon…"></textarea>
+    <label for="note-${it.id}">YOUR NOTES (numbers, text, keep / cut, look)</label>
+    <textarea id="note-${it.id}" placeholder="e.g. too strong, cut it in half · text is confusing · merge with … · nobody picks it"></textarea>
     <div class="saved"></div>`;
   drawIcon(el.querySelector('canvas.big'), it.icon, 4);
   drawIcon(el.querySelector('canvas.small'), it.icon, 1);
@@ -117,7 +124,6 @@ function makeCard(it) {
   const rt = el.querySelector('.tag.rar');
   rt.textContent = r.label; rt.style.color = r.color;
   el.querySelector('.tag.type').textContent = it.type;
-  if (it.isNew) { const t = document.createElement('span'); t.className = 'tag new'; t.textContent = 'NEW'; el.querySelector('.tags').prepend(t); }
   el.querySelector('.desc').textContent = it.desc;
   const per = el.querySelector('.per');
   if (it.perStack) per.textContent = 'Per stack: ' + it.perStack; else per.hidden = true;
@@ -141,13 +147,13 @@ function makeCard(it) {
 }
 
 // Drafts stay in this browser too, so nothing typed is lost if the database is not reachable.
-function draft(id, text) { try { localStorage.setItem('soldia-item-note-' + id, text); } catch (e) {} }
-function readDraft(id) { try { return localStorage.getItem('soldia-item-note-' + id); } catch (e) { return null; } }
+function draft(id, text) { try { localStorage.setItem('soldia-item-note2-' + id, text); } catch (e) {} }
+function readDraft(id) { try { return localStorage.getItem('soldia-item-note2-' + id); } catch (e) { return null; } }
 
 async function saveNote(it, text, saved) {
   if (!db) { saved.textContent = 'Kept in this browser only (not saved online)'; saved.className = 'saved bad'; return; }
   try {
-    const ref = db.collection('notes').doc(it.id);
+    const ref = db.collection(COL).doc(it.id);
     if (text.trim()) await ref.set({ note: text, name: it.name, updatedAt: new Date().toISOString() });
     else await ref.delete();
     saved.textContent = text.trim() ? 'Saved' : 'Note removed';
@@ -160,7 +166,7 @@ async function saveNote(it, text, saved) {
 
 function counts() {
   const n = (f) => DATA.items.filter((it) => show(it, f)).length;
-  for (const f of ['new', 'all', 'notes']) document.querySelector(`#f-${f} .n`).textContent = n(f);
+  for (const f of ['all', 'notes']) document.querySelector(`#f-${f} .n`).textContent = n(f);
 }
 function show(it, f) { return f === 'all' || (f === 'new' && it.isNew) || (f === 'notes' && (notes[it.id] || '').trim()); }
 
@@ -184,7 +190,7 @@ function render() {
     sec.append(h, grid);
     main.append(sec);
   }
-  if (!any) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = 'No notes yet. Pick "New" or "All items" and write in the box under an item.'; main.append(p); }
+  if (!any) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = 'No notes yet. Pick "All items" and write in the box under an item.'; main.append(p); }
 }
 
 // The icon pop, like the game: the framed icon jumps up over the Knight's head with a white ring, holds, floats up, fades.
@@ -235,16 +241,26 @@ document.querySelectorAll('.chip').forEach((b) => b.addEventListener('click', ()
 counts();
 render();
 for (const c of cards.values()) { if (io) io.observe(c.cv); }
+
+// The general notes box (same database, doc id `_general`).
+const GEN = { id: '_general', name: 'General notes' };
+const genTa = document.getElementById('note-general'), genSaved = document.getElementById('saved-general');
+{ const d = readDraft(GEN.id); if (d) genTa.value = d; }
+let genTimer = null;
+const genSave = () => { clearTimeout(genTimer); genTimer = null; saveNote(GEN, genTa.value, genSaved); };
+genTa.addEventListener('input', () => { draft(GEN.id, genTa.value); genSaved.textContent = 'Typing…'; genSaved.className = 'saved'; clearTimeout(genTimer); genTimer = setTimeout(genSave, 900); });
+genTa.addEventListener('blur', () => { if (genTimer) genSave(); });
 requestAnimationFrame(frame);
 
-// The notes database: everyone's notes for each item (collection `notes`, doc = item id).
+// The notes database: everyone's notes for each item (collection `notes2`, doc = item id; `_general` = the top box).
 (async () => {
   const status = document.getElementById('status');
   db = window.claude ? await window.claude.use('db') : null;
   if (!db) { status.textContent = 'Notes stay in this browser (sign in to claude.ai to save them)'; status.classList.add('bad'); return; }
   status.textContent = 'Notes save automatically';
-  db.collection('notes').onSnapshot((snap) => {
+  db.collection(COL).onSnapshot((snap) => {
     for (const d of snap.docs) {
+      if (d.id === GEN.id) { if (document.activeElement !== genTa) { genTa.value = (d.data() || {}).note || ''; draft(GEN.id, genTa.value); } continue; }
       const c = cards.get(d.id);
       const text = (d.data() || {}).note || '';
       if (!c || document.activeElement === c.ta) continue; // never overwrite what is being typed

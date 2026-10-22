@@ -196,3 +196,21 @@ export function comingSoonWindow(scene, title, who, { w = 280, h = 160, depth = 
   scene.time.delayedCall(150, () => shadeRect.once('pointerup', () => { sfx.play('cardClose'); box.destroy(); if (onClose) onClose(); }));
   return box;
 }
+
+// Menu UI in and out (user: when a screen slides to the next, its buttons leave first, the new screen's buttons come in
+// after; fast). `parts` = { up: [...], down: [...], fade: [...] }: `up` slide up and fade, `down` slide down and fade,
+// `fade` only fade. show = false: out from where they are; show = true: in from off-set and invisible. `instant` puts
+// them at the hidden spot at once (a screen that waits for its slide). onDone runs once when all are done.
+export function uiShift(scene, parts, show, { ms = 160, dy = 28, instant = false, onDone = null } = {}) {
+  const all = [];
+  for (const [kind, list] of Object.entries(parts)) for (const o of list) if (o && o.active) all.push([o, kind === 'up' ? -dy : kind === 'down' ? dy : 0]);
+  for (const [o] of all) if (!o.uiHome) o.uiHome = { y: o.y, alpha: o.alpha };
+  if (instant) { for (const [o, off] of all) o.setAlpha(0).setY(o.uiHome.y + off); if (onDone) onDone(); return; }
+  if (!all.length) { if (onDone) onDone(); return; }
+  let left = all.length;
+  const done = () => { if (--left === 0 && onDone) onDone(); };
+  for (const [o, off] of all) {
+    scene.tweens.add({ targets: o, y: o.uiHome.y + (show ? 0 : off), alpha: show ? o.uiHome.alpha : 0, duration: ms,
+      ease: show ? 'Quad.easeOut' : 'Quad.easeIn', onComplete: done });
+  }
+}

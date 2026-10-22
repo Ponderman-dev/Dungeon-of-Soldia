@@ -222,8 +222,8 @@
       } } }
   ],
   "ui": {
-    "_about": "Base screen interface (screen px). expedition = the big black window (tap = the screen slides up into the squad screen in slideMs), arrows bobbing on both sides. menu = the row of square buttons at the bottom (each opens 'Coming soon' for now): icon = pixel rows drawn iconPx per art px. settings = the gear top left. profile = the name box + round portrait top right. soon = the 'Coming soon' window.",
-    "slideMs": 700,
+    "_about": "Base screen interface (screen px). expedition = the big black window (tap = its buttons leave in uiShiftMs, the screen slides up into the squad screen in slideMs, then the squad screen's buttons come in; '< CAMP' does the same back), arrows bobbing on both sides. menu = the row of square buttons at the bottom (each opens 'Coming soon' for now): icon = pixel rows drawn iconPx per art px. settings = the gear top left. profile = the name box + round portrait top right. soon = the 'Coming soon' window.",
+    "slideMs": 700, "uiShiftMs": 160,
     "soon": {"w": 280, "h": 160},
     "expedition": {"y": 628, "w": 342, "h": 80, "text": "TO EXPEDITION", "size": "normal", "cell": 3, "arrow": {"head": 5, "stemW": 3, "stemH": 4}, "arrowInset": 36, "bob": 4, "bobMs": 600},
     "settings": {"x": 24, "y": 14, "size": 44, "name": "Settings", "who": "Sound, language, controls"},

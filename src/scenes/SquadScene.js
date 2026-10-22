@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, SKILL_COLORS, UI } from '../config.js';
-import { drawWindow, drawCursor } from '../entities/uiKit.js';
+import { drawWindow, drawCursor, uiShift } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
 import { skillIconKey } from '../entities/skillIconTexture.js';
@@ -52,6 +52,7 @@ export default class SquadScene extends Phaser.Scene {
 
   init(data) {
     this.lastRun = (data && data.lastRun) || null; // { floor, kills, newly: [hero ids unlocked by that run] }
+    this.fromCamp = !!(data && data.fromCamp); // slid up from the camp: the buttons come in after the slide
   }
 
   create() {
@@ -68,6 +69,12 @@ export default class SquadScene extends Phaser.Scene {
     this.drawSlots();
     this.drawBench();
     this.drawUi();
+    this.shifting = false; // the menu is fading in or out (taps blocked by `leaving`, buttons still drawn)
+    if (this.fromCamp) { // hidden until the slide up has ended; no taps before that
+      this.leaving = this.shifting = true;
+      uiShift(this, this.uiParts, false, { instant: true });
+      this.time.delayedCall(camp.ui.slideMs, () => uiShift(this, this.uiParts, true, { ms: camp.ui.uiShiftMs, onDone: () => { this.leaving = this.shifting = false; } }));
+    }
 
     // Every hero figure: on the bench, or standing in its slot.
     this.figures = new Map();
@@ -142,6 +149,7 @@ export default class SquadScene extends Phaser.Scene {
   }
 
   drawUi() {
+    const n0 = this.children.list.length; // what drawUi adds: the top part, then the bottom part (for uiShift)
     // Sound on/off: a small pixel speaker icon top right (waves = on, a cross = off); saved in the progress.
     const sx = GAME_WIDTH - 30, sy = TESTER ? 30 : 92, P = 2; // centre (under the TEST buttons when they are there), pixel size
     drawWindow(this.add.graphics().setDepth(DEPTH.ui), sx - 18, sy - 18, 36, 36);
@@ -170,6 +178,7 @@ export default class SquadScene extends Phaser.Scene {
       this.add.text(20, 21, `Last run: floor ${this.lastRun.floor}`, { fontFamily: FONT, fontSize: '8px', color: UI.gold }).setOrigin(0, 0.5).setDepth(DEPTH.ui);
     }
 
+    const n1 = this.children.list.length;
     // "Begin descent": only when all 3 slots are filled, at the bottom over RANDOM.
     this.begin = this.add.container(DOOR_X, BEGIN_Y).setDepth(DEPTH.ui);
     const bg = this.add.graphics();
@@ -187,9 +196,13 @@ export default class SquadScene extends Phaser.Scene {
       this.add.text(x + 75, 767, label, { fontFamily: FONT, fontSize: '16px', color: INK }).setOrigin(0.5).setDepth(DEPTH.ui);
       this.add.zone(x + 75, 767, 150, 46).setInteractive().setDepth(DEPTH.ui).on('pointerdown', onTap);
     });
+    const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));
+    this.uiParts = { up: shown(this.children.list.slice(n0, n1)), fade: this.slotMarks.map((m) => m.back) };
+    this.uiParts.down = shown(this.children.list.slice(n1)); // (the test toggle below joins it)
     if (TESTER) return; // the playtest build (npm run build:itch) has no test toggle
     this.toggleText = this.add.text(GAME_WIDTH / 2, 818, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
     this.add.zone(GAME_WIDTH / 2, 818, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
+    this.uiParts.down.push(this.toggleText);
   }
 
   // ---- state ---------------------------------------------------------------------------------
@@ -260,9 +273,9 @@ export default class SquadScene extends Phaser.Scene {
       const m = this.slotMarks[i];
       m.ring.setVisible(!id);
       m.num.setVisible(!id);
-      m.back.setVisible(!!id && !this.walkers.has(id) && !this.leaving);
+      m.back.setVisible(!!id && !this.walkers.has(id) && (!this.leaving || this.shifting)); // shifting: they fade with the menu
     });
-    const ready = this.ready() && !this.leaving;
+    const ready = this.ready() && (!this.leaving || this.shifting);
     this.begin.setVisible(ready);
     if (this.toggleText) this.toggleText.setText(`${this.progress.unlockAll ? '[X]' : '[ ]'} test: unlock every hero`).setColor(this.progress.unlockAll ? UI.green : MUTE);
   }
@@ -499,8 +512,12 @@ export default class SquadScene extends Phaser.Scene {
   // '< CAMP': the screen slides down back into the camp hub (the reverse of BaseScene.toExpedition).
   toCamp() {
     if (this.panel || this.leaving) return;
-    this.leaving = true;
+    this.leaving = this.shifting = true;
     sfx.play('tap');
+    uiShift(this, this.uiParts, false, { ms: camp.ui.uiShiftMs, onDone: () => this.slideToCamp() }); // the buttons leave first
+  }
+
+  slideToCamp() {
     const base = this.scene.get('Base');
     base.events.once(Phaser.Scenes.Events.CREATE, () => {
       const cam = base.cameras.main, mine = this.cameras.main, ms = camp.ui.slideMs;
@@ -508,7 +525,7 @@ export default class SquadScene extends Phaser.Scene {
       this.tweens.add({ targets: cam, scrollY: 0, duration: ms, ease: 'Sine.easeInOut' });
       this.tweens.add({ targets: mine, scrollY: GAME_HEIGHT, duration: ms, ease: 'Sine.easeInOut', onComplete: () => this.scene.stop() });
     });
-    this.scene.launch('Base');
+    this.scene.launch('Base', { fromSquad: true });
   }
 
   descend() {

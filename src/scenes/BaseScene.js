@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc, uiShift } from '../entities/uiKit.js';
 import camp from '../data/camp.json';
 import { openFloor, darkLayer, lightTint, fireLayers, propLayer } from '../systems/campArt.js';
 import floorArt from '../data/floorArt.json';
@@ -26,6 +26,7 @@ export default class BaseScene extends Phaser.Scene {
 
   init(data) {
     this.fromTitle = !!(data && data.fromTitle); // from the title screen: the camp fades in
+    this.fromSquad = !!(data && data.fromSquad); // back from the squad screen: the buttons come in after the slide
     this.modal = null;
     this.leaving = false;
   }
@@ -41,6 +42,10 @@ export default class BaseScene extends Phaser.Scene {
     this.drawHeroes();
     this.drawUi();
     if (this.fromTitle) this.cameras.main.fadeIn(camp.hero.fadeMs, 0, 0, 0);
+    if (this.fromSquad) { // the buttons come in once the slide down has ended; no taps before that
+      this.leaving = true;
+      this.time.delayedCall(U.slideMs, () => uiShift(this, this.uiParts, true, { ms: U.uiShiftMs, onDone: () => { this.leaving = false; } }));
+    }
   }
 
   // Up to 3 random unlocked heroes round the fire, each idly wandering near its spot (camp.json hero).
@@ -80,6 +85,7 @@ export default class BaseScene extends Phaser.Scene {
   // Settings gear (top left), profile (top right), TO EXPEDITION and the row of menu buttons at the bottom.
   drawUi() {
     const ui = [];
+    const n0 = this.children.list.length; // what drawUi adds: the bottom part first, then the top (for uiShift)
     // TO EXPEDITION: the biggest thing on screen. A black window with big letters and a white pixel up-arrow on each
     // side, bobbing.
     const T = U.expedition, cx = GAME_WIDTH / 2;
@@ -110,6 +116,7 @@ export default class BaseScene extends Phaser.Scene {
       this.add.zone(x + w / 2, M.y + M.h / 2, w, M.h).setInteractive().on('pointerup', () => this.comingSoon(b.label, b.who));
     });
 
+    const n1 = this.children.list.length;
     // Settings (top left): a gear in a small window.
     const G = U.settings;
     ui.push(drawGear(drawWindow(this.add.graphics(), G.x, G.y, G.size, G.size), G.x + G.size / 2, G.y + G.size / 2));
@@ -128,6 +135,9 @@ export default class BaseScene extends Phaser.Scene {
     ui.push(c);
     this.add.zone(px + d / 2 - Pr.barW / 2 + d / 4, Pr.y + d / 2, Pr.barW + d / 2, d).setInteractive().on('pointerup', () => this.comingSoon(Pr.title, Pr.who));
     for (const o of ui) o.setDepth(DEPTH.ui);
+    const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));
+    this.uiParts = { down: shown(this.children.list.slice(n0, n1)), up: shown(this.children.list.slice(n1)) };
+    if (this.fromSquad) uiShift(this, this.uiParts, false, { instant: true });
   }
 
   // A 'Coming soon' window (uiKit). Tap anywhere to close.
@@ -141,6 +151,10 @@ export default class BaseScene extends Phaser.Scene {
     if (this.leaving || this.modal) return;
     this.leaving = true;
     sfx.play('tap');
+    uiShift(this, this.uiParts, false, { ms: U.uiShiftMs, onDone: () => this.slideToSquad() }); // the buttons leave first
+  }
+
+  slideToSquad() {
     const squad = this.scene.get('Squad');
     squad.events.once(Phaser.Scenes.Events.CREATE, () => {
       const cam = squad.cameras.main, mine = this.cameras.main;
@@ -148,7 +162,7 @@ export default class BaseScene extends Phaser.Scene {
       this.tweens.add({ targets: cam, scrollY: 0, duration: U.slideMs, ease: 'Sine.easeInOut' });
       this.tweens.add({ targets: mine, scrollY: -GAME_HEIGHT, duration: U.slideMs, ease: 'Sine.easeInOut', onComplete: () => this.scene.stop() });
     });
-    this.scene.launch('Squad');
+    this.scene.launch('Squad', { fromCamp: true });
   }
 
   // A pixel layer as an image at screen (x, y), placed by its anchor.

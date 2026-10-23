@@ -419,3 +419,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Sharpest Blade 6% (+3%) / 4.5x -> 12% (+4%) / 5x (tested: Archer +3.1, Knight +3.7).
   Sweeping Strap reach 60 -> 100px. Reaper's Bell blast 100 -> 150px. Kinetic Coil: BLOCKS (parries) store a
   charge too, not only dodges.
+- Check after all session 29 changes: Euclid + 3 charms on Archer +4.5 over the charms alone (was +2.6), Sharpest
+  Blade Archer +2.5 / Knight +3.6, Sweeping Strap +0.2..+1.6, Reaper's Bell and Kinetic Coil still ~0 (Coil on
+  Samurai / Knight with Shield Totems too). Curve 3 smart: mean 43.6 -> 44.9, median 38 -> 38, p90 68 -> 77,
+  max 305 -> 257; Necromancer 45.7 -> 49.5 avg floor (Demon Head no longer blocks its dark attacks).

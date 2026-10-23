@@ -63,6 +63,21 @@ const fifteen = enemySpots(fake(15, 5), { width: 390, y: 340, perRow: L.enemyPer
 const ys = [...new Set(fifteen.map((p) => p.y))].sort((a, b) => a - b);
 ok('15 enemies stand in 3 rows of 5', ys.length === 3 && ys.every((y) => fifteen.filter((p) => p.y === y).length === 5), ys.join());
 ok('ranged enemies stand in the back row (highest up)', fifteen.slice(0, 5).every((p) => p.y === ys[0]));
+// Smart row gap: the gap behind a row grows with its tallest enemy (+ room for bar/icons, more for an elite), clamped.
+const room = { rowRoom: L.rowRoom, eliteRowRoom: L.eliteRowRoom, maxGap: L.enemyRowGapMax };
+const tall = (h, elite) => ({ def: { damageType: 'melee', height: h, drawScale: 3 }, ...(elite ? { elite: {} } : {}) });
+const gapOf = (front) => { const sp = enemySpots([...front, ...Array.from({ length: 5 }, () => ({ def: { damageType: 'ranged', height: 5 } }))], { width: 390, y: 340, perRow: 5, rowGap: L.enemyRowGap, room }); return sp[0].y - sp[5].y; };
+ok('small front row: the gap stays at the smallest', gapOf(Array.from({ length: 5 }, () => tall(5))) === L.enemyRowGap);
+const bigH = Math.round((L.enemyRowGapMax - L.eliteRowRoom) / 3) - 2; // tall, but an elite of it still fits under the max
+ok('a tall front enemy widens the gap to its drawn height + room', gapOf([tall(bigH), tall(5), tall(5), tall(5), tall(5)]) === bigH * 3 + L.rowRoom);
+ok('an elite gets the elite room', gapOf([tall(bigH, true), tall(5), tall(5), tall(5), tall(5)]) === bigH * 3 + L.eliteRowRoom);
+const topY = L.enemyY + L.topMarginY;
+const deep = enemySpots([tall(200), tall(5), tall(5), tall(5), tall(5), ...fake(5, 5)], { width: 390, y: L.enemyY, perRow: 5, rowGap: L.enemyRowGap, room, top: topY });
+ok('a tall formation shifts down: the back row stays at or under the wall line', Math.min(...deep.map((p) => p.y)) === topY && deep[0].y - deep[5].y === L.enemyRowGapMax, deep.map((p) => p.y).join());
+ok('the gap never passes the max', gapOf([tall(200), tall(5), tall(5), tall(5), tall(5)]) === L.enemyRowGapMax);
+const mid = enemySpots(fake(10), { width: 390, y: 340, perRow: 5, rowGap: L.enemyRowGap, room });
+const midYs = [...new Set(mid.map((p) => p.y))];
+ok('rows stay centred around y', midYs.length === 2 && (midYs[0] + midYs[1]) / 2 === 340, midYs.join());
 
 // The new fodder (step 2): in the roster from their floor, tier fodder, with a sprite.
 const NEW_FODDER = { swarmling: 13, mushling: 22, boneRat: 25, shadeWisp: 35 };

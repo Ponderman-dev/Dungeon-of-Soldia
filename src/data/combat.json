@@ -199,7 +199,11 @@
       "marginX": 22,
       "topMarginY": -40,
       "enemyPerRow": 5,
-      "enemyRowGap": 70
+      "enemyRowGap": 70,
+      "_rowRoom": "Smart row gap (formation.js enemySpots): the gap behind a row = its tallest enemy as drawn (height x drawScale) + rowRoom (HP bar + one row of status icons; eliteRowRoom if that enemy is an elite, for its name), at least enemyRowGap, at most enemyRowGapMax.",
+      "rowRoom": 45,
+      "eliteRowRoom": 60,
+      "enemyRowGapMax": 160
     }
   },
   "attackMotion": {

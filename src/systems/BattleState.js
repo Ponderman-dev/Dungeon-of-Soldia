@@ -385,7 +385,7 @@ export default class BattleState {
   placeLines() {
     const L = this.rules.movement.layout;
     this.heroes.forEach((u, i) => this.place(u, (L.width * (i + 0.5)) / this.heroes.length, L.heroY));
-    const spots = enemySpots(this.enemies, { width: L.width, y: L.enemyY, perRow: L.enemyPerRow, rowGap: L.enemyRowGap, spread: 'lane' });
+    const spots = enemySpots(this.enemies, { width: L.width, y: L.enemyY, perRow: L.enemyPerRow, rowGap: L.enemyRowGap, spread: 'lane', room: { rowRoom: L.rowRoom, eliteRowRoom: L.eliteRowRoom, maxGap: L.enemyRowGapMax }, top: L.enemyY + L.topMarginY });
     this.enemies.forEach((u, i) => this.place(u, spots[i].x, spots[i].y));
   }
 

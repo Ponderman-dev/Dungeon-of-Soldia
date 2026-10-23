@@ -1181,7 +1181,7 @@ export default class BattleScene extends Phaser.Scene {
     }
     const enemies = this.state.spawnEnemies(lineUp, n);
     const L = combatRules.movement.layout;
-    const spots = enemySpots(enemies, { width: GAME_WIDTH, y: ENEMY_Y, perRow: L.enemyPerRow, rowGap: L.enemyRowGap });
+    const spots = enemySpots(enemies, { width: GAME_WIDTH, y: ENEMY_Y, perRow: L.enemyPerRow, rowGap: L.enemyRowGap, room: { rowRoom: L.rowRoom, eliteRowRoom: L.eliteRowRoom, maxGap: L.enemyRowGapMax }, top: L.enemyY + L.topMarginY });
     enemies.forEach((unit, i) => this.makeView(unit, spots[i].x, spots[i].y, container));
 
     return {

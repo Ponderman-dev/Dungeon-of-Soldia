@@ -146,7 +146,7 @@ export default class BattleState {
   interval(unit) {
     const chill = this.statusDefs.chill || {};
     let change = -this.stacks(unit, 'chill') * (chill.slowPerStackPercent || 0);
-    for (const s of unit.statuses) if (s.type === 'shock') change += s.attackSpeedPercent;
+    for (const s of unit.statuses) if (s.type === 'shock' || s.type === 'tangled') change += s.attackSpeedPercent; // Tangled: Brood Mother's Sticky Webs
     change += Math.min(0, ...unit.statuses.filter((s) => s.type === 'doom').map((s) => s.attackSpeedPercent || 0)); // Eclipse Idol's Doom: the strongest slow only
     // Bloodrage (Berserker): faster the more health he is missing.
     const rage = unit.def.passive && unit.def.passive.bloodrage;
@@ -2468,6 +2468,7 @@ export default class BattleState {
         status.fumbleChance = spec.fumbleChance ?? info.fumbleChance ?? 0;
         status.fumbleStunMs = spec.fumbleStunMs ?? info.fumbleStunMs ?? 300;
       }
+      if (spec.status === 'tangled') status.attackSpeedPercent = spec.attackSpeedPercent ?? info.attackSpeedPercent ?? 0;
       if (spec.status === 'doom') {
         status.attackSpeedPercent = spec.attackSpeedPercent ?? info.attackSpeedPercent ?? 0;
         status.resistCutPercent = spec.resistCutPercent || 0; // Eclipse Idol: % of resist taken off (the biggest one counts)

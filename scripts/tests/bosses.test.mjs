@@ -67,6 +67,23 @@ ok('a boss floor always brings its own line-up', JSON.stringify(enemiesForFloor(
   ok('Brood Mother lays egg sacs', sacs.length === 2, sacs.length);
   const ev2 = run(s, 6200);
   ok('...an egg sac left alone hatches into 3 spiderlings', ev2.some((e) => e.type === 'hatch') && s.enemies.filter((e) => e.alive && e.def.id === 'spiderling').length >= 3); }
+{ const { s, es } = mk(['egg_sac']); const sac = es[0];
+  run(s, enemies.egg_sac.hatch.afterMs - 200);
+  ok('Egg Sac: still an egg just before its hatch time', sac.alive);
+  const ev = run(s, 400);
+  ok('...hatches right on time', ev.some((e) => e.type === 'hatch' && e.unit === sac)); }
+ok('Spiderling: EVERY hit poisons (a weak poison)', enemies.spiderling.onHit.some((o) => o.status === 'poison' && o.chance === 100 && o.damageMultiplier < enemies.brood_mother.onHit[0].damageMultiplier));
+{ const { s, es, h } = mk(['brood_mother']); const b = es[0]; b.hp = b.maxHp = 1e6;
+  const sw = enemies.brood_mother.abilities.find((a) => a.id === 'sticky_webs');
+  for (const ab of b.abilities) if (ab.def.id !== 'sticky_webs') ab.timer = 1e9;
+  const before = h.map((x) => s.interval(x));
+  const ev = run(s, sw.firstMs + sw.castMs + 100);
+  const tangled = h.filter((x) => x.statuses.some((st) => st.type === 'tangled'));
+  ok('Sticky Webs: tangles exactly 2 different heroes', tangled.length === sw.count, tangled.length);
+  const i = h.indexOf(tangled[0]);
+  ok('...their attacks come much slower (-70% attack speed)', s.interval(tangled[0]) > before[i] * 2.5, `${Math.round(before[i])} -> ${Math.round(s.interval(tangled[0]))}`);
+  run(s, sw.apply[0].durationMs + 100);
+  ok('...and it wears off', !h.some((x) => x.statuses.some((st) => st.type === 'tangled'))); }
 
 // ---- Frost Warden
 { const { s, es, h } = mk(['frost_warden']); const w = es[0]; w.hp = w.maxHp = 1e6;

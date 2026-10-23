@@ -213,6 +213,14 @@
     "control": true,
     "debuff": true
   },
+  "tangled": {
+    "popup": false,
+    "label": "TANGLED",
+    "color": "#c9bed6",
+    "textColor": "#000000",
+    "attackSpeedPercent": -70,
+    "debuff": true
+  },
   "reflect": {
     "popup": false,
     "label": "MIRROR",

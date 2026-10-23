@@ -5,7 +5,7 @@
 //   abilities: [ ... ]       timed moves, each with an optional wind-up (`castMs`, a red bar over the boss).
 //                            A stun / freeze / fear / knockback during the wind-up INTERRUPTS it.
 //     { id, name, everyMs, firstMs, castMs, hpBelow (once, at that health %), interruptible (default true),
-//       target: 'frontHero' | 'backHero' | 'randomHero' | 'lowestHero' | 'allHeroes' | 'self' | 'allies' | 'meleeNear',
+//       target: 'frontHero' | 'backHero' | 'randomHero' | 'randomHeroes' (+ count) | 'lowestHero' | 'allHeroes' | 'self' | 'allies' | 'meleeNear',
 //       radius (meleeNear), damageMultiplier, damageType, apply: [status specs], healAllies (% of their max health),
 //       summon: { id, count, max, near } (or a list of them), swap: 'partnerId', daggers: { count, damageMultiplier, apply },
 //       channel: { intervalMs, ticks, target, damageMultiplier, damageType, apply, drain: { percentMaxHp } },
@@ -227,7 +227,7 @@ export const bossMethods = {
   },
 
   // The heroes a move goes for.
-  abilityTargets(u, target, radius) {
+  abilityTargets(u, target, radius, count) {
     const heroes = this.heroes.filter((h) => h.alive);
     const all = this.defenders();
     if (!heroes.length && target !== 'self' && target !== 'allies') return [];
@@ -236,6 +236,11 @@ export const bossMethods = {
       case 'frontHero': return [heroes.reduce((a, b) => (dist(b) < dist(a) ? b : a))];
       case 'backHero': return [heroes.reduce((a, b) => (dist(b) > dist(a) ? b : a))];
       case 'randomHero': return [heroes[Math.floor(this.rng() * heroes.length)]];
+      case 'randomHeroes': { // `count` different heroes at random (Brood Mother's Sticky Webs)
+        const pool = [...heroes], out = [];
+        while (pool.length && out.length < (count || 1)) out.push(pool.splice(Math.floor(this.rng() * pool.length), 1)[0]);
+        return out;
+      }
       case 'lowestHero': return [heroes.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a))];
       case 'allHeroes': return all;
       case 'meleeNear': return all.filter((h) => h.damageType === 'melee' && (!this.hasPositions(h) || dist(h) <= (radius || 100)));
@@ -259,7 +264,7 @@ export const bossMethods = {
       return;
     }
     if (a.burrow) return this.startBurrow(u, a.burrow, events); // Cave Worm
-    const targets = this.abilityTargets(u, a.target, a.radius);
+    const targets = this.abilityTargets(u, a.target, a.radius, a.count);
     if (a.target === 'lowestOtherAlly' && !targets.length) return; // a Shieldbearer alone: no one to guard, no popup
     // Blink Imp: it appears next to its target first (then the hit below).
     if (a.blink && targets[0] && this.hasPositions(u) && this.hasPositions(targets[0])) {

@@ -1187,13 +1187,13 @@
       }
     },
     "stats": {
-      "health": 45,
+      "health": 75,
       "attack": 0,
       "defense": 0,
       "attackEfficiency": 100
     },
     "hatch": {
-      "afterMs": 6000,
+      "afterMs": 3000,
       "into": "spiderling",
       "count": 3
     }
@@ -1214,9 +1214,9 @@
     "onHit": [
       {
         "status": "poison",
-        "chance": 30,
+        "chance": 100,
         "durationMs": 4000,
-        "damageMultiplier": 0.25,
+        "damageMultiplier": 0.1,
         "damageType": "dark"
       }
     ],
@@ -1656,7 +1656,7 @@
     "xp": 180,
     "stats": {
       "health": 2500,
-      "attack": 6,
+      "attack": 8,
       "defense": 4,
       "attackEfficiency": 90
     },
@@ -1695,6 +1695,21 @@
           {
             "status": "webbed",
             "durationMs": 3000
+          }
+        ]
+      },
+      {
+        "id": "sticky_webs",
+        "name": "Sticky Webs",
+        "everyMs": 16000,
+        "firstMs": 12000,
+        "castMs": 800,
+        "target": "randomHeroes",
+        "count": 2,
+        "apply": [
+          {
+            "status": "tangled",
+            "durationMs": 5000
           }
         ]
       }

@@ -11,7 +11,7 @@
     "queueMax": 3,
     "queueMsShare": 0.6,
     "_deck": "stack 'deck' (user, session 26: queue but like stacking cards): each icon dealt onto one pile deckGapMs after the last, deckStepPx up/right of it, at most deckMax cards; each card fades on its own like a normal pop (user).",
-    "deckGapMs": 50,
+    "deckGapMs": 100,
     "deckStepPx": 4,
     "deckMax": 6
   },

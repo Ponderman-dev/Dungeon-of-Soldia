@@ -56,7 +56,11 @@ Rule (item-decisions.md): every extra copy adds a real +5-10% or more, no ceilin
 - Sharpest Blade: any element on the attack turns it off (charm riders count; the Mage can't use it).
 - Rally Flag: each holder's flag fires once per floor, but the shields do NOT stack: a new rally replaces the old shield.
 - Sweeping Strap: 'next to' = within ~60px of the target (same row neighbours).
-- Kinetic Coil: charges stay until the next attack spends them, reset each floor.
+- Kinetic Coil: charges stay until the next attack spends them, reset each floor. Only good on dodgy heroes (meant).
+- Frost Mantle: 30% chance, +5% per copy (was +10%; 100% at 15 copies).
+- Reaper's Bell: stays EPIC, chains forever, nerfed: 18% of the dead enemy's max health, +8% per copy (was 25% +12%).
+- Frozen Demon Head per extra copy: +35% ice damage and +150% Ice Spikes damage (700% -> 850% -> 1000%...).
+- Better Odds: +2.5% damage per alive enemy per copy (was 1.5%).
 
 ## Counts after the batch
 common 24+7 = 31, rare 26+8 = 34, epic 25+2 = 27, legendary 17+4 = 21 (113).

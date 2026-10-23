@@ -1275,6 +1275,12 @@ export default class BattleScene extends Phaser.Scene {
       lineUp.splice(0, lineUp.length, ...house);
       Object.assign(lineUp, { monsterHouse: true, elites: house.elites, shape: house.shape });
     }
+    // Dev server only: `?lineup=risen_skeleton*12,goblin` replaces every directed fight's enemies (effect reviews).
+    const forcedLineUp = import.meta.env.DEV && !room && new URLSearchParams(location.search).get('lineup');
+    if (forcedLineUp) {
+      const ids = forcedLineUp.split(',').flatMap((part) => { const [id, n] = part.split('*'); return enemyDefs[id] ? Array(Number(n) || 1).fill(id) : []; });
+      if (ids.length) { lineUp.splice(0, lineUp.length, ...ids); lineUp.elites = []; lineUp.monsterHouse = false; }
+    }
     // Dev server only: `?elite=1` makes the first normal/strong enemy of every directed fight an elite (browser checks).
     if (import.meta.env.DEV && new URLSearchParams(location.search).get('elite') && lineUp.elites && !lineUp.elites.length) {
       const i = lineUp.findIndex((id) => (enemyDefs[id].tier || 'normal') !== 'fodder');

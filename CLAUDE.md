@@ -71,7 +71,7 @@ and suggest a fresh session per task.
 ## Commands
 - `npm install`  install dependencies
 - `npm test`  run all tests (`scripts/tests/run-all.mjs`)
-- `npm run dev`  start dev server (http://localhost:5173); dev-only url flags `?floor=N`, `?room=<kind>`, `?elite=1`, `?house=1`
+- `npm run dev`  start dev server (http://localhost:5173); dev-only url flags `?floor=N`, `?room=<kind>`, `?elite=1`, `?house=1`, `?lineup=risen_skeleton*12`
 - `npm run build`  production build into `dist/`
 - `npm run build:page`  build + pack into ONE file `dist-page.html` (for the claude.ai preview page)
 - `npm run build:studio`  build the Character Studio into ONE file `studio-page.html`

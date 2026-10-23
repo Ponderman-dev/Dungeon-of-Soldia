@@ -56,6 +56,8 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
       if (e.above !== undefined) specials[e.special + 'Above'] = e.above; // e.g. suckerPunchAbove (health %)
       if (e.cooldownMs) specials[e.special + 'CooldownMs'] = e.cooldownMs; // e.g. blockCooldownMs
       if (e.durationMs) specials[e.special + 'Ms'] = e.durationMs; // e.g. openingHornMs
+      if (e.radius !== undefined) specials[e.special + 'Radius'] = e.radius; // e.g. reaperBellRadius (px)
+      if (e.spec) specials[e.special + 'Spec'] = e.spec; // a status spec, e.g. frostMantleSpec
       if (e.debuffs) specials[e.special + 'List'] = e.debuffs; // e.g. critDebuffList
     } else if (e.damageBonus) {
       damageBonus[e.damageBonus] = (damageBonus[e.damageBonus] || 0) + e.percent * factor;

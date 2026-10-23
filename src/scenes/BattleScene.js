@@ -1828,6 +1828,19 @@ export default class BattleScene extends Phaser.Scene {
       this.tweens.add({ targets: cloud, radius: e.radius || 80, alpha: 0, duration: 650, ease: 'Quad.easeOut', onComplete: () => cloud.destroy() });
       this.puff(c.x, c.y + 8, color, 8);
       if (e.explosive) this.cameras.main.shake(120, 0.004); // an Explosive elite
+    } else if (e.type === 'lifeOrb') {
+      // Life Crystal: a green orb pops out of the dead enemy, then a small orb flies to every hero it heals.
+      const v = this.views.get(e.at.uid);
+      const c = v ? this.center(v) : { x: e.at.x, y: e.at.y };
+      const orb = this.add.circle(c.x, c.y, 6, 0x5ddf6a).setDepth(DEPTH.popup - 1);
+      this.tweens.add({ targets: orb, y: c.y - 18, scale: 1.4, duration: 220, yoyo: true, onComplete: () => orb.destroy() });
+      for (const t of e.targets) {
+        const tv = this.views.get(t.uid);
+        if (!tv) continue;
+        const to = this.center(tv);
+        const bit = this.add.circle(c.x, c.y - 18, 4, 0x9dffa8).setDepth(DEPTH.popup - 1);
+        this.tweens.add({ targets: bit, x: to.x, y: to.y, delay: 220, duration: 320, ease: 'Quad.easeIn', onComplete: () => { bit.destroy(); this.puff(to.x, to.y, 0x5ddf6a, 4); } });
+      }
     } else if (e.type === 'shieldBreak') {
       sfx.play('shieldBreak');
       const v = this.views.get(e.unit.uid);

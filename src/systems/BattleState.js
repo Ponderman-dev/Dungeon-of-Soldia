@@ -1843,7 +1843,10 @@ export default class BattleState {
     if (gf && !result.dodged && !opts.ghastly && (opts.damageType || attacker.damageType) === 'fire' && target.alive && target.hp > 0 && result.amount > 0) {
       this.strike(attacker, target, events, { multiplier: (result.amount * gf) / 100 / Math.max(1, attacker.stats.attack), damageType: 'dark', item: true, ghastly: true, burst: true });
     }
-    if (!result.dodged && attacker.side === 'enemy' && target.side === 'hero') this.onHeroHit(target, events);
+    if (!result.dodged && attacker.side === 'enemy' && target.side === 'hero') {
+      this.onHeroHit(target, events);
+      if (!opts.item) this.frostMantle(attacker, target, events);
+    }
     if (result.blocked && target.specials.blockCooldownMs) {
       // A successful block sends the holder's Shield Totems on cooldown (only if the item has a `cooldownMs`; phase H: none).
       const spec = { status: 'blockCooldown', durationMs: target.specials.blockCooldownMs || 2500 };
@@ -2300,6 +2303,7 @@ export default class BattleState {
     this.tryIntercept(target, events); // Knight: jumps in front of a hero who drops low
     this.tryBodyguard(target, events); // Martyr's Shield: its holder takes every hit on a hero who drops low
     this.tryTriage(target, events); // Aid Kit: patches a hero who drops low
+    this.tryRally(target, events); // Rally Flag: a hero dropping low shields the whole squad
     // Second Wind Flask: below its threshold ONE flask is used up and heals (once per floor per holder).
     const below = target.specials.secondWindBelow;
     if (target.specials.secondWind && !target.floor.flaskUsed && target.hp < (target.maxHp * below) / 100) {
@@ -2324,6 +2328,28 @@ export default class BattleState {
   }
 
   // Item reactions to a kill (killer = the unit that dealt the last blow, if known).
+  // Rally Flag: when a hero drops below `rallyFlagBelow`% (30) health, ONE holder whose flag is unused this floor
+  // gives every living hero a shield of `rallyFlag`% of their max health. Each hero can set off one rally per floor
+  // (2 flags = 2 heroes dropping low). The shields don't stack: a new rally replaces the old one (same key).
+  tryRally(target, events) {
+    if (target.floor.rallied) return;
+    const holder = this.heroes.find((h) => h.alive && h.specials.rallyFlag && !h.floor.rallyUsed && target.hp < (target.maxHp * (h.specials.rallyFlagBelow ?? 30)) / 100);
+    if (!holder) return;
+    holder.floor.rallyUsed = true;
+    target.floor.rallied = true;
+    events.push({ type: 'proc', unit: holder, label: 'Rally!', itemId: 'rally_flag' });
+    for (const h of this.heroes) if (h.alive) this.applyStatus(h, { status: 'shield', percentMaxHp: holder.specials.rallyFlag }, holder, 'rally', events);
+  }
+
+  // Frost Mantle: a MELEE hit on the holder has `frostMantle`% (30, +5 per copy) to chill the attacker.
+  frostMantle(attacker, target, events) {
+    const sp = target.specials;
+    if (!sp || !sp.frostMantle || target.minion || attacker.damageType !== 'melee' || !attacker.alive || attacker.hp <= 0) return;
+    if (this.rng() * 100 >= this.debuffChance(target, sp.frostMantle)) return;
+    events.push({ type: 'proc', unit: target, label: 'Frost!', itemId: 'frost_mantle', target: attacker });
+    this.applyStatus(attacker, sp.frostMantleSpec || { status: 'chill', durationMs: 3000 }, target, `mantle_${target.uid}`, events);
+  }
+
   // A friendly was hit by an enemy: Spirit Axe, Mimic Chest (10% a Mimic pops out of the holder).
   onHeroHit(target, events) {
     this.trySpiritAxe(target, events);
@@ -2349,6 +2375,27 @@ export default class BattleState {
       // Quick Fingers: every kill cuts the killer's skill cooldowns.
       const cut = killer.specials.killCooldownMs || 0;
       if (cut > 0) for (const slot of killer.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - cut);
+      // Emergency Buckler: every kill gives the killer a shield that fades away over `killShieldMs` (4s).
+      if (killer.specials.killShield) this.applyStatus(killer, { status: 'shield', percentMaxHp: killer.specials.killShield, durationMs: killer.specials.killShieldMs || 4000, fade: true }, killer, 'buckler', events);
+      // Reaper's Bell: the dead enemy explodes for `reaperBell`% of ITS max health as dark damage nearby. The blast's
+      // kills are the killer's too, so they explode again (a chain; exception to 'item damage triggers no item').
+      const bell = killer.specials.reaperBell || 0;
+      if (bell > 0 && !victim.def.object) {
+        const radius = killer.specials.reaperBellRadius || 100;
+        const near = this.enemies.filter((e) => e.alive && e !== victim && (!this.hasPositions(e) || !this.hasPositions(victim) || Math.hypot(e.x - victim.x, e.y - victim.y) <= radius));
+        events.push({ type: 'deathBurst', unit: victim, radius, color: '#a45be6', targets: near, explosive: true });
+        const mult = (victim.maxHp * bell) / 100 / Math.max(1, killer.stats.attack);
+        for (const e of near) if (e.alive) this.strike(killer, e, events, { multiplier: mult, damageType: 'dark', item: true, burst: true });
+      }
+    }
+    // Life Crystal: when ANY enemy dies, each living holder has `lifeCrystal`% to drop a green orb there that heals
+    // the heroes within `lifeCrystalRadius` px of it by `lifeCrystalHeal`% of their max health.
+    for (const holder of this.heroes) {
+      if (!holder.alive || !holder.specials.lifeCrystal || victim.def.object || this.rng() * 100 >= holder.specials.lifeCrystal) continue;
+      const radius = holder.specials.lifeCrystalRadius || 120;
+      const near = this.heroes.filter((h) => h.alive && (!this.hasPositions(h) || !this.hasPositions(victim) || Math.hypot(h.x - victim.x, h.y - victim.y) <= radius));
+      events.push({ type: 'lifeOrb', unit: holder, at: victim, radius, targets: near });
+      for (const h of near) this.healUnit(h, (h.maxHp * (holder.specials.lifeCrystalHeal || 5)) / 100 / this.regenAura().factor, events);
     }
     // Items of any living hero whose effect depends on the enemy's stacks when it dies:
     for (const hero of this.heroes) {
@@ -2469,6 +2516,7 @@ export default class BattleState {
         status.maxAmount = status.amount;
         status.sourceUid = source.uid;
         status.onBreak = spec.onBreak || null;
+        status.fade = !!spec.fade; // shrinks evenly to 0 over its duration (Emergency Buckler)
       }
       if (spec.status === 'invulnerable') status.healPercentOnEnd = spec.healPercentOnEnd || 0;
       if (spec.status === 'regenBoost') status.percentMaxHpPerSec = spec.percentMaxHpPerSec || 0;
@@ -2535,6 +2583,7 @@ export default class BattleState {
       if (!unit.alive) continue;
       for (const status of unit.statuses) status.remaining -= dt;
       for (const st of unit.statuses) if (st.regenPerSec && st.amount < st.maxAmount) st.amount = Math.min(st.maxAmount, st.amount + (st.regenPerSec * dt) / 1000); // Fire Heart's shield regenerates
+      for (const st of unit.statuses) if (st.fade && st.total > 0) st.amount = Math.min(st.amount, Math.ceil((st.maxAmount * Math.max(0, st.remaining)) / st.total)); // Emergency Buckler: the shield fades
       for (const st of unit.statuses) {
         if (st.type !== 'regenBoost' || unit.hp >= unit.maxHp) continue;
         const gain = Math.min(unit.maxHp - unit.hp, (unit.maxHp * st.percentMaxHpPerSec * this.regenAura().factor * dt) / 100000); // Ballad of Rest (Cleric aura makes it stronger)

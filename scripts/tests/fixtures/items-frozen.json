@@ -2122,5 +2122,104 @@
     ],
     "dropWeight": 90,
     "perStack": "-0.3s per kill"
+  },
+  "life_crystal": {
+    "name": "Life Crystal",
+    "rarity": "common",
+    "type": "special",
+    "scope": "self",
+    "description": "15% when any enemy dies: it drops a green orb that heals heroes near it 5% max health.",
+    "effects": [
+      {
+        "special": "lifeCrystal",
+        "percent": 15,
+        "perExtra": 5,
+        "radius": 120
+      },
+      {
+        "special": "lifeCrystalHeal",
+        "percent": 5,
+        "unique": true
+      }
+    ],
+    "dropWeight": 90,
+    "perStack": "+5% chance"
+  },
+  "emergency_buckler": {
+    "name": "Emergency Buckler",
+    "rarity": "common",
+    "type": "special",
+    "scope": "self",
+    "description": "Every kill: a shield of 6% max health that fades over 4s.",
+    "effects": [
+      {
+        "special": "killShield",
+        "percent": 6,
+        "perExtra": 3,
+        "durationMs": 4000
+      }
+    ],
+    "dropWeight": 90,
+    "perStack": "+3% shield"
+  },
+  "rally_flag": {
+    "name": "Rally Flag",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "Once per floor, when a hero drops below 30% health: every hero gets a 12% max health shield.",
+    "effects": [
+      {
+        "special": "rallyFlag",
+        "percent": 12,
+        "perExtra": 6,
+        "below": 30
+      }
+    ],
+    "dropWeight": 90,
+    "perStack": "+6% shield"
+  },
+  "frost_mantle": {
+    "name": "Frost Mantle",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "Hit by a melee attack: 30% chance to chill the attacker.",
+    "effects": [
+      {
+        "special": "frostMantle",
+        "percent": 30,
+        "perExtra": 5,
+        "spec": {
+          "status": "chill",
+          "durationMs": 3000
+        }
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "cc"
+    ],
+    "perStack": "+5% chance"
+  },
+  "reapers_bell": {
+    "name": "Reaper's Bell",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "Enemies this hero kills explode for 18% of their max health as dark damage nearby. Explosions can chain.",
+    "effects": [
+      {
+        "special": "reaperBell",
+        "percent": 18,
+        "perExtra": 8,
+        "radius": 100
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "dark"
+    ],
+    "perStack": "+8% of max health"
   }
 }

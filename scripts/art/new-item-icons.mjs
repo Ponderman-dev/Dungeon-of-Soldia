@@ -67,6 +67,36 @@ const CUSTOM = {
     p.rect(6, 13, 11, 14, 's'); p.line(7, 2, 7, 6, 's'); p.line(9, 2, 9, 6, 's');
     p.line(1, 4, 4, 4, 'y'); p.line(1, 8, 4, 8, 'Y'); p.line(2, 11, 4, 11, 'y');
   },
+  life_crystal(p) { // a green crystal with a small heart glow
+    for (let y = 2; y < 14; y++) { const w = y < 6 ? (y - 2) : Math.max(0, Math.round((14 - y) / 2)); p.line(8 - w, y, 8 + w, y, 'G'); }
+    p.line(8, 2, 8, 13, 'd'); p.line(5, 6, 11, 6, 'd');
+    p.px(6, 4, 'w'); p.px(7, 3, 'w'); p.px(6, 5, 'w');
+    p.px(10, 8, 'r'); p.px(9, 8, 'r'); p.px(9, 9, 'r'); p.px(11, 8, 'r'); p.px(10, 9, 'r'); p.px(10, 10, 'r');
+  },
+  emergency_buckler(p) { // a small round wooden buckler with a red cross
+    p.disc(8, 8, 6, 's'); p.disc(8, 8, 5, 'b'); p.ring(8, 8, 3.5, 'B');
+    p.rect(7, 4, 8, 12, 'r'); p.rect(4, 7, 12, 8, 'r'); p.px(4, 4, 'w'); p.px(5, 3, 'w');
+  },
+  rally_flag(p) { // a red banner on a pole with a gold tip
+    p.line(3, 1, 3, 15, 'b'); p.px(3, 0, 'y');
+    p.rect(4, 2, 12, 8, 'r'); p.rect(4, 6, 12, 8, 'R'); p.px(13, 3, 'r'); p.px(13, 5, 'r'); p.px(12, 9, 'R');
+    p.rect(7, 3, 9, 5, 'y');
+  },
+  frost_mantle(p) { // a pale blue hooded cloak with frost on its hem
+    p.disc(8, 4, 3, 'C'); p.disc(8, 4.5, 1.6, 'k');
+    p.rect(4, 7, 11, 8, 'c');
+    for (let y = 9; y < 15; y++) { const w = 4 + Math.round((y - 9) / 2.5); p.line(8 - w, y, 7 + w, y, 'c'); }
+    p.line(7, 7, 7, 14, 'C'); p.line(8, 7, 8, 14, 'C');
+    for (const x of [3, 5, 10, 12]) p.px(x, 14, 'w'); p.px(4, 13, 'w'); p.px(11, 13, 'w'); p.px(6, 2, 'w');
+  },
+  reapers_bell(p) { // a dark iron bell with a purple skull mark and clapper
+    p.rect(7, 1, 8, 2, 'S');
+    p.disc(7.5, 6, 3.6, 'g');
+    for (let y = 6; y < 13; y++) { const w = 4 + Math.round((y - 6) / 3); p.line(8 - w, y, 7 + w, y, 'g'); }
+    p.line(1, 12, 14, 12, 'S'); p.disc(7.5, 14, 1.2, 'p');
+    p.disc(7.5, 8, 2, 'P'); p.px(7, 8, 'k'); p.px(8, 8, 'k'); p.px(7, 10, 'P'); p.px(8, 10, 'P');
+    p.px(5, 4, 'w'); p.px(5, 5, 'w');
+  },
 };
 const MAP = { quiver_of_plenty: 'quiver', spotters_lens: 'lens', giantslayers_brand: 'giant', catalyst_vial: 'vial', scholars_bookmark: 'bookmark', mirror_buckler: 'buckler', soul_lantern: 'lantern', phoenix_feather: 'feather', iron_will_talisman: 'talisman' };
 const path = new URL('../../src/data/itemIcons.json', import.meta.url);

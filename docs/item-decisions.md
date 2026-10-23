@@ -357,3 +357,15 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Opening Horn (common): first 4s of every floor +30% attack speed, +12% per extra copy (`openingHorn`, `durationMs`).
 - Quick Fingers (common): every kill BY THE HOLDER: holder's skill cooldowns -0.5s, -0.3s per extra copy (`killCooldownMs`).
 - Icons drawn in `scripts/art/new-item-icons.mjs`. Tests: items-batch1.test.mjs. No balance run (user rule).
+
+## Session 27: new items batch 2 (5 more; 11 of 21 built)
+- Life Crystal (common): when ANY enemy dies, 15% chance (+5% per extra copy) for a green orb that heals every hero
+  within 120px of the dead enemy 5% max health (`lifeCrystal`, `lifeCrystalHeal`, radius in the item).
+- Emergency Buckler (common): every kill BY THE HOLDER: holder gets a 6% max-health shield (+3% per extra copy) that
+  fades evenly to 0 over 4s (`killShield`; shield `fade`). A new kill refills it (no stacking).
+- Rally Flag (rare): when a hero drops below 30%, one unused flag (once per floor per holder) gives every hero a 12%
+  max-health shield (+6% per extra copy). Each hero sets off one rally per floor; rally shields replace each other.
+- Frost Mantle (rare): a melee hit on the holder: 30% chance (+5% per extra copy) to chill the attacker (3s).
+- Reaper's Bell (epic): the holder's kills (attacks, skills, item hits) explode for 18% of the dead enemy's max health
+  (+8% per extra copy) as dark damage within 100px; blast kills explode again (chains forever).
+- Icons in `scripts/art/new-item-icons.mjs`. Tests: items-batch2.test.mjs. No balance run (user rule).

@@ -1,12 +1,14 @@
-# New items batch 1 (session 26, user's picks; NOT built yet)
+# New items batch 1 (session 26, user's picks; FINAL LIST, NOT built yet)
 
-21 new items (92 -> 113). Numbers are the user's or first proposals; settle them before building.
+21 new items (92 -> 113). Numbers OK'd by the user (session 26 end): discuss once more, then build.
 Rule (item-decisions.md): every extra copy adds a real +5-10% or more, no ceiling that wastes copies.
 
 ## Bomb family (existing Fire Bombs is the fire member)
 - Ice Bomb (rare), Electric Bomb (rare), Dark Bomb (rare), Poison Bombs (rare): like Fire Bombs (5% per attack,
-  250% damage bomb), each puts its own element's debuff on (chill / shock / dark debuff / poison). +40% damage per copy.
-- Bombardier's Barrel (legendary): when a bomb goes off, a chance to throw 2-4 bombs. +100% bomb damage, +100% per copy.
+  250% damage bomb of their element), +40% damage per copy, each puts its element's debuff on: Ice = chill,
+  Electric = 1s shock-stun, Dark = enemy deals -15% damage for 4s, Poison = 3 poison stacks.
+- Bombardier's Barrel (legendary): when a bomb goes off, 25% chance (+5% per copy) to throw 2-4 bombs.
+  +100% bomb damage, +100% per copy.
 
 ## Badges (each copy adds the same again)
 - Hunter's Badge (common): +20% damage to elites.
@@ -15,15 +17,16 @@ Rule (item-decisions.md): every extra copy adds a real +5-10% or more, no ceilin
 
 ## Legendaries
 - Frozen Demon Head: +50% ice damage. Stores the hero's ice damage; when full, huge Ice Spikes on a random enemy
-  (stronger ones first): 700% damage + 5s Freeze. The hero deals ICE ONLY while holding it (no other elements).
-- Euclid of Elements: attacks with 2+ elements have a chance to cast 3 more times with boosted damage
-  (a barrage of 4).
+  (stronger ones first): 700% damage + 5s Freeze. Fills at 8x the hero's attack in ice damage (about every 8-10s).
+  The hero deals ICE ONLY while holding it (no other elements).
+- Euclid of Elements: attacks with 2+ elements have a 15% chance (+5% per copy) to cast 3 more times, each extra
+  cast 60% damage (+20% per copy) (a barrage of 4).
 - Sharpest Blade: attacks with NO elemental damage (plain physical: melee/ranged) have a chance to strike at the
-  heart: 4.5x damage + 2.5s stun. (Chance and per-copy growth to set.)
+  heart: 6% chance (+3% per copy), 4.5x damage (+0.5x per copy) + 2.5s stun.
 
 ## User's commons
-- Life Crystal: chance on an enemy's death to drop a green orb that heals nearby heroes.
-- Emergency Buckler: killing an enemy gives the hero a small shield that slowly fades.
+- Life Crystal: 15% per kill (+5% per copy) an enemy drops a green orb: heals heroes nearby 5% max health.
+- Emergency Buckler: killing an enemy gives the hero a 6% max-health shield (+3% per copy) that fades over 4s.
 
 ## From Claude's list (session 26 proposals)
 - Opening Horn (common): first 4s of each floor +30% attack speed (+12% per copy).

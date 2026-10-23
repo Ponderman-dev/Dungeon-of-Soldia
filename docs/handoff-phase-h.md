@@ -1,64 +1,49 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 26): NEXT = FLOORS 50+ (user: 'floor 1-50 experiences are good now, focus on the rest')
-- BRANCH: `main` has EVERYTHING (session 25 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- FIRST (user's order): REVERT the heroes' +15% attack (session 25): set combat.json `heroAttack.percent` to 0 (keep the
-  rule; tests use `plainRules()`), then go through BOTH lists below with the user: first tell them what was already built for the earlier list
-  (7-10, they have not read it), then ASK which to do first (question tool). One step at a time.
-- THE USER'S LIST (session 25 end, with screenshots; nothing started):
-  1. Two full ROWS of enemies: back-row enemies overlap the front enemy's HP bar (rows too close: combat.json
-     `movement.layout.enemyRowGap` 70 / bar height; see `enemySpots()`, `syncBar()`).
-  2. Assault Breastplate's debuff icon still shows BEFORE the floor starts (aura 0.5s into the floor was the s24 fix;
-     the icon itself still pops early: check `drawChips()` / when the aura status is applied vs drawn).
-  3. High floors fill up with HERO MINIONS and enemies can't clear them: ideas from the user = enemies deal more damage
-     to minions the deeper you go, enemy AREA skills, more enemy skills that really hurt heroes, and enemy ATTACK SPEED
-     scaling with floors (now only health/attack scale: combat.json `floorScaling`). ASK before designing.
-  4. Floors 80-100+: enemy stat scaling needs to go up a bit (`floorScaling`; maybe a second band from floor 80).
-  5. Proc icon pops (item icon over the hero, e.g. Moonlight Twinblade) form a LONG ROW when many fire at once (pic: 5
-     moon icons side by side over the Archer): cap / stack them (one icon + count, or a short queue). `itemFx.js` /
-     BattleScene icon pop (effects.md).
-  6. ITEM VARIETY (from earlier): rolls ARE random (3 sim runs: 61-67 different items of 92 per 60 floors, a different
-     'favourite' each run); it feels samey because half the cards are commons (24 items) and `needs` items are x0.25.
-     I listed 13 ideas (anti-repeat, seen-fade, owned fade, fewer commons deep, pity timer, reroll, 4 cards, skip,
-     build-aware card, themed screens, more commons...); my pick: anti-repeat + fewer commons deeper in. User to choose.
-- THE USER'S EARLIER LIST (session 25, with screenshots). Built in session 25 (tests pass, committed), but the user has
-  NOT READ the replies or SEEN it in the game: tell them what was done (simply), show it IN THE GAME when they ask, and
-  ask whether it is OK before moving on:
-  7. TEXT OVER THE EDGES: the 'Which skill?' box note ('Full: replaces one' ran out of the box) now uses `fitText()`
-     (RewardScene); the big banner ('Blessed!\nRegen for the next 3 fights' ran off the screen) now wraps (wordWrap
-     GAME_WIDTH - 32 in BattleScene). Check other long texts too (the user said 'such as these').
-  8. SOUNDS GO MISSING AT HIGH FLOORS (floor clear and others): busy fights filled all 8 voices (`sounds.json`
-     maxVoices). Now only BUSY cues (with their own minGapMs: hits, procs, steps) share the 8; one-off cues (floor clear,
-     level up, rewards, boss roar) and `always: true` cues (every skill_* sound) always play (`sfx.js`, sound.md).
-  9. ITEMS FEEL THE SAME EVERY RUN: = item 6 above (no fix built yet, only the measuring + 13 ideas).
-  10. REMOVE THE SKILL BOOK LIMITS (was 3 stat pages + 2 modifiers per skill): combat.json `books` maxStatPages /
-     modifierSlots = null (no limit); the same modifier twice on one skill is still refused (ask the user if that is
-     OK); the page marks on the skill square wrap into rows (stat dots rows of 5, modifier diamonds rows of 4,
-     `drawPageMarks()`); 'Which skill?' shows '2 stats / 1 mods' without a max. Tests: skill-books.test.mjs.
-- DONE session 25 (in the game + preview): bosses.md has the details.
-  - Grukk (20): Goblin King look (first-draft art, `scripts/art/grukk/`), separate swinging cleaver; War Drum calls
-    1 Goblin + 1 Goblin Archer (ranged, poison every hit) at 50% health; Quake Jump (under 50%: 2x hit + 2s stun on all).
-    bosscheck 81% win (was 93%).
-  - Brood Mother (40): 15% bigger, attack 8, eggs at her SIDES (45 health, hatch 5s), spiderlings weak poison every hit,
-    Sticky Webs (2 heroes `tangled`: -70% attack speed 5s). User: 'challenging enough'. Last bosscheck 39% (before the
-    egg 45 health / 5s change). Brood Mother demo page (floor 40 on repeat): https://claude.ai/artifact/3ZPdABV5GtWPAFnMU5bAkz
-  - Boss floor reward: always 2 epic + 1 legendary (rewards.json `bossRarities`), then the golden book.
-  - KIV (user): OUTLINE style (bosses/new enemies outlined, first-batch enemies + most heroes not; decide later, art.md).
-- No new curve run this session (hero buff, boss rewards and bosses changed): run `curve.mjs 3 smart` only if the user asks.
-- itch.io: the zip given to the user predates the hub, charms, page-2 sounds and sessions 23-25: `npm run build:itch`
+## START HERE (session 27): NEXT = DISCUSS THE NEW ITEMS (21), then build them
+- BRANCH: `main` has EVERYTHING (session 26 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- FIRST: go through `docs/proposals/new-items-batch1.md` with the user (FINAL list, numbers OK'd, 'for discussion'):
+  21 items (92 -> 113): bomb family (Ice/Electric/Dark/Poison Bombs + Bombardier's Barrel; existing Fire Bombs is the
+  fire member), badges (Hunter's vs elites, Elite's vs bosses, Better Odds per enemy), legendaries (Frozen Demon Head,
+  Euclid of Elements, Sharpest Blade), commons (Life Crystal, Emergency Buckler, Opening Horn, Swarm Swatter, Sweeping
+  Strap, Quick Fingers), Frost Mantle, Kinetic Coil, Rally Flag, Reaper's Bell. Ask before building; then build in small
+  batches (items.json + item-decisions.md + items.md; new effect shapes need fixture copies, see CLAUDE.md Tests).
+  Open design points to raise: Frozen Demon Head 'ice only' (what happens to fire/electric skills and charms?),
+  Euclid needs 2+ elements on ONE attack (which heroes/items make that?), Better Odds = alive enemies or floor start.
+- WHY NEW ITEMS (session 26 finding): in a 60-floor run each epic shows ~0.7x and each legendary ~0.2x (+boss cards):
+  most never appear. User chose more items first; my fix ideas kept for later: UNSEEN BONUS (items not seen this run
+  get a higher chance) and FEWER COMMONS from floor 41 (user OK with repeats). Adding epics/legendaries spreads them thinner.
+- STILL OPEN from the session 25 list: 3. HERO MINIONS PILE UP on high floors (ideas: enemies deal more to minions deeper,
+  enemy area skills, harder enemy skills; floor 80+ attack speed now helps a little). Ask before designing.
+  Also unanswered: skill books: the same modifier twice on one skill is still refused: OK?
+- DONE session 26 (all tested, committed, merged to main):
+  - Heroes' +15% attack reverted (combat.json `heroAttack.percent` 0; rule kept, tested with its own percent).
+  - SMART ENEMY ROW GAP (formation.js): the gap behind a row = its tallest enemy as drawn + `rowRoom` 45 (`eliteRowRoom`
+    60), min 70, max 160; a tall formation shifts down instead of passing the wall line (y 300). enemies.md.
+  - Assault Breastplate icon no longer pops during the walk-in (`spawnEnemies()` resets `floorMs`). statuses.md.
+  - ITEM ICON POPS = 'deck' (user pick): icons dealt onto one pile 0.1s apart like cards, each fades on its own
+    (itemFx.json `iconPop.stack`; count/bounce/queue/row also exist). effects.md.
+  - FLOORS 80+: enemy health/attack x1.015 per floor past 80, compounding (snowball option 3: x1.35 at 100, x2.8 at 150)
+    + attack speed +1%/floor, max +40% (option 2). Together ~x3.9 damage per second at 150. combat.json `floorScaling`,
+    test floor-snowball.test.mjs, balance-tools.md. NO curve run yet (user did not ask).
+  - `needs` drop rule OFF (rewards.json `needsMissingFactor` 1): every item the same chance (user, after an example).
+- Not shown in the preview yet: session 26 visuals (row gap, deck pops). `npm run build:page` + publish when the user asks.
+- Look and Pick page (https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN, `docs/proposals/skill-fx` reuse) now holds the
+  icon pop clips (recorded with Playwright recordVideo + ffmpeg crop, a nice way to show MOTION; user liked clips).
+- itch.io: the zip given to the user predates the hub, charms, page-2 sounds and sessions 23-26: `npm run build:itch`
   again before an upload, add them to the devlog draft `docs/devlog/2026-10-21-title-and-camp.md` (version 0.1.0: ask
   whether testers played the old build; then bump to 0.2.0).
 - Test helper (scratchpad, throwaway): `git worktree add <scratch>/wt HEAD`, symlink node_modules, run
-  `<scratch>/wt/node_modules/.bin/vite <scratch>/wt --port 5177` FROM the scratchpad (demo pages: `VITE_DEMO=brood`);
-  Playwright (/opt/node22/lib/node_modules/playwright, executablePath /opt/pw-browsers/chromium). Dev build exposes
-  `window.__game`: wait for 'Title', stop scenes, `scene.start('Battle')` (registry `squadIds`; `?floor=N`). After a
-  screen slide, wait ~2.5s before tapping. Stop vite by PID (`ps aux | grep "[n]ode_modules/.bin/vite"`): a
-  `pkill -f` with the pattern in the same shell line can kill the shell itself.
+  `<scratch>/wt/node_modules/.bin/vite <scratch>/wt --port 5177` FROM the scratchpad. Dev build exposes `window.__game`:
+  wait for 'Title', stop scenes, `scene.start('Battle')` (registry `squadIds`; `?floor=N`, `?room=treasure` on an even
+  floor = a fight). Seed Math.random in addInitScript for the same line-up. Remove the worktree at the end.
 - PUBLISH: the first publish per session may be refused ('not viewed'): Read 1-8 lines of the saved live copy, then
-  publish again (if refused again as 'identical', publish once more: it goes through).
+  publish again. Publishing with `edits` sends only the page: pass `files` again for changed videos/images.
 - Fresh clone: `npm install` first (node_modules is not there).
 
 ## How we work with this user
+- NUMBERS: the user wants to SEE stats (tables in chat, floors side by side, real enemies like Goblin/Orc Brute) before
+  picking; 'stop asking questions' = show the numbers in chat, then wait (no question tool, no review page unless asked).
 - NO BALANCE SIMULATIONS unless the user asks (user, session 24: 'no need run simulation'): curve/review/itemruns cost time.
 - 'Don't commit / don't push a preview' (user, session 25): when they say it, keep changes uncommitted and say so (the
   stop hook will nag; explain, don't commit). Preview only when they ask.

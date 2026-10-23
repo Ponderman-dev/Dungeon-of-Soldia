@@ -414,6 +414,10 @@
  ],
  "emergency_buckler": [
   [
+   "hit",
+   "puff"
+  ],
+  [
    "status",
    "shield"
   ]
@@ -425,6 +429,10 @@
   ]
  ],
  "frost_mantle": [
+  [
+   "hit",
+   "melee"
+  ],
   [
    "status",
    "chill"
@@ -438,6 +446,132 @@
   [
    "hit",
    "melee"
+  ]
+ ],
+ "ice_bomb": [
+  [
+   "item",
+   "iceBomb"
+  ],
+  [
+   "status",
+   "chill"
+  ]
+ ],
+ "electric_bomb": [
+  [
+   "item",
+   "electricBomb"
+  ],
+  [
+   "status",
+   "stun"
+  ]
+ ],
+ "dark_bomb": [
+  [
+   "item",
+   "darkBomb"
+  ],
+  [
+   "status",
+   "weaken"
+  ]
+ ],
+ "poison_bombs": [
+  [
+   "item",
+   "poisonBomb"
+  ],
+  [
+   "status",
+   "poison"
+  ]
+ ],
+ "bombardiers_barrel": [
+  [
+   "item",
+   "bomb"
+  ],
+  [
+   "item",
+   "iceBomb"
+  ],
+  [
+   "item",
+   "electricBomb"
+  ],
+  [
+   "item",
+   "darkBomb"
+  ],
+  [
+   "item",
+   "poisonBomb"
+  ]
+ ],
+ "life_crystal": [
+  [
+   "hit",
+   "puff"
+  ],
+  [
+   "hit",
+   "heal"
+  ]
+ ],
+ "reapers_bell": [
+  [
+   "hit",
+   "puff"
+  ],
+  [
+   "hit",
+   "dark"
+  ]
+ ],
+ "frozen_demon_head": [
+  [
+   "hit",
+   "ice"
+  ],
+  [
+   "status",
+   "freeze"
+  ]
+ ],
+ "euclid_of_elements": [
+  [
+   "hit",
+   "fire"
+  ],
+  [
+   "hit",
+   "ice"
+  ],
+  [
+   "hit",
+   "electric"
+  ]
+ ],
+ "sharpest_blade": [
+  [
+   "hit",
+   "crit"
+  ],
+  [
+   "status",
+   "stun"
+  ]
+ ],
+ "kinetic_coil": [
+  [
+   "hit",
+   "dodge"
+  ],
+  [
+   "hit",
+   "electric"
   ]
  ]
 }

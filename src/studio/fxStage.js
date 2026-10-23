@@ -28,6 +28,7 @@ export function catalog() {
   for (const k of SHOT_FX) list.push({ group: 'shot', name: k, label: `${nice(k)} (skill)`, ms: SHOT_MS[k] });
   for (const k of itemFx.ITEM_FX) list.push({ group: 'item', name: k, label: nice(k), ms: itemFx.ITEM_MS[k], on: HERO_ITEM_FX.includes(k) ? 'hero' : 'enemy' });
   list.push({ group: 'item', name: 'tornado', label: 'Excalibur tornado', ms: 2000 });
+  for (const k of Object.keys(itemFx.BOMB_KINDS)) if (k !== 'bomb') list.push({ group: 'item', name: k, label: nice(k), ms: itemFx.ITEM_MS.bomb }); // the other bombs
   for (const k of CAST_FX) list.push({ group: 'skill', name: k, label: nice(k), ms: CAST_MS[k] });
   return list;
 }
@@ -87,7 +88,8 @@ export class FxStage {
     if (g === 'item') {
       const a = { x: H0.x + H0.hw + 2, y: H0.mid }, b = at(E0);
       const map = {
-        bomb: () => itemFx.bombFx(q, a, b, t), lightning: () => [...itemFx.lightningFx(q, a, b, t, 3), ...itemFx.lightningFx(q, b, at(E1), t, 9)], greenfire: () => itemFx.greenfireFx(q, a, b),
+        bomb: () => itemFx.bombFx(q, a, b, t), iceBomb: () => itemFx.bombFx(q, a, b, t, 0, 'ice'), electricBomb: () => itemFx.bombFx(q, a, b, t, 0, 'electric'),
+        darkBomb: () => itemFx.bombFx(q, a, b, t, 0, 'dark'), poisonBomb: () => itemFx.bombFx(q, a, b, t, 0, 'poison'), lightning: () => [...itemFx.lightningFx(q, a, b, t, 3), ...itemFx.lightningFx(q, b, at(E1), t, 9)], greenfire: () => itemFx.greenfireFx(q, a, b),
         battleCry: () => [...itemFx.battleCryFx(q, H0), ...itemFx.speedLinesFx(q, H0, t)], shatter: () => itemFx.shatterFx(q, E0), knifeBurst: () => itemFx.knifeBurstFx(q, E0.x, E0.mid),
         plague: () => itemFx.plagueFx(q, b, at(E1)), thunderbolt: () => itemFx.thunderboltFx(q, E0), aegisBlast: () => itemFx.aegisBlastFx(q, H0), thorns: () => itemFx.thornsFx(q, H0),
         lifesteal: () => itemFx.lifestealFx(q, b, at(H0)), suckerPunch: () => itemFx.suckerPunchFx(q, E0, -1), executioner: () => itemFx.executionerFx(q, E0), dice: () => itemFx.diceFx(q, E0, t),

@@ -1989,13 +1989,16 @@ export default class BattleState {
       if (proc.doubleHit && foe) { const dh = this.strike(hero, foe, events); if (!dh.dodged) this.addCombo(hero, foe, 1, events); }
       if (debuffs && enemy && ctx.hit !== false && !String(proc.itemId).startsWith('passive_')) this.addCombo(hero, enemy, 1, events); // Rogue: a debuff item proc = a combo point
       if (proc.strike && foe && !(ctx.folded && proc.mergeCopies)) { // folded: already inside the hit (riders)
-        const hit = this.strike(hero, foe, events, {
-          multiplier: proc.strike.damageMultiplier,
-          damageType: proc.strike.damageType,
-          projectile: proc.strike.projectile,
-          item: true, // damage made BY an item never triggers lifesteal, thorns or other item effects
-        });
-        landed = foe === enemy && !hit.dodged;
+        if (proc.bomb) this.throwBomb(hero, foe, proc, events, true);
+        else {
+          const hit = this.strike(hero, foe, events, {
+            multiplier: proc.strike.damageMultiplier,
+            damageType: proc.strike.damageType,
+            projectile: proc.strike.projectile,
+            item: true, // damage made BY an item never triggers lifesteal, thorns or other item effects
+          });
+          landed = foe === enemy && !hit.dodged;
+        }
       }
       const extra = (proc.copies || 1) - 1;
       // Static Crystal: +`jumpsPerExtra` jumps per extra crystal.
@@ -2013,6 +2016,26 @@ export default class BattleState {
         if (spec.durationPerCopyMs) real = { ...real, durationMs: spec.durationMs + spec.durationPerCopyMs * ((proc.copies || 1) - 1) }; // Jolly Banner: longer with every extra copy
         for (const target of receivers(spec.to)) this.applyStatus(target, real, hero, `proc_${proc.itemId}`, events);
       }
+    }
+  }
+
+  // A bomb (Fire / Ice / Electric / Dark / Poison Bombs: procs with `bomb: true`) hits `foe` for its strike, boosted
+  // by Bombardier's Barrel (`bombDamage`%), and puts its `strike.apply` statuses on the enemy it hit.
+  // `barrel`: this bomb may set off the Barrel: `bombBarrel`% chance to throw `bombBarrelCount` [2, 4] more bombs at
+  // random enemies, each a random pick from the bomb items the holder has (those never set off the Barrel again).
+  throwBomb(hero, foe, proc, events, barrel = false) {
+    const sp = hero.specials || {};
+    const hit = this.strike(hero, foe, events, { multiplier: proc.strike.damageMultiplier * (1 + (sp.bombDamage || 0) / 100), damageType: proc.strike.damageType, projectile: proc.strike.projectile, item: true });
+    if (!hit.dodged && foe.alive) for (const spec of proc.strike.apply || []) this.applyStatus(foe, spec, hero, `proc_${proc.itemId}`, events);
+    if (!barrel || !sp.bombBarrel || this.rng() * 100 >= sp.bombBarrel) return;
+    const bombs = [...new Map(hero.procs.filter((p) => p.bomb).map((p) => [p.itemId, p])).values()];
+    const [lo, hi] = sp.bombBarrelCount || [2, 4];
+    const count = lo + Math.floor(this.rng() * (hi - lo + 1));
+    events.push({ type: 'proc', unit: hero, label: 'Bombs away!', itemId: 'bombardiers_barrel' });
+    for (let i = 0; i < count; i++) {
+      const alive = this.targetableEnemies();
+      if (!alive.length) break;
+      this.throwBomb(hero, alive[Math.floor(this.rng() * alive.length)], bombs[Math.floor(this.rng() * bombs.length)], events);
     }
   }
 

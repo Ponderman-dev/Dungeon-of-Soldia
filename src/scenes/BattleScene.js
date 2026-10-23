@@ -2067,11 +2067,18 @@ export default class BattleScene extends Phaser.Scene {
     }
     // Pixel looks from systems/itemFx.js: Fire Bombs' bomb, lightning bolts (Static Crystal, Chain Lightning),
     // the Grimoire's green ghost fire. They aim at where the target is NOW.
-    if (kind === 'bomb' || kind === 'lightning' || kind === 'greenfire' || kind === 'moon' || kind === 'spiritfire') {
+    if (itemFx.BOMB_KINDS[kind]) { // Fire / Ice / Electric / Dark / Poison bombs: the same bomb in their element's colours
       const a = this.fxPoint(from);
       let b = this.fxPoint(to);
       const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
-      const fn = { bomb: itemFx.bombFx, lightning: itemFx.lightningFx, greenfire: itemFx.greenfireFx, moon: itemFx.moonFx, spiritfire: itemFx.spiritFireFx }[kind];
+      this.addFx(itemFx.ITEM_MS.bomb, (q, now) => { if (to.ch.active) b = this.fxPoint(to); return itemFx.bombFx(q, a, b, now, seed, itemFx.BOMB_KINDS[kind]); }, ['item', 'bomb']);
+      return;
+    }
+    if (kind === 'lightning' || kind === 'greenfire' || kind === 'moon' || kind === 'spiritfire') {
+      const a = this.fxPoint(from);
+      let b = this.fxPoint(to);
+      const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
+      const fn = { lightning: itemFx.lightningFx, greenfire: itemFx.greenfireFx, moon: itemFx.moonFx, spiritfire: itemFx.spiritFireFx }[kind];
       this.addFx(itemFx.ITEM_MS[kind], (q, now) => { if (to.ch.active) b = this.fxPoint(to); return fn(q, a, b, now, seed); }, ['item', kind]);
       return;
     }

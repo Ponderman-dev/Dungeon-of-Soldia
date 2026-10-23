@@ -58,6 +58,7 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
       if (e.durationMs) specials[e.special + 'Ms'] = e.durationMs; // e.g. openingHornMs
       if (e.radius !== undefined) specials[e.special + 'Radius'] = e.radius; // e.g. reaperBellRadius (px)
       if (e.spec) specials[e.special + 'Spec'] = e.spec; // a status spec, e.g. frostMantleSpec
+      if (e.count) specials[e.special + 'Count'] = e.count; // e.g. bombBarrelCount [2, 4]
       if (e.debuffs) specials[e.special + 'List'] = e.debuffs; // e.g. critDebuffList
     } else if (e.damageBonus) {
       damageBonus[e.damageBonus] = (damageBonus[e.damageBonus] || 0) + e.percent * factor;

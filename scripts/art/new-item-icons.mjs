@@ -97,7 +97,24 @@ const CUSTOM = {
     p.disc(7.5, 8, 2, 'P'); p.px(7, 8, 'k'); p.px(8, 8, 'k'); p.px(7, 10, 'P'); p.px(8, 10, 'P');
     p.px(5, 4, 'w'); p.px(5, 5, 'w');
   },
+  ice_bomb(p) { bombIcon(p, 'c', 'w', 'C'); }, // a bomb wrapped in ice, a frosty fuse
+  electric_bomb(p) { bombIcon(p, 'y', 'Y', 'y'); p.line(1, 9, 3, 11, 'Y'); p.line(3, 11, 2, 13, 'Y'); },
+  dark_bomb(p) { bombIcon(p, 'p', 'P', 'p'); },
+  poison_bombs(p) { bombIcon(p, 'G', 'w', 'd'); p.disc(13, 13, 1.6, 'G'); },
+  bombardiers_barrel(p) { // a wooden barrel with iron bands and two bombs on top, fuses lit
+    p.rect(3, 7, 12, 15, 'b'); p.line(3, 7, 3, 15, 'B'); p.line(12, 7, 12, 15, 'B');
+    p.line(3, 9, 12, 9, 'S'); p.line(3, 13, 12, 13, 'S'); p.line(6, 7, 6, 15, 'B');
+    p.disc(5.5, 5, 2.4, 'S'); p.disc(10.5, 5, 2.4, 'S'); p.disc(5.5, 5, 1.5, 'k'); p.disc(10.5, 5, 1.5, 'k'); p.px(5, 4, 'w'); p.px(10, 4, 'w');
+    p.line(6, 2, 7, 1, 'n'); p.px(8, 0, 'o'); p.line(10, 2, 11, 1, 'n'); p.px(12, 0, 'y');
+  },
 };
+// Bombs of the bomb family: a dark bomb with a highlight, a fuse and a spark in the element's colours.
+function bombIcon(p, glow, spark, band) {
+  p.disc(7, 9, 5, 'S'); p.disc(7, 9, 4, 'k'); p.px(5, 7, 'g'); p.px(5, 8, 'g'); p.px(6, 6, 'w');
+  p.ring(7, 9, 5, band); p.rect(6, 3, 8, 4, 'g');
+  p.line(8, 3, 10, 1, 'n'); p.px(11, 0, spark); p.px(12, 1, glow); p.px(10, 0, glow); p.px(12, 0, spark);
+  p.px(9, 11, glow); p.px(8, 12, glow); p.px(10, 10, glow);
+}
 const MAP = { quiver_of_plenty: 'quiver', spotters_lens: 'lens', giantslayers_brand: 'giant', catalyst_vial: 'vial', scholars_bookmark: 'bookmark', mirror_buckler: 'buckler', soul_lantern: 'lantern', phoenix_feather: 'feather', iron_will_talisman: 'talisman' };
 const path = new URL('../../src/data/itemIcons.json', import.meta.url);
 const icons = JSON.parse(fs.readFileSync(path, 'utf8'));

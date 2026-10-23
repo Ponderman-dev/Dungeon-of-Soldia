@@ -301,11 +301,13 @@
           "damageMultiplier": 3,
           "damageType": "fire",
           "projectile": "bomb"
-        }
+        },
+        "bomb": true
       }
     ],
     "provides": [
-      "fire"
+      "fire",
+      "bomb"
     ],
     "perStack": "+8% chance"
   },
@@ -2221,5 +2223,162 @@
       "dark"
     ],
     "perStack": "+8% of max health"
+  },
+  "ice_bomb": {
+    "name": "Ice Bomb",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "8% on attack: throw a bomb for 300% ice damage that chills.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Bomb!",
+        "bomb": true,
+        "strike": {
+          "damageMultiplier": 3,
+          "damageType": "ice",
+          "projectile": "iceBomb",
+          "apply": [
+            {
+              "status": "chill",
+              "durationMs": 3000
+            }
+          ]
+        }
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "ice",
+      "bomb"
+    ],
+    "perStack": "+8% chance"
+  },
+  "electric_bomb": {
+    "name": "Electric Bomb",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "8% on attack: throw a bomb for 300% electric damage that stuns for 1s.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Bomb!",
+        "bomb": true,
+        "strike": {
+          "damageMultiplier": 3,
+          "damageType": "electric",
+          "projectile": "electricBomb",
+          "apply": [
+            {
+              "status": "stun",
+              "durationMs": 1000
+            }
+          ]
+        }
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "electric",
+      "bomb"
+    ],
+    "perStack": "+8% chance"
+  },
+  "dark_bomb": {
+    "name": "Dark Bomb",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "8% on attack: throw a bomb for 300% dark damage; the enemy deals 15% less damage for 4s.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Bomb!",
+        "bomb": true,
+        "strike": {
+          "damageMultiplier": 3,
+          "damageType": "dark",
+          "projectile": "darkBomb",
+          "apply": [
+            {
+              "status": "weaken",
+              "attackPercent": -15,
+              "durationMs": 4000
+            }
+          ]
+        }
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "dark",
+      "bomb"
+    ],
+    "perStack": "+8% chance"
+  },
+  "poison_bombs": {
+    "name": "Poison Bombs",
+    "rarity": "rare",
+    "type": "onhit",
+    "scope": "self",
+    "description": "8% on attack: throw a poison bomb for 300% dark damage that adds 3 poison stacks.",
+    "effects": [
+      {
+        "proc": "onAttack",
+        "chance": 8,
+        "label": "Bomb!",
+        "bomb": true,
+        "strike": {
+          "damageMultiplier": 3,
+          "damageType": "dark",
+          "projectile": "poisonBomb",
+          "apply": [
+            {
+              "status": "poison",
+              "stacks": 3,
+              "durationMs": 4000,
+              "damageMultiplier": 0.3,
+              "damageType": "dark"
+            }
+          ]
+        }
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "poison",
+      "bomb"
+    ],
+    "perStack": "+8% chance"
+  },
+  "bombardiers_barrel": {
+    "name": "Bombardier's Barrel",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "Bombs deal +100% damage. When a bomb goes off: 25% chance to throw 2-4 more bombs.",
+    "effects": [
+      {
+        "special": "bombDamage",
+        "percent": 100
+      },
+      {
+        "special": "bombBarrel",
+        "percent": 25,
+        "perExtra": 5,
+        "count": [
+          2,
+          4
+        ]
+      }
+    ],
+    "dropWeight": 90,
+    "needs": "bomb",
+    "perStack": "+100% bomb damage, +5% chance"
   }
 }

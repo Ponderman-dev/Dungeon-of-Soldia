@@ -369,3 +369,12 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Reaper's Bell (epic): the holder's kills (attacks, skills, item hits) explode for 18% of the dead enemy's max health
   (+8% per extra copy) as dark damage within 100px; blast kills explode again (chains forever).
 - Icons in `scripts/art/new-item-icons.mjs`. Tests: items-batch2.test.mjs. No balance run (user rule).
+
+## Session 27: new items batch 3, the bomb family (5 more; 16 of 21 built)
+- Ice Bomb / Electric Bomb / Dark Bomb / Poison Bombs (rare): exactly like Fire Bombs (8% chance per attack per copy,
+  300% damage of their element) + a debuff on the enemy hit: Chill (3s) / Stun 1s / Weaken -15% damage for 4s /
+  3 poison stacks (4s, 0.3x, dark). Poison Bombs deal dark damage.
+- Bombardier's Barrel (legendary): +100% bomb damage per barrel; when a bomb goes off 25% chance (+5% per extra
+  barrel) to throw 2-4 more bombs at random enemies, each a random pick of the holder's bomb items (extra bombs
+  never set the Barrel off again). Fire Bombs counts (proc `bomb: true`).
+- Tests: items-batch3.test.mjs. No balance run (user rule).

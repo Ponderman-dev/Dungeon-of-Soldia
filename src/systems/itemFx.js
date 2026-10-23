@@ -42,14 +42,18 @@ function spikes(g, u, p, size = 1) {
 }
 
 // ---- recipes: (q, ...) -> draws ----
-// Fire Bombs: a black bomb with a sputtering fuse lobs over in an arc (first 60%), then explodes.
-export function bombFx(q, a, b, t) {
+// Fire Bombs (and the other bombs): a black bomb with a sputtering fuse lobs over in an arc (first 60%), then
+// explodes in its element's colours.
+const BOMB_COLORS = { fire: [C.fire, C.fire2, C.blood], ice: [C.ice, C.ice2, C.white], electric: [C.elec, C.white, C.gold], dark: [C.dark, 0xd6a8ff, C.dark2], poison: [C.poison, GREEN2, GREEN] };
+export const BOMB_KINDS = { bomb: 'fire', iceBomb: 'ice', electricBomb: 'electric', darkBomb: 'dark', poisonBomb: 'poison' }; // projectile kind -> element
+export function bombFx(q, a, b, t, seed = 0, element = 'fire') {
+  const [c1, c2, c3] = BOMB_COLORS[element] || BOMB_COLORS.fire;
   const g = pen();
   const p = ph(q, 0, 0.6);
   if (p > 0 && p < 1) { const [x, y] = fly(a, b, p, 18); g.disc(x, y, 2, BOMB); g.px(x + 1, y - 3, Math.floor(t / 60) % 2 ? C.fire2 : C.fire); }
   const e = ph(q, 0.6, 1);
-  if (e > 0 && e < 1) { g.disc(b.x, b.y, 3 + e * 6, C.fire2, (1 - e) * 0.9); g.ring(b.x, b.y, 4 + e * 10, C.fire, 1 - e); }
-  burst(g, b.x, b.y, 14, [C.fire, C.fire2, C.blood, BOMB], e, 14, 2, 1);
+  if (e > 0 && e < 1) { g.disc(b.x, b.y, 3 + e * 6, c2, (1 - e) * 0.9); g.ring(b.x, b.y, 4 + e * 10, c1, 1 - e); }
+  burst(g, b.x, b.y, 14, [c1, c2, c3, BOMB], e, 14, 2, 1);
   return g.out;
 }
 // Static Crystal / chain lightning: a flickering bolt from a to b, sparks on b.

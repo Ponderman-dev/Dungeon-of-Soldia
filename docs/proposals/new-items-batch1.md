@@ -1,5 +1,5 @@
 # New items batch 1 (FINAL, decided with the user in session 27)
-BUILT: 6, 7, 8, 9, 15, 17 (build batch 1); 13, 14, 18, 20, 21 (batch 2). Not built yet: the rest.
+BUILT: 6, 7, 8, 9, 15, 17 (build batch 1); 13, 14, 18, 20, 21 (batch 2); 1-5 (batch 3, bombs). Not built yet: 10, 11, 12, 16, 19.
 
 21 new items (92 -> 113). Rule (item-decisions.md): every extra copy adds a real +5-10% or more.
 "Holder" = the hero holding the item.

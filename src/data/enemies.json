@@ -1187,13 +1187,13 @@
       }
     },
     "stats": {
-      "health": 75,
+      "health": 60,
       "attack": 0,
       "defense": 0,
       "attackEfficiency": 100
     },
     "hatch": {
-      "afterMs": 3000,
+      "afterMs": 4000,
       "into": "spiderling",
       "count": 3
     }
@@ -1681,7 +1681,7 @@
           "id": "egg_sac",
           "count": 2,
           "max": 4,
-          "near": true
+          "beside": 100
         }
       },
       {

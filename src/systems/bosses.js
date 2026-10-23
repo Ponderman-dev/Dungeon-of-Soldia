@@ -7,7 +7,7 @@
 //     { id, name, everyMs, firstMs, castMs, hpBelow (once, at that health %), interruptible (default true),
 //       target: 'frontHero' | 'backHero' | 'randomHero' | 'randomHeroes' (+ count) | 'lowestHero' | 'allHeroes' | 'self' | 'allies' | 'meleeNear',
 //       radius (meleeNear), damageMultiplier, damageType, apply: [status specs], healAllies (% of their max health),
-//       summon: { id, count, max, near } (or a list of them), swap: 'partnerId', daggers: { count, damageMultiplier, apply },
+//       summon: { id, count, max, near, beside (px to the sides) } (or a list of them), swap: 'partnerId', daggers: { count, damageMultiplier, apply },
 //       channel: { intervalMs, ticks, target, damageMultiplier, damageType, apply, drain: { percentMaxHp } },
 //       clones: { statPercent }, shatterClones: { multiplier } }
 //     slam: { liftPx, dropMs, shakeMs, shakeIntensity } = looks only: it rises during the wind-up and crashes down (Grukk's Quake Jump)
@@ -55,14 +55,20 @@ export const bossMethods = {
   },
 
   // A new enemy joins the fight next to `near` (summons, hatchlings, clones). `def` may be a custom def (clones).
-  spawnEnemyUnit(defOrId, near, events, spread = 60) {
+  // `beside` = { px, side: -1 | 1 }: at that distance to one side of `near`, level with it (Brood Mother's eggs: heroes
+  // must walk over to them); a side without room flips to the other.
+  spawnEnemyUnit(defOrId, near, events, spread = 60, beside = null) {
     const def = typeof defOrId === 'string' ? this.enemyDefs[defOrId] : defOrId;
     if (!def) return null;
     const u = this.makeUnit(def, 'enemy', this.floorNo || 1, 1);
     if (near && this.hasPositions(near)) {
       const L = this.rules.movement.layout;
-      const x = Math.min(L.width - L.marginX, Math.max(L.marginX, near.x + (this.rng() - 0.5) * spread * 2));
-      this.place(u, x, near.y + (this.rng() - 0.5) * 30);
+      const lo = L.marginX, hi = L.width - L.marginX;
+      if (beside) {
+        let x = near.x + beside.side * (beside.px + (this.rng() - 0.5) * 20);
+        if (x < lo || x > hi) x = near.x - beside.side * beside.px;
+        this.place(u, Math.min(hi, Math.max(lo, x)), near.y - 10 + (this.rng() - 0.5) * 20);
+      } else this.place(u, Math.min(hi, Math.max(lo, near.x + (this.rng() - 0.5) * spread * 2)), near.y + (this.rng() - 0.5) * 30);
     }
     this.enemies.push(u);
     events.push({ type: 'enemySpawn', unit: u, from: near || null });
@@ -287,7 +293,10 @@ export const bossMethods = {
     }
     for (const sm of a.summon ? [].concat(a.summon) : []) { // one summon spec, or a list (War Drum: goblin + archer)
       const have = this.enemies.filter((e) => e.alive && e.def.id === sm.id).length;
-      for (let i = 0; i < sm.count && have + i < (sm.max ?? Infinity); i++) this.spawnEnemyUnit(sm.id, u, events, sm.near ? 90 : 60);
+      const first = this.rng() < 0.5 ? -1 : 1; // `beside` (px): to its sides, every other one on the other side
+      for (let i = 0; i < sm.count && have + i < (sm.max ?? Infinity); i++) {
+        this.spawnEnemyUnit(sm.id, u, events, sm.near ? 90 : 60, sm.beside ? { px: sm.beside, side: i % 2 ? -first : first } : null);
+      }
     }
     if (a.swap) {
       const p = this.enemies.find((e) => e.alive && e.def.id === a.swap);

@@ -61,10 +61,12 @@ ok('a boss floor always brings its own line-up', JSON.stringify(enemiesForFloor(
   ok('...a stun INTERRUPTS it', ev2.some((e) => e.type === 'castCancel' && e.unit === g && e.reason === 'interrupted') && !g.bossCast); }
 
 // ---- Brood Mother
-{ const { s, es } = mk(['brood_mother']); const b = es[0]; b.hp = b.maxHp = 1e6;
+{ const { s, es } = mk(['brood_mother']); const b = es[0]; b.hp = b.maxHp = 1e6; s.placeLines(); b.stats.attack = 0;
   const ev = run(s, 4700);
   const sacs = s.enemies.filter((e) => e.def.id === 'egg_sac');
   ok('Brood Mother lays egg sacs', sacs.length === 2, sacs.length);
+  const px = enemies.brood_mother.abilities.find((a) => a.id === 'lay_eggs').summon.beside;
+  ok('...to her SIDES (one left, one right, level with her), not in front', sacs.some((e) => e.x < b.x) && sacs.some((e) => e.x > b.x) && sacs.every((e) => Math.abs(e.x - b.x) >= px * 0.8 && Math.abs(e.y - b.y) <= 25), sacs.map((e) => `${Math.round(e.x - b.x)},${Math.round(e.y - b.y)}`).join(' '));
   const ev2 = run(s, 6200);
   ok('...an egg sac left alone hatches into 3 spiderlings', ev2.some((e) => e.type === 'hatch') && s.enemies.filter((e) => e.alive && e.def.id === 'spiderling').length >= 3); }
 { const { s, es } = mk(['egg_sac']); const sac = es[0];

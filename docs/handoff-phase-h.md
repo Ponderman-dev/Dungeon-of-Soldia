@@ -1,42 +1,34 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 27): NEXT = DISCUSS THE NEW ITEMS (21), then build them
-- BRANCH: `main` has EVERYTHING (session 26 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- FIRST: go through `docs/proposals/new-items-batch1.md` with the user (FINAL list, numbers OK'd, 'for discussion'):
-  21 items (92 -> 113): bomb family (Ice/Electric/Dark/Poison Bombs + Bombardier's Barrel; existing Fire Bombs is the
-  fire member), badges (Hunter's vs elites, Elite's vs bosses, Better Odds per enemy), legendaries (Frozen Demon Head,
-  Euclid of Elements, Sharpest Blade), commons (Life Crystal, Emergency Buckler, Opening Horn, Swarm Swatter, Sweeping
-  Strap, Quick Fingers), Frost Mantle, Kinetic Coil, Rally Flag, Reaper's Bell. Ask before building; then build in small
-  batches (items.json + item-decisions.md + items.md; new effect shapes need fixture copies, see CLAUDE.md Tests).
-  Open design points to raise: Frozen Demon Head 'ice only' (what happens to fire/electric skills and charms?),
-  Euclid needs 2+ elements on ONE attack (which heroes/items make that?), Better Odds = alive enemies or floor start.
-- WHY NEW ITEMS (session 26 finding): in a 60-floor run each epic shows ~0.7x and each legendary ~0.2x (+boss cards):
-  most never appear. User chose more items first; my fix ideas kept for later: UNSEEN BONUS (items not seen this run
-  get a higher chance) and FEWER COMMONS from floor 41 (user OK with repeats). Adding epics/legendaries spreads them thinner.
-- STILL OPEN from the session 25 list: 3. HERO MINIONS PILE UP on high floors (ideas: enemies deal more to minions deeper,
-  enemy area skills, harder enemy skills; floor 80+ attack speed now helps a little). Ask before designing.
-  Also unanswered: skill books: the same modifier twice on one skill is still refused: OK?
-- DONE session 26 (all tested, committed, merged to main):
-  - Heroes' +15% attack reverted (combat.json `heroAttack.percent` 0; rule kept, tested with its own percent).
-  - SMART ENEMY ROW GAP (formation.js): the gap behind a row = its tallest enemy as drawn + `rowRoom` 45 (`eliteRowRoom`
-    60), min 70, max 160; a tall formation shifts down instead of passing the wall line (y 300). enemies.md.
-  - Assault Breastplate icon no longer pops during the walk-in (`spawnEnemies()` resets `floorMs`). statuses.md.
-  - ITEM ICON POPS = 'deck' (user pick): icons dealt onto one pile 0.1s apart like cards, each fades on its own
-    (itemFx.json `iconPop.stack`; count/bounce/queue/row also exist). effects.md.
-  - FLOORS 80+: enemy health/attack x1.015 per floor past 80, compounding (snowball option 3: x1.35 at 100, x2.8 at 150)
-    + attack speed +1%/floor, max +40% (option 2). Together ~x3.9 damage per second at 150. combat.json `floorScaling`,
-    test floor-snowball.test.mjs, balance-tools.md. NO curve run yet (user did not ask).
-  - `needs` drop rule OFF (rewards.json `needsMissingFactor` 1): every item the same chance (user, after an example).
-- Not shown in the preview yet: session 26 visuals (row gap, deck pops). `npm run build:page` + publish when the user asks.
-- Look and Pick page (https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN, `docs/proposals/skill-fx` reuse) now holds the
-  icon pop clips (recorded with Playwright recordVideo + ffmpeg crop, a nice way to show MOTION; user liked clips).
-- itch.io: the zip given to the user predates the hub, charms, page-2 sounds and sessions 23-26: `npm run build:itch`
-  again before an upload, add them to the devlog draft `docs/devlog/2026-10-21-title-and-camp.md` (version 0.1.0: ask
-  whether testers played the old build; then bump to 0.2.0).
+## START HERE (session 28): NEXT = EFFECTS VISUAL REVIEW of the new items (in the game, with the user)
+- BRANCH: `main` has EVERYTHING (session 27 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- FIRST: show the user the NEW ITEM LOOKS IN A REAL FIGHT (ART rule below: scratchpad worktree + Playwright screenshots /
+  short clips like the icon-pop clips, then the question tool). None of these were seen in the game yet:
+  - Bombs: Ice / Electric / Dark / Poison Bombs = Fire Bombs' bomb in the element's colours (`itemFx.bombFx` +
+    `BOMB_KINDS`); Bombardier's Barrel throws its extra bombs 0.15s apart ('Bombs away!' icon pop).
+  - Life Crystal: green orb pops out of the dead enemy, small orbs fly to the healed heroes (BattleScene `lifeOrb`).
+  - Reaper's Bell: purple `deathBurst` cloud (reused Puffshroom look) on every exploding kill, chains.
+  - Frozen Demon Head: Ice Spikes = 5 pale triangles bursting up under the enemy + shake (BattleScene `iceSpikes`;
+    plain Phaser triangles: maybe redo as pixel fx in itemFx.js, the user likes REAL things, no abstract shapes).
+  - Euclid of Elements: 3 extra casts 0.15s apart (normal hits of their elements, 'Euclid!' pop).
+  - Sharpest Blade 'Heart strike!' (4.5x hit + stun: only the icon pop and the normal crit-less hit; may want a big
+    dramatic slash, user liked dramatic for its icon). Kinetic Coil charges have NO look yet (maybe sparks on the hero).
+  - Emergency Buckler / Rally Flag shields (normal shield bar), Sweeping Strap side hits, Frost Mantle chill.
+  Easy way to see them: dev url flags + give items in the worktree (or a seeded run); `?floor=N`, `?elite=1`.
+- ALL 21 NEW ITEMS BUILT (92 -> 113), list + every decision: `docs/proposals/new-items-batch1.md`; numbers in
+  `docs/item-decisions.md` 'Session 27' sections; code notes in `docs/systems/items.md` (batch 1-5 lines).
+  Tests items-batch1..5.test.mjs. Icons: `scripts/art/new-item-icons.mjs` (bombs = Fire Bombs icon recoloured, user).
+- NO balance run yet for the new items (user rule: only when asked). Short itemruns smoke runs: no crashes.
+- STILL OPEN (older): HERO MINIONS PILE UP on high floors (ask before designing); skill books: same modifier twice on
+  one skill is refused: OK?; UNSEEN BONUS / FEWER COMMONS from floor 41 (my ideas for items rarely showing up, later).
+- Not in the preview page yet: sessions 26-27 visuals. `npm run build:page` + publish when the user asks.
+- itch.io zip is old (predates hub, charms, sessions 23-27): `npm run build:itch` before an upload, devlog draft
+  `docs/devlog/2026-10-21-title-and-camp.md` (ask about testers; bump 0.1.0 -> 0.2.0).
 - Test helper (scratchpad, throwaway): `git worktree add <scratch>/wt HEAD`, symlink node_modules, run
   `<scratch>/wt/node_modules/.bin/vite <scratch>/wt --port 5177` FROM the scratchpad. Dev build exposes `window.__game`:
   wait for 'Title', stop scenes, `scene.start('Battle')` (registry `squadIds`; `?floor=N`, `?room=treasure` on an even
   floor = a fight). Seed Math.random in addInitScript for the same line-up. Remove the worktree at the end.
+  Playwright: global install `/opt/node22/lib/node_modules/playwright/index.mjs` (not in the repo's node_modules).
 - PUBLISH: the first publish per session may be refused ('not viewed'): Read 1-8 lines of the saved live copy, then
   publish again. Publishing with `edits` sends only the page: pass `files` again for changed videos/images.
 - Fresh clone: `npm install` first (node_modules is not there).

@@ -32,6 +32,9 @@ ok('a boss floor always brings its own line-up', JSON.stringify(enemiesForFloor(
   ok('...the drum beats up a goblin AND a goblin archer', ['goblin', 'goblinArcher'].every((id) => ev.some((e) => e.type === 'enemySpawn' && e.unit.def.id === id)));
   const archer = s.enemies.find((e) => e.def.id === 'goblinArcher');
   ok('...archers attack faster near the drum too', s.auraSpeed(archer) > 0);
+  const pct = enemies.war_drum.abilities[0].summon[0].hpPercent, normal = s.makeUnit(enemies.goblin, 'enemy', 20, 1);
+  const drumGob = s.enemies.find((e) => e.def.id === 'goblin');
+  ok('...its goblins are weaker than normal goblins (hpPercent)', Math.abs(drumGob.maxHp - (normal.maxHp * pct) / 100) <= 1 && drumGob.hp === drumGob.maxHp, `${drumGob.maxHp} vs ${normal.maxHp}`);
   run(s, 8000 * 3);
   const max = enemies.war_drum.abilities[0].summon.map((sm) => sm.max);
   ok('...at most the cap of each kind at once', ['goblin', 'goblinArcher'].every((id, i) => s.enemies.filter((e) => e.alive && e.def.id === id).length <= max[i])); }

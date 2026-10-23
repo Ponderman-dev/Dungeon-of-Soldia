@@ -7,7 +7,7 @@
 //     { id, name, everyMs, firstMs, castMs, hpBelow (once, at that health %), interruptible (default true),
 //       target: 'frontHero' | 'backHero' | 'randomHero' | 'randomHeroes' (+ count) | 'lowestHero' | 'allHeroes' | 'self' | 'allies' | 'meleeNear',
 //       radius (meleeNear), damageMultiplier, damageType, apply: [status specs], healAllies (% of their max health),
-//       summon: { id, count, max, near, beside (px to the sides) } (or a list of them), swap: 'partnerId', daggers: { count, damageMultiplier, apply },
+//       summon: { id, count, max, near, beside (px to the sides), hpPercent (summons' health) } (or a list of them), swap: 'partnerId', daggers: { count, damageMultiplier, apply },
 //       channel: { intervalMs, ticks, target, damageMultiplier, damageType, apply, drain: { percentMaxHp } },
 //       clones: { statPercent }, shatterClones: { multiplier } }
 //     slam: { liftPx, dropMs, shakeMs, shakeIntensity } = looks only: it rises during the wind-up and crashes down (Grukk's Quake Jump)
@@ -295,7 +295,8 @@ export const bossMethods = {
       const have = this.enemies.filter((e) => e.alive && e.def.id === sm.id).length;
       const first = this.rng() < 0.5 ? -1 : 1; // `beside` (px): to its sides, every other one on the other side
       for (let i = 0; i < sm.count && have + i < (sm.max ?? Infinity); i++) {
-        this.spawnEnemyUnit(sm.id, u, events, sm.near ? 90 : 60, sm.beside ? { px: sm.beside, side: i % 2 ? -first : first } : null);
+        const sp = this.spawnEnemyUnit(sm.id, u, events, sm.near ? 90 : 60, sm.beside ? { px: sm.beside, side: i % 2 ? -first : first } : null);
+        if (sp && sm.hpPercent) sp.hp = sp.maxHp = Math.max(1, Math.round((sp.maxHp * sm.hpPercent) / 100)); // War Drum: weaker summoned goblins
       }
     }
     if (a.swap) {

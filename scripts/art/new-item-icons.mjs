@@ -107,6 +107,21 @@ const CUSTOM = {
     p.disc(5.5, 5, 2.4, 'S'); p.disc(10.5, 5, 2.4, 'S'); p.disc(5.5, 5, 1.5, 'k'); p.disc(10.5, 5, 1.5, 'k'); p.px(5, 4, 'w'); p.px(10, 4, 'w');
     p.line(6, 2, 7, 1, 'n'); p.px(8, 0, 'o'); p.line(10, 2, 11, 1, 'n'); p.px(12, 0, 'y');
   },
+  sweeping_strap(p) { // a leather strap with a buckle and a white sweep arc
+    p.ring(8, 9, 6, 'w'); for (let y = 9; y < 16; y++) for (let x = 0; x < 16; x++) if (p.g[y][x] === 'w') p.g[y][x] = null;
+    p.line(2, 13, 13, 13, 'b', 1); p.line(2, 14, 13, 14, 'B');
+    p.rect(7, 12, 9, 15, 's'); p.px(8, 13, 'k'); p.px(1, 9, 'w'); p.px(15, 9, 'w');
+  },
+  kinetic_coil(p) { // a copper coil spring with yellow sparks
+    for (const y of [2, 5, 8, 11]) { p.line(4, y, 11, y + 1, 'o'); p.line(11, y + 1, 4, y + 3, 'b'); }
+    p.rect(3, 14, 12, 15, 'S');
+    p.px(13, 2, 'y'); p.px(14, 3, 'Y'); p.px(13, 4, 'y'); p.px(2, 8, 'y'); p.px(1, 9, 'Y'); p.px(14, 11, 'Y');
+  },
+  sharpest_blade(p) { // a thin bright silver blade with a red gleam on its tip
+    p.line(3, 13, 13, 3, 'w'); p.line(4, 13, 14, 3, 's'); p.line(3, 12, 12, 3, 's');
+    p.px(14, 2, 'w'); p.px(13, 2, 'r'); p.px(14, 1, 'r');
+    p.line(2, 11, 5, 14, 'y'); p.line(1, 15, 3, 13, 'b'); p.px(1, 14, 'B');
+  },
 };
 // Bombs of the bomb family: a dark bomb with a highlight, a fuse and a spark in the element's colours.
 function bombIcon(p, glow, spark, band) {

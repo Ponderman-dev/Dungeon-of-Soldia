@@ -2383,5 +2383,71 @@
     "dropWeight": 90,
     "needs": "bomb",
     "perStack": "+100% bomb damage, +5% chance"
+  },
+  "sweeping_strap": {
+    "name": "Sweeping Strap",
+    "rarity": "common",
+    "type": "special",
+    "scope": "self",
+    "description": "Melee attacks also hit enemies next to the target for 15% damage.",
+    "effects": [
+      {
+        "special": "sweep",
+        "percent": 15,
+        "perExtra": 8,
+        "radius": 60
+      }
+    ],
+    "dropWeight": 90,
+    "needs": "melee",
+    "perStack": "+8% damage"
+  },
+  "kinetic_coil": {
+    "name": "Kinetic Coil",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "Every dodge stores a charge (max 3). The next attack deals +40% electric damage per charge.",
+    "effects": [
+      {
+        "special": "kineticCoil",
+        "percent": 40,
+        "perExtra": 20,
+        "count": 3
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "electric"
+    ],
+    "perStack": "+20% per charge"
+  },
+  "sharpest_blade": {
+    "name": "Sharpest Blade",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "Attacks with no element: 6% chance to strike the heart for 450% damage and stun for 2.5s.",
+    "effects": [
+      {
+        "special": "heartStrike",
+        "percent": 6,
+        "perExtra": 3,
+        "spec": {
+          "status": "stun",
+          "durationMs": 2500
+        }
+      },
+      {
+        "special": "heartStrikeMult",
+        "percent": 450,
+        "perExtra": 50
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "cc"
+    ],
+    "perStack": "+3% chance, +50% damage"
   }
 }

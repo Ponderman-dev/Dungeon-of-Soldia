@@ -379,3 +379,12 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Barrel bombs CAN set the Barrel off again, but it has a 0.3s cooldown (user: so it can't loop forever).
   Fire Bombs counts (proc `bomb: true`).
 - Tests: items-batch3.test.mjs. No balance run (user rule).
+
+## Session 27: new items batch 4 (3 more; 19 of 21 built)
+- Sweeping Strap (common, melee): basic melee attacks also hit every other enemy within 60px of the target for 15%
+  (+8% per extra copy) as item damage (`sweep`).
+- Kinetic Coil (rare): every dodge stores a charge (max 3, per floor); the next basic attack spends them all:
+  +40% electric per charge (+20% per charge per extra copy), inside the hit (`kineticCoil`, a rider).
+- Sharpest Blade (legendary): a basic attack with NO element (no charm / Chill Band / Coil riders, not the Mage)
+  has 6% (+3% per extra copy) to deal 4.5x damage (+0.5x per extra copy) and stun 2.5s (`heartStrike`).
+- Tests: items-batch4.test.mjs. No balance run (user rule).

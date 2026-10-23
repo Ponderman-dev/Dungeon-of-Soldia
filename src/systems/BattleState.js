@@ -1175,7 +1175,14 @@ export default class BattleState {
     }
     const empower = fired.filter((f) => f.counter.effect === 'empower');
     const metro = this.metronomeBeat(unit, target, events); // Metronome: every 4th basic attack of the holder hits harder
-    const hit = this.strike(unit, target, events, { basic: true, riders: true, ...(metro ? { damagePercent: metro } : {}), ...(unit.hitType ? { damageType: unit.hitType } : {}) }); // an elite hits with its element; riders = element charms in the same hit
+    const coil = this.spendCoil(unit); // Kinetic Coil: stored dodge charges ride on this attack as electric damage
+    const heart = this.heartStrike(unit, coil); // Sharpest Blade: a plain physical attack may strike at the heart
+    const hit = this.strike(unit, target, events, { basic: true, riders: true, ...(coil.length ? { extraRiders: coil } : {}), ...(heart ? { multiplier: heart } : {}), ...(metro ? { damagePercent: metro } : {}), ...(unit.hitType ? { damageType: unit.hitType } : {}) }); // an elite hits with its element; riders = element charms in the same hit
+    if (heart && !hit.dodged) {
+      events.push({ type: 'proc', unit, label: 'Heart strike!', itemId: 'sharpest_blade', target });
+      if (target.alive) this.applyStatus(target, unit.specials.heartStrikeSpec || { status: 'stun', durationMs: 2500 }, unit, `heart_${unit.uid}`, events);
+    }
+    this.sweep(unit, target, hit, events); // Sweeping Strap: the swing also hits the enemies next to the target
     if (unit.elite) this.eliteAfterAttack(unit, target, hit, events); // Storm: every 4th hit jumps
     this.cycleElement(unit); // Mage: the next basic attack is the next element
     if (!hit.dodged) this.addCombo(unit, target, 1, events);
@@ -1203,6 +1210,36 @@ export default class BattleState {
     this.rollProcs(unit, 'onAttack', events, { target, hit: !hit.dodged, folded: true, force: empower.some((f) => f.counter.forceProcs) });
     this.extraArrows(unit, target, events);
     this.volley(unit, target, events); // Archer: every Nth shot fires at more enemies
+  }
+
+  // Kinetic Coil: the holder's stored charges are all spent on its next basic attack: +`kineticCoil`% (40, +20 per
+  // extra copy) of its attack as electric per charge, inside the hit (a rider). Returns the riders to add.
+  spendCoil(unit) {
+    const n = unit.side === 'hero' && !unit.minion && unit.floor ? unit.floor.coil || 0 : 0;
+    if (!n || !unit.specials.kineticCoil) return [];
+    unit.floor.coil = 0;
+    return [{ damageType: 'electric', multiplier: (n * unit.specials.kineticCoil) / 100 }];
+  }
+
+  // Sharpest Blade: a basic attack with NO element (plain melee/ranged, no element riders: charms, Chill Band,
+  // Kinetic Coil charges...) has `heartStrike`% (6, +3 per extra copy) to deal `heartStrikeMult`% (450, +50 per
+  // extra copy) damage and stun (2.5s). The Mage's attacks are always elemental. Returns the multiplier, or 0.
+  heartStrike(unit, extra = []) {
+    const sp = unit.side === 'hero' && !unit.minion ? unit.specials : null;
+    if (!sp || !sp.heartStrike) return 0;
+    const type = unit.hitType || unit.damageType;
+    if ((type !== 'melee' && type !== 'ranged') || this.riders(unit).length || extra.length) return 0;
+    return this.rng() * 100 < sp.heartStrike ? (sp.heartStrikeMult || 450) / 100 : 0;
+  }
+
+  // Sweeping Strap: a MELEE basic attack also hits every other enemy within `sweepRadius` px (60) of its target for
+  // `sweep`% (15, +8 per extra copy) of the attack as item damage (it triggers nothing).
+  sweep(unit, target, hit, events) {
+    const sp = unit.side === 'hero' && !unit.minion ? unit.specials : null;
+    if (!sp || !sp.sweep || unit.damageType !== 'melee' || hit.dodged) return;
+    const radius = sp.sweepRadius || 60;
+    const near = this.enemies.filter((e) => e.alive && e !== target && !this.untargetable(e) && (!this.hasPositions(e) || !this.hasPositions(target) || Math.hypot(e.x - target.x, e.y - target.y) <= radius));
+    for (const e of near) this.strike(unit, e, events, { multiplier: sp.sweep / 100, damageType: 'melee', item: true, burst: true });
   }
 
   // Mage's ELEMENT CYCLE (passive.elementCycle: ['fire', 'ice', 'electric']): her basic attacks go through the list in
@@ -1782,7 +1819,7 @@ export default class BattleState {
     }
     // opts.riders: this hit carries the attacker's sure extra element hits (computeDamage adds them in; rollProcs then
     // skips their own strike, see `folded`).
-    if (opts.riders) opts = { ...opts, riders: this.riders(attacker) };
+    if (opts.riders) opts = { ...opts, riders: [...this.riders(attacker), ...(opts.extraRiders || [])] }; // extraRiders: Kinetic Coil's charges
     // Item damage bonuses of the attacker (Sucker Punch, Full Vigor, Brawler's Streak...).
     const bonus = this.itemDamageBonus(attacker, target, opts);
     if (bonus) opts = { ...opts, damagePercent: (opts.damagePercent || 0) + bonus };
@@ -1870,6 +1907,10 @@ export default class BattleState {
     if (ia && result.dodged && !result.missed && !opts.counter) this.counterCut(target, attacker, events);
     // Riposte Cloak: a hit the holder DODGED (evasion only: not a block, a blind miss or invulnerability) is answered.
     if (result.dodged && !result.missed && !result.blocked && !result.invulnerable && !opts.counter && target.side === 'hero' && !target.minion && target.specials.riposte) this.riposte(target, attacker, events);
+    // Kinetic Coil: every hit the holder DODGES stores a charge (at most `kineticCoilCount`, 3), kept for the floor.
+    if (result.dodged && !result.missed && !result.blocked && !result.invulnerable && target.side === 'hero' && !target.minion && target.specials.kineticCoil) {
+      target.floor.coil = Math.min(target.specials.kineticCoilCount || 3, (target.floor.coil || 0) + 1);
+    }
     return result;
   }
 

@@ -3,7 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, SKILL_COLORS, UI } from '../config
 import { drawWindow, uiText, uiStyle, uiButton } from '../entities/uiKit.js';
 import allHeroDefs from '../data/heroes.json';
 import squadIds from '../data/squad.json';
-import demoSquad from '../data/demoSquad.json'; // the Monster House demo page's squad
+import { DEMO, demoSquad } from './demoMode.js'; // the demo pages (Monster House, Brood Mother) and their squads
 import enemyDefs from '../data/enemies.json';
 import minionDefs from '../data/minions.json';
 import dungeons from '../data/dungeons.json';
@@ -113,7 +113,7 @@ export default class BattleScene extends Phaser.Scene {
     this.fxList = [];
     this.iceBreaks = [];
     // The squad: from squad.json, or the one the TEST squad button picked (registry `squadIds`).
-    const demo = import.meta.env.VITE_DEMO === 'house';
+    const demo = !!DEMO;
     const heroDefs = pickSquad(allHeroDefs, demo ? demoSquad.heroes.map((h) => h.id) : this.registry.get('squadIds') || squadIds); // the demo page always uses its saved squad
     this.slotWidth = GAME_WIDTH / heroDefs.length;
     this.dungeon = dungeons[DUNGEON_ID];
@@ -136,7 +136,7 @@ export default class BattleScene extends Phaser.Scene {
       damageTypes,
       leveling,
     });
-    // The Monster House demo page: the squad exactly as the smart player had it after floor 60 (src/data/demoSquad.json,
+    // A demo page: the squad exactly as the smart player had it before the demo floor (src/data/demoSquad.json,
     // made by scripts/tests/make-demo-squad.mjs): its levels, items and skill pages.
     if (demo) {
       this.state.heroes.forEach((h, i) => {
@@ -1163,7 +1163,7 @@ export default class BattleScene extends Phaser.Scene {
     const devHouse = import.meta.env.DEV && new URLSearchParams(location.search).get('house') && n >= this.dungeon.director.fromFloor;
     // The MONSTER HOUSE DEMO page (`npm run build:house-demo`, VITE_DEMO=house): it starts on floor 61 with a real squad
     // (demoSquad.json) and EVERY fight floor is a Monster House (boss floors stay boss fights).
-    const demo = import.meta.env.VITE_DEMO === 'house';
+    const demo = DEMO === 'house';
     if ((devHouse || demo) && !room && !lineUp.monsterHouse && !(this.dungeon.bosses || {})[n]) {
       const always = { ...this.dungeon, director: { ...this.dungeon.director, monsterHouse: { ...this.dungeon.director.monsterHouse, fromFloor: 0, chance: 100 } }, bosses: {} };
       const house = monsterHouse(always, n, Math.random, enemyDefs);
@@ -1424,7 +1424,7 @@ export default class BattleScene extends Phaser.Scene {
   // The camera slides up: the old floor drops away and the new floor comes in from above.
   slideToNextFloor(done) {
     const old = this.layer;
-    this.floor += 1;
+    if (DEMO !== 'brood') this.floor += 1; // the Brood Mother demo page: floor 40 again and again
     const next = this.buildFloor(this.floor, -GAME_HEIGHT);
     this.tweens.add({ targets: [old.container, old.front], y: GAME_HEIGHT, duration: T.slideMs, ease: 'Sine.easeInOut' });
     this.tweens.add({

@@ -14,9 +14,9 @@ import unlocks from '../data/unlocks.json';
 import dungeons from '../data/dungeons.json';
 import combatRules from '../data/combat.json';
 import defaultSquad from '../data/squad.json';
-import demoSquad from '../data/demoSquad.json'; // the Monster House demo page's saved squad
+import { DEMO as DEMO_KIND, demoSquad } from './demoMode.js'; // a demo page's saved squad
 import camp from '../data/camp.json'; // slideMs: the slide back down to the camp
-const DEMO = import.meta.env.VITE_DEMO === 'house';
+const DEMO = !!DEMO_KIND;
 const TESTER = import.meta.env.VITE_TESTER === '1'; // the playtest build for itch.io: no test buttons
 import { perkMods } from '../systems/party.js';
 import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad } from '../systems/progress.js';

@@ -1,0 +1,160 @@
+{
+ "_about": "Made by scripts/tests/make-demo-squad.mjs (smart player, seed 1): the squad as it was after floor 39.",
+ "floor": 40,
+ "heroes": [
+  {
+   "id": "knight",
+   "level": 17,
+   "items": [
+    "mage_cloak",
+    "wisp_lantern",
+    "bulwark_plate",
+    "tough_skin",
+    "spirit_axe",
+    "second_wind_flask",
+    "overheal_ring",
+    "giantslayers_brand",
+    "heart_charm",
+    "iron_will_talisman",
+    "heart_of_the_beast"
+   ],
+   "pages": [
+    [],
+    []
+   ]
+  },
+  {
+   "id": "berserker",
+   "level": 17,
+   "items": [
+    "sharp_edge",
+    "dread_bell",
+    "assault_breastplate",
+    "serrated_edge",
+    "dread_bell",
+    "harvest_scythe",
+    "thousand_cuts",
+    "thousand_cuts",
+    "chill_band",
+    "chill_band",
+    "dread_bell",
+    "exploiters_lens",
+    "hunters_sigil",
+    "magma_core"
+   ],
+   "pages": [
+    [
+     {
+      "id": "aftershock",
+      "kind": "modifier",
+      "tag": "Area",
+      "name": "Aftershock",
+      "text": "1 second later a second pulse hits the same targets for 35% (a heal pulses again at 35%).",
+      "aftershock": {
+       "delayMs": 1000,
+       "power": 0.35
+      }
+     },
+     {
+      "id": "ricochet",
+      "kind": "modifier",
+      "tag": "Area",
+      "name": "Ricochet",
+      "text": "A one-target skill also hits 1 more enemy at 50% (a heal or buff on one ally also reaches a second ally at 50%).",
+      "ricochet": 0.5
+     },
+     {
+      "id": "sharpen",
+      "kind": "stat",
+      "name": "Sharpen",
+      "text": "+8% skill power (damage, healing, shield or buff size).",
+      "power": 8
+     }
+    ],
+    []
+   ]
+  },
+  {
+   "id": "archer",
+   "level": 17,
+   "items": [
+    "echo_rune",
+    "hourglass",
+    "conductors_baton",
+    "quiver_of_plenty"
+   ],
+   "pages": [
+    [
+     {
+      "id": "swift",
+      "kind": "stat",
+      "name": "Swift",
+      "text": "Cooldown 8% shorter.",
+      "cooldown": 8
+     },
+     {
+      "id": "sharpen",
+      "kind": "stat",
+      "name": "Sharpen",
+      "text": "+8% skill power (damage, healing, shield or buff size).",
+      "power": 8
+     },
+     {
+      "id": "sharpen",
+      "kind": "stat",
+      "name": "Sharpen",
+      "text": "+8% skill power (damage, healing, shield or buff size).",
+      "power": 8
+     },
+     {
+      "id": "razorInk",
+      "kind": "modifier",
+      "tag": "Debuff",
+      "name": "Razor Ink",
+      "text": "Every enemy the skill hits also gets 2 stacks of Bleed.",
+      "ink": [
+       {
+        "status": "bleed",
+        "stacks": 2,
+        "durationMs": 4000,
+        "damageMultiplier": 0.2
+       }
+      ]
+     },
+     {
+      "id": "aftershock",
+      "kind": "modifier",
+      "tag": "Area",
+      "name": "Aftershock",
+      "text": "1 second later a second pulse hits the same targets for 35% (a heal pulses again at 35%).",
+      "aftershock": {
+       "delayMs": 1000,
+       "power": 0.35
+      }
+     }
+    ],
+    [
+     {
+      "id": "rally",
+      "kind": "modifier",
+      "tag": "Team",
+      "name": "Rally",
+      "text": "Casting gives the whole squad +10% attack speed for 3s.",
+      "squadApply": [
+       {
+        "status": "buff",
+        "durationMs": 3000,
+        "mods": [
+         {
+          "stat": "attackEfficiency",
+          "percent": 10
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   ]
+  }
+ ]
+}

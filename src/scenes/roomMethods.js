@@ -41,7 +41,7 @@ export const roomMethods = {
     // Dev server only: ?room=treasure makes every odd floor that room (browser checks).
     const forced = import.meta.env.DEV && new URLSearchParams(location.search).get('room');
     if (forced && roomRules.kinds[forced]) return n % 2 ? forced : null;
-    if (import.meta.env.VITE_DEMO === 'house') return null; // the Monster House demo page: fights only
+    if (import.meta.env.VITE_DEMO) return null; // the demo pages: fights only
     return roomForFloor(roomRules, this.dungeon, n, prev);
   },
 

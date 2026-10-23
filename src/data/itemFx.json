@@ -47,6 +47,9 @@
   "executioners_axe": {
     "effect": "executioner"
   },
+  "sharpest_blade": {
+    "effect": "heartSlash"
+  },
   "gamblers_dice": {
     "effect": "dice"
   },

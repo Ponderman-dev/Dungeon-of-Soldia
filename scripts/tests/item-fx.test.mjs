@@ -20,6 +20,7 @@ const calls = {
   spiritAxe: (q, t) => fx.spiritAxeFx(q, u, t), moon: (q, t) => fx.moonFx(q, a, b, t, 3),
   spiritfire: (q, t) => fx.spiritFireFx(q, a, b, t, 3), soulLantern: (q, t) => fx.soulLanternFx(q, u, t), ghastlyFire: (q, t) => fx.ghastlyDraws(hit.impactFx('fire', q, { ...u, side: -1 }, t, 1, a).draws, u),
   thunderstruck: (q, t) => fx.thunderstruckFx(q, u, t, 3),
+  heartSlash: (q) => fx.heartSlashFx(q, u, -1),
   iceSpike: (q, t) => fx.iceSpikeFx(q * fx.ITEM_MS.iceSpike, u, t, fx.ITEM_MS.iceSpike - fx.ICE_SPIKE.shatterMs),
 };
 ok('Demon Head icicle stays up while the enemy is frozen (no shatter yet)', fx.iceSpikeFx(4000, u, 61, null).length > 100 && clean(fx.iceSpikeFx(4000, u, 61, null)));

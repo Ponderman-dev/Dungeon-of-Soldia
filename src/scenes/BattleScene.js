@@ -779,6 +779,10 @@ export default class BattleScene extends Phaser.Scene {
     } else if (spec.effect === 'suckerPunch' && tv) {
       const side = v.ch.x < tv.ch.x ? -1 : 1;
       this.addFx(ms, (q) => (tv.ch.active ? itemFx.suckerPunchFx(q, this.fxBody(tv), side) : []), tag);
+    } else if (spec.effect === 'heartSlash' && tv) { // Sharpest Blade: a huge yellow slash through the enemy
+      const at = this.fxBody(tv), side = v && v.ch.x < tv.ch.x ? -1 : 1;
+      this.addFx(ms, (q) => itemFx.heartSlashFx(q, tv.ch.active ? this.fxBody(tv) : at, side), tag);
+      this.cameras.main.shake(120, 0.004);
     } else if (spec.effect === 'executioner' && tv) {
       const at = this.fxBody(tv); // the enemy may die from this very hit
       this.addFx(ms, (q) => itemFx.executionerFx(q, tv.ch.active ? this.fxBody(tv) : at), tag);

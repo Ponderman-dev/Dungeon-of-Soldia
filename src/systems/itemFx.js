@@ -12,7 +12,7 @@ const lerp = (a, b, p) => a + (b - a) * p;
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const BOMB = 0x4a4a5a, KNIFE = 0xe4e8f0, HILT = 0x6b4a2a, BANNER = 0xf2d03a, GREEN = 0x3aa84a, GREEN2 = 0xc8ffd0;
 
-export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 700, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340, thunderstruck: 520, iceSpike: 1800 };
+export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 700, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340, thunderstruck: 520, iceSpike: 1800, heartSlash: 620 };
 export const ITEM_FX = Object.keys(ITEM_MS);
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -271,6 +271,27 @@ export function executionerFx(q, u) {
   const p = ph(q, 0, 0.5);
   if (p > 0 && p < 1) { const y = u.top - 14 + p * (u.y - u.top + 14); for (let i = -1; i <= 1; i++) g.line(u.x + i, y - 8, u.x + i, y, i ? C.blood : C.white, 1 - p * 0.3); }
   burst(g, u.x, u.mid, 10, [C.blood, C.blood2], ph(q, 0.35, 1), 10, 4, 1);
+  return g.out;
+}
+// Sharpest Blade's Heart strike (user: 'a very yellow slash'): one huge bright-yellow crescent slashes down through
+// the enemy (white-hot core, gold edges), sparks burst out of its heart, then the slash fades. side = the holder's side.
+export function heartSlashFx(q, u, side = -1) {
+  const g = pen();
+  const tall = u.y - u.top, len = Math.max(30, tall * 2.2);
+  const A = { x: u.x + side * len * 0.38, y: u.mid - len * 0.5 }, B = { x: u.x - side * len * 0.38, y: u.mid + len * 0.42 };
+  const dx = B.x - A.x, dy = B.y - A.y, n = Math.hypot(dx, dy), px = -dy / n, py = dx / n;
+  const drawn = easeOut(ph(q, 0, 0.2)), a = 1 - ph(q, 0.45, 0.85);
+  const cols = [C.white, C.gold2, C.elec, C.elec, C.gold];
+  const N = Math.round(n * 1.5);
+  for (let i = 0; i <= N * drawn; i++) {
+    const s = i / N, bulge = Math.sin(s * Math.PI) * len * 0.12, w = Math.round(1 + 3.4 * Math.sin(s * Math.PI));
+    const x = A.x + dx * s + px * bulge, y = A.y + dy * s + py * bulge;
+    for (let k = -w; k <= w; k++) g.px(x + px * k * 0.8, y + py * k * 0.8, cols[Math.min(cols.length - 1, Math.abs(k))], a);
+  }
+  if (q < 0.2) for (let k = 0; k < 3; k++) { const s = drawn - k * 0.04; if (s > 0) g.px(A.x + dx * s, A.y + dy * s, C.white, 1); } // the blade's leading spark
+  const hx = A.x + dx * 0.5 + px * len * 0.12, hy = A.y + dy * 0.5 + py * len * 0.12;
+  burst(g, hx, hy, 18, [C.white, C.elec, C.gold2, C.gold], ph(q, 0.12, 0.75), 18, 5, 0.5);
+  burst(g, hx, hy, 8, [C.elec, C.white], ph(q, 0.18, 0.6), 9, 9);
   return g.out;
 }
 // Gambler's Dice: a little white die tumbles above the enemy's head and lands (the debuff it rolled appears).

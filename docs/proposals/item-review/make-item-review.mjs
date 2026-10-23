@@ -49,7 +49,7 @@ const CLIPS = {
   reapers_bell: ['reapers-bell', 'Every kill explodes in a purple cloud (the Puffshroom cloud) and can chain.'],
   frozen_demon_head: ['demon-head', 'The Mage stores ice; when full, a giant icicle (your sketch) traps the enemy, holds it still while frozen, then shatters.'],
   euclid_of_elements: ['euclid', 'A hit with 2+ elements casts 3 more times, 0.15s apart (\'Euclid!\').'],
-  sharpest_blade: ['sharpest-blade', '\'Heart strike!\' (4.5x + stun). Open: today only the icon pop and a normal hit, maybe a big dramatic slash?'],
+  sharpest_blade: ['sharpest-blade', '\'Heart strike!\' (4.5x + stun): a huge bright-yellow slash through the enemy.'],
   kinetic_coil: ['kinetic-coil', 'Rogue dodges store charges for an electric hit. Open: the charges have NO look yet (sparks on the hero?).'],
   emergency_buckler: ['emergency-buckler', 'Each kill gives the killer a small shield (normal shield look) that fades over 4s.'],
   rally_flag: ['rally-flag', 'The Knight drops under 30%: every hero gets a shield (normal shield look).'],

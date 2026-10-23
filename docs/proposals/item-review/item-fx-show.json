@@ -552,8 +552,8 @@
  ],
  "sharpest_blade": [
   [
-   "hit",
-   "crit"
+   "item",
+   "heartSlash"
   ],
   [
    "status",

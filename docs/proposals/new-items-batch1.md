@@ -45,6 +45,18 @@ Rule (item-decisions.md): every extra copy adds a real +5-10% or more, no ceilin
 - Euclid of Elements: any 2+ different elements in ONE hit count (two different charms, Chill Band, Magma Core,
   element skills). Physical does not count as an element.
 - Better Odds: counts enemies ALIVE right now (shrinks as they die).
+- Bombs: ALL like Fire Bombs (8% chance, 300% damage, +8% chance per copy) + their element's debuff
+  (overrides the 5% / 250% / +40% above). Fire Bombs unchanged.
+- Bombardier's Barrel: the 2-4 extra bombs are RANDOM picks from the bomb types the hero holds.
+- Life Crystal: the orb heals heroes NEAR the dead enemy only (mostly melee; user OK with that).
+- Quick Fingers: the holder's own kills only.
+- Emergency Buckler: the holder's own kills, the shield goes on the holder.
+- Reaper's Bell: ANY kill by the holder (skills AND attacks), and explosions CAN chain (an exploded kill explodes
+  again; exception to the 'item damage triggers no item' rule). Watch its strength on swarms.
+- Sharpest Blade: any element on the attack turns it off (charm riders count; the Mage can't use it).
+- Rally Flag: each holder's flag fires once per floor, but the shields do NOT stack: a new rally replaces the old shield.
+- Sweeping Strap: 'next to' = within ~60px of the target (same row neighbours).
+- Kinetic Coil: charges stay until the next attack spends them, reset each floor.
 
 ## Counts after the batch
 common 24+7 = 31, rare 26+8 = 34, epic 25+2 = 27, legendary 17+4 = 21 (113).

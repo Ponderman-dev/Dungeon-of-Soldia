@@ -73,6 +73,13 @@ export default class BattleState {
       stats.health = Math.round(stats.health * (1 + s.hpPerStep * growth * hpSteps) * (tiered ? tier.hpScale ?? 1 : 1));
       const atkSteps = Math.floor((floor - 1) / s.attackStepFloors);
       stats.attack = Math.round(stats.attack * (1 + s.attackPerStep * growth * atkSteps) * (tiered ? tier.attackScale ?? 1 : 1));
+      // Deep floors snowball: x(1 + percent) per floor past snowballFromFloor, compounding (floors 80+).
+      const deep = s.snowballFromFloor ? Math.max(0, floor - s.snowballFromFloor) : 0;
+      if (deep) {
+        const m = Math.pow(1 + ((s.snowballPercentPerFloor || 0) * growth) / 100, deep);
+        stats.health = Math.round(stats.health * m);
+        stats.attack = Math.round(stats.attack * m);
+      }
       stats.attackEfficiency *= this.rules.enemyAttackSpeedMultiplier ?? 1; // global enemy slowdown
       if (tiered) {
         xpScale = tier.xpScale ?? 1;

@@ -51,7 +51,10 @@
     "hpPerStep": 0.5,
     "hpStepFloors": 3,
     "attackPerStep": 0.42,
-    "attackStepFloors": 3
+    "attackStepFloors": 3,
+    "_snowball": "From snowballFromFloor, health and attack are also multiplied by (1 + snowballPercentPerFloor%) per floor past it, compounding (user, session 26: option 3 = +1.5%: x1.35 at floor 100, x2.8 at 150). Fodder use their growthShare of the percent.",
+    "snowballFromFloor": 80,
+    "snowballPercentPerFloor": 1.5
   },
   "meleeVsFlyingMissPercent": 15,
   "attackTiming": {

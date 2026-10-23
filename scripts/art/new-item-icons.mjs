@@ -97,44 +97,28 @@ const CUSTOM = {
     p.disc(7.5, 8, 2, 'P'); p.px(7, 8, 'k'); p.px(8, 8, 'k'); p.px(7, 10, 'P'); p.px(8, 10, 'P');
     p.px(5, 4, 'w'); p.px(5, 5, 'w');
   },
-  ice_bomb(p) { bombIcon(p, 'c', 'w', 'C'); }, // a bomb wrapped in ice, a frosty fuse
-  electric_bomb(p) { bombIcon(p, 'y', 'Y', 'y'); p.line(1, 9, 3, 11, 'Y'); p.line(3, 11, 2, 13, 'Y'); },
-  dark_bomb(p) { bombIcon(p, 'p', 'P', 'p'); },
-  poison_bombs(p) { bombIcon(p, 'G', 'w', 'd'); p.disc(13, 13, 1.6, 'G'); },
-  bombardiers_barrel(p) { // a wooden barrel with iron bands and two bombs on top, fuses lit
-    p.rect(3, 7, 12, 15, 'b'); p.line(3, 7, 3, 15, 'B'); p.line(12, 7, 12, 15, 'B');
-    p.line(3, 9, 12, 9, 'S'); p.line(3, 13, 12, 13, 'S'); p.line(6, 7, 6, 15, 'B');
-    p.disc(5.5, 5, 2.4, 'S'); p.disc(10.5, 5, 2.4, 'S'); p.disc(5.5, 5, 1.5, 'k'); p.disc(10.5, 5, 1.5, 'k'); p.px(5, 4, 'w'); p.px(10, 4, 'w');
-    p.line(6, 2, 7, 1, 'n'); p.px(8, 0, 'o'); p.line(10, 2, 11, 1, 'n'); p.px(12, 0, 'y');
-  },
-  sweeping_strap(p) { // a leather strap with a buckle and a white sweep arc
-    p.ring(8, 9, 6, 'w'); for (let y = 9; y < 16; y++) for (let x = 0; x < 16; x++) if (p.g[y][x] === 'w') p.g[y][x] = null;
-    p.line(2, 13, 13, 13, 'b', 1); p.line(2, 14, 13, 14, 'B');
-    p.rect(7, 12, 9, 15, 's'); p.px(8, 13, 'k'); p.px(1, 9, 'w'); p.px(15, 9, 'w');
-  },
-  kinetic_coil(p) { // a copper coil spring with yellow sparks
-    for (const y of [2, 5, 8, 11]) { p.line(4, y, 11, y + 1, 'o'); p.line(11, y + 1, 4, y + 3, 'b'); }
-    p.rect(3, 14, 12, 15, 'S');
-    p.px(13, 2, 'y'); p.px(14, 3, 'Y'); p.px(13, 4, 'y'); p.px(2, 8, 'y'); p.px(1, 9, 'Y'); p.px(14, 11, 'Y');
-  },
-  sharpest_blade(p) { // a thin bright silver blade with a red gleam on its tip
-    p.line(3, 13, 13, 3, 'w'); p.line(4, 13, 14, 3, 's'); p.line(3, 12, 12, 3, 's');
-    p.px(14, 2, 'w'); p.px(13, 2, 'r'); p.px(14, 1, 'r');
-    p.line(2, 11, 5, 14, 'y'); p.line(1, 15, 3, 13, 'b'); p.px(1, 14, 'B');
-  },
 };
-// Bombs of the bomb family: a dark bomb with a highlight, a fuse and a spark in the element's colours.
-function bombIcon(p, glow, spark, band) {
-  p.disc(7, 9, 5, 'S'); p.disc(7, 9, 4, 'k'); p.px(5, 7, 'g'); p.px(5, 8, 'g'); p.px(6, 6, 'w');
-  p.ring(7, 9, 5, band); p.rect(6, 3, 8, 4, 'g');
-  p.line(8, 3, 10, 1, 'n'); p.px(11, 0, spark); p.px(12, 1, glow); p.px(10, 0, glow); p.px(12, 0, spark);
-  p.px(9, 11, glow); p.px(8, 12, glow); p.px(10, 10, glow);
-}
 const MAP = { quiver_of_plenty: 'quiver', spotters_lens: 'lens', giantslayers_brand: 'giant', catalyst_vial: 'vial', scholars_bookmark: 'bookmark', mirror_buckler: 'buckler', soul_lantern: 'lantern', phoenix_feather: 'feather', iron_will_talisman: 'talisman' };
 const path = new URL('../../src/data/itemIcons.json', import.meta.url);
 const icons = JSON.parse(fs.readFileSync(path, 'utf8'));
 const ALL = { ...Object.fromEntries(Object.entries(MAP).map(([id, name]) => [id, ICONS[name]])), ...CUSTOM };
-const only = process.argv[2] ? process.argv[2].split(',') : Object.keys(ALL);
+// The bomb family (user: must MATCH Fire Bombs): the Fire Bombs icon itself, recoloured. Its palette is
+// [outline, flame tip, flame, fuse, body, shine]; each bomb swaps the flame, body and shine for its element.
+const BOMBS = {
+  ice_bomb: ['0xffffff', '0x7fd8ff', '0x8b5a2b', '0x3e5a78', '0xbfefff'],
+  electric_bomb: ['0xfff7c0', '0xffe94d', '0x8b5a2b', '0x5a5640', '0xfff0a8'],
+  dark_bomb: ['0xd6a8ff', '0xa45be6', '0x8b5a2b', '0x45345e', '0xd6a8ff'],
+  poison_bombs: ['0xc8ffd0', '0x5ddf6a', '0x8b5a2b', '0x34543e', '0xc8ffd0'],
+};
+// Bombardier's Barrel: the same bomb (fuse lit) sitting on top of a banded wooden keg.
+const BARREL = {
+  palette: ['0x1a1020', '0xffe94d', '0xff9a2e', '0x8b5a2b', '0x4a4a5a', '0xc8ccd6', '0x9a6b3a', '0x5a3820', '0x8c909c'],
+  rows: ['..........0.....', '.........010....', '........0120....', '.......0230.....', '.....004440.....', '....04544440....', '...04444444440..', '..088888888880..', '.06766766766760.', '.06766766766760.', '.08888888888880.', '.06766766766760.', '.06766766766760.', '.08888888888880.', '..067667667660..', '...0000000000...'],
+};
+const want = (id) => !process.argv[2] || process.argv[2].split(',').includes(id);
+for (const id of Object.keys(BOMBS)) if (want(id)) icons[id] = { palette: [icons.fire_bombs.palette[0], ...BOMBS[id]], rows: icons.fire_bombs.rows };
+if (want('bombardiers_barrel')) icons.bombardiers_barrel = BARREL;
+const only = process.argv[2] ? process.argv[2].split(',').filter((id) => ALL[id]) : Object.keys(ALL);
 for (const id of only) {
   const p = pen(); ALL[id](p); const g = outline(p.g);
   // centre the drawing

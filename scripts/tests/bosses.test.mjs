@@ -49,7 +49,8 @@ ok('a boss floor always brings its own line-up', JSON.stringify(enemiesForFloor(
   g.hp = g.maxHp * (jump.hpBelow - 1) / 100;
   const hp0 = h.map((x) => x.hp);
   const ev = run(s, jump.castMs + 200);
-  ok('Quake Jump below half health: hits EVERY hero', h.every((x, i) => x.hp < hp0[i]), h.map((x, i) => hp0[i] - x.hp).join(','));
+  const slam = ev.find((e) => e.type === 'bossAbility' && e.ability.id === 'quake_jump');
+  ok('Quake Jump below half health: goes for EVERY hero (a dodge can still miss)', slam && h.every((x) => slam.targets.includes(x)) && h.some((x, i) => x.hp < hp0[i]), h.map((x, i) => hp0[i] - x.hp).join(','));
   ok('...and stuns every hero', h.every((x) => s.isStunned(x)));
   ok('...once only', (run(s, 10000), g.abilities.find((ab) => ab.def.id === 'quake_jump').done) && !g.bossCast); }
 { const { s, es } = mk(['grukk']); const g = es[0]; g.hp = g.maxHp = 1e6;

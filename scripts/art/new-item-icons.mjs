@@ -97,6 +97,27 @@ const CUSTOM = {
     p.disc(7.5, 8, 2, 'P'); p.px(7, 8, 'k'); p.px(8, 8, 'k'); p.px(7, 10, 'P'); p.px(8, 10, 'P');
     p.px(5, 4, 'w'); p.px(5, 5, 'w');
   },
+  sweeping_strap(p) { // a leather strap with a buckle and a white sweep arc
+    p.ring(8, 9, 6, 'w'); for (let y = 9; y < 16; y++) for (let x = 0; x < 16; x++) if (p.g[y][x] === 'w') p.g[y][x] = null;
+    p.line(2, 13, 13, 13, 'b', 1); p.line(2, 14, 13, 14, 'B');
+    p.rect(7, 12, 9, 15, 's'); p.px(8, 13, 'k'); p.px(1, 9, 'w'); p.px(15, 9, 'w');
+  },
+  kinetic_coil(p) { // a copper coil spring with yellow sparks
+    for (const y of [2, 5, 8, 11]) { p.line(4, y, 11, y + 1, 'o'); p.line(11, y + 1, 4, y + 3, 'b'); }
+    p.rect(3, 14, 12, 15, 'S');
+    p.px(13, 2, 'y'); p.px(14, 3, 'Y'); p.px(13, 4, 'y'); p.px(2, 8, 'y'); p.px(1, 9, 'Y'); p.px(14, 11, 'Y');
+  },
+  sharpest_blade(p) { // (user: more dramatic) a zoomed-in blade edge across the icon with one big shining star on it
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const d = x + y - 14; // 0 = the cutting edge, bigger = deeper into the blade
+      if (d === 0) p.px(x, y, 'w'); else if (d === 1) p.px(x, y, 'c'); else if (d >= 2 && d <= 4) p.px(x, y, 's'); else if (d >= 5 && d <= 8) p.px(x, y, 'g'); else if (d >= 9) p.px(x, y, 'S');
+    }
+    const cx = 7, cy = 7; // one big star shining on the edge
+    p.line(cx, cy - 6, cx, cy + 6, 'Y'); p.line(cx - 6, cy, cx + 6, cy, 'Y');
+    p.line(cx, cy - 4, cx, cy + 4, 'w'); p.line(cx - 4, cy, cx + 4, cy, 'w');
+    p.rect(cx - 1, cy - 1, cx + 1, cy + 1, 'w');
+    for (const [dx, dy] of [[-2, -2], [2, -2], [-2, 2], [2, 2]]) p.px(cx + dx, cy + dy, 'Y');
+  },
 };
 const MAP = { quiver_of_plenty: 'quiver', spotters_lens: 'lens', giantslayers_brand: 'giant', catalyst_vial: 'vial', scholars_bookmark: 'bookmark', mirror_buckler: 'buckler', soul_lantern: 'lantern', phoenix_feather: 'feather', iron_will_talisman: 'talisman' };
 const path = new URL('../../src/data/itemIcons.json', import.meta.url);

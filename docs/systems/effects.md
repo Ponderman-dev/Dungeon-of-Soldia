@@ -19,3 +19,5 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   - COUNTER: a hero `crescent` projectile outside a Wind Cutter cast = a Counter Stance counter-cut: `skillFx.counter` (`counterCut`: clang, crescent flies back, cut), `playCounterLook()`.
   - WEAPON ANCHOR: `fxBody()` also returns the weapon part (`wx, wy, wtop, wbot`) so the staff orb, bow, lute, flask and blade glint follow a redesigned hero (fallback: the body edge).
   - GAME vs DEMO: enemies stand ABOVE the heroes in the game, so Wind Cutter sweeps across the row of the enemies it hits and aimed arrows point at the target. Name colours for every hero in `skillFx.name.heroColors`. Tests: skill-fx.test.mjs ('v2 looks', weapon anchor, flask, rain wave).
+
+- ICON POP STACKING (session 26, `itemFx.json iconPop.stack`, `BattleScene.iconPop/bumpPop/fadePop`): row (old: every proc adds an icon side by side), count (the same item bumps its icon + xN, max `maxSide` 3 different), bounce (same, no number), queue (one at a time, `queueMax` waiting, `queueMsShare` shorter). Set to `row` until the user picks (clips on the Look and Pick page).

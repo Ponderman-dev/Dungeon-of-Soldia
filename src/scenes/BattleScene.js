@@ -795,13 +795,27 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
-  // The item's framed icon jumps up over the holder, holds, then floats up and fades. Several at once
-  // stand side by side.
+  // The item's framed icon jumps up over the holder, holds, then floats up and fades. itemFx.json iconPop.stack
+  // decides what happens when many fire at once (user, session 26: the row of 5 moons over the Archer):
+  // 'count' = the same item again bumps its icon and shows x2, x3...; 'bounce' = the same, no number;
+  // 'queue' = one icon at a time, the others wait their turn; 'row' = the old way, all side by side.
+  // Different items stand side by side, at most maxSide (more are skipped).
   iconPop(v, itemId) {
     const def = itemDefs[itemId];
     if (!v || !def || !v.ch.active) return;
     const cfg = itemFxData.iconPop;
+    const stack = cfg.stack || 'row';
     v.pops = (v.pops || []).filter((o) => o.active);
+    if (stack === 'queue' && v.pops.length) {
+      v.popQueue = v.popQueue || [];
+      if (v.popQueue.length < (cfg.queueMax || 3) && !v.popQueue.includes(itemId)) v.popQueue.push(itemId);
+      return;
+    }
+    if (stack === 'count' || stack === 'bounce') {
+      const same = v.pops.find((o) => o.itemId === itemId);
+      if (same) return this.bumpPop(same, stack === 'count');
+      if (v.pops.length >= (cfg.maxSide || 3)) return;
+    }
     const n = v.pops.length;
     // Extra pops stand side by side; near a side of the screen they line up towards the middle
     // instead, so none is cut off by the edge.
@@ -812,16 +826,52 @@ export default class BattleScene extends Phaser.Scene {
     const spot = () => ({ x: Phaser.Math.Clamp(v.ch.x + offset, half, GAME_WIDTH - half), y: v.bg.y - (10 * cfg.scale + 4) });
     const lift = { d: 12 };
     const img = this.add.image(spot().x, spot().y + lift.d, itemIconKey(this, itemId, def.rarity)).setScale(cfg.scale).setDepth(DEPTH.popup);
-    const follow = () => { if (!v.ch.active) return; const p = spot(); img.setPosition(Math.round(p.x), Math.round(p.y + lift.d)); };
+    Object.assign(img, { itemId, lift, count: 1, label: null });
+    const follow = () => {
+      if (!v.ch.active) return;
+      const p = spot();
+      img.setPosition(Math.round(p.x), Math.round(p.y + lift.d));
+      if (img.label) img.label.setPosition(img.x + 10 * cfg.scale, img.y + 9 * cfg.scale).setAlpha(img.alpha);
+    };
     this.events.on('update', follow);
-    img.once('destroy', () => this.events.off('update', follow));
+    img.once('destroy', () => {
+      this.events.off('update', follow);
+      if (img.label) img.label.destroy();
+      // The queue: the next waiting item pops (a little quicker) once this one is gone.
+      const next = v.popQueue && v.popQueue.shift();
+      if (next && v.ch.active) this.iconPop(v, next);
+    });
     v.pops.push(img);
-    const ms = cfg.ms;
+    const ms = cfg.ms * (stack === 'queue' && v.popQueue && v.popQueue.length ? cfg.queueMsShare || 1 : 1);
     this.tweens.add({ targets: lift, d: 0, duration: ms * 0.25, ease: 'Back.easeOut' });
-    this.tweens.add({ targets: lift, d: -cfg.riseCharPx * CHAR_SCALE, delay: ms * 0.7, duration: ms * 0.3 });
-    this.tweens.add({ targets: img, alpha: 0, delay: ms * 0.7, duration: ms * 0.3, onComplete: () => img.destroy() });
+    this.fadePop(img, ms);
     // a white ring flashes out from the icon as it appears (and moves with it)
     this.addFx(ms * 0.25, (q) => { const out = []; const c = { x: img.x / CHAR_SCALE, y: img.y / CHAR_SCALE }; const r = (9 + q * 16) * (cfg.scale / CHAR_SCALE); for (let i = 0; i < 40; i++) { const a = (i / 40) * Math.PI * 2; out.push([Math.round(c.x + Math.cos(a) * r), Math.round(c.y + Math.sin(a) * r), 1, 1, 0xffffff, 1 - q]); } return out; });
+  }
+
+  // The hold, then the icon floats up and fades (started again when the same item fires again).
+  fadePop(img, ms) {
+    const cfg = itemFxData.iconPop;
+    if (img.fade) img.fade.forEach((t) => t.remove());
+    img.setAlpha(1);
+    img.fade = [
+      this.tweens.add({ targets: img.lift, d: -cfg.riseCharPx * CHAR_SCALE, delay: ms * 0.7, duration: ms * 0.3 }),
+      this.tweens.add({ targets: img, alpha: 0, delay: ms * 0.7, duration: ms * 0.3, onComplete: () => img.destroy() }),
+    ];
+  }
+
+  // The same item fired again while its icon is up: the icon jumps a little, stays longer, and (count) shows x2, x3...
+  bumpPop(img, showCount) {
+    const cfg = itemFxData.iconPop;
+    img.count += 1;
+    this.tweens.killTweensOf(img.lift);
+    img.lift.d = Math.min(img.lift.d, 0) + 6;
+    this.tweens.add({ targets: img.lift, d: 0, duration: cfg.ms * 0.2, ease: 'Back.easeOut' });
+    this.fadePop(img, cfg.ms);
+    if (!showCount) return;
+    if (!img.label) img.label = this.add.text(img.x, img.y, '', { fontFamily: UI.font, fontSize: '8px', color: '#ffffff', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(DEPTH.popup + 0.1);
+    img.label.setText(`x${img.count}`).setScale(1.5);
+    this.tweens.add({ targets: img.label, scale: 1, duration: 160, ease: 'Back.easeOut' });
   }
 
   // Where an AREA skill lands: a faint ring (circle), wedge (cone) or strip (band) on the floor that

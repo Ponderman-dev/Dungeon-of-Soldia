@@ -114,7 +114,7 @@ ok('Siege Cannon is legendary, Feather Boots / Lucky Coin / Dice / Totem / Bulwa
 { const { s, h } = mk(['goblin']); const mage = new BattleState({ heroDefs: ['mage', 'knight', 'rogue'].map((id) => noPerks(r('heroes.json')).concat(r('heroes.json').filter((x) => x.id === 'mage'))[0]), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
   void mage; }
 { const real = r('heroes.json'); const sq = (ids) => new BattleState({ heroDefs: ids.map((id) => real.find((x) => x.id === id)), enemyDefs: r('enemies.json'), itemDefs, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
-  const rw = r('rewards.json'); const w = (st, id) => dropWeight(itemDefs[id], squadSources(st.heroes, itemDefs), rw);
+  const rw = { ...r('rewards.json'), needsMissingFactor: 0.25 }; const w = (st, id) => dropWeight(itemDefs[id], squadSources(st.heroes, itemDefs), rw);
   ok('Element charms work for anyone: normal drop weight without a source', ['kindling', 'frost_charm', 'storm_charm', 'shadow_charm'].every((id) => w(sq(['knight', 'rogue', 'archer']), id) === w(sq(['mage', 'knight', 'rogue']), id)));
   ok('Ghastly Fire (needs fire) is x0.25 without a fire source and normal with the Mage', w(sq(['knight', 'rogue', 'archer']), 'ghastly_fire') * 4 === w(sq(['mage', 'knight', 'rogue']), 'ghastly_fire'));
   const sqi = sq(['knight', 'rogue', 'archer']); sqi.giveItem(sqi.heroes[0].uid, 'kindling');

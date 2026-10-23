@@ -9,5 +9,5 @@
     { "fromFloor": 31, "odds": { "common": 50, "rare": 35, "epic": 12, "legendary": 3 } }
   ],
   "defaultDropWeight": 100,
-  "needsMissingFactor": 0.25
+  "needsMissingFactor": 1
 }

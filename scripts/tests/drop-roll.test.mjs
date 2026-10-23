@@ -29,8 +29,11 @@ ok('floor 31 card matches the legendary odds', Math.abs(m31.legendary - band(2).
   for (let i = 0; i < 2000; i++) { const c = rollChoices({ itemDefs, rules: rw, floor: 5, count: 3, heroes: s.heroes }); if (new Set(c.map((x) => x.id)).size !== c.length || c.length !== 3) dup++; }
   ok('3 different cards every time', dup === 0); }
 
-// Soft gating: Eagle Eye needs a ranged hero.
-{ const melee = mk(['knight', 'rogue', 'berserker']), withArcher = mk(['knight', 'rogue', 'archer']);
+// Soft gating: Eagle Eye needs a ranged hero. The game has it OFF (user, session 26: needsMissingFactor 1 = every item
+// the same chance); the rule is tested with its own factor 0.25 so it still works if it is turned back on.
+ok('needs rule is off in the data (every item the same chance)', rw.needsMissingFactor === 1);
+{ const rw = { ...r('rewards.json'), needsMissingFactor: 0.25 };
+  const melee = mk(['knight', 'rogue', 'berserker']), withArcher = mk(['knight', 'rogue', 'archer']);
   ok('all-melee squad has no ranged source', !squadSources(melee.heroes, itemDefs).has('ranged'));
   ok('archer gives a ranged source', squadSources(withArcher.heroes, itemDefs).has('ranged'));
   ok('Eagle Eye weight x0.25 without a ranged hero', dropWeight(itemDefs.eagle_eye, squadSources(melee.heroes, itemDefs), rw) === 25);

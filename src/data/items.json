@@ -2153,17 +2153,17 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Every kill: a shield of 6% max health that fades over 4s.",
+    "description": "Every kill: a shield of 4% max health that fades over 4s.",
     "effects": [
       {
         "special": "killShield",
-        "percent": 6,
-        "perExtra": 3,
+        "percent": 4,
+        "perExtra": 2,
         "durationMs": 4000
       }
     ],
     "dropWeight": 90,
-    "perStack": "+3% shield"
+    "perStack": "+2% shield"
   },
   "rally_flag": {
     "name": "Rally Flag",

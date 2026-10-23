@@ -6,7 +6,7 @@
     "riseCharPx": 4,
     "gapPx": 44,
     "_stack": "Many pops at once over one hero (BattleScene.iconPop): count = same item bumps its icon + xN, bounce = same without the number, queue = one at a time (queueMax waiting, each queueMsShare of ms while others wait), row = all side by side (old). maxSide = most different items side by side.",
-    "stack": "row",
+    "stack": "deck",
     "maxSide": 3,
     "queueMax": 3,
     "queueMsShare": 0.6,

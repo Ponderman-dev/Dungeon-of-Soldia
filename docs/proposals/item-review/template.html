@@ -46,6 +46,7 @@ canvas { image-rendering: pixelated; display: block; }
 .tag.new { background: var(--accent); color: #1a1208; padding: 1px 6px; border-radius: 3px; }
 .desc { font-size: 14px; color: var(--fg); }
 .fight { display: flex; flex-direction: column; gap: 6px; }
+video.clip { display: block; width: 100%; aspect-ratio: 390 / 600; background: #111; image-rendering: pixelated; border-radius: 6px; border: 1px solid var(--line); }
 .fight canvas { width: 240px; max-width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); background: #1b1629; }
 .see { font-size: 13px; color: var(--muted); margin: 0; }
 .see b { color: var(--fg); font-weight: 600; }
@@ -66,7 +67,7 @@ textarea::placeholder { color: #6e6385; }
 <div class="wrap">
   <header>
     <h1>Item Review</h1>
-    <p class="lede">Round 2: item optimization. Every item in the game with its icon, its text and what it shows in a fight. Write anything in the box under an item (too strong, too weak, confusing text, merge or cut it, change the look…). Big thoughts go in the box at the top. Everything saves by itself.</p>
+    <p class="lede">Round 3: the 21 NEW items. Each new item that shows something has a clip of it going off in a real fight (recorded from the game, chance pushed up so it shows quickly). Write what you think of the look (and anything else) in the box under it. The other items are still here under "All items". Everything saves by itself.</p>
   </header>
   <div class="general">
     <label for="note-general">GENERAL NOTES (about all items, ideas, anything)</label>
@@ -74,7 +75,8 @@ textarea::placeholder { color: #6e6385; }
     <div class="saved" id="saved-general"></div>
   </div>
   <div class="bar" role="toolbar" aria-label="Filter">
-    <button class="chip" id="f-all" data-f="all" aria-pressed="true">All items <span class="n"></span></button>
+    <button class="chip" id="f-new" data-f="new" aria-pressed="true">New items <span class="n"></span></button>
+    <button class="chip" id="f-all" data-f="all" aria-pressed="false">All items <span class="n"></span></button>
     <button class="chip" id="f-notes" data-f="notes" aria-pressed="false">With notes <span class="n"></span></button>
     <span class="status" id="status" aria-live="polite">Connecting…</span>
   </div>
@@ -90,8 +92,8 @@ const FXCAT = FX.catalog();
 const STAGE = new FX.FxStage();
 const SZ = 2; // screen pixels per character pixel on the little stages
 const notes = {}; // item id -> text (from the database, or typed here)
-let filter = 'all';
-const COL = 'notes2'; // round 2 notes (round 1 stays in `notes`)
+let filter = 'new';
+const COL = 'notes3'; // round 3 notes: the new items' looks (round 1 = `notes`, round 2 = `notes2`)
 let db = null;
 
 // One framed icon onto a canvas, `s` screen pixels per icon pixel.
@@ -114,7 +116,8 @@ function makeCard(it) {
   el.className = 'card ' + it.rarity;
   el.innerHTML = `<div class="top"><div class="icons"><canvas class="big"></canvas><canvas class="small"></canvas><span class="cap">battle size</span></div>
     <div class="info"><div class="nm"></div><div class="tags"><span class="tag rar"></span><span class="tag type"></span></div><div class="desc"></div><div class="per"></div></div></div>
-    <div class="fight"><label>IN A FIGHT</label><canvas class="scene" width="240" height="120" role="img"></canvas><p class="see"></p></div>
+    ${it.clip ? `<div class="fight"><label>IN A REAL FIGHT</label><video class="clip" muted loop playsinline controls preload="metadata" aria-label="${it.name} in a real fight"><source src="clips/${it.clip}.mp4" type="video/mp4"><source src="clips/${it.clip}.webm" type="video/webm"></video><p class="see"></p></div>` : ''}
+    <div class="fight"><label>${it.clip ? 'ITS ICON POP' : 'IN A FIGHT'}</label><canvas class="scene" width="240" height="120" role="img"></canvas><p class="see"></p></div>
     <label for="note-${it.id}">YOUR NOTES (numbers, text, keep / cut, look)</label>
     <textarea id="note-${it.id}" placeholder="e.g. too strong, cut it in half · text is confusing · merge with … · nobody picks it"></textarea>
     <div class="saved"></div>`;
@@ -125,6 +128,7 @@ function makeCard(it) {
   rt.textContent = r.label; rt.style.color = r.color;
   el.querySelector('.tag.type').textContent = it.type;
   el.querySelector('.desc').textContent = it.desc;
+  if (it.clip) el.querySelector('.fight .see').textContent = it.clipNote;
   const per = el.querySelector('.per');
   if (it.perStack) per.textContent = 'Per stack: ' + it.perStack; else per.hidden = true;
   const ta = el.querySelector('textarea');
@@ -137,7 +141,7 @@ function makeCard(it) {
   const steps = [];
   if (it.pop) steps.push({ kind: 'pop', ms: 900, label: 'its icon pops up' });
   for (const [g, n] of it.fx) { const e = FXCAT.find((x) => x.group === g && x.name === n); if (e) steps.push({ kind: 'fx', e, ms: e.group === 'status' ? 2400 : FX.tuner.ms(g, n, e.ms), label: e.label }); }
-  const see = el.querySelector('.see');
+  const see = el.querySelector('canvas.scene').nextElementSibling;
   const labels = [...new Set(steps.map((x) => x.label))];
   if (!steps.length) see.textContent = 'Nothing to see: a quiet bonus with no effect of its own.';
   else { see.append('Shows: '); labels.forEach((l, i) => { const b = document.createElement('b'); b.textContent = l; see.append(i ? ', ' : '', b); }); }
@@ -147,8 +151,8 @@ function makeCard(it) {
 }
 
 // Drafts stay in this browser too, so nothing typed is lost if the database is not reachable.
-function draft(id, text) { try { localStorage.setItem('soldia-item-note2-' + id, text); } catch (e) {} }
-function readDraft(id) { try { return localStorage.getItem('soldia-item-note2-' + id); } catch (e) { return null; } }
+function draft(id, text) { try { localStorage.setItem('soldia-item-note3-' + id, text); } catch (e) {} }
+function readDraft(id) { try { return localStorage.getItem('soldia-item-note3-' + id); } catch (e) { return null; } }
 
 async function saveNote(it, text, saved) {
   if (!db) { saved.textContent = 'Kept in this browser only (not saved online)'; saved.className = 'saved bad'; return; }
@@ -166,7 +170,7 @@ async function saveNote(it, text, saved) {
 
 function counts() {
   const n = (f) => DATA.items.filter((it) => show(it, f)).length;
-  for (const f of ['all', 'notes']) document.querySelector(`#f-${f} .n`).textContent = n(f);
+  for (const f of ['new', 'all', 'notes']) document.querySelector(`#f-${f} .n`).textContent = n(f);
 }
 function show(it, f) { return f === 'all' || (f === 'new' && it.isNew) || (f === 'notes' && (notes[it.id] || '').trim()); }
 
@@ -241,6 +245,9 @@ document.querySelectorAll('.chip').forEach((b) => b.addEventListener('click', ()
 counts();
 render();
 for (const c of cards.values()) { if (io) io.observe(c.cv); }
+// Clips play only while on screen (saves the phone's battery).
+const vio = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((x) => (x.isIntersecting ? x.target.play().catch(() => {}) : x.target.pause())), { threshold: 0.3 }) : null;
+document.querySelectorAll('video.clip').forEach((v) => vio && vio.observe(v));
 
 // The general notes box (same database, doc id `_general`).
 const GEN = { id: '_general', name: 'General notes' };

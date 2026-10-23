@@ -411,5 +411,33 @@
    "item",
    "lifesteal"
   ]
+ ],
+ "emergency_buckler": [
+  [
+   "status",
+   "shield"
+  ]
+ ],
+ "rally_flag": [
+  [
+   "status",
+   "shield"
+  ]
+ ],
+ "frost_mantle": [
+  [
+   "status",
+   "chill"
+  ]
+ ],
+ "sweeping_strap": [
+  [
+   "hit",
+   "melee"
+  ],
+  [
+   "hit",
+   "melee"
+  ]
  ]
 }

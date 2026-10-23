@@ -1,6 +1,6 @@
-// Records the NEW ITEM EFFECTS review clips: each new item going off in a real fight (dev server), trimmed with ffmpeg.
-// Usage: node record.mjs <outDir> [port=5177] [clipId...]   (global playwright, run vite from the scratchpad)
-// Each clip: a fresh browser, a floor-6 fight, the item given to a hero with its chance pushed up so it shows quickly.
+// Records the real-fight clips of the NEW items for the ITEM REVIEW page (round 3): each new item going off in a fight
+// (dev server), trimmed with ffmpeg. Usage: node record.mjs <outDir> [port=5177] [clipId...]  (global playwright, run vite
+// from the scratchpad). Each clip: a floor-6 fight, the item given to a hero with its chance pushed up so it shows quickly.
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';

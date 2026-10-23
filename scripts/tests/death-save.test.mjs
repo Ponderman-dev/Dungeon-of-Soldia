@@ -15,8 +15,10 @@ const pct = rules.deathSave.damagePercent / 100;
 // Defense bonus
 { const { h } = mk(), { h: p } = mk(plainRules(rules)); const f = 1 + rules.heroDefense.percent / 100;
   ok('heroDefense: defense and resist are raised by the percent', Math.abs(h.stats.defense - p.stats.defense * f) < 0.01 && Math.abs(h.stats.resist - p.stats.resist * f) < 0.01, `${h.stats.defense} ${p.stats.defense}`); }
-{ const { h } = mk(), { h: p } = mk(plainRules(rules)); const f = 1 + rules.heroAttack.percent / 100;
-  ok('heroAttack: attack is raised by the percent', rules.heroAttack.percent > 0 && Math.abs(h.stats.attack - p.stats.attack * f) < 0.01, `${h.stats.attack} ${p.stats.attack}`); }
+// heroAttack is 0 in the data now (reverted in session 26): test the rule with a made-up percent
+{ const atk = { ...plainRules(rules), heroAttack: { percent: 20 } };
+  const { h } = mk(atk), { h: p } = mk(plainRules(rules)); const f = 1.2;
+  ok('heroAttack: attack is raised by the percent', Math.abs(h.stats.attack - p.stats.attack * f) < 0.01, `${h.stats.attack} ${p.stats.attack}`); }
 // Save: the cut hit leaves the hero alive
 { const { s, h } = mk(); h.hp = 100; const hit = Math.round(100 / pct) - 20; const ev = []; s.dealDamage(h, hit, ev);
   ok('deathSave: the first killing hit is cut, the hero lives', h.alive && h.hp === 100 - Math.round(hit * pct), `${h.hp}`);

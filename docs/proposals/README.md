@@ -42,5 +42,12 @@ Page: https://claude.ai/artifact/C7SHzkoUvkxRdV2ryMV8L2 . Source in `bosses-kits
 
 VERSION 3 (same page): bosses, hero kits v2 and the Organic menu sounds are BUILT. Skill books v3 (not built, waiting for the user): small STAT pages (+8% power, -8% cooldown, -15% wind-up, +15% duration; max 3 per skill) and universal MODIFIER pages any hero can put on any skill (2 slots per skill, a third replaces one): Inks (Poison/Bleed/Burn/Chill x2), Hunter's Ink, Blood Price, Siphon, Cyclone, Ricochet, Aftershock, Titan, Bulwark, Purify, Roar, Gravecall, Rally, Concussive, Overcharge, Reckless, Desperate, Hasty. Blue book = 3 pages (mostly stat), golden book after each boss = 3 modifiers. Hero-specific and FORBIDDEN pages are dropped. Edit script: `bosses-kits-sounds/books-v3-edit.py` (applied to the built `page.html`).
 
-## New item effects (13 items x 2 options)
-Page: https://claude.ai/artifact/FHrVb3J4nFuJjm1oYqyyqU . Built by `node docs/proposals/new-item-fx/make-page.mjs <out.html>` (`recipes.js` = the 26 proposed recipes in the SAME format as src/systems/itemFx.js, `template.html`, bundle `vite.fx.config.js` / `fx-entry.js` with the game's effect stage src/studio/fxStage.js). Picks + notes in db collection `picks` (doc = item id, `{pick: 'now'|'A'|'B', note}`): read with ArtifactData `list`, then move the picked recipe into itemFx.js (+ ITEM_MS, an event in BattleState/BattleScene where the item fires) and hook it like the other item effects.
+## New item effects (13 items x 2 options; the SAME url now holds the NEW ITEM EFFECTS REVIEW, below)
+Page: https://claude.ai/artifact/FHrVb3J4nFuJjm1oYqyyqU (old version; source kept). Built by `node docs/proposals/new-item-fx/make-page.mjs <out.html>` (`recipes.js` = the 26 proposed recipes in the SAME format as src/systems/itemFx.js, `template.html`, bundle `vite.fx.config.js` / `fx-entry.js` with the game's effect stage src/studio/fxStage.js). Picks + notes in db collection `picks` (doc = item id, `{pick: 'now'|'A'|'B', note}`): read with ArtifactData `list`, then move the picked recipe into itemFx.js (+ ITEM_MS, an event in BattleState/BattleScene where the item fires) and hook it like the other item effects.
+
+## New item effects review (session 28: the 21 new items' looks in a real fight)
+Page: https://claude.ai/artifact/FHrVb3J4nFuJjm1oYqyyqU (replaced the old 13-items page above at the same url). Source `item-fx-review/`:
+vite from the scratchpad (e.g. port 5177), `node record.mjs <dir> 5177 [clipId...]` (global playwright; each clip = a floor-6 fight,
+items given with their chance pushed up, cropped to the fight area x2), then `node make.mjs <dir>` (writes
+<dir>/soldia-item-fx-review.html). Publish with `root` = <dir> and files clips/* (clips NOT in git). db collection `review`,
+doc = clip id `{verdict: 'ok'|'change', text}`, doc `_general` {text}. Old page's picks stay in collection `picks`.

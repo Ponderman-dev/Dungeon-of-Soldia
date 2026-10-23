@@ -1,39 +1,36 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 24): NEXT = ITEM OPTIMIZATION, then (fresh session) BOSSES REWORK
-- BRANCH: `main` has EVERYTHING (session 23 merged in). See the Git rule in CLAUDE.md (every handoff updates main).
-- NEXT 1, ITEM OPTIMIZATION: the user's words only ('item optimization'); ASK what they mean first (question tool,
-  e.g. balance weak/strong items with `review.mjs` / `itemruns.mjs`, clean up item texts/tooltips, fewer or merged
-  items, item code speed). Read `docs/systems/items.md` + `docs/item-decisions.md` (numbers truth) + balance-tools.md.
-  Recent: charm / Chill Band / Magma Core 'Per stack' now '+X% of attack as <element>' (they ride INSIDE the hit);
-  every other perStack line was checked against the effects and matched (session 23).
-- NEXT 2, BOSSES REWORK (its own session): the user's words only; ASK what to change. Read `docs/systems/bosses.md`
-  (8 bosses, `bosses.js`, `bosscheck.mjs` win rates). Enemy random picks now go through `pickWeighted()` (below).
-- DONE session 23 (details in the docs/systems files):
-  - Enemies hit RANGED minions (Wisp, Imp, Phoenix) half as often (`minions.rangedTargetWeight` 0.5, `pickWeighted()`;
-    melee enemies never walk to one, but hit it at random if it is in reach; boss random picks too). Curve 3 smart
-    mean 56.9 -> 52.9, median 42 -> 40 (minions.md).
-  - Tap sound = one take (PIXABAY Button, `picked/tap.mp3`) (sound.md).
-  - Squad screen: '< CAMP' + RANDOM in the bottom row, roomier buttons; camp: real up-arrows on TO EXPEDITION, 24px
-    side margins; menu buttons slide/fade OUT before a screen slide and IN after (`uiKit.uiShift`, BEGIN DESCENT too)
-    (title-base.md, saving-squad.md).
-  - Speech bubbles: every line rewritten to 2-5 words, bubble max width 140 (ui.md).
-  - The Skill Effects review page (NySVH2UUozwNNSYuky9xBN) currently holds the 3 tap sounds (done; reuse it freely).
-- itch.io: the zip given to the user predates the hub, charms, page-2 sounds and all of session 23: `npm run build:itch`
+## START HERE (session 25): NEXT = BOSSES REWORK
+- BRANCH: `main` has EVERYTHING (session 24 merged in). See the Git rule in CLAUDE.md (every handoff updates main).
+- NEXT, BOSSES REWORK: the user's words only ('rework bosses'); ASK what to change first (question tool: e.g. new
+  moves, harder/easier, new looks, fewer/more bosses, which boss feels bad). Read `docs/systems/bosses.md`
+  (8 bosses, `bosses.js`, boss HUD, `bosscheck.mjs` win rates). Top killers in the last curve: Brood Mother, Grukk.
+- DONE session 24 (details: `docs/item-decisions.md` 'ITEM OPTIMIZATION round 2' + 'NEW ITEMS session 24'):
+  - Item review page round 2 (https://claude.ai/artifact/S7cbuLJoStsdi5hpg2SBef): notes now in db collection
+    `notes2` (`_general` = big top box); round 1 stays in `notes`. All 19 round-2 notes are BUILT.
+  - 19 items changed (numbers, Bandage Roll any debuff + defense, Bulwark/Totem block with a shared 60% cap, Eclipse
+    resist cut, Heart of the Beast +100 health / 1% regen, Overheal Ring -> Vital Band (common regen, id kept),
+    Plague poison damage, Mimic no tougher with copies, Assault aura 0.5s into the floor). Overheal shield and
+    healAmp code removed.
+  - NEW items: Riposte Cloak (rare), Last Stand (epic), Harvest Scythe (rare, 8% of crit damage, max 10% max health
+    per crit; user wants OP moments). Killing Mask was built then CUT (lifesteal stacking ran away). Icons are first
+    drafts (user may redraw in the Studio). Tests: items-s24.test.mjs.
+  - KIV (user: keep in view): the round-2 changes made early floors a bit harder (alive at 20: 93% -> 88%).
+- Last curve 3 smart (all of the above): median 43, mean 56.2, alive at 100: 5%.
+- itch.io: the zip given to the user predates the hub, charms, page-2 sounds and sessions 23-24: `npm run build:itch`
   again before an upload, add them to the devlog draft `docs/devlog/2026-10-21-title-and-camp.md` (version 0.1.0: ask
   whether testers played the old build; then bump to 0.2.0).
 - Test helper (scratchpad, throwaway): `git worktree add <scratch>/wt HEAD`, symlink node_modules, run
   `<scratch>/wt/node_modules/.bin/vite <scratch>/wt --port 5177` FROM the scratchpad; Playwright
   (/opt/node22/lib/node_modules/playwright, executablePath /opt/pw-browsers/chromium). Dev build exposes `window.__game`:
-  wait for 'Title', stop scenes, `scene.start('Base')` or 'Battle' (registry `squadIds`); `scene.getScene('Battle')
-  .sayLine('clear')` shows a bubble. Copy edited files into the worktree to preview before applying. After a screen
-  slide, wait ~2.5s before tapping (taps are blocked while the buttons shift). Remove the worktree after
-  (`git worktree remove --force`), stop vite with `pkill -f "[v]ite.*--port 5177"`.
+  wait for 'Title', stop scenes, `scene.start('Base')` or 'Battle' (registry `squadIds`). After a screen slide, wait
+  ~2.5s before tapping. Remove the worktree after (`git worktree remove --force`), stop vite with `pkill -f "[v]ite.*--port 5177"`.
 - PUBLISH: the first publish per session may be refused ('not viewed'): Read 1-8 lines of the saved live copy, then
   publish again (if refused again as 'identical', publish once more: it goes through).
-- Sound board picks: page 1 = db `picks` (apply-picks.py), page 2 = db `assign` (WINS; applied by hand so far).
+- Fresh clone: `npm install` first (node_modules is not there).
 
 ## How we work with this user
+- NO BALANCE SIMULATIONS unless the user asks (user, session 24: 'no need run simulation'): curve/review/itemruns cost time.
 - Beginner, vibe coding: explain simply, small steps, ask before design changes. Picks: use the QUESTION TOOL (user asks
   'questions'); include what each extra copy adds (stacking). If it comes back '[No preference]', ask again, don't guess.
 - Show ideas on the EXISTING review page first (docs/proposals/skill-fx), build into the game only after the user's OK.

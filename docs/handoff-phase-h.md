@@ -3,7 +3,8 @@
 ## START HERE (session 26): NEXT = FLOORS 50+ (user: 'floor 1-50 experiences are good now, focus on the rest')
 - BRANCH: `main` has EVERYTHING (session 25 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
 - FIRST (user's order): REVERT the heroes' +15% attack (session 25): set combat.json `heroAttack.percent` to 0 (keep the
-  rule; tests use `plainRules()`), then ASK which of the list below to do first (question tool). One step at a time.
+  rule; tests use `plainRules()`), then go through BOTH lists below with the user: first tell them what was already built for the earlier list
+  (7-10, they have not read it), then ASK which to do first (question tool). One step at a time.
 - THE USER'S LIST (session 25 end, with screenshots; nothing started):
   1. Two full ROWS of enemies: back-row enemies overlap the front enemy's HP bar (rows too close: combat.json
      `movement.layout.enemyRowGap` 70 / bar height; see `enemySpots()`, `syncBar()`).
@@ -20,13 +21,20 @@
      'favourite' each run); it feels samey because half the cards are commons (24 items) and `needs` items are x0.25.
      I listed 13 ideas (anti-repeat, seen-fade, owned fade, fewer commons deep, pity timer, reroll, 4 cards, skip,
      build-aware card, themed screens, more commons...); my pick: anti-repeat + fewer commons deeper in. User to choose.
-- DONE session 25 but NOT SEEN IN THE GAME YET (tests pass; committed at the handoff, no preview built):
-  - Skill books: NO page limits (combat.json `books` null = no limit; duplicates of a modifier still refused); page marks
-    wrap into rows on the skill square (`drawPageMarks()`).
-  - Text overflow: 'Which skill?' box note uses `fitText()`; the big banner (e.g. 'Blessed! Regen for the next 3 fights')
-    wraps (wordWrap) instead of running off the screen.
-  - Sound: at high floors busy fights filled all 8 voices and floor clear / level up went silent. Now only BUSY cues
-    (own minGapMs) share `maxVoices`; one-off cues and `always: true` (skill_*) always play (sound.md).
+- THE USER'S EARLIER LIST (session 25, with screenshots). Built in session 25 (tests pass, committed), but the user has
+  NOT READ the replies or SEEN it in the game: tell them what was done (simply), show it IN THE GAME when they ask, and
+  ask whether it is OK before moving on:
+  7. TEXT OVER THE EDGES: the 'Which skill?' box note ('Full: replaces one' ran out of the box) now uses `fitText()`
+     (RewardScene); the big banner ('Blessed!\nRegen for the next 3 fights' ran off the screen) now wraps (wordWrap
+     GAME_WIDTH - 32 in BattleScene). Check other long texts too (the user said 'such as these').
+  8. SOUNDS GO MISSING AT HIGH FLOORS (floor clear and others): busy fights filled all 8 voices (`sounds.json`
+     maxVoices). Now only BUSY cues (with their own minGapMs: hits, procs, steps) share the 8; one-off cues (floor clear,
+     level up, rewards, boss roar) and `always: true` cues (every skill_* sound) always play (`sfx.js`, sound.md).
+  9. ITEMS FEEL THE SAME EVERY RUN: = item 6 above (no fix built yet, only the measuring + 13 ideas).
+  10. REMOVE THE SKILL BOOK LIMITS (was 3 stat pages + 2 modifiers per skill): combat.json `books` maxStatPages /
+     modifierSlots = null (no limit); the same modifier twice on one skill is still refused (ask the user if that is
+     OK); the page marks on the skill square wrap into rows (stat dots rows of 5, modifier diamonds rows of 4,
+     `drawPageMarks()`); 'Which skill?' shows '2 stats / 1 mods' without a max. Tests: skill-books.test.mjs.
 - DONE session 25 (in the game + preview): bosses.md has the details.
   - Grukk (20): Goblin King look (first-draft art, `scripts/art/grukk/`), separate swinging cleaver; War Drum calls
     1 Goblin + 1 Goblin Archer (ranged, poison every hit) at 50% health; Quake Jump (under 50%: 2x hit + 2s stun on all).

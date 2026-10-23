@@ -63,7 +63,14 @@ const lost = (e) => 1e7 - e.hp;
     const before = lost(e); s.landAttack(k, e, ev); const dealt = lost(e) - before;
     const want = plain * (1 + ps.percent / 100) * (hm.percent / 100) + (e.maxHp * hp.percent) / 100;
     ok('...attack ' + N + ' is a Heart Strike: ' + hm.percent + '% + ' + hp.percent + '% of max health, and a stun', hearts(ev) === 1 && Math.abs(dealt - want) / want < 0.01 && e.statuses.some((st) => st.type === 'stun'), `${dealt} vs ${want}`);
-    ok('...then the count starts again', s.heartStrikeIn(k) === N - 1); }
+    ok('...then the count starts again', s.heartStrikeIn(k) === N - 1);
+    const hb2 = val('sharpest_blade', 'heartStrikeBreak'), br = e.statuses.find((st) => st.type === 'armorBreak');
+    ok('...and it breaks the armor: -' + hb2.percent + '% defense for ' + hb2.spec.durationMs / 1000 + 's', br && br.defensePercent === -hb2.percent && Math.abs(br.remaining - hb2.spec.durationMs) < 1, JSON.stringify(br)); }
+  { // The broken armor helps the whole squad: a plain hit from ANOTHER hero on an armored enemy does more.
+    const hitOn = (broken) => { const { s, e } = mk(['goblin']); e.stats.defense = 200; const other = s.heroes.find((h) => h.damageType === 'melee');
+      if (broken) s.applyStatus(e, { status: 'armorBreak', durationMs: 5000, defenseFlat: 0, defensePercent: -50 }, other, 'test', []);
+      s.strike(other, e, [], { basic: true }); return lost(e); };
+    ok('...a squad mate hits the broken enemy harder', hitOn(true) > hitOn(false) * 1.1, `${hitOn(false)} -> ${hitOn(true)}`); }
   { const { s, e, k } = blade(); e.def = { ...e.def, boss: true }; for (let i = 0; i < N - 1; i++) s.landAttack(k, e, []);
     const before = lost(e); s.landAttack(k, e, []); const dealt = lost(e) - before;
     const want = plain * (1 + ps.percent / 100) * (hm.percent / 100) + (e.maxHp * hb.percent) / 100;

@@ -1182,6 +1182,8 @@ export default class BattleState {
     const hit = this.strike(unit, target, events, { basic: true, riders: true, ...(coil.length ? { extraRiders: coil } : {}), ...(heart ? { multiplier: heart } : {}), ...(plus ? { damagePercent: plus } : {}), ...(unit.hitType ? { damageType: unit.hitType } : {}) }); // an elite hits with its element; riders = element charms in the same hit
     if (heart && !hit.dodged) {
       events.push({ type: 'proc', unit, label: 'Heart strike!', itemId: 'sharpest_blade', target });
+      // Armor break (user): the enemy's defense drops by `heartStrikeBreak`% for a while, for the whole squad.
+      if (unit.specials.heartStrikeBreak && target.alive) this.applyStatus(target, { ...(unit.specials.heartStrikeBreakSpec || { status: 'armorBreak', durationMs: 5000 }), defenseFlat: 0, defensePercent: -unit.specials.heartStrikeBreak }, unit, `heartBreak_${unit.uid}`, events);
       // The cut: a share of the enemy's MAX health on top (less on a boss), as item damage (it triggers nothing).
       const cut = target.def.boss ? unit.specials.heartStrikeBossMaxHp || 0 : unit.specials.heartStrikeMaxHp || 0;
       if (cut > 0 && target.alive) this.strike(unit, target, events, { multiplier: (target.maxHp * cut) / 100 / Math.max(1, unit.stats.attack), damageType: unit.damageType, item: true, heartCut: true });
@@ -2627,7 +2629,7 @@ export default class BattleState {
       if (spec.status === 'invulnerable') status.healPercentOnEnd = spec.healPercentOnEnd || 0;
       if (spec.status === 'regenBoost') status.percentMaxHpPerSec = spec.percentMaxHpPerSec || 0;
       // Stat debuffs: the number comes from the skill/item, or the default in statuses.json.
-      for (const field of ['attackPercent', 'defenseFlat', 'resistFlat', 'missPercent', 'damageTakenPercent']) {
+      for (const field of ['attackPercent', 'defenseFlat', 'defensePercent', 'resistFlat', 'missPercent', 'damageTakenPercent']) {
         if (spec[field] !== undefined || info[field] !== undefined) status[field] = spec[field] ?? info[field];
       }
       if (spec.status === 'shock') {

@@ -426,7 +426,8 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - SHARPEST BLADE REWORK (user: 'one of the best legendaries', the gimmick stays: NO elemental damage): PURE STEEL =
   the holder has no element (no charm / Chill Band / Magma Core / Coil charges; the Mage never): every pure attack
   +40% (+20% per extra), every 5th pure attack of the floor is a HEART STRIKE: 500% (+50%) + 15% (+5%) of the enemy's
-  max health (bosses 4% (+1%)), stun 2.5s; a Heart Strike kill makes the next attack one too. The weapon glints gold
+  max health (bosses 4% (+1%)), stun 2.5s, ARMOR BREAK -50% defense 5s (user: helps the squad); a Heart Strike kill
+  makes the next attack one too. The weapon glints gold
   before it (itemFx.json `sharpest_blade.glint`). Sims (scratch copy, the bot never gives the holder elements, 30 runs):
   Knight +13.1, Rogue +15.7, Archer +10.7, Berserker +7.0 floors (old: +5.7 / +9.3 / +6.7 / -0.6; Gambler's Dice
   +0.6 / +6.7 / +10.6, Bloodlust Mask on Rogue +9.6).

@@ -37,7 +37,7 @@ export function armorPercent(points, rules) {
 function armourCut(defender, type, rules, damageTypes, shred = 0) {
   const physical = damageTypes[type].category === 'physical';
   const points = physical
-    ? defender.stats.defense + statusSum(defender, 'armorBreak', 'defenseFlat') - shred
+    ? defender.stats.defense * (1 + Math.max(-100, statusSum(defender, 'armorBreak', 'defensePercent')) / 100) + statusSum(defender, 'armorBreak', 'defenseFlat') - shred // defensePercent: Sharpest Blade's Heart Strike
     : defender.stats.resist * (1 - doomResistCut(defender) / 100) + statusSum(defender, 'curse', 'resistFlat');
   return armorPercent(points, rules);
 }

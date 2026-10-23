@@ -2365,7 +2365,8 @@
     "effects": [
       {
         "special": "bombDamage",
-        "percent": 100
+        "percent": 100,
+        "perExtra": 50
       },
       {
         "special": "bombBarrel",

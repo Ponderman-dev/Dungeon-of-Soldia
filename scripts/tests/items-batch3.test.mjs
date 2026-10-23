@@ -40,7 +40,8 @@ for (const [id, status] of [['ice_bomb', 'chill'], ['electric_bomb', 'stun'], ['
 { const bd = itemDefs.bombardiers_barrel.effects.find((x) => x.special === 'bombDamage'), bb = itemDefs.bombardiers_barrel.effects.find((x) => x.special === 'bombBarrel');
   const { s, e, k } = mk(['goblin'], () => 0.99); give(s, k, 'fire_bombs'); give(s, k, 'bombardiers_barrel', 2);
   s.throwBomb(k, e, bombProc(k, 'fire_bombs'), []);
-  ok("Bombardier's Barrel: 2 barrels = +" + 2 * bd.percent + '% bomb damage', e.hp === 1e7 - Math.round(300 * (1 + (2 * bd.percent) / 100)), `${1e7 - e.hp}`);
+  const pct = bd.percent + bd.perExtra; // the first barrel gives percent, every extra one perExtra (session 29: no snowball)
+  ok("Bombardier's Barrel: 2 barrels = +" + pct + '% bomb damage', e.hp === 1e7 - Math.round(300 * (1 + pct / 100)), `${1e7 - e.hp}`);
   ok('...barrel chance ' + bb.percent + '% +' + bb.perExtra + '% per extra', k.specials.bombBarrel === bb.percent + bb.perExtra);
   const ev = []; const { s: t, e: e2, k: k2 } = mk(['goblin'], () => 0.99); give(t, k2, 'ice_bomb'); give(t, k2, 'bombardiers_barrel'); t.throwBomb(k2, e2, bombProc(k2, 'ice_bomb'), ev);
   ok('...no extra bombs when the chance misses', shots(ev).length === 1);

@@ -43,8 +43,13 @@ const flush = (s, ev = []) => { for (let i = 0; i < 20; i++) s.tickDelays(100, e
   const ice = itemDefs.frozen_demon_head.effects.find((x) => x.damageBonus === 'ice');
   const { s, k } = mk(); give(s, k, 'frozen_demon_head', 2);
   ok('Frozen Demon Head: 2 copies +' + (ice.percent + ice.perExtra) + '% ice damage', Math.abs(k.damageBonus.ice - ice.percent - ice.perExtra) < 1e-9, `${k.damageBonus.ice}`);
-  const hit = (type) => { const { s: t, e, k: h } = mk(); give(t, h, 'frozen_demon_head'); const res = t.strike(h, e, [], { damageType: type, multiplier: 1 }); return { res, lost: lost(e) }; };
-  for (const type of ['fire', 'electric', 'dark']) { const x = hit(type); ok('...a ' + type + ' hit does nothing', x.lost === 0 && x.res.removed); }
+  const hit = (type, item = false) => { const { s: t, e, k: h } = mk(); give(t, h, 'frozen_demon_head'); const ev = []; const res = t.strike(h, e, ev, { damageType: type, multiplier: 1, item }); return { res, lost: lost(e), ev }; };
+  for (const type of ['fire', 'electric', 'dark']) {
+    const own = hit(type); // its own attack / skill (session 29): turned to ice
+    ok('...its own ' + type + ' hit lands as ice', own.lost > 0 && own.ev.some((x) => x.type === 'attack' && x.damageType === 'ice'), JSON.stringify(own.ev.filter((x) => x.type === 'attack').map((x) => x.damageType)));
+    const item = hit(type, true);
+    ok('...a ' + type + ' ITEM hit does nothing', item.lost === 0 && item.res.removed);
+  }
   ok('...melee and ice hits still land', hit('melee').lost > 0 && hit('ice').lost > 0);
   { const { s: t, e, k: h } = mk(); give(t, h, 'frozen_demon_head'); give(t, h, 'kindling'); give(t, h, 'frost_charm'); const res = t.strike(h, e, [], { basic: true, riders: true });
     ok('...charm riders: fire is dropped, ice stays', (res.riders || []).every((rd) => rd.damageType !== 'fire') && (res.riders || []).some((rd) => rd.damageType === 'ice')); }

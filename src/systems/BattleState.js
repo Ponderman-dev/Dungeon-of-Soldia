@@ -1803,7 +1803,9 @@ export default class BattleState {
       events.push({ type: 'attack', attacker, target, result: miss, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic });
       return miss;
     }
-    // Frozen Demon Head: the holder deals ICE ONLY: its fire / electric / dark hits do nothing at all.
+    // Frozen Demon Head: the holder deals ICE ONLY. Its own fire / electric / dark attacks and skills turn to ice
+    // (session 29, user: the Mage and Necromancer were nearly harmless with it); such ITEM hits do nothing at all.
+    if (!opts.item && this.demonHeadBlocks(attacker, opts.damageType || attacker.damageType)) opts = { ...opts, damageType: 'ice' };
     if (this.demonHeadBlocks(attacker, opts.damageType || attacker.damageType)) return { dodged: true, removed: true, crit: false, amount: 0, mult: 1 };
     // Martyr's Shield (Bodyguard): an enemy hit on a guarded hero goes to the guarding holder instead.
     if (attacker.side === 'enemy' && target.side === 'hero' && !target.minion) {

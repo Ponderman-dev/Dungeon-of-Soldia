@@ -2366,7 +2366,8 @@
     "effects": [
       {
         "special": "bombDamage",
-        "percent": 100
+        "percent": 100,
+        "perExtra": 50
       },
       {
         "special": "bombBarrel",
@@ -2382,7 +2383,7 @@
     ],
     "dropWeight": 90,
     "needs": "bomb",
-    "perStack": "+100% bomb damage, +5% chance"
+    "perStack": "+50% bomb damage, +5% chance"
   },
   "sweeping_strap": {
     "name": "Sweeping Strap",
@@ -2478,7 +2479,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "+50% ice damage. Ice damage fills the Head: Ice Spikes hit the strongest enemy for 700% and freeze it 5s. This hero deals no fire, electric or dark damage.",
+    "description": "+50% ice damage. Ice damage fills the Head: Ice Spikes hit the strongest enemy for 700% and freeze it 5s. This hero's fire, electric and dark attacks turn to ice; such item hits do nothing.",
     "effects": [
       {
         "damageBonus": "ice",

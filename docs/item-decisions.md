@@ -400,3 +400,16 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   + Freeze 5s. The holder's fire / electric / dark HITS do nothing (charm riders of those elements are dropped);
   damage over time it already put on (burn, poison) still ticks.
 - Tests: items-batch5.test.mjs. No balance run (user rule).
+
+## Session 29: simulations on the 21 new items (user asked)
+- itemruns.mjs (40 runs per number, front hero holds it, base 29.6; under ~2.5 floors = noise), 1 / 3 copies:
+  Rally Flag +4.7/+4.6, Kinetic Coil +3.9/+1.8, Sharpest Blade +3.4/+1.5, Quick Fingers +3.3/-0.4, Life Crystal
+  +3.0/+2.3, Ice/Electric/Poison Bomb +2.2/+2.6/-1.3 (3: +5.2/+1.7/+3.1), Hunter's Badge +2.4/+1.7, Reaper's Bell
+  +1.3/+0.8, Emergency Buckler -0.5/0, Sweeping Strap / Frost Mantle / Elite's Badge / Opening Horn / Better Odds /
+  Dark Bomb ~0, Swarm Swatter -2.6/-2.1.
+- Combos (scratch combos.mjs, 30 runs, items from floor 1): 5 bombs on Archer +10.9, + Barrel +26.4, + 2 Barrels
+  +38.8; Frost Charm + Chill Band on Archer +7.0, + Frozen Demon Head +22.9; Demon Head on Mage -9.0 (its fire hits
+  were blocked). Smart-player floor-305 run: Rogue with 8 Barrels + 20 bombs.
+- Bombardier's Barrel (user): +100% bomb damage, each extra barrel only +50% (was +100%).
+- Frozen Demon Head (user): the holder's own fire / electric / dark attacks and skills turn to ICE (Mage,
+  Necromancer); fire / electric / dark ITEM hits still do nothing, charm riders of those elements still dropped.

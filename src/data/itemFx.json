@@ -9,7 +9,11 @@
     "stack": "row",
     "maxSide": 3,
     "queueMax": 3,
-    "queueMsShare": 0.6
+    "queueMsShare": 0.6,
+    "_deck": "stack 'deck' (user, session 26: queue but like stacking cards): each icon dealt onto one pile deckGapMs after the last, deckStepPx up/right of it, at most deckMax cards; the pile fades together after the last one.",
+    "deckGapMs": 50,
+    "deckStepPx": 4,
+    "deckMax": 6
   },
   "war_banner": {
     "effect": "battleCry"

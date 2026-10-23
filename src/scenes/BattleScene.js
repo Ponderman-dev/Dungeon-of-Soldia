@@ -798,13 +798,15 @@ export default class BattleScene extends Phaser.Scene {
   // The item's framed icon jumps up over the holder, holds, then floats up and fades. itemFx.json iconPop.stack
   // decides what happens when many fire at once (user, session 26: the row of 5 moons over the Archer):
   // 'count' = the same item again bumps its icon and shows x2, x3...; 'bounce' = the same, no number;
-  // 'queue' = one icon at a time, the others wait their turn; 'row' = the old way, all side by side.
+  // 'queue' = one icon at a time, the others wait their turn; 'deck' = dealt like cards onto one pile, deckGapMs
+  // apart, the pile fades together after the last one; 'row' = the old way, all side by side.
   // Different items stand side by side, at most maxSide (more are skipped).
   iconPop(v, itemId) {
     const def = itemDefs[itemId];
     if (!v || !def || !v.ch.active) return;
     const cfg = itemFxData.iconPop;
     const stack = cfg.stack || 'row';
+    if (stack === 'deck') return this.dealPop(v, itemId);
     v.pops = (v.pops || []).filter((o) => o.active);
     if (stack === 'queue' && v.pops.length) {
       v.popQueue = v.popQueue || [];
@@ -847,6 +849,47 @@ export default class BattleScene extends Phaser.Scene {
     this.fadePop(img, ms);
     // a white ring flashes out from the icon as it appears (and moves with it)
     this.addFx(ms * 0.25, (q) => { const out = []; const c = { x: img.x / CHAR_SCALE, y: img.y / CHAR_SCALE }; const r = (9 + q * 16) * (cfg.scale / CHAR_SCALE); for (let i = 0; i < 40; i++) { const a = (i / 40) * Math.PI * 2; out.push([Math.round(c.x + Math.cos(a) * r), Math.round(c.y + Math.sin(a) * r), 1, 1, 0xffffff, 1 - q]); } return out; });
+  }
+
+  // 'deck': the icon is dealt onto a pile over the hero like a card: deckGapMs after the last one, a little up and
+  // right of it (deckStepPx), slapping down from big. The pile holds until no card came for a while, then floats
+  // up and fades together. More than deckMax cards: the bottom card goes.
+  dealPop(v, itemId) {
+    const def = itemDefs[itemId];
+    const cfg = itemFxData.iconPop;
+    const d = (v.deck = v.deck || { cards: [], nextAt: 0, lift: { d: 0 } });
+    const now = this.time.now;
+    const at = Math.max(now, d.nextAt);
+    d.nextAt = at + (cfg.deckGapMs || 50);
+    this.time.delayedCall(at - now, () => {
+      if (!v.ch.active) return;
+      d.cards = d.cards.filter((c) => c.active);
+      if (!d.cards.length) { this.tweens.killTweensOf(d.lift); d.lift.d = 0; }
+      while (d.cards.length >= (cfg.deckMax || 6)) d.cards.shift().destroy();
+      const half = (20 * cfg.scale) / 2 + 4;
+      const step = cfg.deckStepPx || 4;
+      const img = this.add.image(0, 0, itemIconKey(this, itemId, def.rarity)).setScale(cfg.scale * 1.4).setDepth(DEPTH.popup + d.cards.length * 0.001);
+      img.slot = d.cards.length;
+      const place = () => {
+        if (!v.ch.active || !img.active) return;
+        const k = img.slot;
+        img.setPosition(Math.round(Phaser.Math.Clamp(v.ch.x - step + k * step, half, GAME_WIDTH - half - 24)), Math.round(v.bg.y - (10 * cfg.scale + 4) - k * step + d.lift.d));
+      };
+      place();
+      this.events.on('update', place);
+      img.once('destroy', () => this.events.off('update', place));
+      d.cards.push(img);
+      d.cards.forEach((c, i) => (c.slot = i));
+      this.tweens.add({ targets: img, scale: cfg.scale, duration: 90, ease: 'Quad.easeIn' });
+      // Every new card starts the pile's hold again; then all cards rise and fade together.
+      if (d.fade) d.fade.forEach((t) => t.remove());
+      d.cards.forEach((c) => c.setAlpha(1));
+      const ms = cfg.ms;
+      d.fade = [
+        this.tweens.add({ targets: d.lift, d: -cfg.riseCharPx * CHAR_SCALE, delay: ms * 0.7, duration: ms * 0.3 }),
+        this.tweens.add({ targets: d.cards, alpha: 0, delay: ms * 0.7, duration: ms * 0.3, onComplete: () => d.cards.forEach((c) => c.destroy()) }),
+      ];
+    });
   }
 
   // The hold, then the icon floats up and fades (started again when the same item fires again).

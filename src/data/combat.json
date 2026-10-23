@@ -16,8 +16,8 @@
     "percent": 10
   },
   "heroAttack": {
-    "_about": "Every hero's attack (after levels, before items) is raised by this percent (user, session 25: +15% hero damage overall).",
-    "percent": 15
+    "_about": "Every hero's attack (after levels, before items) is raised by this percent (user, session 25: +15%; reverted to 0 in session 26).",
+    "percent": 0
   },
   "heroDanger": {
     "_about": "How a hero in danger looks (BattleScene.drawDangerGlow / heroFell). Low health: below lowHpPercent a soft red glow rises from the bottom edge of the screen under that hero, stronger the lower its health, pulsing slowly (pulseMs). Death: the whole screen pulses red (deathFlash*: colour, top alpha, in/out ms) with the heroDeath sound (a low bell toll, sounds.json), a white flash, the hero tips over (fallMs), lies there lieMs, then POOF: a cloud of smoke (poof*) and the body is replaced by a tombstone, '<NAME> FELL' shows over it (text*) and its column of the glow flares (fellGlowMs).",

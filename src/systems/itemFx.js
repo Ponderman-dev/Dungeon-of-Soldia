@@ -12,7 +12,7 @@ const lerp = (a, b, p) => a + (b - a) * p;
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const BOMB = 0x4a4a5a, KNIFE = 0xe4e8f0, HILT = 0x6b4a2a, BANNER = 0xf2d03a, GREEN = 0x3aa84a, GREEN2 = 0xc8ffd0;
 
-export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 700, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340, thunderstruck: 520, iceSpike: 1800, heartSlash: 620 };
+export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 700, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340, thunderstruck: 520, iceSpike: 1800, heartSlash: 620, euclid: 620 };
 export const ITEM_FX = Object.keys(ITEM_MS);
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -292,6 +292,41 @@ export function heartSlashFx(q, u, side = -1) {
   const hx = A.x + dx * 0.5 + px * len * 0.12, hy = A.y + dy * 0.5 + py * len * 0.12;
   burst(g, hx, hy, 18, [C.white, C.elec, C.gold2, C.gold], ph(q, 0.12, 0.75), 18, 5, 0.5);
   burst(g, hx, hy, 8, [C.elec, C.white], ph(q, 0.18, 0.6), 9, 9);
+  return g.out;
+}
+// Euclid of Elements (user: 'a fireball, an icicle and a white electric projectile'): each extra cast flies from the
+// holder to the enemy as a projectile of one of the hit's elements, `stagger` ms apart, landing as its hit lands.
+const EUCLID_FLY = 150, EUCLID_POP = 90;
+function euclidShot(g, p, a, b, el, t, seed) {
+  const [x, y] = fly(a, b, p, 4), dx = b.x - a.x, dy = b.y - a.y, n = Math.hypot(dx, dy) || 1, ux = dx / n, uy = dy / n;
+  if (el === 'fire') { // a big fireball with a flame tail
+    for (let k = 1; k <= 9; k++) g.disc(x - ux * k * 1.6 + (rnd(seed + k + Math.floor(t / 50)) - 0.5) * 2, y - uy * k * 1.6 + (rnd(seed * 3 + k) - 0.5) * 2, Math.max(0.6, 2.4 - k * 0.25), k < 3 ? C.fire2 : k < 6 ? C.fire : C.blood, 1 - k / 10);
+    g.disc(x, y, 4, C.fire); g.disc(x + ux, y + uy, 2.6, C.fire2); g.disc(x + ux * 1.5, y + uy * 1.5, 1, C.white);
+  } else if (el === 'ice') { // a long icicle, point first
+    for (let k = -9; k <= 6; k++) {
+      const w = k > 0 ? (6 - k) * 0.42 : Math.min(2.5, (k + 10) * 0.45);
+      for (let j = -Math.round(w); j <= Math.round(w); j++) g.px(x + ux * k - uy * j, y + uy * k + ux * j, j < 0 ? C.white : j === 0 ? C.ice2 : j === Math.round(w) ? 0x3b8ee0 : C.ice);
+    }
+    g.px(x + ux * 7, y + uy * 7, C.white);
+    for (let k = 1; k <= 4; k++) g.px(x - ux * (10 + k * 2), y - uy * (10 + k * 2) + (rnd(seed + k) - 0.5) * 4, C.ice2, 0.8 - k * 0.18);
+  } else if (el === 'electric') { // a thick crackling white bolt
+    for (const o of [-1, 0, 1]) bolt(g, { x: x - ux * 14 - uy * o, y: y - uy * 14 + ux * o }, { x, y }, C.ice2, seed + o * 5 + Math.floor(t / 40), 5, 2.5);
+    g.disc(x, y, 2.6, C.white); g.disc(x, y, 1.2, C.ice2);
+  } else { // dark (and anything else): a purple orb
+    for (let k = 1; k <= 6; k++) g.disc(x - ux * k * 1.6, y - uy * k * 1.6, Math.max(0.6, 2 - k * 0.3), C.dark2, 1 - k / 7);
+    g.disc(x, y, 3.4, C.dark); g.disc(x - 0.8, y - 1, 1.2, 0xd6a8ff);
+  }
+}
+const EUCLID_POP_COLS = { fire: [C.fire, C.fire2, C.white], ice: [C.ice, C.ice2, C.white], electric: [C.white, C.ice2, C.elec], dark: [C.dark, C.dark2, 0xd6a8ff] };
+export function euclidFx(q, a, b, t, elements = ['fire', 'ice', 'electric'], stagger = 150, count = 3) {
+  const g = pen();
+  const ms = q * ITEM_MS.euclid;
+  for (let i = 0; i < count; i++) {
+    const el = elements[i % elements.length], t0 = stagger * (i + 1) - EUCLID_FLY;
+    const p = (ms - t0) / EUCLID_FLY;
+    if (p >= 0 && p < 1) euclidShot(g, p, a, b, el, t, 7 + i * 13);
+    burst(g, b.x, b.y, 14, EUCLID_POP_COLS[el] || EUCLID_POP_COLS.dark, (ms - t0 - EUCLID_FLY) / EUCLID_POP, 12, 3 + i);
+  }
   return g.out;
 }
 // Gambler's Dice: a little white die tumbles above the enemy's head and lands (the debuff it rolled appears).

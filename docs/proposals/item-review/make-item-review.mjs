@@ -48,7 +48,7 @@ const CLIPS = {
   life_crystal: ['life-crystal', 'A kill pops a green orb out of the dead enemy, small orbs fly to the heroes it heals.'],
   reapers_bell: ['reapers-bell', 'Every kill explodes in a purple cloud (the Puffshroom cloud) and can chain.'],
   frozen_demon_head: ['demon-head', 'The Mage stores ice; when full, a giant icicle (your sketch) traps the enemy, holds it still while frozen, then shatters.'],
-  euclid_of_elements: ['euclid', 'A hit with 2+ elements casts 3 more times, 0.15s apart (\'Euclid!\').'],
+  euclid_of_elements: ['euclid', 'A hit with 2+ elements casts 3 more times, 0.15s apart: a fireball / icicle / white bolt flies for each (Archer: fire + ice + electric charms).'],
   sharpest_blade: ['sharpest-blade', '\'Heart strike!\' (4.5x + stun): a huge bright-yellow slash through the enemy.'],
   kinetic_coil: ['kinetic-coil', 'Rogue dodges store charges for an electric hit. Open: the charges have NO look yet (sparks on the hero?).'],
   emergency_buckler: ['emergency-buckler', 'Each kill gives the killer a small shield (normal shield look) that fades over 4s.'],

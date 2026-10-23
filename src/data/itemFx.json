@@ -50,6 +50,9 @@
   "sharpest_blade": {
     "effect": "heartSlash"
   },
+  "euclid_of_elements": {
+    "effect": "euclid"
+  },
   "gamblers_dice": {
     "effect": "dice"
   },

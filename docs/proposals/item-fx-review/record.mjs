@@ -64,7 +64,8 @@ const CLIPS = {
   },
   euclid: async ({ p, mark }) => {
     await fight(p, ['knight', 'rogue', 'archer']);
-    await setup(p, { archer: ['euclid_of_elements', 'frost_charm', 'storm_charm'], knight: ['euclid_of_elements', 'shadow_charm', 'magma_core'] }, { euclid_of_elements: { 0: { percent: 35 } } }, tanky);
+    await setup(p, { archer: ['euclid_of_elements', 'frost_charm', 'storm_charm', 'magma_core'] }, { euclid_of_elements: { 0: { percent: 50 } } },
+      (sc) => { const [first, ...rest] = sc.state.enemies; first.hp = first.maxHp = first.stats.health = 1e6; for (const e of rest) e.hp = 1; });
     await wait(p, 300); mark('euclid', 8000); await wait(p, 8000);
   },
   blade: async ({ p, mark }) => {

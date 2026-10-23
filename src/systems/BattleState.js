@@ -3403,7 +3403,7 @@ export default class BattleState {
     if (elements.size < 2 || this.rng() * 100 >= sp.euclid) return;
     const power = (sp.euclidPower || 60) / 100;
     const cast = { multiplier: (opts.multiplier || 1) * power, damageType: own, fixedRiders: riders.map((rd) => ({ ...rd, multiplier: rd.multiplier * power })), item: true, euclid: true };
-    events.push({ type: 'proc', unit, label: 'Euclid!', itemId: 'euclid_of_elements', target });
+    events.push({ type: 'proc', unit, label: 'Euclid!', itemId: 'euclid_of_elements', target, elements: [...elements], staggerMs: sp.euclidStaggerMs ?? 150, count: sp.euclidCount || 3 }); // the scene flies one projectile per cast
     for (let i = 0; i < (sp.euclidCount || 3); i++) {
       this.later((sp.euclidStaggerMs ?? 150) * (i + 1), (ev) => {
         if (!unit.alive) return;

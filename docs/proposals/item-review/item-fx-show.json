@@ -538,16 +538,8 @@
  ],
  "euclid_of_elements": [
   [
-   "hit",
-   "fire"
-  ],
-  [
-   "hit",
-   "ice"
-  ],
-  [
-   "hit",
-   "electric"
+   "item",
+   "euclid"
   ]
  ],
  "sharpest_blade": [

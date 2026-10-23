@@ -779,6 +779,14 @@ export default class BattleScene extends Phaser.Scene {
     } else if (spec.effect === 'suckerPunch' && tv) {
       const side = v.ch.x < tv.ch.x ? -1 : 1;
       this.addFx(ms, (q) => (tv.ch.active ? itemFx.suckerPunchFx(q, this.fxBody(tv), side) : []), tag);
+    } else if (spec.effect === 'euclid' && tv && v) { // Euclid of Elements: one projectile per extra cast, landing as it hits
+      const els = e.elements && e.elements.length ? e.elements : ['fire', 'ice', 'electric'];
+      let from = this.fxPoint(v), to = this.fxPoint(tv);
+      this.addFx(ms, (q, now) => {
+        if (v.ch.active) from = this.fxPoint(v);
+        if (tv.ch.active) to = this.fxPoint(tv);
+        return itemFx.euclidFx(q, from, to, now, els, e.staggerMs, e.count);
+      }, tag);
     } else if (spec.effect === 'heartSlash' && tv) { // Sharpest Blade: a huge yellow slash through the enemy
       const at = this.fxBody(tv), side = v && v.ch.x < tv.ch.x ? -1 : 1;
       this.addFx(ms, (q) => itemFx.heartSlashFx(q, tv.ch.active ? this.fxBody(tv) : at, side), tag);

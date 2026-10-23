@@ -60,7 +60,7 @@ const CLIPS = {
   },
   demonHead: async ({ p, mark }) => {
     await fight(p, K);
-    await setup(p, { knight: ['frozen_demon_head', 'frost_charm', 'chill_band'] }, { frozen_demon_head: { 2: { percent: 150 } } }, tanky);
+    await setup(p, { knight: ['frozen_demon_head', 'frost_charm', 'chill_band'] }, { frozen_demon_head: { 2: { percent: 30 } } }, tanky);
     await wait(p, 300); mark('demon-head', 12000); await wait(p, 12000);
   },
   euclid: async ({ p, mark }) => {
@@ -116,8 +116,8 @@ for (const [name, fn] of Object.entries(CLIPS)) {
   await ctx.close();
   const raw = await video.path();
   for (const m of marks) {
-    // The fight area only (top 600px of the 390x844 screen), scaled x2 with crisp pixels.
-    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-ss', String(Math.max(0, m.at - 0.1)), '-i', raw, '-t', String(m.ms / 1000 + 0.2), '-vf', 'crop=390:600:0:120,scale=780:1200:flags=neighbor', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '28', '-preset', 'veryfast', '-movflags', '+faststart', '-an', path.join(OUT, 'clips', `${m.id}.mp4`)]);
+    // Around the Knight and his crowd (320x400 of the 390x844 screen), scaled x3 with crisp pixels.
+    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-ss', String(Math.max(0, m.at - 0.1)), '-i', raw, '-t', String(m.ms / 1000 + 0.2), '-vf', 'crop=320:400:35:360,scale=960:1200:flags=neighbor', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '28', '-preset', 'veryfast', '-movflags', '+faststart', '-an', path.join(OUT, 'clips', `${m.id}.mp4`)]);
     execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', path.join(OUT, 'clips', `${m.id}.mp4`), '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '40', '-row-mt', '1', '-deadline', 'good', '-cpu-used', '4', '-an', path.join(OUT, 'clips', `${m.id}.webm`)]);
   }
   fs.rmSync(raw);

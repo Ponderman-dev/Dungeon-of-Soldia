@@ -1,5 +1,38 @@
-# Handoff ARCHIVE (sessions 2-27, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-28, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## (session 28 start note, 2026-10-23; done in session 28: item review round 3, 5 notes applied) NEXT was EFFECTS VISUAL REVIEW of the new items
+- BRANCH: `main` has EVERYTHING (session 27 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- FIRST: show the user the NEW ITEM LOOKS IN A REAL FIGHT (ART rule below: scratchpad worktree + Playwright screenshots /
+  short clips like the icon-pop clips, then the question tool). None of these were seen in the game yet:
+  - Bombs: Ice / Electric / Dark / Poison Bombs = Fire Bombs' bomb in the element's colours (`itemFx.bombFx` +
+    `BOMB_KINDS`); Bombardier's Barrel throws its extra bombs 0.15s apart ('Bombs away!' icon pop).
+  - Life Crystal: green orb pops out of the dead enemy, small orbs fly to the healed heroes (BattleScene `lifeOrb`).
+  - Reaper's Bell: purple `deathBurst` cloud (reused Puffshroom look) on every exploding kill, chains.
+  - Frozen Demon Head: Ice Spikes = 5 pale triangles bursting up under the enemy + shake (BattleScene `iceSpikes`;
+    plain Phaser triangles: maybe redo as pixel fx in itemFx.js, the user likes REAL things, no abstract shapes).
+  - Euclid of Elements: 3 extra casts 0.15s apart (normal hits of their elements, 'Euclid!' pop).
+  - Sharpest Blade 'Heart strike!' (4.5x hit + stun: only the icon pop and the normal crit-less hit; may want a big
+    dramatic slash, user liked dramatic for its icon). Kinetic Coil charges have NO look yet (maybe sparks on the hero).
+  - Emergency Buckler / Rally Flag shields (normal shield bar), Sweeping Strap side hits, Frost Mantle chill.
+  Easy way to see them: dev url flags + give items in the worktree (or a seeded run); `?floor=N`, `?elite=1`.
+- ALL 21 NEW ITEMS BUILT (92 -> 113), list + every decision: `docs/proposals/new-items-batch1.md`; numbers in
+  `docs/item-decisions.md` 'Session 27' sections; code notes in `docs/systems/items.md` (batch 1-5 lines).
+  Tests items-batch1..5.test.mjs. Icons: `scripts/art/new-item-icons.mjs` (bombs = Fire Bombs icon recoloured, user).
+- NO balance run yet for the new items (user rule: only when asked). Short itemruns smoke runs: no crashes.
+- STILL OPEN (older): HERO MINIONS PILE UP on high floors (ask before designing); skill books: same modifier twice on
+  one skill is refused: OK?; UNSEEN BONUS / FEWER COMMONS from floor 41 (my ideas for items rarely showing up, later).
+- Not in the preview page yet: sessions 26-27 visuals. `npm run build:page` + publish when the user asks.
+- itch.io zip is old (predates hub, charms, sessions 23-27): `npm run build:itch` before an upload, devlog draft
+  `docs/devlog/2026-10-21-title-and-camp.md` (ask about testers; bump 0.1.0 -> 0.2.0).
+- Test helper (scratchpad, throwaway): `git worktree add <scratch>/wt HEAD`, symlink node_modules, run
+  `<scratch>/wt/node_modules/.bin/vite <scratch>/wt --port 5177` FROM the scratchpad. Dev build exposes `window.__game`:
+  wait for 'Title', stop scenes, `scene.start('Battle')` (registry `squadIds`; `?floor=N`, `?room=treasure` on an even
+  floor = a fight). Seed Math.random in addInitScript for the same line-up. Remove the worktree at the end.
+  Playwright: global install `/opt/node22/lib/node_modules/playwright/index.mjs` (not in the repo's node_modules).
+- PUBLISH: the first publish per session may be refused ('not viewed'): Read 1-8 lines of the saved live copy, then
+  publish again. Publishing with `edits` sends only the page: pass `files` again for changed videos/images.
+- Fresh clone: `npm install` first (node_modules is not there).
 
 ## (session 27 start note, 2026-10-23; all done in session 27: the 21 new items discussed + built) NEXT was DISCUSS THE NEW ITEMS (21), then build them
 - BRANCH: `main` has EVERYTHING (session 26 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).

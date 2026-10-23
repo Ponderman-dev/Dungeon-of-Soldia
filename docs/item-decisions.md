@@ -431,3 +431,6 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   before it (itemFx.json `sharpest_blade.glint`). Sims (scratch copy, the bot never gives the holder elements, 30 runs):
   Knight +13.1, Rogue +15.7, Archer +10.7, Berserker +7.0 floors (old: +5.7 / +9.3 / +6.7 / -0.6; Gambler's Dice
   +0.6 / +6.7 / +10.6, Bloodlust Mask on Rogue +9.6).
+- Final Blade (with the armor break), 60 runs, pure holder: Knight +10.3, Rogue +11.3, Archer +13.1, Berserker +6.4;
+  with a Frost Charm on the Archer +0.3 (it is off). Same test: Gambler's Dice +1.6 / +6.2 / +8.2, Bloodlust Mask on
+  Rogue +8.1. Best legendary on every physical hero tested.

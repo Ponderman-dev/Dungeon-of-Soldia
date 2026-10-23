@@ -1189,7 +1189,7 @@
       }
     },
     "stats": {
-      "health": 60,
+      "health": 45,
       "attack": 0,
       "defense": 0,
       "attackEfficiency": 100
@@ -3941,7 +3941,6 @@
   "goblinArcher": {
     "name": "Goblin Archer",
     "damageType": "ranged",
-    "hunts": "ranged",
     "flying": false,
     "height": 15,
     "weak": [],

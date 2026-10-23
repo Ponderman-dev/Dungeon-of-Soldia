@@ -425,7 +425,6 @@ export default class BattleState {
   //    dies, then take the NEAREST enemy. Ranged heroes pick any enemy at random.
   //  - Melee enemies keep their opponent too, and a new one is always the NEAREST hero (melee or
   //    ranged). Ranged enemies pick at random. Ranged minions are picked less (`pickWeighted()`).
-  //  - `def.hunts: 'ranged'` enemies pick among the ranged heroes while one lives.
   pickTarget(unit) {
     // Charmed (Bard's Discord): an enemy attacks the nearest OTHER enemy instead.
     if (unit.side === 'enemy' && this.has(unit, 'charm')) {
@@ -443,11 +442,6 @@ export default class BattleState {
       if (focus) return this.setFoe(unit, focus);
     }
     const enemy = unit.side === 'enemy';
-    // `def.hunts: 'ranged'` (Goblin Archer): it shoots the ranged heroes first, anyone once they are gone.
-    if (enemy && unit.def.hunts === 'ranged') {
-      const backline = foes.filter((f) => !f.minion && f.damageType !== 'melee');
-      if (backline.length) return backline[Math.floor(this.rng() * backline.length)];
-    }
     if (unit.damageType !== 'melee') return enemy ? this.pickWeighted(foes) : foes[Math.floor(this.rng() * foes.length)];
     const current = foes.find((u) => u.uid === unit.foe);
     if (current) return current;
@@ -3299,6 +3293,7 @@ export default class BattleState {
       const tough = 1 + ((this.rules.heroDefense && this.rules.heroDefense.percent) || 0) / 100; // combat.json heroDefense
       levelStats.defense = (levelStats.defense || 0) * tough;
       levelStats.resist = (levelStats.resist || 0) * tough;
+      levelStats.attack = (levelStats.attack || 0) * (1 + ((this.rules.heroAttack && this.rules.heroAttack.percent) || 0) / 100); // combat.json heroAttack
       const { stats, damageBonus, specials, procs, minionSources } = computeHeroStats(hero, this.heroes, this.itemDefs, levelStats, this.rules.morale, this.statUpkeep(hero), this.squadItemMult());
       hero.minionSources = this.buildSources(hero, minionSources);
       const hpDelta = stats.health - hero.maxHp;

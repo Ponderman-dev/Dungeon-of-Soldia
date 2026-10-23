@@ -23,4 +23,4 @@ export const kitsV1 = (defs) => defs.map((h) => (V1[h.id] ? { ...h, passive: V1[
 export const frozenItems = () => JSON.parse(fs.readFileSync(new URL('./fixtures/items-frozen.json', import.meta.url), 'utf8'));
 // combat.json without the hero toughness tuning (heroDefense bonus, deathSave), for tests that check exact
 // defense numbers or killing blows of other mechanics.
-export const plainRules = (rules) => ({ ...rules, heroDefense: { percent: 0 }, deathSave: null });
+export const plainRules = (rules) => ({ ...rules, heroDefense: { percent: 0 }, heroAttack: { percent: 0 }, deathSave: null });

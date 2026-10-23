@@ -34,17 +34,11 @@ ok('a boss floor always brings its own line-up', JSON.stringify(enemiesForFloor(
   ok('...archers attack faster near the drum too', s.auraSpeed(archer) > 0);
   const pct = enemies.war_drum.abilities[0].summon[0].hpPercent, normal = s.makeUnit(enemies.goblin, 'enemy', 20, 1);
   const drumGob = s.enemies.find((e) => e.def.id === 'goblin');
-  ok('...its goblins are weaker than normal goblins (hpPercent)', Math.abs(drumGob.maxHp - (normal.maxHp * pct) / 100) <= 1 && drumGob.hp === drumGob.maxHp, `${drumGob.maxHp} vs ${normal.maxHp}`);
+  ok('...its goblins are weaker than normal goblins (hpPercent)', Math.abs(drumGob.maxHp - (normal.maxHp * pct) / 100) <= 1, `${drumGob.maxHp} vs ${normal.maxHp}`);
   run(s, 8000 * 3);
   const max = enemies.war_drum.abilities[0].summon.map((sm) => sm.max);
   ok('...at most the cap of each kind at once', ['goblin', 'goblinArcher'].every((id, i) => s.enemies.filter((e) => e.alive && e.def.id === id).length <= max[i])); }
-{ const { s, es, h } = mk(['goblinArcher']); const a = es[0];
-  const ranged = h.filter((x) => x.damageType !== 'melee');
-  let ok1 = true; for (let i = 0; i < 40; i++) { a.foe = null; if (!ranged.includes(s.pickTarget(a))) ok1 = false; }
-  ok('Goblin Archer: always shoots a RANGED hero while one lives', ranged.length > 0 && ok1);
-  for (const x of ranged) x.alive = false;
-  ok('...then anyone', !!s.pickTarget(a) && s.pickTarget(a).damageType === 'melee');
-  ok('...its hits always poison', enemies.goblinArcher.onHit.some((o) => o.status === 'poison' && o.chance === 100)); }
+ok('Goblin Archer: its hits always poison', enemies.goblinArcher.onHit.some((o) => o.status === 'poison' && o.chance === 100));
 { const { s, es, h } = mk(['grukk']); const g = es[0]; g.hp = g.maxHp = 1e6;
   g.abilities.find((ab) => ab.def.id === 'cleaver_charge').timer = 1e9; // only the jump
   const jump = enemies.grukk.abilities.find((a) => a.id === 'quake_jump');

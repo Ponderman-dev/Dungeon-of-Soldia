@@ -2374,7 +2374,9 @@
         "count": [
           2,
           4
-        ]
+        ],
+        "cooldownMs": 300,
+        "staggerMs": 150
       }
     ],
     "dropWeight": 90,

@@ -375,6 +375,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   300% damage of their element) + a debuff on the enemy hit: Chill (3s) / Stun 1s / Weaken -15% damage for 4s /
   3 poison stacks (4s, 0.3x, dark). Poison Bombs deal dark damage.
 - Bombardier's Barrel (legendary): +100% bomb damage per barrel; when a bomb goes off 25% chance (+5% per extra
-  barrel) to throw 2-4 more bombs at random enemies, each a random pick of the holder's bomb items (extra bombs
-  never set the Barrel off again). Fire Bombs counts (proc `bomb: true`).
+  barrel) to throw 2-4 more bombs at random enemies, one every 0.15s, each a random pick of the holder's bomb items.
+  Barrel bombs CAN set the Barrel off again, but it has a 0.3s cooldown (user: so it can't loop forever).
+  Fire Bombs counts (proc `bomb: true`).
 - Tests: items-batch3.test.mjs. No balance run (user rule).

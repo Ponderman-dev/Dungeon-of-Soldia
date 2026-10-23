@@ -39,20 +39,27 @@ for (const [id, status] of [['ice_bomb', 'chill'], ['electric_bomb', 'stun'], ['
 // Bombardier's Barrel.
 { const bd = itemDefs.bombardiers_barrel.effects.find((x) => x.special === 'bombDamage'), bb = itemDefs.bombardiers_barrel.effects.find((x) => x.special === 'bombBarrel');
   const { s, e, k } = mk(['goblin'], () => 0.99); give(s, k, 'fire_bombs'); give(s, k, 'bombardiers_barrel', 2);
-  s.throwBomb(k, e, bombProc(k, 'fire_bombs'), [], true);
+  s.throwBomb(k, e, bombProc(k, 'fire_bombs'), []);
   ok("Bombardier's Barrel: 2 barrels = +" + 2 * bd.percent + '% bomb damage', e.hp === 1e7 - Math.round(300 * (1 + (2 * bd.percent) / 100)), `${1e7 - e.hp}`);
   ok('...barrel chance ' + bb.percent + '% +' + bb.perExtra + '% per extra', k.specials.bombBarrel === bb.percent + bb.perExtra);
-  const ev = []; const { s: t, e: e2, k: k2 } = mk(['goblin'], () => 0.99); give(t, k2, 'ice_bomb'); give(t, k2, 'bombardiers_barrel'); t.throwBomb(k2, e2, bombProc(k2, 'ice_bomb'), ev, true);
+  const ev = []; const { s: t, e: e2, k: k2 } = mk(['goblin'], () => 0.99); give(t, k2, 'ice_bomb'); give(t, k2, 'bombardiers_barrel'); t.throwBomb(k2, e2, bombProc(k2, 'ice_bomb'), ev);
   ok('...no extra bombs when the chance misses', shots(ev).length === 1);
-  // rng 0: the barrel always goes off, throws the lowest count; the extra bombs never set it off again.
+  // rng 0: the barrel always goes off and throws the lowest count, one bomb every staggerMs; barrel bombs can set it
+  // off again, but only after its cooldown.
   const { s: u, k: k3 } = mk(); give(u, k3, 'ice_bomb'); give(u, k3, 'poison_bombs'); give(u, k3, 'bombardiers_barrel');
-  const ev3 = []; u.throwBomb(k3, u.enemies[0], bombProc(k3, 'ice_bomb'), ev3, true);
-  ok('...goes off: ' + bb.count[0] + '-' + bb.count[1] + ' more bombs (no endless chain)', shots(ev3).length === 1 + bb.count[0], `${shots(ev3).length}`);
+  const ev3 = []; u.throwBomb(k3, u.enemies[0], bombProc(k3, 'ice_bomb'), ev3);
+  const pops = (ev) => ev.filter((x) => x.type === 'proc' && x.itemId === 'bombardiers_barrel').length;
+  ok('...goes off: the first bomb now, the ' + bb.count[0] + ' extra bombs come one after another', shots(ev3).length === 1 && pops(ev3) === 1);
+  const step = (ms) => { k3.barrelCd -= ms; u.tickDelays(ms, ev3); };
+  step(bb.staggerMs);
+  ok('...an extra bomb after ' + bb.staggerMs / 1000 + 's, inside the cooldown: no new barrel', shots(ev3).length === 2 && pops(ev3) === 1, `${shots(ev3).length} ${pops(ev3)}`);
+  step(bb.cooldownMs - bb.staggerMs);
+  ok('...the next one after the ' + bb.cooldownMs / 1000 + 's cooldown can set it off again', shots(ev3).length === 1 + bb.count[0] && pops(ev3) === 2, `${shots(ev3).length} ${pops(ev3)}`);
   const kinds = new Set(shots(ev3).slice(1).map((x) => x.kind));
   ok('...extra bombs are bombs the hero holds', [...kinds].every((kd) => ['iceBomb', 'poisonBomb'].includes(kd)), [...kinds].join());
   let seed = 7; const lcg = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const { s: w, k: k4 } = mk(['goblin', 'goblin', 'goblin'], lcg); give(w, k4, 'ice_bomb'); give(w, k4, 'poison_bombs'); give(w, k4, 'bombardiers_barrel');
-  const ev4 = []; for (let i = 0; i < 60; i++) w.throwBomb(k4, w.enemies[0], bombProc(k4, 'ice_bomb'), ev4, true);
+  const ev4 = []; for (let i = 0; i < 60; i++) { k4.barrelCd = 0; w.throwBomb(k4, w.enemies[0], bombProc(k4, 'ice_bomb'), ev4); k4.barrelCd = 1e9; w.tickDelays(1000, ev4); }
   const extras = ev4.filter((x) => x.type === 'projectile' && x.kind === 'poisonBomb').length;
   ok('...picked at random among them (both kinds can come)', extras > 0 && ev4.filter((x) => x.type === 'projectile' && x.kind === 'iceBomb').length > 60, `${extras} poison bombs`); }
 // A real attack: a bomb proc goes through throwBomb (debuff + barrel), Fire Bombs counts as a bomb.

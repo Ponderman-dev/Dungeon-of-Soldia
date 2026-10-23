@@ -1068,6 +1068,7 @@ export default class BattleState {
       if (hero.floor.guard && (hero.floor.guard.remaining -= dt) <= 0) hero.floor.guard = null;
       hero.shareCd = Math.max(0, hero.shareCd - dt);
       if (hero.soulCd > 0) hero.soulCd -= dt; // Grimoire fireball cooldown
+      if (hero.barrelCd > 0) hero.barrelCd -= dt; // Bombardier's Barrel cooldown
       if (hero.triageCd > 0) hero.triageCd -= dt; // Aid Kit triage cooldown
       this.tickBandages(hero, dt, events);
       this.tickSong(hero, dt, events);
@@ -1989,7 +1990,7 @@ export default class BattleState {
       if (proc.doubleHit && foe) { const dh = this.strike(hero, foe, events); if (!dh.dodged) this.addCombo(hero, foe, 1, events); }
       if (debuffs && enemy && ctx.hit !== false && !String(proc.itemId).startsWith('passive_')) this.addCombo(hero, enemy, 1, events); // Rogue: a debuff item proc = a combo point
       if (proc.strike && foe && !(ctx.folded && proc.mergeCopies)) { // folded: already inside the hit (riders)
-        if (proc.bomb) this.throwBomb(hero, foe, proc, events, true);
+        if (proc.bomb) this.throwBomb(hero, foe, proc, events);
         else {
           const hit = this.strike(hero, foe, events, {
             multiplier: proc.strike.damageMultiplier,
@@ -2021,21 +2022,28 @@ export default class BattleState {
 
   // A bomb (Fire / Ice / Electric / Dark / Poison Bombs: procs with `bomb: true`) hits `foe` for its strike, boosted
   // by Bombardier's Barrel (`bombDamage`%), and puts its `strike.apply` statuses on the enemy it hit.
-  // `barrel`: this bomb may set off the Barrel: `bombBarrel`% chance to throw `bombBarrelCount` [2, 4] more bombs at
-  // random enemies, each a random pick from the bomb items the holder has (those never set off the Barrel again).
-  throwBomb(hero, foe, proc, events, barrel = false) {
+  // Then the Barrel: `bombBarrel`% chance to throw `bombBarrelCount` [2, 4] more bombs at random enemies, one every
+  // `bombBarrelStaggerMs` (0.15s), each a random pick from the holder's bomb items. Those bombs can set the Barrel
+  // off again, but it has a `bombBarrelCooldownMs` (0.3s) cooldown, so it can't loop forever in one go.
+  throwBomb(hero, foe, proc, events) {
     const sp = hero.specials || {};
     const hit = this.strike(hero, foe, events, { multiplier: proc.strike.damageMultiplier * (1 + (sp.bombDamage || 0) / 100), damageType: proc.strike.damageType, projectile: proc.strike.projectile, item: true });
     if (!hit.dodged && foe.alive) for (const spec of proc.strike.apply || []) this.applyStatus(foe, spec, hero, `proc_${proc.itemId}`, events);
-    if (!barrel || !sp.bombBarrel || this.rng() * 100 >= sp.bombBarrel) return;
+    if (!sp.bombBarrel || hero.barrelCd > 0 || this.rng() * 100 >= sp.bombBarrel) return;
+    hero.barrelCd = sp.bombBarrelCooldownMs ?? 300;
     const bombs = [...new Map(hero.procs.filter((p) => p.bomb).map((p) => [p.itemId, p])).values()];
     const [lo, hi] = sp.bombBarrelCount || [2, 4];
     const count = lo + Math.floor(this.rng() * (hi - lo + 1));
     events.push({ type: 'proc', unit: hero, label: 'Bombs away!', itemId: 'bombardiers_barrel' });
+    const step = sp.bombBarrelStaggerMs ?? 150;
     for (let i = 0; i < count; i++) {
-      const alive = this.targetableEnemies();
-      if (!alive.length) break;
-      this.throwBomb(hero, alive[Math.floor(this.rng() * alive.length)], bombs[Math.floor(this.rng() * bombs.length)], events);
+      const pick = bombs[Math.floor(this.rng() * bombs.length)];
+      const go = (ev) => {
+        const alive = this.targetableEnemies();
+        if (hero.alive && alive.length) this.throwBomb(hero, alive[Math.floor(this.rng() * alive.length)], pick, ev);
+      };
+      if (step > 0) this.later(step * (i + 1), go);
+      else go(events);
     }
   }
 

@@ -1,5 +1,5 @@
 // Session 24 new items: Riposte Cloak (strike back after a dodge), Last Stand (low health: more damage and speed),
-// Harvest Scythe (crits heal), Killing Mask (lifesteal).
+// Harvest Scythe (crits heal). (Killing Mask was cut: lifesteal stacking ran away.)
 import fs from 'fs';
 import { noPerks, frozenItems } from './util.mjs';
 import BattleState from '../../src/systems/BattleState.js';
@@ -47,7 +47,3 @@ const give = (s, u, id, n = 1) => { for (let i = 0; i < n; i++) s.giveItem(u.uid
   ok('Harvest Scythe: a crit heals ' + pct + '% of its damage', c.crit && Math.abs(c.got - (c.amount * pct) / 100) <= 1, `${c.amount} -> ${c.got}`);
   ok('...a normal hit heals nothing', !n.crit && n.got === 0);
   ok('...2 scythes: ' + 2 * pct + '%', Math.abs(c2.got - (c2.amount * 2 * pct) / 100) <= 1, `${c2.got}`); }
-// Killing Mask
-{ const pct = val('killing_mask', 'lifesteal').percent;
-  const { s, e, k } = mk(); give(s, k, 'killing_mask', 2); k.hp = 1; const res = s.strike(k, e, [], {});
-  ok('Killing Mask: ' + pct + '% lifesteal per copy', k.specials.lifesteal === 2 * pct && Math.abs(k.hp - 1 - (res.amount * 2 * pct) / 100) <= 1, `${res.amount} -> ${k.hp - 1}`); }

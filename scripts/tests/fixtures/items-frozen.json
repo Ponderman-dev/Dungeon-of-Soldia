@@ -2023,19 +2023,5 @@
       }
     ],
     "perStack": "+15% of crit damage healed"
-  },
-  "killing_mask": {
-    "name": "Killing Mask",
-    "rarity": "rare",
-    "type": "special",
-    "scope": "self",
-    "description": "Heals 8% of damage dealt (lifesteal).",
-    "effects": [
-      {
-        "special": "lifesteal",
-        "percent": 8
-      }
-    ],
-    "perStack": "+8% lifesteal"
   }
 }

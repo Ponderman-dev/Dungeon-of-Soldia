@@ -1195,7 +1195,7 @@
       "attackEfficiency": 100
     },
     "hatch": {
-      "afterMs": 4000,
+      "afterMs": 5000,
       "into": "spiderling",
       "count": 3
     }

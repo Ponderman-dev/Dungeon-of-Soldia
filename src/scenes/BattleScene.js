@@ -2046,6 +2046,7 @@ export default class BattleScene extends Phaser.Scene {
     // this empty container only carries its position along the flight.
     const arrow = this.add.container(from.x, from.y);
     arrow.kind = a.unit.hitType || a.unit.damageType; // an elite archer shoots its element
+    if (a.unit.specials && a.unit.specials.demonHead && ['fire', 'electric', 'dark'].includes(arrow.kind)) arrow.kind = 'ice'; // Frozen Demon Head: its shots are ice
     a.arrow = arrow;
     this.flyArrow(a, arrow, t, hitInMs);
     a.ch.lunge(t.ch.x, t.ch.y); // a small recoil-like jab as it shoots

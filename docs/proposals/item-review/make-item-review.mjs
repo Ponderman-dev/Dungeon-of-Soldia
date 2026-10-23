@@ -47,7 +47,7 @@ const CLIPS = {
   bombardiers_barrel: ['barrel', 'Archer with all 5 bombs: when a bomb goes off, 2-4 more fly 0.15s apart (\'Bombs away!\').'],
   life_crystal: ['life-crystal', 'A kill pops a green orb out of the dead enemy, small orbs fly to the heroes it heals.'],
   reapers_bell: ['reapers-bell', 'Every kill explodes in a purple cloud (the Puffshroom cloud) and can chain.'],
-  frozen_demon_head: ['demon-head', 'Mage + Archer store ice; when full, Ice Spikes burst under an enemy + shake + FREEZE. Open: the spikes are plain triangles, could be redrawn as pixel ice.'],
+  frozen_demon_head: ['demon-head', 'The Mage stores ice; when full, a giant icicle (your sketch) traps the enemy, holds it still while frozen, then shatters.'],
   euclid_of_elements: ['euclid', 'A hit with 2+ elements casts 3 more times, 0.15s apart (\'Euclid!\').'],
   sharpest_blade: ['sharpest-blade', '\'Heart strike!\' (4.5x + stun). Open: today only the icon pop and a normal hit, maybe a big dramatic slash?'],
   kinetic_coil: ['kinetic-coil', 'Rogue dodges store charges for an electric hit. Open: the charges have NO look yet (sparks on the hero?).'],

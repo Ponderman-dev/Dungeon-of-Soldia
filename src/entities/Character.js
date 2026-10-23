@@ -99,6 +99,7 @@ export default class Character extends Phaser.GameObjects.Container {
       return samplePose(clip, Math.min(1, p) * clip.length);
     };
     if (this.deathAt !== null && A.death) return shot('death', this.deathAt, A.death.length, true);
+    if (this.heldPose) return this.heldPose; // stuck inside an icicle (encase)
     const hurt = A.hurt && shot('hurt', this.hurtAt, A.hurt.length, false);
     if (hurt) return hurt;
     if (this.action) {
@@ -152,6 +153,12 @@ export default class Character extends Phaser.GameObjects.Container {
   // Stunned or frozen (the battle tells it each frame): plays the stunned clip (dizzy loop).
   setStunned(on) {
     this.stunned = on;
+  }
+
+  // Frozen Demon Head: stuck inside an icicle, the character holds its current pose (no idle, no dizzy loop).
+  encase(on) {
+    this.heldPose = on ? this.clipPose() : null;
+    for (const t of this.idleTweens) (on ? t.pause() : t.resume());
   }
 
   // A floor was won: the victory clip (if it has one).

@@ -20,7 +20,9 @@ const calls = {
   spiritAxe: (q, t) => fx.spiritAxeFx(q, u, t), moon: (q, t) => fx.moonFx(q, a, b, t, 3),
   spiritfire: (q, t) => fx.spiritFireFx(q, a, b, t, 3), soulLantern: (q, t) => fx.soulLanternFx(q, u, t), ghastlyFire: (q, t) => fx.ghastlyDraws(hit.impactFx('fire', q, { ...u, side: -1 }, t, 1, a).draws, u),
   thunderstruck: (q, t) => fx.thunderstruckFx(q, u, t, 3),
+  iceSpike: (q, t) => fx.iceSpikeFx(q * fx.ITEM_MS.iceSpike, u, t, fx.ITEM_MS.iceSpike - fx.ICE_SPIKE.shatterMs),
 };
+ok('Demon Head icicle stays up while the enemy is frozen (no shatter yet)', fx.iceSpikeFx(4000, u, 61, null).length > 100 && clean(fx.iceSpikeFx(4000, u, 61, null)));
 ok('Thunderstruck circle draws clean pixels and grows', [0, 0.5, 1].every((p) => clean(fx.thunderMarkFx(p, b, 12, 61))) && fx.thunderMarkFx(0.9, b, 12, 61).length > 20);
 ok('every effect has a recipe here', fx.ITEM_FX.every((k) => calls[k]), fx.ITEM_FX.filter((k) => !calls[k]).join());
 const bad = [];

@@ -59,8 +59,8 @@ const CLIPS = {
   },
   demonHead: async ({ p, mark }) => {
     await fight(p, ['knight', 'mage', 'archer']);
-    await setup(p, { mage: ['frozen_demon_head', 'frost_charm', 'chill_band'], archer: ['frozen_demon_head', 'chill_band'] }, { frozen_demon_head: { 2: { percent: 60 } } }, tanky);
-    await wait(p, 300); mark('demon-head', 9000); await wait(p, 9000);
+    await setup(p, { mage: ['frozen_demon_head', 'frost_charm', 'chill_band'] }, { frozen_demon_head: { 2: { percent: 150 } } }, tanky);
+    await wait(p, 300); mark('demon-head', 12000); await wait(p, 12000);
   },
   euclid: async ({ p, mark }) => {
     await fight(p, ['knight', 'rogue', 'archer']);

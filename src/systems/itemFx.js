@@ -12,7 +12,7 @@ const lerp = (a, b, p) => a + (b - a) * p;
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const BOMB = 0x4a4a5a, KNIFE = 0xe4e8f0, HILT = 0x6b4a2a, BANNER = 0xf2d03a, GREEN = 0x3aa84a, GREEN2 = 0xc8ffd0;
 
-export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 700, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340, thunderstruck: 520 };
+export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 700, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340, thunderstruck: 520, iceSpike: 1800 };
 export const ITEM_FX = Object.keys(ITEM_MS);
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -334,5 +334,62 @@ export function thunderstruckFx(q, u, t, seed = 0) {
   const e = ph(q, 0.05, 0.9);
   if (e > 0 && e < 1) { g.ring(hit.x, hit.y, 4 + e * 26, C.elec, 1 - e, (4 + e * 26) * 0.4); g.ring(hit.x, hit.y, 2 + e * 16, C.white, (1 - e) * 0.7, (2 + e * 16) * 0.4); }
   burst(g, hit.x, hit.y - 4, 16, [C.elec, C.white], ph(q, 0.05, 0.8), 18, seed + 3, -0.2);
+  return g.out;
+}
+
+// Frozen Demon Head (user's sketch: 'a very spiky and crooked tall icicle' that traps the enemy): one giant icicle,
+// a wide block round the enemy with a spike out of each side, then a crooked spire leaning right. It bursts up out of
+// the ground, stays while the enemy is frozen (the enemy holds still inside), then shatters.
+//   ms = time since it burst up, shatterMs = when it started to shatter (null = still standing). u = the enemy's body.
+const ICE_DEEP = 0x3b8ee0;
+// The sketch's outline: x across the base (-0.5..0.5, the spikes stick out past it), y from the ground (0) to the tip (1).
+const ICICLE = [[-0.5, 0], [-0.47, 0.22], [-0.66, 0.52], [-0.3, 0.4], [-0.21, 0.5], [-0.16, 0.61], [-0.09, 0.71], [0.06, 0.87], [0.21, 1], [0.26, 0.92], [0.32, 0.78], [0.34, 0.62], [0.38, 0.37], [0.74, 0.5], [0.53, 0.22], [0.5, 0]];
+export const ICE_SPIKE = { growMs: 260, shatterMs: 480 };
+export function iceSpikeFx(ms, u, t, shatterMs = null) {
+  const g = pen();
+  const tall = Math.max(30, (u.y - u.top) * 2.7), wide = Math.max(u.hw * 2 + 10, tall * 0.42), base = u.y + 1;
+  const grow = easeOut(clamp(ms / ICE_SPIKE.growMs));
+  const sp = shatterMs === null ? 0 : clamp((ms - shatterMs) / ICE_SPIKE.shatterMs);
+  const a = 1 - ph(sp, 0, 0.25);
+  // frost on the ground
+  g.ring(u.x, base, 3 + grow * wide * 0.8, C.ice2, 0.7 * a, 1 + grow * 2.5);
+  const h = Math.round(tall * grow);
+  if (a > 0 && h > 1) {
+    const spans = []; // per row from the ground: [x0, x1] pairs inside the outline
+    for (let i = 0; i <= h; i++) {
+      const y = i / h, xs = [];
+      for (let k = 0; k < ICICLE.length; k++) {
+        const [x0, y0] = ICICLE[k], [x1, y1] = ICICLE[(k + 1) % ICICLE.length];
+        if ((y0 <= y && y < y1) || (y1 <= y && y < y0)) xs.push(x0 + ((y - y0) / (y1 - y0)) * (x1 - x0));
+      }
+      xs.sort((p, q) => p - q);
+      const row = [], jag = Math.round((rnd(i * 3 + 1) - 0.5) * 1.6); // crooked edges
+      for (let k = 0; k + 1 < xs.length; k += 2) row.push([Math.round(u.x + xs[k] * wide) + jag, Math.round(u.x + xs[k + 1] * wide) + (k ? 0 : jag)]);
+      spans.push(row);
+    }
+    const inside = (x, i) => i >= 0 && i < spans.length && spans[i].some(([x0, x1]) => x >= x0 && x <= x1);
+    const shine = t % 1800 < 700 ? (t % 1800) / 700 : -1; // a glint runs up it now and then
+    for (let i = 0; i < spans.length; i++) {
+      const y = base - i;
+      for (const [x0, x1] of spans[i]) {
+        for (let x = x0; x <= x1; x++) {
+          const light = (x - u.x) / wide < -0.1 + (i / h) * 0.25; // the left face catches the light
+          let c = light ? C.ice2 : C.ice, al = 0.5;
+          if (!inside(x, i + 1)) { c = C.white; al = 1; } // top edges
+          if (x === x0) { c = C.white; al = 1; } else if (x === x1) { c = C.ice; al = 1; }
+          if (shine >= 0 && Math.abs(i - shine * h - (x - u.x) * 0.5) < 1) { c = C.white; al = 0.85; }
+          g.px(x, y, c, al * a);
+        }
+        g.px(x0 - 1, y, ICE_DEEP, a); g.px(x1 + 1, y, ICE_DEEP, a);
+      }
+    }
+    for (const [x0, x1] of spans[h] || []) for (let x = x0; x <= x1; x++) g.px(x, base - h - 1, ICE_DEEP, a);
+    // cracks inside the ice
+    if (grow >= 1) for (const [sx, sy, ex, ey] of [[-0.2, 0.15, 0.05, 0.35], [0.15, 0.5, 0.25, 0.75], [-0.3, 0.3, -0.15, 0.42]]) g.line(u.x + sx * wide, base - sy * tall, u.x + ex * wide, base - ey * tall, C.white, 0.35 * a);
+  }
+  burst(g, u.x + 0.2 * wide, base - tall, 10, [C.white, C.ice2], ph(ms, 120, 520), 14, 23); // spray at the tip as it bursts up
+  // the shatter: big shards fly out and fall
+  burst(g, u.x, base - tall * 0.45, 30, [C.white, C.ice, C.ice2, ICE_DEEP], sp, 34, 11, 1.6);
+  burst(g, u.x + 0.15 * wide, base - tall * 0.8, 14, [C.ice, C.white], sp, 22, 17, 2);
   return g.out;
 }

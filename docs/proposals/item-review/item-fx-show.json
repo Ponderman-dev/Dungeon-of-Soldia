@@ -532,12 +532,8 @@
  ],
  "frozen_demon_head": [
   [
-   "hit",
-   "ice"
-  ],
-  [
-   "status",
-   "freeze"
+   "item",
+   "iceSpike"
   ]
  ],
  "euclid_of_elements": [

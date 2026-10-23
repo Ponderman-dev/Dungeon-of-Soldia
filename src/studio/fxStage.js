@@ -89,7 +89,7 @@ export class FxStage {
       const a = { x: H0.x + H0.hw + 2, y: H0.mid }, b = at(E0);
       const map = {
         bomb: () => itemFx.bombFx(q, a, b, t), iceBomb: () => itemFx.bombFx(q, a, b, t, 0, 'ice'), electricBomb: () => itemFx.bombFx(q, a, b, t, 0, 'electric'),
-        darkBomb: () => itemFx.bombFx(q, a, b, t, 0, 'dark'), poisonBomb: () => itemFx.bombFx(q, a, b, t, 0, 'poison'), lightning: () => [...itemFx.lightningFx(q, a, b, t, 3), ...itemFx.lightningFx(q, b, at(E1), t, 9)], greenfire: () => itemFx.greenfireFx(q, a, b),
+        darkBomb: () => itemFx.bombFx(q, a, b, t, 0, 'dark'), iceSpike: () => itemFx.iceSpikeFx(q * itemFx.ITEM_MS.iceSpike, E0, t, itemFx.ITEM_MS.iceSpike - itemFx.ICE_SPIKE.shatterMs), poisonBomb: () => itemFx.bombFx(q, a, b, t, 0, 'poison'), lightning: () => [...itemFx.lightningFx(q, a, b, t, 3), ...itemFx.lightningFx(q, b, at(E1), t, 9)], greenfire: () => itemFx.greenfireFx(q, a, b),
         battleCry: () => [...itemFx.battleCryFx(q, H0), ...itemFx.speedLinesFx(q, H0, t)], shatter: () => itemFx.shatterFx(q, E0), knifeBurst: () => itemFx.knifeBurstFx(q, E0.x, E0.mid),
         plague: () => itemFx.plagueFx(q, b, at(E1)), thunderbolt: () => itemFx.thunderboltFx(q, E0), aegisBlast: () => itemFx.aegisBlastFx(q, H0), thorns: () => itemFx.thornsFx(q, H0),
         lifesteal: () => itemFx.lifestealFx(q, b, at(H0)), suckerPunch: () => itemFx.suckerPunchFx(q, E0, -1), executioner: () => itemFx.executionerFx(q, E0), dice: () => itemFx.diceFx(q, E0, t),

@@ -76,9 +76,9 @@
     "rangedTargetWeight": 0.5
   },
   "books": {
-    "_about": "Skill book limits per skill (pages in skillBooks.json): stat pages may repeat, a modifier only once per skill; a new modifier on a full skill replaces one the player picks.",
-    "maxStatPages": 3,
-    "modifierSlots": 2
+    "_about": "Skill book limits per skill (pages in skillBooks.json): stat pages may repeat, a modifier only once per skill; a new modifier on a full skill replaces one the player picks. null = NO LIMIT (user, session 25: limits removed; were 3 stat pages and 2 modifiers).",
+    "maxStatPages": null,
+    "modifierSlots": null
   },
   "skillWindUp": {
     "_about": "Skills wind up before they go off (castMs per skill in skills.json, else defaultCastMs). The skill goes on cooldown when tapped; stunned, frozen or silenced during the wind-up = the skill is lost (still on cooldown). No basic attacks and no walking while winding up.",

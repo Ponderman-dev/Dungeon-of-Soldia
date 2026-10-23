@@ -11,7 +11,7 @@ let ctx = null;
 let master = null;
 const buffers = {};
 const lastPlayed = {};
-let voices = 0; // sounds playing right now (a busy fight never plays more than maxVoices at once)
+let voices = 0; // busy fight sounds playing right now (never more than maxVoices at once)
 let muted = !!(loadProgress().settings || {}).muted;
 
 function audioContext() {
@@ -55,7 +55,10 @@ export async function play(cue) {
     if (!c) return;
     const now = typeof performance !== 'undefined' ? performance.now() : 0;
     if (lastPlayed[cue] && now - lastPlayed[cue] < (c.minGapMs ?? soundData.minGapMs ?? 0)) return; // the same sound many times at once = one
-    if (voices >= (soundData.maxVoices || 8)) return;
+    // Only BUSY sounds (a cue with its own minGapMs: hits, procs, steps...) share the maxVoices slots; one-off moments
+    // (floor clear, level up, rewards, boss roar...) always play (user: at high floors they went silent: slots full).
+    const busy = c.minGapMs !== undefined && !c.always; // `always`: a tapped skill's own sound
+    if (busy && voices >= (soundData.maxVoices || 8)) return;
     lastPlayed[cue] = now;
     const a = audioContext();
     if (!a) return;
@@ -70,8 +73,10 @@ export async function play(cue) {
     const g = a.createGain();
     g.gain.value = c.volume ?? 1;
     src.connect(g).connect(master);
-    voices++;
-    src.onended = () => { voices = Math.max(0, voices - 1); };
+    if (busy) {
+      voices++;
+      src.onended = () => { voices = Math.max(0, voices - 1); };
+    }
     src.start();
   } catch {
     // ignore

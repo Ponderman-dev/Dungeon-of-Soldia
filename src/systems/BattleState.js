@@ -2833,7 +2833,7 @@ export default class BattleState {
 
   // ---- skill books (skillBooks.json pages, combat.json `books` limits) ----------------------------------------
   // Puts a page ({ id, kind, ... } from skillBooks.json) on skill `index` of a hero, for the rest of the run.
-  // Stat pages: at most books.maxStatPages per skill (they may repeat). Modifiers: at most books.modifierSlots, no
+  // Stat pages: at most books.maxStatPages per skill (they may repeat; null = no limit). Modifiers: at most books.modifierSlots, no
   // duplicates; on a full skill pass `replace` = which of its modifiers (0, 1...) the new one replaces.
   // Returns { ok, reason?: 'noHero' | 'full' | 'duplicate', replaced? }.
   addPage(heroUid, index, page, replace = null) {
@@ -2843,13 +2843,13 @@ export default class BattleState {
     const lim = this.rules.books || {};
     const pages = (slot.pages = slot.pages || []);
     if (page.kind === 'stat') {
-      if (pages.filter((p) => p.kind === 'stat').length >= (lim.maxStatPages ?? 3)) return { ok: false, reason: 'full' };
+      if (pages.filter((p) => p.kind === 'stat').length >= (lim.maxStatPages ?? Infinity)) return { ok: false, reason: 'full' };
       pages.push(page);
       return { ok: true };
     }
     const mods = pages.filter((p) => p.kind === 'modifier');
     if (mods.some((p) => p.id === page.id)) return { ok: false, reason: 'duplicate' };
-    if (mods.length >= (lim.modifierSlots ?? 2)) {
+    if (mods.length >= (lim.modifierSlots ?? Infinity)) { // null = no limit
       if (replace === null || !mods[replace]) return { ok: false, reason: 'full' };
       pages.splice(pages.indexOf(mods[replace]), 1, page);
       return { ok: true, replaced: mods[replace] };

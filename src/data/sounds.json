@@ -1,5 +1,5 @@
 {
-  "_about": "Sound effects. pack = the menu folder in src/assets/sounds (uisfx 'organic', CC0). Fight sounds come from Kenney (CC0, folder 'kenney/'). cues: game moment -> { file or files (random take), volume (0-1), pitch (base speed, <1 = deeper), pitchJitter (random +/- fraction), minGapMs }. masterVolume for everything, maxVoices = most sounds at once. Muting is saved in the progress (settings.muted).",
+  "_about": "Sound effects. pack = the menu folder in src/assets/sounds (uisfx 'organic', CC0). Fight sounds come from Kenney (CC0, folder 'kenney/'). cues: game moment -> { file or files (random take), volume (0-1), pitch (base speed, <1 = deeper), pitchJitter (random +/- fraction), minGapMs }. masterVolume for everything, maxVoices = most BUSY sounds at once (a cue with its own minGapMs: hits, procs...); cues without minGapMs (floor clear, level up, rewards...) and cues with always: true (skill sounds) always play. Muting is saved in the progress (settings.muted).",
   "pack": "organic",
   "masterVolume": 0.7,
   "minGapMs": 40,
@@ -297,140 +297,160 @@
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_death_coil3",
-      "source": "pixabay_casting-magic-3-382381.mp3"
+      "source": "pixabay_casting-magic-3-382381.mp3",
+      "always": true
     },
     "skill_holy_nova": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_holy_nova",
-      "source": "pixabay_casting-magic-3-382381.mp3"
+      "source": "pixabay_casting-magic-3-382381.mp3",
+      "always": true
     },
     "skill_defense_bash": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_defense_bash",
-      "source": "pixabay_punch-impact-hit-567196.mp3"
+      "source": "pixabay_punch-impact-hit-567196.mp3",
+      "always": true
     },
     "skill_arrow_rain": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_arrow_rain",
-      "source": "pixabay_many-arrows-flying-by-306037.mp3"
+      "source": "pixabay_many-arrows-flying-by-306037.mp3",
+      "always": true
     },
     "skill_alch_barrage": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "source": "new_75-cc0-breaking-falling-hit-sfx-bfh1-glass-breaking-06.mp3",
-      "file": "picked/skill_alch_barrage"
+      "file": "picked/skill_alch_barrage",
+      "always": true
     },
     "skill_alch_brew": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_alch_brew",
-      "source": "rising bubbly pop: 3 pops of new_40-cc0-water-splash-slime-sfx-bubble-01.mp3 at pitch 1.0 / 1.3 / 1.7 (ffmpeg, user asked)"
+      "source": "rising bubbly pop: 3 pops of new_40-cc0-water-splash-slime-sfx-bubble-01.mp3 at pitch 1.0 / 1.3 / 1.7 (ffmpeg, user asked)",
+      "always": true
     },
     "skill_mage_ward": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_mage_ward",
-      "source": "pixabay_warp-magic-5-382388.mp3"
+      "source": "pixabay_warp-magic-5-382388.mp3",
+      "always": true
     },
     "skill_blood_feast": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_blood_feast",
-      "source": "new_80-cc0-rpg-sfx-creature-die-01.mp3"
+      "source": "new_80-cc0-rpg-sfx-creature-die-01.mp3",
+      "always": true
     },
     "skill_smoke_bomb": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_smoke_bomb",
-      "source": "new_micro-pack-organic-wooshes-swish-2.mp3"
+      "source": "new_micro-pack-organic-wooshes-swish-2.mp3",
+      "always": true
     },
     "skill_bone_sacrifice": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_bone_sacrifice",
-      "source": "pixabay_earth-magic-6-378601.mp3"
+      "source": "pixabay_earth-magic-6-378601.mp3",
+      "always": true
     },
     "skill_discord": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_discord",
-      "source": "pixabay_mandolin-strum-high-g-chord-100702.mp3"
+      "source": "pixabay_mandolin-strum-high-g-chord-100702.mp3",
+      "always": true
     },
     "skill_challenge": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_challenge",
-      "source": "new_80-cc0-rpg-sfx-creature-roar-03.mp3"
+      "source": "new_80-cc0-rpg-sfx-creature-roar-03.mp3",
+      "always": true
     },
     "skill_counter_stance": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_counter_stance",
-      "source": "new_100-cc0-sfx-metal-04.mp3"
+      "source": "new_100-cc0-sfx-metal-04.mp3",
+      "always": true
     },
     "skill_change_song": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_change_song",
-      "source": "pixabay_mandolin-strum-high-g-chord-100702.mp3"
+      "source": "pixabay_mandolin-strum-high-g-chord-100702.mp3",
+      "always": true
     },
     "skill_multistrike": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_multistrike",
-      "source": "pixabay_rpg-sword-attack-combo-27-388938.mp3"
+      "source": "pixabay_rpg-sword-attack-combo-27-388938.mp3",
+      "always": true
     },
     "skill_hunters_mark": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_hunters_mark",
-      "source": "new_kenney-interfacesounds-audio-select-003.mp3"
+      "source": "new_kenney-interfacesounds-audio-select-003.mp3",
+      "always": true
     },
     "skill_sanctuary": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_sanctuary",
-      "source": "yours_light-spell-873.mp3"
+      "source": "yours_light-spell-873.mp3",
+      "always": true
     },
     "skill_brawl_leap": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_brawl_leap",
-      "source": "pixabay_heavy-body-fall-352446.mp3"
+      "source": "pixabay_heavy-body-fall-352446.mp3",
+      "always": true
     },
     "skill_wind_cutter3": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_wind_cutter3",
-      "source": "pixabay_rpg-sword-attack-combo-22-388940.mp3"
+      "source": "pixabay_rpg-sword-attack-combo-22-388940.mp3",
+      "always": true
     },
     "skill_mage_rotation": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
       "file": "picked/skill_mage_rotation",
-      "source": "pixabay_lightning-spell-386163.mp3"
+      "source": "pixabay_lightning-spell-386163.mp3",
+      "always": true
     }
   },
   "maxVoices": 8

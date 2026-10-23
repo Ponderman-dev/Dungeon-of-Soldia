@@ -169,7 +169,7 @@ export default class BattleScene extends Phaser.Scene {
       .setOrigin(0, 0.5)
       .setDepth(DEPTH.hud);
     this.banner = this.add
-      .text(GAME_WIDTH / 2, BANNER_Y, '', { fontFamily: UI.font, fontSize: '24px', color: '#ffffff', stroke: '#000000', strokeThickness: 4, align: 'center' })
+      .text(GAME_WIDTH / 2, BANNER_Y, '', { fontFamily: UI.font, fontSize: '24px', color: '#ffffff', stroke: '#000000', strokeThickness: 4, align: 'center', wordWrap: { width: GAME_WIDTH - 32, useAdvancedWrap: true } }) // long lines wrap instead of running off the screen
       .setOrigin(0.5)
       .setDepth(DEPTH.hud);
     // Any tap closes an open passive text (not the tap that opened it: same moment).
@@ -1080,24 +1080,28 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
-  // Skill book pages on a skill square: a small white dot per stat page along the bottom edge, a purple diamond
-  // per modifier in the top corners.
+  // Skill book pages on a skill square: a small white dot per stat page along the bottom edge (rows of 5, going up),
+  // a purple diamond per modifier along the top edge (rows of 4, going down). No page limit (user), so they wrap.
   drawPageMarks(g, b, slot, alive) {
     const pages = slot.pages || [];
     if (!pages.length) return;
     const a = alive ? 1 : 0.4;
     const stats = pages.filter((p) => p.kind === 'stat').length;
     for (let i = 0; i < stats; i++) {
-      const x = b.x + SKILL_W / 2 + (i - (stats - 1) / 2) * 7 - 2;
-      g.fillStyle(0x000000, a).fillRect(x - 1, b.y + SKILL_H - 8, 6, 6);
-      g.fillStyle(0xf3eefc, a).fillRect(x, b.y + SKILL_H - 7, 4, 4);
+      const row = Math.floor(i / 5), inRow = Math.min(5, stats - row * 5), k = i % 5;
+      const x = b.x + SKILL_W / 2 + (k - (inRow - 1) / 2) * 7 - 2;
+      const y = b.y + SKILL_H - 8 - row * 7;
+      g.fillStyle(0x000000, a).fillRect(x - 1, y, 6, 6);
+      g.fillStyle(0xf3eefc, a).fillRect(x, y + 1, 4, 4);
     }
-    pages.filter((p) => p.kind === 'modifier').forEach((_, i) => {
-      const cx = i === 0 ? b.x + 7 : b.x + SKILL_W - 7;
-      const cy = b.y + 7;
+    const mods = pages.filter((p) => p.kind === 'modifier').length;
+    for (let i = 0; i < mods; i++) {
+      const row = Math.floor(i / 4), k = i % 4;
+      const cx = mods <= 2 ? (k === 0 ? b.x + 7 : b.x + SKILL_W - 7) : b.x + 6 + k * 9.3; // 1-2: the two top corners, as before
+      const cy = b.y + 7 + row * 9;
       g.fillStyle(0x000000, a).fillTriangle(cx - 5, cy, cx, cy - 5, cx + 5, cy).fillTriangle(cx - 5, cy, cx, cy + 5, cx + 5, cy);
       g.fillStyle(0xc8a0ff, a).fillTriangle(cx - 3, cy, cx, cy - 3, cx + 3, cy).fillTriangle(cx - 3, cy, cx, cy + 3, cx + 3, cy);
-    });
+    }
   }
 
   // Draws one fighter: the character, plus a health bar above it.

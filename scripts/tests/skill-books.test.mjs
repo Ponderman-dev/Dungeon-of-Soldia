@@ -7,9 +7,10 @@ const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name,
 const books = r('skillBooks.json').pages;
 const page = (id) => ({ id, ...books[id] });
 const heroes = r('heroes.json');
-const mk = (ids = ['knight', 'rogue', 'archer'], castMs = null) => {
+const capped = { ...r('combat.json'), books: { maxStatPages: 3, modifierSlots: 2 } }; // the old caps: limits still work when set
+const mk = (ids = ['knight', 'rogue', 'archer'], castMs = null, rules = r('combat.json')) => {
   const skills = Object.fromEntries(Object.entries(r('skills.json')).map(([k, v]) => [k, castMs === null ? v : { ...v, castMs }]));
-  const s = new BattleState({ heroDefs: ids.map((id) => ({ ...heroes.find((h) => h.id === id), perk: undefined })), enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs: loadItems(r('items.json')), skillDefs: skills, statusDefs: r('statuses.json'), rules: r('combat.json'), damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng: () => 0.5 });
+  const s = new BattleState({ heroDefs: ids.map((id) => ({ ...heroes.find((h) => h.id === id), perk: undefined })), enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs: loadItems(r('items.json')), skillDefs: skills, statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng: () => 0.5 });
   const es = s.spawnEnemies(['goblin', 'goblin', 'goblin'], 1);
   for (const u of [...s.heroes, ...es]) { u.hp = u.maxHp = 100000; u.stats.evasion = 0; u.stats.crit = 0; u.stats.defense = 0; }
   return { s, es, h: s.heroes };
@@ -18,6 +19,11 @@ const dmgOf = (ev) => ev.filter((e) => e.type === 'attack' && e.skill).reduce((a
 
 ok('every page has a kind, name and text', Object.values(books).every((p) => ['stat', 'modifier'].includes(p.kind) && p.name && p.text));
 { const { s, h } = mk(); const k = h[0];
+  let all = true; for (let i = 0; i < 8; i++) if (!s.addPage(k.uid, 0, page(['sharpen', 'swift', 'lasting'][i % 3])).ok) all = false;
+  for (const id of ['venomInk', 'siphon', 'rally', 'hasty', 'roar']) if (!s.addPage(k.uid, 0, page(id)).ok) all = false;
+  ok('NO page limits in the game (user): 8 stat pages + 5 modifiers on one skill', all && k.skills[0].pages.length === 13);
+  ok('...still no duplicate modifier', s.addPage(k.uid, 0, page('rally')).reason === 'duplicate'); }
+{ const { s, h } = mk(undefined, null, capped); const k = h[0];
   ok('a stat page goes on a skill', s.addPage(k.uid, 0, page('sharpen')).ok && k.skills[0].pages.length === 1);
   s.addPage(k.uid, 0, page('sharpen')); s.addPage(k.uid, 0, page('swift'));
   ok('...max 3 stat pages per skill', s.addPage(k.uid, 0, page('lasting')).reason === 'full');
@@ -82,7 +88,7 @@ import { rollBookPages, pageFit, maybeAddBook, pageOf } from '../../src/systems/
   const blue = rollBookPages(data, 'blue'), gold = rollBookPages(data, 'golden');
   ok('a blue book shows 2 stat pages + 1 modifier', blue.length === 3 && blue.filter((p) => p.kind === 'stat').length === 2 && new Set(blue.map((p) => p.id)).size === 3);
   ok('a golden book shows 3 different modifiers', gold.length === 3 && gold.every((p) => p.kind === 'modifier') && new Set(gold.map((p) => p.id)).size === 3);
-  const { s, h } = mk(); const lim = r('combat.json').books;
+  const { s, h } = mk(undefined, null, capped); const lim = capped.books;
   ok('pageFit: ok on an empty skill', pageFit(h[0], 0, pageOf(data, 'rally'), lim) === 'ok');
   s.addPage(h[0].uid, 0, pageOf(data, 'rally')); s.addPage(h[0].uid, 0, pageOf(data, 'siphon'));
   ok('...duplicate / replace on a full skill', pageFit(h[0], 0, pageOf(data, 'rally'), lim) === 'duplicate' && pageFit(h[0], 0, pageOf(data, 'hasty'), lim) === 'replace');

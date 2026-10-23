@@ -21,10 +21,10 @@ export function rollBookPages(data, book, rng = Math.random) {
 export function pageFit(hero, index, page, limits = {}) {
   if (!hero.alive) return 'dead';
   const pages = (hero.skills[index] && hero.skills[index].pages) || [];
-  if (page.kind === 'stat') return pages.filter((p) => p.kind === 'stat').length >= (limits.maxStatPages ?? 3) ? 'full' : 'ok';
+  if (page.kind === 'stat') return pages.filter((p) => p.kind === 'stat').length >= (limits.maxStatPages ?? Infinity) ? 'full' : 'ok';
   const mods = pages.filter((p) => p.kind === 'modifier');
   if (mods.some((p) => p.id === page.id)) return 'duplicate';
-  return mods.length >= (limits.modifierSlots ?? 2) ? 'replace' : 'ok';
+  return mods.length >= (limits.modifierSlots ?? Infinity) ? 'replace' : 'ok'; // null = no limit
 }
 
 // The reward screen: with chance `chance` one of the item cards becomes a skill book card (only while a living

@@ -1,5 +1,11 @@
-# Handoff ARCHIVE (sessions 2-24, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-25, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## (session 25 start note, 2026-10-23: session 24 work = item optimization round 2 + new items)
+- NEXT was BOSSES REWORK (done in session 25: Grukk + Brood Mother reworked, see bosses.md).
+- DONE session 24: item review page round 2 (db `notes2`), 19 items changed, NEW Riposte Cloak / Last Stand / Harvest
+  Scythe, Killing Mask cut (details: item-decisions.md 'ITEM OPTIMIZATION round 2' + 'NEW ITEMS session 24').
+  KIV: early floors a bit harder (alive at 20: 93% -> 88%). Curve 3 smart: median 43, mean 56.2, alive at 100: 5%.
 
 ## (session 24 start note, 2026-10-22: session 23 work = ranged minion targeting, tap sound, squad/camp buttons, speech bubbles)
 - BRANCH: `main` has EVERYTHING (session 23 merged in). See the Git rule in CLAUDE.md (every handoff updates main).

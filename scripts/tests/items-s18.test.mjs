@@ -62,4 +62,8 @@ ok('Thunderstruck exists: legendary, electric, offered once per run', itemDefs.t
   const plain = hitWith(0).amount, one = hitWith(1).amount, two = hitWith(2).amount, same = hitWith(0, 40 - shred).amount, same2 = hitWith(0, 40 - 2 * shred).amount;
   ok('...an ALLY\'s hit on an enemy goes through ' + shred + ' less defense per copy', one === same && two === same2 && two > one && one > plain, `${plain} ${one}=${same} ${two}=${same2}`);
   ok('...gone when the holder is dead', hitWith(1, 40, true).amount === plain);
-  ok('...not in the first ' + eff.find((e) => e.special === 'assaultDelayMs').percent + 'ms of a floor', hitWith(1, 40, false, true).amount === plain); }
+  ok('...not in the first ' + eff.find((e) => e.special === 'assaultDelayMs').percent + 'ms of a floor', hitWith(1, 40, false, true).amount === plain);
+  // The next floor's enemies walk in: the aura (and its icon) must wait again, not carry the last floor's time over.
+  { const { s, k } = mk(); s.giveItem(k.uid, 'assault_breastplate'); s.floorMs = 60000;
+    s.spawnEnemies(['goblin'], 2);
+    ok('...off again while the next floor walks in (no early icon)', s.assaultShred() === 0); } }

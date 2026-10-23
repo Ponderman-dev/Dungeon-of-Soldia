@@ -281,6 +281,7 @@ export default class BattleState {
   }
 
   spawnEnemies(ids, floor) {
+    this.floorMs = 0; // the last floor's time must not carry over (Assault Breastplate's icon popped during the walk-in)
     this.focusUid = null;
     this.teamElementsMs = 0;
     this.tornados = [];

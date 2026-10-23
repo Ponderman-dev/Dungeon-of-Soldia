@@ -29,7 +29,29 @@ ok('a boss floor always brings its own line-up', JSON.stringify(enemiesForFloor(
   const fast = s.interval(g); drum.alive = false; const slow = s.interval(g); drum.alive = true;
   ok('War Drum: Grukk attacks faster while the drum stands', fast < slow, `${fast} < ${slow}`);
   const ev = run(s, 3200);
-  ok('...the drum beats up a goblin', ev.some((e) => e.type === 'enemySpawn' && e.unit.def.id === 'goblin')); }
+  ok('...the drum beats up a goblin AND a goblin archer', ['goblin', 'goblinArcher'].every((id) => ev.some((e) => e.type === 'enemySpawn' && e.unit.def.id === id)));
+  const archer = s.enemies.find((e) => e.def.id === 'goblinArcher');
+  ok('...archers attack faster near the drum too', s.auraSpeed(archer) > 0);
+  run(s, 8000 * 3);
+  const max = enemies.war_drum.abilities[0].summon.map((sm) => sm.max);
+  ok('...at most the cap of each kind at once', ['goblin', 'goblinArcher'].every((id, i) => s.enemies.filter((e) => e.alive && e.def.id === id).length <= max[i])); }
+{ const { s, es, h } = mk(['goblinArcher']); const a = es[0];
+  const ranged = h.filter((x) => x.damageType !== 'melee');
+  let ok1 = true; for (let i = 0; i < 40; i++) { a.foe = null; if (!ranged.includes(s.pickTarget(a))) ok1 = false; }
+  ok('Goblin Archer: always shoots a RANGED hero while one lives', ranged.length > 0 && ok1);
+  for (const x of ranged) x.alive = false;
+  ok('...then anyone', !!s.pickTarget(a) && s.pickTarget(a).damageType === 'melee');
+  ok('...its hits always poison', enemies.goblinArcher.onHit.some((o) => o.status === 'poison' && o.chance === 100)); }
+{ const { s, es, h } = mk(['grukk']); const g = es[0]; g.hp = g.maxHp = 1e6;
+  g.abilities.find((ab) => ab.def.id === 'cleaver_charge').timer = 1e9; // only the jump
+  const jump = enemies.grukk.abilities.find((a) => a.id === 'quake_jump');
+  ok('Rally Shout is gone (no heal)', !enemies.grukk.abilities.some((a) => a.healAllies));
+  g.hp = g.maxHp * (jump.hpBelow - 1) / 100;
+  const hp0 = h.map((x) => x.hp);
+  const ev = run(s, jump.castMs + 200);
+  ok('Quake Jump below half health: hits EVERY hero', h.every((x, i) => x.hp < hp0[i]), h.map((x, i) => hp0[i] - x.hp).join(','));
+  ok('...and stuns every hero', h.every((x) => s.isStunned(x)));
+  ok('...once only', (run(s, 10000), g.abilities.find((ab) => ab.def.id === 'quake_jump').done) && !g.bossCast); }
 { const { s, es } = mk(['grukk']); const g = es[0]; g.hp = g.maxHp = 1e6;
   const ev = run(s, 5100);
   ok('Grukk winds up Cleaver Charge (a boss cast with a red bar)', ev.some((e) => e.type === 'castStart' && e.boss) && g.bossCast);

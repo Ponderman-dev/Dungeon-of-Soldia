@@ -1608,6 +1608,8 @@ export default class BattleScene extends Phaser.Scene {
       sfx.play('bossWarn');
       const bv = this.views.get(e.unit.uid);
       if (bv) { this.popText(bv, e.skill.name, '#ff7a6a', true); bv.ch.flash(0xff4a3a, 140); }
+      // A slam move (Grukk's Quake Jump): it rises into the air during the wind-up (it crashes down in 'bossAbility').
+      if (bv && e.ability && e.ability.slam) this.tweens.add({ targets: Object.assign(bv, { leapLift: bv.leapLift || 0 }), leapLift: e.ability.slam.liftPx, duration: e.castMs, ease: 'Quad.easeOut' });
     } else if (e.type === 'castStart') {
       // The hero winds up and a charge bar fills (see drawCastBars); its name shows when it goes off (skillName).
       this.stopStep(this.views.get(e.unit.uid)); // the skill cuts the attack short (Character.stopAttack: the swing)
@@ -1617,6 +1619,7 @@ export default class BattleScene extends Phaser.Scene {
       const cv = this.views.get(e.unit.uid);
       if (!cv) return;
       cv.ch.castCancel();
+      if (cv.leapLift && e.unit.side === 'enemy' && !e.unit.statuses.some((st) => st.type === 'airborne')) this.tweens.add({ targets: cv, leapLift: 0, duration: 200, ease: 'Quad.easeIn' }); // a stopped slam drops
       if (e.reason === 'interrupted') { this.popText(this.views.get(e.unit.uid), 'Interrupted!', '#ff8a5c', true); sfx.play('interrupted'); }
     } else if (e.type === 'cast') {
       const caster = this.views.get(e.unit.uid);
@@ -2501,10 +2504,18 @@ export default class BattleScene extends Phaser.Scene {
           return true;
         }
         if (v) v.ch.flash(0xff4a3a, 160);
+        const slam = e.ability.slam;
+        if (v && slam) {
+          // Quake Jump: it crashes down from the air, the ground shakes hard and dust bursts out round its feet.
+          this.tweens.add({ targets: v, leapLift: 0, duration: slam.dropMs, ease: 'Quad.easeIn', onComplete: () => {
+            this.cameras.main.shake(slam.shakeMs, slam.shakeIntensity);
+            this.puff(v.ch.x, v.ch.y, 0x8a7a6a, 14);
+          } });
+        }
         sfx.play('bossMove');
         this.bossBanner(e.ability.name);
         for (const t of e.targets) this.ring(this.views.get(t.uid), 0xff4a3a);
-        this.cameras.main.shake(120, 0.003);
+        if (!slam) this.cameras.main.shake(120, 0.003);
         return true;
       }
       case 'bossChannel':

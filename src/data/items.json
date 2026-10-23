@@ -2216,7 +2216,7 @@
         "special": "reaperBell",
         "percent": 18,
         "perExtra": 8,
-        "radius": 100
+        "radius": 150
       }
     ],
     "dropWeight": 90,
@@ -2396,7 +2396,7 @@
         "special": "sweep",
         "percent": 15,
         "perExtra": 8,
-        "radius": 60
+        "radius": 100
       }
     ],
     "dropWeight": 90,
@@ -2408,7 +2408,7 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "Every dodge stores a charge (max 3). The next attack deals +40% electric damage per charge.",
+    "description": "Every dodge or block stores a charge (max 3). The next attack deals +40% electric damage per charge.",
     "effects": [
       {
         "special": "kineticCoil",
@@ -2428,12 +2428,12 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Attacks with no element: 6% chance to strike the heart for 450% damage and stun for 2.5s.",
+    "description": "Attacks with no element: 12% chance to strike the heart for 500% damage and stun for 2.5s.",
     "effects": [
       {
         "special": "heartStrike",
-        "percent": 6,
-        "perExtra": 3,
+        "percent": 12,
+        "perExtra": 4,
         "spec": {
           "status": "stun",
           "durationMs": 2500
@@ -2441,7 +2441,7 @@
       },
       {
         "special": "heartStrikeMult",
-        "percent": 450,
+        "percent": 500,
         "perExtra": 50
       }
     ],
@@ -2449,25 +2449,25 @@
     "provides": [
       "cc"
     ],
-    "perStack": "+3% chance, +50% damage"
+    "perStack": "+4% chance, +50% damage"
   },
   "euclid_of_elements": {
     "name": "Euclid of Elements",
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Hits with 2 or more elements: 15% chance to cast 3 more times at 60% damage.",
+    "description": "Hits with 2 or more elements: 25% chance to cast 3 more times at 70% damage.",
     "effects": [
       {
         "special": "euclid",
-        "percent": 15,
+        "percent": 25,
         "perExtra": 5,
         "count": 3,
         "staggerMs": 150
       },
       {
         "special": "euclidPower",
-        "percent": 60,
+        "percent": 70,
         "perExtra": 20
       }
     ],

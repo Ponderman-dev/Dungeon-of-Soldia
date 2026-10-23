@@ -413,3 +413,9 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Bombardier's Barrel (user): +100% bomb damage, each extra barrel only +50% (was +100%).
 - Frozen Demon Head (user): the holder's own fire / electric / dark attacks and skills turn to ICE (Mage,
   Necromancer); fire / electric / dark ITEM hits still do nothing, charm riders of those elements still dropped.
+- Weak items (sims: Euclid +2.6 over its charms, Sharpest Blade +0.6..+1.7, Kinetic Coil / Sweeping Strap /
+  Reaper's Bell ~0 even with much bigger numbers: they happen too rarely), user picks:
+  Euclid of Elements 15% / 60% -> 25% chance / 70% casts (tested 30/80: +8.7 over the charms alone).
+  Sharpest Blade 6% (+3%) / 4.5x -> 12% (+4%) / 5x (tested: Archer +3.1, Knight +3.7).
+  Sweeping Strap reach 60 -> 100px. Reaper's Bell blast 100 -> 150px. Kinetic Coil: BLOCKS (parries) store a
+  charge too, not only dodges.

@@ -1917,8 +1917,9 @@ export default class BattleState {
     if (ia && result.dodged && !result.missed && !opts.counter) this.counterCut(target, attacker, events);
     // Riposte Cloak: a hit the holder DODGED (evasion only: not a block, a blind miss or invulnerability) is answered.
     if (result.dodged && !result.missed && !result.blocked && !result.invulnerable && !opts.counter && target.side === 'hero' && !target.minion && target.specials.riposte) this.riposte(target, attacker, events);
-    // Kinetic Coil: every hit the holder DODGES stores a charge (at most `kineticCoilCount`, 3), kept for the floor.
-    if (result.dodged && !result.missed && !result.blocked && !result.invulnerable && target.side === 'hero' && !target.minion && target.specials.kineticCoil) {
+    // Kinetic Coil: every hit the holder DODGES or BLOCKS (session 29, user: parries too) stores a charge (at most
+    // `kineticCoilCount`, 3), kept for the floor.
+    if (result.dodged && !result.missed && !result.invulnerable && target.side === 'hero' && !target.minion && target.specials.kineticCoil) {
       target.floor.coil = Math.min(target.specials.kineticCoilCount || 3, (target.floor.coil || 0) + 1);
     }
     return result;

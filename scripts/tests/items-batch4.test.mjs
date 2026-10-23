@@ -43,7 +43,11 @@ const lost = (e) => 1e7 - e.hp;
   ok('...the next attack: +' + per + '% electric per charge x ' + kc.count, Math.abs(lost(e) - plainHit * (1 + (kc.count * per) / 100)) <= 2 && hit.result.riders.some((rd) => rd.damageType === 'electric'), `${plainHit} -> ${lost(e)}`);
   ok('...and the charges are used up', k.floor.coil === 0);
   s.spawnEnemies(['goblin'], 2);
-  ok('...reset every floor', !k.floor.coil); }
+  ok('...reset every floor', !k.floor.coil);
+  // A BLOCKED hit stores a charge too (session 29, user).
+  { const { s: b, e: be } = mk(['goblin'], () => 0); const bk = melee(b); give(b, bk, 'kinetic_coil'); bk.stats.evasion = 0; bk.specials.block = 100;
+    const res = b.strike(be, bk, [], {});
+    ok('...a blocked hit stores a charge too', res.blocked && bk.floor.coil === 1, JSON.stringify(res)); } }
 // Sharpest Blade
 { const hs = val('sharpest_blade', 'heartStrike'), hm = val('sharpest_blade', 'heartStrikeMult');
   const plain = (() => { const { s, e } = mk(['goblin']); s.landAttack(melee(s), e, []); return lost(e); })();

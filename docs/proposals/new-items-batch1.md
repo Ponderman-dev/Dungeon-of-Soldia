@@ -1,6 +1,6 @@
 # New items batch 1 (session 26, user's picks; NOT built yet)
 
-20 new items (92 -> 112). Numbers are the user's or first proposals; settle them before building.
+21 new items (92 -> 113). Numbers are the user's or first proposals; settle them before building.
 Rule (item-decisions.md): every extra copy adds a real +5-10% or more, no ceiling that wastes copies.
 
 ## Bomb family (existing Fire Bombs is the fire member)
@@ -18,6 +18,8 @@ Rule (item-decisions.md): every extra copy adds a real +5-10% or more, no ceilin
   (stronger ones first): 700% damage + 5s Freeze. The hero deals ICE ONLY while holding it (no other elements).
 - Euclid of Elements: attacks with 2+ elements have a chance to cast 3 more times with boosted damage
   (a barrage of 4).
+- Sharpest Blade: attacks with NO elemental damage (plain physical: melee/ranged) have a chance to strike at the
+  heart: 4.5x damage + 2.5s stun. (Chance and per-copy growth to set.)
 
 ## User's commons
 - Life Crystal: chance on an enemy's death to drop a green orb that heals nearby heroes.
@@ -35,4 +37,4 @@ Rule (item-decisions.md): every extra copy adds a real +5-10% or more, no ceilin
   nearby (+12% per copy).
 
 ## Counts after the batch
-common 24+7 = 31, rare 26+8 = 34, epic 25+2 = 27, legendary 17+3 = 20 (112).
+common 24+7 = 31, rare 26+8 = 34, epic 25+2 = 27, legendary 17+4 = 21 (113).

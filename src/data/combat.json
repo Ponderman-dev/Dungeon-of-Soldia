@@ -54,7 +54,11 @@
     "attackStepFloors": 3,
     "_snowball": "From snowballFromFloor, health and attack are also multiplied by (1 + snowballPercentPerFloor%) per floor past it, compounding (user, session 26: option 3 = +1.5%: x1.35 at floor 100, x2.8 at 150). Fodder use their growthShare of the percent.",
     "snowballFromFloor": 80,
-    "snowballPercentPerFloor": 1.5
+    "snowballPercentPerFloor": 1.5,
+    "_speed": "From speedFromFloor, enemies attack speedPercentPerFloor% faster per floor past it (added, not compounding), at most speedMaxPercent (user, session 26: option 2 = +1%/floor, max +40% at floor 120).",
+    "speedFromFloor": 80,
+    "speedPercentPerFloor": 1,
+    "speedMaxPercent": 40
   },
   "meleeVsFlyingMissPercent": 15,
   "attackTiming": {

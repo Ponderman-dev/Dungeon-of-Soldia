@@ -81,6 +81,9 @@ export default class BattleState {
         stats.attack = Math.round(stats.attack * m);
       }
       stats.attackEfficiency *= this.rules.enemyAttackSpeedMultiplier ?? 1; // global enemy slowdown
+      // Deep floors: attack speed +speedPercentPerFloor% per floor past speedFromFloor, at most speedMaxPercent.
+      const fast = s.speedFromFloor ? Math.min(s.speedMaxPercent ?? Infinity, Math.max(0, floor - s.speedFromFloor) * (s.speedPercentPerFloor || 0)) : 0;
+      stats.attackEfficiency *= 1 + fast / 100;
       if (tiered) {
         xpScale = tier.xpScale ?? 1;
         if (tier.drawScale) def = { ...def, drawScale: tier.drawScale };

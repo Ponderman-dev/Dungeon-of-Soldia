@@ -48,7 +48,8 @@
     "effect": "executioner"
   },
   "sharpest_blade": {
-    "effect": "heartSlash"
+    "effect": "heartSlash",
+    "glint": "0xffe14a"
   },
   "euclid_of_elements": {
     "effect": "euclid"

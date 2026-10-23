@@ -48,25 +48,32 @@ const lost = (e) => 1e7 - e.hp;
   { const { s: b, e: be } = mk(['goblin'], () => 0); const bk = melee(b); give(b, bk, 'kinetic_coil'); bk.stats.evasion = 0; bk.specials.block = 100;
     const res = b.strike(be, bk, [], {});
     ok('...a blocked hit stores a charge too', res.blocked && bk.floor.coil === 1, JSON.stringify(res)); } }
-// Sharpest Blade
-{ const hs = val('sharpest_blade', 'heartStrike'), hm = val('sharpest_blade', 'heartStrikeMult');
+// Sharpest Blade (reworked session 29, user): PURE STEEL only (no element); pure attacks +pureSteel%, every Nth is a
+// Heart Strike (multiplier + a share of the enemy's max health, less on a boss, stun); a Heart Strike kill = the next too.
+{ const hs = val('sharpest_blade', 'heartStrike'), hm = val('sharpest_blade', 'heartStrikeMult'), hp = val('sharpest_blade', 'heartStrikeMaxHp');
+  const hb = val('sharpest_blade', 'heartStrikeBossMaxHp'), ps = val('sharpest_blade', 'pureSteel'), N = hs.percent;
   const plain = (() => { const { s, e } = mk(['goblin']); s.landAttack(melee(s), e, []); return lost(e); })();
-  const { s, e } = mk(['goblin'], () => 0); const k = melee(s); give(s, k, 'sharpest_blade', 2);
-  ok('Sharpest Blade: 2 copies = ' + (hs.percent + hs.perExtra) + '% chance', k.specials.heartStrike === hs.percent + hs.perExtra);
-  k.stats.crit = 0; s.rng = () => 0; k.stats.crit = 0;
-  const ev = []; s.landAttack(k, e, ev);
-  const mult = (hm.percent + hm.perExtra) / 100;
-  ok('...a heart strike: ' + mult + 'x damage and a ' + hs.spec.durationMs / 1000 + 's stun', ev.some((x) => x.type === 'proc' && x.itemId === 'sharpest_blade') && e.statuses.some((st) => st.type === 'stun'), `${plain} -> ${lost(e)}`);
-  const { s: s2, e: e2 } = mk(['goblin'], () => 0); const k2 = melee(s2); give(s2, k2, 'sharpest_blade'); give(s2, k2, 'frost_charm');
-  const ev2 = []; s2.landAttack(k2, e2, ev2);
-  ok('...an element on the attack (a charm) turns it off', !ev2.some((x) => x.itemId === 'sharpest_blade'));
-  const { s: s3, e: e3 } = mk(['goblin'], () => 0); const k3 = melee(s3); give(s3, k3, 'sharpest_blade'); k3.hitType = 'fire';
-  const ev3 = []; s3.landAttack(k3, e3, ev3);
-  ok('...an elemental attack (like the Mage) never strikes the heart', !ev3.some((x) => x.itemId === 'sharpest_blade'));
-  const { s: s4, e: e4 } = mk(['goblin'], () => 0.99); const k4 = melee(s4); give(s4, k4, 'sharpest_blade');
-  const ev4 = []; s4.landAttack(k4, e4, ev4);
-  ok('...nothing when the chance misses', !ev4.some((x) => x.itemId === 'sharpest_blade') && lost(e4) === plain, `${lost(e4)}`);
-  // Size of the heart strike against a plain hit, both without crits (rng 0 also means a sure hit).
-  const { s: s5, e: e5 } = mk(['goblin'], () => 0); const k5 = melee(s5); k5.stats.crit = 0; give(s5, k5, 'sharpest_blade');
-  k5.stats.crit = 0; const m = s5.heartStrike(k5); s5.strike(k5, e5, [], { basic: true, multiplier: m });
-  ok('...1 copy: ' + hm.percent / 100 + 'x', m === hm.percent / 100); }
+  const blade = (extra = []) => { const { s, e, es } = mk(['goblin', 'goblin']); const k = melee(s); give(s, k, 'sharpest_blade'); for (const id of extra) give(s, k, id); return { s, e, es, k }; };
+  const hearts = (ev) => ev.filter((x) => x.type === 'proc' && x.itemId === 'sharpest_blade').length;
+  { const { s, e, k } = blade(); s.landAttack(k, e, []);
+    ok('Sharpest Blade: a pure attack deals +' + ps.percent + '%', Math.abs(lost(e) - plain * (1 + ps.percent / 100)) <= 1, `${plain} -> ${lost(e)}`); }
+  { const { s, e, k } = blade(); const ev = [];
+    for (let i = 0; i < N - 1; i++) s.landAttack(k, e, ev);
+    ok('...no Heart Strike in the first ' + (N - 1) + ' attacks, then the glint says the next one is', hearts(ev) === 0 && s.heartStrikeIn(k) === 0);
+    const before = lost(e); s.landAttack(k, e, ev); const dealt = lost(e) - before;
+    const want = plain * (1 + ps.percent / 100) * (hm.percent / 100) + (e.maxHp * hp.percent) / 100;
+    ok('...attack ' + N + ' is a Heart Strike: ' + hm.percent + '% + ' + hp.percent + '% of max health, and a stun', hearts(ev) === 1 && Math.abs(dealt - want) / want < 0.01 && e.statuses.some((st) => st.type === 'stun'), `${dealt} vs ${want}`);
+    ok('...then the count starts again', s.heartStrikeIn(k) === N - 1); }
+  { const { s, e, k } = blade(); e.def = { ...e.def, boss: true }; for (let i = 0; i < N - 1; i++) s.landAttack(k, e, []);
+    const before = lost(e); s.landAttack(k, e, []); const dealt = lost(e) - before;
+    const want = plain * (1 + ps.percent / 100) * (hm.percent / 100) + (e.maxHp * hb.percent) / 100;
+    ok('...on a boss only ' + hb.percent + '% of max health', Math.abs(dealt - want) / want < 0.01, `${dealt} vs ${want}`); }
+  { const { s, es, k } = blade(); for (let i = 0; i < N - 1; i++) s.landAttack(k, es[1], []);
+    es[0].hp = 1; const ev = []; s.landAttack(k, es[0], ev);
+    ok('...a Heart Strike that kills makes the NEXT attack a Heart Strike too', !es[0].alive && s.heartStrikeIn(k) === 0);
+    s.landAttack(k, es[1], ev); ok('...(it is)', hearts(ev) === 2); }
+  for (const [why, setup] of [['a charm', (k, s) => give(s, k, 'frost_charm')], ['an elemental attack (like the Mage)', (k) => { k.hitType = 'fire'; }]]) {
+    const { s, e, k } = blade(); setup(k, s); const ev = []; for (let i = 0; i < N * 2; i++) s.landAttack(k, e, ev);
+    ok('...' + why + ' turns it all off (no Heart Strike, no pure bonus)', hearts(ev) === 0 && s.heartStrikeIn(k) === -1); }
+  { const { s, k } = mk(); const h = melee(s); give(s, h, 'sharpest_blade', 2);
+    ok('...2 copies: +' + (ps.percent + ps.perExtra) + '% pure, ' + (hm.percent + hm.perExtra) + '%, ' + (hp.percent + hp.perExtra) + '% max health, still every ' + N, h.specials.pureSteel === ps.percent + ps.perExtra && h.specials.heartStrikeMult === hm.percent + hm.perExtra && h.specials.heartStrikeMaxHp === hp.percent + hp.perExtra && h.specials.heartStrike === N); } }

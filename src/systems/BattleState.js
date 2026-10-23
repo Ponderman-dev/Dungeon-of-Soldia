@@ -1176,11 +1176,17 @@ export default class BattleState {
     const empower = fired.filter((f) => f.counter.effect === 'empower');
     const metro = this.metronomeBeat(unit, target, events); // Metronome: every 4th basic attack of the holder hits harder
     const coil = this.spendCoil(unit); // Kinetic Coil: stored dodge charges ride on this attack as electric damage
-    const heart = this.heartStrike(unit, coil); // Sharpest Blade: a plain physical attack may strike at the heart
-    const hit = this.strike(unit, target, events, { basic: true, riders: true, ...(coil.length ? { extraRiders: coil } : {}), ...(heart ? { multiplier: heart } : {}), ...(metro ? { damagePercent: metro } : {}), ...(unit.hitType ? { damageType: unit.hitType } : {}) }); // an elite hits with its element; riders = element charms in the same hit
+    const pure = this.pureSteel(unit, coil); // Sharpest Blade: an attack with no element at all
+    const heart = pure ? this.heartStrike(unit) : 0; // ...every 5th one strikes at the heart
+    const plus = (metro || 0) + (pure ? unit.specials.pureSteel || 0 : 0); // Metronome beat + Pure Steel
+    const hit = this.strike(unit, target, events, { basic: true, riders: true, ...(coil.length ? { extraRiders: coil } : {}), ...(heart ? { multiplier: heart } : {}), ...(plus ? { damagePercent: plus } : {}), ...(unit.hitType ? { damageType: unit.hitType } : {}) }); // an elite hits with its element; riders = element charms in the same hit
     if (heart && !hit.dodged) {
       events.push({ type: 'proc', unit, label: 'Heart strike!', itemId: 'sharpest_blade', target });
+      // The cut: a share of the enemy's MAX health on top (less on a boss), as item damage (it triggers nothing).
+      const cut = target.def.boss ? unit.specials.heartStrikeBossMaxHp || 0 : unit.specials.heartStrikeMaxHp || 0;
+      if (cut > 0 && target.alive) this.strike(unit, target, events, { multiplier: (target.maxHp * cut) / 100 / Math.max(1, unit.stats.attack), damageType: unit.damageType, item: true, heartCut: true });
       if (target.alive) this.applyStatus(target, unit.specials.heartStrikeSpec || { status: 'stun', durationMs: 2500 }, unit, `heart_${unit.uid}`, events);
+      else unit.floor.nextHeart = true; // Killing spree: a Heart Strike that kills makes the next one a Heart Strike too
     }
     this.sweep(unit, target, hit, events); // Sweeping Strap: the swing also hits the enemies next to the target
     if (unit.elite) this.eliteAfterAttack(unit, target, hit, events); // Storm: every 4th hit jumps
@@ -1221,15 +1227,32 @@ export default class BattleState {
     return [{ damageType: 'electric', multiplier: (n * unit.specials.kineticCoil) / 100 }];
   }
 
-  // Sharpest Blade: a basic attack with NO element (plain melee/ranged, no element riders: charms, Chill Band,
-  // Kinetic Coil charges...) has `heartStrike`% (6, +3 per extra copy) to deal `heartStrikeMult`% (450, +50 per
-  // extra copy) damage and stun (2.5s). The Mage's attacks are always elemental. Returns the multiplier, or 0.
-  heartStrike(unit, extra = []) {
+  // Sharpest Blade (reworked session 29, user): only PURE STEEL counts: a basic attack with NO element (plain
+  // melee/ranged, no element riders: charms, Chill Band, Magma Core, Kinetic Coil charges...; the Mage's attacks are
+  // always elemental). Every pure attack deals +`pureSteel`% (40, +20 per extra copy).
+  pureSteel(unit, extra = []) {
     const sp = unit.side === 'hero' && !unit.minion ? unit.specials : null;
-    if (!sp || !sp.heartStrike) return 0;
+    if (!sp || !sp.heartStrike) return false;
     const type = unit.hitType || unit.damageType;
-    if ((type !== 'melee' && type !== 'ranged') || this.riders(unit).length || extra.length) return 0;
-    return this.rng() * 100 < sp.heartStrike ? (sp.heartStrikeMult || 450) / 100 : 0;
+    return (type === 'melee' || type === 'ranged') && !this.riders(unit).length && !extra.length;
+  }
+
+  // Every `heartStrike`th (5) pure attack of the floor is a HEART STRIKE: `heartStrikeMult`% (500, +50 per extra
+  // copy), plus `heartStrikeMaxHp`% (15) of the enemy's max health (`heartStrikeBossMaxHp`% 4 on a boss) and a stun
+  // (2.5s). A Heart Strike that kills makes the next attack one too (`floor.nextHeart`). Returns the multiplier, or 0.
+  heartStrike(unit) {
+    const sp = unit.specials, f = unit.floor, mult = (sp.heartStrikeMult || 500) / 100;
+    if (f.nextHeart) { f.nextHeart = false; return mult; }
+    f.heartCount = (f.heartCount || 0) + 1;
+    if (f.heartCount < sp.heartStrike) return 0;
+    f.heartCount = 0;
+    return mult;
+  }
+
+  // The pure attacks still to go before the next Heart Strike (the scene shows a glint on the last one); -1 = none.
+  heartStrikeIn(unit) {
+    if (!this.pureSteel(unit)) return -1;
+    return unit.floor.nextHeart ? 0 : unit.specials.heartStrike - 1 - (unit.floor.heartCount || 0);
   }
 
   // Sweeping Strap: a MELEE basic attack also hits every other enemy within `sweepRadius` px (60) of its target for

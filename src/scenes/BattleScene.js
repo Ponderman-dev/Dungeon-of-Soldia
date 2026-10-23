@@ -1150,8 +1150,10 @@ export default class BattleScene extends Phaser.Scene {
     for (const hero of this.state.heroes) {
       const view = this.views.get(hero.uid);
       if (hero.alive) this.setBar(view); // health regeneration moves the bar
-      if (view.steadyShown !== hero.steady) {
+      const heart = hero.alive && this.state.heartStrikeIn(hero) === 0; // Sharpest Blade: the next attack is a Heart Strike
+      if (view.steadyShown !== hero.steady || view.heartShown !== heart) {
         view.steadyShown = hero.steady; // Steady Aim switched on or off: redraw the tags
+        view.heartShown = heart; // (and the blade's glint)
         this.drawChips(view);
       }
       view.skillButtons.forEach((b, j) => {
@@ -1338,7 +1340,9 @@ export default class BattleScene extends Phaser.Scene {
     // shines until the Nth goes off (a counter with a rotation shows the colour of the element that comes NEXT).
     const counter = view.unit.side === 'hero' && view.unit.alive ? view.unit.def.counter : null;
     const next = counter && counter.rotation ? counter.rotation[(view.unit.beatsFired || 0) % counter.rotation.length].color : null;
-    view.ch.setGlow(counter && view.unit.counterCount >= counter.every - 1 ? Phaser.Display.Color.HexStringToColor(next || counter.color || '#c8a0ff').color : null);
+    // Sharpest Blade: the weapon glints gold when the next attack is a Heart Strike (a charged counter shows first).
+    const charged = counter && view.unit.counterCount >= counter.every - 1;
+    view.ch.setGlow(charged ? Phaser.Display.Color.HexStringToColor(next || counter.color || '#c8a0ff').color : view.heartShown ? Number(itemFxData.sharpest_blade.glint) : null);
     // Status ICONS (statusIcons.json) in rows of 3 over the health bar, rows going up (a hero's item dots move
     // up above them). Stacking statuses (bleed, burn, poison, chill) show their
     // stack count just right of the icon. The icon pops up a little when it arrives or gains a stack.

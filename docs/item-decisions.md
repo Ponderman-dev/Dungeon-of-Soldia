@@ -423,3 +423,10 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Blade Archer +2.5 / Knight +3.6, Sweeping Strap +0.2..+1.6, Reaper's Bell and Kinetic Coil still ~0 (Coil on
   Samurai / Knight with Shield Totems too). Curve 3 smart: mean 43.6 -> 44.9, median 38 -> 38, p90 68 -> 77,
   max 305 -> 257; Necromancer 45.7 -> 49.5 avg floor (Demon Head no longer blocks its dark attacks).
+- SHARPEST BLADE REWORK (user: 'one of the best legendaries', the gimmick stays: NO elemental damage): PURE STEEL =
+  the holder has no element (no charm / Chill Band / Magma Core / Coil charges; the Mage never): every pure attack
+  +40% (+20% per extra), every 5th pure attack of the floor is a HEART STRIKE: 500% (+50%) + 15% (+5%) of the enemy's
+  max health (bosses 4% (+1%)), stun 2.5s; a Heart Strike kill makes the next attack one too. The weapon glints gold
+  before it (itemFx.json `sharpest_blade.glint`). Sims (scratch copy, the bot never gives the holder elements, 30 runs):
+  Knight +13.1, Rogue +15.7, Archer +10.7, Berserker +7.0 floors (old: +5.7 / +9.3 / +6.7 / -0.6; Gambler's Dice
+  +0.6 / +6.7 / +10.6, Bloodlust Mask on Rogue +9.6).

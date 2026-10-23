@@ -2428,12 +2428,12 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Attacks with no element: 12% chance to strike the heart for 500% damage and stun for 2.5s.",
+    "description": "Pure steel: if this hero has no element, attacks deal +40% and every 5th is a HEART STRIKE: 500% + 15% of the enemy's max health (bosses 4%), stun 2.5s. A kill makes the next one a Heart Strike too.",
     "effects": [
       {
         "special": "heartStrike",
-        "percent": 12,
-        "perExtra": 4,
+        "unique": true,
+        "percent": 5,
         "spec": {
           "status": "stun",
           "durationMs": 2500
@@ -2443,13 +2443,28 @@
         "special": "heartStrikeMult",
         "percent": 500,
         "perExtra": 50
+      },
+      {
+        "special": "heartStrikeMaxHp",
+        "percent": 15,
+        "perExtra": 5
+      },
+      {
+        "special": "heartStrikeBossMaxHp",
+        "percent": 4,
+        "perExtra": 1
+      },
+      {
+        "special": "pureSteel",
+        "percent": 40,
+        "perExtra": 20
       }
     ],
     "dropWeight": 90,
     "provides": [
       "cc"
     ],
-    "perStack": "+4% chance, +50% damage"
+    "perStack": "+20% pure damage, +50% and +5% max health on Heart Strikes"
   },
   "euclid_of_elements": {
     "name": "Euclid of Elements",

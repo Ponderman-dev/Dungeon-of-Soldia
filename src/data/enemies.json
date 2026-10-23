@@ -1713,7 +1713,8 @@
           }
         ]
       }
-    ]
+    ],
+    "drawScale": 3.45
   },
   "frost_warden": {
     "name": "The Frost Warden",

@@ -1239,6 +1239,7 @@ export default class BattleState {
     if (!sp || !sp.sweep || unit.damageType !== 'melee' || hit.dodged) return;
     const radius = sp.sweepRadius || 60;
     const near = this.enemies.filter((e) => e.alive && e !== target && !this.untargetable(e) && (!this.hasPositions(e) || !this.hasPositions(target) || Math.hypot(e.x - target.x, e.y - target.y) <= radius));
+    events.push({ type: 'sweep', unit, target, radius }); // the scene draws the cleave (every strap hit)
     for (const e of near) this.strike(unit, e, events, { multiplier: sp.sweep / 100, damageType: 'melee', item: true, burst: true });
   }
 

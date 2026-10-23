@@ -91,7 +91,7 @@ const CLIPS = {
   },
   strap: async ({ p, mark }) => {
     await fight(p, ['knight', 'samurai', 'archer']);
-    await setup(p, { knight: ['sweeping_strap'], samurai: ['sweeping_strap'] }, { sweeping_strap: { 0: { radius: 90 } } }, tanky);
+    await setup(p, { knight: ['sweeping_strap'], samurai: ['sweeping_strap'] }, {}, tanky);
     await wait(p, 300); mark('sweeping-strap', 7000); await wait(p, 7000);
   },
   mantle: async ({ p, mark }) => {

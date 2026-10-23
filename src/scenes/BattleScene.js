@@ -1860,6 +1860,12 @@ export default class BattleScene extends Phaser.Scene {
         }, ['item', 'iceSpike']);
       }
       this.cameras.main.shake(140, 0.005);
+    } else if (e.type === 'sweep') { // Sweeping Strap: one Sven-style cleave crescent bursts out of the target on every strap hit
+      const hv = this.views.get(e.unit.uid), tv = this.views.get(e.target.uid);
+      if (hv && tv) {
+        const h = this.fxPoint(hv), t = this.fxPoint(tv);
+        this.addFx(itemFx.ITEM_MS.cleave, (q) => itemFx.cleaveFx(q, h, t, (e.radius || 60) / CHAR_SCALE), ['item', 'cleave']);
+      }
     } else if (e.type === 'lifeOrb') {
       // Life Crystal: a green orb pops out of the dead enemy, then a small orb flies to every hero it heals.
       const v = this.views.get(e.at.uid);

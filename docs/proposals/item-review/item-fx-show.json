@@ -444,8 +444,8 @@
    "melee"
   ],
   [
-   "hit",
-   "melee"
+   "item",
+   "cleave"
   ]
  ],
  "ice_bomb": [

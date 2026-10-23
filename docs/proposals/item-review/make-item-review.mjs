@@ -53,7 +53,7 @@ const CLIPS = {
   kinetic_coil: ['kinetic-coil', 'Rogue dodges store charges for an electric hit. Open: the charges have NO look yet (sparks on the hero?).'],
   emergency_buckler: ['emergency-buckler', 'Each kill gives the killer a small shield (normal shield look) that fades over 4s.'],
   rally_flag: ['rally-flag', 'The Knight drops under 30%: every hero gets a shield (normal shield look).'],
-  sweeping_strap: ['sweeping-strap', 'Knight + Samurai attacks also hit the enemies next to the target (small numbers only).'],
+  sweeping_strap: ['sweeping-strap', 'Every strap hit: one Sven-style cleave crescent bursts out of the target (reach 60px).'],
   frost_mantle: ['frost-mantle', 'A melee enemy that hits the holder gets chilled (icon pop + snowflake status).'],
 };
 

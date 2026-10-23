@@ -12,7 +12,7 @@ const lerp = (a, b, p) => a + (b - a) * p;
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const BOMB = 0x4a4a5a, KNIFE = 0xe4e8f0, HILT = 0x6b4a2a, BANNER = 0xf2d03a, GREEN = 0x3aa84a, GREEN2 = 0xc8ffd0;
 
-export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 700, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340, thunderstruck: 520, iceSpike: 1800, heartSlash: 620, euclid: 620 };
+export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 700, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340, thunderstruck: 520, iceSpike: 1800, heartSlash: 620, euclid: 620, cleave: 380 };
 export const ITEM_FX = Object.keys(ITEM_MS);
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -326,6 +326,24 @@ export function euclidFx(q, a, b, t, elements = ['fire', 'ice', 'electric'], sta
     const p = (ms - t0) / EUCLID_FLY;
     if (p >= 0 && p < 1) euclidShot(g, p, a, b, el, t, 7 + i * 13);
     burst(g, b.x, b.y, 14, EUCLID_POP_COLS[el] || EUCLID_POP_COLS.dark, (ms - t0 - EUCLID_FLY) / EUCLID_POP, 12, 3 + i);
+  }
+  return g.out;
+}
+// Sweeping Strap (user: 'a cleave strike like Sven's from Dota 2, just one line'): every strap hit sends ONE pale-blue
+// crescent bursting out of the target, away from the holder, as far as the strap reaches.
+//   h = the holder's centre, target = the target's centre, reach (char px).
+export function cleaveFx(q, h, target, reach = 20) {
+  const g = pen();
+  const dir = Math.atan2(target.y - h.y, target.x - h.x), spread = 0.75, R = reach + 6;
+  const p = ph(q, 0, 0.8);
+  if (p <= 0 || p >= 1) return g.out;
+  const r = 4 + easeOut(p) * R, al = 1 - p * p, n = Math.round(r * spread * 2.4) + 4;
+  for (let i = 0; i <= n; i++) {
+    const s = i / n, a = dir - spread + s * spread * 2, w = Math.round(4 * Math.sin(s * Math.PI));
+    for (let j = 0; j <= w; j++) {
+      const rr = r - j;
+      g.px(target.x + Math.cos(a) * rr, target.y + Math.sin(a) * rr * 0.75, j === 0 ? C.white : j <= 2 ? C.ice2 : C.shield, al);
+    }
   }
   return g.out;
 }

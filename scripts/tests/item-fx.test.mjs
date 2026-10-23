@@ -21,6 +21,7 @@ const calls = {
   spiritfire: (q, t) => fx.spiritFireFx(q, a, b, t, 3), soulLantern: (q, t) => fx.soulLanternFx(q, u, t), ghastlyFire: (q, t) => fx.ghastlyDraws(hit.impactFx('fire', q, { ...u, side: -1 }, t, 1, a).draws, u),
   thunderstruck: (q, t) => fx.thunderstruckFx(q, u, t, 3),
   heartSlash: (q) => fx.heartSlashFx(q, u, -1),
+  cleave: (q) => fx.cleaveFx(q, a, b, 20),
   euclid: (q, t) => fx.euclidFx(q, a, b, t, ['fire', 'ice', 'electric']),
   iceSpike: (q, t) => fx.iceSpikeFx(q * fx.ITEM_MS.iceSpike, u, t, fx.ITEM_MS.iceSpike - fx.ICE_SPIKE.shatterMs),
 };

@@ -39,5 +39,12 @@ Rule (item-decisions.md): every extra copy adds a real +5-10% or more, no ceilin
 - Reaper's Bell (epic): enemies killed by the holder's skills explode for 25% of their max health as dark damage
   nearby (+12% per copy).
 
+## Decisions (session 27)
+- Frozen Demon Head: the holder's fire/electric/dark damage is REMOVED (charms of other elements do nothing,
+  a Mage holding it loses her other elements).
+- Euclid of Elements: any 2+ different elements in ONE hit count (two different charms, Chill Band, Magma Core,
+  element skills). Physical does not count as an element.
+- Better Odds: counts enemies ALIVE right now (shrinks as they die).
+
 ## Counts after the batch
 common 24+7 = 31, rare 26+8 = 34, epic 25+2 = 27, legendary 17+4 = 21 (113).

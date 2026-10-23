@@ -118,6 +118,18 @@ const CUSTOM = {
     p.rect(cx - 1, cy - 1, cx + 1, cy + 1, 'w');
     for (const [dx, dy] of [[-2, -2], [2, -2], [-2, 2], [2, 2]]) p.px(cx + dx, cy + dy, 'Y');
   },
+  euclid_of_elements(p) { // a dark tome; on its cover a gold triangle linking three big element gems
+    p.rect(2, 2, 13, 14, 'B'); p.rect(3, 2, 13, 13, 'b'); p.line(3, 14, 13, 14, 'n');
+    p.line(8, 4, 4, 11, 'y'); p.line(8, 4, 12, 11, 'y'); p.line(4, 11, 12, 11, 'y');
+    p.disc(8, 4, 1.8, 'r'); p.px(8, 4, 'o'); p.disc(4, 11, 1.8, 'C'); p.px(4, 11, 'c'); p.disc(12, 11, 1.8, 'y'); p.px(12, 11, 'Y');
+    p.px(7, 3, 'w'); p.px(3, 10, 'w'); p.px(11, 10, 'w');
+  },
+  frozen_demon_head(p) { // a pale blue horned demon skull, frost-cracked, with glowing ice eyes
+    p.disc(8, 8, 5, 'c'); p.rect(5, 11, 11, 14, 'c'); p.line(5, 15, 11, 15, 'C');
+    p.line(4, 6, 1, 1, 'w'); p.line(3, 6, 1, 2, 's'); p.line(12, 6, 15, 1, 'w'); p.line(13, 6, 15, 2, 's');
+    p.rect(5, 8, 6, 9, 'C'); p.rect(10, 8, 11, 9, 'C'); p.px(5, 8, 'w'); p.px(10, 8, 'w');
+    p.px(8, 11, 'C'); for (const x of [6, 8, 10]) p.px(x, 13, 'C'); p.line(7, 4, 9, 6, 'w');
+  },
 };
 const MAP = { quiver_of_plenty: 'quiver', spotters_lens: 'lens', giantslayers_brand: 'giant', catalyst_vial: 'vial', scholars_bookmark: 'bookmark', mirror_buckler: 'buckler', soul_lantern: 'lantern', phoenix_feather: 'feather', iron_will_talisman: 'talisman' };
 const path = new URL('../../src/data/itemIcons.json', import.meta.url);

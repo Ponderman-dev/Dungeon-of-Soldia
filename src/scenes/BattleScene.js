@@ -1828,6 +1828,17 @@ export default class BattleScene extends Phaser.Scene {
       this.tweens.add({ targets: cloud, radius: e.radius || 80, alpha: 0, duration: 650, ease: 'Quad.easeOut', onComplete: () => cloud.destroy() });
       this.puff(c.x, c.y + 8, color, 8);
       if (e.explosive) this.cameras.main.shake(120, 0.004); // an Explosive elite
+    } else if (e.type === 'iceSpikes') {
+      // Frozen Demon Head: big ice spikes burst up out of the ground under the enemy, then shatter.
+      const v = this.views.get(e.target.uid);
+      const c = v ? this.center(v) : { x: e.target.x, y: e.target.y };
+      const foot = c.y + 18;
+      [[-18, 26], [-8, 40], [4, 48], [15, 34], [24, 22]].forEach(([dx, h], i) => {
+        const spike = this.add.triangle(c.x + dx, foot, -5, 0, 5, 0, 0, -h, i % 2 ? 0x9fe0ff : 0xe8fbff).setOrigin(0, 0).setStrokeStyle(1, 0x3b8ee0).setDepth(DEPTH.popup - 1).setScale(1, 0);
+        this.tweens.add({ targets: spike, scaleY: 1, duration: 120, delay: i * 30, ease: 'Back.easeOut', onComplete: () => this.tweens.add({ targets: spike, alpha: 0, delay: 380, duration: 220, onComplete: () => spike.destroy() }) });
+      });
+      this.puff(c.x, foot, 0x9fe0ff, 10);
+      this.cameras.main.shake(120, 0.004);
     } else if (e.type === 'lifeOrb') {
       // Life Crystal: a green orb pops out of the dead enemy, then a small orb flies to every hero it heals.
       const v = this.views.get(e.at.uid);

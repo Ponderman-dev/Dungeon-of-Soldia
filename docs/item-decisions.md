@@ -388,3 +388,14 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Sharpest Blade (legendary): a basic attack with NO element (no charm / Chill Band / Coil riders, not the Mage)
   has 6% (+3% per extra copy) to deal 4.5x damage (+0.5x per extra copy) and stun 2.5s (`heartStrike`).
 - Tests: items-batch4.test.mjs. No balance run (user rule).
+
+## Session 27: new items batch 5 (the last 2; all 21 built, 113 items)
+- Euclid of Elements (legendary): a hit (attack or skill, not item damage) carrying 2+ different elements (its own
+  magical type + its riders: two different charms, Chill Band, Magma Core, Kinetic Coil charges) has 15% chance
+  (+5% per extra copy) to cast 3 more times, 0.15s apart, each 60% (+20% per extra copy) of the hit with the same
+  elements. Physical does not count. The extra casts are item hits (trigger nothing).
+- Frozen Demon Head (legendary): +50% ice damage (+35% per extra copy). The holder's ice damage fills the Head; at
+  8x its attack Ice Spikes hit the strongest enemy (boss > elite > most health) for 700% (+150% per extra copy) ice
+  + Freeze 5s. The holder's fire / electric / dark HITS do nothing (charm riders of those elements are dropped);
+  damage over time it already put on (burn, poison) still ticks.
+- Tests: items-batch5.test.mjs. No balance run (user rule).

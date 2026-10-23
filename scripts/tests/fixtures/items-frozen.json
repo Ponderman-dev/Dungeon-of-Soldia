@@ -2448,5 +2448,64 @@
       "cc"
     ],
     "perStack": "+3% chance, +50% damage"
+  },
+  "euclid_of_elements": {
+    "name": "Euclid of Elements",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "Hits with 2 or more elements: 15% chance to cast 3 more times at 60% damage.",
+    "effects": [
+      {
+        "special": "euclid",
+        "percent": 15,
+        "perExtra": 5,
+        "count": 3,
+        "staggerMs": 150
+      },
+      {
+        "special": "euclidPower",
+        "percent": 60,
+        "perExtra": 20
+      }
+    ],
+    "dropWeight": 90,
+    "perStack": "+5% chance, +20% damage"
+  },
+  "frozen_demon_head": {
+    "name": "Frozen Demon Head",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "+50% ice damage. Ice damage fills the Head: Ice Spikes hit the strongest enemy for 700% and freeze it 5s. This hero deals no fire, electric or dark damage.",
+    "effects": [
+      {
+        "damageBonus": "ice",
+        "percent": 50,
+        "perExtra": 35
+      },
+      {
+        "special": "demonHead",
+        "percent": 700,
+        "perExtra": 150,
+        "spec": {
+          "status": "freeze",
+          "durationMs": 5000
+        }
+      },
+      {
+        "special": "demonHeadFill",
+        "percent": 800,
+        "unique": true
+      }
+    ],
+    "dropWeight": 90,
+    "needs": "ice",
+    "provides": [
+      "ice",
+      "freeze",
+      "cc"
+    ],
+    "perStack": "+35% ice damage, +150% spikes"
   }
 }

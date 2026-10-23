@@ -1802,6 +1802,8 @@ export default class BattleState {
       events.push({ type: 'attack', attacker, target, result: miss, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic });
       return miss;
     }
+    // Frozen Demon Head: the holder deals ICE ONLY: its fire / electric / dark hits do nothing at all.
+    if (this.demonHeadBlocks(attacker, opts.damageType || attacker.damageType)) return { dodged: true, removed: true, crit: false, amount: 0, mult: 1 };
     // Martyr's Shield (Bodyguard): an enemy hit on a guarded hero goes to the guarding holder instead.
     if (attacker.side === 'enemy' && target.side === 'hero' && !target.minion) {
       const martyr = this.martyrFor(target);
@@ -1820,6 +1822,8 @@ export default class BattleState {
     // opts.riders: this hit carries the attacker's sure extra element hits (computeDamage adds them in; rollProcs then
     // skips their own strike, see `folded`).
     if (opts.riders) opts = { ...opts, riders: [...this.riders(attacker), ...(opts.extraRiders || [])] }; // extraRiders: Kinetic Coil's charges
+    else if (opts.fixedRiders) opts = { ...opts, riders: opts.fixedRiders }; // Euclid's extra casts carry the same riders
+    if (opts.riders && opts.riders.length) opts = { ...opts, riders: opts.riders.filter((rd) => !this.demonHeadBlocks(attacker, rd.damageType)) }; // Frozen Demon Head
     // Item damage bonuses of the attacker (Sucker Punch, Full Vigor, Brawler's Streak...).
     const bonus = this.itemDamageBonus(attacker, target, opts);
     if (bonus) opts = { ...opts, damagePercent: (opts.damagePercent || 0) + bonus };
@@ -1876,6 +1880,9 @@ export default class BattleState {
     if (dealt) this.breakEffects(target, dealt.broken, events);
     if (!result.dodged) this.afterItemHit(attacker, target, opts, events);
     if (!result.dodged && (opts.damageType || attacker.hitType || attacker.damageType) === 'dark') this.storeDark(attacker, result.amount - (result.absorbed || 0), events);
+    // Frozen Demon Head: the holder's ice damage (the hit's own or its ice riders) fills the Head (not the spikes).
+    if (!result.dodged && !opts.spikes) this.storeIce(attacker, (opts.damageType || attacker.hitType || attacker.damageType) === 'ice' ? result.amount - (result.absorbed || 0) : ((result.riders || []).filter((rd) => rd.damageType === 'ice').reduce((t, rd) => t + rd.amount, 0)), events);
+    if (!result.dodged && !opts.item && !opts.euclid) this.euclid(attacker, target, opts, events); // Euclid of Elements: a 2+ element hit may cast again
     // Ghastly Fire: the holder's fire hits also deal `ghastly`% (20 per copy) of the damage as DARK (it triggers nothing).
     const gf = attacker.side === 'hero' && !attacker.minion && attacker.specials ? attacker.specials.ghastly || 0 : 0;
     if (gf && !result.dodged && !opts.ghastly && (opts.damageType || attacker.damageType) === 'fire' && target.alive && target.hp > 0 && result.amount > 0) {
@@ -3361,6 +3368,51 @@ export default class BattleState {
   // Eclipse Idol: the holder's DARK damage (hits, Dark Spirit orbs, Poison and other dark ticks; not Doom itself) is
   // stored. At `eclipseCharge`% of its attack it is cast: 2-3 random enemies get DOOM for `eclipseMs` (a dark DoT of
   // `eclipse`% attack per second and `eclipseSlow`% slower attacks). Doom is item damage (it never refills the idol).
+  // Frozen Demon Head: true when `type` is an element its holder may not deal (fire, electric, dark).
+  demonHeadBlocks(unit, type) {
+    return !!(unit.side === 'hero' && !unit.minion && unit.specials && unit.specials.demonHead && (type === 'fire' || type === 'electric' || type === 'dark'));
+  }
+
+  // Frozen Demon Head: stores the holder's ice damage; at `demonHeadFill`% (800) of its attack, Ice Spikes burst under
+  // the strongest enemy (boss > elite > most health) for `demonHead`% (700, +150 per extra copy) of its attack as ice
+  // + `demonHeadSpec` (Freeze 5s).
+  storeIce(unit, amount, events) {
+    const sp = unit.specials;
+    if (!sp || !sp.demonHead || unit.side !== 'hero' || unit.minion || !unit.alive || !(amount > 0)) return;
+    unit.iceStore = (unit.iceStore || 0) + amount;
+    if (unit.iceStore < (unit.stats.attack * (sp.demonHeadFill || 800)) / 100) return;
+    const target = this.strongestEnemy();
+    if (!target) return;
+    unit.iceStore = 0;
+    events.push({ type: 'proc', unit, label: 'Ice Spikes!', itemId: 'frozen_demon_head', target });
+    events.push({ type: 'iceSpikes', unit, target });
+    const hit = this.strike(unit, target, events, { multiplier: sp.demonHead / 100, damageType: 'ice', item: true, burst: true, spikes: true });
+    if (!hit.dodged && target.alive) this.applyStatus(target, sp.demonHeadSpec || { status: 'freeze', durationMs: 5000 }, unit, `spikes_${unit.uid}`, events);
+  }
+
+  // Euclid of Elements: a hit (not item damage) carrying 2+ different ELEMENTS (magical types: its own + its riders,
+  // e.g. two different charms) has `euclid`% (15, +5 per extra copy) to cast 3 more times, `euclidStaggerMs` apart, each
+  // `euclidPower`% (60, +20 per extra copy) of the hit, same elements. The extra casts are item hits (they trigger nothing).
+  euclid(unit, target, opts, events) {
+    const sp = unit.side === 'hero' && !unit.minion ? unit.specials : null;
+    if (!sp || !sp.euclid) return;
+    const magic = (t) => this.damageTypes[t] && this.damageTypes[t].category === 'magical';
+    const own = opts.damageType || unit.hitType || unit.damageType;
+    const riders = opts.riders || [];
+    const elements = new Set([own, ...riders.map((rd) => rd.damageType)].filter(magic));
+    if (elements.size < 2 || this.rng() * 100 >= sp.euclid) return;
+    const power = (sp.euclidPower || 60) / 100;
+    const cast = { multiplier: (opts.multiplier || 1) * power, damageType: own, fixedRiders: riders.map((rd) => ({ ...rd, multiplier: rd.multiplier * power })), item: true, euclid: true };
+    events.push({ type: 'proc', unit, label: 'Euclid!', itemId: 'euclid_of_elements', target });
+    for (let i = 0; i < (sp.euclidCount || 3); i++) {
+      this.later((sp.euclidStaggerMs ?? 150) * (i + 1), (ev) => {
+        if (!unit.alive) return;
+        const foe = target.alive ? target : this.nearest(target, this.targetableEnemies());
+        if (foe) this.strike(unit, foe, ev, cast);
+      });
+    }
+  }
+
   storeDark(unit, amount, events) {
     const sp = unit.specials;
     if (!sp || !sp.eclipse || unit.side !== 'hero' || unit.minion || !unit.alive || !(amount > 0)) return;

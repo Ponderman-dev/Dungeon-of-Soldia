@@ -2015,13 +2015,18 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "Critical hits heal this hero 15% of the damage dealt.",
+    "description": "Critical hits heal this hero 8% of the damage dealt (at most 10% of max health per crit).",
     "effects": [
       {
         "special": "critHeal",
-        "percent": 15
+        "percent": 8
+      },
+      {
+        "special": "critHealCap",
+        "percent": 10,
+        "unique": true
       }
     ],
-    "perStack": "+15% of crit damage healed"
+    "perStack": "+8% of crit damage healed"
   }
 }

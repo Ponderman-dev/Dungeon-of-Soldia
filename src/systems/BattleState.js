@@ -2098,10 +2098,12 @@ export default class BattleState {
         for (const ally of hurt) this.healUnit(ally, base, events, { aura: false });
       }
     }
-    // Harvest Scythe: a crit heals the attacker `critHeal`% (15 per copy) of the damage it dealt.
+    // Harvest Scythe: a crit heals the attacker `critHeal`% (8 per copy) of the damage it dealt, at most `critHealCap`%
+    // (10) of its max health per crit.
     const reap = (attacker.specials && attacker.specials.critHeal) || 0;
     if (result.crit && reap > 0 && attacker.alive && attacker.side === 'hero') {
-      const heal = Math.max(1, Math.round(((amount * reap) / 100) * this.regenAura().factor));
+      const cap = (attacker.maxHp * (attacker.specials.critHealCap || 100)) / 100;
+      const heal = Math.max(1, Math.round(Math.min(cap, ((amount * reap) / 100) * this.regenAura().factor)));
       if (this.healUnit(attacker, heal, events, { aura: false }) > 0) events.push({ type: 'lifesteal', unit: attacker, from: target });
     }
     // Gambler's Dice: a crit also gives the enemy a random debuff.

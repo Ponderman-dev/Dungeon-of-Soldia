@@ -42,8 +42,11 @@ const give = (s, u, id, n = 1) => { for (let i = 0; i < n; i++) s.giveItem(u.uid
   ok('...2 copies: +' + (ls.percent + ls.perExtra) + '% damage', Math.abs(two.dmg / plain.dmg - (1 + (ls.percent + ls.perExtra) / 100)) < 0.03, `${two.dmg}`); }
 // Harvest Scythe
 { const pct = val('harvest_scythe', 'critHeal').percent;
-  const swing = (crit, n = 1) => { const { s, e, k } = mk(() => 0); give(s, k, 'harvest_scythe', n); k.stats.crit = crit ? 100 : 0; k.hp = 1; const res = s.strike(k, e, [], {}); return { got: k.hp - 1, amount: res.amount, crit: res.crit }; };
+  const swing = (crit, n = 1) => { const { s, e, k } = mk(() => 0); give(s, k, 'harvest_scythe', n); k.stats.crit = crit ? 100 : 0; k.maxHp = 1e6; k.hp = 1; const res = s.strike(k, e, [], {}); return { got: k.hp - 1, amount: res.amount, crit: res.crit }; };
   const c = swing(true), n = swing(false), c2 = swing(true, 2);
   ok('Harvest Scythe: a crit heals ' + pct + '% of its damage', c.crit && Math.abs(c.got - (c.amount * pct) / 100) <= 1, `${c.amount} -> ${c.got}`);
   ok('...a normal hit heals nothing', !n.crit && n.got === 0);
-  ok('...2 scythes: ' + 2 * pct + '%', Math.abs(c2.got - (c2.amount * 2 * pct) / 100) <= 1, `${c2.got}`); }
+  ok('...2 scythes: ' + 2 * pct + '%', Math.abs(c2.got - (c2.amount * 2 * pct) / 100) <= 1, `${c2.got}`);
+  const cap = val('harvest_scythe', 'critHealCap').percent;
+  const { s, e, k } = mk(() => 0); give(s, k, 'harvest_scythe', 5); k.baseStats.attack = 1e5; s.refreshStats(); k.stats.crit = 100; k.hp = 1; s.strike(k, e, [], {});
+  ok('...one crit heals at most ' + cap + '% of max health', Math.abs(k.hp - 1 - (k.maxHp * cap) / 100) <= 1, `${k.hp - 1} of ${k.maxHp}`); }

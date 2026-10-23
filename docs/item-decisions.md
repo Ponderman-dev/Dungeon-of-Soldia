@@ -348,3 +348,12 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Icons drawn (first draft) in itemIcons.json. Tests: items-s24.test.mjs.
 - Curve 3 smart with all 4: median 40 -> 52, mean 48.8 -> 88 (Scythe + Mask most picked). Mask cut (user).
   With Scythe, Riposte, Last Stand only: median 46, mean 69.4, alive at 100: 10% (was 4%). Scythe kept as is (user).
+
+## Session 27: new items batch 1 (6 of 21, list in docs/proposals/new-items-batch1.md)
+- Hunter's Badge (common): +20% damage to elites, +20% per copy (`eliteDamage`).
+- Elite's Badge (rare): +20% damage to bosses, +20% per copy (`bossDamage`, adds up with Giantslayer's Brand).
+- Swarm Swatter (common): +25% damage to fodder, +12% per extra copy (`fodderDamage`, enemy `tier` 'fodder').
+- Better Odds (epic): +2.5% damage per enemy alive right now, +2.5% per copy (`betterOdds`).
+- Opening Horn (common): first 4s of every floor +30% attack speed, +12% per extra copy (`openingHorn`, `durationMs`).
+- Quick Fingers (common): every kill BY THE HOLDER: holder's skill cooldowns -0.5s, -0.3s per extra copy (`killCooldownMs`).
+- Icons drawn in `scripts/art/new-item-icons.mjs`. Tests: items-batch1.test.mjs. No balance run (user rule).

@@ -1,4 +1,5 @@
-# New items batch 1 (FINAL, all decided with the user in session 27, NOT built yet)
+# New items batch 1 (FINAL, decided with the user in session 27)
+BUILT: 6, 7, 8, 9, 15, 17 (build batch 1). Not built yet: the rest.
 
 21 new items (92 -> 113). Rule (item-decisions.md): every extra copy adds a real +5-10% or more.
 "Holder" = the hero holding the item.
@@ -28,7 +29,7 @@ All like Fire Bombs: 8% chance per attack (+8% per copy) to throw a 300% bomb of
     copy) to strike the heart for 4.5x damage (+0.5x per copy) + 2.5s stun.
 
 ## Commons
-13. Life Crystal: the holder's kills (?) 15% chance (+5% per copy) to drop a green orb: heals heroes NEAR the dead enemy 5% max health.
+13. Life Crystal: ANY hero's kill: 15% chance (+5% per copy) to drop a green orb: heals heroes NEAR the dead enemy 5% max health.
 14. Emergency Buckler: the holder's kills give the holder a 6% max-health shield (+3% per copy) that fades over 4s.
 15. Opening Horn: first 4s of each floor +30% attack speed (+12% per copy).
 16. Sweeping Strap (melee): basic attacks also hit enemies within ~60px of the target for 15% (+8% per copy).

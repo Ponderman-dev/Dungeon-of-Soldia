@@ -34,6 +34,39 @@ const CUSTOM = {
     p.line(4, 9, 3, 5, 'p'); p.line(12, 9, 13, 5, 'p');
     p.disc(8, 11, 2.2, 'G'); p.px(8, 8, 'G'); p.px(8, 7, 'P'); p.px(7, 12, 'w');
   },
+  // New items batch 1 (session 27).
+  hunters_badge(p) { // a silver shield badge with the elites' gold crown
+    p.rect(3, 3, 12, 9, 's'); for (let y = 10; y < 15; y++) { const w = 4 - (y - 10); p.line(7.5 - w, y, 7.5 + w + 0.5, y, 's'); }
+    p.rect(4, 4, 11, 9, 'S'); p.rect(5, 6, 10, 8, 'y'); p.px(5, 5, 'y'); p.px(7, 4, 'y'); p.px(8, 4, 'y'); p.px(10, 5, 'y'); p.px(7, 7, 'r'); p.px(8, 7, 'r');
+    p.px(4, 3, 'w'); p.px(5, 3, 'w');
+  },
+  elites_badge(p) { // a gold badge with a red horned skull (bosses)
+    p.disc(8, 8, 6.2, 'y'); p.disc(8, 8, 5, 'R');
+    p.disc(8, 8, 2.8, 'n'); p.rect(7, 10, 9, 11, 'n'); p.px(7, 8, 'k'); p.px(9, 8, 'k'); p.px(8, 10, 'k');
+    p.line(5, 6, 4, 3, 'w'); p.line(11, 6, 12, 3, 'w'); p.px(3, 2, 'Y');
+  },
+  swarm_swatter(p) { // a fly swatter: long handle, green mesh head, a squashed fly
+    p.line(2, 14, 7, 9, 'b', 2); p.line(3, 14, 8, 9, 'B');
+    p.rect(7, 2, 13, 8, 'd'); for (let y = 2; y <= 8; y += 2) p.line(7, y, 13, y, 'G'); for (let x = 7; x <= 13; x += 2) p.line(x, 2, x, 8, 'G');
+    p.px(10, 5, 'k'); p.px(9, 4, 'w'); p.px(11, 4, 'w');
+  },
+  better_odds(p) { // a fan of three cards, the front one with a red heart
+    p.rect(2, 4, 7, 12, 'n'); p.rect(5, 3, 10, 11, 'n'); p.rect(8, 2, 13, 10, 'w');
+    p.line(5, 3, 5, 11, 'g'); p.line(8, 2, 8, 10, 'g');
+    p.rect(9, 5, 12, 6, 'r'); p.rect(10, 7, 11, 7, 'r'); p.px(9, 4, 'r'); p.px(12, 4, 'r'); p.px(10, 5, 'n'); // a red heart
+   
+    p.px(3, 6, 'k'); p.px(6, 5, 'k');
+  },
+  opening_horn(p) { // a curved gold war horn with a brown strap and sound lines
+    p.line(2, 4, 4, 9, 'n', 2); p.line(4, 9, 8, 12, 'n', 2); p.line(8, 12, 12, 11, 'y', 2); p.disc(12.5, 10, 2.4, 'y'); p.disc(12.5, 10, 1.2, 'B');
+    p.line(3, 9, 8, 6, 'b'); p.px(1, 3, 'w'); p.px(2, 3, 'w');
+    p.px(14, 6, 'w'); p.px(15, 5, 'w'); p.px(15, 8, 'w');
+  },
+  quick_fingers(p) { // a white glove with yellow speed lines
+    p.rect(6, 7, 11, 13, 'w'); for (const x of [6, 8, 10]) p.rect(x, 2, x + 1, 6, 'w'); p.line(12, 9, 13, 6, 'w', 2);
+    p.rect(6, 13, 11, 14, 's'); p.line(7, 2, 7, 6, 's'); p.line(9, 2, 9, 6, 's');
+    p.line(1, 4, 4, 4, 'y'); p.line(1, 8, 4, 8, 'Y'); p.line(2, 11, 4, 11, 'y');
+  },
 };
 const MAP = { quiver_of_plenty: 'quiver', spotters_lens: 'lens', giantslayers_brand: 'giant', catalyst_vial: 'vial', scholars_bookmark: 'bookmark', mirror_buckler: 'buckler', soul_lantern: 'lantern', phoenix_feather: 'feather', iron_will_talisman: 'talisman' };
 const path = new URL('../../src/data/itemIcons.json', import.meta.url);

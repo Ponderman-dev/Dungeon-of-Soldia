@@ -2028,5 +2028,99 @@
       }
     ],
     "perStack": "+8% of crit damage healed"
+  },
+  "hunters_badge": {
+    "name": "Hunter's Badge",
+    "rarity": "common",
+    "type": "special",
+    "scope": "self",
+    "description": "+20% damage to elites.",
+    "effects": [
+      {
+        "special": "eliteDamage",
+        "percent": 20
+      }
+    ],
+    "dropWeight": 90,
+    "perStack": "+20% damage"
+  },
+  "elites_badge": {
+    "name": "Elite's Badge",
+    "rarity": "rare",
+    "type": "special",
+    "scope": "self",
+    "description": "+20% damage to bosses.",
+    "effects": [
+      {
+        "special": "bossDamage",
+        "percent": 20
+      }
+    ],
+    "dropWeight": 90,
+    "perStack": "+20% damage"
+  },
+  "swarm_swatter": {
+    "name": "Swarm Swatter",
+    "rarity": "common",
+    "type": "special",
+    "scope": "self",
+    "description": "+25% damage to small fodder enemies.",
+    "effects": [
+      {
+        "special": "fodderDamage",
+        "percent": 25,
+        "perExtra": 12
+      }
+    ],
+    "dropWeight": 90,
+    "perStack": "+12% damage"
+  },
+  "better_odds": {
+    "name": "Better Odds",
+    "rarity": "epic",
+    "type": "special",
+    "scope": "self",
+    "description": "+2.5% damage for every enemy alive.",
+    "effects": [
+      {
+        "special": "betterOdds",
+        "percent": 2.5
+      }
+    ],
+    "dropWeight": 90,
+    "perStack": "+2.5% per enemy"
+  },
+  "opening_horn": {
+    "name": "Opening Horn",
+    "rarity": "common",
+    "type": "special",
+    "scope": "self",
+    "description": "First 4s of every floor: +30% attack speed.",
+    "effects": [
+      {
+        "special": "openingHorn",
+        "percent": 30,
+        "perExtra": 12,
+        "durationMs": 4000
+      }
+    ],
+    "dropWeight": 90,
+    "perStack": "+12% attack speed"
+  },
+  "quick_fingers": {
+    "name": "Quick Fingers",
+    "rarity": "common",
+    "type": "special",
+    "scope": "self",
+    "description": "Every kill: this hero's skill cooldowns -0.5s.",
+    "effects": [
+      {
+        "special": "killCooldownMs",
+        "percent": 500,
+        "perExtra": 300
+      }
+    ],
+    "dropWeight": 90,
+    "perStack": "-0.3s per kill"
   }
 }

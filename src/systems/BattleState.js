@@ -164,6 +164,8 @@ export default class BattleState {
     // Last Stand: faster below `lastStandBelow`% (30) health.
     const ls = unit.side === 'hero' && unit.specials ? unit.specials.lastStandSpeed || 0 : 0;
     if (ls && unit.hp < (unit.maxHp * (unit.specials.lastStandBelow ?? 30)) / 100) change += ls;
+    // Opening Horn: faster for the first `openingHornMs` (4s) of every floor.
+    if (unit.side === 'hero' && unit.specials && unit.specials.openingHorn && (this.floorMs || 0) < (unit.specials.openingHornMs || 0)) change += unit.specials.openingHorn;
     if (unit.side === 'enemy') change += this.auraSpeed(unit) - this.ghastlySlow(unit); // War Drum; Ghastly Fire burns slow
     const speed = (unit.stats.attackEfficiency / 100) * Math.max(0.2, 1 + change / 100);
     return this.rules.baseAttackIntervalMs / speed;
@@ -1934,7 +1936,10 @@ export default class BattleState {
     if (sp.executioner && target.hp < target.maxHp * 0.25) { bonus += sp.executioner; this.bonusItems.push(['executioners_axe', 'Execute!']); } // Executioner's Axe
     if (sp.hornDamage && this.has(target, 'taunt')) bonus += sp.hornDamage; // Provoker's Horn: taunted enemies take more
     if (sp.spotter && (this.focusUid === target.uid || this.heroes.some((h) => h.alive && h.order === target.uid))) bonus += sp.spotter; // Spotter's Lens: the TAPPED (or drag-ordered) enemy takes more from the squad
-    if (sp.bossDamage && target.def.boss) bonus += sp.bossDamage; // Giantslayer's Brand
+    if (sp.bossDamage && target.def.boss) bonus += sp.bossDamage; // Giantslayer's Brand, Elite's Badge
+    if (sp.eliteDamage && target.elite) bonus += sp.eliteDamage; // Hunter's Badge
+    if (sp.fodderDamage && target.def.tier === 'fodder') bonus += sp.fodderDamage; // Swarm Swatter
+    if (sp.betterOdds) bonus += sp.betterOdds * this.enemies.filter((e) => e.alive && !e.def.object).length; // Better Odds: per enemy alive
     return bonus;
   }
 
@@ -2341,6 +2346,9 @@ export default class BattleState {
       // Blood Chalice: killing a BLEEDING enemy heals the killer.
       const chalice = killer.specials.chaliceHeal || 0;
       if (chalice > 0 && lastStatuses.some((st) => st.type === 'bleed')) this.healUnit(killer, (killer.maxHp * chalice) / 100 / this.regenAura().factor, events);
+      // Quick Fingers: every kill cuts the killer's skill cooldowns.
+      const cut = killer.specials.killCooldownMs || 0;
+      if (cut > 0) for (const slot of killer.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - cut);
     }
     // Items of any living hero whose effect depends on the enemy's stacks when it dies:
     for (const hero of this.heroes) {

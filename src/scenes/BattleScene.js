@@ -872,6 +872,8 @@ export default class BattleScene extends Phaser.Scene {
     const d = (v.deck = v.deck || { cards: [], nextAt: 0 });
     const now = this.time.now;
     const at = Math.max(now, d.nextAt);
+    // A full backlog drops the card (many procs a second: the waiting cards were dealt long after, even on the next floor).
+    if (at - now >= (cfg.deckGapMs || 50) * (cfg.deckMax || 6)) return;
     d.nextAt = at + (cfg.deckGapMs || 50);
     this.time.delayedCall(at - now, () => {
       if (!v.ch.active) return;
@@ -1849,15 +1851,20 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'iceSpikes') {
       // Frozen Demon Head: a giant icicle bursts up round the enemy; the enemy holds still inside while it is frozen,
       // then the icicle shatters (freeze over, or the enemy died). itemFx.iceSpikeFx.
+      // One icicle per enemy (bug: two holders, or a second burst while still frozen, stacked two icicles on it): a
+      // burst on an enemy already inside one keeps that icicle (its freeze was refreshed, so it stands longer).
       const v = this.views.get(e.target.uid);
-      if (v) {
+      if (v && !v.icicle) {
         let body = this.fxBody(v), shatterAt = null;
         const start = this.time.now;
         v.ch.encase(true);
+        v.icicle = true;
         this.addFx(itemFx.ITEM_MS.iceSpike * 20, (q, now) => {
           const ms = now - start;
-          if (shatterAt === null && ms > itemFx.ICE_SPIKE.growMs && (!v.ch.active || !v.unit.alive || !v.unit.statuses.some((st) => st.type === 'freeze'))) {
+          // (it also shatters near the effect's end, a very long refreshed freeze: else the enemy stayed stuck in its pose)
+          if (shatterAt === null && ms > itemFx.ICE_SPIKE.growMs && (q > 0.9 || !v.ch.active || !v.unit.alive || !v.unit.statuses.some((st) => st.type === 'freeze'))) {
             shatterAt = ms;
+            v.icicle = false;
             if (v.ch.active) v.ch.encase(false);
             this.cameras.main.shake(110, 0.003);
           }
@@ -2032,6 +2039,9 @@ export default class BattleScene extends Phaser.Scene {
 
   shootArrow(a, t, hitInMs) {
     const from = this.center(a);
+    // A new shot before the last one landed (fast attacks): the old one goes (bug: it was never removed, piling up
+    // floor after floor, and its landing removed the NEW shot mid-flight).
+    this.landArrow(a);
     // The shot itself is drawn in pixels by drawHitFx() (its look per damage type: systems/hitFx.js);
     // this empty container only carries its position along the flight.
     const arrow = this.add.container(from.x, from.y);
@@ -2059,7 +2069,7 @@ export default class BattleScene extends Phaser.Scene {
         arrow.setPosition(fromX + (to.x - fromX) * p, fromY + (to.y - fromY) * p);
         arrow.rotation = Math.atan2(to.y - fromY, to.x - fromX);
       },
-      onComplete: () => this.landArrow(a),
+      onComplete: () => { if (a.arrow === arrow) this.landArrow(a); },
     });
   }
 
@@ -3012,12 +3022,16 @@ export default class BattleScene extends Phaser.Scene {
     if (!view || !view.ch.active) return;
     const G = combatRules.gainText;
     const t = this.add.text(view.ch.x, view.bg.y, text, { fontFamily: UI.font, fontSize: `${G.sizePx}px`, color, stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5).setDepth(DEPTH.popup + 1).setAlpha(0);
+    // Names still showing on this hero (an item, then a boss's golden book page) stack upwards instead of piling up.
+    view.gains = (view.gains || []).filter((o) => o.active);
+    const row = view.gains.length;
+    view.gains.push(t);
     // It FOLLOWS the hero (the squad may walk off to the door), above the health bar and the item's icon pop.
     const rise = { d: G.risePx };
     const follow = () => {
       if (!view.ch.active) return;
       t.x = Math.round(Phaser.Math.Clamp(view.ch.x, t.width / 2 + 6, GAME_WIDTH - t.width / 2 - 6));
-      t.y = Math.round(view.bg.y - G.abovePx + rise.d);
+      t.y = Math.round(view.bg.y - G.abovePx - row * (G.sizePx + 6) + rise.d);
     };
     follow();
     this.events.on('update', follow);

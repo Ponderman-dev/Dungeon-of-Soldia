@@ -145,9 +145,9 @@ export function playRun(squad, opts = {}) {
   s.offeredOnce = new Set();
   const dungeon = opts.dungeon || DATA.dungeon;
   const out = { floor: 1, log: [], bosses: {}, rooms: {}, deaths: [], fightMs: {} };
-  const reward = (count = DATA.rw.choices, odds = null) => {
-    let cards = rollChoices({ itemDefs: DATA.itemDefs, rules: DATA.rw, floor: out.floor, count, heroes: s.heroes, potionChance: odds ? 0 : DATA.rw.potionChance, offered: s.offeredOnce, rng, odds, bump: (!odds || s.monsterHouse) && s.floorHadElite ? DATA.rules.elites.rewardBump : 0 });
-    if (!odds) cards = maybeAddBook(cards, DATA.bookData, s.heroes, DATA.bookData.bookChancePerScreen, rng);
+  const reward = (count = DATA.rw.choices, odds = null, rarities = null) => { // rarities: a boss floor's set rarities
+    let cards = rollChoices({ itemDefs: DATA.itemDefs, rules: DATA.rw, floor: out.floor, count, heroes: s.heroes, potionChance: odds || rarities ? 0 : DATA.rw.potionChance, offered: s.offeredOnce, rng, odds, rarities, bump: !rarities && (!odds || s.monsterHouse) && s.floorHadElite ? DATA.rules.elites.rewardBump : 0 });
+    if (!odds && !rarities) cards = maybeAddBook(cards, DATA.bookData, s.heroes, DATA.bookData.bookChancePerScreen, rng);
     takeReward(s, cards, opts, out.log);
   };
   let prevRoom = null;
@@ -181,7 +181,7 @@ export function playRun(squad, opts = {}) {
     if (!res.won) { out.deaths.push(boss ? 'BOSS ' + boss[0] : line.monsterHouse ? 'MONSTER HOUSE' : line.join('+')); break; }
     s.endFloor(); s.winHeal(rules.winHealPercent); s.clearStatuses();
     if (s.monsterHouse) { out.houses = (out.houses || 0) + 1; reward(DATA.rw.choices, dungeon.director.monsterHouse.rewardOdds); continue; } // its own prize
-    reward();
+    reward(DATA.rw.choices, null, boss ? DATA.rw.bossRarities : null);
     if (boss) takeReward(s, [DATA.bookData.cards.golden], opts, out.log);
   }
   if (opts.keepState) out.state = s; // the fight state at the end (make-demo-squad.mjs saves its heroes; not sent between workers)

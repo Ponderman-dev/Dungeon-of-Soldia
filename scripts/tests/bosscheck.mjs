@@ -61,8 +61,9 @@ for (const sq of squads) for (let n = 0; n < N; n++) {
       if (s.heroes.some((h) => !h.alive)) { for (const h of s.heroes) if (!h.alive) { h.alive = true; h.hp = h.maxHp; } s.refreshStats(); }
     }
     s.endFloor(); s.winHeal(rules.winHealPercent); s.clearStatuses();
-    let choices = rollChoices({ itemDefs, rules: rw, floor, count: rw.choices, heroes: s.heroes, potionChance: rw.potionChance });
-    choices = maybeAddBook(choices, bookData, s.heroes, bookData.bookChancePerScreen);
+    const bossFloor = !!dungeon.bosses[floor];
+    let choices = rollChoices({ itemDefs, rules: rw, floor, count: rw.choices, heroes: s.heroes, potionChance: bossFloor ? 0 : rw.potionChance, rarities: bossFloor ? rw.bossRarities : null });
+    if (!bossFloor) choices = maybeAddBook(choices, bookData, s.heroes, bookData.bookChancePerScreen);
     if (dungeon.bosses[floor]) useBook(s, 'golden');
     if (choices.length) {
       const item = pick(choices);

@@ -48,7 +48,7 @@ function pickWeighted(list, weightOf, rng) {
 // card; rollChoices adds them to it. `odds` (optional) replaces the floor's rarity odds (the Mimic's prize: rare/epic only).
 // `bump` (after a fight with an elite): that many random cards roll their rarity one step higher (common > rare > epic >
 // legendary; a legendary stays legendary; a step with nothing left in the pool is skipped).
-export function rollChoices({ itemDefs, count, heroes, rules, floor = 1, potionChance = 0, rng = Math.random, offered = null, odds: oddsOverride = null, bump = 0 }) {
+export function rollChoices({ itemDefs, count, heroes, rules, floor = 1, potionChance = 0, rng = Math.random, offered = null, odds: oddsOverride = null, bump = 0, rarities: fixed = null }) {
   const pool = Object.values(itemDefs).filter((item) => item.kind !== 'potion' && heroes.some((h) => canReceive(h, item)) && !(item.oncePerRun && offered && offered.has(item.id)));
   const sources = squadSources(heroes, itemDefs);
   const odds = oddsOverride || rarityOddsFor(floor, rules);
@@ -60,6 +60,8 @@ export function rollChoices({ itemDefs, count, heroes, rules, floor = 1, potionC
     const rarities = Object.keys(odds).filter((r) => odds[r] > 0 && pool.some((item) => item.rarity === r));
     if (!rarities.length) break;
     let rarity = rarities[pickWeighted(rarities, (r) => odds[r], rng)];
+    const want = fixed && fixed[choices.length]; // `rarities`: a set rarity per card (boss floors: epic, epic, legendary)
+    if (want && pool.some((item) => item.rarity === want)) rarity = want;
     if (bumped.has(choices.length)) rarity = order.slice(order.indexOf(rarity) + 1).find((r) => pool.some((item) => item.rarity === r)) || rarity;
     const inRarity = pool.filter((item) => item.rarity === rarity);
     const item = inRarity[pickWeighted(inRarity, (it) => dropWeight(it, sources, rules), rng)];

@@ -2781,18 +2781,19 @@ export default class BattleScene extends Phaser.Scene {
     if (room && room.kind === 'mimic') return this.itemPick('MIMIC DEFEATED', next, room.rules.rewardOdds);
     // A cleared Monster House: a pick from the epic pool with a small legendary chance (an elite there still bumps a card).
     if (this.state.monsterHouse) return this.itemPick('MONSTER HOUSE CLEARED', next, this.dungeon.director.monsterHouse.rewardOdds, this.state.floorHadElite ? combatRules.elites.rewardBump : 0);
-    let choices = this.rollItems(null, this.state.floorHadElite ? combatRules.elites.rewardBump : 0); // an elite: one card a rarity higher
-    choices = maybeAddBook(choices, bookData, this.state.heroes, bookData.bookChancePerScreen); // a skill book card, about 1 in 15 screens
-    // After a BOSS the squad also gets a free golden book (3 modifier pages), after the normal reward.
     const bossFloor = !!(this.dungeon.bosses && this.dungeon.bosses[this.floor]) && this.state.heroes.some((h) => h.alive);
+    // A BOSS floor: set rarities (rewards.json bossRarities: 2 epic + 1 legendary), no potion or book card.
+    let choices = bossFloor ? this.rollItems(null, 0, rewardRules.bossRarities) : this.rollItems(null, this.state.floorHadElite ? combatRules.elites.rewardBump : 0); // an elite: one card a rarity higher
+    if (!bossFloor) choices = maybeAddBook(choices, bookData, this.state.heroes, bookData.bookChancePerScreen); // a skill book card, about 1 in 15 screens
+    // After a BOSS the squad also gets a free golden book (3 modifier pages), after the item reward.
     const afterNormal = bossFloor ? () => this.openRewardSheet([bookData.cards.golden], next, 'BOSS DEFEATED: A GOLDEN BOOK') : next;
     if (!choices.length) return afterNormal();
     this.openRewardSheet(choices, afterNormal);
   }
 
   // 3 item cards for a reward sheet (odds = optional rarity odds instead of the floor's).
-  rollItems(odds = null, bump = 0) {
-    return rollChoices({ itemDefs, rules: rewardRules, floor: this.floor, count: rewardRules.choices, heroes: this.state.heroes, potionChance: odds ? 0 : rewardRules.potionChance, offered: (this.state.offeredOnce = this.state.offeredOnce || new Set()), odds, bump });
+  rollItems(odds = null, bump = 0, rarities = null) {
+    return rollChoices({ itemDefs, rules: rewardRules, floor: this.floor, count: rewardRules.choices, heroes: this.state.heroes, potionChance: odds || rarities ? 0 : rewardRules.potionChance, offered: (this.state.offeredOnce = this.state.offeredOnce || new Set()), odds, bump, rarities });
   }
 
   // The reward sheet with these cards; `next` runs after the pick has been applied.

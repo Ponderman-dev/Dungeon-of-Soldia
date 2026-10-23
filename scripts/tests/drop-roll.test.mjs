@@ -51,3 +51,8 @@ ok('items without a weight use the default 100', dropWeight(itemDefs.fire_bombs,
   const noCommons = Object.fromEntries(Object.entries(itemDefs).filter(([, it]) => it.rarity !== 'common'));
   let full = true; for (let i = 0; i < 500; i++) if (rollChoices({ itemDefs: noCommons, rules: rw, floor: 1, count: 3, heroes: s.heroes }).length !== 3) full = false;
   ok('no commons left: still 3 cards', full); }
+// Boss floors (user, session 25): one card of each rarity in rewards.json bossRarities (2 epic + 1 legendary), all different.
+{ const s = mk(['knight', 'rogue', 'archer']); let good = true;
+  for (let i = 0; i < 500; i++) { const c = rollChoices({ itemDefs, rules: rw, floor: 20, count: 3, heroes: s.heroes, rarities: rw.bossRarities });
+    if (JSON.stringify(c.map((x) => x.rarity)) !== JSON.stringify(rw.bossRarities) || new Set(c.map((x) => x.id)).size !== 3) good = false; }
+  ok('boss floor reward: exactly the set rarities (2 epic + 1 legendary), no repeats', good && rw.bossRarities.filter((r) => r === 'epic').length === 2 && rw.bossRarities.includes('legendary')); }

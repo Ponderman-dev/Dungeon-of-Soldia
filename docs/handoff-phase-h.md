@@ -1,38 +1,40 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 30): NEXT = BOSS REWORK for floors 60, 80, 100 (user asked)
-- BRANCH: `main` has EVERYTHING (session 29 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- BOSS REWORK (user: 'bosses rework, especially 60, 80, 100'): Frost Warden (60), Rask & Vesh (80), Morthul (100).
-  Read docs/systems/bosses.md first. Smart-player curve (session 29, `curve.mjs 3 smart`): bosses beaten by squads that
-  reach them: 20 Grukk 87%, 40 Brood Mother 81%, 60 Frost Warden 99%, 80 Rask & Vesh 97%, 100 Morthul 100%, 120-160
-  91-100%. Why: squads past floor 40 have snowballed (dozens of items on one hero), boss numbers were set for weaker
-  runs. Two roads (user has NOT picked yet, ask): numbers (bosses scale / much tougher) and/or MECHANICS items can't
-  just outdamage. Show NUMBERS in tables; `bosscheck.mjs` + `curve.mjs`.
-- DONE session 29 (all in main): BUG HUNT (auto-play script over ~450 floors, no crashes): ranged shots leaked and
-  removed the new shot mid-flight (fixed), one Frozen Demon Head icicle per enemy, gain-name labels stack, icon-pop
-  deck backlog capped. ITEM SIMS + CHANGES (user picks, numbers in docs/item-decisions.md 'Session 29'): Sweeping
-  Strap quiet (no pop) + reach 100px; Bombardier's Barrel extra copies +50% (was +100%, floor-305 runaway); Frozen
-  Demon Head turns the holder's own fire/electric/dark attacks to ICE (Mage was -9 floors); Euclid 25%/70%; Reaper's
-  Bell 150px; Kinetic Coil charges from blocks too. SHARPEST BLADE REWORK (user: gimmick = NO elements): pure steel
-  +40%, every 5th pure attack = Heart Strike 500% + 15% max health (boss 4%) + stun + armor break -50% defense 5s,
-  a Heart Strike kill = the next one too; gold weapon glint before it (user OK'd the look); stacking = numbers only.
-  Best legendary on physical heroes now (+10..+13 floors vs Dice +2..+8).
-- STILL OPEN: Kinetic Coil and Reaper's Bell still ~0 floors (need a new idea, not numbers); HERO MINIONS PILE UP on
-  high floors; skill books same modifier twice refused: OK?; UNSEEN BONUS / FEWER COMMONS from floor 41; smart bot
-  doesn't keep a Sharpest Blade holder free of elements (undersells it in curve.mjs); preview page, itch zip and the
-  Item Review page (https://claude.ai/artifact/S7cbuLJoStsdi5hpg2SBef) are old.
-- Sim helpers from session 29 lived in the scratchpad (gone): a combo runner = itemruns.mjs with a per-hero loadout and
-  the same seeds per line (+ a 'keep the Blade holder pure' reward filter); an auto-play bug hunter (Playwright, 3x
-  speed via rAF/performance.now, autopilot for Reward/Puzzle/rooms, leak probes). Rebuild if needed.
-- Test helper (scratchpad, throwaway): `git worktree add <scratch>/wt HEAD`, symlink node_modules, run
-  `<scratch>/wt/node_modules/.bin/vite <scratch>/wt --port 5177` FROM the scratchpad. Dev build exposes `window.__game`:
-  wait for 'Title', stop scenes, `scene.start('Battle')` (registry `squadIds`; `?floor=N&room=treasure` on an even
-  floor = a fight; `?lineup=` picks the enemies). Playwright: `/opt/node22/lib/node_modules/playwright/index.mjs`.
+## START HERE (session 31): NEXT = BOSS REWORK, Rask & Vesh (80) then Morthul (100) (user asked: 'bosses rework, especially 60, 80, 100')
+- BRANCH: `main` has EVERYTHING (session 30 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- HOW SESSION 30 WENT (Frost Warden, 60; copy this flow): user picked MECHANICS + NUMBERS, then WROTE the boss's design
+  themselves ('let me write first'): ask what they want, don't push your own ideas. Order: rules + tests first, then each
+  look ONE at a time shown in the game (clip + slow-motion x3 + frames, question tool), then numbers with the smart curve
+  (`curve.mjs 8 smart`, ~2 min; 3/squad is too few at floor 60+), then a full recorded fight. All details: bosses.md.
+- FROST WARDEN NOW (all in docs/systems/bosses.md): plates 80% cut / 15% health each (drawn on him: shoulder pieces +
+  breastplate), ice x0.2, HAILSTORM every 5s (whole-screen wind, 10% max health + 30s Chill; under 25% DESPERATE = random
+  every 2-4s), ICE SPIKES once under 50% (7s, 40 spikes, 1 in 8 aimed in turns + spacing rule, 25% + freeze 3s, deadly),
+  FROZEN REST once under 25% (3 Ice Spirit Knights attack 12 + heals 20% in 8s, still hittable), Ice Slam (own look).
+  Smart win rate of squads that reach him: 99% -> 65%. New effect code: `src/systems/bossFx.js`.
+- SHARPEST BLADE FIX (session 30): the Heart Strike max-health cut was boosted by crits/damage items (a boss's '4%' landed
+  as 5-15%); now EXACT (`strike` opts.fixedAmount), bosses 2% (+0.5%) (user). item-decisions.md updated.
+- BOSS NUMBERS to beat (smart, 960 runs, session 30 end): 20 Grukk 87%, 40 Brood Mother 80%, 60 Frost Warden 65%,
+  80 Rask & Vesh ~97%, 100 Morthul 100%, 120-160 ~90-100% (few runs reach them).
+- KIV (user): MOVE ORDERS so the squad can dodge Ice Spikes (drag a hero to a floor spot / tap floor = team walks there).
+- STILL OPEN (older): Kinetic Coil and Reaper's Bell ~0 floors; hero minions pile up on high floors; skill books same
+  modifier twice refused: OK?; unseen bonus / fewer commons from floor 41; smart bot doesn't keep a Sharpest Blade holder
+  pure; preview page, itch zip and the Item Review page are old.
+- RECORD A REAL BOSS FIGHT (session 30, user liked it): `node scripts/tests/make-demo-squad.mjs 60 rogue,cleric,necromancer
+  demoSquadTry.json` (writes src/data/: MOVE it to the scratchpad, never commit), then in Playwright on the dev server:
+  wait for 'Title', `registry.set('squadIds', ids)` + `registry.set('testJump', { floor, room: null, heroes })`, stop
+  scenes, `scene.start('Battle')`, `recordVideo`, wait until the boss or the squad is dead, ffmpeg to mp4. Squads with
+  many items on one hero win; Knight/Berserker/Alchemist lost at 60.
+- Test helper: vite from the SCRATCHPAD: `<repo>/node_modules/.bin/vite <repo> --port 5177` (it dies between turns
+  sometimes: restart). Dev build exposes `window.__game` (see the recording recipe). To show a boss move: set the
+  boss's other `abilities` timers to 1e9 / done, set `hp` under the threshold. Playwright:
+  `/opt/node22/lib/node_modules/playwright/index.mjs`. ffmpeg is installed.
 - PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish
   again (may need a third identical publish). Publishing with `edits` sends only the page: pass `files` for clips.
 - Fresh clone: `npm install` first (node_modules is not there).
 
 ## How we work with this user
+- 'Discuss first' / 'Hold on' / 'let me write first' (session 30) = STOP and wait for their text; no building meanwhile.
+- Unfair luck bothers them ('potentially BS'): when a random move can pile up on one hero, show sims (hits per hero) and spread rules.
 - ART changes: show in-game clips/frames (SendUserFile, plus a slow-motion copy), then the question tool; the user
   answers with sketches or references (e.g. 'like Sven's cleave') and wants ONE clean line, not layered effects.
 - NUMBERS: the user wants to SEE stats (tables in chat, floors side by side, real enemies like Goblin/Orc Brute) before

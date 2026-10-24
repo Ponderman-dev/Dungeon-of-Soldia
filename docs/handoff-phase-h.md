@@ -10,11 +10,11 @@
   breastplate), ice x0.2, HAILSTORM every 5s, UNSTOPPABLE (stuns/other moves can't skip it; whole-screen wind, 10% max health
   + 30s Chill, minions weak 45% / greater 35%; under 25% DESPERATE = random every 2-4s), ICE SPIKES once under 50% (7s, 40 spikes, 1 in 8 aimed in turns + spacing rule, 25% + freeze 3s, deadly; weak minions
   destroyed, greater 50%),
-  FROZEN REST once under 25% (3 Ice Spirit Knights attack 12 + heals 20% in 8s, still hittable), Ice Slam (own look).
-  Smart win rate of squads that reach him: 99% -> 48%. New effect code: `src/systems/bossFx.js`.
+  FROZEN REST once under 25% (3 Ice Spirit Knights attack 12, a hit every ~1.2s + heals 20% in 8s, still hittable), Ice Slam (own look).
+  Smart win rate of squads that reach him: 99% -> 33%. New effect code: `src/systems/bossFx.js`.
 - SHARPEST BLADE FIX (session 30): the Heart Strike max-health cut was boosted by crits/damage items (a boss's '4%' landed
   as 5-15%); now EXACT (`strike` opts.fixedAmount), bosses 2% (+0.5%) (user). item-decisions.md updated.
-- BOSS NUMBERS to beat (smart, 960 runs, session 30 end): 20 Grukk 87%, 40 Brood Mother 80%, 60 Frost Warden 48%,
+- BOSS NUMBERS to beat (smart, 960 runs, session 30 end): 20 Grukk 87%, 40 Brood Mother 80%, 60 Frost Warden 33%,
   80 Rask & Vesh ~97%, 100 Morthul 100%, 120-160 ~90-100% (few runs reach them).
 - KIV (user): MOVE ORDERS so the squad can dodge Ice Spikes (drag a hero to a floor spot / tap floor = team walks there).
 - STILL OPEN (older): Kinetic Coil and Reaper's Bell ~0 floors; hero minions pile up on high floors; skill books same

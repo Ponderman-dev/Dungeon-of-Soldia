@@ -4189,7 +4189,7 @@
       "attack": 12,
       "defense": 20,
       "resist": 15,
-      "attackEfficiency": 70
+      "attackEfficiency": 130
     },
     "statusImmune": [
       "chill",

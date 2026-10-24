@@ -33,7 +33,7 @@ import statusIcons from '../data/statusIcons.json';
 import { iconList, iconLayout, ICON_PX } from '../systems/statusIcons.js';
 import { statusLook, iceBreak, bodyBox } from '../systems/statusFx.js';
 import { eliteGlow, crownPixels } from '../systems/eliteFx.js';
-import { hailstormFx } from '../systems/bossFx.js';
+import * as bossFx from '../systems/bossFx.js';
 import { projectileFx, impactFx, critFx, IMPACT_MS, CRIT_MS, MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, deathPuffFx } from '../systems/hitFx.js';
 import BattleState from '../systems/BattleState.js';
 import dialogue from '../data/dialogue.json';
@@ -728,6 +728,29 @@ export default class BattleScene extends Phaser.Scene {
   fxPoint(v) {
     const c = this.center(v);
     return { x: c.x / CHAR_SCALE, y: c.y / CHAR_SCALE };
+  }
+
+  // A giant icicle bursts up round a fighter (Frozen Demon Head, Frost Warden's Ice Spikes); it holds still inside while
+  // it is frozen, then the icicle shatters (freeze over, or it died). itemFx.iceSpikeFx. A fighter already inside one
+  // keeps that icicle (its freeze was refreshed, so it stands longer).
+  encaseIcicle(v) {
+    if (v.icicle) return;
+    let body = this.fxBody(v), shatterAt = null;
+    const start = this.time.now;
+    v.ch.encase(true);
+    v.icicle = true;
+    this.addFx(itemFx.ITEM_MS.iceSpike * 20, (q, now) => {
+      const ms = now - start;
+      // (it also shatters near the effect's end, a very long refreshed freeze: else the fighter stayed stuck in its pose)
+      if (shatterAt === null && ms > itemFx.ICE_SPIKE.growMs && (q > 0.9 || !v.ch.active || !v.unit.alive || !v.unit.statuses.some((st) => st.type === 'freeze'))) {
+        shatterAt = ms;
+        v.icicle = false;
+        if (v.ch.active) v.ch.encase(false);
+        this.cameras.main.shake(110, 0.003);
+      }
+      if (v.ch.active && shatterAt === null) body = this.fxBody(v);
+      return shatterAt !== null && ms - shatterAt > itemFx.ICE_SPIKE.shatterMs ? [] : itemFx.iceSpikeFx(ms, body, now, shatterAt);
+    }, ['item', 'iceSpike']);
   }
 
   fxBody(v) {
@@ -1859,24 +1882,7 @@ export default class BattleScene extends Phaser.Scene {
       // One icicle per enemy (bug: two holders, or a second burst while still frozen, stacked two icicles on it): a
       // burst on an enemy already inside one keeps that icicle (its freeze was refreshed, so it stands longer).
       const v = this.views.get(e.target.uid);
-      if (v && !v.icicle) {
-        let body = this.fxBody(v), shatterAt = null;
-        const start = this.time.now;
-        v.ch.encase(true);
-        v.icicle = true;
-        this.addFx(itemFx.ITEM_MS.iceSpike * 20, (q, now) => {
-          const ms = now - start;
-          // (it also shatters near the effect's end, a very long refreshed freeze: else the enemy stayed stuck in its pose)
-          if (shatterAt === null && ms > itemFx.ICE_SPIKE.growMs && (q > 0.9 || !v.ch.active || !v.unit.alive || !v.unit.statuses.some((st) => st.type === 'freeze'))) {
-            shatterAt = ms;
-            v.icicle = false;
-            if (v.ch.active) v.ch.encase(false);
-            this.cameras.main.shake(110, 0.003);
-          }
-          if (v.ch.active && shatterAt === null) body = this.fxBody(v);
-          return shatterAt !== null && ms - shatterAt > itemFx.ICE_SPIKE.shatterMs ? [] : itemFx.iceSpikeFx(ms, body, now, shatterAt);
-        }, ['item', 'iceSpike']);
-      }
+      if (v) this.encaseIcicle(v);
       this.cameras.main.shake(140, 0.005);
     } else if (e.type === 'sweep') { // Sweeping Strap: one Sven-style cleave crescent bursts out of the target on every strap hit
       const hv = this.views.get(e.unit.uid), tv = this.views.get(e.target.uid);
@@ -2688,7 +2694,9 @@ export default class BattleScene extends Phaser.Scene {
         sfx.play('bossMove');
         this.bossBanner(e.ability.name);
         for (const t of e.targets) this.ring(this.views.get(t.uid), 0xff4a3a);
-        if (!slam) this.cameras.main.shake(120, 0.003);
+        const sp = e.ability.spikes; // Ice Spikes: the ground shakes for the whole barrage
+        if (sp) this.cameras.main.shake(sp.warnMs + sp.count * (sp.gapMs || 0), 0.003);
+        else if (!slam) this.cameras.main.shake(120, 0.003);
         return true;
       }
       case 'bossChannel':
@@ -2709,7 +2717,7 @@ export default class BattleScene extends Phaser.Scene {
         const S = CHAR_SCALE;
         const area = { x0: 0, x1: GAME_WIDTH / S, y0: 0, y1: GAME_HEIGHT / S }; // the whole screen (user)
         const ms = (e.ms || 900) / 0.8; // the front takes 80% of the effect to cross (bossFx HAIL_SWEEP_END)
-        this.addFx(ms, (q) => hailstormFx(q, area), ['boss', 'hailstorm']);
+        this.addFx(ms, (q) => bossFx.hailstormFx(q, area), ['boss', 'hailstorm']);
         return true;
       }
       case 'windHit': {
@@ -2718,8 +2726,22 @@ export default class BattleScene extends Phaser.Scene {
         v.ch.flash(0xbfefff, 140);
         return true;
       }
-      case 'spikeWarn': return true; // Ice Spikes look: next step (placeholder puff on landing)
-      case 'spikeLand': this.puff(e.spike.x, e.spike.y, 0xbfe0ff, 5); return true;
+      case 'spikeWarn': { // Ice Spikes: a frost circle grows on the floor where a spike will burst up
+        const S = CHAR_SCALE, sp = e.spike;
+        this.addFx(sp.total, (q, now) => bossFx.spikeWarnFx(q, sp.x / S, sp.y / S, sp.spec.radius / S, now), ['boss', 'spikeWarn']);
+        return true;
+      }
+      case 'spikeLand': { // the icicle bursts up: round each hero it caught (they stay inside while frozen), else on its own
+        const S = CHAR_SCALE, sp = e.spike;
+        const caught = e.targets.filter((t) => t.alive).map((t) => this.views.get(t.uid)).filter(Boolean);
+        for (const tv of caught) this.encaseIcicle(tv);
+        if (!caught.length) {
+          const start = this.time.now, body = { x: sp.x / S, y: sp.y / S, top: sp.y / S - 11, hw: 4 };
+          const standMs = bossFx.FREE_SPIKE_MS;
+          this.addFx(standMs + itemFx.ICE_SPIKE.shatterMs, (q, now) => itemFx.iceSpikeFx(now - start, body, now, now - start > standMs ? standMs : null), ['item', 'iceSpike']);
+        }
+        return true;
+      }
       case 'plateBreak':
         if (!v) return true;
         this.popText(v, e.left > 0 ? 'Armor cracked!' : 'Armor shattered!', '#bfe0ff', true);

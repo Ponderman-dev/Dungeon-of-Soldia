@@ -1864,11 +1864,11 @@
         "interruptible": false,
         "target": "none",
         "spikes": {
-          "count": 14,
-          "aimed": 6,
+          "count": 40,
+          "aimEvery": 4,
           "radius": 28,
           "warnMs": 900,
-          "gapMs": 120,
+          "gapMs": 155,
           "percentMaxHp": 25,
           "freezeMs": 3000
         }

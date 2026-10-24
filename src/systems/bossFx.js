@@ -1,5 +1,5 @@
 // Boss move effects (no Phaser). Same pixel pen as hitFx.js: everything in CHARACTER pixels (screen / CHAR_SCALE),
-// the scene multiplies. Frost Warden first (session 30): Hailstorm.
+// the scene multiplies. Frost Warden (session 30): Hailstorm, Ice Spikes.
 import { pen, rnd, FX_COLORS as C } from './statusFx.js';
 
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -43,5 +43,26 @@ export function hailstormFx(q, area) {
     const y = area.y0 + rnd(i * 13 + 9) * H + since * 10;
     g.px(sx + Math.sin(since * 6 + i) * 2, y, rnd(i) < 0.5 ? C.white : C.ice2, (1 - since) * fade * 0.8);
   }
+  return g.out;
+}
+
+// Ice Spikes: where a spike will burst up, a frost circle grows on the floor (radius r = the hit radius) and blinks
+// faster as it gets close; frost cracks reach in. The icicle itself is itemFx.iceSpikeFx (the Frozen Demon Head's).
+export const FREE_SPIKE_MS = 650; // how long a spike that caught nobody stands before it shatters
+export function spikeWarnFx(q, x, y, r, t) {
+  const g = pen();
+  const grow = 0.35 + 0.65 * Math.min(1, q * 1.6);
+  const blink = 0.55 + 0.45 * Math.sin(t / (q > 0.7 ? 45 : 110)); // faster just before it lands
+  const ry = r * 0.45; // flat on the floor
+  for (let k = 1; k < r * grow - 1; k += 2) g.ring(x, y, k, C.ice, 0.16 * blink, k * 0.45); // a pale frost patch
+  g.ring(x, y, r * grow, C.white, 0.95 * blink, ry * grow);
+  g.ring(x, y, r * grow - 1, C.ice, 0.8 * blink, ry * grow - 0.5);
+  // frost cracks from the edge towards the middle
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2 + rnd(i + Math.round(x)) * 0.5;
+    const r0 = r * grow, r1 = r * grow * (1 - 0.55 * Math.min(1, q * 1.3));
+    g.line(x + Math.cos(a) * r0, y + Math.sin(a) * r0 * 0.45, x + Math.cos(a) * r1, y + Math.sin(a) * r1 * 0.45, C.ice2, 0.6 * blink);
+  }
+  if (q > 0.75) g.disc(x, y, 1 + (q - 0.75) * 8, C.white, (q - 0.75) * 3); // the middle lights up as it comes
   return g.out;
 }

@@ -116,7 +116,7 @@ ok('Spiderling: EVERY hit poisons (a weak poison)', enemies.spiderling.onHit.som
   const sp = w2.def.abilities.find((a) => a.id === 'ice_spikes').spikes;
   w2.hp = Math.floor(w2.maxHp * 0.49);
   for (const x of h2) x.statuses = [];
-  const ev2 = run(s2, 4000);
+  const ev2 = run(s2, sp.warnMs + sp.count * sp.gapMs + 1500);
   const warns = ev2.filter((e) => e.type === 'spikeWarn'), lands = ev2.filter((e) => e.type === 'spikeLand');
   ok('Ice Spikes: below 50% a barrage of spikes is warned, then lands', warns.length === sp.count && lands.length === sp.count, `${warns.length}/${lands.length}`);
   const struck = lands.flatMap((e) => e.targets);

@@ -1834,7 +1834,10 @@
             "durationMs": 30000,
             "stacks": 1
           }
-        ]
+        ],
+        "sweep": {
+          "ms": 900
+        }
       },
       {
         "id": "ice_slam",

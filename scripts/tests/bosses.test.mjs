@@ -102,10 +102,14 @@ ok('Spiderling: EVERY hit poisons (a weak poison)', enemies.spiderling.onHit.som
   const ab = (id) => w.def.abilities.find((a) => a.id === id);
   const hs = ab('hailstorm');
   for (const x of h) x.statuses = [];
+  s.placeLines(); w.abilities.forEach((x) => { x.timer = 1e9; x.done = true; });
   const ev = []; s.releaseAbility(w, hs, ev);
-  ok('Hailstorm: every hero loses its % of max health and gets 1 Chill', h.every((x) => x.maxHp - x.hp === Math.round(x.maxHp * hs.percentMaxHp / 100) && s.stacks(x, 'chill') === 1), h.map((x) => x.maxHp - x.hp).join(','));
-  ok('...that Chill lasts a long time', h[0].statuses.find((x) => x.type === 'chill').remaining === hs.apply[0].durationMs);
-  for (let i = 1; i < 5; i++) s.releaseAbility(w, hs, []);
+  const evs = run(s, hs.sweep.ms + 100);
+  const order = evs.filter((e) => e.type === 'windHit').map((e) => e.unit);
+  ok('Hailstorm: the wind crosses left to right, hitting each hero as it passes', ev.some((e) => e.type === 'windSweep') && order.length === h.length && order.every((x, i) => i === 0 || order[i - 1].x <= x.x));
+  ok('Hailstorm: every hero loses its % of max health and gets 1 Chill', h.every((x) => Math.abs(x.maxHp - x.hp - x.maxHp * hs.percentMaxHp / 100) <= x.maxHp * 0.002 && s.stacks(x, 'chill') === 1), h.map((x) => x.maxHp - x.hp).join(','));
+  ok('...that Chill lasts a long time', h[0].statuses.find((x) => x.type === 'chill').remaining > hs.apply[0].durationMs - hs.sweep.ms - 200);
+  for (let i = 1; i < 5; i++) { s.releaseAbility(w, hs, []); run(s, hs.sweep.ms + 100); }
   ok('...5 Hailstorms freeze a hero', h.every((x) => x.statuses.some((st) => st.type === 'freeze') && s.stacks(x, 'chill') === 0));
   // Ice Spikes: once below 50%
   const { s: s2, es: es2, h: h2 } = mk(['frost_warden'], 60); const w2 = es2[0]; w2.stats.attack = 0; s2.placeLines();

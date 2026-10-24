@@ -10,6 +10,8 @@
 //       summon: { id, count, max, near, beside (px to the sides), hpPercent (summons' health) } (or a list of them), swap: 'partnerId', daggers: { count, damageMultiplier, apply },
 //       channel: { intervalMs, ticks, target, damageMultiplier, damageType, apply, drain: { percentMaxHp }, healSelfPercent (per tick), selfFreeze (looks) },
 //       percentMaxHp: every target loses that % of ITS OWN max health (shields still absorb; Hailstorm),
+//       sweep: { ms }: the move crosses the screen left to right in `ms`; each target is hit (percentMaxHp, apply)
+//         when it reaches it (Hailstorm's wind; event 'windSweep' at the start, 'windHit' per target),
 //       spikes: { count, aimed, radius, warnMs, gapMs, percentMaxHp, freezeMs }   Ice Spikes: `count` spots on the hero side
 //         (`aimed` of them where a hero stands now), each shows a warning for `warnMs` (+ `gapMs` per spot) then lands:
 //         every hero within `radius` loses `percentMaxHp`% health and freezes for `freezeMs`,
@@ -103,6 +105,7 @@ export const bossMethods = {
         }
       }
       if (u.spikes && u.spikes.length) this.tickSpikes(u, dt, events);
+      if (u.sweeps && u.sweeps.length) this.tickSweeps(u, dt, events);
       if (d.reformFor) this.tickPhylactery(u, dt, events);
       if (d.heat) this.tickHeat(u, dt, events);
       if (u.reviveTimer > 0) this.tickRevive(u, dt, events);
@@ -288,8 +291,9 @@ export const bossMethods = {
       u.foe = t.uid;
       events.push({ type: 'blink', unit: u, from, target: t });
     }
-    events.push({ type: 'bossAbility', unit: u, ability: a, targets, minor: !!a.minor });
+    events.push({ type: 'bossAbility', unit: u, ability: a, targets: a.sweep ? [] : targets, minor: !!a.minor }); // a sweep marks each hero when it gets there
     if (a.spikes) this.startSpikes(u, a.spikes, events);
+    if (a.sweep) return this.startSweep(u, a, targets, events);
     for (const t of targets) {
       if (!t.alive) continue;
       if (a.percentMaxHp) this.percentHit(u, t, a.percentMaxHp, events);
@@ -366,6 +370,28 @@ export const bossMethods = {
     this.breakEffects(t, d.broken, events);
     if (t.hp <= 0 && t.alive) this.killUnit(t, events, u);
     return d.immune ? 0 : amount;
+  },
+
+  // ---- Frost Warden: Hailstorm (a wind that crosses the screen) --------------------------------------
+  // Each target is hit when the wind gets to it: `sweep.ms` x (its x / screen width).
+  startSweep(u, a, targets, events) {
+    const W = this.rules.movement.layout.width;
+    u.sweeps = u.sweeps || [];
+    for (const t of targets) u.sweeps.push({ a, t, remaining: this.hasPositions(t) ? (a.sweep.ms * Math.min(W, Math.max(0, t.x))) / W : 0 });
+    events.push({ type: 'windSweep', unit: u, ability: a, ms: a.sweep.ms });
+  },
+
+  tickSweeps(u, dt, events) {
+    for (const sw of [...u.sweeps]) {
+      sw.remaining -= dt;
+      if (sw.remaining > 0) continue;
+      u.sweeps.splice(u.sweeps.indexOf(sw), 1);
+      const { a, t } = sw;
+      if (!t.alive) continue;
+      events.push({ type: 'windHit', unit: t, from: u, ability: a });
+      if (a.percentMaxHp) this.percentHit(u, t, a.percentMaxHp, events);
+      if (t.alive) for (const spec of a.apply || []) this.applyStatus(t, spec, u, `boss_${a.id}`, events);
+    }
   },
 
   // ---- Frost Warden: Ice Spikes ------------------------------------------------------------------

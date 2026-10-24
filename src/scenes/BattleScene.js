@@ -33,6 +33,7 @@ import statusIcons from '../data/statusIcons.json';
 import { iconList, iconLayout, ICON_PX } from '../systems/statusIcons.js';
 import { statusLook, iceBreak, bodyBox } from '../systems/statusFx.js';
 import { eliteGlow, crownPixels } from '../systems/eliteFx.js';
+import { hailstormFx } from '../systems/bossFx.js';
 import { projectileFx, impactFx, critFx, IMPACT_MS, CRIT_MS, MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, deathPuffFx } from '../systems/hitFx.js';
 import BattleState from '../systems/BattleState.js';
 import dialogue from '../data/dialogue.json';
@@ -2702,6 +2703,19 @@ export default class BattleScene extends Phaser.Scene {
       case 'percentHit': { // Hailstorm, Ice Spikes: a share of the hero's own health
         const tv = this.views.get(e.unit.uid);
         if (tv) { this.setBar(tv); if (e.amount > 0) this.popText(tv, `-${e.amount}`, '#9fe8ff'); }
+        return true;
+      }
+      case 'windSweep': { // Hailstorm: the icy wind crosses the fight left to right (the hits land as it passes, 'windHit')
+        const S = CHAR_SCALE;
+        const area = { x0: 0, x1: GAME_WIDTH / S, y0: 0, y1: GAME_HEIGHT / S }; // the whole screen (user)
+        const ms = (e.ms || 900) / 0.8; // the front takes 80% of the effect to cross (bossFx HAIL_SWEEP_END)
+        this.addFx(ms, (q) => hailstormFx(q, area), ['boss', 'hailstorm']);
+        return true;
+      }
+      case 'windHit': {
+        if (!v) return true;
+        (this.impacts = this.impacts || []).push({ type: 'ice', start: this.time.now, ms: IMPACT_MS.ice, view: v, attacker: null, side: -1, seed: (this.impactSeed = (this.impactSeed || 0) + 1) });
+        v.ch.flash(0xbfefff, 140);
         return true;
       }
       case 'spikeWarn': return true; // Ice Spikes look: next step (placeholder puff on landing)

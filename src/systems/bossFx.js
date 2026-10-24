@@ -66,3 +66,22 @@ export function spikeWarnFx(q, x, y, r, t) {
   if (q > 0.75) g.disc(x, y, 1 + (q - 0.75) * 8, C.white, (q - 0.75) * 3); // the middle lights up as it comes
   return g.out;
 }
+
+// Frozen Rest: while the Frost Warden heals inside his ice, pale frost motes and small plus signs rise off him and a
+// soft frost ring pulses at his feet. b = his body in char px ({ x, y (feet), top, hw }), t = clock (ms).
+export function frostHealFx(b, t) {
+  const g = pen();
+  const tall = b.y - b.top + 12, GLOW = 0x7ff0ff;
+  for (let i = 0; i < 18; i++) {
+    const p = (t / 1500 + rnd(i * 5 + 1)) % 1;
+    const x = b.x + (rnd(i * 5 + 2) - 0.5) * 3 * b.hw + Math.sin(p * 6 + i) * 1.5;
+    const y = b.y - 2 - p * tall;
+    const a = Math.sin(p * Math.PI);
+    if (i % 3 === 0) { // a plus sign
+      g.rect(x - 2, y, 5, 1, GLOW, a); g.rect(x, y - 2, 1, 5, GLOW, a); g.px(x, y, C.white, a);
+    } else { g.rect(x, y, 2, 2, GLOW, a * 0.9); g.px(x, y, C.white, a); }
+  }
+  const pulse = 0.5 + 0.5 * Math.sin(t / 260);
+  g.ring(b.x, b.y, b.hw + 3 + pulse * 2, GLOW, 0.4 + 0.35 * pulse, (b.hw + 3 + pulse * 2) * 0.35);
+  return g.out;
+}

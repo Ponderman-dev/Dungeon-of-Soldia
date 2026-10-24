@@ -437,16 +437,29 @@ export default class BattleScene extends Phaser.Scene {
         kinds.beastRegen = kinds.regenBoost || { stacks: 1, age: 1e9 };
         delete kinds.regenBoost;
       }
+      // Frost Warden's Frozen Rest: he looks frozen while he heals (a `selfFreeze` channel), and the ice breaks off after.
+      const c = u.bossCast, selfFrozen = !!(c && c.channel && c.channel.spec.selfFreeze);
+      if (selfFrozen) kinds.freeze = { stacks: 1, age: c.total - c.remaining };
+      if (v.selfFrozen && !selfFrozen) {
+        this.iceBreaks.push({ view: v, start: now });
+        this.cameras.main.shake(160, 0.004);
+        if (u.alive) this.popText(v, 'The ice breaks!', '#bfe0ff', true);
+      }
+      v.selfFrozen = selfFrozen;
       if (!v.box) v.box = bodyBox(u.def.parts, u.def.height);
       let look;
       try { look = statusLook(kinds, v.box, now + (u.uid % 7) * 137, TUNE); } // each fighter a little out of step
       catch (err) { console.error(err); continue; } // a broken effect must never stop the fight
-      v.ch.setStatusLook(v.hitTint || look.tint, look.ice);
+      v.ch.setStatusLook((!selfFrozen && v.hitTint) || look.tint, look.ice); // frozen: the ice wins over the green heal glow
       // Still sliding in with its floor (an elite's shield at the start): the screen-space effects wait until it
       // has arrived, or they were drawn at its final spot before the enemy got there.
       if (v.ch.parentContainer) continue;
       this.nudge(v, look.dx * Math.abs(v.ch.scaleY));
       this.paintFx(g, v, look.draws);
+      if (selfFrozen) { // Frozen Rest: frost motes rise off him while he heals (char pixels, like the hit effects)
+        const S = CHAR_SCALE;
+        for (const [x, y, w, h, col, a] of bossFx.frostHealFx(this.fxBody(v), now)) { g.fillStyle(col, a); g.fillRect(x * S - S / 2, y * S, w * S, h * S); }
+      }
     }
     this.drawElites(now);
     this.drawBombs(now);
@@ -1925,7 +1938,7 @@ export default class BattleScene extends Phaser.Scene {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
       this.popText(v, `+${Math.round(e.amount)}`, '#6dff8f');
-      if (!v.healFxAt || this.time.now - v.healFxAt > 450) { v.healFxAt = this.time.now; this.addMoment('heal', v); } // not on every tiny heal
+      if (!v.selfFrozen && (!v.healFxAt || this.time.now - v.healFxAt > 450)) { v.healFxAt = this.time.now; this.addMoment('heal', v); } // not on every tiny heal; not inside Frozen Rest's ice
     } else if (e.type === 'thorns') {
       const v = this.views.get(e.unit.uid);
       v.ch.flash();
@@ -2700,7 +2713,7 @@ export default class BattleScene extends Phaser.Scene {
         return true;
       }
       case 'bossChannel':
-        for (const t of e.targets) this.ring(this.views.get(t.uid), 0xc070ff, 0.6);
+        for (const t of e.targets) if (t !== e.unit) this.ring(this.views.get(t.uid), 0xc070ff, 0.6); // not on itself (Frozen Rest)
         return true;
       case 'drain': {
         const tv = this.views.get(e.unit.uid), fv = this.views.get(e.from.uid);

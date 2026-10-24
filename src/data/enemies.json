@@ -1815,15 +1815,15 @@
     ],
     "plates": {
       "count": 3,
-      "cutPercent": 70,
-      "plateHpPercent": 10,
+      "cutPercent": 80,
+      "plateHpPercent": 15,
       "fireMultiplier": 3
     },
     "abilities": [
       {
         "id": "hailstorm",
         "name": "Hailstorm",
-        "everyMs": 8000,
+        "everyMs": 5000,
         "firstMs": 5000,
         "castMs": 600,
         "target": "allHeroes",

@@ -16,8 +16,9 @@ function markMultiplier(defender) {
 function weakResistMultiplier(defender, type, rules, damageTypes) {
   const category = damageTypes[type].category;
   const has = (list) => list.includes(type) || list.includes(category);
-  if (has(defender.weak)) return rules.weakMultiplier;
-  if (has(defender.resists)) return rules.resistMultiplier;
+  // A def can set its own multipliers (Frost Warden: ice does only 20%).
+  if (has(defender.weak)) return (defender.def && defender.def.weakMultiplier) ?? rules.weakMultiplier;
+  if (has(defender.resists)) return (defender.def && defender.def.resistMultiplier) ?? rules.resistMultiplier;
   return 1;
 }
 

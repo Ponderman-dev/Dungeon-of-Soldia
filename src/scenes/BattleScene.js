@@ -2699,6 +2699,13 @@ export default class BattleScene extends Phaser.Scene {
         if (fv) this.setBar(fv);
         return true;
       }
+      case 'percentHit': { // Hailstorm, Ice Spikes: a share of the hero's own health
+        const tv = this.views.get(e.unit.uid);
+        if (tv) { this.setBar(tv); if (e.amount > 0) this.popText(tv, `-${e.amount}`, '#9fe8ff'); }
+        return true;
+      }
+      case 'spikeWarn': return true; // Ice Spikes look: next step (placeholder puff on landing)
+      case 'spikeLand': this.puff(e.spike.x, e.spike.y, 0xbfe0ff, 5); return true;
       case 'plateBreak':
         if (!v) return true;
         this.popText(v, e.left > 0 ? 'Armor cracked!' : 'Armor shattered!', '#bfe0ff', true);

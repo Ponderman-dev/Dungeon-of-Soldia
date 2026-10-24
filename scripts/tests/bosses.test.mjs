@@ -92,7 +92,44 @@ ok('Spiderling: EVERY hit poisons (a weak poison)', enemies.spiderling.onHit.som
   w.plates = 0; const hp1 = w.hp; s.strike(h[0], w, [], { multiplier: 1, damageType: 'melee' }); const bare = hp1 - w.hp;
   ok('...her armor plates cut the damage a lot', plated < bare * 0.5, `${plated} vs ${bare}`);
   w.plates = 3; w.plateHp = 10; const ev3 = []; s.strike(h[0], w, ev3, { multiplier: 1, damageType: 'fire' });
-  ok('...fire breaks a plate', w.plates === 2 && ev3.some((e) => e.type === 'plateBreak')); }
+  ok('...fire breaks a plate', w.plates === 2 && ev3.some((e) => e.type === 'plateBreak'));
+  w.plates = 0; h[0].stats.attack = 100; const hp2 = w.hp; s.strike(h[0], w, [], { multiplier: 1, damageType: 'melee' }); const melee = hp2 - w.hp;
+  const hp3 = w.hp; s.strike(h[0], w, [], { multiplier: 1, damageType: 'ice' }); const ice = hp3 - w.hp;
+  ok('...ice does very little to him (his own resist multiplier)', ice < melee * w.def.resistMultiplier * 1.5, `${ice} vs ${melee}`); }
+
+// Frost Warden: Hailstorm, Ice Spikes (50%), Frozen Rest + Ice Knights (25%)
+{ const { s, es, h } = mk(['frost_warden'], 60); const w = es[0]; w.hp = w.maxHp = 1e6; w.stats.attack = 0;
+  const ab = (id) => w.def.abilities.find((a) => a.id === id);
+  const hs = ab('hailstorm');
+  for (const x of h) x.statuses = [];
+  const ev = []; s.releaseAbility(w, hs, ev);
+  ok('Hailstorm: every hero loses its % of max health and gets 1 Chill', h.every((x) => x.maxHp - x.hp === Math.round(x.maxHp * hs.percentMaxHp / 100) && s.stacks(x, 'chill') === 1), h.map((x) => x.maxHp - x.hp).join(','));
+  ok('...that Chill lasts a long time', h[0].statuses.find((x) => x.type === 'chill').remaining === hs.apply[0].durationMs);
+  for (let i = 1; i < 5; i++) s.releaseAbility(w, hs, []);
+  ok('...5 Hailstorms freeze a hero', h.every((x) => x.statuses.some((st) => st.type === 'freeze') && s.stacks(x, 'chill') === 0));
+  // Ice Spikes: once below 50%
+  const { s: s2, es: es2, h: h2 } = mk(['frost_warden'], 60); const w2 = es2[0]; w2.stats.attack = 0; s2.placeLines();
+  const sp = w2.def.abilities.find((a) => a.id === 'ice_spikes').spikes;
+  w2.hp = Math.floor(w2.maxHp * 0.49);
+  for (const x of h2) x.statuses = [];
+  const ev2 = run(s2, 4000);
+  const warns = ev2.filter((e) => e.type === 'spikeWarn'), lands = ev2.filter((e) => e.type === 'spikeLand');
+  ok('Ice Spikes: below 50% a barrage of spikes is warned, then lands', warns.length === sp.count && lands.length === sp.count, `${warns.length}/${lands.length}`);
+  const struck = lands.flatMap((e) => e.targets);
+  ok('...a hero under a spike freezes and loses health', struck.length > 0 && ev2.some((e) => e.type === 'status' && e.status.type === 'freeze' && e.status.key === 'freeze:ice_spike'));
+  const ev3 = run(s2, 10000);
+  ok('...only once', !ev3.some((e) => e.type === 'spikeWarn'));
+  // Frozen Rest: below 25% he summons 3 Ice Knights and heals while frozen (can still be hit)
+  const { s: s3, es: es3 } = mk(['frost_warden'], 60); const w3 = es3[0]; w3.stats.attack = 0;
+  const rest = w3.def.abilities.find((a) => a.id === 'ice_knights');
+  w3.abilities.forEach((x) => { if (x.def.id !== 'ice_knights') x.done = true, x.timer = 1e9; });
+  w3.hp = Math.floor(w3.maxHp * 0.24); const before = w3.hp;
+  run(s3, rest.castMs + rest.channel.ticks * rest.channel.intervalMs + 300);
+  const knights = s3.enemies.filter((e) => e.alive && e.def.id === 'ice_knight');
+  ok('Frozen Rest: 3 Ice Knights join the fight', knights.length === rest.summon.count, knights.length);
+  const healed = (w3.hp - before) / w3.maxHp * 100;
+  ok('...and he heals about 20% of his health', Math.abs(healed - rest.channel.ticks * rest.channel.healSelfPercent) < 1.5, healed.toFixed(1));
+  ok('...he can still be hit meanwhile', !s3.untargetable(w3)); }
 
 // ---- Rask & Vesh
 { const { s, es, h } = mk(['rask', 'vesh']); const [rask, vesh] = es;

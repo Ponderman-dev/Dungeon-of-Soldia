@@ -8,7 +8,11 @@
 //       target: 'frontHero' | 'backHero' | 'randomHero' | 'randomHeroes' (+ count) | 'lowestHero' | 'allHeroes' | 'self' | 'allies' | 'meleeNear',
 //       radius (meleeNear), damageMultiplier, damageType, apply: [status specs], healAllies (% of their max health),
 //       summon: { id, count, max, near, beside (px to the sides), hpPercent (summons' health) } (or a list of them), swap: 'partnerId', daggers: { count, damageMultiplier, apply },
-//       channel: { intervalMs, ticks, target, damageMultiplier, damageType, apply, drain: { percentMaxHp } },
+//       channel: { intervalMs, ticks, target, damageMultiplier, damageType, apply, drain: { percentMaxHp }, healSelfPercent (per tick), selfFreeze (looks) },
+//       percentMaxHp: every target loses that % of ITS OWN max health (shields still absorb; Hailstorm),
+//       spikes: { count, aimed, radius, warnMs, gapMs, percentMaxHp, freezeMs }   Ice Spikes: `count` spots on the hero side
+//         (`aimed` of them where a hero stands now), each shows a warning for `warnMs` (+ `gapMs` per spot) then lands:
+//         every hero within `radius` loses `percentMaxHp`% health and freezes for `freezeMs`,
 //       clones: { statPercent }, shatterClones: { multiplier } }
 //     slam: { liftPx, dropMs, shakeMs, shakeIntensity } = looks only: it rises during the wind-up and crashes down (Grukk's Quake Jump)
 //     minor: true = a normal enemy's small move (a popup, no red banner); needsHurt: waits until an enemy is hurt;
@@ -19,6 +23,7 @@
 //   aura: { ids, attackSpeedPercent }        other enemies with these ids attack faster while it lives (War Drum)
 //   hatch: { afterMs, into, count }          it turns into enemies after a while (Egg Sac)
 //   plates: { count, cutPercent, plateHpPercent, fireMultiplier }   armor plates: less damage until broken (Frost Warden)
+//   weakMultiplier / resistMultiplier        its own weak / resist numbers (default combat.json)
 //   statusImmune: [status ids]
 //   link: { partner, enrage: [mods], reviveMs, revivePercent }        twin bosses (Rask & Vesh)
 //   phylactery: { id, hpPercent, reformMs, reformPercent, toughen, maxReforms }   a second life (Morthul; back at most maxReforms times)
@@ -97,6 +102,7 @@ export const bossMethods = {
           continue;
         }
       }
+      if (u.spikes && u.spikes.length) this.tickSpikes(u, dt, events);
       if (d.reformFor) this.tickPhylactery(u, dt, events);
       if (d.heat) this.tickHeat(u, dt, events);
       if (u.reviveTimer > 0) this.tickRevive(u, dt, events);
@@ -267,6 +273,7 @@ export const bossMethods = {
     if (a.channel) {
       u.bossCast = { def: a, remaining: a.channel.ticks * a.channel.intervalMs, total: a.channel.ticks * a.channel.intervalMs, channel: { spec: a.channel, timer: 0, tick: 0 } };
       events.push({ type: 'bossAbility', unit: u, ability: a, targets: [] });
+      this.summonFor(u, a, events); // Frozen Rest: the knights come as he starts to heal
       return;
     }
     if (a.burrow) return this.startBurrow(u, a.burrow, events); // Cave Worm
@@ -282,7 +289,10 @@ export const bossMethods = {
       events.push({ type: 'blink', unit: u, from, target: t });
     }
     events.push({ type: 'bossAbility', unit: u, ability: a, targets, minor: !!a.minor });
+    if (a.spikes) this.startSpikes(u, a.spikes, events);
     for (const t of targets) {
+      if (!t.alive) continue;
+      if (a.percentMaxHp) this.percentHit(u, t, a.percentMaxHp, events);
       if (!t.alive) continue;
       if (a.damageMultiplier) this.strike(u, t, events, { multiplier: a.damageMultiplier, damageType: a.damageType, ability: true });
       if (!t.alive) continue;
@@ -291,14 +301,7 @@ export const bossMethods = {
       // Shieldbearer: a shield of `percentOwnHp` of ITS OWN max health on the target (the same move refills it).
       if (a.shield) this.applyStatus(t, { status: 'shield', amount: Math.round((u.maxHp * a.shield.percentOwnHp) / 100), durationMs: a.shield.durationMs }, u, `ability_${a.id}`, events);
     }
-    for (const sm of a.summon ? [].concat(a.summon) : []) { // one summon spec, or a list (War Drum: goblin + archer)
-      const have = this.enemies.filter((e) => e.alive && e.def.id === sm.id).length;
-      const first = this.rng() < 0.5 ? -1 : 1; // `beside` (px): to its sides, every other one on the other side
-      for (let i = 0; i < sm.count && have + i < (sm.max ?? Infinity); i++) {
-        const sp = this.spawnEnemyUnit(sm.id, u, events, sm.near ? 90 : 60, sm.beside ? { px: sm.beside, side: i % 2 ? -first : first } : null);
-        if (sp && sm.hpPercent) sp.hp = sp.maxHp = Math.max(1, Math.round((sp.maxHp * sm.hpPercent) / 100)); // War Drum: weaker summoned goblins
-      }
-    }
+    this.summonFor(u, a, events);
     if (a.swap) {
       const p = this.enemies.find((e) => e.alive && e.def.id === a.swap);
       if (p && this.hasPositions(u) && this.hasPositions(p)) {
@@ -323,6 +326,18 @@ export const bossMethods = {
     if (a.shatterClones) this.shatterClones(u, a.shatterClones.multiplier, events);
   },
 
+  // A move's `summon`: one spec, or a list (War Drum: goblin + archer).
+  summonFor(u, a, events) {
+    for (const sm of a.summon ? [].concat(a.summon) : []) {
+      const have = this.enemies.filter((e) => e.alive && e.def.id === sm.id).length;
+      const first = this.rng() < 0.5 ? -1 : 1; // `beside` (px): to its sides, every other one on the other side
+      for (let i = 0; i < sm.count && have + i < (sm.max ?? Infinity); i++) {
+        const sp = this.spawnEnemyUnit(sm.id, u, events, sm.near ? 90 : 60, sm.beside ? { px: sm.beside, side: i % 2 ? -first : first } : null);
+        if (sp && sm.hpPercent) sp.hp = sp.maxHp = Math.max(1, Math.round((sp.maxHp * sm.hpPercent) / 100)); // War Drum: weaker summoned goblins
+      }
+    }
+  },
+
   // One tick of a boss channel (Blizzard, Soul Drain).
   channelTick(u, c, events) {
     const s = c.channel.spec;
@@ -333,14 +348,59 @@ export const bossMethods = {
       if (!t.alive) continue;
       if (s.damageMultiplier) this.strike(u, t, events, { multiplier: s.damageMultiplier, damageType: s.damageType, ability: true });
       if (s.drain && t.alive) {
-        const amount = Math.max(1, Math.round((t.maxHp * s.drain.percentMaxHp) / 100));
-        const d = this.dealDamage(t, amount, events);
-        events.push({ type: 'drain', unit: t, from: u, amount: d.immune ? 0 : amount - d.absorbed });
-        this.breakEffects(t, d.broken, events);
-        if (t.hp <= 0 && t.alive) this.killUnit(t, events, u);
-        if (!d.immune) this.healUnit(u, amount, events, { aura: false });
+        const amount = this.percentHit(u, t, s.drain.percentMaxHp, events, 'drain');
+        if (amount) this.healUnit(u, amount, events, { aura: false });
       }
       if (t.alive) for (const spec of s.apply || []) this.applyStatus(t, spec, u, `boss_${c.def.id}`, events);
+    }
+    // Frost Warden's Frozen Rest: he heals himself while he channels.
+    if (s.healSelfPercent && u.alive) this.healUnit(u, (u.maxHp * s.healSelfPercent) / 100, events, { aura: false });
+  },
+
+  // `t` loses `pct`% of its own max health (shields absorb; no defense, no dodge). Returns the amount (0 = immune).
+  // Event 'drain' (Soul Drain) or 'percentHit' (Hailstorm, Ice Spikes).
+  percentHit(u, t, pct, events, type = 'percentHit') {
+    const amount = Math.max(1, Math.round((t.maxHp * pct) / 100));
+    const d = this.dealDamage(t, amount, events);
+    events.push({ type, unit: t, from: u, amount: d.immune ? 0 : amount - d.absorbed });
+    this.breakEffects(t, d.broken, events);
+    if (t.hp <= 0 && t.alive) this.killUnit(t, events, u);
+    return d.immune ? 0 : amount;
+  },
+
+  // ---- Frost Warden: Ice Spikes ------------------------------------------------------------------
+  // `aimed` spots where heroes stand right now, the rest anywhere on the hero side; each lands after its warning.
+  startSpikes(u, spec, events) {
+    const L = this.rules.movement.layout;
+    const heroes = this.defenders().filter((h) => this.hasPositions(h));
+    u.spikes = u.spikes || [];
+    for (let i = 0; i < spec.count; i++) {
+      let x, y;
+      if (i < (spec.aimed || 0) && heroes.length) {
+        const h = heroes[i % heroes.length];
+        x = h.x + (this.rng() - 0.5) * 30;
+        y = h.y + (this.rng() - 0.5) * 30;
+      } else {
+        x = L.marginX + this.rng() * (L.width - 2 * L.marginX);
+        y = L.enemyY + this.rng() * (L.heroY - L.enemyY); // anywhere between the boss line and the heroes
+      }
+      const spike = { x, y, remaining: spec.warnMs + i * (spec.gapMs || 0), total: spec.warnMs + i * (spec.gapMs || 0), spec };
+      u.spikes.push(spike);
+      events.push({ type: 'spikeWarn', unit: u, spike });
+    }
+  },
+
+  tickSpikes(u, dt, events) {
+    for (const sp of [...u.spikes]) {
+      sp.remaining -= dt;
+      if (sp.remaining > 0) continue;
+      u.spikes.splice(u.spikes.indexOf(sp), 1);
+      const hit = this.defenders().filter((h) => h.alive && this.hasPositions(h) && Math.hypot(h.x - sp.x, h.y - sp.y) <= sp.spec.radius);
+      events.push({ type: 'spikeLand', unit: u, spike: sp, targets: hit });
+      for (const h of hit) {
+        this.percentHit(u, h, sp.spec.percentMaxHp, events);
+        if (h.alive && sp.spec.freezeMs) this.applyStatus(h, { status: 'freeze', durationMs: sp.spec.freezeMs }, u, 'ice_spike', events);
+      }
     }
   },
 

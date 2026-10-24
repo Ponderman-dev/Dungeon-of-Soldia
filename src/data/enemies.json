@@ -1821,23 +1821,20 @@
     },
     "abilities": [
       {
-        "id": "blizzard",
-        "name": "Blizzard",
-        "everyMs": 14000,
-        "firstMs": 7000,
-        "castMs": 900,
-        "channel": {
-          "intervalMs": 500,
-          "ticks": 6,
-          "target": "allHeroes",
-          "apply": [
-            {
-              "status": "chill",
-              "durationMs": 5000,
-              "stacks": 1
-            }
-          ]
-        }
+        "id": "hailstorm",
+        "name": "Hailstorm",
+        "everyMs": 8000,
+        "firstMs": 5000,
+        "castMs": 600,
+        "target": "allHeroes",
+        "percentMaxHp": 10,
+        "apply": [
+          {
+            "status": "chill",
+            "durationMs": 30000,
+            "stacks": 1
+          }
+        ]
       },
       {
         "id": "ice_slam",
@@ -1855,8 +1852,46 @@
             "stacks": 2
           }
         ]
+      },
+      {
+        "id": "ice_spikes",
+        "name": "Ice Spikes",
+        "hpBelow": 50,
+        "castMs": 900,
+        "interruptible": false,
+        "target": "none",
+        "spikes": {
+          "count": 14,
+          "aimed": 6,
+          "radius": 28,
+          "warnMs": 900,
+          "gapMs": 120,
+          "percentMaxHp": 25,
+          "freezeMs": 3000
+        }
+      },
+      {
+        "id": "ice_knights",
+        "name": "Frozen Rest",
+        "hpBelow": 25,
+        "castMs": 600,
+        "interruptible": false,
+        "summon": {
+          "id": "ice_knight",
+          "count": 3,
+          "max": 3,
+          "near": true
+        },
+        "channel": {
+          "intervalMs": 500,
+          "ticks": 16,
+          "target": "self",
+          "healSelfPercent": 1.25,
+          "selfFreeze": true
+        }
       }
-    ]
+    ],
+    "resistMultiplier": 0.2
   },
   "rask": {
     "name": "Rask the Bandit King",
@@ -4035,5 +4070,112 @@
         }
       }
     }
+  },
+  "ice_knight": {
+    "name": "Ice Spirit Knight",
+    "tier": "strong",
+    "weak": [
+      "fire"
+    ],
+    "resists": [
+      "ice"
+    ],
+    "flying": false,
+    "height": 18,
+    "parts": {
+      "body": {
+        "x": 0,
+        "y": -9,
+        "w": 12,
+        "h": 18,
+        "art": {
+          "palette": [
+            "0x1a1020",
+            "0x8a8fa0",
+            "0xc0c6d4",
+            "0x5a5f70",
+            "0xe0b040",
+            "0x2a2f40"
+          ],
+          "rows": [
+            "...0000.....",
+            "..022220....",
+            "..021120....",
+            "..055550....",
+            "..011110....",
+            ".00000000...",
+            "0111111110..",
+            "0122222210..",
+            "0111441110..",
+            "0111111110..",
+            "0133333310..",
+            ".01111110...",
+            ".01111110...",
+            "..011110....",
+            "..01..10....",
+            "..01..10....",
+            ".001..100...",
+            ".000..000..."
+          ]
+        },
+        "anchor": [
+          6,
+          9
+        ],
+        "idle": {
+          "dy": -1,
+          "duration": 520
+        }
+      },
+      "weapon": {
+        "x": 5,
+        "y": -8,
+        "w": 8,
+        "h": 12,
+        "art": {
+          "palette": [
+            "0x1a1020",
+            "0xc0c6d4",
+            "0x8a8fa0",
+            "0xe0b040"
+          ],
+          "rows": [
+            "00000000",
+            "01111110",
+            "01222210",
+            "01233210",
+            "01233210",
+            "01222210",
+            "01222210",
+            "01222210",
+            "01222210",
+            ".012210.",
+            "..0110..",
+            "...00..."
+          ]
+        },
+        "anchor": [
+          4,
+          6
+        ],
+        "idle": {
+          "angle": 8,
+          "duration": 650
+        }
+      }
+    },
+    "damageType": "melee",
+    "xp": 30,
+    "stats": {
+      "health": 700,
+      "attack": 7,
+      "defense": 20,
+      "resist": 15,
+      "attackEfficiency": 70
+    },
+    "statusImmune": [
+      "chill",
+      "freeze"
+    ]
   }
 }

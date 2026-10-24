@@ -121,6 +121,8 @@ ok('Spiderling: EVERY hit poisons (a weak poison)', enemies.spiderling.onHit.som
   ok('Ice Spikes: below 50% a barrage of spikes is warned, then lands', warns.length === sp.count && lands.length === sp.count, `${warns.length}/${lands.length}`);
   const struck = lands.flatMap((e) => e.targets);
   ok('...a hero under a spike freezes and loses health', struck.length > 0 && ev2.some((e) => e.type === 'status' && e.status.type === 'freeze' && e.status.key === 'freeze:ice_spike'));
+  const near = warns.filter((a, i) => warns.some((b, j) => j < i && a.spike.at - b.spike.at < sp.spacing.ms && Math.hypot(a.spike.x - b.spike.x, a.spike.y - b.spike.y) < sp.spacing.px)).length;
+  ok('...spread out: hardly any spike lands near a recent one', near <= 5, near); // out of 40 (after 8 tries it takes the spot anyway)
   const ev3 = run(s2, 10000);
   ok('...only once', !ev3.some((e) => e.type === 'spikeWarn'));
   // Frozen Rest: below 25% he summons 3 Ice Knights and heals while frozen (can still be hit)

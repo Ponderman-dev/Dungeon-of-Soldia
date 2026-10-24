@@ -1865,7 +1865,12 @@
         "target": "none",
         "spikes": {
           "count": 40,
-          "aimEvery": 4,
+          "aimEvery": 8,
+          "aimTurns": true,
+          "spacing": {
+            "px": 56,
+            "ms": 1500
+          },
           "radius": 28,
           "warnMs": 900,
           "gapMs": 155,

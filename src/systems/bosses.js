@@ -12,7 +12,7 @@
 //       percentMaxHp: every target loses that % of ITS OWN max health (shields still absorb; Hailstorm),
 //       sweep: { ms }: the move crosses the screen left to right in `ms`; each target is hit (percentMaxHp, apply)
 //         when it reaches it (Hailstorm's wind; event 'windSweep' at the start, 'windHit' per target),
-//       spikes: { count, aimEvery, radius, warnMs, gapMs, percentMaxHp, freezeMs }   Ice Spikes: a barrage, one spot every
+//       spikes: { count, aimEvery, aimTurns, aimSkipFrozen, spacing: { px, ms }, radius, warnMs, gapMs, percentMaxHp, freezeMs }   Ice Spikes: a barrage, one spot every
 //         `gapMs` (every `aimEvery`th where a hero stands then), each warned for `warnMs` then it lands:
 //         every hero within `radius` loses `percentMaxHp`% health and freezes for `freezeMs`,
 //       clones: { statPercent }, shatterClones: { multiplier } }
@@ -402,14 +402,24 @@ export const bossMethods = {
     for (let i = 0; i < spec.count; i++) u.spikes.push({ spec, wait: i * (spec.gapMs || 0), aimed: !!spec.aimEvery && i % spec.aimEvery === 0, remaining: null });
   },
 
-  spikeSpot(sp) {
-    const L = this.rules.movement.layout;
-    const heroes = this.defenders().filter((h) => h.alive && this.hasPositions(h));
-    if (sp.aimed && heroes.length) {
-      const h = heroes[Math.floor(this.rng() * heroes.length)];
-      return { x: h.x + (this.rng() - 0.5) * 24, y: h.y + (this.rng() - 0.5) * 24 };
+  // `aimTurns`: aimed spikes go to each living hero in turn (else a random hero). `spacing: { px, ms }`: a spot
+  // closer than `px` to a spike from the last `ms` is picked again (a few tries), so spikes don't pile up in one place.
+  spikeSpot(u, sp) {
+    const L = this.rules.movement.layout, spec = sp.spec;
+    let heroes = this.defenders().filter((h) => h.alive && this.hasPositions(h));
+    if (spec.aimSkipFrozen && heroes.some((h) => !this.has(h, 'freeze'))) heroes = heroes.filter((h) => !this.has(h, 'freeze')); // aimed spikes leave frozen heroes alone
+    const recent = (u.spikeLog || []).filter((r) => this.floorMs - r.at < (spec.spacing ? spec.spacing.ms : 0));
+    const crowded = (p) => spec.spacing && recent.some((r) => Math.hypot(r.x - p.x, r.y - p.y) < spec.spacing.px);
+    let spot;
+    for (let tries = 0; tries < 8; tries++) {
+      if (sp.aimed && heroes.length) {
+        const h = spec.aimTurns ? heroes[(u.spikeTurn = (u.spikeTurn || 0) + 1) % heroes.length] : heroes[Math.floor(this.rng() * heroes.length)];
+        spot = { x: h.x + (this.rng() - 0.5) * 24, y: h.y + (this.rng() - 0.5) * 24 };
+      } else spot = { x: L.marginX + this.rng() * (L.width - 2 * L.marginX), y: L.enemyY - 60 + this.rng() * (L.heroY - L.enemyY + 80) }; // the whole fight floor
+      if (!crowded(spot)) break;
     }
-    return { x: L.marginX + this.rng() * (L.width - 2 * L.marginX), y: L.enemyY - 60 + this.rng() * (L.heroY - L.enemyY + 80) }; // the whole fight floor
+    u.spikeLog = [...recent, { ...spot, at: this.floorMs }];
+    return { ...spot, at: this.floorMs };
   },
 
   tickSpikes(u, dt, events) {
@@ -417,7 +427,7 @@ export const bossMethods = {
       if (sp.remaining === null) { // still waiting for its turn
         sp.wait -= dt;
         if (sp.wait > 0) continue;
-        Object.assign(sp, this.spikeSpot(sp));
+        Object.assign(sp, this.spikeSpot(u, sp));
         sp.remaining = sp.total = sp.spec.warnMs;
         events.push({ type: 'spikeWarn', unit: u, spike: sp });
         continue;

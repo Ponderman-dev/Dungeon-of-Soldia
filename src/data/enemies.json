@@ -1837,6 +1837,11 @@
         ],
         "sweep": {
           "ms": 900
+        },
+        "desperate": {
+          "hpBelow": 25,
+          "minMs": 2000,
+          "maxMs": 4000
         }
       },
       {
@@ -4171,7 +4176,7 @@
     "xp": 30,
     "stats": {
       "health": 700,
-      "attack": 7,
+      "attack": 12,
       "defense": 20,
       "resist": 15,
       "attackEfficiency": 70

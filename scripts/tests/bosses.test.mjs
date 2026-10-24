@@ -135,7 +135,13 @@ ok('Spiderling: EVERY hit poisons (a weak poison)', enemies.spiderling.onHit.som
   ok('Frozen Rest: 3 Ice Knights join the fight', knights.length === rest.summon.count, knights.length);
   const healed = (w3.hp - before) / w3.maxHp * 100;
   ok('...and he heals about 20% of his health', Math.abs(healed - rest.channel.ticks * rest.channel.healSelfPercent) < 1.5, healed.toFixed(1));
-  ok('...he can still be hit meanwhile', !s3.untargetable(w3)); }
+  ok('...he can still be hit meanwhile', !s3.untargetable(w3));
+  // Desperate Hailstorm: under 25% it comes at random, faster
+  const des = hs.desperate, hab = w3.abilities.find((x) => x.def.id === 'hailstorm');
+  w3.hp = Math.floor(w3.maxHp * 0.2); hab.timer = 0; hab.done = false; w3.bossCast = null; w3.statuses = [];
+  const gaps = []; let last = null;
+  for (let t = 0; t < 30000; t += 50) for (const e of s3.update(50)) if (e.type === 'castStart' && e.ability && e.ability.id === 'hailstorm') { if (last !== null) gaps.push(t - last); last = t; }
+  ok('Desperate Hailstorm: under 25% it comes every 2-4s at random', gaps.length >= 5 && gaps.every((g) => g >= des.minMs - 100 && g <= des.maxMs + hs.castMs + 200) && new Set(gaps).size > 1, gaps.join(',')); }
 
 // ---- Rask & Vesh
 { const { s, es, h } = mk(['rask', 'vesh']); const [rask, vesh] = es;

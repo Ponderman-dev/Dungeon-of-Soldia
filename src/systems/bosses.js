@@ -5,6 +5,7 @@
 //   abilities: [ ... ]       timed moves, each with an optional wind-up (`castMs`, a red bar over the boss).
 //                            A stun / freeze / fear / knockback during the wind-up INTERRUPTS it.
 //     { id, name, everyMs, firstMs, castMs, hpBelow (once, at that health %), interruptible (default true),
+//       desperate: { hpBelow, minMs, maxMs } (under that health % the next one comes after a random minMs..maxMs; Hailstorm),
 //       target: 'frontHero' | 'backHero' | 'randomHero' | 'randomHeroes' (+ count) | 'lowestHero' | 'allHeroes' | 'self' | 'allies' | 'meleeNear',
 //       radius (meleeNear), damageMultiplier, damageType, apply: [status specs], healAllies (% of their max health),
 //       summon: { id, count, max, near, beside (px to the sides), hpPercent (summons' health) } (or a list of them), swap: 'partnerId', daggers: { count, damageMultiplier, apply },
@@ -222,6 +223,7 @@ export const bossMethods = {
       }
       if (!ready) continue;
       if (a.hpBelow !== undefined) ab.done = true;
+      else if (a.desperate && (u.hp / u.maxHp) * 100 < a.desperate.hpBelow) ab.timer += a.desperate.minMs + this.rng() * (a.desperate.maxMs - a.desperate.minMs); // a last desperate push: random, faster
       else ab.timer += a.everyMs;
       this.startAbility(u, a, events);
       return; // one at a time

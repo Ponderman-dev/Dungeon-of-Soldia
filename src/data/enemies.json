@@ -1854,7 +1854,14 @@
             "durationMs": 5000,
             "stacks": 2
           }
-        ]
+        ],
+        "slam": {
+          "liftPx": 34,
+          "dropMs": 110,
+          "shakeMs": 220,
+          "shakeIntensity": 0.008
+        },
+        "look": "iceSlam"
       },
       {
         "id": "ice_spikes",

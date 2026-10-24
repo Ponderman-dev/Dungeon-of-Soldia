@@ -456,6 +456,10 @@ export default class BattleScene extends Phaser.Scene {
       if (v.ch.parentContainer) continue;
       this.nudge(v, look.dx * Math.abs(v.ch.scaleY));
       this.paintFx(g, v, look.draws);
+      if (u.def.plates && u.plates > 0 && u.alive) { // Frost Warden: his ice armor plates, one per plate left
+        const S = CHAR_SCALE;
+        for (const [x, y, w, h, col, a] of bossFx.platesFx(this.fxBody(v), u.plates, now)) { g.fillStyle(col, a); g.fillRect(x * S - S / 2, y * S, w * S, h * S); }
+      }
       if (selfFrozen) { // Frozen Rest: frost motes rise off him while he heals (char pixels, like the hit effects)
         const S = CHAR_SCALE;
         for (const [x, y, w, h, col, a] of bossFx.frostHealFx(this.fxBody(v), now)) { g.fillStyle(col, a); g.fillRect(x * S - S / 2, y * S, w * S, h * S); }
@@ -2701,7 +2705,14 @@ export default class BattleScene extends Phaser.Scene {
           // Quake Jump: it crashes down from the air, the ground shakes hard and dust bursts out round its feet.
           this.tweens.add({ targets: v, leapLift: 0, duration: slam.dropMs, ease: 'Quad.easeIn', onComplete: () => {
             this.cameras.main.shake(slam.shakeMs, slam.shakeIntensity);
-            this.puff(v.ch.x, v.ch.y, 0x8a7a6a, 14);
+            if (e.ability.look === 'iceSlam') { // Ice Slam: a frost crack runs to each target and ice shards burst up round it
+              for (const t of e.targets) {
+                const tv = this.views.get(t.uid);
+                if (!tv) continue;
+                const from = this.fxBody(v), to = this.fxBody(tv);
+                this.addFx(bossFx.ICE_SLAM_MS, (q) => bossFx.iceSlamFx(q, from, to), ['boss', 'iceSlam']);
+              }
+            } else this.puff(v.ch.x, v.ch.y, 0x8a7a6a, 14);
           } });
         }
         sfx.play('bossMove');
@@ -2758,7 +2769,8 @@ export default class BattleScene extends Phaser.Scene {
       case 'plateBreak':
         if (!v) return true;
         this.popText(v, e.left > 0 ? 'Armor cracked!' : 'Armor shattered!', '#bfe0ff', true);
-        this.puff(v.ch.x, v.ch.y - 30, 0xbfe0ff, 6);
+        { const at = bossFx.plateSpots(this.fxBody(v))[e.left]; // the plate that just broke bursts into shards
+          if (at) this.addFx(bossFx.PLATE_BREAK_MS, (q) => bossFx.plateBreakFx(q, at), ['boss', 'plateBreak']); }
         this.cameras.main.shake(140, 0.004);
         return true;
       case 'immuneStatus': if (v) this.popText(v, 'Immune', '#aaaaaa'); return true;

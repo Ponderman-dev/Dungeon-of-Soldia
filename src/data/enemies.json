@@ -1842,6 +1842,12 @@
           "hpBelow": 25,
           "minMs": 2000,
           "maxMs": 4000
+        },
+        "unstoppable": true,
+        "interruptible": false,
+        "minionPercent": {
+          "weak": 45,
+          "greater": 35
         }
       },
       {
@@ -1887,7 +1893,11 @@
           "warnMs": 900,
           "gapMs": 155,
           "percentMaxHp": 25,
-          "freezeMs": 3000
+          "freezeMs": 3000,
+          "minionPercent": {
+            "weak": 100,
+            "greater": 50
+          }
         }
       },
       {

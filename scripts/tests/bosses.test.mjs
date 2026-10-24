@@ -143,6 +143,28 @@ ok('Spiderling: EVERY hit poisons (a weak poison)', enemies.spiderling.onHit.som
   for (let t = 0; t < 30000; t += 50) for (const e of s3.update(50)) if (e.type === 'castStart' && e.ability && e.ability.id === 'hailstorm') { if (last !== null) gaps.push(t - last); last = t; }
   ok('Desperate Hailstorm: under 25% it comes every 2-4s at random', gaps.length >= 5 && gaps.every((g) => g >= des.minMs - 100 && g <= des.maxMs + hs.castMs + 200) && new Set(gaps).size > 1, gaps.join(',')); }
 
+// Frost Warden: Hailstorm is UNSTOPPABLE (comes every 5s even while he is stunned or busy); minions take their own %
+{ const { s, es, h } = mk(['frost_warden'], 60); const w = es[0]; w.hp = w.maxHp = 1e7; w.stats.attack = 0; s.placeLines();
+  const hs = w.def.abilities.find((a) => a.id === 'hailstorm');
+  w.abilities.forEach((x) => { if (x.def.id !== 'hailstorm') { x.timer = 1e9; x.done = true; } });
+  let lands = 0;
+  for (let t = 0; t < 20000; t += 50) {
+    if (t % 1000 === 0) s.applyStatus(w, { status: 'stun', durationMs: 900 }, h[0], 'test' + t, []); // stunned most of the time
+    for (const e of s.update(50)) if (e.type === 'windSweep') lands++;
+  }
+  ok('Hailstorm: comes every 5s even while he is kept stunned', lands >= Math.floor(20000 / hs.everyMs) - 1, lands);
+  const weak = s.spawnMinion(h[0], { kind: 'weak', spec: { minion: 'skeleton', cap: 9 }, capGroup: 'hero', key: 't1' }, []);
+  const great = s.spawnMinion(h[0], { kind: 'greater', minion: 'spirit_knight', key: 't2' }, []);
+  for (const m of [weak, great]) { m.hp = m.maxHp = 1000; m.statuses = []; }
+  s.percentHit(w, weak, hs.percentMaxHp, [], 'percentHit', hs.minionPercent);
+  s.percentHit(w, great, hs.percentMaxHp, [], 'percentHit', hs.minionPercent);
+  ok('...a weak minion loses 45%, a greater one 35%', weak.hp === 1000 - hs.minionPercent.weak * 10 && great.hp === 1000 - hs.minionPercent.greater * 10, `${weak.hp} ${great.hp}`);
+  const sp = w.def.abilities.find((a) => a.id === 'ice_spikes').spikes;
+  s.percentHit(w, weak, sp.percentMaxHp, [], 'percentHit', sp.minionPercent);
+  great.hp = great.maxHp;
+  s.percentHit(w, great, sp.percentMaxHp, [], 'percentHit', sp.minionPercent);
+  ok('Ice Spikes: destroy a weak minion at once, a greater one loses 50%', !weak.alive && great.hp === great.maxHp - Math.round(great.maxHp * sp.minionPercent.greater / 100), `${weak.alive} ${great.hp}/${great.maxHp}`); }
+
 // ---- Rask & Vesh
 { const { s, es, h } = mk(['rask', 'vesh']); const [rask, vesh] = es;
   const ev = []; rask.hp = 0; s.killUnit(rask, ev, h[0]);

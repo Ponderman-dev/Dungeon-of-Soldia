@@ -6,6 +6,8 @@
 //                            A stun / freeze / fear / knockback during the wind-up INTERRUPTS it.
 //     { id, name, everyMs, firstMs, castMs, hpBelow (once, at that health %), interruptible (default true),
 //       desperate: { hpBelow, minMs, maxMs } (under that health % the next one comes after a random minMs..maxMs; Hailstorm),
+//       unstoppable: true (its clock runs while stunned/busy, never cancelled; Hailstorm), minionPercent: { weak, greater }
+//         (percentMaxHp / spikes: minions lose that % instead; 100 = a weak minion is destroyed at once),
 //       target: 'frontHero' | 'backHero' | 'randomHero' | 'randomHeroes' (+ count) | 'lowestHero' | 'allHeroes' | 'self' | 'allies' | 'meleeNear',
 //       radius (meleeNear), damageMultiplier, damageType, apply: [status specs], healAllies (% of their max health),
 //       summon: { id, count, max, near, beside (px to the sides), hpPercent (summons' health) } (or a list of them), swap: 'partnerId', daggers: { count, damageMultiplier, apply },
@@ -188,6 +190,7 @@ export const bossMethods = {
 
   tickAbilities(u, dt, events) {
     if (u.dust || this.untargetable(u)) return;
+    this.tickUnstoppable(u, dt, events);
     const c = u.bossCast;
     if (c) {
       if (c.def.interruptible !== false && this.bossDisrupted(u)) {
@@ -213,6 +216,7 @@ export const bossMethods = {
     if (this.isStunned(u) || this.has(u, 'fear')) return;
     for (const ab of u.abilities) {
       const a = ab.def;
+      if (a.unstoppable) continue; // tickUnstoppable()
       // A heal with nobody hurt waits (it stays ready).
       if (a.needsHurt && !this.enemies.some((e) => e.alive && !e.def.object && e.hp < e.maxHp)) { if (ab.timer > 0) ab.timer -= dt; continue; }
       let ready = false;
@@ -223,11 +227,31 @@ export const bossMethods = {
       }
       if (!ready) continue;
       if (a.hpBelow !== undefined) ab.done = true;
-      else if (a.desperate && (u.hp / u.maxHp) * 100 < a.desperate.hpBelow) ab.timer += a.desperate.minMs + this.rng() * (a.desperate.maxMs - a.desperate.minMs); // a last desperate push: random, faster
-      else ab.timer += a.everyMs;
+      else ab.timer += this.nextGap(u, a);
       this.startAbility(u, a, events);
       return; // one at a time
     }
+  },
+
+  // `unstoppable` moves (Frost Warden's Hailstorm): their clock runs even while the boss is stunned or busy with another
+  // move, and nothing cancels them. Due while he is free: the normal wind-up; due while he is busy or stunned: it goes
+  // off at once (session 30, user: Hailstorm must come every 5s; stuns and his other moves used to skip a third of them).
+  tickUnstoppable(u, dt, events) {
+    for (const ab of u.abilities) {
+      const a = ab.def;
+      if (!a.unstoppable) continue;
+      ab.timer -= dt;
+      if (ab.timer > 0) continue;
+      ab.timer += this.nextGap(u, a);
+      if (u.bossCast || this.isStunned(u) || this.has(u, 'fear')) this.releaseAbility(u, a, events);
+      else this.startAbility(u, a, events);
+    }
+  },
+
+  // The wait until a timed move comes again (`desperate`: under that health % a random, shorter wait).
+  nextGap(u, a) {
+    if (a.desperate && (u.hp / u.maxHp) * 100 < a.desperate.hpBelow) return a.desperate.minMs + this.rng() * (a.desperate.maxMs - a.desperate.minMs);
+    return a.everyMs;
   },
 
   startAbility(u, a, events) {
@@ -298,7 +322,7 @@ export const bossMethods = {
     if (a.sweep) return this.startSweep(u, a, targets, events);
     for (const t of targets) {
       if (!t.alive) continue;
-      if (a.percentMaxHp) this.percentHit(u, t, a.percentMaxHp, events);
+      if (a.percentMaxHp) this.percentHit(u, t, a.percentMaxHp, events, 'percentHit', a.minionPercent);
       if (!t.alive) continue;
       if (a.damageMultiplier) this.strike(u, t, events, { multiplier: a.damageMultiplier, damageType: a.damageType, ability: true });
       if (!t.alive) continue;
@@ -365,7 +389,12 @@ export const bossMethods = {
 
   // `t` loses `pct`% of its own max health (shields absorb; no defense, no dodge). Returns the amount (0 = immune).
   // Event 'drain' (Soul Drain) or 'percentHit' (Hailstorm, Ice Spikes).
-  percentHit(u, t, pct, events, type = 'percentHit') {
+  // `minionPct` = { weak, greater }: a minion loses that % instead (100+ = gone at once: Ice Spikes on weak minions).
+  percentHit(u, t, pct, events, type = 'percentHit', minionPct = null) {
+    if (t.minion && minionPct) {
+      pct = t.greater ? minionPct.greater ?? pct : minionPct.weak ?? pct;
+      if (pct >= 100) { events.push({ type, unit: t, from: u, amount: t.hp }); t.hp = 0; this.killUnit(t, events, u); return 0; }
+    }
     const amount = Math.max(1, Math.round((t.maxHp * pct) / 100));
     const d = this.dealDamage(t, amount, events);
     events.push({ type, unit: t, from: u, amount: d.immune ? 0 : amount - d.absorbed });
@@ -391,7 +420,7 @@ export const bossMethods = {
       const { a, t } = sw;
       if (!t.alive) continue;
       events.push({ type: 'windHit', unit: t, from: u, ability: a });
-      if (a.percentMaxHp) this.percentHit(u, t, a.percentMaxHp, events);
+      if (a.percentMaxHp) this.percentHit(u, t, a.percentMaxHp, events, 'percentHit', a.minionPercent);
       if (t.alive) for (const spec of a.apply || []) this.applyStatus(t, spec, u, `boss_${a.id}`, events);
     }
   },
@@ -440,7 +469,7 @@ export const bossMethods = {
       const hit = this.defenders().filter((h) => h.alive && this.hasPositions(h) && Math.hypot(h.x - sp.x, h.y - sp.y) <= sp.spec.radius);
       events.push({ type: 'spikeLand', unit: u, spike: sp, targets: hit });
       for (const h of hit) {
-        this.percentHit(u, h, sp.spec.percentMaxHp, events);
+        this.percentHit(u, h, sp.spec.percentMaxHp, events, 'percentHit', sp.spec.minionPercent);
         if (h.alive && sp.spec.freezeMs) this.applyStatus(h, { status: 'freeze', durationMs: sp.spec.freezeMs }, u, 'ice_spike', events);
       }
     }

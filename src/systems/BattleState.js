@@ -1184,9 +1184,10 @@ export default class BattleState {
       events.push({ type: 'proc', unit, label: 'Heart strike!', itemId: 'sharpest_blade', target });
       // Armor break (user): the enemy's defense drops by `heartStrikeBreak`% for a while, for the whole squad.
       if (unit.specials.heartStrikeBreak && target.alive) this.applyStatus(target, { ...(unit.specials.heartStrikeBreakSpec || { status: 'armorBreak', durationMs: 5000 }), defenseFlat: 0, defensePercent: -unit.specials.heartStrikeBreak }, unit, `heartBreak_${unit.uid}`, events);
-      // The cut: a share of the enemy's MAX health on top (less on a boss), as item damage (it triggers nothing).
+      // The cut: EXACTLY a share of the enemy's MAX health on top (less on a boss), as item damage (it triggers nothing).
+      // Fixed (session 30, user): it went through crits and damage items, so a boss's "4%" landed as 5-15% per strike.
       const cut = target.def.boss ? unit.specials.heartStrikeBossMaxHp || 0 : unit.specials.heartStrikeMaxHp || 0;
-      if (cut > 0 && target.alive) this.strike(unit, target, events, { multiplier: (target.maxHp * cut) / 100 / Math.max(1, unit.stats.attack), damageType: unit.damageType, item: true, heartCut: true });
+      if (cut > 0 && target.alive) this.strike(unit, target, events, { fixedAmount: (target.maxHp * cut) / 100, damageType: unit.damageType, item: true, heartCut: true });
       if (target.alive) this.applyStatus(target, unit.specials.heartStrikeSpec || { status: 'stun', durationMs: 2500 }, unit, `heart_${unit.uid}`, events);
       else unit.floor.nextHeart = true; // Killing spree: a Heart Strike that kills makes the next one a Heart Strike too
     }
@@ -1240,7 +1241,7 @@ export default class BattleState {
   }
 
   // Every `heartStrike`th (5) pure attack of the floor is a HEART STRIKE: `heartStrikeMult`% (500, +50 per extra
-  // copy), plus `heartStrikeMaxHp`% (15) of the enemy's max health (`heartStrikeBossMaxHp`% 4 on a boss) and a stun
+  // copy), plus exactly `heartStrikeMaxHp`% (15) of the enemy's max health (`heartStrikeBossMaxHp`% 2 on a boss) and a stun
   // (2.5s). A Heart Strike that kills makes the next attack one too (`floor.nextHeart`). Returns the multiplier, or 0.
   heartStrike(unit) {
     const sp = unit.specials, f = unit.floor, mult = (sp.heartStrikeMult || 500) / 100;
@@ -1876,9 +1877,12 @@ export default class BattleState {
     const dirty = attacker.side === 'enemy' && target.def.passive && target.def.passive.dirtyFighting;
     if (dirty && attacker.debuffedBy && attacker.debuffedBy.has(target.uid)) opts = { ...opts, extraMissPercent: (opts.extraMissPercent || 0) + dirty.missPercent };
     const shred = target.side === 'enemy' ? this.assaultShred() : 0; // Assault Breastplate: every enemy has less defense
-    const result = forced ? { dodged: true, blocked: true, parried: true, crit: false, amount: 0, mult: 1 } : computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, shred ? { ...opts, defenseShred: shred } : opts);
+    // opts.fixedAmount: exactly that much, no dodge, crit, armor or bonuses (Sharpest Blade's Heart Strike cut; shields still absorb).
+    const result = forced ? { dodged: true, blocked: true, parried: true, crit: false, amount: 0, mult: 1 }
+      : opts.fixedAmount ? { dodged: false, crit: false, amount: Math.max(1, Math.round(opts.fixedAmount)), mult: 1 }
+        : computeDamage(attacker, target, this.rules, this.damageTypes, this.rng, shred ? { ...opts, defenseShred: shred } : opts);
     if (!result.dodged && attacker.side === 'enemy' && target.side === 'hero') result.amount = this.interceptHit(attacker, target, result.amount, events); // Knight takes his share
-    if (!result.dodged && target.side === 'enemy') {
+    if (!result.dodged && target.side === 'enemy' && !opts.fixedAmount) {
       result.amount = this.plateHit(target, result.amount, opts.damageType || attacker.damageType, events); // Frost Warden's ice plates
       this.heatFromHit(target, opts.damageType || attacker.damageType, events); // Ignatius: fire heats him, ice cools him
     }

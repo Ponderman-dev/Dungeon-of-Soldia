@@ -2428,7 +2428,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Pure steel: if this hero has no element, attacks deal +40% and every 5th is a HEART STRIKE: 500% + 15% of the enemy's max health (bosses 4%), stun 2.5s and -50% armor 5s. A kill makes the next one a Heart Strike too.",
+    "description": "Pure steel: if this hero has no element, attacks deal +40% and every 5th is a HEART STRIKE: 500% + exactly 15% of the enemy's max health (bosses 2%), stun 2.5s and -50% armor 5s. A kill makes the next one a Heart Strike too.",
     "effects": [
       {
         "special": "heartStrike",
@@ -2451,8 +2451,8 @@
       },
       {
         "special": "heartStrikeBossMaxHp",
-        "percent": 4,
-        "perExtra": 1
+        "percent": 2,
+        "perExtra": 0.5
       },
       {
         "special": "heartStrikeBreak",

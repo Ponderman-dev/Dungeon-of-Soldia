@@ -19,7 +19,7 @@
 - KIV (user): MOVE ORDERS so the squad can dodge Ice Spikes (drag a hero to a floor spot / tap floor = team walks there).
 - STILL OPEN (older): Kinetic Coil and Reaper's Bell ~0 floors; hero minions pile up on high floors; skill books same
   modifier twice refused: OK?; unseen bonus / fewer commons from floor 41; smart bot doesn't keep a Sharpest Blade holder
-  pure; preview page, itch zip and the Item Review page are old.
+  pure; the itch zip is old (preview page + Item Review page republished at the end of session 30: all 112 items).
 - RECORD A REAL BOSS FIGHT (session 30, user liked it): `node scripts/tests/make-demo-squad.mjs 60 rogue,cleric,necromancer
   demoSquadTry.json` (writes src/data/: MOVE it to the scratchpad, never commit), then in Playwright on the dev server:
   wait for 'Title', `registry.set('squadIds', ids)` + `registry.set('testJump', { floor, room: null, heroes })`, stop

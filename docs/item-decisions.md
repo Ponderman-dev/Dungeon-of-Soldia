@@ -480,3 +480,6 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   instead of doing nothing. Frozen Thunderbolt keeps the mix penalty (pair it with Euclid).
   Chill Band -> NUMBING COLD: no ice hit any more; every attack 1 Chill (5 = Freeze) and chilled enemies deal 10%
   less damage (extra copy proposal: +5% less damage). Frost Charm, Ice Bomb, Shatter Hammer, Spirit Knight Banner unchanged.
+- [planned, NOT built] ELECTRIC (user, session 31): Thunderstruck now stacks: each extra copy +350% bolt damage
+  (1 = 700%, 2 = 1050%). Kinetic Coil: full rework, effect being picked. Storm Charm, Electric Bomb, Wisp Lantern,
+  Static Crystal unchanged.

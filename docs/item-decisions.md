@@ -450,3 +450,8 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   copy (1 copy 4 elements = +45%, 2 copies = +75%, 3 = +105%). D1: PRISM BURST: damage of the holder's mixed-element
   hits fills a meter; full = a 4-colour blast on every enemy; each extra copy +50% blast damage. Meter size / blast %
   still to set. Build after the item list review.
+- [planned, NOT built] REGEN TRIO (user, session 31): all three keep regen, each its own job.
+  Vital Band (common): plain regen 0.2%/s per copy, nothing else.
+  Heart Charm (rare): +40 health, regen 0.3 -> 0.5%/s, and +5% extra floor-win heal per copy (win heal 25% -> 30%).
+  Heart of the Beast (legendary): +100 health AND +10% max health, regen 1 -> 2%/s, DESPERATE: regen x2 below 30%
+  health (4%/s). Per copy: all numbers add up; the x2 does not grow with copies.

@@ -16,12 +16,14 @@ export function canReceive(unit, item) {
 }
 
 // Mixing elements (combat.json `elementMix`): the different elements among the hero's items (`provides` tags) and
-// the % cut on that hero's element damage (`penaltyPerExtraPercent` per element past the first; 0 with Euclid).
+// the % cut on that hero's element damage (`penaltyPerExtraPercent` per element past the first; 0 with Euclid or for
+// a hero in `exemptHeroes`).
 export function elementMix(hero, itemDefs, mixRules) {
   const list = (mixRules && mixRules.elements) || [];
   const elements = [...new Set(hero.items.flatMap((id) => ((itemDefs[id] && itemDefs[id].provides) || []).filter((t) => list.includes(t))))];
   const euclid = hero.items.some((id) => itemDefs[id] && (itemDefs[id].effects || []).some((e) => e.special === 'euclid'));
-  const cut = euclid ? 0 : Math.min(100, Math.max(0, elements.length - 1) * ((mixRules && mixRules.penaltyPerExtraPercent) || 0));
+  const exempt = euclid || ((mixRules && mixRules.exemptHeroes) || []).includes(hero.def && hero.def.id);
+  const cut = exempt ? 0 : Math.min(100, Math.max(0, elements.length - 1) * ((mixRules && mixRules.penaltyPerExtraPercent) || 0));
   return { elements, cut };
 }
 

@@ -10,8 +10,8 @@ const rules = { ...r('combat.json'), skillWindUp: { defaultCastMs: 0 } };
 const per = rules.elementMix.penaltyPerExtraPercent;
 const heroes = r('heroes.json');
 const itemDefs = loadItems(frozenItems());
-const mk = (items) => {
-  const s = new BattleState({ heroDefs: [{ ...heroes.find((h) => h.id === 'knight'), perk: undefined }], enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng: () => 0.5 });
+const mk = (items, heroId = 'knight') => {
+  const s = new BattleState({ heroDefs: [{ ...heroes.find((h) => h.id === heroId), perk: undefined }], enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng: () => 0.5 });
   const es = s.spawnEnemies(['goblin'], 1);
   const k = s.heroes[0];
   for (const id of items) s.giveItem(k.uid, id);
@@ -37,4 +37,5 @@ ok('the physical part is never cut', Math.abs(steel(one) - steel(four)) <= 1, `$
 const burn = (x) => { x.s.applyStatus(x.e, { status: 'burn', durationMs: 3000, damageMultiplier: 1 }, x.k, 'test', []); return x.e.statuses.filter((st) => st.type === 'burn').pop().damage; };
 const b1 = burn(mk(['kindling'])), b2 = burn(mk(['kindling', 'frost_charm']));
 ok('burns are cut too', b2 < b1, `${b1} -> ${b2}`);
+ok('the Mage never has the cut', mk(['frost_charm', 'storm_charm', 'kindling'], 'mage').k.elementCut === 0);
 ok('elementMix counts provides tags only for the listed elements', elementMix({ items: ['venom_fang', 'kindling'] }, itemDefs, rules.elementMix).elements.join() === 'fire');

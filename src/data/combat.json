@@ -12,9 +12,10 @@
   },
   "winHealPercent": 25,
   "elementMix": {
-    "_about": "Mixing elements (user, session 31): count the different elements among a hero's ITEMS (their `provides` tags in this list). Every element past the first cuts ALL of that hero's damage of these elements (hits, riders, item hits, burns) by penaltyPerExtraPercent. Euclid of Elements (special `euclid`) removes the cut. Physical damage is never cut.",
+    "_about": "Mixing elements (user, session 31): count the different elements among a hero's ITEMS (their `provides` tags in this list). Every element past the first cuts ALL of that hero's damage of these elements (hits, riders, item hits, burns) by penaltyPerExtraPercent. Euclid of Elements (special `euclid`) removes the cut, and heroes in exemptHeroes never have it (user: the Mage's kit is elemental). Physical damage is never cut. Session 31: 15 -> 10 (user: 45% for 4 elements was unfair).",
     "elements": ["fire", "ice", "electric", "dark"],
-    "penaltyPerExtraPercent": 15
+    "penaltyPerExtraPercent": 10,
+    "exemptHeroes": ["mage"]
   },
   "heroDefense": {
     "_about": "Every hero's defense and resist (after levels, before items) is raised by this percent.",

@@ -443,3 +443,5 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   (2 = -15%, 3 = -30%, 4 = -45%). Physical untouched. Euclid of Elements removes it. Poison Bombs counts as dark.
 - Damage per second, floor 30, 4 charms (one element / mixed / mixed + Euclid): before Berserker +41/+34/+115%,
   Archer +58/+55/+108%, Mage +56/+58/+111%; after Berserker +38/+22/+101%, Archer +68/+37/+113%, Mage +53/-13/+112%.
+- [built] Then (user): -10% per extra element (4 = -30%), and the MAGE never has the penalty. Floor 30, 4 charms:
+  Berserker one element +37..+50% / mixed +34% / mixed + Euclid +120%; Archer +49..+58% / +33% / +107%.

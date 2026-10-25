@@ -481,5 +481,8 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Chill Band -> NUMBING COLD: no ice hit any more; every attack 1 Chill (5 = Freeze) and chilled enemies deal 10%
   less damage (extra copy proposal: +5% less damage). Frost Charm, Ice Bomb, Shatter Hammer, Spirit Knight Banner unchanged.
 - [planned, NOT built] ELECTRIC (user, session 31): Thunderstruck now stacks: each extra copy +350% bolt damage
-  (1 = 700%, 2 = 1050%). Kinetic Coil: full rework, effect being picked. Storm Charm, Electric Bomb, Wisp Lantern,
+  (1 = 700%, 2 = 1050%). Kinetic Coil v2 (user's design): only DODGES give a charge (blocks no
+  longer); charges are NOT spent on the next attack any more; at 3 charges the weapon GLOWS and the next attack is a
+  powerful LIGHTNING strike for 400% electric, then charges reset. Each extra copy +200% (2 = 600%, 3 = 800%).
+  Best with evasion items (Feather Boots, Riposte Cloak). Storm Charm, Electric Bomb, Wisp Lantern,
   Static Crystal unchanged.

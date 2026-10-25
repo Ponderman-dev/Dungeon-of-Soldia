@@ -475,3 +475,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   (takes Ember Charm's old job). Ember Charm becomes RARE -> BURNING SKIN: +15 resist; melee attackers
   that hit this hero are Burned 3s (extra copy proposal: +15 resist, +20% of that burn's damage). Magma Core (epic) ->
   ERUPTION: no fire hit any more; burns deal +40%, and when a Burn ends it explodes for 150% fire on nearby enemies.
+- [planned, NOT built] ICE (user, session 31): Frost Mantle -> FROST SKIN: +15 defense, EVERY melee attacker gets
+  1 Chill (no roll). Frozen Demon Head: the holder's fire/electric/dark ITEM hits turn to ice at reduced damage
+  (% being picked) instead of doing nothing. Frozen Thunderbolt keeps the mix penalty (pair it with Euclid).
+  Chill Band: new effect being picked. Frost Charm, Ice Bomb, Shatter Hammer, Spirit Knight Banner unchanged.

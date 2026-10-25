@@ -462,3 +462,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   each extra copy +5% heal and +25% XP.
   Giantslayer's Brand (epic) -> BIG GAME: +40% damage to bosses AND elites, +20% per extra copy; the wind-up part
   is dropped (user wanted ONE simple line; complicated ideas were rejected).
+- [planned, NOT built] BOMBS (user, session 31): keep all 5 (with the mix penalty each element needs its bomb).
+  Fire Bombs: + Burn 3s (every bomb now has its own extra). Poison Bombs: the NO-ELEMENT bomb: plain (physical)
+  damage + 3 poison, its poison not dark either, drop 'dark' from its provides (added this session) so it never
+  counts for the mix penalty. Ice / Electric / Dark Bomb unchanged.

@@ -494,5 +494,5 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   it for 5s: -20% damage dealt, Silence 2s (BOSSES are not silenced, the other two still apply), 1 Armor Break
   stack. Max 3 spirits at once. NO element (drop 'dark' from provides; never counts for the mix penalty).
   Extra copy: +15% spawn chance (50 -> 65 -> 80 -> 95 -> 100) and +1s haunt (keeps growing after 100%).
-- [planned, NOT built] BASIC DAMAGE (user, session 31): Sharp Edge +15% -> +20% melee damage per copy, Eagle Eye
-  +15% -> +20% ranged damage per copy (specialists edge out Whetstone, the all-rounder). Whetstone unchanged.
+- [planned, NOT built] BASIC DAMAGE (user, session 31): Sharp Edge +15% -> +25% melee damage per copy, Eagle Eye
+  +15% -> +25% ranged damage per copy (specialists edge out Whetstone, the all-rounder). Whetstone unchanged.

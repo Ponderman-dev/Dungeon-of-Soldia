@@ -445,3 +445,8 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Archer +58/+55/+108%, Mage +56/+58/+111%; after Berserker +38/+22/+101%, Archer +68/+37/+113%, Mage +53/-13/+112%.
 - [built] Then (user): -10% per extra element (4 = -30%), and the MAGE never has the penalty. Floor 30, 4 charms:
   Berserker one element +37..+50% / mixed +34% / mixed + Euclid +120%; Archer +49..+58% / +33% / +107%.
+- [planned, NOT built] EUCLID REWORK (user, session 31): C + D1, replaces the old '25% chance to cast 3 more times'.
+  C: +15% element damage per element past the first (instead of the -10% penalty), +10% more per element per extra
+  copy (1 copy 4 elements = +45%, 2 copies = +75%, 3 = +105%). D1: PRISM BURST: damage of the holder's mixed-element
+  hits fills a meter; full = a 4-colour blast on every enemy; each extra copy +50% blast damage. Meter size / blast %
+  still to set. Build after the item list review.

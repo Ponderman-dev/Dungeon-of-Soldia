@@ -471,3 +471,6 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   unchanged.
 - [planned, NOT built] PHOENIX FEATHER buff (user, session 31): still used up (one save per copy), but the save gives
   invulnerable 3s (was 1s), heals to 100% (was 70%), and every OTHER living hero heals 30% max health too.
+- [planned, NOT built] FIRE TRIO (user, session 31): Kindling (common) also gets 10% chance per attack to Burn 3s
+  (takes Ember Charm's old job). Ember Charm becomes RARE with a new effect (being picked). Magma Core (epic) ->
+  ERUPTION: no fire hit any more; burns deal +40%, and when a Burn ends it explodes for 150% fire on nearby enemies.

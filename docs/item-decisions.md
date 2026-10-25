@@ -466,3 +466,6 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Fire Bombs: + Burn 3s (every bomb now has its own extra). Poison Bombs: the NO-ELEMENT bomb: plain (physical)
   damage + 3 poison, its poison not dark either, drop 'dark' from its provides (added this session) so it never
   counts for the mix penalty. Ice / Electric / Dark Bomb unchanged.
+- [planned, NOT built] LOW-HEALTH SAVES (user, session 31): Second Wind Flask stays used up but heals 50% (was 80%).
+  Aid Kit patch = 8% of the hurt hero's max health (was 15 flat), +4% per extra copy. Rally Flag and Phoenix Feather
+  unchanged.

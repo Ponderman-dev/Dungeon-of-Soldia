@@ -469,3 +469,5 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - [planned, NOT built] LOW-HEALTH SAVES (user, session 31): Second Wind Flask stays used up but heals 50% (was 80%).
   Aid Kit patch = 8% of the hurt hero's max health (was 15 flat), +4% per extra copy. Rally Flag and Phoenix Feather
   unchanged.
+- [planned, NOT built] PHOENIX FEATHER buff (user, session 31): still used up (one save per copy), but the save gives
+  invulnerable 3s (was 1s), heals to 100% (was 70%), and every OTHER living hero heals 30% max health too.

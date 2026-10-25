@@ -454,4 +454,6 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Vital Band (common): plain regen 0.2%/s per copy, nothing else.
   Heart Charm (rare): +40 health, regen 0.3 -> 0.5%/s, and +5% extra floor-win heal per copy (win heal 25% -> 30%).
   Heart of the Beast (legendary): +100 health AND +10% max health, regen 1 -> 2%/s, DESPERATE: regen x2 below 30%
-  health (4%/s). Per copy: all numbers add up; the x2 does not grow with copies.
+  health (4%/s). Each EXTRA copy: only +100 health and +0.5%/s regen (user: the +10% health and full 2% are
+  first copy only, else 3 copies = 38 hp/s on a level-20 Knight); the x2 does not grow with copies.
+  Vital Band and Heart Charm: every number adds up per copy.

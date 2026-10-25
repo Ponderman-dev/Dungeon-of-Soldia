@@ -496,3 +496,8 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Extra copy: +15% spawn chance (50 -> 65 -> 80 -> 95 -> 100) and +1s haunt (keeps growing after 100%).
 - [planned, NOT built] BASIC DAMAGE (user, session 31): Sharp Edge +15% -> +25% melee damage per copy, Eagle Eye
   +15% -> +25% ranged damage per copy (specialists edge out Whetstone, the all-rounder). Whetstone unchanged.
+- [planned, NOT built] CONDITIONAL DAMAGE (user, session 31): Sucker Punch Glove (common, enemies above 90%) and
+  Executioner's Axe (rare, enemies under 25%) both +40% per copy (opener / finisher; the Axe no longer shrinks per
+  copy). Brawler's Streak: +3% per hit in a row, max +15% (+15% to the max per extra copy). Swarm Swatter: +25% to
+  NORMAL enemies (not elites, not bosses), +12% per extra copy (set: Swatter normal / Hunter's Badge elites / Big
+  Game bosses + elites). Better Odds (epic): +5% damage per enemy alive, +2.5% per enemy per extra copy.

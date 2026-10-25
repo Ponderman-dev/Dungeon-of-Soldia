@@ -489,3 +489,8 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - [planned, NOT built] FUSED PAIRS (user, session 31): hybrid items count their two elements as ONE for the mix
   penalty while the hero holds them: Ghastly Fire fuses fire + dark, Frozen Thunderbolt fuses electric + ice.
   E.g. Kindling + Ghastly Fire = 1 element (no cut); + Frost Charm = 2 (-10%). Data idea: item field `fuses`.
+- [planned, NOT built] REAPER'S BELL -> HAUNTING SPIRITS (user's design, session 31; the explosion is removed):
+  when THIS hero kills an enemy, 50% chance a ghost spirit rises and flies to another not-yet-haunted enemy, haunting
+  it for 5s: -20% damage dealt, Silence 2s (BOSSES are not silenced, the other two still apply), 1 Armor Break
+  stack. Max 3 spirits at once. NO element (drop 'dark' from provides; never counts for the mix penalty).
+  Extra copy: +15% spawn chance (50 -> 65 -> 80 -> 95 -> 100) and +1s haunt (keeps growing after 100%).

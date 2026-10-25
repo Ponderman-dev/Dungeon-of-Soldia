@@ -86,6 +86,9 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
   if (!opts.ignoreArmor) amount *= 1 - armourCut(defender, type, rules, damageTypes, opts.defenseShred || 0) / 100; // Headshot ignores defense
   amount *= markMultiplier(defender);
   amount *= 1 + (opts.damagePercent || 0) / 100; // e.g. the Rogue's Opportunist vs debuffed enemies
+  // Mixing elements (combat.json elementMix): a hero with items of several elements deals less element damage.
+  const mixed = (t) => (attacker.elementCut && rules.elementMix && rules.elementMix.elements.includes(t) ? 1 - attacker.elementCut / 100 : 1);
+  amount *= mixed(type);
 
   // Riders (element charms, Chill Band, Magma Core): extra element damage ADDED INTO this same hit (user: one number,
   // not a second small hit). Each is `multiplier` x attack in its own element: same crit roll, its own weak/resist and
@@ -95,7 +98,7 @@ export function computeDamage(attacker, defender, rules, damageTypes, rng, opts 
     let part = attack * r.multiplier * (crit ? critMultiplier : 1);
     part *= weakResistMultiplier(defender, r.damageType, rules, damageTypes);
     if (!opts.ignoreArmor) part *= 1 - armourCut(defender, r.damageType, rules, damageTypes, opts.defenseShred || 0) / 100;
-    part *= markMultiplier(defender) * (1 + (opts.damagePercent || 0) / 100);
+    part *= markMultiplier(defender) * (1 + (opts.damagePercent || 0) / 100) * mixed(r.damageType);
     riders.push({ damageType: r.damageType, amount: part });
     amount += part;
   }

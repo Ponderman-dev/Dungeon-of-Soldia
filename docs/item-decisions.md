@@ -437,3 +437,9 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Blade stacking (user: keep NUMBERS only, not a faster rhythm): each extra copy +20% pure damage, +50% Heart
   Strike, +5% max health (+1% boss); still every 5th, armor break -50% does not stack. 40 runs, pure holder:
   Rogue 1/2/3 Blades +11.3 / +17.1 / +18.2, Archer +12.8 / +15.5 / +19.1.
+
+## Session 31: mixing elements penalty (user)
+- [built] Every different element among a hero's items past the first: -15% to ALL that hero's element damage
+  (2 = -15%, 3 = -30%, 4 = -45%). Physical untouched. Euclid of Elements removes it. Poison Bombs counts as dark.
+- Damage per second, floor 30, 4 charms (one element / mixed / mixed + Euclid): before Berserker +41/+34/+115%,
+  Archer +58/+55/+108%, Mage +56/+58/+111%; after Berserker +38/+22/+101%, Archer +68/+37/+113%, Mage +53/-13/+112%.

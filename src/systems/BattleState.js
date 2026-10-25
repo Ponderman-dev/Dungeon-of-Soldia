@@ -2,7 +2,7 @@ import { bossMethods } from './bosses.js';
 import { eliteMethods } from './elites.js';
 import { computeDamage, computeDotDamage } from './combat.js';
 import { xpForNextLevel, statsAtLevel } from './leveling.js';
-import { computeHeroStats } from './items.js';
+import { computeHeroStats, elementMix } from './items.js';
 import { moraleTier } from './party.js';
 import { partArt, artSize } from './pixelArt.js';
 import { enemySpots } from './formation.js';
@@ -2655,7 +2655,8 @@ export default class BattleState {
         const bonus = info.typeBonus === false ? 0 : ((source.damageBonus && source.damageBonus[status.damageType]) || 0) / 100; // Poison: `typeBonus: false`
         const sp = source.side === 'hero' && source.specials ? source.specials : {};
         const magma = spec.status === 'burn' ? sp.magmaBurn || 0 : spec.status === 'poison' ? sp.plaguePoison || 0 : 0; // Magma Core: burns, Plague Flask: poison deal more damage
-        status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus) * cat.dot * (1 + ((source.side === 'hero' && source.specials && source.specials.dotDamage) || 0) / 100) * (1 + magma / 100)));
+        const mixCut = (source.elementCut && ((this.rules.elementMix && this.rules.elementMix.elements) || []).includes(status.damageType) ? source.elementCut : 0) / 100; // mixing elements cuts burns too
+        status.damage = Math.max(1, Math.round(source.stats.attack * spec.damageMultiplier * (1 + bonus) * (1 - mixCut) * cat.dot * (1 + ((source.side === 'hero' && source.specials && source.specials.dotDamage) || 0) / 100) * (1 + magma / 100)));
         if (!(spec.status in target.dotClocks)) target.dotClocks[spec.status] = 0; // first stack: start the tick clock
       }
     }
@@ -3525,6 +3526,7 @@ export default class BattleState {
       hero.stats = stats;
       hero.damageBonus = damageBonus;
       hero.specials = specials;
+      hero.elementCut = elementMix(hero, this.itemDefs, this.rules.elementMix).cut; // mixing elements: combat.js cuts the element damage
       // The hero's own passive can have procs too (Knight's Taunt Wall); they roll like item procs.
       hero.procs = [...procs, ...(((hero.def.passive && hero.def.passive.procs) || []).map((p) => ({ ...p, itemId: `passive_${hero.def.id}` })))];
       hero.maxHp = stats.health;

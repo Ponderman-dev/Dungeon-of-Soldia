@@ -11,6 +11,11 @@
     "linearUpTo": 50
   },
   "winHealPercent": 25,
+  "elementMix": {
+    "_about": "Mixing elements (user, session 31): count the different elements among a hero's ITEMS (their `provides` tags in this list). Every element past the first cuts ALL of that hero's damage of these elements (hits, riders, item hits, burns) by penaltyPerExtraPercent. Euclid of Elements (special `euclid`) removes the cut. Physical damage is never cut.",
+    "elements": ["fire", "ice", "electric", "dark"],
+    "penaltyPerExtraPercent": 15
+  },
   "heroDefense": {
     "_about": "Every hero's defense and resist (after levels, before items) is raised by this percent.",
     "percent": 10

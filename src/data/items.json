@@ -2353,6 +2353,7 @@
     "dropWeight": 90,
     "provides": [
       "poison",
+      "dark",
       "bomb"
     ],
     "perStack": "+8% chance"
@@ -2480,7 +2481,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Hits with 2 or more elements: 25% chance to cast 3 more times at 70% damage.",
+    "description": "Hits with 2 or more elements: 25% chance to cast 3 more times at 70% damage. Mixing elements no longer weakens this hero.",
     "effects": [
       {
         "special": "euclid",

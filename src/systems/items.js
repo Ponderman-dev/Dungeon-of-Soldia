@@ -15,6 +15,16 @@ export function canReceive(unit, item) {
   return unit.alive && countOf(unit, item.id) < (item.maxStacks ?? Infinity);
 }
 
+// Mixing elements (combat.json `elementMix`): the different elements among the hero's items (`provides` tags) and
+// the % cut on that hero's element damage (`penaltyPerExtraPercent` per element past the first; 0 with Euclid).
+export function elementMix(hero, itemDefs, mixRules) {
+  const list = (mixRules && mixRules.elements) || [];
+  const elements = [...new Set(hero.items.flatMap((id) => ((itemDefs[id] && itemDefs[id].provides) || []).filter((t) => list.includes(t))))];
+  const euclid = hero.items.some((id) => itemDefs[id] && (itemDefs[id].effects || []).some((e) => e.special === 'euclid'));
+  const cut = euclid ? 0 : Math.min(100, Math.max(0, elements.length - 1) * ((mixRules && mixRules.penaltyPerExtraPercent) || 0));
+  return { elements, cut };
+}
+
 // A hero's stats = their level stats + every item that currently works for them.
 //   - the hero's own items (while the hero is alive)
 //   - squad items held by any LIVING hero

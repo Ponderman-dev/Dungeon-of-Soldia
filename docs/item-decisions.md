@@ -459,5 +459,6 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Vital Band and Heart Charm: every number adds up per copy.
 - [planned, NOT built] BOSS BADGES (user, session 31): Hunter's Badge (common) stays +20% damage to elites.
   Elite's Badge (rare) -> BOUNTY: when an elite dies, the squad heals 10% max health and gets +50% XP from it;
-  each extra copy +5% heal and +25% XP. Giantslayer's Brand: rework still open (8 ideas rejected: topple meter,
-  interrupt wind-ups, size scaling, weak spot, giant's bane, slow attacks, grows as boss gets hurt, stomp).
+  each extra copy +5% heal and +25% XP.
+  Giantslayer's Brand (epic) -> BIG GAME: +40% damage to bosses AND elites, +20% per extra copy; the wind-up part
+  is dropped (user wanted ONE simple line; complicated ideas were rejected).

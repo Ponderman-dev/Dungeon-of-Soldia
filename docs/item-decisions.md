@@ -544,3 +544,8 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - [planned, NOT built] DAMAGE TRICKS (user, session 32): CATALYST VIAL (epic) keeps its crit ticks (crits +25%) AND
   burn, poison and bleed from this hero deal +30% damage. Every other damage trick item stays as it is (Quiver of
   Plenty and Last Stand kept too).
+- [planned, NOT built] ON-HIT (user, session 32): SERRATED EDGE (rare) extra copy = +8% chance AND +10% bleed damage
+  (was +5% chance only; same as Venom Fang). DREAD BELL (rare) -> FEAR RING: 5% on attack, the target and every enemy
+  near it (~100px) are Feared 1.5s (extra copy proposal: +3% chance, +0.3s). BOSSES ARE IMMUNE TO FEAR (user; was
+  half length; data: add 'fear' to every boss's statusImmune, Dread Bell is the only enemy-fear source); a ring next
+  to a boss still scares its adds. Elites are NOT immune. Show the ring in game first. Other on-hit items unchanged.

@@ -546,6 +546,6 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Plenty and Last Stand kept too).
 - [planned, NOT built] ON-HIT (user, session 32): SERRATED EDGE (rare) extra copy = +8% chance AND +10% bleed damage
   (was +5% chance only; same as Venom Fang). DREAD BELL (rare) -> FEAR RING: 5% on attack, the target and every enemy
-  near it (~100px) are Feared 1s (user: start at 1s; extra copy +3% chance, +0.3s: 2 = 8% 1.3s, 3 = 11% 1.6s). BOSSES ARE IMMUNE TO FEAR (user; was
+  near it (~100px) are Feared 1s (user: start at 1s; extra copy +3% chance, +0.3s: 2 = 8% 1.3s, 3 = 11% 1.6s); 3s COOLDOWN after each ring (user: not every time). BOSSES ARE IMMUNE TO FEAR (user; was
   half length; data: add 'fear' to every boss's statusImmune, Dread Bell is the only enemy-fear source); a ring next
   to a boss still scares its adds. Elites are NOT immune. Show the ring in game first. Other on-hit items unchanged.

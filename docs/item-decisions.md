@@ -541,3 +541,6 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - [planned, NOT built] SWEEPING STRAP (user, session 32) -> CLEAVE: every 3rd melee attack hits ALL enemies in front of
   the hero for 70% (one clean swing line, like Sven's cleave; show in game first); the old 15% splash is removed.
   Extra copy +35% (user; 2 = 105%, 3 = 140%). NEW ICON (user).
+- [planned, NOT built] DAMAGE TRICKS (user, session 32): CATALYST VIAL (epic) keeps its crit ticks (crits +25%) AND
+  burn, poison and bleed from this hero deal +30% damage. Every other damage trick item stays as it is (Quiver of
+  Plenty and Last Stand kept too).

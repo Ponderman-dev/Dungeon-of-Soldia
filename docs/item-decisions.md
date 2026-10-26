@@ -501,3 +501,15 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   copy). Brawler's Streak: +3% per hit in a row, max +15% (+15% to the max per extra copy). Swarm Swatter: +25% to
   NORMAL enemies (not elites, not bosses), +12% per extra copy (set: Swatter normal / Hunter's Badge elites / Big
   Game bosses + elites). Better Odds (epic): +5% damage per enemy alive, +2.5% per enemy per extra copy.
+- [planned, NOT built] MINIONS (user, session 31). Boosters, each its own job:
+  Overseer's Whistle = MORE swarm (+1 weak minion allowed, 25% faster; its +25% health removed; copy +1, +10%).
+  Grave Dust = unchanged (weak minions explode 400% + Poison). Bone Charm = +20% health and attack, ALL minions.
+  Necro Crown = +38% health and attack, ALL minions, and every squad kill raises a skeleton, MAX 4 (+2 per extra
+  copy); its 'weak minions 50% faster' part removed.
+  NEW: 4 EPIC ELEMENT TOTEMS (names placeholder: Ember / Frost / Storm / Shadow Totem): all of the holder's minions'
+  attacks become that element (NO extra debuff, user: too powerful); each extra copy +25% minion damage of that
+  element. Two different totems: the NEWEST wins; the item text must WARN 'does not stack with other totems'.
+  Proposed, NOT yet confirmed by the user: swarm vs champion families; every minion gets half its holder's matching
+  damage bonus (Rats/Gargoyle: +melee); minion items don't count for the mix penalty; 6 minions max per hero
+  (Necro Crown skeletons not counted); Fire Imp Brazier epic -> rare; Mimic Chest appears below 50% health;
+  Phoenix revives once per floor at 50%.

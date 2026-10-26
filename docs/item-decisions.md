@@ -540,4 +540,4 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - [planned, NOT built] METRONOME (user, session 32): every 3RD basic attack (was 4th) deals +100% damage (+50% per extra copy).
 - [planned, NOT built] SWEEPING STRAP (user, session 32) -> CLEAVE: every 3rd melee attack hits ALL enemies in front of
   the hero for 70% (one clean swing line, like Sven's cleave; show in game first); the old 15% splash is removed.
-  Extra copy: proposed +35% (user to confirm). NEW ICON (user).
+  Extra copy +35% (user; 2 = 105%, 3 = 140%). NEW ICON (user).

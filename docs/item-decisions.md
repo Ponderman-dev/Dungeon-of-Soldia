@@ -513,3 +513,5 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   damage bonus (Rats/Gargoyle: +melee); minion items don't count for the mix penalty; 6 minions max per hero
   (Necro Crown skeletons not counted); Fire Imp Brazier epic -> rare; Mimic Chest appears below 50% health (30% chance);
   Phoenix revives once per floor at 50%.
+- [planned, NOT built] SOUL LANTERN (user, session 31): stays once per run, counts squad kills from pick-up (not
+  retroactive). Every 7 kills (was 8): +1% health, +1% attack, +1% attack speed, +0.5% defense, no limit.

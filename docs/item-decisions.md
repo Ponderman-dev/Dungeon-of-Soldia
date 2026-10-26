@@ -526,4 +526,6 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Padded Vest: unchanged (+12 defense, user OK). The other defense items stay as they are.
   Emergency Buckler -> renamed BUCKLER (common): the holder-only block item (Shield Totem's old job): 5% block per
   copy (1=5%, 3=15%, 12=60% cap); the kill shield is REMOVED.
-  TODO (user, session 32): revisit minion UPKEEP for all summon items once the defense items are done.
+- [planned, NOT built] MINION UPKEEP (user, session 32): the DEFENSE part is removed (combat.json upkeepDefensePercent
+  -> 0); attack speed upkeep stays and still adds up PER summon item (greater -12%, weak -6%; user: paying once
+  would let everyone go summoner). Shield Totem stays free.

@@ -523,5 +523,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   just in front of the heroes, in the centre. NO upkeep for this item. Dies -> back after 2 floors (normal rule).
   Gets health from minion boosters (Bone Charm, Necro Crown). Start ~120 health, 20 defense, 0 attack (to tune).
   Note: the planned element totems (placeholder names) do nothing for it (it never attacks); rename them later.
-  Padded Vest (+12 defense): still no answer (advised keep).
+  Padded Vest: unchanged (+12 defense, user OK). The other defense items stay as they are.
+  Emergency Buckler -> renamed BUCKLER (common): the holder-only block item (Shield Totem's old job): 5% block per
+  copy (1=5%, 3=15%, 12=60% cap); the kill shield is REMOVED.
   TODO (user, session 32): revisit minion UPKEEP for all summon items once the defense items are done.

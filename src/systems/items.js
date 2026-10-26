@@ -63,7 +63,7 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
       // A minion item (only its holder gets the minions): weak spawner, minion that pops out when the holder is hit,
       // or greater minion, one entry per copy.
       if (holder === hero) {
-        if (e.greaterMinion) minionSources.push({ itemId: e.itemId, kind: 'greater', minion: e.greaterMinion });
+        if (e.greaterMinion) minionSources.push({ itemId: e.itemId, kind: 'greater', minion: e.greaterMinion, ...(e.upkeep === false ? { spec: { upkeep: false } } : {}) }); // Shield Totem: no upkeep
         else if (e.minionOnHit) minionSources.push({ itemId: e.itemId, kind: 'weak', onHit: true, spec: e.minionOnHit });
         else minionSources.push({ itemId: e.itemId, kind: 'weak', spec: e.minionSpawner });
       }
@@ -92,6 +92,7 @@ export function computeHeroStats(hero, heroes, itemDefs, levelStats, moraleRules
       if (e.count) specials[e.special + 'Count'] = e.count; // e.g. bombBarrelCount [2, 4]
       if (e.staggerMs !== undefined) specials[e.special + 'StaggerMs'] = e.staggerMs; // e.g. bombBarrelStaggerMs
       if (e.debuffs) specials[e.special + 'List'] = e.debuffs; // e.g. critDebuffList
+      if (e.element) specials[e.special + 'Element'] = e.element; // e.g. collarElement (the newest collar wins: it is applied last)
     } else if (e.damageBonus) {
       damageBonus[e.damageBonus] = (damageBonus[e.damageBonus] || 0) + e.percent * factor;
     } else if (e.percent !== undefined) {

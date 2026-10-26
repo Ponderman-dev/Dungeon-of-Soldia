@@ -1585,6 +1585,9 @@
           "shakeIntensity": 0.014
         }
       }
+    ],
+    "statusImmune": [
+      "fear"
     ]
   },
   "brood_mother": {
@@ -1716,7 +1719,10 @@
         ]
       }
     ],
-    "drawScale": 3.45
+    "drawScale": 3.45,
+    "statusImmune": [
+      "fear"
+    ]
   },
   "frost_warden": {
     "name": "The Frost Warden",
@@ -1811,7 +1817,8 @@
     },
     "statusImmune": [
       "chill",
-      "freeze"
+      "freeze",
+      "fear"
     ],
     "plates": {
       "count": 3,
@@ -2038,6 +2045,9 @@
         "castMs": 0,
         "swap": "vesh"
       }
+    ],
+    "statusImmune": [
+      "fear"
     ]
   },
   "vesh": {
@@ -2156,6 +2166,9 @@
           ]
         }
       }
+    ],
+    "statusImmune": [
+      "fear"
     ]
   },
   "morthul": {
@@ -2303,6 +2316,9 @@
           }
         ]
       }
+    ],
+    "statusImmune": [
+      "fear"
     ]
   },
   "ignatius": {
@@ -2448,6 +2464,9 @@
           }
         ]
       }
+    ],
+    "statusImmune": [
+      "fear"
     ]
   },
   "sela": {
@@ -2588,6 +2607,9 @@
           }
         ]
       }
+    ],
+    "statusImmune": [
+      "fear"
     ]
   },
   "vharox": {
@@ -2732,6 +2754,9 @@
           }
         ]
       }
+    ],
+    "statusImmune": [
+      "fear"
     ]
   },
   "mimic": {

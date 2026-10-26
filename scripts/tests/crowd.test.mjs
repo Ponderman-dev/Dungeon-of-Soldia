@@ -11,7 +11,7 @@ const all = r('heroes.json');
 function crowd(movement, seed) {
   let x = seed;
   const rng = () => ((x = (x * 16807) % 2147483647) / 2147483647);
-  const rules = { ...base, movement: { ...base.movement, ...movement }, minions: { ...base.minions, itemWeakCap: 9 } };
+  const rules = { ...base, movement: { ...base.movement, ...movement }, minions: { ...base.minions, itemWeakCap: 9, maxPerHero: 99 } }; // a big crowd on purpose (no 6-per-hero limit)
   const s = new BattleState({ heroDefs: ['knight', 'necromancer', 'berserker'].map((id) => all.find((h) => h.id === id)), enemyDefs: r('enemies.json'), itemDefs: {}, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), minionDefs: r('minions.json'), rng });
   const es = s.spawnEnemies(['goblin', 'goblin', 'orcBrute', 'goblin'], 1);
   s.placeLines();

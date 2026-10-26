@@ -72,13 +72,13 @@ const run = (s, ms) => { const ev = []; for (let t = 0; t < ms; t += 20) ev.push
   ok('...(a 40% item proc goes off about 50% of the time in March)', Math.abs(off - 0.4) < 0.04 && Math.abs(on - 0.4 * (1 + P.songs.march.procChancePercent / 100)) < 0.04, `${off.toFixed(2)} -> ${on.toFixed(2)}`); }
 { const M = P.hymn.squadItemMultiplier;
   const withBard = mk(['bard', 'knight']), alone = mk(['rogue', 'knight']);
-  for (const x of [withBard, alone]) { x.s.giveItem(x.h[1].uid, 'war_banner'); x.s.giveItem(x.h[1].uid, 'spotters_lens'); x.s.giveItem(x.h[1].uid, 'heart_charm'); }
-  const wb = (x) => x.h[1].procs.find((p) => p.itemId === 'war_banner').chance;
-  ok(`Battle Hymn: squad items x${M} (War Banner proc chance)`, Math.abs(wb(withBard) / wb(alone) - M) < 1e-6, `${wb(alone)} -> ${wb(withBard)}`);
+  for (const x of [withBard, alone]) { x.base = x.h[1].stats.attackEfficiency; x.s.giveItem(x.h[1].uid, 'war_banner'); x.s.giveItem(x.h[1].uid, 'spotters_lens'); x.s.giveItem(x.h[1].uid, 'heart_charm'); }
+  const wb = (x) => x.h[1].stats.attackEfficiency - x.base; // War Banner: the squad attack speed aura (session 32)
+  ok(`Battle Hymn: squad items x${M} (War Banner attack speed)`, Math.abs(wb(withBard) / wb(alone) - M) < 1e-6, `${wb(alone)} -> ${wb(withBard)}`);
   ok("...(Spotter's Lens bonus)", Math.abs(withBard.h[0].specials.spotter / alone.h[0].specials.spotter - M) < 1e-6);
   ok('...but NOT other items (Heart Charm)', withBard.h[1].stats.health === alone.h[1].stats.health || withBard.h[1].maxHp - alone.h[1].maxHp < 1, `${alone.h[1].stats.health} / ${withBard.h[1].stats.health}`);
   withBard.h[0].alive = false; withBard.s.refreshStats();
-  ok('...only while the Bard lives', Math.abs(wb(withBard) - wb(alone)) < 1e-6); }
+  ok('...only while the Bard lives', Math.abs(withBard.h[1].specials.spotter - alone.h[1].specials.spotter) < 1e-6); }
 { const { s, h } = mk(['bard', 'knight', 'rogue']); const L = P.lute;
   const ev = run(s, L.everyMs + 100); const lute = ev.filter((e) => e.type === 'lute');
   ok(`Lute: every ${L.everyMs / 1000}s of a fight a random boost for the squad`, lute.length === 1 && h.every((x) => x.statuses.some((st) => st.key === 'buff:lute' || st.key === 'regenBoost:lute')), lute.map((e) => e.boost).join());

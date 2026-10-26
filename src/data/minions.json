@@ -1,5 +1,5 @@
 {
-  "_about": "Minions: extra fighters on the hero side. They are NOT heroes (no XP, perks, morale, never count as living heroes). kind 'weak': many at once (cap per source), vanish when the floor ends or their holder dies. kind 'greater' (later): one per item, persists across floors. Same shape as enemies.json (stats, parts, height, flying) plus kind. hitType: the element of its hits when it differs from how it moves (damageType). holderElementShare: share of its hero's +% for its element. regenPercent: max health healed per second. bait: { radius, durationMs } = never attacks, taunts the enemies around it on its attack turns (Mimic).",
+  "_about": "Minions: extra fighters on the hero side. They are NOT heroes (no XP, perks, morale, never count as living heroes). kind 'weak': many at once (cap per source), vanish when the floor ends or their holder dies. kind 'greater' (later): one per item, persists across floors. Same shape as enemies.json (stats, parts, height, flying) plus kind. hitType: the element of its hits when it differs from how it moves (damageType). holderElementShare: share of its hero's +% for its element. regenPercent: max health healed per second. bait: { radius, durationMs } = never attacks, taunts the enemies around it on its attack turns (Mimic). object: true = never moves or attacks (Shield Totem). reviveOncePerFloor: comes back once per floor at that % of max health (Phoenix). holderElementShare default: combat.json minions.holderBonusShare (every minion gets half its holder's +% for its own damage type).",
   "skeleton": {
     "name": "Skeleton",
     "kind": "weak",
@@ -644,6 +644,65 @@
         "damageType": "fire"
       }
     ],
-    "regenPercent": 2
+    "regenPercent": 2,
+    "reviveOncePerFloor": 50
+  },
+  "shield_totem": {
+    "name": "Shield Totem",
+    "kind": "greater",
+    "damageType": "melee",
+    "flying": false,
+    "object": true,
+    "height": 18,
+    "weak": [],
+    "resists": [],
+    "stats": {
+      "health": 120,
+      "attack": 0,
+      "defense": 20,
+      "attackEfficiency": 100
+    },
+    "copyStatBonus": 0.5,
+    "parts": {
+      "body": {
+        "x": 0,
+        "y": -9,
+        "w": 12,
+        "h": 18,
+        "art": {
+          "palette": [
+            "0x9a8a6a",
+            "0x6e6048",
+            "0x4a4030",
+            "0x7fd8ff",
+            "0xd8d0b8"
+          ],
+          "rows": [
+            "....4444....",
+            "...444444...",
+            "..00000000..",
+            "..03333330..",
+            "..03344330..",
+            "..03344330..",
+            "..00333300..",
+            "...003300...",
+            "...000000...",
+            "...011110...",
+            "...000000...",
+            "...011110...",
+            "...000000...",
+            "..00111100..",
+            "..00000000..",
+            ".0000000000.",
+            ".1111111111.",
+            "222222222222"
+          ]
+        },
+        "anchor": [
+          6,
+          17.5
+        ]
+      }
+    }
   }
 }

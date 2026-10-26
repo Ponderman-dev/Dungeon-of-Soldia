@@ -54,9 +54,9 @@ const shield = (u, key) => u.statuses.find((st) => st.type === 'shield' && (!key
   b2.hp = b2.maxHp * 0.5; s.afterDamage(b2, []);
   ok('Rally Flag: nothing above ' + rf.below + '%', !shield(a));
   b2.hp = b2.maxHp * 0.2; const ev = []; s.afterDamage(b2, ev);
-  ok('...a hero below ' + rf.below + '%: every hero gets a ' + rf.percent + '% shield', s.heroes.every((h) => shield(h) && Math.abs(shield(h).amount - (h.maxHp * rf.percent) / 100) <= 1));
-  shield(a).amount = 1; c.hp = c.maxHp * 0.2; s.afterDamage(c, []);
-  ok('...once per floor per flag', shield(a).amount === 1);
+  ok('...a hero below ' + rf.below + '%: ONLY that hero gets a ' + rf.percent + '% shield (Cautious Banner, session 32)', shield(b2) && Math.abs(shield(b2).amount - (b2.maxHp * rf.percent) / 100) <= 1 && !shield(a) && !shield(c));
+  c.hp = c.maxHp * 0.2; s.afterDamage(c, []);
+  ok('...once per floor per flag', !shield(c));
   const { s: t, k: k1 } = mk(); give(t, k1, 'rally_flag'); give(t, t.heroes[1], 'rally_flag', 2);
   const [x, y, z] = t.heroes;
   y.hp = y.maxHp * 0.2; t.afterDamage(y, []);
@@ -64,7 +64,7 @@ const shield = (u, key) => u.statuses.find((st) => st.type === 'shield' && (!key
   ok('...the same hero sets off only one rally', t.heroes.filter((h) => h.alive && h.specials.rallyFlag && h.floor.rallyUsed).length === 1);
   z.hp = z.maxHp * 0.2; t.afterDamage(z, []);
   ok('...a 2nd flag holder rallies for a 2nd hero', x.floor.rallyUsed && y.floor.rallyUsed);
-  ok("...shields don't stack: one rally shield per hero", t.heroes.every((h) => h.statuses.filter((st) => st.type === 'shield').length === 1)); }
+  ok("...shields don't stack: at most one rally shield per hero", t.heroes.every((h) => h.statuses.filter((st) => st.type === 'shield').length <= 1) && y.statuses.some((st) => st.type === 'shield')); }
 // Frost Mantle: melee attackers get chilled (not ranged).
 { const fm = val('frost_mantle', 'frostMantle');
   const { s, e, k } = mk(['goblin', 'skeletonArcher'], () => 0); give(s, k, 'frost_mantle', 2);

@@ -21,16 +21,7 @@ const give = (s, u, id, n = 1) => { for (let i = 0; i < n; i++) s.giveItem(u.uid
 const melee = (s) => s.heroes.find((h) => h.damageType === 'melee');
 const lost = (e) => 1e7 - e.hp;
 
-// Sweeping Strap
-{ const sw = val('sweeping_strap', 'sweep');
-  const { s, es } = mk(); const k = melee(s); give(s, k, 'sweeping_strap', 2);
-  const [t, near, far] = es; t.x = 100; t.y = 100; near.x = 100 + sw.radius - 5; near.y = 100; far.x = 100 + sw.radius * 3; far.y = 100;
-  s.landAttack(k, t, []);
-  ok('Sweeping Strap: 2 copies, a neighbour within ' + sw.radius + 'px takes ' + (sw.percent + sw.perExtra) + '%', lost(near) === Math.round((lost(t) * (sw.percent + sw.perExtra)) / 100), `${lost(t)} ${lost(near)}`);
-  ok('...an enemy further away takes nothing', lost(far) === 0);
-  const { s: s2, es: es2 } = mk(); const a = melee(s2); a.damageType = 'ranged'; give(s2, a, 'sweeping_strap');
-  for (const e of es2) { e.x = 100; e.y = 100; } s2.landAttack(a, es2[0], []);
-  ok('...ranged attacks do not sweep', lost(es2[1]) === 0 && lost(es2[2]) === 0); }
+// Sweeping Strap: reworked in session 32 (CLEAVE), tested in items-s31.test.mjs.
 // Kinetic Coil: reworked in session 31 (v2), tested in items-s31.test.mjs.
 // Sharpest Blade (reworked session 29, user): PURE STEEL only (no element); pure attacks +pureSteel%, every Nth is a
 // Heart Strike (multiplier + a share of the enemy's max health, less on a boss, stun); a Heart Strike kill = the next too.

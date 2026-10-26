@@ -2672,6 +2672,7 @@ export default class BattleScene extends Phaser.Scene {
         this.showEnemySpawn(e.unit, 0xffd24d);
         this.popText(this.views.get(e.unit.uid), 'Revived!', '#ffd24d', true);
         return true;
+      case 'minionRevive': if (v) { this.puff(v.ch.x, v.ch.y, 0xffd24d, 8); this.popText(v, 'Reborn!', '#ffd24d', true); } return true; // Phoenix rises again
       case 'hatch': if (v) { this.puff(v.ch.x, v.ch.y, 0xd8d0a0, 6); this.popText(v, 'Hatched!', '#e8e0b0'); } return true;
       case 'dust':
         if (!v) return true;

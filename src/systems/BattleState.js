@@ -665,6 +665,14 @@ export default class BattleState {
   // Marks a unit dead. Enemies give XP; a dead hero's items stop working.
   killUnit(target, events, killer = null) {
     if (target.def.phylactery && !target.finalDeath) return this.turnToDust(target, events); // Morthul: his crystal appears
+    // Phoenix (minions.json `reviveOncePerFloor`): rises again once per floor at that % of max health.
+    if (target.minion && target.def.reviveOncePerFloor && !target.floorRevived) {
+      target.floorRevived = true;
+      target.hp = Math.max(1, Math.round((target.maxHp * target.def.reviveOncePerFloor) / 100));
+      target.statuses = target.statuses.filter((st) => !(this.statusDefs[st.type] && this.statusDefs[st.type].debuff));
+      events.push({ type: 'minionRevive', unit: target });
+      return;
+    }
     const was = this.morale;
     const lastStatuses = target.statuses.slice(); // what it was suffering from when it died (item reactions below)
     target.alive = false;
@@ -763,7 +771,7 @@ export default class BattleState {
   }
 
   // Squad-wide minion boosters (Bone Charm, Overseer's Whistle, Grave Dust, Necro Crown): they reach EVERY minion
-  // whoever holds them, and cost no upkeep. Caps: Whistle +4 weak cap in total, Necro Crown +6.
+  // whoever holds them, and cost no upkeep. Whistle: +1 weak minion per copy (the 6 per hero limit still holds).
   minionBoost() {
     const sum = { bone: 0, whistle: 0, speed: 0, whistleHp: 0, dust: 0, crown: 0, crownKill: false };
     for (const h of this.heroes) {
@@ -779,7 +787,7 @@ export default class BattleState {
       sum.crownKill = sum.crownKill || !!sp.necroCrownKill;
       sum.spawnSpeed = Math.max(sum.spawnSpeed || 0, sp.necroCrownSpeed || 0); // does not grow with copies
     }
-    return { bone: sum.bone, weakCap: Math.min(4, sum.whistle) + Math.min(6, sum.crown), weakSpeed: sum.speed, weakHealth: sum.whistleHp, dust: sum.dust, crownKill: sum.crownKill, spawnSpeed: sum.spawnSpeed || 0 };
+    return { bone: sum.bone, weakCap: sum.whistle + Math.min(6, sum.crown), weakSpeed: sum.speed, weakHealth: sum.whistleHp, dust: sum.dust, crownKill: sum.crownKill, spawnSpeed: sum.spawnSpeed || 0 };
   }
 
   sourceState(hero, key) {
@@ -836,7 +844,7 @@ export default class BattleState {
     this.spirits = [];
     for (const m of [...this.minions]) {
       if (!m.greater) this.vanishMinion(m, 'floorEnd', events);
-      else m.floors++; // a greater minion that survived the floor (Spirit Knight grows)
+      else { m.floors++; m.floorRevived = false; } // a greater minion that survived the floor (Spirit Knight grows; Phoenix can revive again)
     }
     for (const hero of this.heroes) {
       for (const src of hero.minionSources || []) {
@@ -880,9 +888,14 @@ export default class BattleState {
     if (!def) return null;
     if (src.kind === 'weak') {
       // Over the cap: the oldest weak minion of the same cap group (the hero's own, or all item minions) goes.
+      // Necro Crown skeletons have their own cap (`necroCrownSkeletons`, 4 +2 per extra crown) and never count for the others.
       const mine = this.minions.filter((m) => m.holderUid === holder.uid && m.capGroup === src.capGroup);
-      const cap = (src.capGroup === 'hero' ? src.spec.cap || 4 : this.itemWeakCap(holder)) + this.minionBoost().weakCap;
+      const cap = src.capGroup === 'crown' ? holder.specials.necroCrownSkeletons || 4 : (src.capGroup === 'hero' ? src.spec.cap || 4 : this.itemWeakCap(holder)) + this.minionBoost().weakCap;
       if (mine.length >= cap) this.vanishMinion(mine[0], 'pushedOut', events);
+      // At most `minions.maxPerHero` (6) minions per hero (crown skeletons not counted): the oldest WEAK one goes.
+      const all = this.minions.filter((m) => m.holderUid === holder.uid && m.capGroup !== 'crown');
+      const max = this.rules.minions.maxPerHero || Infinity;
+      if (src.capGroup !== 'crown' && all.length >= max) { const old = all.find((m) => !m.greater); if (old) this.vanishMinion(old, 'pushedOut', events); }
     }
     const m = this.makeUnit({ id, ...def, stats: { ...def.stats } }, 'hero', 1);
     m.minion = true;
@@ -901,7 +914,11 @@ export default class BattleState {
     if (cpc && m.copies > 1) m.chain = { jumps: cpc.jumps * (m.copies - 1), damageMultiplier: cpc.damageMultiplier, damageType: def.damageType, skipFirst: true };
     m.floors = 0;
     m.timer = 0;
-    if (this.hasPositions(holder)) {
+    if (this.hasPositions(holder) && def.object) {
+      // Shield Totem: stands still in the FRONT line, just in front of the heroes, in the centre.
+      const L = this.rules.movement.layout;
+      this.place(m, L.width / 2, L.heroY - (this.rules.minions.totemAheadPx || 50));
+    } else if (this.hasPositions(holder)) {
       const M = this.rules.movement;
       this.place(m, holder.x + (this.rng() - 0.5) * 80, holder.y - 36 - this.rng() * 20);
       m.x = Math.min(M.layout.width - M.layout.marginX, Math.max(M.layout.marginX, m.x));
@@ -1024,10 +1041,19 @@ export default class BattleState {
     stats.attackEfficiency = Math.max(10, stats.attackEfficiency);
     stats.health = m.maxHp; // buffs never change a minion's health
     m.stats = stats;
-    // Element minions (Imp, Wisp, Phoenix, Ice Spirit Knight) get `holderElementShare` of their hero's +% for their element.
-    const share = m.def.holderElementShare || 0;
-    const type = m.def.hitType || m.def.damageType;
+    // Element COLLARS (session 31): the holder's newest collar turns all its minions' hits into that element; each
+    // extra copy of that collar +`collar`% (25) minion damage of it.
+    const collar = holder && holder.specials && holder.specials.collarElement;
+    m.hitType = collar || m.def.hitType || undefined;
+    // Every minion gets `holderElementShare` (minions.json, default combat.json minions.holderBonusShare 0.5) of its
+    // hero's +% for its own damage type (Imp fire, Rats/Gargoyle melee...).
+    const share = m.def.holderElementShare ?? this.rules.minions.holderBonusShare ?? 0;
+    const type = m.hitType || m.def.damageType;
     m.damageBonus = share && holder && holder.damageBonus && holder.damageBonus[type] ? { [type]: holder.damageBonus[type] * share } : {};
+    if (collar) {
+      const copies = holder.items.filter((id) => (this.itemDefs[id].effects || []).some((e) => e.special === 'collar' && e.element === collar)).length;
+      m.damageBonus[collar] = (m.damageBonus[collar] || 0) + (holder.specials.collar || 0) * Math.max(0, copies - 1);
+    }
   }
 
   // Moves the fight forward by dt milliseconds. Returns events for the scene to show.
@@ -1196,7 +1222,8 @@ export default class BattleState {
       if (target.alive) this.applyStatus(target, unit.specials.heartStrikeSpec || { status: 'stun', durationMs: 2500 }, unit, `heart_${unit.uid}`, events);
       else unit.floor.nextHeart = true; // Killing spree: a Heart Strike that kills makes the next one a Heart Strike too
     }
-    this.sweep(unit, target, hit, events); // Sweeping Strap: the swing also hits the enemies next to the target
+    this.sweep(unit, target, hit, events); // Sweeping Strap: every 3rd swing cleaves the enemies in front
+    this.fearRing(unit, target, hit, events); // Dread Bell: a ring of fear around the target
     if (unit.elite) this.eliteAfterAttack(unit, target, hit, events); // Storm: every 4th hit jumps
     this.cycleElement(unit); // Mage: the next basic attack is the next element
     if (!hit.dodged) this.addCombo(unit, target, 1, events);
@@ -1270,15 +1297,38 @@ export default class BattleState {
     return unit.floor.nextHeart ? 0 : unit.specials.heartStrike - 1 - (unit.floor.heartCount || 0);
   }
 
-  // Sweeping Strap: a MELEE basic attack also hits every other enemy within `sweepRadius` px (60) of its target for
-  // `sweep`% (15, +8 per extra copy) of the attack as item damage (it triggers nothing).
+  // Sweeping Strap (CLEAVE, session 32): every `sweepEvery`th (3) MELEE basic attack of the holder also hits EVERY other
+  // enemy in front of it (closer to the enemy side, within `sweepRadius` px (110) of the target) for `sweep`% (70, +35 per
+  // extra copy) of the attack as item damage (it triggers nothing). Counted per floor; a dodged swing still counts.
   sweep(unit, target, hit, events) {
     const sp = unit.side === 'hero' && !unit.minion ? unit.specials : null;
-    if (!sp || !sp.sweep || unit.damageType !== 'melee' || hit.dodged) return;
-    const radius = sp.sweepRadius || 60;
-    const near = this.enemies.filter((e) => e.alive && e !== target && !this.untargetable(e) && (!this.hasPositions(e) || !this.hasPositions(target) || Math.hypot(e.x - target.x, e.y - target.y) <= radius));
-    events.push({ type: 'sweep', unit, target, radius }); // the scene draws the cleave (every strap hit)
+    if (!sp || !sp.sweep || unit.damageType !== 'melee') return;
+    unit.floor.cleave = (unit.floor.cleave || 0) + 1;
+    if (unit.floor.cleave < (sp.sweepEvery || 3)) return;
+    unit.floor.cleave = 0;
+    const radius = sp.sweepRadius || 110;
+    const ahead = (e) => !this.hasPositions(e) || !this.hasPositions(unit) || e.y <= unit.y + 10; // in front = up the screen
+    const near = this.enemies.filter((e) => e.alive && e !== target && !this.untargetable(e) && ahead(e) && (!this.hasPositions(e) || !this.hasPositions(target) || Math.hypot(e.x - target.x, e.y - target.y) <= radius));
+    events.push({ type: 'sweep', unit, target, radius, cleave: true }); // the scene draws the cleave swing
     for (const e of near) this.strike(unit, e, events, { multiplier: sp.sweep / 100, damageType: 'melee', item: true, burst: true });
+  }
+
+  // Dread Bell (FEAR RING, session 32): `fearRing`% (5, +3 per extra) per basic attack of the holder: the target and every
+  // enemy within `fearRingRadius` px (100) of it are Feared (`fearRingSpec`, 1s +0.3s per extra copy), then the bell
+  // rests `fearRingCooldownMs` (3s). Bosses are immune to fear (enemies.json statusImmune); their adds are not.
+  fearRing(unit, target, hit, events) {
+    const sp = unit.side === 'hero' && !unit.minion ? unit.specials : null;
+    if (!sp || !sp.fearRing || hit.dodged || !target.alive || (unit.floor.fearCd || 0) > this.floorMs) return;
+    if (this.rng() * 100 >= this.debuffChance(unit, sp.fearRing)) return;
+    unit.floor.fearCd = this.floorMs + (sp.fearRingCooldownMs || 3000);
+    const copies = unit.items.filter((i) => i === 'dread_bell').length;
+    const base = sp.fearRingSpec || { status: 'fear', durationMs: 1000 };
+    const spec = { status: base.status, durationMs: base.durationMs + (base.durationPerCopyMs || 0) * Math.max(0, copies - 1) };
+    const radius = sp.fearRingRadius || 100;
+    const near = this.enemies.filter((e) => e.alive && !this.untargetable(e) && (e === target || !this.hasPositions(e) || !this.hasPositions(target) || Math.hypot(e.x - target.x, e.y - target.y) <= radius));
+    events.push({ type: 'proc', unit, label: 'Fear!', itemId: 'dread_bell', target });
+    events.push({ type: 'fearRing', unit, target, radius, targets: near });
+    for (const e of near) this.applyStatus(e, spec, unit, `fearRing_${unit.uid}`, events);
   }
 
   // Mage's ELEMENT CYCLE (passive.elementCycle: ['fire', 'ice', 'electric']): her basic attacks go through the list in
@@ -1700,7 +1750,8 @@ export default class BattleState {
     return this.heroes.find((h) => h !== target && h.alive && h.floor.guard && h.floor.guard.uid === target.uid) || null;
   }
 
-  // Spite Mail: while the holder has a taunted enemy (it taunted one that still lives) he gets +defense and reflect.
+  // Spite Mail: while the holder has a taunted enemy (it taunted one that still lives) he gets +defense, +resist and
+  // heals `spiteHeal`% of max health per hit taken (session 32; the reflect is gone).
   tickTaunting(hero) {
     if (!hero.specials || !hero.specials.spiteMail) {
       if (hero.taunting) hero.taunting = false;
@@ -1942,6 +1993,7 @@ export default class BattleState {
     }
     if (!result.dodged && attacker.side === 'enemy' && target.side === 'hero') {
       this.onHeroHit(target, events);
+      if (target.taunting && target.specials.spiteHeal && target.alive && target.hp > 0) this.healUnit(target, (target.maxHp * target.specials.spiteHeal) / 100, events, { aura: false }); // Spite Mail
       if (!opts.item) this.frostMantle(attacker, target, events);
     }
     if (result.blocked && target.specials.blockCooldownMs) {
@@ -2441,7 +2493,7 @@ export default class BattleState {
     this.tryIntercept(target, events); // Knight: jumps in front of a hero who drops low
     this.tryBodyguard(target, events); // Martyr's Shield: its holder takes every hit on a hero who drops low
     this.tryTriage(target, events); // Aid Kit: patches a hero who drops low
-    this.tryRally(target, events); // Rally Flag: a hero dropping low shields the whole squad
+    this.tryRally(target, events); // Cautious Banner: a hero dropping low gets a shield
     // Second Wind Flask: below its threshold ONE flask is used up and heals (once per floor per holder).
     const below = target.specials.secondWindBelow;
     if (target.specials.secondWind && !target.floor.flaskUsed && target.hp < (target.maxHp * below) / 100) {
@@ -2466,17 +2518,17 @@ export default class BattleState {
   }
 
   // Item reactions to a kill (killer = the unit that dealt the last blow, if known).
-  // Rally Flag: when a hero drops below `rallyFlagBelow`% (30) health, ONE holder whose flag is unused this floor
-  // gives every living hero a shield of `rallyFlag`% of their max health. Each hero can set off one rally per floor
-  // (2 flags = 2 heroes dropping low). The shields don't stack: a new rally replaces the old one (same key).
+  // Cautious Banner (was Rally Flag, session 32): when a hero drops below `rallyFlagBelow`% (30) health, ONE holder whose
+  // banner is unused this floor gives ONLY THAT hero a shield of `rallyFlag`% (25, +12 per extra) of its max health.
+  // Each hero can set it off once per floor (2 banners = 2 heroes dropping low).
   tryRally(target, events) {
     if (target.floor.rallied) return;
     const holder = this.heroes.find((h) => h.alive && h.specials.rallyFlag && !h.floor.rallyUsed && target.hp < (target.maxHp * (h.specials.rallyFlagBelow ?? 30)) / 100);
     if (!holder) return;
     holder.floor.rallyUsed = true;
     target.floor.rallied = true;
-    events.push({ type: 'proc', unit: holder, label: 'Rally!', itemId: 'rally_flag' });
-    for (const h of this.heroes) if (h.alive) this.applyStatus(h, { status: 'shield', percentMaxHp: holder.specials.rallyFlag }, holder, 'rally', events);
+    events.push({ type: 'proc', unit: holder, label: 'Rally!', itemId: 'rally_flag', target });
+    this.applyStatus(target, { status: 'shield', percentMaxHp: holder.specials.rallyFlag }, holder, 'rally', events);
   }
 
   // Skins: a MELEE hit on the holder. Frost Mantle (FROST SKIN, session 31): `frostMantle`% (100 = every attacker) to
@@ -2495,7 +2547,8 @@ export default class BattleState {
   // A friendly was hit by an enemy: Spirit Axe, Mimic Chest (10% a Mimic pops out of the holder).
   onHeroHit(target, events) {
     this.trySpiritAxe(target, events);
-    if (!target.minion && target.alive && target.specials.mimic && this.rng() * 100 < target.specials.mimic) {
+    const low = target.hp < (target.maxHp * (target.specials.mimicBelow ?? 100)) / 100; // Mimic Chest: only below 50% health
+    if (!target.minion && target.alive && target.specials.mimic && low && this.rng() * 100 < target.specials.mimic) {
       const src = { key: 'mimic_chest', kind: 'weak', capGroup: 'items', upkeep: true, upkeepScale: this.rules.minions.upkeepWeakScale ?? 0.5, spec: { minion: 'mimic' }, copies: target.specials.mimicCopies || 1 };
       events.push({ type: 'proc', unit: target, label: 'Mimic!', itemId: 'mimic_chest' });
       this.spawnMinion(target, src, events);
@@ -2513,7 +2566,7 @@ export default class BattleState {
     // Necro Crown: every enemy kill raises a skeleton (for the first living holder).
     if (this.minionBoost().crownKill) {
       const holder = this.heroes.find((h) => h.alive && h.specials.necroCrownKill);
-      if (holder) this.spawnMinion(holder, { key: 'necro_crown', kind: 'weak', capGroup: 'items', upkeep: false, spec: { minion: 'skeleton' } }, events);
+      if (holder) this.spawnMinion(holder, { key: 'necro_crown', kind: 'weak', capGroup: 'crown', upkeep: false, spec: { minion: 'skeleton' } }, events);
     }
     if (killer && killer.side === 'hero' && !killer.minion && killer.alive) {
       const heal = killer.specials.killHeal || 0; // Bandage Roll
@@ -2521,6 +2574,13 @@ export default class BattleState {
       // Blood Chalice: killing a BLEEDING enemy heals the killer.
       const chalice = killer.specials.chaliceHeal || 0;
       if (chalice > 0 && lastStatuses.some((st) => st.type === 'bleed')) this.healUnit(killer, (killer.maxHp * chalice) / 100 / this.regenAura().factor, events);
+      // Conqueror's Flag: every kill heals the OTHER living heroes `conqueror`% (6, +3 per extra) of their max health.
+      const conq = killer.specials.conqueror || 0;
+      if (conq > 0 && !victim.def.object) {
+        const others = this.heroes.filter((h) => h.alive && h !== killer);
+        if (others.length) events.push({ type: 'proc', unit: killer, label: 'Conquer!', itemId: 'conquerors_flag' });
+        for (const h of others) this.healUnit(h, (h.maxHp * conq) / 100 / this.regenAura().factor, events);
+      }
       // Quick Fingers: every kill cuts the killer's skill cooldowns.
       const cut = killer.specials.killCooldownMs || 0;
       if (cut > 0) for (const slot of killer.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - cut);
@@ -3604,6 +3664,9 @@ export default class BattleState {
       hero.damageBonus = damageBonus;
       hero.specials = specials;
       hero.elementCut = elementMix(hero, this.itemDefs, this.rules.elementMix).cut; // mixing elements: combat.js cuts the element damage
+      // Shield Totem: while a holder's totem stands, EVERY hero blocks `totemBlock`% (4 per copy) more (60% cap shared).
+      const aura = this.totemBlock();
+      if (aura) specials.block = Math.min(this.rules.blockCapPercent || 60, (specials.block || 0) + aura);
       // The hero's own passive can have procs too (Knight's Taunt Wall); they roll like item procs.
       hero.procs = [...procs, ...(((hero.def.passive && hero.def.passive.procs) || []).map((p) => ({ ...p, itemId: `passive_${hero.def.id}` })))];
       hero.maxHp = stats.health;
@@ -3637,6 +3700,13 @@ export default class BattleState {
     e.stats = stats;
   }
 
+  // Shield Totem aura: the block every hero gets from the living holders whose totem stands (copies add up).
+  totemBlock() {
+    let n = 0;
+    for (const h of this.heroes) if (h.alive && h.specials && h.specials.totemBlock && this.minions.some((m) => m.alive && m.holderUid === h.uid && m.sourceKey === 'shield_totem')) n += h.specials.totemBlock;
+    return n;
+  }
+
   // Changes to a hero's stats that come from its current state, not its items: minion upkeep,
   // Spite Mail while taunting, the Archer's Steady Aim.
   statUpkeep(hero) {
@@ -3644,7 +3714,7 @@ export default class BattleState {
     const paying = this.upkeepCount(hero);
     const mr = this.rules.minions || {};
     if (paying > 0) upkeep.push({ stat: 'attackEfficiency', percent: (mr.upkeepAttackSpeedPercent || 0) * paying }, { stat: 'defense', percent: (mr.upkeepDefensePercent || 0) * paying });
-    if (hero.taunting && hero.specials && hero.specials.spiteMail) upkeep.push({ stat: 'defense', flat: hero.specials.spiteMail }); // Spite Mail
+    if (hero.taunting && hero.specials && hero.specials.spiteMail) upkeep.push({ stat: 'defense', flat: hero.specials.spiteMail }, { stat: 'resist', flat: hero.specials.spiteResist || 0 }); // Spite Mail
     if (hero.lanternGain) upkeep.push({ stat: 'attack', percent: hero.lanternGain }, { stat: 'health', percent: hero.lanternGain }, { stat: 'attackEfficiency', percent: hero.lanternGain }, { stat: 'defense', flat: hero.lanternGain }); // Soul Lantern
     const sa = hero.def.passive && hero.def.passive.steadyAim;
     if (sa && hero.steady) upkeep.push({ stat: 'attackEfficiency', percent: sa.attackSpeedPercent }, { stat: 'crit', flat: sa.critFlat });

@@ -116,29 +116,15 @@
     "name": "War Banner",
     "rarity": "rare",
     "type": "squad",
-    "scope": "self",
-    "description": "8% on attack: the whole squad gets +25% attack speed for 2s.",
+    "scope": "squad",
+    "description": "The whole squad gets +10% attack speed (while this hero lives).",
     "effects": [
       {
-        "proc": "onAttack",
-        "chance": 8,
-        "label": "Battle Cry!",
-        "targets": "squad",
-        "apply": [
-          {
-            "status": "buff",
-            "durationMs": 2000,
-            "mods": [
-              {
-                "stat": "attackEfficiency",
-                "percent": 25
-              }
-            ]
-          }
-        ]
+        "stat": "attackEfficiency",
+        "percent": 10
       }
     ],
-    "perStack": "+8% chance"
+    "perStack": "+10% attack speed for the squad"
   },
   "shield_totem": {
     "dropWeight": 90,

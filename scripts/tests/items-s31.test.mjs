@@ -153,3 +153,86 @@ const per = r('combat.json').elementMix.penaltyPerExtraPercent;
   ok('...a boss is not silenced (the rest still applies)', !es2[1].statuses.some((x) => x.type === 'silence') && es2[1].statuses.some((x) => x.type === 'weaken'));
   const { s: s3, es: es3, k: k3 } = mk(['goblin', 'goblin'], () => 0.99); give(s3, k3, 'reapers_bell'); s3.onKill(k3, es3[0], [], []);
   ok('...' + rb.percent + '% chance (a high roll: nothing)', !s3.spirits.length); }
+
+// ---- batch 3: minions, defense, banners, cleave, fear ----
+const M = r('combat.json').minions;
+// Overseer's Whistle: +1 weak minion per copy, faster; no health part.
+{ const w = eff('overseers_whistle', 'whistleSpeed'); const { s, k } = mk(); give(s, k, 'overseers_whistle', 2); const b = s.minionBoost();
+  ok("Overseer's Whistle: 2 copies +2 weak minions, +" + (w.percent + w.perExtra) + '% speed, no health bonus', b.weakCap === 2 && b.weakSpeed === w.percent + w.perExtra && !b.weakHealth, JSON.stringify(b)); }
+// Necro Crown: +38% minions, kill skeletons in their own group, max 4 (+2 per extra crown).
+{ const c = eff('necro_crown', 'necroCrownSkeletons'); const { s, es, k } = mk(['goblin', 'goblin']); give(s, k, 'necro_crown');
+  ok('Necro Crown: +' + eff('necro_crown', 'boneCharm').percent + '% minion health and attack', s.minionBoost().bone === eff('necro_crown', 'boneCharm').percent);
+  for (let i = 0; i < 10; i++) s.onKill(s.heroes[1], es[0], [], []);
+  const sk = s.minions.filter((m) => m.capGroup === 'crown');
+  ok('...every squad kill raises a skeleton, max ' + c.percent, sk.length === c.percent, `${sk.length}`);
+  give(s, k, 'necro_crown'); for (let i = 0; i < 10; i++) s.onKill(s.heroes[1], es[0], [], []);
+  ok('...+' + c.perExtra + ' per extra crown', s.minions.filter((m) => m.capGroup === 'crown').length === c.percent + c.perExtra); }
+// 6 minions per hero at most (crown skeletons not counted).
+{ const { s, k } = mk(); give(s, k, 'rat_cage', 9); give(s, k, 'overseers_whistle', 9); const src = k.minionSources.find((x) => x.key === 'rat_cage');
+  for (let i = 0; i < 12; i++) s.spawnMinion(k, src, []);
+  ok('At most ' + M.maxPerHero + ' minions per hero', s.minions.filter((m) => m.holderUid === k.uid).length === M.maxPerHero, `${s.minions.length}`); }
+// Every minion gets half its holder's matching damage bonus (Rats: +melee).
+{ const { s, k } = mk(); give(s, k, 'rat_cage'); give(s, k, 'sharp_edge'); const rat = s.spawnMinion(k, k.minionSources.find((x) => x.key === 'rat_cage'), []);
+  ok("Minions get " + M.holderBonusShare * 100 + "% of the holder's +damage for their type (rat: +melee)", near(rat.damageBonus.melee, k.damageBonus.melee * M.holderBonusShare, 0.001), `${rat.damageBonus.melee}`); }
+// Element collars: minions hit with that element, the newest collar wins, extra copies +25%.
+{ const { s, k } = mk(); give(s, k, 'rat_cage'); give(s, k, 'ember_collar'); const rat = s.spawnMinion(k, k.minionSources.find((x) => x.key === 'rat_cage'), []);
+  ok('Ember Collar: the rats hit as fire', rat.hitType === 'fire');
+  give(s, k, 'frost_collar'); ok('...a newer Frost Collar wins (ice)', rat.hitType === 'ice');
+  give(s, k, 'frost_collar'); ok('...2 Frost Collars: +' + eff('frost_collar', 'collar').percent + '% minion ice damage', near(rat.damageBonus.ice, eff('frost_collar', 'collar').percent, 0.001), `${JSON.stringify(rat.damageBonus)}`);
+  ok('...collar text warns it does not stack', /not stack/.test(itemDefs.ember_collar.description)); }
+ok('Fire Imp Brazier is rare now', itemDefs.fire_imp_brazier.rarity === 'rare');
+// Mimic Chest: only below 50% health.
+{ const { s, e, k } = mk(['goblin'], () => 0); give(s, k, 'mimic_chest'); s.onHeroHit(k, []);
+  ok('Mimic Chest: nothing above ' + eff('mimic_chest', 'mimic').below + '% health', !s.minions.length);
+  k.hp = k.maxHp * 0.3; s.onHeroHit(k, []); ok('...a Mimic below it', s.minions.length === 1); }
+// Phoenix: revives once per floor at 50%.
+{ const { s, k } = mk(); give(s, k, 'phoenix_hatchling'); const src = k.minionSources.find((x) => x.key === 'phoenix_hatchling'); const ph = s.spawnMinion(k, src, []);
+  ph.hp = 0; s.killUnit(ph, []); ok('Phoenix: comes back once per floor at ' + r('minions.json').phoenix.reviveOncePerFloor + '%', ph.alive && near(ph.hp, ph.maxHp * 0.5, 0.05));
+  ph.hp = 0; s.killUnit(ph, []); ok('...the second death is for real', !ph.alive); }
+// Minion upkeep: per summon item, no defense part; the Shield Totem is free.
+{ const { s, k } = mk(); const d0 = k.stats.defense, a0 = k.stats.attackEfficiency; give(s, k, 'gargoyle_idol'); s.spawnMinion(k, k.minionSources.find((x) => x.key === 'gargoyle_idol'), []);
+  ok('Upkeep: attack speed only (no defense part)', k.stats.defense === d0 && k.stats.attackEfficiency < a0, `${d0}->${k.stats.defense} ${a0}->${k.stats.attackEfficiency}`); }
+// Shield Totem: a greater minion that never attacks, front centre; every hero blocks while it stands; no upkeep.
+{ const tb = eff('shield_totem', 'totemBlock'); const { s, es, k, h } = mk(); const a0 = k.stats.attackEfficiency; give(s, k, 'shield_totem', 2);
+  const t = s.spawnMinion(k, k.minionSources.find((x) => x.key === 'shield_totem'), []);
+  const L = r('combat.json').movement.layout;
+  ok('Shield Totem: a totem stands in the front centre', t && t.def.object && Math.abs(t.x - L.width / 2) < 1 && t.y < L.heroY);
+  ok('...EVERY hero blocks ' + 2 * tb.percent + '% (2 copies)', h.every((x) => x.specials.block === 2 * tb.percent), h.map((x) => x.specials.block).join());
+  ok('...no upkeep', k.stats.attackEfficiency === a0);
+  const ev = []; for (let i = 0; i < 40; i++) ev.push(...s.update(50)); ok('...it never attacks', !ev.some((x) => x.type === 'attackStart' && x.attacker === t));
+  t.hp = 0; s.killUnit(t, []); ok('...when it falls the block is gone', h.every((x) => !x.specials.block)); }
+// Buckler: holder-only block 5% per copy.
+{ const b = eff('emergency_buckler', 'block'); const { s, k, h } = mk(); give(s, k, 'emergency_buckler', 3);
+  ok('Buckler: ' + 3 * b.percent + '% block with 3 (holder only), no kill shield', k.specials.block === 3 * b.percent && !h[1].specials.block && !k.specials.killShield && itemDefs.emergency_buckler.name === 'Buckler'); }
+// Spite Mail: no reflect; while taunting +defense +resist and heals per hit taken.
+{ const { s, es, k } = mk(); give(s, k, 'spite_mail'); const r0 = k.stats.resist; s.applyStatus(es[0], { status: 'taunt', durationMs: 5000 }, k, 't', []); s.tickTaunting(k);
+  ok('Spite Mail: taunting = +' + eff('spite_mail', 'spiteResist').percent + ' resist too', k.taunting && k.stats.resist - r0 === eff('spite_mail', 'spiteResist').percent);
+  k.hp = Math.round(k.maxHp / 2); es[0].stats.attack = 1; const ev = []; s.strike(es[0], k, ev, {});
+  ok('...a hit taken heals ' + eff('spite_mail', 'spiteHeal').percent + '% max health', ev.some((x) => x.type === 'heal' && x.unit === k), ev.map((x) => x.type).join());
+  ok('...no reflect', !k.specials.spiteReflect); }
+// War Banner: steady squad attack speed aura.
+{ const w = itemDefs.war_banner.effects[0].percent; const { s, k, h } = mk(); const a = h.map((x) => x.stats.attackEfficiency); give(s, k, 'war_banner', 2);
+  ok('War Banner: the whole squad +' + 2 * w + '% attack speed (2 copies)', h.every((x, i) => near(x.stats.attackEfficiency, a[i] + x.baseStats.attackEfficiency * 0.02 * w * (s.squadItemMult ? s.squadItemMult() : 1), 0.02)), h.map((x, i) => `${a[i]}->${x.stats.attackEfficiency}`).join()); }
+// Conqueror's Flag: the holder's kills heal the OTHER heroes.
+{ const c = eff('conquerors_flag', 'conqueror'); const { s, es, k, h } = mk(); give(s, k, 'conquerors_flag'); for (const x of h) x.hp = Math.round(x.maxHp / 2);
+  const k0 = k.hp, o0 = h[1].hp; s.onKill(k, es[0], [], []);
+  ok("Conqueror's Flag: a kill heals the others " + c.percent + '%, not the holder', k.hp === k0 && Math.abs(h[1].hp - o0 - (h[1].maxHp * c.percent) / 100) <= 1, `${h[1].hp - o0}`);
+  const o1 = h[1].hp; s.onKill(h[2], es[0], [], []); ok("...another hero's kill: nothing", h[1].hp === o1); }
+// Sweeping Strap (CLEAVE): every 3rd melee attack hits all enemies in front.
+{ const sw = eff('sweeping_strap', 'sweep'), every = eff('sweeping_strap', 'sweepEvery').percent;
+  const { s, es, k } = mk(['goblin', 'goblin', 'goblin'], () => 0.99); give(s, k, 'sweeping_strap', 2); k.damageType = 'melee';
+  for (const e of es) { e.x = k.x; e.y = k.y - 40; }
+  const hits = []; for (let i = 0; i < every; i++) { const ev = []; s.landAttack(k, es[0], ev); hits.push(ev.some((x) => x.type === 'sweep')); }
+  ok('Cleave: only every ' + every + 'rd melee attack', hits.join() === [...Array(every - 1).fill(false), true].join(), hits.join());
+  ok('...it hits every enemy in front for ' + (sw.percent + sw.perExtra) + '%', lost(es[1]) > 0 && lost(es[2]) > 0 && near(lost(es[1]), lost(es[0]) / every * (sw.percent + sw.perExtra) / 100, 0.1), `${lost(es[0])} ${lost(es[1])}`);
+  es[2].y = k.y + 80; s.landAttack(k, es[0], []); s.landAttack(k, es[0], []); const b2 = lost(es[2]); s.landAttack(k, es[0], []);
+  ok('...not one behind the hero', lost(es[2]) === b2); }
+// Dread Bell (FEAR RING): target + neighbours feared, 3s cooldown, bosses immune.
+{ const fr = eff('dread_bell', 'fearRing'); const { s, es, k } = mk(['goblin', 'goblin', 'goblin'], () => 0); give(s, k, 'dread_bell', 2);
+  es[0].x = es[1].x = 100; es[0].y = es[1].y = 100; es[2].x = 300; es[2].y = 100; s.floorMs = 0;
+  s.landAttack(k, es[0], []); const f = (e) => e.statuses.find((x) => x.type === 'fear');
+  ok('Fear Ring: the target and its neighbour are Feared, a far one is not', f(es[0]) && f(es[1]) && !f(es[2]));
+  ok('...2 copies: ' + (fr.spec.durationMs + fr.spec.durationPerCopyMs) + 'ms', f(es[0]).total === fr.spec.durationMs + fr.spec.durationPerCopyMs);
+  for (const e of es) e.statuses = []; s.landAttack(k, es[0], []); ok('...then a ' + fr.cooldownMs / 1000 + 's cooldown', !f(es[0]));
+  s.floorMs = fr.cooldownMs + 1; s.landAttack(k, es[0], []); ok('...ready again after it', !!f(es[0]));
+  const bosses = Object.values(r('enemies.json')).filter((e) => e.boss); ok('...every boss is immune to fear', bosses.length && bosses.every((b) => (b.statusImmune || []).includes('fear'))); }

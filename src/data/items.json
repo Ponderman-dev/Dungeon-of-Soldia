@@ -120,29 +120,15 @@
     "name": "War Banner",
     "rarity": "rare",
     "type": "squad",
-    "scope": "self",
-    "description": "8% on attack: the whole squad gets +25% attack speed for 2s.",
+    "scope": "squad",
+    "description": "The whole squad gets +10% attack speed (while this hero lives).",
     "effects": [
       {
-        "proc": "onAttack",
-        "chance": 8,
-        "label": "Battle Cry!",
-        "targets": "squad",
-        "apply": [
-          {
-            "status": "buff",
-            "durationMs": 2000,
-            "mods": [
-              {
-                "stat": "attackEfficiency",
-                "percent": 25
-              }
-            ]
-          }
-        ]
+        "stat": "attackEfficiency",
+        "percent": 10
       }
     ],
-    "perStack": "+8% chance"
+    "perStack": "+10% attack speed for the squad"
   },
   "shield_totem": {
     "dropWeight": 90,
@@ -150,15 +136,22 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "6% chance to block a hit completely. Block from all items stops at 60%.",
+    "description": "Summons a Shield Totem in front of the squad. It never attacks; while it stands EVERY hero blocks 4% of hits. No upkeep.",
     "effects": [
       {
-        "special": "block",
-        "percent": 6,
-        "cap": 60
+        "greaterMinion": "shield_totem",
+        "upkeep": false
+      },
+      {
+        "special": "totemBlock",
+        "percent": 4
       }
     ],
-    "perStack": "+6% block (max 60%)"
+    "perStack": "+4% block, totem +50% health",
+    "provides": [
+      "minion",
+      "shield"
+    ]
   },
   "quick_gloves": {
     "name": "Quick Gloves",
@@ -836,26 +829,26 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "5% on attack: Fear the enemy for 1s.",
+    "description": "FEAR RING: 5% on attack: the enemy and every enemy near it are Feared for 1s (3s cooldown). Bosses are immune to fear.",
     "effects": [
       {
-        "proc": "onAttack",
-        "chance": 5,
-        "label": "Fear!",
-        "targets": "target",
-        "apply": [
-          {
-            "status": "fear",
-            "durationMs": 1000,
-            "durationPerCopyMs": 200
-          }
-        ],
-        "unique": true,
-        "chancePerExtra": 3
+        "special": "fearRing",
+        "percent": 5,
+        "perExtra": 3,
+        "radius": 100,
+        "cooldownMs": 3000,
+        "spec": {
+          "status": "fear",
+          "durationMs": 1000,
+          "durationPerCopyMs": 300
+        }
       }
     ],
     "dropWeight": 90,
-    "perStack": "+3% chance, +0.2s"
+    "perStack": "+3% chance, +0.3s",
+    "provides": [
+      "cc"
+    ]
   },
   "gag_rune": {
     "name": "Gag Rune",
@@ -1164,20 +1157,24 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "While this hero is taunting: +30 defense and reflects 25% of melee damage.",
+    "description": "While this hero is taunting: +30 defense, +30 resist, and every hit taken heals 1% max health.",
     "effects": [
       {
         "special": "spiteMail",
         "percent": 30
       },
       {
-        "special": "spiteReflect",
-        "percent": 25
+        "special": "spiteResist",
+        "percent": 30
+      },
+      {
+        "special": "spiteHeal",
+        "percent": 1
       }
     ],
     "dropWeight": 80,
     "needs": "taunt",
-    "perStack": "+30 defense, +25% reflect"
+    "perStack": "+30 defense, +30 resist, +1% heal"
   },
   "martyrs_shield": {
     "name": "Martyr's Shield",
@@ -1364,7 +1361,7 @@
   },
   "fire_imp_brazier": {
     "name": "Fire Imp Brazier",
-    "rarity": "epic",
+    "rarity": "rare",
     "type": "minion",
     "scope": "self",
     "description": "A fire Imp (its hits Burn) joins every fight, then another every 10s. Imps get half this hero's +fire damage.",
@@ -1391,12 +1388,13 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "10% when this hero is hit: a Mimic pops out. It never attacks: it taunts the enemies around it, then explodes when it dies.",
+    "description": "Below 50% health, 30% when this hero is hit: a Mimic pops out. It never attacks: it taunts the enemies around it, then explodes when it dies.",
     "effects": [
       {
         "special": "mimic",
-        "percent": 10,
-        "perExtra": 3
+        "percent": 30,
+        "perExtra": 3,
+        "below": 50
       },
       {
         "special": "mimicCopies",
@@ -1433,7 +1431,7 @@
     "perStack": "Gargoyle +50% stronger"
   },
   "spirit_knight_banner": {
-    "name": "Spirit Knight Banner",
+    "name": "Spirit Knight's Sigil",
     "rarity": "epic",
     "type": "minion",
     "scope": "self",
@@ -1455,7 +1453,7 @@
     "rarity": "legendary",
     "type": "minion",
     "scope": "self",
-    "description": "Summons a flying Phoenix whose fire hits Burn. It heals itself 2% per second and gets half this hero's +fire damage.",
+    "description": "Summons a flying Phoenix whose fire hits Burn. It heals itself 2% per second, comes back once per floor at 50% health, and gets half this hero's +fire damage.",
     "effects": [
       {
         "greaterMinion": "phoenix"
@@ -1490,25 +1488,21 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "+1 weak minion allowed. Weak minions attack 15% faster and have 25% more health.",
+    "description": "+1 weak minion allowed. Weak minions attack 25% faster.",
     "effects": [
       {
         "special": "whistleCap",
-        "percent": 1,
-        "cap": 4
+        "percent": 1
       },
       {
         "special": "whistleSpeed",
-        "percent": 15
-      },
-      {
-        "special": "whistleHealth",
-        "percent": 25
+        "percent": 25,
+        "perExtra": 10
       }
     ],
     "dropWeight": 70,
     "needs": "minion",
-    "perStack": "+1 minion (max +4), +15% speed, +25% health"
+    "perStack": "+1 weak minion, +10% speed"
   },
   "grave_dust": {
     "name": "Grave Dust",
@@ -1531,21 +1525,21 @@
     "rarity": "legendary",
     "type": "minion",
     "scope": "self",
-    "description": "All minions +20% health and attack, weak minions come 50% faster, every kill raises a skeleton.",
+    "description": "All minions +38% health and attack. Every squad kill raises a skeleton (max 4).",
     "effects": [
       {
         "special": "boneCharm",
-        "percent": 20
-      },
-      {
-        "special": "necroCrownSpeed",
-        "percent": 50,
-        "unique": true
+        "percent": 38
       },
       {
         "special": "necroCrownKill",
         "percent": 1,
         "unique": true
+      },
+      {
+        "special": "necroCrownSkeletons",
+        "percent": 4,
+        "perExtra": 2
       }
     ],
     "dropWeight": 80,
@@ -1553,7 +1547,7 @@
     "provides": [
       "minion"
     ],
-    "perStack": "+20% minion health and attack"
+    "perStack": "+38% minion health and attack, +2 skeletons"
   },
   "jolly_banner": {
     "name": "Jolly Banner",
@@ -2198,38 +2192,37 @@
     "perStack": "+5% chance"
   },
   "emergency_buckler": {
-    "name": "Emergency Buckler",
+    "name": "Buckler",
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Every kill: a shield of 4% max health that fades over 4s.",
+    "description": "5% chance to block a hit completely. Block from all items stops at 60%.",
     "effects": [
       {
-        "special": "killShield",
-        "percent": 4,
-        "perExtra": 2,
-        "durationMs": 4000
+        "special": "block",
+        "percent": 5,
+        "cap": 60
       }
     ],
     "dropWeight": 90,
-    "perStack": "+2% shield"
+    "perStack": "+5% block (max 60%)"
   },
   "rally_flag": {
-    "name": "Rally Flag",
+    "name": "Cautious Banner",
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "Once per floor, when a hero drops below 30% health: every hero gets a 12% max health shield.",
+    "description": "Once per floor, when a hero drops below 30% health: that hero gets a 25% max health shield.",
     "effects": [
       {
         "special": "rallyFlag",
-        "percent": 12,
-        "perExtra": 6,
+        "percent": 25,
+        "perExtra": 12,
         "below": 30
       }
     ],
     "dropWeight": 90,
-    "perStack": "+6% shield"
+    "perStack": "+12% shield"
   },
   "frost_mantle": {
     "name": "Frost Mantle",
@@ -2452,18 +2445,23 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Melee attacks also hit enemies next to the target for 15% damage.",
+    "description": "CLEAVE: every 3rd melee attack also hits ALL enemies in front of this hero for 70% damage.",
     "effects": [
       {
         "special": "sweep",
-        "percent": 15,
-        "perExtra": 8,
-        "radius": 100
+        "percent": 70,
+        "perExtra": 35,
+        "radius": 110
+      },
+      {
+        "special": "sweepEvery",
+        "percent": 3,
+        "unique": true
       }
     ],
     "dropWeight": 90,
     "needs": "melee",
-    "perStack": "+8% damage"
+    "perStack": "+35% cleave damage"
   },
   "kinetic_coil": {
     "name": "Kinetic Coil",
@@ -2603,5 +2601,108 @@
       "cc"
     ],
     "perStack": "+35% ice damage, +150% spikes"
+  },
+  "ember_collar": {
+    "name": "Ember Collar",
+    "rarity": "epic",
+    "type": "minion",
+    "scope": "self",
+    "description": "All of this hero's minions attack with fire damage. Does not stack with other collars (the newest one counts).",
+    "effects": [
+      {
+        "special": "collar",
+        "percent": 25,
+        "unique": true,
+        "element": "fire"
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "minion",
+    "provides": [
+      "fire"
+    ],
+    "perStack": "+25% minion fire damage"
+  },
+  "frost_collar": {
+    "name": "Frost Collar",
+    "rarity": "epic",
+    "type": "minion",
+    "scope": "self",
+    "description": "All of this hero's minions attack with ice damage. Does not stack with other collars (the newest one counts).",
+    "effects": [
+      {
+        "special": "collar",
+        "percent": 25,
+        "unique": true,
+        "element": "ice"
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "minion",
+    "provides": [
+      "ice"
+    ],
+    "perStack": "+25% minion ice damage"
+  },
+  "storm_collar": {
+    "name": "Storm Collar",
+    "rarity": "epic",
+    "type": "minion",
+    "scope": "self",
+    "description": "All of this hero's minions attack with electric damage. Does not stack with other collars (the newest one counts).",
+    "effects": [
+      {
+        "special": "collar",
+        "percent": 25,
+        "unique": true,
+        "element": "electric"
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "minion",
+    "provides": [
+      "electric"
+    ],
+    "perStack": "+25% minion electric damage"
+  },
+  "shadow_collar": {
+    "name": "Shadow Collar",
+    "rarity": "epic",
+    "type": "minion",
+    "scope": "self",
+    "description": "All of this hero's minions attack with dark damage. Does not stack with other collars (the newest one counts).",
+    "effects": [
+      {
+        "special": "collar",
+        "percent": 25,
+        "unique": true,
+        "element": "dark"
+      }
+    ],
+    "dropWeight": 80,
+    "needs": "minion",
+    "provides": [
+      "dark"
+    ],
+    "perStack": "+25% minion dark damage"
+  },
+  "conquerors_flag": {
+    "name": "Conqueror's Flag",
+    "rarity": "legendary",
+    "type": "special",
+    "scope": "self",
+    "description": "Every enemy this hero kills heals the OTHER living heroes 6% max health.",
+    "effects": [
+      {
+        "special": "conqueror",
+        "percent": 6,
+        "perExtra": 3
+      }
+    ],
+    "dropWeight": 90,
+    "provides": [
+      "heal"
+    ],
+    "perStack": "+3% heal"
   }
 }

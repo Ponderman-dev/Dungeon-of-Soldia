@@ -537,3 +537,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   SPIRIT KNIGHT BANNER -> renamed SPIRIT KNIGHT'S SIGIL: new item icon + name only (the Ice Spirit Knight keeps its look).
   NEW LEGENDARY CONQUEROR'S FLAG (user's idea): every enemy the holder kills heals the OTHER living heroes 6% max
   health (+3% per extra copy); not the holder itself. New icon (show in game first).
+- [planned, NOT built] METRONOME (user, session 32): every 3RD basic attack (was 4th) deals +100% damage (+50% per extra copy).
+- [planned, NOT built] SWEEPING STRAP (user, session 32) -> CLEAVE: every 3rd melee attack hits ALL enemies in front of
+  the hero for 70% (one clean swing line, like Sven's cleave; show in game first); the old 15% splash is removed.
+  Extra copy: proposed +35% (user to confirm). NEW ICON (user).

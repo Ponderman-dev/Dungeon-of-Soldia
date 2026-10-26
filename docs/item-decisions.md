@@ -516,3 +516,11 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - [planned, NOT built] SOUL LANTERN (user, session 31): stays once per run, counts squad kills from pick-up (not
   retroactive). Every 7 kills (was 8): +1% health, +1% attack, +1% attack speed, +1 FLAT defense (user; was
   +0.5%, which was tiny: % of level defense only), no limit. Attack stays +1% (flat attack rejected: +50 at 350 kills).
+- [planned, NOT built] DEFENSE (user, session 32): Tough Skin UNCHANGED (3 less per hit, no % part).
+  Spite Mail: reflect REMOVED; while taunting +30 defense, +30 resist, heals 1% max health per hit taken.
+  Shield Totem -> SUMMONS A TOTEM (greater minion, one per item): never attacks; while it stands EVERY hero blocks 4%
+  (+4% per extra copy; extra copy also +50% totem health as usual; 60% block cap stays). Stands in the FRONT line,
+  just in front of the heroes, in the centre. NO upkeep for this item. Dies -> back after 2 floors (normal rule).
+  Gets health from minion boosters (Bone Charm, Necro Crown). Start ~120 health, 20 defense, 0 attack (to tune).
+  Note: the planned element totems (placeholder names) do nothing for it (it never attacks); rename them later.
+  Padded Vest (+12 defense): still no answer (advised keep).

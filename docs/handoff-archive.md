@@ -1,6 +1,39 @@
 # Handoff ARCHIVE (sessions 2-30, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
 
+## (session 31 start note, 2026-10-25; session 31 did the ITEM REVIEW + element penalty instead) START HERE (session 31): NEXT = BOSS REWORK, Rask & Vesh (80) then Morthul (100) (user asked: 'bosses rework, especially 60, 80, 100')
+- BRANCH: `main` has EVERYTHING (session 30 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- HOW SESSION 30 WENT (Frost Warden, 60; copy this flow): user picked MECHANICS + NUMBERS, then WROTE the boss's design
+  themselves ('let me write first'): ask what they want, don't push your own ideas. Order: rules + tests first, then each
+  look ONE at a time shown in the game (clip + slow-motion x3 + frames, question tool), then numbers with the smart curve
+  (`curve.mjs 8 smart`, ~2 min; 3/squad is too few at floor 60+), then a full recorded fight. All details: bosses.md.
+- FROST WARDEN NOW (all in docs/systems/bosses.md): plates 80% cut / 15% health each (drawn on him: shoulder pieces +
+  breastplate), ice x0.2, HAILSTORM every 5s, UNSTOPPABLE (stuns/other moves can't skip it; whole-screen wind, 10% max health
+  + 30s Chill, minions weak 45% / greater 35%; under 25% DESPERATE = random every 2-4s), ICE SPIKES once under 50% (7s, 40 spikes, 1 in 8 aimed in turns + spacing rule, 25% + freeze 3s, deadly; weak minions
+  destroyed, greater 50%),
+  FROZEN REST once under 25% (3 Ice Spirit Knights attack 12, a hit every ~1.5s + heals 20% in 8s, still hittable), Ice Slam (own look).
+  Smart win rate of squads that reach him: 99% -> 39%. New effect code: `src/systems/bossFx.js`.
+- SHARPEST BLADE FIX (session 30): the Heart Strike max-health cut was boosted by crits/damage items (a boss's '4%' landed
+  as 5-15%); now EXACT (`strike` opts.fixedAmount), bosses 2% (+0.5%) (user). item-decisions.md updated.
+- BOSS NUMBERS to beat (smart, 960 runs, session 30 end): 20 Grukk 87%, 40 Brood Mother 80%, 60 Frost Warden 39%,
+  80 Rask & Vesh ~97%, 100 Morthul 100%, 120-160 ~90-100% (few runs reach them).
+- KIV (user): MOVE ORDERS so the squad can dodge Ice Spikes (drag a hero to a floor spot / tap floor = team walks there).
+- STILL OPEN (older): Kinetic Coil and Reaper's Bell ~0 floors; hero minions pile up on high floors; skill books same
+  modifier twice refused: OK?; unseen bonus / fewer commons from floor 41; smart bot doesn't keep a Sharpest Blade holder
+  pure; the itch zip is old (preview page + Item Review page republished at the end of session 30: all 112 items).
+- RECORD A REAL BOSS FIGHT (session 30, user liked it): `node scripts/tests/make-demo-squad.mjs 60 rogue,cleric,necromancer
+  demoSquadTry.json` (writes src/data/: MOVE it to the scratchpad, never commit), then in Playwright on the dev server:
+  wait for 'Title', `registry.set('squadIds', ids)` + `registry.set('testJump', { floor, room: null, heroes })`, stop
+  scenes, `scene.start('Battle')`, `recordVideo`, wait until the boss or the squad is dead, ffmpeg to mp4. Squads with
+  many items on one hero win; Knight/Berserker/Alchemist lost at 60.
+- Test helper: vite from the SCRATCHPAD: `<repo>/node_modules/.bin/vite <repo> --port 5177` (it dies between turns
+  sometimes: restart). Dev build exposes `window.__game` (see the recording recipe). To show a boss move: set the
+  boss's other `abilities` timers to 1e9 / done, set `hp` under the threshold. Playwright:
+  `/opt/node22/lib/node_modules/playwright/index.mjs`. ffmpeg is installed.
+- PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish
+  again (may need a third identical publish). Publishing with `edits` sends only the page: pass `files` for clips.
+- Fresh clone: `npm install` first (node_modules is not there).
+
 ## (session 30 start note, 2026-10-24; done in session 30: Frost Warden rework + Sharpest Blade fix) NEXT was BOSS REWORK for floors 60, 80, 100
 - BRANCH: `main` has EVERYTHING (session 29 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
 - BOSS REWORK (user: 'bosses rework, especially 60, 80, 100'): Frost Warden (60), Rask & Vesh (80), Morthul (100).

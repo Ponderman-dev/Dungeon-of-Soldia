@@ -532,3 +532,8 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - [planned, NOT built] BANNERS (user, session 32): WAR BANNER (rare) -> steady aura: whole squad +10% attack speed
   while the holder lives, +10% per extra copy (the 8% Battle Cry proc is removed; squad item, Bard's Hymn boosts it).
   Jolly Banner unchanged (now the only random burst banner). Guardian's Banner, Rally Flag unchanged.
+- [planned, NOT built] BANNERS 2 (user, session 32): RALLY FLAG -> renamed CAUTIOUS BANNER (rare): once per floor, when
+  a hero drops below 30% health, ONLY THAT hero gets a 25% max health shield (was 12% to every hero).
+  SPIRIT KNIGHT BANNER -> renamed SPIRIT KNIGHT'S SIGIL: new item icon + name only (the Ice Spirit Knight keeps its look).
+  NEW LEGENDARY CONQUEROR'S FLAG (user's idea): every enemy the holder kills heals the OTHER living heroes 6% max
+  health (+3% per extra copy); not the holder itself. New icon (show in game first).

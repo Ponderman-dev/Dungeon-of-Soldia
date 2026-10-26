@@ -524,3 +524,4 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Gets health from minion boosters (Bone Charm, Necro Crown). Start ~120 health, 20 defense, 0 attack (to tune).
   Note: the planned element totems (placeholder names) do nothing for it (it never attacks); rename them later.
   Padded Vest (+12 defense): still no answer (advised keep).
+  TODO (user, session 32): revisit minion UPKEEP for all summon items once the defense items are done.

@@ -529,3 +529,6 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - [planned, NOT built] MINION UPKEEP (user, session 32): the DEFENSE part is removed (combat.json upkeepDefensePercent
   -> 0); attack speed upkeep stays and still adds up PER summon item (greater -12%, weak -6%; user: paying once
   would let everyone go summoner). Shield Totem stays free.
+- [planned, NOT built] BANNERS (user, session 32): WAR BANNER (rare) -> steady aura: whole squad +10% attack speed
+  while the holder lives, +10% per extra copy (the 8% Battle Cry proc is removed; squad item, Bard's Hymn boosts it).
+  Jolly Banner unchanged (now the only random burst banner). Guardian's Banner, Rally Flag unchanged.

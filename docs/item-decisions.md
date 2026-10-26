@@ -514,4 +514,5 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   (Necro Crown skeletons not counted); Fire Imp Brazier epic -> rare; Mimic Chest appears below 50% health (30% chance);
   Phoenix revives once per floor at 50%.
 - [planned, NOT built] SOUL LANTERN (user, session 31): stays once per run, counts squad kills from pick-up (not
-  retroactive). Every 7 kills (was 8): +1% health, +1% attack, +1% attack speed, +0.5% defense, no limit.
+  retroactive). Every 7 kills (was 8): +1% health, +1% attack, +1% attack speed, +1 FLAT defense (user; was
+  +0.5%, which was tiny: % of level defense only), no limit. Attack stays +1% (flat attack rejected: +50 at 350 kills).

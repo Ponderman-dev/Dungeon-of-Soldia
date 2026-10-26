@@ -445,63 +445,63 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Archer +58/+55/+108%, Mage +56/+58/+111%; after Berserker +38/+22/+101%, Archer +68/+37/+113%, Mage +53/-13/+112%.
 - [built] Then (user): -10% per extra element (4 = -30%), and the MAGE never has the penalty. Floor 30, 4 charms:
   Berserker one element +37..+50% / mixed +34% / mixed + Euclid +120%; Archer +49..+58% / +33% / +107%.
-- [planned, NOT built] EUCLID REWORK (user, session 31): C + D1, replaces the old '25% chance to cast 3 more times'.
+- [built session 33] EUCLID REWORK (user, session 31): C + D1, replaces the old '25% chance to cast 3 more times'.
   C: +15% element damage per element past the first (instead of the -10% penalty), +10% more per element per extra
   copy (1 copy 4 elements = +45%, 2 copies = +75%, 3 = +105%). D1: PRISM BURST: damage of the holder's mixed-element
   hits fills a meter; full = a 4-colour blast on every enemy; each extra copy +50% blast damage. Meter size / blast %
   still to set. Build after the item list review.
-- [planned, NOT built] REGEN TRIO (user, session 31): all three keep regen, each its own job.
+- [built session 33] REGEN TRIO (user, session 31): all three keep regen, each its own job.
   Vital Band (common): plain regen 0.2%/s per copy, nothing else.
   Heart Charm (rare): +40 health, regen 0.3 -> 0.5%/s, and +5% extra floor-win heal per copy (win heal 25% -> 30%).
   Heart of the Beast (legendary): +100 health AND +10% max health, regen 1 -> 2%/s, DESPERATE: regen x2 below 30%
   health (4%/s). Each EXTRA copy: only +100 health and +0.5%/s regen (user: the +10% health and full 2% are
   first copy only, else 3 copies = 38 hp/s on a level-20 Knight); the x2 does not grow with copies.
   Vital Band and Heart Charm: every number adds up per copy.
-- [planned, NOT built] BOSS BADGES (user, session 31): Hunter's Badge (common) stays +20% damage to elites.
+- [built session 33] BOSS BADGES (user, session 31): Hunter's Badge (common) stays +20% damage to elites.
   Elite's Badge (rare) -> BOUNTY: when an elite dies, the squad heals 10% max health and gets +50% XP from it;
   each extra copy +5% heal and +25% XP.
   Giantslayer's Brand (epic) -> BIG GAME: +40% damage to bosses AND elites, +20% per extra copy; the wind-up part
   is dropped (user wanted ONE simple line; complicated ideas were rejected).
-- [planned, NOT built] BOMBS (user, session 31): keep all 5 (with the mix penalty each element needs its bomb).
+- [built session 33] BOMBS (user, session 31): keep all 5 (with the mix penalty each element needs its bomb).
   Fire Bombs: + Burn 3s (every bomb now has its own extra). Poison Bombs: the NO-ELEMENT bomb: plain (physical)
   damage + 3 poison, its poison not dark either, drop 'dark' from its provides (added this session) so it never
   counts for the mix penalty. Ice / Electric / Dark Bomb unchanged.
-- [planned, NOT built] LOW-HEALTH SAVES (user, session 31): Second Wind Flask stays used up but heals 50% (was 80%).
+- [built session 33] LOW-HEALTH SAVES (user, session 31): Second Wind Flask stays used up but heals 50% (was 80%).
   Aid Kit patch = 8% of the hurt hero's max health (was 15 flat), +4% per extra copy. Rally Flag and Phoenix Feather
   unchanged.
-- [planned, NOT built] PHOENIX FEATHER buff (user, session 31): still used up (one save per copy), but the save gives
+- [built session 33] PHOENIX FEATHER buff (user, session 31): still used up (one save per copy), but the save gives
   invulnerable 3s (was 1s), heals to 100% (was 70%), and every OTHER living hero heals 30% max health too.
-- [planned, NOT built] FIRE TRIO (user, session 31): Kindling (common) also gets 10% chance per attack to Burn 3s
+- [built session 33] FIRE TRIO (user, session 31): Kindling (common) also gets 10% chance per attack to Burn 3s
   (takes Ember Charm's old job). Ember Charm becomes RARE -> BURNING SKIN: +15 resist; melee attackers
   that hit this hero are Burned 3s (extra copy proposal: +15 resist, +20% of that burn's damage). Magma Core (epic) ->
   ERUPTION: no fire hit any more; burns deal +40%, and when a Burn ends it explodes for 150% fire on nearby enemies.
-- [planned, NOT built] ICE (user, session 31): Frost Mantle -> FROST SKIN: +15 defense, EVERY melee attacker gets
+- [built session 33] ICE (user, session 31): Frost Mantle -> FROST SKIN: +15 defense, EVERY melee attacker gets
   1 Chill (no roll). Frozen Demon Head: the holder's fire/electric/dark ITEM hits turn to ice at 50% damage
   instead of doing nothing. Frozen Thunderbolt: see FUSED PAIRS below (replaces 'keeps the mix penalty').
   Chill Band -> NUMBING COLD: no ice hit any more; every attack 1 Chill (5 = Freeze) and chilled enemies deal 10%
   less damage (extra copy proposal: +5% less damage). Frost Charm, Ice Bomb, Shatter Hammer, Spirit Knight Banner unchanged.
-- [planned, NOT built] ELECTRIC (user, session 31): Thunderstruck now stacks: each extra copy +350% bolt damage
+- [built session 33] ELECTRIC (user, session 31): Thunderstruck now stacks: each extra copy +350% bolt damage
   (1 = 700%, 2 = 1050%). Kinetic Coil v2 (user's design): only DODGES give a charge (blocks no
   longer); charges are NOT spent on the next attack any more; at 3 charges the weapon GLOWS and the next attack is a
   powerful LIGHTNING strike for 400% electric, then charges reset. Each extra copy +200% (2 = 600%, 3 = 800%).
   Best with evasion items (Feather Boots, Riposte Cloak). Storm Charm, Electric Bomb, Wisp Lantern,
   Static Crystal unchanged.
-- [planned, NOT built] FUSED PAIRS (user, session 31): hybrid items count their two elements as ONE for the mix
+- [built session 33] FUSED PAIRS (user, session 31): hybrid items count their two elements as ONE for the mix
   penalty while the hero holds them: Ghastly Fire fuses fire + dark, Frozen Thunderbolt fuses electric + ice.
   E.g. Kindling + Ghastly Fire = 1 element (no cut); + Frost Charm = 2 (-10%). Data idea: item field `fuses`.
-- [planned, NOT built] REAPER'S BELL -> HAUNTING SPIRITS (user's design, session 31; the explosion is removed):
+- [built session 33] REAPER'S BELL -> HAUNTING SPIRITS (user's design, session 31; the explosion is removed):
   when THIS hero kills an enemy, 50% chance a ghost spirit rises and flies to another not-yet-haunted enemy, haunting
   it for 5s: -20% damage dealt, Silence 2s (BOSSES are not silenced, the other two still apply), 1 Armor Break
   stack. Max 3 spirits at once. NO element (drop 'dark' from provides; never counts for the mix penalty).
   Extra copy: +15% spawn chance (50 -> 65 -> 80 -> 95 -> 100) and +1s haunt (keeps growing after 100%).
-- [planned, NOT built] BASIC DAMAGE (user, session 31): Sharp Edge +15% -> +25% melee damage per copy, Eagle Eye
+- [built session 33] BASIC DAMAGE (user, session 31): Sharp Edge +15% -> +25% melee damage per copy, Eagle Eye
   +15% -> +25% ranged damage per copy (specialists edge out Whetstone, the all-rounder). Whetstone unchanged.
-- [planned, NOT built] CONDITIONAL DAMAGE (user, session 31): Sucker Punch Glove (common, enemies above 90%) and
+- [built session 33] CONDITIONAL DAMAGE (user, session 31): Sucker Punch Glove (common, enemies above 90%) and
   Executioner's Axe (rare, enemies under 25%) both +40% per copy (opener / finisher; the Axe no longer shrinks per
   copy). Brawler's Streak: +3% per hit in a row, max +15% (+15% to the max per extra copy). Swarm Swatter: +25% to
   NORMAL enemies (not elites, not bosses), +12% per extra copy (set: Swatter normal / Hunter's Badge elites / Big
   Game bosses + elites). Better Odds (epic): +5% damage per enemy alive, +2.5% per enemy per extra copy.
-- [planned, NOT built] MINIONS (user, session 31). Boosters, each its own job:
+- [built session 33] MINIONS (user, session 31). Boosters, each its own job:
   Overseer's Whistle = MORE swarm (+1 weak minion allowed, 25% faster; its +25% health removed; copy +1, +10%).
   Grave Dust = unchanged (weak minions explode 400% + Poison). Bone Charm = +20% health and attack, ALL minions.
   Necro Crown = +38% health and attack, ALL minions, and every squad kill raises a skeleton, MAX 4 (+2 per extra
@@ -513,10 +513,10 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   damage bonus (Rats/Gargoyle: +melee); minion items don't count for the mix penalty; 6 minions max per hero
   (Necro Crown skeletons not counted); Fire Imp Brazier epic -> rare; Mimic Chest appears below 50% health (30% chance);
   Phoenix revives once per floor at 50%.
-- [planned, NOT built] SOUL LANTERN (user, session 31): stays once per run, counts squad kills from pick-up (not
+- [built session 33] SOUL LANTERN (user, session 31): stays once per run, counts squad kills from pick-up (not
   retroactive). Every 7 kills (was 8): +1% health, +1% attack, +1% attack speed, +1 FLAT defense (user; was
   +0.5%, which was tiny: % of level defense only), no limit. Attack stays +1% (flat attack rejected: +50 at 350 kills).
-- [planned, NOT built] DEFENSE (user, session 32): Tough Skin UNCHANGED (3 less per hit, no % part).
+- [built session 33] DEFENSE (user, session 32): Tough Skin UNCHANGED (3 less per hit, no % part).
   Spite Mail: reflect REMOVED; while taunting +30 defense, +30 resist, heals 1% max health per hit taken.
   Shield Totem -> SUMMONS A TOTEM (greater minion, one per item): never attacks; while it stands EVERY hero blocks 4%
   (+4% per extra copy; extra copy also +50% totem health as usual; 60% block cap stays). Stands in the FRONT line,
@@ -526,25 +526,25 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Padded Vest: unchanged (+12 defense, user OK). The other defense items stay as they are.
   Emergency Buckler -> renamed BUCKLER (common): the holder-only block item (Shield Totem's old job): 5% block per
   copy (1=5%, 3=15%, 12=60% cap); the kill shield is REMOVED.
-- [planned, NOT built] MINION UPKEEP (user, session 32): the DEFENSE part is removed (combat.json upkeepDefensePercent
+- [built session 33] MINION UPKEEP (user, session 32): the DEFENSE part is removed (combat.json upkeepDefensePercent
   -> 0); attack speed upkeep stays and still adds up PER summon item (greater -12%, weak -6%; user: paying once
   would let everyone go summoner). Shield Totem stays free.
-- [planned, NOT built] BANNERS (user, session 32): WAR BANNER (rare) -> steady aura: whole squad +10% attack speed
+- [built session 33] BANNERS (user, session 32): WAR BANNER (rare) -> steady aura: whole squad +10% attack speed
   while the holder lives, +10% per extra copy (the 8% Battle Cry proc is removed; squad item, Bard's Hymn boosts it).
   Jolly Banner unchanged (now the only random burst banner). Guardian's Banner, Rally Flag unchanged.
-- [planned, NOT built] BANNERS 2 (user, session 32): RALLY FLAG -> renamed CAUTIOUS BANNER (rare): once per floor, when
+- [built session 33] BANNERS 2 (user, session 32): RALLY FLAG -> renamed CAUTIOUS BANNER (rare): once per floor, when
   a hero drops below 30% health, ONLY THAT hero gets a 25% max health shield (was 12% to every hero).
   SPIRIT KNIGHT BANNER -> renamed SPIRIT KNIGHT'S SIGIL: new item icon + name only (the Ice Spirit Knight keeps its look).
   NEW LEGENDARY CONQUEROR'S FLAG (user's idea): every enemy the holder kills heals the OTHER living heroes 6% max
   health (+3% per extra copy); not the holder itself. New icon (show in game first).
-- [planned, NOT built] METRONOME (user, session 32): every 3RD basic attack (was 4th) deals +100% damage (+50% per extra copy).
-- [planned, NOT built] SWEEPING STRAP (user, session 32) -> CLEAVE: every 3rd melee attack hits ALL enemies in front of
+- [built session 33] METRONOME (user, session 32): every 3RD basic attack (was 4th) deals +100% damage (+50% per extra copy).
+- [built session 33] SWEEPING STRAP (user, session 32) -> CLEAVE: every 3rd melee attack hits ALL enemies in front of
   the hero for 70% (one clean swing line, like Sven's cleave; show in game first); the old 15% splash is removed.
   Extra copy +35% (user; 2 = 105%, 3 = 140%). NEW ICON (user).
-- [planned, NOT built] DAMAGE TRICKS (user, session 32): CATALYST VIAL (epic) keeps its crit ticks (crits +25%) AND
+- [built session 33] DAMAGE TRICKS (user, session 32): CATALYST VIAL (epic) keeps its crit ticks (crits +25%) AND
   burn, poison and bleed from this hero deal +30% damage. Every other damage trick item stays as it is (Quiver of
   Plenty and Last Stand kept too).
-- [planned, NOT built] ON-HIT (user, session 32): SERRATED EDGE (rare) extra copy = +8% chance AND +10% bleed damage
+- [built session 33] ON-HIT (user, session 32): SERRATED EDGE (rare) extra copy = +8% chance AND +10% bleed damage
   (was +5% chance only; same as Venom Fang). DREAD BELL (rare) -> FEAR RING: 5% on attack, the target and every enemy
   near it (~100px) are Feared 1s (user: start at 1s; extra copy +3% chance, +0.3s: 2 = 8% 1.3s, 3 = 11% 1.6s); 3s COOLDOWN after each ring (user: not every time). BOSSES ARE IMMUNE TO FEAR (user; was
   half length; data: add 'fear' to every boss's statusImmune, Dread Bell is the only enemy-fear source); a ring next

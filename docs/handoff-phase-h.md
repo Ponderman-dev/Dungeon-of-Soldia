@@ -16,6 +16,7 @@
   the game first (art rule): prism burst, haunting spirits, Kinetic Coil glow + lightning, Eruption, element totems,
   Shield Totem minion, fear ring, cleave swing, new icons (Sweeping Strap, Spirit Knight's Sigil, Conqueror's Flag).
   New effect shapes need a copy in the test fixture (CLAUDE.md 'Tests vs tuning').
+  war-banner.test.mjs 'proc rate ~8%' is unseeded and fails now and then (7.0% once); it is rewritten with the War Banner aura anyway.
 - OPEN (ask, don't guess): Conqueror's Flag: do the holder's MINION kills count? (written as holder's own kills only).
   Euclid prism meter size / blast % still to set. Element totems need new names (they do nothing for the Shield Totem).
 - ALSO WAITING: MOVE ORDERS (user picked: tap floor = whole squad walks there, drag a hero onto floor = that hero

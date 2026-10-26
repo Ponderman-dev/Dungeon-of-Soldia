@@ -509,7 +509,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   NEW: 4 EPIC ELEMENT TOTEMS (names placeholder: Ember / Frost / Storm / Shadow Totem): all of the holder's minions'
   attacks become that element (NO extra debuff, user: too powerful); each extra copy +25% minion damage of that
   element. Two different totems: the NEWEST wins; the item text must WARN 'does not stack with other totems'.
-  Proposed, NOT yet confirmed by the user: swarm vs champion families; every minion gets half its holder's matching
+  Also CONFIRMED (user, 1-6 yes): swarm vs champion families; every minion gets half its holder's matching
   damage bonus (Rats/Gargoyle: +melee); minion items don't count for the mix penalty; 6 minions max per hero
-  (Necro Crown skeletons not counted); Fire Imp Brazier epic -> rare; Mimic Chest appears below 50% health;
+  (Necro Crown skeletons not counted); Fire Imp Brazier epic -> rare; Mimic Chest appears below 50% health (30% chance);
   Phoenix revives once per floor at 50%.

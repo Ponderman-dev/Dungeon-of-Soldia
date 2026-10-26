@@ -41,8 +41,8 @@ const skillOf = (u, kind) => u.skills.findIndex((x) => x.kind === kind);
   ok('...fire + electric = Overload (a burst on the others)', ev.some((x) => x.type === 'reaction' && x.kind === 'overload') && es[1].hp < hp1); }
 { const { s, es, h } = mk(['knight']); const k = h[0]; s.strike(k, es[0], [], { damageType: 'fire' });
   ok('...no Mage, no elements', !es[0].statuses.some((x) => x.type === 'element')); }
-{ const { s, es, h } = mk(['mage', 'archer'], ['goblin'], () => 0); const a = h[1]; s.giveItem(a.uid, 'chill_band');
+{ const { s, es, h } = mk(['mage', 'archer'], ['goblin'], () => 0); const a = h[1]; s.giveItem(a.uid, 'frost_charm');
   s.strike(h[0], es[0], [], { damageType: 'fire' }); const ev = []; s.landAttack(a, es[0], ev);
-  ok('...ITEM hits of other heroes react too (Chill Band ice on fire)', ev.some((x) => x.type === 'reaction')); }
+  ok('...ITEM hits of other heroes react too (Frost Charm ice on fire)', ev.some((x) => x.type === 'reaction')); }
 
 

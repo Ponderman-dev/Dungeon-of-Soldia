@@ -16,15 +16,34 @@ export function canReceive(unit, item) {
 }
 
 // Mixing elements (combat.json `elementMix`): the different elements among the hero's items (`provides` tags) and
-// the % cut on that hero's element damage (`penaltyPerExtraPercent` per element past the first; 0 with Euclid or for
-// a hero in `exemptHeroes`).
+// the % cut on that hero's element damage (`penaltyPerExtraPercent` per element past the first; 0 for a hero in
+// `exemptHeroes`). Minion items never count (session 31). FUSED PAIRS: an item with `fuses` (Ghastly Fire: fire + dark,
+// Frozen Thunderbolt: electric + ice) makes its two elements count as ONE while the hero holds both.
+// Euclid of Elements (special `euclid`, session 31): instead of a cut, +`euclid`% element damage per element past the
+// first, +`perExtra` more per element for every extra copy (a NEGATIVE cut = a bonus; the Mage gets it too).
 export function elementMix(hero, itemDefs, mixRules) {
   const list = (mixRules && mixRules.elements) || [];
-  const elements = [...new Set(hero.items.flatMap((id) => ((itemDefs[id] && itemDefs[id].provides) || []).filter((t) => list.includes(t))))];
-  const euclid = hero.items.some((id) => itemDefs[id] && (itemDefs[id].effects || []).some((e) => e.special === 'euclid'));
-  const exempt = euclid || ((mixRules && mixRules.exemptHeroes) || []).includes(hero.def && hero.def.id);
-  const cut = exempt ? 0 : Math.min(100, Math.max(0, elements.length - 1) * ((mixRules && mixRules.penaltyPerExtraPercent) || 0));
-  return { elements, cut };
+  const isMinion = (def) => (def.effects || []).some((e) => e.minionSpawner || e.greaterMinion || e.minionOnHit);
+  const held = hero.items.map((id) => itemDefs[id]).filter((def) => def && !isMinion(def));
+  const elements = [...new Set(held.flatMap((def) => (def.provides || []).filter((t) => list.includes(t))))];
+  let count = elements.length;
+  const fused = new Set();
+  for (const def of held) {
+    const pair = def.fuses;
+    if (!pair || fused.has(pair.join()) || !pair.every((t) => elements.includes(t))) continue;
+    fused.add(pair.join());
+    count -= 1; // the pair counts as one element
+  }
+  count = Math.max(elements.length ? 1 : 0, count);
+  const euclidIds = hero.items.filter((id) => itemDefs[id] && (itemDefs[id].effects || []).some((e) => e.special === 'euclid'));
+  if (euclidIds.length) {
+    const e = itemDefs[euclidIds[0]].effects.find((x) => x.special === 'euclid');
+    const per = e.percent + (e.perExtra || 0) * (euclidIds.length - 1);
+    return { elements, count, cut: -Math.max(0, count - 1) * per };
+  }
+  const exempt = ((mixRules && mixRules.exemptHeroes) || []).includes(hero.def && hero.def.id);
+  const cut = exempt ? 0 : Math.min(100, Math.max(0, count - 1) * ((mixRules && mixRules.penaltyPerExtraPercent) || 0));
+  return { elements, count, cut };
 }
 
 // A hero's stats = their level stats + every item that currently works for them.

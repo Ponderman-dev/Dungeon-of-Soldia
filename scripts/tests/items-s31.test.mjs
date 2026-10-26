@@ -81,3 +81,75 @@ ok('Minion upkeep: the defense part is 0', r('combat.json').minions.upkeepDefens
 // Kindling: a chance to Burn.
 { const { s, e, k } = mk(['goblin'], () => 0); give(s, k, 'kindling'); s.rollProcs(k, 'onAttack', [], { target: e, hit: true, folded: true });
   ok('Kindling: ' + proc('kindling') && 'Kindling: can Burn on attack', e.statuses.some((x) => x.type === 'burn')); }
+
+// ---- batch 2: elements ----
+const lost = (e) => 1e7 - e.hp;
+const flush = (s, ev = []) => { for (let i = 0; i < 20; i++) s.tickDelays(100, ev); return ev; };
+const per = r('combat.json').elementMix.penaltyPerExtraPercent;
+// Fused pairs: Ghastly Fire (fire + dark) and Frozen Thunderbolt (electric + ice) count as one element.
+{ const cut = (ids) => { const { s, k } = mk(); for (const id of ids) give(s, k, id); return k.elementCut; };
+  ok('Fused pairs: Kindling + Ghastly Fire = 1 element (no cut)', cut(['kindling', 'ghastly_fire']) === 0);
+  ok('...+ Frost Charm = 2 elements (-' + per + '%)', cut(['kindling', 'ghastly_fire', 'frost_charm']) === per);
+  ok('...Storm Charm + Frozen Thunderbolt = 1 element', cut(['storm_charm', 'frozen_thunderbolt']) === 0);
+  ok('...minion items never count', cut(['kindling', 'wisp_lantern']) === 0 && cut(['kindling', 'fire_imp_brazier', 'frost_charm']) === per); }
+// Euclid of Elements: +X% per element past the first (negative cut), +perExtra per element per extra copy.
+{ const eu = eff('euclid_of_elements', 'euclid'); const c = (n) => { const { s, k } = mk(); for (const id of ['kindling', 'frost_charm', 'storm_charm', 'shadow_charm']) give(s, k, id); give(s, k, 'euclid_of_elements', n); return -k.elementCut; };
+  ok('Euclid: 4 elements, 1 copy = +' + 3 * eu.percent + '%, 2 copies = +' + 3 * (eu.percent + eu.perExtra) + '%', c(1) === 3 * eu.percent && c(2) === 3 * (eu.percent + eu.perExtra), `${c(1)} ${c(2)}`); }
+{ const fill = eff('euclid_of_elements', 'prismFill').percent, pr = eff('euclid_of_elements', 'prism');
+  const { s, es, k } = mk(['goblin', 'goblin'], () => 0.5); give(s, k, 'kindling'); give(s, k, 'frost_charm'); give(s, k, 'euclid_of_elements');
+  const ev = []; let n = 0; while (!ev.some((x) => x.label === 'Prism burst!') && n++ < 200) s.landAttack(k, es[0], ev);
+  const before = lost(es[1]); const ev2 = flush(s);
+  const types = new Set(ev2.filter((x) => x.type === 'attack' && x.target === es[1]).map((x) => x.damageType));
+  ok('Euclid PRISM BURST: 2-element hits fill the prism (' + fill + '% of attack), then fire+ice+electric+dark hit EVERY enemy', n < 200 && lost(es[1]) > before && ['fire', 'ice', 'electric', 'dark'].every((t) => types.has(t)), `${n} ${[...types]}`);
+  const { s: s2, e: e2, k: k2 } = mk(); give(s2, k2, 'kindling'); give(s2, k2, 'euclid_of_elements'); for (let i = 0; i < 50; i++) s2.landAttack(k2, e2, []);
+  ok('...one element never fills it', !k2.prismStore); }
+// Ember Charm (BURNING SKIN): + resist, melee attackers burn.
+{ const { s, e, k } = mk(); const r0 = k.stats.resist; give(s, k, 'ember_charm'); e.damageType = 'melee'; s.strike(e, k, [], {});
+  ok('Ember Charm: +' + itemDefs.ember_charm.effects[0].flat + ' resist, a melee attacker is Burned', k.stats.resist - r0 === itemDefs.ember_charm.effects[0].flat && e.statuses.some((x) => x.type === 'burn'));
+  ok('...it is rare now', itemDefs.ember_charm.rarity === 'rare'); }
+// Magma Core (ERUPTION): no fire hit; when a Burn ends the enemy explodes.
+{ const { s, es, k } = mk(['goblin', 'goblin']); give(s, k, 'magma_core'); for (const e of es) { e.x = 100; e.y = 100; }
+  ok('Magma Core: no fire rider any more', !s.riders(k).length);
+  s.applyStatus(es[0], { status: 'burn', durationMs: 1000, damageMultiplier: 0.01, damageType: 'fire' }, k, 't', []);
+  const ev = []; for (let t = 0; t < 1200; t += 50) ev.push(...s.update(50));
+  ok('...when the Burn ends the enemy ERUPTS and hits its neighbour', ev.some((x) => x.label === 'Eruption!') && lost(es[1]) > 0, `${lost(es[1])}`); }
+// Frost Mantle (FROST SKIN): + defense, EVERY melee attacker gets 1 Chill.
+{ const { s, e, k } = mk(['goblin'], () => 0.99); const d0 = k.stats.defense; give(s, k, 'frost_mantle'); e.damageType = 'melee';
+  for (let i = 0; i < 3; i++) s.strike(e, k, [], {});
+  ok('Frost Mantle: +15 defense, every melee hit chills (no roll)', k.stats.defense - d0 === 15 && s.stacks(e, 'chill') === 3, `${s.stacks(e, 'chill')}`); }
+// Frozen Demon Head: fire/electric/dark ITEM hits turn to ice at half damage.
+{ const pct = eff('frozen_demon_head', 'demonHeadItem').percent;
+  const hit = (dh) => { const { s, e, k } = mk(); if (dh) give(s, k, 'frozen_demon_head'); k.damageBonus = {}; e.resists = []; const ev = []; s.strike(k, e, ev, { damageType: 'fire', multiplier: 1, item: true }); return { lost: lost(e), type: (ev.find((x) => x.type === 'attack') || {}).damageType }; };
+  const a = hit(false), b = hit(true);
+  ok('Frozen Demon Head: a fire ITEM hit lands as ice at ' + pct + '%', b.type === 'ice' && b.lost > 0 && b.lost < a.lost, `${a.lost} -> ${b.lost} ${b.type}`); }
+// Chill Band (NUMBING COLD): no ice hit; a chilled enemy deals less.
+{ const nc = eff('chill_band', 'numbingCold');
+  const { s, e, k } = mk(['goblin'], () => 0.99); give(s, k, 'chill_band', 2);
+  ok('Chill Band: no ice rider any more', !s.riders(k).length);
+  const dmg = (chill) => { const t = mk(['goblin'], () => 0.99); give(t.s, t.k, 'chill_band', 2); t.e.stats.crit = 0; t.e.stats.attack = 1000; if (chill) t.s.applyStatus(t.e, { status: 'chill', durationMs: 5000 }, t.k, 'x', []); t.k.hp = t.k.maxHp = 1e6; const r1 = t.s.strike(t.e, t.k, [], {}); return r1.amount; };
+  ok('...a chilled enemy deals ' + (nc.percent + nc.perExtra) + '% less (2 bands)', near(dmg(true), dmg(false) * (1 - (nc.percent + nc.perExtra) / 100), 0.05), `${dmg(false)} -> ${dmg(true)}`);
+  s.landAttack(k, e, []); ok('...every attack still adds 1 Chill', s.stacks(e, 'chill') === 1); }
+// Kinetic Coil v2: dodges only, charges kept, at 3 the next attack is a lightning strike.
+{ const kc = eff('kinetic_coil', 'kineticCoil'); const { s, e, k } = mk(['goblin'], () => 0); give(s, k, 'kinetic_coil', 2);
+  k.stats.evasion = 100; s.strike(e, k, [], {}); s.strike(e, k, [], {});
+  k.stats.evasion = 0; s.rng = () => 0.99; s.landAttack(k, e, []);
+  ok('Kinetic Coil: charges are NOT spent below ' + kc.count, k.floor.coil === 2 && !s.coilReady(k));
+  s.rng = () => 0; k.stats.evasion = 100; s.strike(e, k, [], {}); k.stats.evasion = 0;
+  ok('...at ' + kc.count + ' charges the weapon is ready', s.coilReady(k));
+  s.rng = () => 0.99; const ev = []; const h0 = lost(e); s.landAttack(k, e, ev); const hit = ev.find((x) => x.type === 'attack' && x.attacker === k);
+  const rider = hit.result.riders.find((rd) => rd.damageType === 'electric');
+  ok('...the next attack is a LIGHTNING strike (+' + (kc.percent + kc.perExtra) + '% electric) and the charges reset', ev.some((x) => x.label === 'Lightning!') && rider && near(rider.amount, k.stats.attack * (kc.percent + kc.perExtra) / 100, 0.05) && k.floor.coil === 0, `${rider && rider.amount}`);
+  const { s: b, e: be, k: bk } = mk(['goblin'], () => 0); give(b, bk, 'kinetic_coil'); bk.stats.evasion = 0; bk.specials.block = 100; b.strike(be, bk, [], {});
+  ok('...a BLOCK no longer stores a charge', !bk.floor.coil); }
+// Reaper's Bell (HAUNTING SPIRITS): no element, a spirit haunts another enemy (weaken, silence, armor break), max 3.
+{ const rb = eff('reapers_bell', 'reaperBell'); ok("Reaper's Bell: no element", !(itemDefs.reapers_bell.provides || []).some((t) => ['fire', 'ice', 'electric', 'dark'].includes(t)));
+  const { s, es, k } = mk(['goblin', 'goblin', 'goblin', 'goblin', 'goblin', 'goblin'], () => 0); give(s, k, 'reapers_bell');
+  const ev = []; s.onKill(k, es[0], ev, []);
+  const t = es.find((e) => e !== es[0] && e.statuses.some((x) => x.type === 'weaken'));
+  ok('...a kill sends a spirit: the haunted enemy is weakened, silenced and armor-broken', t && ['silence', 'armorBreak'].every((x) => t.statuses.some((st) => st.type === x)) && ev.some((x) => x.label === 'Haunt!'));
+  for (let i = 0; i < 5; i++) s.onKill(k, es[0], [], []);
+  ok('...max ' + eff('reapers_bell', 'hauntMax').percent + ' spirits at once', s.spirits.length === eff('reapers_bell', 'hauntMax').percent && new Set(s.spirits.map((x) => x.target)).size === s.spirits.length);
+  const { s: s2, es: es2, k: k2 } = mk(['goblin', 'goblin']); give(s2, k2, 'reapers_bell'); es2[1].def = { ...es2[1].def, boss: true }; s2.rng = () => 0; s2.onKill(k2, es2[0], [], []);
+  ok('...a boss is not silenced (the rest still applies)', !es2[1].statuses.some((x) => x.type === 'silence') && es2[1].statuses.some((x) => x.type === 'weaken'));
+  const { s: s3, es: es3, k: k3 } = mk(['goblin', 'goblin'], () => 0.99); give(s3, k3, 'reapers_bell'); s3.onKill(k3, es3[0], [], []);
+  ok('...' + rb.percent + '% chance (a high roll: nothing)', !s3.spirits.length); }

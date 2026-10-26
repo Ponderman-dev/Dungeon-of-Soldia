@@ -21,23 +21,7 @@ const give = (s, u, id, n = 1) => { for (let i = 0; i < n; i++) s.giveItem(u.uid
 const lost = (e) => 1e7 - e.hp;
 const flush = (s, ev = []) => { for (let i = 0; i < 20; i++) s.tickDelays(100, ev); return ev; };
 
-// Euclid of Elements
-{ const eu = val('euclid_of_elements', 'euclid'), ep = val('euclid_of_elements', 'euclidPower');
-  const swing = (items, rng, n = 1) => {
-    const { s, e, k } = mk(['goblin'], rng); for (const id of items) give(s, k, id); give(s, k, 'euclid_of_elements', n); k.stats.crit = 0;
-    const ev = []; s.landAttack(k, e, ev); const first = lost(e); flush(s, ev);
-    return { first, total: lost(e), procs: ev.filter((x) => x.type === 'proc' && x.itemId === 'euclid_of_elements').length };
-  };
-  const two = swing(['kindling', 'frost_charm'], () => 0);
-  ok('Euclid: a hit with 2 elements (2 charms) casts ' + eu.count + ' more times at ' + ep.percent + '%', two.procs === 1 && Math.abs(two.total - two.first * (1 + (eu.count * ep.percent) / 100)) <= eu.count * 2, `${two.first} -> ${two.total}`);
-  const one = swing(['kindling'], () => 0);
-  ok('...a hit with only 1 element: nothing (physical is not an element)', one.procs === 0 && one.total === one.first);
-  const miss = swing(['kindling', 'frost_charm'], () => 0.99);
-  ok('...nothing when the chance misses', miss.procs === 0);
-  const two2 = swing(['kindling', 'frost_charm'], () => 0, 2);
-  ok('...2 copies: ' + (ep.percent + ep.perExtra) + '% per cast', Math.abs(two2.total - two2.first * (1 + (eu.count * (ep.percent + ep.perExtra)) / 100)) <= eu.count * 2, `${two2.first} -> ${two2.total}`);
-  const { s, k } = mk(); give(s, k, 'euclid_of_elements', 2);
-  ok('...2 copies: ' + (eu.percent + eu.perExtra) + '% chance', k.specials.euclid === eu.percent + eu.perExtra); }
+// Euclid of Elements: reworked in session 31 (prism burst), tested in items-s31.test.mjs.
 // Frozen Demon Head
 { const dh = val('frozen_demon_head', 'demonHead'), fill = val('frozen_demon_head', 'demonHeadFill').percent;
   const ice = itemDefs.frozen_demon_head.effects.find((x) => x.damageBonus === 'ice');
@@ -47,8 +31,6 @@ const flush = (s, ev = []) => { for (let i = 0; i < 20; i++) s.tickDelays(100, e
   for (const type of ['fire', 'electric', 'dark']) {
     const own = hit(type); // its own attack / skill (session 29): turned to ice
     ok('...its own ' + type + ' hit lands as ice', own.lost > 0 && own.ev.some((x) => x.type === 'attack' && x.damageType === 'ice'), JSON.stringify(own.ev.filter((x) => x.type === 'attack').map((x) => x.damageType)));
-    const item = hit(type, true);
-    ok('...a ' + type + ' ITEM hit does nothing', item.lost === 0 && item.res.removed);
   }
   ok('...melee and ice hits still land', hit('melee').lost > 0 && hit('ice').lost > 0);
   { const { s: t, e, k: h } = mk(); give(t, h, 'frozen_demon_head'); give(t, h, 'kindling'); give(t, h, 'frost_charm'); const res = t.strike(h, e, [], { basic: true, riders: true });

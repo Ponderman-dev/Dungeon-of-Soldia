@@ -76,21 +76,4 @@ const shield = (u, key) => u.statuses.find((st) => st.type === 'shield' && (!key
   ok('...a ranged attacker is not', s.stacks(archer, 'chill') === 0);
   const { s: s2, e: e2, k: k3 } = mk(['goblin'], () => 0.99); give(s2, k3, 'frost_mantle'); e2.damageType = 'melee'; s2.strike(e2, k3, [], {});
   ok('...nothing when the chance misses', s2.stacks(e2, 'chill') === 0); }
-// Reaper's Bell: the holder's kills explode for % of the dead enemy's max health; the blast's kills explode again.
-{ const rb = val('reapers_bell', 'reaperBell');
-  const { s, es, k } = mk(['goblin', 'goblin', 'goblin']); give(s, k, 'reapers_bell', 2);
-  for (const e of es) { e.x = 100; e.y = 100; e.hp = 1e7; }
-  const [dead, a, b] = es;
-  const before = a.hp; s.onKill(s.heroes[1], dead, [], []);
-  ok("Reaper's Bell: another hero's kill does not explode", a.hp === before);
-  s.onKill(k, dead, [], []);
-  const pct = rb.percent + rb.perExtra, lost = before - a.hp;
-  ok('...own kill, 2 copies: neighbours take about ' + pct + '% of its max health as dark', Math.abs(lost / ((dead.maxHp * pct) / 100) - 1) < 0.1, `${lost}`);
-  // Chain: a small enemy dies to the blast and explodes too.
-  const { s: t, es: fs2, k: k2 } = mk(['goblin', 'goblin', 'goblin']); give(t, k2, 'reapers_bell');
-  for (const e of fs2) { e.x = 100; e.y = 100; }
-  fs2[1].hp = 1; fs2[2].hp = 1e7; t.killUnit(fs2[0], [], k2);
-  ok('...a blast kill explodes again (chain)', !fs2[1].alive && fs2[2].hp < 1e7 - (fs2[0].maxHp * rb.percent) / 100 * 1.5, `${1e7 - fs2[2].hp}`);
-  const { s: u, es: gs, k: k4 } = mk(['goblin', 'goblin']); give(u, k4, 'reapers_bell');
-  gs[0].x = 0; gs[0].y = 0; gs[1].x = 500; gs[1].y = 0; u.onKill(k4, gs[0], [], []);
-  ok('...enemies out of range (' + rb.radius + 'px) are safe', gs[1].hp === 1e7); }
+// Reaper's Bell: reworked in session 31 (haunting spirits), tested in items-s31.test.mjs.

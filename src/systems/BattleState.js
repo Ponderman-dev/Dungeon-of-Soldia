@@ -299,6 +299,7 @@ export default class BattleState {
     this.tornados = [];
     this.bombs = []; // Kobold Sapper bombs on the floor
     this.thunders = []; // Thunderstruck circles growing under enemies
+    this.spirits = []; // Reaper's Bell haunting spirits
     for (const h of this.heroes) {
       h.floor = {}; // per-floor flags (Tough Skin used, Second Wind used...)
       h.sigilHits = new Set(); // enemies this hero has already marked (Hunter's Sigil)
@@ -832,6 +833,7 @@ export default class BattleState {
     for (const b of this.bombs || []) events.push({ type: 'bombFizzle', bomb: b }); // a Sapper bomb still lit when the floor is won goes out
     this.bombs = [];
     this.thunders = []; // a Thunderstruck circle still growing when the floor is won just goes away
+    this.spirits = [];
     for (const m of [...this.minions]) {
       if (!m.greater) this.vanishMinion(m, 'floorEnd', events);
       else m.floors++; // a greater minion that survived the floor (Spirit Knight grows)
@@ -1037,6 +1039,7 @@ export default class BattleState {
     this.tickTornados(dt, events);
     this.tickDelays(dt, events); // Flame Spirit / Moonlight Twinblade hits on their way
     this.tickThunders(dt, events); // Thunderstruck circles, then the bolt
+    if (this.spirits && this.spirits.length) this.spirits = this.spirits.filter((x) => (x.remaining -= dt) > 0 && x.target.alive); // Reaper's Bell spirits fade
     this.tickBookTimers(dt, events); // skill book Aftershock pulses
     this.tickBosses(dt, events); // boss moves, eggs, heat, revives... (bosses.js)
     this.tickElites(dt, events); // elite regen and shields (elites.js)
@@ -1177,7 +1180,7 @@ export default class BattleState {
     }
     const empower = fired.filter((f) => f.counter.effect === 'empower');
     const metro = this.metronomeBeat(unit, target, events); // Metronome: every 4th basic attack of the holder hits harder
-    const coil = this.spendCoil(unit); // Kinetic Coil: stored dodge charges ride on this attack as electric damage
+    const coil = this.spendCoil(unit, events, target); // Kinetic Coil: 3 stored dodge charges = a lightning strike
     const pure = this.pureSteel(unit, coil); // Sharpest Blade: an attack with no element at all
     const heart = pure ? this.heartStrike(unit) : 0; // ...every 5th one strikes at the heart
     const plus = (metro || 0) + (pure ? unit.specials.pureSteel || 0 : 0); // Metronome beat + Pure Steel
@@ -1223,13 +1226,20 @@ export default class BattleState {
     this.volley(unit, target, events); // Archer: every Nth shot fires at more enemies
   }
 
-  // Kinetic Coil: the holder's stored charges are all spent on its next basic attack: +`kineticCoil`% (40, +20 per
-  // extra copy) of its attack as electric per charge, inside the hit (a rider). Returns the riders to add.
-  spendCoil(unit) {
-    const n = unit.side === 'hero' && !unit.minion && unit.floor ? unit.floor.coil || 0 : 0;
-    if (!n || !unit.specials.kineticCoil) return [];
+  // Kinetic Coil v2 (session 31): charges are kept until there are `kineticCoilCount` (3); then the weapon glows and the
+  // next basic attack is a LIGHTNING strike: +`kineticCoil`% (400, +200 per extra copy) of its attack as electric inside
+  // the hit (a rider), and the charges reset. Returns the riders to add.
+  spendCoil(unit, events, target = null) {
+    if (!this.coilReady(unit)) return [];
     unit.floor.coil = 0;
-    return [{ damageType: 'electric', multiplier: (n * unit.specials.kineticCoil) / 100 }];
+    if (events) events.push({ type: 'proc', unit, label: 'Lightning!', itemId: 'kinetic_coil', target }); // a thunderbolt on the enemy
+    return [{ damageType: 'electric', multiplier: unit.specials.kineticCoil / 100 }];
+  }
+
+  // Kinetic Coil: full of charges (the scene makes the weapon glow).
+  coilReady(unit) {
+    const n = unit.side === 'hero' && !unit.minion && unit.floor ? unit.floor.coil || 0 : 0;
+    return !!(unit.specials && unit.specials.kineticCoil && n >= (unit.specials.kineticCoilCount || 3));
   }
 
   // Sharpest Blade (reworked session 29, user): only PURE STEEL counts: a basic attack with NO element (plain
@@ -1832,9 +1842,12 @@ export default class BattleState {
       return miss;
     }
     // Frozen Demon Head: the holder deals ICE ONLY. Its own fire / electric / dark attacks and skills turn to ice
-    // (session 29, user: the Mage and Necromancer were nearly harmless with it); such ITEM hits do nothing at all.
-    if (!opts.item && this.demonHeadBlocks(attacker, opts.damageType || attacker.damageType)) opts = { ...opts, damageType: 'ice' };
-    if (this.demonHeadBlocks(attacker, opts.damageType || attacker.damageType)) return { dodged: true, removed: true, crit: false, amount: 0, mult: 1 };
+    // (session 29, user: the Mage and Necromancer were nearly harmless with it); such ITEM hits turn to ice too, at
+    // `demonHeadItem`% (50) of their damage (session 31; they used to do nothing).
+    if (this.demonHeadBlocks(attacker, opts.damageType || attacker.damageType)) {
+      const cut = opts.item ? (attacker.specials.demonHeadItem ?? 50) / 100 : 1;
+      opts = { ...opts, damageType: 'ice', ...(opts.item ? { multiplier: (opts.multiplier || 1) * cut, ...(opts.fixedAmount ? { fixedAmount: opts.fixedAmount * cut } : {}) } : {}) };
+    }
     // Martyr's Shield (Bodyguard): an enemy hit on a guarded hero goes to the guarding holder instead.
     if (attacker.side === 'enemy' && target.side === 'hero' && !target.minion) {
       const martyr = this.martyrFor(target);
@@ -1854,7 +1867,12 @@ export default class BattleState {
     // skips their own strike, see `folded`).
     if (opts.riders) opts = { ...opts, riders: [...this.riders(attacker), ...(opts.extraRiders || [])] }; // extraRiders: Kinetic Coil's charges
     else if (opts.fixedRiders) opts = { ...opts, riders: opts.fixedRiders }; // Euclid's extra casts carry the same riders
-    if (opts.riders && opts.riders.length) opts = { ...opts, riders: opts.riders.filter((rd) => !this.demonHeadBlocks(attacker, rd.damageType)) }; // Frozen Demon Head
+    if (opts.riders && opts.riders.length) opts = { ...opts, riders: opts.riders.map((rd) => (this.demonHeadBlocks(attacker, rd.damageType) ? { ...rd, damageType: 'ice', multiplier: (rd.multiplier * (attacker.specials.demonHeadItem ?? 50)) / 100 } : rd)) }; // Frozen Demon Head: item riders turn to ice at 50%
+    // Chill Band (NUMBING COLD): a CHILLED enemy deals `numbingCold`% less (10, +5 per extra band; the best holder counts).
+    if (attacker.side === 'enemy' && this.has(attacker, 'chill')) {
+      const numb = Math.max(0, ...this.heroes.map((h) => (h.alive && h.specials && h.specials.numbingCold) || 0));
+      if (numb) opts = { ...opts, damagePercent: (opts.damagePercent || 0) - numb };
+    }
     // Item damage bonuses of the attacker (Sucker Punch, Full Vigor, Brawler's Streak...).
     const bonus = this.itemDamageBonus(attacker, target, opts);
     if (bonus) opts = { ...opts, damagePercent: (opts.damagePercent || 0) + bonus };
@@ -1916,7 +1934,7 @@ export default class BattleState {
     if (!result.dodged && (opts.damageType || attacker.hitType || attacker.damageType) === 'dark') this.storeDark(attacker, result.amount - (result.absorbed || 0), events);
     // Frozen Demon Head: the holder's ice damage (the hit's own or its ice riders) fills the Head (not the spikes).
     if (!result.dodged && !opts.spikes) this.storeIce(attacker, (opts.damageType || attacker.hitType || attacker.damageType) === 'ice' ? result.amount - (result.absorbed || 0) : ((result.riders || []).filter((rd) => rd.damageType === 'ice').reduce((t, rd) => t + rd.amount, 0)), events);
-    if (!result.dodged && !opts.item && !opts.euclid) this.euclid(attacker, target, opts, events); // Euclid of Elements: a 2+ element hit may cast again
+    if (!result.dodged && !opts.item) this.euclid(attacker, target, opts, events, result.amount - (result.absorbed || 0)); // Euclid of Elements: 2+ element hits fill the prism
     // Ghastly Fire: the holder's fire hits also deal `ghastly`% (20 per copy) of the damage as DARK (it triggers nothing).
     const gf = attacker.side === 'hero' && !attacker.minion && attacker.specials ? attacker.specials.ghastly || 0 : 0;
     if (gf && !result.dodged && !opts.ghastly && (opts.damageType || attacker.damageType) === 'fire' && target.alive && target.hp > 0 && result.amount > 0) {
@@ -1948,9 +1966,9 @@ export default class BattleState {
     if (ia && result.dodged && !result.missed && !opts.counter) this.counterCut(target, attacker, events);
     // Riposte Cloak: a hit the holder DODGED (evasion only: not a block, a blind miss or invulnerability) is answered.
     if (result.dodged && !result.missed && !result.blocked && !result.invulnerable && !opts.counter && target.side === 'hero' && !target.minion && target.specials.riposte) this.riposte(target, attacker, events);
-    // Kinetic Coil: every hit the holder DODGES or BLOCKS (session 29, user: parries too) stores a charge (at most
-    // `kineticCoilCount`, 3), kept for the floor.
-    if (result.dodged && !result.missed && !result.invulnerable && target.side === 'hero' && !target.minion && target.specials.kineticCoil) {
+    // Kinetic Coil v2 (session 31): every hit the holder DODGES (evasion only: no blocks, parries, blind misses) stores a
+    // charge (at most `kineticCoilCount`, 3), kept for the floor.
+    if (result.dodged && !result.missed && !result.blocked && !result.invulnerable && target.side === 'hero' && !target.minion && target.specials.kineticCoil) {
       target.floor.coil = Math.min(target.specials.kineticCoilCount || 3, (target.floor.coil || 0) + 1);
     }
     return result;
@@ -2461,12 +2479,16 @@ export default class BattleState {
     for (const h of this.heroes) if (h.alive) this.applyStatus(h, { status: 'shield', percentMaxHp: holder.specials.rallyFlag }, holder, 'rally', events);
   }
 
-  // Frost Mantle: a MELEE hit on the holder has `frostMantle`% (30, +5 per copy) to chill the attacker.
+  // Skins: a MELEE hit on the holder. Frost Mantle (FROST SKIN, session 31): `frostMantle`% (100 = every attacker) to
+  // give the attacker 1 Chill. Ember Charm (BURNING SKIN): the attacker is Burned (`burningSkinSpec`, 3s) for
+  // `burningSkin`% of the holder's attack per tick (20, +4 per extra copy). A sure effect pops no icon (every hit).
   frostMantle(attacker, target, events) {
     const sp = target.specials;
-    if (!sp || !sp.frostMantle || target.minion || attacker.damageType !== 'melee' || !attacker.alive || attacker.hp <= 0) return;
-    if (this.rng() * 100 >= this.debuffChance(target, sp.frostMantle)) return;
-    events.push({ type: 'proc', unit: target, label: 'Frost!', itemId: 'frost_mantle', target: attacker });
+    if (!sp || target.minion || attacker.damageType !== 'melee' || !attacker.alive || attacker.hp <= 0) return;
+    if (sp.burningSkin) this.applyStatus(attacker, { ...(sp.burningSkinSpec || { status: 'burn', durationMs: 3000, damageType: 'fire' }), damageMultiplier: sp.burningSkin / 100 }, target, `skin_${target.uid}`, events);
+    if (!sp.frostMantle || !attacker.alive) return;
+    if (sp.frostMantle < 100 && this.rng() * 100 >= this.debuffChance(target, sp.frostMantle)) return;
+    if (sp.frostMantle < 100) events.push({ type: 'proc', unit: target, label: 'Frost!', itemId: 'frost_mantle', target: attacker });
     this.applyStatus(attacker, sp.frostMantleSpec || { status: 'chill', durationMs: 3000 }, target, `mantle_${target.uid}`, events);
   }
 
@@ -2504,16 +2526,8 @@ export default class BattleState {
       if (cut > 0) for (const slot of killer.skills) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - cut);
       // Emergency Buckler: every kill gives the killer a shield that fades away over `killShieldMs` (4s).
       if (killer.specials.killShield) this.applyStatus(killer, { status: 'shield', percentMaxHp: killer.specials.killShield, durationMs: killer.specials.killShieldMs || 4000, fade: true }, killer, 'buckler', events);
-      // Reaper's Bell: the dead enemy explodes for `reaperBell`% of ITS max health as dark damage nearby. The blast's
-      // kills are the killer's too, so they explode again (a chain; exception to 'item damage triggers no item').
-      const bell = killer.specials.reaperBell || 0;
-      if (bell > 0 && !victim.def.object) {
-        const radius = killer.specials.reaperBellRadius || 100;
-        const near = this.enemies.filter((e) => e.alive && e !== victim && (!this.hasPositions(e) || !this.hasPositions(victim) || Math.hypot(e.x - victim.x, e.y - victim.y) <= radius));
-        events.push({ type: 'deathBurst', unit: victim, radius, color: '#a45be6', targets: near, explosive: true });
-        const mult = (victim.maxHp * bell) / 100 / Math.max(1, killer.stats.attack);
-        for (const e of near) if (e.alive) this.strike(killer, e, events, { multiplier: mult, damageType: 'dark', item: true, burst: true });
-      }
+      // Reaper's Bell (HAUNTING SPIRITS, session 31): a spirit may rise and haunt another enemy.
+      if (killer.specials.reaperBell && !victim.def.object) this.hauntSpirit(killer, victim, events);
     }
     // Life Crystal: when ANY enemy dies, each living holder has `lifeCrystal`% to drop a green orb there that heals
     // the heroes within `lifeCrystalRadius` px of it by `lifeCrystalHeal`% of their max health.
@@ -2546,6 +2560,42 @@ export default class BattleState {
         events.push({ type: 'proc', unit: hero, label: 'Knife burst!', itemId: 'thousand_cuts', at: victim });
         for (const e of near) this.strike(hero, e, events, { multiplier: burst / 100, damageType: 'melee', item: true });
       }
+    }
+  }
+
+  // Reaper's Bell (HAUNTING SPIRITS, user's design session 31): when the holder kills an enemy, `reaperBell`% (50, +15 per
+  // extra copy) a ghost spirit rises and flies to the nearest enemy that is not haunted yet, haunting it for `hauntMs`
+  // (5s, +1s per extra copy): it deals less damage (combat.json `haunt.attackPercent`), is Silenced (`haunt.silenceMs`;
+  // bosses are not) and gets 1 Armor Break stack. At most `hauntMax` (3) spirits at once. No element.
+  hauntSpirit(killer, victim, events) {
+    const sp = killer.specials, H = this.rules.haunt || { attackPercent: -20, silenceMs: 2000 };
+    this.spirits = (this.spirits || []).filter((x) => x.target.alive && x.remaining > 0);
+    if (this.spirits.length >= (sp.hauntMax || 3) || this.rng() * 100 >= sp.reaperBell) return;
+    const free = this.targetableEnemies().filter((e) => e !== victim && !e.def.object && !this.spirits.some((x) => x.target === e));
+    if (!free.length) return;
+    const target = this.nearest(victim, free);
+    const ms = sp.hauntMs || 5000;
+    this.spirits.push({ holder: killer, target, remaining: ms });
+    events.push({ type: 'proc', unit: killer, label: 'Haunt!', itemId: 'reapers_bell', target });
+    events.push({ type: 'projectile', from: victim, to: target, kind: 'spiritfire' }); // the ghost flies from the dead enemy
+    this.applyStatus(target, { status: 'weaken', attackPercent: H.attackPercent, durationMs: ms }, killer, 'haunt', events);
+    if (!target.def.boss) this.applyStatus(target, { status: 'silence', durationMs: H.silenceMs }, killer, 'haunt', events);
+    this.applyStatus(target, { status: 'armorBreak', durationMs: ms, stackEach: true }, killer, 'haunt', events);
+  }
+
+  // Magma Core (ERUPTION, session 31): when the last Burn stack on an enemy ends (runs out, not death), every living hero
+  // with `eruption` whose burn was on it makes it explode: `eruption`% (150, +75 per extra copy) of that hero's attack as
+  // fire on it and every enemy within `eruptionRadius` px (item hits).
+  erupt(unit, ended, events) {
+    if (unit.side !== 'enemy' || !unit.alive || unit.statuses.some((st) => st.type === 'burn')) return;
+    for (const h of this.heroes) {
+      const pct = h.alive && h.specials ? h.specials.eruption || 0 : 0;
+      if (!pct || !ended.some((st) => st.sourceUid === h.uid)) continue;
+      const radius = h.specials.eruptionRadius || 100;
+      const near = this.enemies.filter((e) => e.alive && !this.untargetable(e) && (e === unit || !this.hasPositions(e) || !this.hasPositions(unit) || Math.hypot(e.x - unit.x, e.y - unit.y) <= radius));
+      events.push({ type: 'proc', unit: h, label: 'Eruption!', itemId: 'magma_core', target: unit });
+      events.push({ type: 'deathBurst', unit, radius, color: '#ff7a3d', targets: near, explosive: true });
+      for (const e of near) if (e.alive) this.strike(h, e, events, { multiplier: pct / 100, damageType: 'fire', item: true, burst: true });
     }
   }
 
@@ -2720,9 +2770,11 @@ export default class BattleState {
       }
       this.tickDots(unit, dt, events);
       if (!unit.alive) continue;
+      const burnsEnded = [];
       for (const status of [...unit.statuses]) {
         if (status.remaining > 0) continue;
         unit.statuses.splice(unit.statuses.indexOf(status), 1);
+        if (status.type === 'burn') burnsEnded.push(status);
         if (status.type === 'buff') buffEnded = true;
         events.push({ type: 'status', unit, change: 'expire', status });
         if (status.type === 'invulnerable' && status.healPercentOnEnd > 0) {
@@ -2730,6 +2782,7 @@ export default class BattleState {
           this.healUnit(unit, (unit.maxHp * status.healPercentOnEnd) / 100, events, { aura: false });
         }
       }
+      if (burnsEnded.length) this.erupt(unit, burnsEnded, events); // Magma Core: a Burn ran out
     }
     if (buffEnded) this.refreshStats();
   }
@@ -3439,27 +3492,35 @@ export default class BattleState {
     if (!hit.dodged && target.alive) this.applyStatus(target, sp.demonHeadSpec || { status: 'freeze', durationMs: 5000 }, unit, `spikes_${unit.uid}`, events);
   }
 
-  // Euclid of Elements: a hit (not item damage) carrying 2+ different ELEMENTS (magical types: its own + its riders,
-  // e.g. two different charms) has `euclid`% (15, +5 per extra copy) to cast 3 more times, `euclidStaggerMs` apart, each
-  // `euclidPower`% (60, +20 per extra copy) of the hit, same elements. The extra casts are item hits (they trigger nothing).
-  euclid(unit, target, opts, events) {
+  // Euclid of Elements (PRISM BURST, session 31): the damage of the holder's hits (not item damage) carrying 2+ different
+  // ELEMENTS (magical types: its own + its riders) fills a prism. At `prismFill`% (1000) of its attack the prism bursts:
+  // every enemy is hit by fire, ice, electric and dark, together `prism`% (300, +150 per extra copy) of its attack
+  // (item hits). The +% element damage part is in items.js elementMix (a negative cut).
+  euclid(unit, target, opts, events, amount = 0) {
     const sp = unit.side === 'hero' && !unit.minion ? unit.specials : null;
-    if (!sp || !sp.euclid) return;
+    if (!sp || !sp.prism || !(amount > 0)) return;
     const magic = (t) => this.damageTypes[t] && this.damageTypes[t].category === 'magical';
     const own = opts.damageType || unit.hitType || unit.damageType;
-    const riders = opts.riders || [];
-    const elements = new Set([own, ...riders.map((rd) => rd.damageType)].filter(magic));
-    if (elements.size < 2 || this.rng() * 100 >= sp.euclid) return;
-    const power = (sp.euclidPower || 60) / 100;
-    const cast = { multiplier: (opts.multiplier || 1) * power, damageType: own, fixedRiders: riders.map((rd) => ({ ...rd, multiplier: rd.multiplier * power })), item: true, euclid: true };
-    events.push({ type: 'proc', unit, label: 'Euclid!', itemId: 'euclid_of_elements', target, elements: [...elements], staggerMs: sp.euclidStaggerMs ?? 150, count: sp.euclidCount || 3 }); // the scene flies one projectile per cast
-    for (let i = 0; i < (sp.euclidCount || 3); i++) {
-      this.later((sp.euclidStaggerMs ?? 150) * (i + 1), (ev) => {
-        if (!unit.alive) return;
-        const foe = target.alive ? target : this.nearest(target, this.targetableEnemies());
-        if (foe) this.strike(unit, foe, ev, cast);
-      });
-    }
+    const elements = new Set([own, ...(opts.riders || []).map((rd) => rd.damageType)].filter(magic));
+    if (elements.size < 2) return;
+    unit.prismStore = (unit.prismStore || 0) + amount;
+    if (unit.prismStore < (unit.stats.attack * (sp.prismFill || 1000)) / 100) return;
+    unit.prismStore = 0;
+    const foes = this.targetableEnemies();
+    if (!foes.length) return;
+    const colors = ['fire', 'ice', 'electric', 'dark'];
+    events.push({ type: 'proc', unit, label: 'Prism burst!', itemId: 'euclid_of_elements', target, elements: colors, staggerMs: 80, count: colors.length });
+    for (const e of foes) events.push({ type: 'deathBurst', unit: e, radius: 40, color: '#ffffff', targets: [], explosive: false });
+    colors.forEach((type, i) => this.later(80 * (i + 1), (ev) => {
+      if (!unit.alive) return;
+      for (const e of this.targetableEnemies()) this.strike(unit, e, ev, { multiplier: sp.prism / 100 / colors.length, damageType: type, item: true, burst: true });
+    }));
+  }
+
+  // Prism fill 0..1 (the scene can show it).
+  prismCharge(unit) {
+    const sp = unit.specials;
+    return sp && sp.prism ? Math.min(1, (unit.prismStore || 0) / ((unit.stats.attack * (sp.prismFill || 1000)) / 100)) : 0;
   }
 
   storeDark(unit, amount, events) {

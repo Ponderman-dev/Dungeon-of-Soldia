@@ -95,5 +95,9 @@
   },
   "mirror_buckler": {
     "text": "Reflected!"
+  },
+  "kinetic_coil": {
+    "effect": "thunderbolt",
+    "glint": "0xffe94d"
   }
 }

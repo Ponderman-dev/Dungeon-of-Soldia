@@ -1192,9 +1192,11 @@ export default class BattleScene extends Phaser.Scene {
       const view = this.views.get(hero.uid);
       if (hero.alive) this.setBar(view); // health regeneration moves the bar
       const heart = hero.alive && this.state.heartStrikeIn(hero) === 0; // Sharpest Blade: the next attack is a Heart Strike
-      if (view.steadyShown !== hero.steady || view.heartShown !== heart) {
+      const coil = hero.alive && this.state.coilReady(hero); // Kinetic Coil: 3 charges, the next attack is lightning
+      if (view.steadyShown !== hero.steady || view.heartShown !== heart || view.coilShown !== coil) {
         view.steadyShown = hero.steady; // Steady Aim switched on or off: redraw the tags
         view.heartShown = heart; // (and the blade's glint)
+        view.coilShown = coil;
         this.drawChips(view);
       }
       view.skillButtons.forEach((b, j) => {
@@ -1383,7 +1385,8 @@ export default class BattleScene extends Phaser.Scene {
     const next = counter && counter.rotation ? counter.rotation[(view.unit.beatsFired || 0) % counter.rotation.length].color : null;
     // Sharpest Blade: the weapon glints gold when the next attack is a Heart Strike (a charged counter shows first).
     const charged = counter && view.unit.counterCount >= counter.every - 1;
-    view.ch.setGlow(charged ? Phaser.Display.Color.HexStringToColor(next || counter.color || '#c8a0ff').color : view.heartShown ? Number(itemFxData.sharpest_blade.glint) : null);
+    // Kinetic Coil: the weapon glows electric yellow when the next attack is its lightning strike.
+    view.ch.setGlow(charged ? Phaser.Display.Color.HexStringToColor(next || counter.color || '#c8a0ff').color : view.heartShown ? Number(itemFxData.sharpest_blade.glint) : view.coilShown ? Number(itemFxData.kinetic_coil.glint) : null);
     // Status ICONS (statusIcons.json) in rows of 3 over the health bar, rows going up (a hero's item dots move
     // up above them). Stacking statuses (bleed, burn, poison, chill) show their
     // stack count just right of the icon. The icon pops up a little when it arrives or gains a stack.

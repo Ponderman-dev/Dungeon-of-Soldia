@@ -31,23 +31,7 @@ const lost = (e) => 1e7 - e.hp;
   const { s: s2, es: es2 } = mk(); const a = melee(s2); a.damageType = 'ranged'; give(s2, a, 'sweeping_strap');
   for (const e of es2) { e.x = 100; e.y = 100; } s2.landAttack(a, es2[0], []);
   ok('...ranged attacks do not sweep', lost(es2[1]) === 0 && lost(es2[2]) === 0); }
-// Kinetic Coil
-{ const kc = val('kinetic_coil', 'kineticCoil');
-  const { s, e } = mk(['goblin'], () => 0); const k = melee(s); give(s, k, 'kinetic_coil', 2);
-  k.stats.evasion = 100;
-  for (let i = 0; i < 5; i++) s.strike(e, k, [], {});
-  ok('Kinetic Coil: dodges store charges, at most ' + kc.count, k.floor.coil === kc.count, `${k.floor.coil}`);
-  k.stats.crit = 0; const plainHit = (() => { const { s: p, e: pe } = mk(['goblin']); const pk = melee(p); p.landAttack(pk, pe, []); return lost(pe); })();
-  const ev = []; s.rng = () => 0.99; s.landAttack(k, e, ev);
-  const per = kc.percent + kc.perExtra, hit = ev.find((x) => x.type === 'attack' && x.attacker === k);
-  ok('...the next attack: +' + per + '% electric per charge x ' + kc.count, Math.abs(lost(e) - plainHit * (1 + (kc.count * per) / 100)) <= 2 && hit.result.riders.some((rd) => rd.damageType === 'electric'), `${plainHit} -> ${lost(e)}`);
-  ok('...and the charges are used up', k.floor.coil === 0);
-  s.spawnEnemies(['goblin'], 2);
-  ok('...reset every floor', !k.floor.coil);
-  // A BLOCKED hit stores a charge too (session 29, user).
-  { const { s: b, e: be } = mk(['goblin'], () => 0); const bk = melee(b); give(b, bk, 'kinetic_coil'); bk.stats.evasion = 0; bk.specials.block = 100;
-    const res = b.strike(be, bk, [], {});
-    ok('...a blocked hit stores a charge too', res.blocked && bk.floor.coil === 1, JSON.stringify(res)); } }
+// Kinetic Coil: reworked in session 31 (v2), tested in items-s31.test.mjs.
 // Sharpest Blade (reworked session 29, user): PURE STEEL only (no element); pure attacks +pureSteel%, every Nth is a
 // Heart Strike (multiplier + a share of the enemy's max health, less on a boss, stun); a Heart Strike kill = the next too.
 { const hs = val('sharpest_blade', 'heartStrike'), hm = val('sharpest_blade', 'heartStrikeMult'), hp = val('sharpest_blade', 'heartStrikeMaxHp');

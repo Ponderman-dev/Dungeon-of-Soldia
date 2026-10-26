@@ -29,7 +29,7 @@ ok('one element: no cut', one.k.elementCut === 0);
 ok('two of the SAME element: no cut', same.k.elementCut === 0);
 ok(`two elements: -${per}%`, two.k.elementCut === per, `${two.k.elementCut}`);
 ok(`four elements: -${3 * per}%`, four.k.elementCut === 3 * per, `${four.k.elementCut}`);
-ok('Euclid of Elements: no cut with four elements', euclid.k.elementCut === 0);
+ok('Euclid of Elements: no cut with four elements (a bonus instead)', euclid.k.elementCut < 0, `${euclid.k.elementCut}`);
 ok('the ice part of the hit is cut', close(two.part('ice'), one.part('ice') * (1 - per / 100)), `${one.part('ice').toFixed(2)} -> ${two.part('ice').toFixed(2)}`);
 ok('...and cut more with four elements', close(four.part('ice'), one.part('ice') * (1 - (3 * per) / 100)));
 const steel = (x) => x.hit.amount - (x.hit.riders || []).reduce((a, y) => a + y.amount, 0);

@@ -329,19 +329,8 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "Every attack adds an ice hit (20%) and 1 Chill. 5 Chill = Freeze.",
+    "description": "NUMBING COLD: every attack adds 1 Chill (5 Chill = Freeze). Chilled enemies deal 10% less damage.",
     "effects": [
-      {
-        "proc": "onAttack",
-        "chance": 100,
-        "label": "Ice hit",
-        "silent": true,
-        "strike": {
-          "damageMultiplier": 0.2,
-          "damageType": "ice"
-        },
-        "mergeCopies": true
-      },
       {
         "proc": "onAttack",
         "chance": 100,
@@ -355,6 +344,11 @@
             "durationMs": 5000
           }
         ]
+      },
+      {
+        "special": "numbingCold",
+        "percent": 10,
+        "perExtra": 5
       }
     ],
     "provides": [
@@ -362,7 +356,7 @@
       "freeze",
       "cc"
     ],
-    "perStack": "+20% of attack as ice"
+    "perStack": "+5% less damage from chilled enemies"
   },
   "static_crystal": {
     "name": "Static Crystal",
@@ -701,33 +695,31 @@
   },
   "ember_charm": {
     "name": "Ember Charm",
-    "rarity": "common",
-    "type": "onhit",
+    "rarity": "rare",
+    "type": "special",
     "scope": "self",
-    "description": "12% on attack: Burn the enemy for 3s.",
+    "description": "BURNING SKIN: +15 resist. Melee attackers that hit this hero are Burned for 3s.",
     "effects": [
       {
-        "proc": "onAttack",
-        "chance": 12,
-        "label": "Burn!",
-        "targets": "target",
-        "apply": [
-          {
-            "status": "burn",
-            "durationMs": 3000,
-            "damageMultiplier": 0.2,
-            "damageType": "fire",
-            "damagePerExtraPercent": 10
-          }
-        ],
-        "unique": true,
-        "chancePerExtra": 10
+        "stat": "resist",
+        "flat": 15
+      },
+      {
+        "special": "burningSkin",
+        "percent": 20,
+        "perExtra": 4,
+        "spec": {
+          "status": "burn",
+          "durationMs": 3000,
+          "damageType": "fire"
+        }
       }
     ],
     "provides": [
-      "burn"
+      "burn",
+      "fire"
     ],
-    "perStack": "+10% burn chance, +10% burn damage"
+    "perStack": "+15 resist, +20% burn damage"
   },
   "venom_fang": {
     "name": "Venom Fang",
@@ -900,26 +892,21 @@
     "rarity": "epic",
     "type": "onhit",
     "scope": "self",
-    "description": "Every attack adds a fire hit (35%). Burns deal +40% damage.",
+    "description": "ERUPTION: burns from this hero deal +40% damage, and when a Burn ends the enemy explodes for 150% fire damage nearby.",
     "effects": [
-      {
-        "proc": "onAttack",
-        "chance": 100,
-        "label": "Fire hit",
-        "silent": true,
-        "strike": {
-          "damageMultiplier": 0.35,
-          "damageType": "fire"
-        },
-        "mergeCopies": true
-      },
       {
         "special": "magmaBurn",
         "percent": 40
+      },
+      {
+        "special": "eruption",
+        "percent": 150,
+        "perExtra": 75,
+        "radius": 100
       }
     ],
     "dropWeight": 90,
-    "perStack": "+35% of attack as fire, +40% burn damage",
+    "perStack": "+40% burn damage, +75% explosion",
     "provides": [
       "fire"
     ]
@@ -1061,7 +1048,7 @@
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "Electric hits add a small ice hit (30%) and 1 Chill. At 3 Chill (or Frozen) the enemy shatters: 150% ice on it and its neighbours.",
+    "description": "Electric hits add a small ice hit (30%) and 1 Chill. At 3 Chill (or Frozen) the enemy shatters: 150% ice on it and its neighbours. Electric + ice count as ONE element for mixing.",
     "effects": [
       {
         "special": "frozenThunderbolt",
@@ -1083,7 +1070,11 @@
       "ice",
       "cc"
     ],
-    "perStack": "+30% ice hit, +150% shatter"
+    "perStack": "+30% ice hit, +150% shatter",
+    "fuses": [
+      "electric",
+      "ice"
+    ]
   },
   "warding_charm": {
     "name": "Warding Charm",
@@ -1894,7 +1885,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "Fire hits and burns from this hero also deal 28% as dark. Burning enemies attack 5% slower.",
+    "description": "Fire hits and burns from this hero also deal 28% as dark. Burning enemies attack 5% slower. Fire + dark count as ONE element for mixing.",
     "effects": [
       {
         "special": "ghastly",
@@ -1911,7 +1902,11 @@
     "provides": [
       "dark"
     ],
-    "perStack": "+28% dark, +2% slow"
+    "perStack": "+28% dark, +2% slow",
+    "fuses": [
+      "fire",
+      "dark"
+    ]
   },
   "eclipse_idol": {
     "name": "Eclipse Idol",
@@ -2241,12 +2236,16 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "Hit by a melee attack: 30% chance to chill the attacker.",
+    "description": "FROST SKIN: +15 defense. Every melee attacker that hits this hero gets 1 Chill.",
     "effects": [
       {
+        "stat": "defense",
+        "flat": 15
+      },
+      {
         "special": "frostMantle",
-        "percent": 30,
-        "perExtra": 5,
+        "percent": 100,
+        "unique": true,
         "spec": {
           "status": "chill",
           "durationMs": 3000
@@ -2257,27 +2256,36 @@
     "provides": [
       "cc"
     ],
-    "perStack": "+5% chance"
+    "perStack": "+15 defense"
   },
   "reapers_bell": {
     "name": "Reaper's Bell",
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "Enemies this hero kills explode for 18% of their max health as dark damage nearby. Explosions can chain.",
+    "description": "When this hero kills an enemy: 50% chance a spirit haunts another enemy for 5s (-20% damage, Silence 2s, 1 Armor Break). Max 3 spirits.",
     "effects": [
       {
         "special": "reaperBell",
-        "percent": 18,
-        "perExtra": 8,
-        "radius": 150
+        "percent": 50,
+        "perExtra": 15
+      },
+      {
+        "special": "hauntMs",
+        "percent": 5000,
+        "perExtra": 1000
+      },
+      {
+        "special": "hauntMax",
+        "percent": 3,
+        "unique": true
       }
     ],
     "dropWeight": 90,
     "provides": [
-      "dark"
+      "cc"
     ],
-    "perStack": "+8% of max health"
+    "perStack": "+15% chance, +1s haunt"
   },
   "ice_bomb": {
     "name": "Ice Bomb",
@@ -2462,12 +2470,12 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "Every dodge or block stores a charge (max 3). The next attack deals +40% electric damage per charge.",
+    "description": "Every dodge stores a charge. At 3 charges the weapon glows: the next attack is a LIGHTNING strike for 400% electric damage.",
     "effects": [
       {
         "special": "kineticCoil",
-        "percent": 40,
-        "perExtra": 20,
+        "percent": 400,
+        "perExtra": 200,
         "count": 3
       }
     ],
@@ -2475,7 +2483,7 @@
     "provides": [
       "electric"
     ],
-    "perStack": "+20% per charge"
+    "perStack": "+200% lightning damage"
   },
   "sharpest_blade": {
     "name": "Sharpest Blade",
@@ -2534,30 +2542,33 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Hits with 2 or more elements: 25% chance to cast 3 more times at 70% damage. Mixing elements no longer weakens this hero.",
+    "description": "Each element past the first among your items: +15% element damage (no mixing penalty). Hits with 2+ elements fill a prism: when full, a 4-colour PRISM BURST hits every enemy for 300%.",
     "effects": [
       {
         "special": "euclid",
-        "percent": 25,
-        "perExtra": 5,
-        "count": 3,
-        "staggerMs": 150
+        "percent": 15,
+        "perExtra": 10
       },
       {
-        "special": "euclidPower",
-        "percent": 70,
-        "perExtra": 20
+        "special": "prism",
+        "percent": 300,
+        "perExtra": 150
+      },
+      {
+        "special": "prismFill",
+        "percent": 1000,
+        "unique": true
       }
     ],
     "dropWeight": 90,
-    "perStack": "+5% chance, +20% damage"
+    "perStack": "+10% per element, +50% burst damage"
   },
   "frozen_demon_head": {
     "name": "Frozen Demon Head",
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "+50% ice damage. Ice damage fills the Head: Ice Spikes hit the strongest enemy for 700% and freeze it 5s. This hero's fire, electric and dark attacks turn to ice; such item hits do nothing.",
+    "description": "+50% ice damage. Ice damage fills the Head: Ice Spikes hit the strongest enemy for 700% and freeze it 5s. This hero's fire, electric and dark attacks turn to ice; such item hits turn to ice at 50% damage.",
     "effects": [
       {
         "damageBonus": "ice",
@@ -2576,6 +2587,11 @@
       {
         "special": "demonHeadFill",
         "percent": 800,
+        "unique": true
+      },
+      {
+        "special": "demonHeadItem",
+        "percent": 50,
         "unique": true
       }
     ],

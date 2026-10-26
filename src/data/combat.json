@@ -85,6 +85,11 @@
     "healMs": 3000,
     "squadHealPercent": 30
   },
+  "haunt": {
+    "_about": "Reaper's Bell haunting spirit (session 31): the haunted enemy deals attackPercent less (a weaken) and is silenced silenceMs (not bosses).",
+    "attackPercent": -20,
+    "silenceMs": 2000
+  },
   "soulLantern": {
     "_about": "Soul Lantern: every `every` squad kills (from pick-up) each lantern gives +1% health, attack, attack speed and +1 flat defense.",
     "every": 7

@@ -1,28 +1,25 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 32): NEXT = BUILD THE PLANNED ITEMS (session 31 = item review, decisions only)
-- BRANCH: `main` has EVERYTHING (session 31 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- BUILT in session 31: MIXING ELEMENTS PENALTY (combat.json `elementMix`, `elementMix()` items.js, test
-  element-mix.test.mjs): each different element among a hero's items past the first = -10% to that hero's element
-  damage (4 elements -30%); Mage exempt; Euclid removes it; Poison Bombs provides dark (TO UNDO when the bomb plan is
-  built). Details: docs/systems/items.md (last line).
-- PLANNED, NOT BUILT (~40 items): all in docs/item-decisions.md, section 'Session 31' at the END, every line tagged
-  '[planned, NOT built]'. Groups: Euclid rework (C + D1 prism burst), regen trio, boss badges (Bounty, Big Game),
-  bombs, low-health saves + Phoenix Feather, fire trio, ice, electric (Thunderstruck stacks, Kinetic Coil v2),
-  FUSED PAIRS (Ghastly Fire / Frozen Thunderbolt count as one element), Reaper's Bell haunting spirits, Sharp Edge /
-  Eagle Eye 25%, conditional damage, minions (families, boosters, 4 NEW epic element totems, 6-minion cap), Soul Lantern.
-- BUILD PLAN (suggested): small batches, numbers-only first (no new looks), then new mechanics; every NEW LOOK
-  (prism burst, haunting spirits, Kinetic Coil glow + lightning, Eruption, totems) shown in the game first (art rule).
+## START HERE (session 33): NEXT = BUILD THE PLANNED ITEMS (sessions 31 + 32 = item review, decisions only)
+- BRANCH: `main` has EVERYTHING (session 32 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- REVIEW IS DONE: every item group reviewed. Nothing from sessions 31/32 is built except the mixing elements penalty
+  (session 31; docs/systems/items.md last line).
+- PLANNED, NOT BUILT: all in docs/item-decisions.md, sections at the END tagged '[planned, NOT built]'.
+  Session 31: Euclid rework, regen trio, boss badges, bombs, low-health saves + Phoenix Feather, fire trio, ice,
+  electric, fused pairs, Reaper's Bell spirits, Sharp Edge / Eagle Eye 25%, conditional damage, minions, Soul Lantern.
+  Session 32: DEFENSE (Spite Mail rework; Shield Totem -> block-aura TOTEM minion, front centre, no upkeep; Emergency
+  Buckler -> BUCKLER 5% block/copy), MINION UPKEEP (defense part removed, attack speed stays per item), BANNERS (War
+  Banner steady +10% atk speed aura; Rally Flag -> Cautious Banner; Spirit Knight Banner -> Spirit Knight's Sigil;
+  NEW legendary Conqueror's Flag), Metronome every 3rd +100%, Sweeping Strap -> CLEAVE, Catalyst Vial +30% DoT,
+  Serrated Edge copies, Dread Bell -> FEAR RING (3s cooldown), BOSSES IMMUNE TO FEAR.
+- BUILD PLAN (suggested): small batches, numbers-only first (no new looks), then new mechanics; every NEW LOOK shown in
+  the game first (art rule): prism burst, haunting spirits, Kinetic Coil glow + lightning, Eruption, element totems,
+  Shield Totem minion, fear ring, cleave swing, new icons (Sweeping Strap, Spirit Knight's Sigil, Conqueror's Flag).
   New effect shapes need a copy in the test fixture (CLAUDE.md 'Tests vs tuning').
-- OPEN DECISIONS (ask, don't guess): DEFENSE ITEMS proposals waiting for the user: (1) Shield Totem -> squad block 4%
-  each hero (+4%/copy); (2) Spite Mail -> no reflect, while taunting +30 defense +30 resist, heal 1% per hit taken;
-  (3) Tough Skin -> 3 or 4% of the hit, whichever bigger. Padded Vest +12: I advised keep (user asked, no answer).
-  Not reviewed yet: damage tricks, on-hit statuses, skills (Metronome weak), squad/support (War vs Jolly Banner),
-  kill effects (Emergency Buckler weak), Sweeping Strap weak. Euclid prism meter size / blast % still to set.
+- OPEN (ask, don't guess): Conqueror's Flag: do the holder's MINION kills count? (written as holder's own kills only).
+  Euclid prism meter size / blast % still to set. Element totems need new names (they do nothing for the Shield Totem).
 - ALSO WAITING: MOVE ORDERS (user picked: tap floor = whole squad walks there, drag a hero onto floor = that hero
   walks there; on arrival they go straight back to fighting). Older NEXT: boss rework 80 / 100 (see archive).
-- Element bench (not kept, scratchpad only): stacking.mjs loop, floor 30 level 12, every tick set heroes hp=maxHp, sum
-  `attack` event amounts where attacker = holder (or its minions), seeded rng per build; 12 trials x 90s each.
 - PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish
   again. Fresh clone: `npm install` first.
 

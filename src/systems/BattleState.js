@@ -1049,7 +1049,9 @@ export default class BattleState {
       if (!hero.alive) continue;
       // Regen (Heart Charm) and the Cleric's aura: every hero regenerates a little, and regen/heals from items are stronger.
       const aura = this.regenAura();
-      const regen = ((hero.specials && hero.specials.regen) || 0) * aura.factor + aura.base + this.songRegen(); // % of max health per second
+      const sp = hero.specials || {};
+      const desperate = sp.desperate && hero.hp < (hero.maxHp * (sp.desperateBelow ?? 30)) / 100 ? sp.desperate : 1; // Heart of the Beast: x2 regen when low
+      const regen = (sp.regen || 0) * desperate * aura.factor + aura.base + this.songRegen(); // % of max health per second
       if (regen > 0) {
         const gain = Math.min(hero.maxHp - hero.hp, (hero.maxHp * regen * dt) / 100000);
         hero.hp += gain;
@@ -1995,7 +1997,7 @@ export default class BattleState {
   // Extra damage % from the ATTACKER's item specials for this hit.
   //  - suckerPunch: ANY hit (attack, skill, item) on an enemy above `suckerPunchAbove`% health.
   //  - fullVigor: while the attacker is above 90% health.
-  //  - brawlerMax: +2% per basic hit in a row (any enemy), up to the item's max; lost on stun/freeze/fear.
+  //  - brawlerMax: +`brawlerStep`% (3) per basic hit in a row (any enemy), up to the item's max; lost on stun/freeze/fear.
   itemDamageBonus(attacker, target, opts) {
     const sp = attacker.specials;
     this.bonusItems = []; // items that boosted this hit (the scene shows them: Sucker Punch, Executioner's Axe)
@@ -2006,7 +2008,7 @@ export default class BattleState {
       if (sp.brawlerMax) {
         const st = attacker.streak;
         // A COMBO of the holder's basic hits on ANY enemy; lost when the holder is stunned, frozen or feared (applyStatus).
-        bonus += Math.min(sp.brawlerMax, st.count * 2);
+        bonus += Math.min(sp.brawlerMax, st.count * (sp.brawlerStep || 2));
         attacker.streak = { uid: target.uid, count: st.count + 1 };
       }
     }
@@ -2021,9 +2023,11 @@ export default class BattleState {
     if (sp.executioner && target.hp < target.maxHp * 0.25) { bonus += sp.executioner; this.bonusItems.push(['executioners_axe', 'Execute!']); } // Executioner's Axe
     if (sp.hornDamage && this.has(target, 'taunt')) bonus += sp.hornDamage; // Provoker's Horn: taunted enemies take more
     if (sp.spotter && (this.focusUid === target.uid || this.heroes.some((h) => h.alive && h.order === target.uid))) bonus += sp.spotter; // Spotter's Lens: the TAPPED (or drag-ordered) enemy takes more from the squad
-    if (sp.bossDamage && target.def.boss) bonus += sp.bossDamage; // Giantslayer's Brand, Elite's Badge
+    if (sp.bossDamage && target.def.boss) bonus += sp.bossDamage; // (old boss-only items)
+    if (sp.bigGame && (target.def.boss || target.elite)) bonus += sp.bigGame; // Giantslayer's Brand: BIG GAME, bosses and elites
     if (sp.eliteDamage && target.elite) bonus += sp.eliteDamage; // Hunter's Badge
-    if (sp.fodderDamage && target.def.tier === 'fodder') bonus += sp.fodderDamage; // Swarm Swatter
+    if (sp.fodderDamage && target.def.tier === 'fodder') bonus += sp.fodderDamage; // (old fodder-only Swarm Swatter)
+    if (sp.normalDamage && !target.elite && !target.def.boss) bonus += sp.normalDamage; // Swarm Swatter: normal enemies (not elites, not bosses)
     if (sp.betterOdds) bonus += sp.betterOdds * this.enemies.filter((e) => e.alive && !e.def.object).length; // Better Odds: per enemy alive
     return bonus;
   }
@@ -2087,7 +2091,7 @@ export default class BattleState {
       if (proc.chain && foe) this.chainHit(hero, foe, proc.chain.jumpsPerExtra ? { ...proc.chain, jumps: proc.chain.jumps + proc.chain.jumpsPerExtra * extra } : proc.chain, events);
       // Excalibur: tornadoes hit `damagePerExtraPercent` harder per extra copy. A tornado also comes on a miss.
       if (proc.flameSpirit && foe) this.conjureSpirit(hero, events, proc.damageMultiplier || 0.8);
-      if (proc.thunderstruck && foe) this.markThunder(hero, proc.thunderstruck, events);
+      if (proc.thunderstruck && foe) this.markThunder(hero, proc.thunderstruck.damagePerExtra ? { ...proc.thunderstruck, damageMultiplier: proc.thunderstruck.damageMultiplier + proc.thunderstruck.damagePerExtra * extra } : proc.thunderstruck, events); // +350% per extra copy
       if (proc.moonlight && foe) this.moonCrescent(hero, foe, proc.copies || 1, events, proc.hitMultiplier);
       if (proc.tornado && foe) this.spawnTornado(hero, proc.tornado.damagePerExtraPercent ? { ...proc.tornado, damageMultiplier: proc.tornado.damageMultiplier * (1 + (proc.tornado.damagePerExtraPercent * extra) / 100) } : proc.tornado, foe, events);
       for (const spec of proc.apply || []) {
@@ -2319,9 +2323,10 @@ export default class BattleState {
     return { lost: left, absorbed, immune: false, broken, burnShield };
   }
 
-  // Soul Lantern: every `lanternEvery` (8) enemies the squad defeats, each holder gains +1% attack and max health per
-  // lantern for the rest of the run, with NO limit (`hero.lanternGain`, used in statUpkeep()).
-  // Every kill feeds the lantern (`soulFeed` event: green lines swirl round the holder); every 8th pops its icon.
+  // Soul Lantern: every `lanternEvery` (7) enemies the squad defeats (counted from pick-up), each holder gains +1% max
+  // health, attack and attack speed and +1 FLAT defense per lantern for the rest of the run, with NO limit
+  // (`hero.lanternGain`, used in statUpkeep()).
+  // Every kill feeds the lantern (`soulFeed` event: green lines swirl round the holder); every 7th pops its icon.
   soulLanternKill(events = []) {
     let changed = false;
     for (const h of this.heroes) {
@@ -2329,7 +2334,7 @@ export default class BattleState {
       if (!n) continue;
       h.lanternKills = (h.lanternKills || 0) + 1;
       events.push({ type: 'soulFeed', unit: h });
-      if (h.lanternKills % 8 !== 0) continue;
+      if (h.lanternKills % ((this.rules.soulLantern && this.rules.soulLantern.every) || 7) !== 0) continue;
       events.push({ type: 'proc', unit: h, label: 'Soul Lantern!', itemId: 'soul_lantern' });
       const before = h.lanternGain || 0;
       h.lanternGain = before + n; // no limit (user's choice: legendary, offered at most once per run)
@@ -2358,8 +2363,9 @@ export default class BattleState {
     return cut;
   }
 
-  // Phoenix Feather (used up): when the holder would die it stays at 1 health, is invulnerable for 1s and heals back up
-  // to 70% of max health over 3s (a regen boost). Every feather is one more save.
+  // Phoenix Feather (used up): when the holder would die it stays at 1 health, is invulnerable for 3s and heals back up
+  // to 100% of max health over 3s (a regen boost); every OTHER living hero heals 30% of max health at once.
+  // Every feather is one more save.
   phoenixSave(target, events) {
     const sp = target.specials;
     if (target.side !== 'hero' || target.minion || !target.alive || !sp || !sp.phoenixFeather) return;
@@ -2368,9 +2374,11 @@ export default class BattleState {
     target.hp = 1;
     events.push({ type: 'proc', unit: target, label: 'Phoenix!', itemId: 'phoenix_feather' });
     events.push({ type: 'itemUsed', unit: target, itemId: id });
-    // 1s untouchable, then it climbs back to 70% of max health over 3s.
-    this.applyStatus(target, { status: 'invulnerable', durationMs: 1000 }, target, 'phoenix_feather', events);
-    this.applyStatus(target, { status: 'regenBoost', durationMs: 3000, percentMaxHpPerSec: (70 - 100 / target.maxHp) / 3 }, target, 'phoenix_feather', events);
+    // 3s untouchable while it climbs back to 100% of max health over 3s.
+    const P = this.rules.phoenixFeather || { invulnerableMs: 3000, healToPercent: 100, healMs: 3000, squadHealPercent: 30 };
+    this.applyStatus(target, { status: 'invulnerable', durationMs: P.invulnerableMs }, target, 'phoenix_feather', events);
+    this.applyStatus(target, { status: 'regenBoost', durationMs: P.healMs, percentMaxHpPerSec: (P.healToPercent - 100 / target.maxHp) / (P.healMs / 1000) }, target, 'phoenix_feather', events);
+    for (const h of this.heroes) if (h !== target && h.alive) this.healUnit(h, (h.maxHp * P.squadHealPercent) / 100, events, { aura: false });
   }
 
   // Mirror Buckler: `mirrorBuckler`% chance (12 per copy, stops at 60%) that a ranged/magic hit bounces back; every copy
@@ -2395,7 +2403,7 @@ export default class BattleState {
 
   // Things that react to a unit having lost health (called from dealDamage when it has an events list).
   // Aid Kit (TRIAGE): when any living hero drops below `triageBelow`% (30) health, a living holder whose kit is ready
-  // patches them at once for `triage` FLAT health (15 per kit), then waits `triageCooldownMs` (10s).
+  // patches them at once for `triage`% of THEIR max health (8, +4 per extra kit), then waits `triageCooldownMs` (10s).
   tryTriage(target, events) {
     if (target.hp <= 0) return;
     for (const h of this.heroes) {
@@ -2405,7 +2413,7 @@ export default class BattleState {
       h.triageCd = sp.triageCooldownMs || 10000;
       events.push({ type: 'proc', unit: h, label: 'Triage!', itemId: 'aid_kit', target });
       if (h !== target) events.push({ type: 'flask', unit: h, target, flask: { color: '0xff6b6b' } }); // a red-cross kit lobbed over
-      this.healUnit(target, sp.triage, events, { aura: false });
+      this.healUnit(target, (target.maxHp * sp.triage) / 100, events, { aura: false });
       return;
     }
   }
@@ -2473,6 +2481,13 @@ export default class BattleState {
   }
 
   onKill(killer, victim, events, lastStatuses = []) {
+    // Elite's Badge (BOUNTY): an elite dies = every living hero heals `bounty`% (10, +5 per extra badge) of max health.
+    const bounty = victim.elite ? this.heroes.filter((h) => h.alive).reduce((n, h) => n + (h.specials.bounty || 0), 0) : 0;
+    if (bounty > 0) {
+      const holder = this.heroes.find((h) => h.alive && h.specials.bounty);
+      events.push({ type: 'proc', unit: holder, label: 'Bounty!', itemId: 'elites_badge', target: victim });
+      for (const h of this.heroes) if (h.alive) this.healUnit(h, (h.maxHp * bounty) / 100 / this.regenAura().factor, events);
+    }
     // Necro Crown: every enemy kill raises a skeleton (for the first living holder).
     if (this.minionBoost().crownKill) {
       const holder = this.heroes.find((h) => h.alive && h.specials.necroCrownKill);
@@ -3491,7 +3506,8 @@ export default class BattleState {
     this.kills = (this.kills || 0) + 1; // enemies killed in this run (saved with the run's results)
     const living = this.heroes.filter((h) => h.alive);
     if (!living.length) return;
-    const share = ((enemy.def.xp || 0) * (enemy.xpScale ?? 1)) / living.length;
+    const bounty = enemy.elite ? living.reduce((n, h) => n + ((h.specials && h.specials.bountyXp) || 0), 0) : 0; // Elite's Badge: +50% XP from elites
+    const share = ((enemy.def.xp || 0) * (enemy.xpScale ?? 1) * (1 + bounty / 100)) / living.length;
     for (const hero of living) {
       hero.xp += share;
       while (hero.xp >= xpForNextLevel(hero.level, this.leveling)) {
@@ -3568,7 +3584,7 @@ export default class BattleState {
     const mr = this.rules.minions || {};
     if (paying > 0) upkeep.push({ stat: 'attackEfficiency', percent: (mr.upkeepAttackSpeedPercent || 0) * paying }, { stat: 'defense', percent: (mr.upkeepDefensePercent || 0) * paying });
     if (hero.taunting && hero.specials && hero.specials.spiteMail) upkeep.push({ stat: 'defense', flat: hero.specials.spiteMail }); // Spite Mail
-    if (hero.lanternGain) upkeep.push({ stat: 'attack', percent: hero.lanternGain }, { stat: 'health', percent: hero.lanternGain }); // Soul Lantern
+    if (hero.lanternGain) upkeep.push({ stat: 'attack', percent: hero.lanternGain }, { stat: 'health', percent: hero.lanternGain }, { stat: 'attackEfficiency', percent: hero.lanternGain }, { stat: 'defense', flat: hero.lanternGain }); // Soul Lantern
     const sa = hero.def.passive && hero.def.passive.steadyAim;
     if (sa && hero.steady) upkeep.push({ stat: 'attackEfficiency', percent: sa.attackSpeedPercent }, { stat: 'crit', flat: sa.critFlat });
     if (hero.thirst) upkeep.push({ stat: 'attack', percent: hero.def.passive.bloodthirst.attackPercent }); // Berserker's Bloodthirst
@@ -3632,8 +3648,9 @@ export default class BattleState {
     const healed = [];
     for (const h of this.heroes) {
       if (!h.alive) continue;
-      const bonus = (h.specials && h.specials.clearHealFlat) || 0; // Aid Kit: +8 health per kit (flat)
-      const amount = Math.min(Math.round((h.maxHp * percent) / 100 + bonus), h.maxHp - h.hp);
+      const bonus = (h.specials && h.specials.clearHealFlat) || 0; // (old Aid Kit: flat health per kit)
+      const more = (h.specials && h.specials.winHeal) || 0; // Heart Charm: +5% of max health per charm
+      const amount = Math.min(Math.round((h.maxHp * (percent + more)) / 100 + bonus), h.maxHp - h.hp);
       h.hp += amount;
       healed.push({ unit: h, amount });
     }

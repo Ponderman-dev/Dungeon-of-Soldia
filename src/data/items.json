@@ -55,14 +55,14 @@
     "rarity": "common",
     "type": "stat",
     "scope": "self",
-    "description": "+15% melee damage.",
+    "description": "+25% melee damage.",
     "effects": [
       {
         "damageBonus": "melee",
-        "percent": 15
+        "percent": 25
       }
     ],
-    "perStack": "+15% melee damage"
+    "perStack": "+25% melee damage"
   },
   "eagle_eye": {
     "needs": "ranged",
@@ -70,14 +70,14 @@
     "rarity": "common",
     "type": "stat",
     "scope": "self",
-    "description": "+15% ranged damage.",
+    "description": "+25% ranged damage.",
     "effects": [
       {
         "damageBonus": "ranged",
-        "percent": 15
+        "percent": 25
       }
     ],
-    "perStack": "+15% ranged damage"
+    "perStack": "+25% ranged damage"
   },
   "feather_boots": {
     "name": "Feather Boots",
@@ -99,7 +99,7 @@
     "rarity": "rare",
     "type": "stat",
     "scope": "self",
-    "description": "+40 max health. Heals 0.3% of max health per second in fights.",
+    "description": "+40 max health. Heals 0.5% of max health per second in fights. +5% heal after each won floor.",
     "effects": [
       {
         "stat": "health",
@@ -107,10 +107,14 @@
       },
       {
         "special": "regen",
-        "percent": 0.3
+        "percent": 0.5
+      },
+      {
+        "special": "winHeal",
+        "percent": 5
       }
     ],
-    "perStack": "+40 health, +0.3% regen"
+    "perStack": "+40 health, +0.5% regen, +5% floor heal"
   },
   "war_banner": {
     "name": "War Banner",
@@ -291,7 +295,7 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "8% on attack: throw a bomb for 300% fire damage.",
+    "description": "8% on attack: throw a bomb for 300% fire damage that Burns for 3s.",
     "effects": [
       {
         "proc": "onAttack",
@@ -300,7 +304,15 @@
         "strike": {
           "damageMultiplier": 3,
           "damageType": "fire",
-          "projectile": "bomb"
+          "projectile": "bomb",
+          "apply": [
+            {
+              "status": "burn",
+              "durationMs": 3000,
+              "damageMultiplier": 0.2,
+              "damageType": "fire"
+            }
+          ]
         },
         "bomb": true
       }
@@ -387,11 +399,12 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "When a hero drops below 30% health, this hero patches them for 15 health (10s cooldown).",
+    "description": "When a hero drops below 30% health, this hero patches them for 8% of their max health (10s cooldown).",
     "effects": [
       {
         "special": "triage",
-        "percent": 15
+        "percent": 8,
+        "perExtra": 4
       },
       {
         "special": "triageBelow",
@@ -407,7 +420,7 @@
     "provides": [
       "heal"
     ],
-    "perStack": "+15 health"
+    "perStack": "+4% max health"
   },
   "shared_potion": {
     "name": "Shared Potion",
@@ -422,15 +435,15 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "Enemies above 90% health take +50% damage from this hero (attacks, skills and items).",
+    "description": "Enemies above 90% health take +40% damage from this hero (attacks, skills and items).",
     "effects": [
       {
         "special": "suckerPunch",
-        "percent": 50,
+        "percent": 40,
         "above": 90
       }
     ],
-    "perStack": "+50% vs enemies above 90% health"
+    "perStack": "+40% vs enemies above 90% health"
   },
   "bandage_roll": {
     "name": "Bandage Roll",
@@ -468,11 +481,11 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Used up: below 20% health, this hero heals 80% (once per floor).",
+    "description": "Used up: below 20% health, this hero heals 50% (once per floor).",
     "effects": [
       {
         "special": "secondWind",
-        "percent": 80,
+        "percent": 50,
         "unique": true,
         "below": 20
       }
@@ -500,15 +513,20 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "Each hit in a row: +2% damage (max +10%). Lost when stunned, frozen or feared.",
+    "description": "Each hit in a row: +3% damage (max +15%). Lost when stunned, frozen or feared.",
     "effects": [
       {
         "special": "brawlerMax",
-        "percent": 10
+        "percent": 15
+      },
+      {
+        "special": "brawlerStep",
+        "percent": 3,
+        "unique": true
       }
     ],
     "dropWeight": 80,
-    "perStack": "+10% max"
+    "perStack": "+15% max"
   },
   "tough_skin": {
     "name": "Tough Skin",
@@ -530,7 +548,7 @@
     "rarity": "common",
     "type": "onhit",
     "scope": "self",
-    "description": "+10% fire damage (Burn too), inflict fire damage on attacks.",
+    "description": "+10% fire damage (Burn too), inflict fire damage on attacks, 10% on attack: Burn 3s.",
     "effects": [
       {
         "damageBonus": "fire",
@@ -546,6 +564,21 @@
           "damageType": "fire"
         },
         "mergeCopies": true
+      },
+      {
+        "proc": "onAttack",
+        "chance": 10,
+        "label": "Burn!",
+        "targets": "target",
+        "unique": true,
+        "apply": [
+          {
+            "status": "burn",
+            "durationMs": 3000,
+            "damageMultiplier": 0.2,
+            "damageType": "fire"
+          }
+        ]
       }
     ],
     "perStack": "+10% fire damage, +10% of attack as fire",
@@ -768,17 +801,18 @@
           {
             "status": "bleed",
             "durationMs": 4000,
-            "damageMultiplier": 0.3
+            "damageMultiplier": 0.3,
+            "damagePerExtraPercent": 10
           }
         ],
         "unique": true,
-        "chancePerExtra": 5
+        "chancePerExtra": 8
       }
     ],
     "provides": [
       "bleed"
     ],
-    "perStack": "+5% chance"
+    "perStack": "+8% chance, +10% bleed damage"
   },
   "hex_doll": {
     "name": "Hex Doll",
@@ -852,15 +886,14 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "+30% damage to enemies under 25% health.",
+    "description": "+40% damage to enemies under 25% health.",
     "effects": [
       {
         "special": "executioner",
-        "percent": 30,
-        "falloffRatio": 0.95
+        "percent": 40
       }
     ],
-    "perStack": "+30% (a bit less each)"
+    "perStack": "+40% damage"
   },
   "magma_core": {
     "name": "Magma Core",
@@ -1271,15 +1304,16 @@
     "rarity": "rare",
     "type": "skill",
     "scope": "self",
-    "description": "Every 4th basic attack deals +50% damage.",
+    "description": "Every 3rd basic attack deals +100% damage.",
     "effects": [
       {
         "special": "metronome",
-        "percent": 50
+        "percent": 100,
+        "perExtra": 50
       },
       {
         "special": "metronomeEvery",
-        "percent": 4,
+        "percent": 3,
         "unique": true
       }
     ],
@@ -1638,34 +1672,35 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "+42% damage to bosses. Boss wind-ups take 20% longer.",
+    "description": "BIG GAME: +40% damage to bosses and elites.",
     "effects": [
       {
-        "special": "bossDamage",
-        "percent": 42
-      },
-      {
-        "special": "bossWindup",
-        "percent": 20
+        "special": "bigGame",
+        "percent": 40,
+        "perExtra": 20
       }
     ],
     "dropWeight": 90,
-    "perStack": "+42% damage, +20% wind-up"
+    "perStack": "+20% damage"
   },
   "catalyst_vial": {
     "name": "Catalyst Vial",
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "This hero's burn, poison and bleed ticks can crit (crit chance) and crits deal +25% more.",
+    "description": "This hero's burn, poison and bleed deal +30% damage, their ticks can crit (crit chance) and crits deal +25% more.",
     "effects": [
       {
         "special": "dotCrit",
         "percent": 25
+      },
+      {
+        "special": "dotDamage",
+        "percent": 30
       }
     ],
     "dropWeight": 90,
-    "perStack": "+25% tick crit damage",
+    "perStack": "+30% DoT damage, +25% tick crit damage",
     "needs": [
       "burn",
       "poison",
@@ -1707,7 +1742,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Only once per run. Every 8 kills: +1% attack and max health for the rest of the run.",
+    "description": "Only once per run. Every 7 kills by the squad: +1% max health, attack and attack speed, +1 defense for the rest of the run.",
     "effects": [
       {
         "special": "soulLantern",
@@ -1722,7 +1757,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Used up: when this hero would die, they live, are invulnerable for 1s and heal to 70%.",
+    "description": "Used up: when this hero would die, they live, are invulnerable for 3s and heal to 100%; every other living hero heals 30% max health.",
     "effects": [
       {
         "special": "phoenixFeather",
@@ -1805,22 +1840,34 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "+100 max health. Heals 1% of max health per second in fights.",
+    "description": "+100 max health and +10% max health. Heals 2% of max health per second in fights, twice as fast below 30% health.",
     "effects": [
       {
         "stat": "health",
         "flat": 100
       },
       {
+        "stat": "health",
+        "percent": 10,
+        "perExtra": 0
+      },
+      {
         "special": "regen",
-        "percent": 1
+        "percent": 2,
+        "perExtra": 0.5
+      },
+      {
+        "special": "desperate",
+        "percent": 2,
+        "unique": true,
+        "below": 30
       }
     ],
     "dropWeight": 90,
     "provides": [
       "heal"
     ],
-    "perStack": "+100 health, +1% regen"
+    "perStack": "+100 health, +0.5% regen"
   },
   "moonlight_twinblade": {
     "name": "Moonlight Twinblade",
@@ -1922,15 +1969,15 @@
         "thunderstruck": {
           "damageMultiplier": 7,
           "damageType": "electric",
-          "delayMs": 1500
+          "delayMs": 1500,
+          "damagePerExtra": 3.5
         }
       }
     ],
     "provides": [
       "electric"
     ],
-    "oncePerRun": true,
-    "perStack": "does not stack"
+    "perStack": "+350% bolt damage"
   },
   "guardians_banner": {
     "name": "Guardian's Banner",
@@ -2052,25 +2099,31 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "+20% damage to bosses.",
+    "description": "BOUNTY: when an elite dies, the squad heals 10% max health and gets +50% XP from it.",
     "effects": [
       {
-        "special": "bossDamage",
-        "percent": 20
+        "special": "bounty",
+        "percent": 10,
+        "perExtra": 5
+      },
+      {
+        "special": "bountyXp",
+        "percent": 50,
+        "perExtra": 25
       }
     ],
     "dropWeight": 90,
-    "perStack": "+20% damage"
+    "perStack": "+5% heal, +25% XP"
   },
   "swarm_swatter": {
     "name": "Swarm Swatter",
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "+25% damage to small fodder enemies.",
+    "description": "+25% damage to normal enemies (not elites or bosses).",
     "effects": [
       {
-        "special": "fodderDamage",
+        "special": "normalDamage",
         "percent": 25,
         "perExtra": 12
       }
@@ -2083,11 +2136,12 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "+2.5% damage for every enemy alive.",
+    "description": "+5% damage for every enemy alive.",
     "effects": [
       {
         "special": "betterOdds",
-        "percent": 2.5
+        "percent": 5,
+        "perExtra": 2.5
       }
     ],
     "dropWeight": 90,
@@ -2327,7 +2381,7 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "8% on attack: throw a poison bomb for 300% dark damage that adds 3 poison stacks.",
+    "description": "8% on attack: throw a poison bomb for 300% damage (no element) that adds 3 poison stacks.",
     "effects": [
       {
         "proc": "onAttack",
@@ -2336,7 +2390,7 @@
         "bomb": true,
         "strike": {
           "damageMultiplier": 3,
-          "damageType": "dark",
+          "damageType": "ranged",
           "projectile": "poisonBomb",
           "apply": [
             {
@@ -2344,7 +2398,7 @@
               "stacks": 3,
               "durationMs": 4000,
               "damageMultiplier": 0.3,
-              "damageType": "dark"
+              "damageType": "ranged"
             }
           ]
         }
@@ -2353,7 +2407,6 @@
     "dropWeight": 90,
     "provides": [
       "poison",
-      "dark",
       "bomb"
     ],
     "perStack": "+8% chance"

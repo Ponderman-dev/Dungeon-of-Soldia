@@ -64,8 +64,9 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
 { const ch = (n) => { const { s, k } = mk(); give(s, k, 'mirror_buckler', n); return k.specials.mirrorBuckler; }; ok('...12% per copy, the chance stops at 60% (but copies keep counting for power)', ch(1) === 12 && ch(7) === 84); }
 // Soul Lantern
 { const { s, es, k } = mk(); give(s, k, 'soul_lantern', 2); const a0 = k.stats.attack;
-  for (let i = 0; i < 16; i++) s.soulLanternKill(); ok('Soul Lantern: every 8 kills +1% per lantern (16 kills, 2 lanterns = +4%)', k.lanternGain === 4 && near(k.stats.attack, a0 * 1.04 * 1, 0.02), `${k.lanternGain}`);
-  for (let i = 0; i < 1000; i++) s.soulLanternKill(); ok('...no limit any more (1016 kills, 2 lanterns = +254%)', k.lanternGain === 254, `${k.lanternGain}`); }
+  const every = r('combat.json').soulLantern.every;
+  for (let i = 0; i < 2 * every; i++) s.soulLanternKill(); ok('Soul Lantern: every ' + every + ' kills +1% per lantern (2 lanterns = +4%)', k.lanternGain === 4 && near(k.stats.attack, a0 * 1.04 * 1, 0.02), `${k.lanternGain}`);
+  for (let i = 0; i < 100 * every; i++) s.soulLanternKill(); ok('...no limit any more (2 lanterns = +204%)', k.lanternGain === 204, `${k.lanternGain}`); }
 { const { rollChoices } = await import('../../src/systems/rewards.js'); const { s } = mk(); const rw = r('rewards.json'); const offered = new Set(); let seen = 0;
   const only = { soul_lantern: itemDefs.soul_lantern, whetstone: itemDefs.whetstone, padded_vest: itemDefs.padded_vest, lucky_coin: itemDefs.lucky_coin };
   for (let i = 0; i < 200; i++) if (rollChoices({ itemDefs: only, rules: { ...rw, rarityOdds: [{ from: 1, odds: { legendary: 1, common: 1 } }] }, floor: 1, count: 2, heroes: s.heroes, offered }).some((x) => x.id === 'soul_lantern')) seen++;
@@ -110,9 +111,13 @@ ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('i
 { const { s, k } = mk(); give(s, k, 'phoenix_feather', 2); const ev = []; s.dealDamage(k, k.hp + 50, ev);
   const rb = k.statuses.find((x) => x.type === 'regenBoost');
   ok('Phoenix Feather: a killing blow leaves the holder at 1 health, one feather is used up', k.hp === 1 && k.alive && k.items.filter((i) => i === 'phoenix_feather').length === 1 && ev.some((e) => e.type === 'itemUsed'));
-  ok('...it is invulnerable for 1s', k.statuses.some((x) => x.type === 'invulnerable' && x.total === 1000) && s.dealDamage(k, 9999, []).immune);
-  ok('...and climbs back to 70% over 3s', rb && rb.total === 3000);
-  for (let t = 0; t < 3100; t += 50) s.update(50); ok('...the heal arrives over the 3s (about 70%)', Math.abs(k.hp / k.maxHp - 0.7) < 0.03, `${(k.hp / k.maxHp).toFixed(2)}`); }
+  const P = r('combat.json').phoenixFeather;
+  ok('...it is invulnerable for ' + P.invulnerableMs / 1000 + 's', k.statuses.some((x) => x.type === 'invulnerable' && x.total === P.invulnerableMs) && s.dealDamage(k, 9999, []).immune);
+  ok('...and climbs back to ' + P.healToPercent + '% over ' + P.healMs / 1000 + 's', rb && rb.total === P.healMs);
+  for (let t = 0; t < P.healMs + 100; t += 50) s.update(50); ok('...the heal arrives in time', Math.abs(k.hp / k.maxHp - P.healToPercent / 100) < 0.03, `${(k.hp / k.maxHp).toFixed(2)}`); }
+{ const { s, k, h } = mk(); give(s, k, 'phoenix_feather'); const P = r('combat.json').phoenixFeather; for (const x of h) x.hp = Math.round(x.maxHp * 0.4);
+  const o = h[1], o0 = o.hp; s.dealDamage(k, k.hp + 50, []);
+  ok('...every OTHER living hero heals ' + P.squadHealPercent + '%', Math.abs(o.hp - o0 - (o.maxHp * P.squadHealPercent) / 100) < 1.5, `${o.hp - o0}`); }
 // Iron Will Talisman
 { const dur = (n) => { const { s, es, k } = mk(); if (n) give(s, k, 'iron_will_talisman', n); s.applyStatus(k, { status: 'stun', durationMs: 1000 }, es[0], 't', []); return k.statuses.find((x) => x.type === 'stun').total; };
   ok('Iron Will: stuns 25% shorter, 2 copies 44%, 5 copies 76%', Math.abs(dur(1) - 750) < 1 && Math.abs(dur(2) - 562.5) < 1 && Math.abs(dur(5) - 237.3) < 1, `${dur(1)} ${dur(2)} ${dur(5)}`);

@@ -64,15 +64,16 @@ const attacks = (ev, who) => ev.filter((x) => x.type === 'attack' && x.attacker 
   for (let i = 0; i < 300; i++) { e.statuses = []; s.afterHit(k, e, 10, [], { crit: true }); for (const st of e.statuses) seen.add(st.type); }
   ok('crit gives chill, poison, stun and shock over time', seen.has('chill') && seen.has('poison') && seen.has('stun') && seen.has('shock'), [...seen].join());
   e.statuses = []; s.afterHit(k, e, 10, [], { crit: false }); ok('no debuff without a crit', e.statuses.length === 0); }
-// Aid Kit (TRIAGE): any hero dropping below 30% is patched by the holder for 15 flat health per kit, 10s cooldown.
+// Aid Kit (TRIAGE): any hero dropping below 30% is patched by the holder for a % of THEIR max health (first kit, then perExtra), 10s cooldown.
+const kit = frozenItems().aid_kit.effects.find((e) => e.special === 'triage');
 { const s = mk(); const [k, a] = s.heroes; s.giveItem(k.uid, 'aid_kit'); const ev = [];
   a.hp = a.maxHp * 0.35; s.dealDamage(a, 1, ev); ok('Aid Kit: nothing above 30%', !ev.some((e) => e.label === 'Triage!'));
   a.hp = a.maxHp * 0.31; const before = a.maxHp * 0.31 - a.maxHp * 0.02; s.dealDamage(a, a.maxHp * 0.02, ev);
-  ok('...an ally dropping below 30% is patched for 15 health (and a kit flies over)', ev.some((e) => e.label === 'Triage!') && ev.some((e) => e.type === 'flask') && Math.abs(a.hp - (before + 15)) < 0.6, `${a.hp - before}`);
+  ok('...an ally dropping below 30% is patched for ' + kit.percent + '% of their max health (and a kit flies over)', ev.some((e) => e.label === 'Triage!') && ev.some((e) => e.type === 'flask') && Math.abs(a.hp - (before + (a.maxHp * kit.percent) / 100)) < 0.6, `${a.hp - before}`);
   const ev2 = []; a.hp = a.maxHp * 0.2; s.dealDamage(a, 1, ev2); ok('...then a 10s cooldown', !ev2.some((e) => e.label === 'Triage!'));
   for (let t = 0; t < 10000; t += 50) s.update(50); a.hp = a.maxHp * 0.2; const ev3 = []; s.dealDamage(a, 1, ev3); ok('...ready again after 10s', ev3.some((e) => e.label === 'Triage!')); }
 { const s = mk(); const [k] = s.heroes; for (let i = 0; i < 3; i++) s.giveItem(k.uid, 'aid_kit'); k.hp = k.maxHp * 0.25; const h0 = k.hp - 1; s.dealDamage(k, 1, []);
-  ok('...3 kits = 45 health, and the holder can patch itself', Math.abs(k.hp - (h0 + 45)) < 0.6, `${k.hp - h0}`); }
+  ok('...3 kits = ' + (kit.percent + 2 * kit.perExtra) + '%, and the holder can patch itself', Math.abs(k.hp - (h0 + (k.maxHp * (kit.percent + 2 * kit.perExtra)) / 100)) < 0.6, `${k.hp - h0}`); }
 // Ranged heroes pick random enemies by default; melee heroes keep one opponent (front line); a tapped enemy is still focused
 { const s = mk(); const es = dummy(s, ['goblin', 'goblin', 'goblin']); const hit = new Set(); for (let i = 0; i < 200; i++) hit.add(s.pickTarget(s.heroes[3]).uid);
   ok('ranged default target is random', hit.size === 3);

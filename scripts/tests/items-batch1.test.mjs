@@ -30,26 +30,28 @@ const bonus = (s, k, e) => s.itemDamageBonus(k, e, {});
   const plain = s2.strike(k2, e2, [], { basic: true }).amount; give(s2, k2, 'hunters_badge');
   const more = s2.strike(k2, e2, [], { basic: true }).amount;
   ok('...a real hit on an elite is ' + p + '% bigger', Math.abs(more / plain - (1 + p / 100)) < 0.03, `${plain} -> ${more}`); }
-// Elite's Badge: bosses only (same special as Giantslayer's Brand, so they add up).
-{ const p = val('elites_badge', 'bossDamage').percent;
-  const { s, e, k } = mk(); give(s, k, 'elites_badge', 3);
-  ok("Elite's Badge: nothing vs a normal enemy", bonus(s, k, e) === 0);
-  e.def = { ...e.def, boss: true };
-  ok('...3 badges: +' + 3 * p + '% vs a boss', bonus(s, k, e) === 3 * p, `${bonus(s, k, e)}`);
-  give(s, k, 'giantslayers_brand');
-  ok("...adds up with Giantslayer's Brand", bonus(s, k, e) === 3 * p + val('giantslayers_brand', 'bossDamage').percent, `${bonus(s, k, e)}`); }
-// Swarm Swatter: fodder only, first copy then perExtra.
-{ const sw = val('swarm_swatter', 'fodderDamage');
+// Elite's Badge (BOUNTY, session 31): an elite dying heals the squad and gives more XP.
+{ const heal = val('elites_badge', 'bounty'), xp = val('elites_badge', 'bountyXp');
+  const { s, es, k } = mk(['goblin', 'goblin']); give(s, k, 'elites_badge', 2);
+  for (const h of s.heroes) h.hp = Math.round(h.maxHp * 0.5);
+  const a = s.heroes[1], a0 = a.hp; es[0].elite = { element: 'burning', trait: 'vampiric', hits: 0, unhit: 0 }; es[0].hp = 1; const ev = []; s.strike(k, es[0], ev, {});
+  const want = (a.maxHp * (heal.percent + heal.perExtra)) / 100;
+  ok("Elite's Badge: an elite dies = the whole squad heals " + (heal.percent + heal.perExtra) + '% (2 badges)', ev.some((e) => e.label === 'Bounty!') && Math.abs(a.hp - a0 - want) < 1.5, `${a.hp - a0} vs ${want}`);
+  const a1 = a.hp; es[1].hp = 1; s.strike(k, es[1], [], {}); ok('...nothing for a normal enemy', a.hp === a1);
+  const gain = (badges, elite) => { const t = mk(['goblin']); if (badges) give(t.s, t.k, 'elites_badge', badges); if (elite) t.e.elite = { unhit: 0 }; t.e.xpScale = 1; t.e.def = { ...t.e.def, xp: 3 }; for (const h of t.s.heroes) h.xp = 0; t.s.awardXp(t.e, []); return t.s.heroes[1].xp; };
+  ok('...+' + xp.percent + '% XP from an elite (+' + xp.perExtra + '% per extra badge)', Math.abs(gain(1, true) / gain(0, true) - (1 + xp.percent / 100)) < 1e-6 && Math.abs(gain(2, true) / gain(0, true) - (1 + (xp.percent + xp.perExtra) / 100)) < 1e-6 && gain(1, false) === gain(0, false)); }
+// Swarm Swatter (session 31): NORMAL enemies (not elites, not bosses), first copy then perExtra.
+{ const sw = val('swarm_swatter', 'normalDamage');
   const { s, es, k } = mk(['slime', 'goblin']); give(s, k, 'swarm_swatter', 2);
-  const slime = es.find((x) => x.def.tier === 'fodder'), gob = es.find((x) => x.def.tier !== 'fodder');
-  ok('Swarm Swatter: 2 copies +' + (sw.percent + sw.perExtra) + '% vs fodder', bonus(s, k, slime) === sw.percent + sw.perExtra, `${bonus(s, k, slime)}`);
-  ok('...nothing vs a normal enemy', bonus(s, k, gob) === 0); }
-// Better Odds: per enemy ALIVE right now, per copy.
-{ const p = val('better_odds', 'betterOdds').percent;
+  ok('Swarm Swatter: 2 copies +' + (sw.percent + sw.perExtra) + '% vs normal enemies', bonus(s, k, es[0]) === sw.percent + sw.perExtra && bonus(s, k, es[1]) === sw.percent + sw.perExtra, `${bonus(s, k, es[1])}`);
+  es[1].elite = { unhit: 0 }; ok('...nothing vs an elite', bonus(s, k, es[1]) === 0);
+  es[0].def = { ...es[0].def, boss: true }; ok('...nothing vs a boss', bonus(s, k, es[0]) === 0); }
+// Better Odds: per enemy ALIVE right now, first copy then perExtra.
+{ const b = val('better_odds', 'betterOdds'); const p = b.percent + (b.perExtra ?? b.percent);
   const { s, es, e, k } = mk(['goblin', 'goblin', 'goblin', 'goblin']); give(s, k, 'better_odds', 2);
-  ok('Better Odds: 4 alive, 2 copies = +' + 4 * 2 * p + '%', Math.abs(bonus(s, k, e) - 4 * 2 * p) < 1e-9, `${bonus(s, k, e)}`);
+  ok('Better Odds: 4 alive, 2 copies = +' + 4 * p + '%', Math.abs(bonus(s, k, e) - 4 * p) < 1e-9, `${bonus(s, k, e)}`);
   es[3].alive = false;
-  ok('...shrinks when one dies (3 alive)', Math.abs(bonus(s, k, e) - 3 * 2 * p) < 1e-9, `${bonus(s, k, e)}`); }
+  ok('...shrinks when one dies (3 alive)', Math.abs(bonus(s, k, e) - 3 * p) < 1e-9, `${bonus(s, k, e)}`); }
 // Opening Horn: faster only in the first seconds of the floor.
 { const h = val('opening_horn', 'openingHorn');
   const { s, k } = mk(); const slow = s.interval(k); give(s, k, 'opening_horn', 2);

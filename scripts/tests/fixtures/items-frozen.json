@@ -387,11 +387,12 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "When a hero drops below 30% health, this hero patches them for 15 health (10s cooldown).",
+    "description": "When a hero drops below 30% health, this hero patches them for 8% of their max health (10s cooldown).",
     "effects": [
       {
         "special": "triage",
-        "percent": 15
+        "percent": 8,
+        "perExtra": 4
       },
       {
         "special": "triageBelow",
@@ -407,7 +408,7 @@
     "provides": [
       "heal"
     ],
-    "perStack": "+15 health"
+    "perStack": "+4% max health"
   },
   "shared_potion": {
     "name": "Shared Potion",
@@ -2051,25 +2052,31 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "+20% damage to bosses.",
+    "description": "BOUNTY: when an elite dies, the squad heals 10% max health and gets +50% XP from it.",
     "effects": [
       {
-        "special": "bossDamage",
-        "percent": 20
+        "special": "bounty",
+        "percent": 10,
+        "perExtra": 5
+      },
+      {
+        "special": "bountyXp",
+        "percent": 50,
+        "perExtra": 25
       }
     ],
     "dropWeight": 90,
-    "perStack": "+20% damage"
+    "perStack": "+5% heal, +25% XP"
   },
   "swarm_swatter": {
     "name": "Swarm Swatter",
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "+25% damage to small fodder enemies.",
+    "description": "+25% damage to normal enemies (not elites or bosses).",
     "effects": [
       {
-        "special": "fodderDamage",
+        "special": "normalDamage",
         "percent": 25,
         "perExtra": 12
       }

@@ -1970,7 +1970,7 @@
   },
   "guardians_banner": {
     "name": "Guardian's Banner",
-    "rarity": "epic",
+    "rarity": "legendary",
     "type": "squad",
     "scope": "squad",
     "description": "The whole squad gets +15 defense and +15 resist (while this hero lives).",
@@ -2209,7 +2209,7 @@
   },
   "rally_flag": {
     "name": "Cautious Banner",
-    "rarity": "rare",
+    "rarity": "epic",
     "type": "special",
     "scope": "self",
     "description": "Once per floor, when a hero drops below 30% health: that hero gets a 25% max health shield.",
@@ -2691,18 +2691,18 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Every enemy this hero kills heals the OTHER living heroes 6% max health.",
+    "description": "Every enemy this hero kills heals the OTHER living heroes 10% max health.",
     "effects": [
       {
         "special": "conqueror",
-        "percent": 6,
-        "perExtra": 3
+        "percent": 10,
+        "perExtra": 5
       }
     ],
     "dropWeight": 90,
     "provides": [
       "heal"
     ],
-    "perStack": "+3% heal"
+    "perStack": "+5% heal"
   }
 }

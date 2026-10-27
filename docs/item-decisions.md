@@ -549,3 +549,9 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   near it (~100px) are Feared 1s (user: start at 1s; extra copy +3% chance, +0.3s: 2 = 8% 1.3s, 3 = 11% 1.6s); 3s COOLDOWN after each ring (user: not every time). BOSSES ARE IMMUNE TO FEAR (user; was
   half length; data: add 'fear' to every boss's statusImmune, Dread Bell is the only enemy-fear source); a ring next
   to a boss still scares its adds. Elites are NOT immune. Show the ring in game first. Other on-hit items unchanged.
+
+## Session 33: banner fixes after the item ranking (user)
+- Guardian's Banner epic -> LEGENDARY (numbers unchanged; it was +23 floors with 3 copies, far ahead of everything).
+- Cautious Banner rare -> EPIC (numbers unchanged; +9 floors, above most legendaries).
+- Conqueror's Flag 6% (+3) -> 10% (+5) heal for the other heroes per kill (was +2.9 floors, weak for a legendary).
+- War Banner, Jolly Banner, Last Stand unchanged. No re-check sim (user).

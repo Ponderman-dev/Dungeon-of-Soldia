@@ -1,28 +1,26 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 33): NEXT = BUILD THE PLANNED ITEMS (sessions 31 + 32 = item review, decisions only)
-- BRANCH: `main` has EVERYTHING (session 32 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- REVIEW IS DONE: every item group reviewed. Nothing from sessions 31/32 is built except the mixing elements penalty
-  (session 31; docs/systems/items.md last line).
-- PLANNED, NOT BUILT: all in docs/item-decisions.md, sections at the END tagged '[planned, NOT built]'.
-  Session 31: Euclid rework, regen trio, boss badges, bombs, low-health saves + Phoenix Feather, fire trio, ice,
-  electric, fused pairs, Reaper's Bell spirits, Sharp Edge / Eagle Eye 25%, conditional damage, minions, Soul Lantern.
-  Session 32: DEFENSE (Spite Mail rework; Shield Totem -> block-aura TOTEM minion, front centre, no upkeep; Emergency
-  Buckler -> BUCKLER 5% block/copy), MINION UPKEEP (defense part removed, attack speed stays per item), BANNERS (War
-  Banner steady +10% atk speed aura; Rally Flag -> Cautious Banner; Spirit Knight Banner -> Spirit Knight's Sigil;
-  NEW legendary Conqueror's Flag), Metronome every 3rd +100%, Sweeping Strap -> CLEAVE, Catalyst Vial +30% DoT,
-  Serrated Edge copies, Dread Bell -> FEAR RING (3s cooldown), BOSSES IMMUNE TO FEAR.
-- BUILD PLAN (suggested): small batches, numbers-only first (no new looks), then new mechanics; every NEW LOOK shown in
-  the game first (art rule): prism burst, haunting spirits, Kinetic Coil glow + lightning, Eruption, element totems,
-  Shield Totem minion, fear ring, cleave swing, new icons (Sweeping Strap, Spirit Knight's Sigil, Conqueror's Flag).
-  New effect shapes need a copy in the test fixture (CLAUDE.md 'Tests vs tuning').
-  war-banner.test.mjs 'proc rate ~8%' is unseeded and fails now and then (7.0% once); it is rewritten with the War Banner aura anyway.
-- OPEN (ask, don't guess): Conqueror's Flag: do the holder's MINION kills count? (written as holder's own kills only).
-  Euclid prism meter size / blast % still to set. Element totems need new names (they do nothing for the Shield Totem).
-- ALSO WAITING: MOVE ORDERS (user picked: tap floor = whole squad walks there, drag a hero onto floor = that hero
-  walks there; on arrival they go straight back to fighting). Older NEXT: boss rework 80 / 100 (see archive).
-- PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish
-  again. Fresh clone: `npm install` first.
+## START HERE (session 34): NEXT = CHARACTER STUDIO (pixel sprite editor) work (user: 'I want to get back on the pixel sprite editor')
+- BRANCH: `main` has EVERYTHING (session 33 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- Studio: read docs/systems/studio.md first; build/publish steps there (url https://claude.ai/artifact/1azV1LBUimRkeavNpQBgc7).
+  Ask the user what they want in the editor; nothing is planned yet.
+- SESSION 33 DONE: every '[planned]' item of sessions 31/32 is BUILT (docs/item-decisions.md, now tagged '[built session 33]';
+  mechanics in docs/systems/items.md 'Session 33 batch 1-3', test scripts/tests/items-s31.test.mjs uses the REAL items.json).
+  Then: item RANKING sim of all 117 items (scripts/tests/rankitems.mjs, report docs/item-ranking-s33.md) and the user's
+  balance picks: Guardian's Banner + Assault Breastplate -> legendary, Cautious Banner -> epic, Conqueror's Flag 10% (+5),
+  Bloodlust Mask nerf (extra copies +20% speed / +2% lifesteal, no squad share), 9 weak items buffed (item-decisions.md end).
+- ITEM REVIEW page round 4 (session 33 changes + each item's ranking result, notes in db collection `notes4`):
+  https://claude.ai/artifact/S7cbuLJoStsdi5hpg2SBef. Read the notes when the user says they wrote some.
+- OPEN (later, user: 'fix this later'): weak items whose sim was unfair need a BUILD test with partner items (Euclid, Kinetic
+  Coil, the 4 Collars, Overseer's Whistle, Gag Rune, Shatter Hammer). Placeholder choices to confirm: Euclid prism fill 1000%
+  / burst 300%, Collar names (planned 'element totems'), Thunderstruck no longer once per run, Eruption +75%/copy,
+  Kindling burn chance flat. FIRST-DRAFT LOOKS never approved: Collar / Conqueror's Flag / Sigil / cleave-axe icons, Shield
+  Totem sprite (minions.json), Fear Ring + Prism Burst have no own look yet (reuse effects). Conqueror's Flag: holder's
+  MINION kills still don't count (as written).
+- ALSO WAITING: MOVE ORDERS (tap floor = squad walks there, drag a hero onto floor = that hero walks; back to fighting on
+  arrival). Boss rework 80 / 100 (archive).
+- PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish again
+  (if refused as 'identical', publish once more). Fresh clone: `npm install` first.
 
 ## How we work with this user
 - 'Discuss first' / 'Hold on' / 'let me write first' (session 30) = STOP and wait for their text; no building meanwhile.
@@ -50,4 +48,5 @@
 - QUESTION TOOL (session 31): after a worker restart it can come back '[No preference]' twice: then ask in TEXT.
 - Item reviews (session 31): user wants ONE simple line per item; lists of 4 ideas, they often answer 'other'/'more':
   give a longer list in text. They decide stacking per copy each time (show copy tables 1/2/3/5).
+- Balance (session 33): the user picks from option tables (question tool, copy tables 1/2/3/5) and often says 'No sim'.
 - Item numbers: docs/item-decisions.md is the truth. Old open item notes (Moonlight Twinblade, watch list): archive 'Open right now'.

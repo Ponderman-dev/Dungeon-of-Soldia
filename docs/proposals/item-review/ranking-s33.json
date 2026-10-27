@@ -1,0 +1,590 @@
+{
+ "_about": "Item ranking sim of session 33 (rankitems.mjs, 60 runs per number, baseline floor 30.1): rank of 117, extra floors with 1 and 3 copies. Taken BEFORE the banner / Bloodlust / weak-item changes of the same session.",
+ "items": {
+  "guardians_banner": {
+   "rank": 1,
+   "c1": 7.3,
+   "c3": 23.4
+  },
+  "bloodlust_mask": {
+   "rank": 2,
+   "c1": 8.7,
+   "c3": 18.6
+  },
+  "heart_of_the_beast": {
+   "rank": 3,
+   "c1": 7.8,
+   "c3": 12.2
+  },
+  "soul_lantern": {
+   "rank": 4,
+   "c1": 1.2,
+   "c3": 11
+  },
+  "assault_breastplate": {
+   "rank": 5,
+   "c1": 4.3,
+   "c3": 10.7
+  },
+  "gamblers_dice": {
+   "rank": 6,
+   "c1": 2.8,
+   "c3": 9.8
+  },
+  "moonlight_twinblade": {
+   "rank": 7,
+   "c1": 4.1,
+   "c3": 9.5
+  },
+  "fire_imp_brazier": {
+   "rank": 8,
+   "c1": 5,
+   "c3": 9.2
+  },
+  "rally_flag": {
+   "rank": 9,
+   "c1": 4.8,
+   "c3": 9.2
+  },
+  "flame_spirit": {
+   "rank": 10,
+   "c1": 4.4,
+   "c3": 8.4
+  },
+  "frozen_demon_head": {
+   "rank": 11,
+   "c1": 7.5,
+   "c3": 8.3
+  },
+  "wisp_lantern": {
+   "rank": 12,
+   "c1": 0.7,
+   "c3": 7.4
+  },
+  "eclipse_idol": {
+   "rank": 13,
+   "c1": 3.5,
+   "c3": 7.3
+  },
+  "bombardiers_barrel": {
+   "rank": 14,
+   "c1": 1.3,
+   "c3": 7.3
+  },
+  "fire_heart": {
+   "rank": 15,
+   "c1": 5.5,
+   "c3": 7.2
+  },
+  "rat_cage": {
+   "rank": 16,
+   "c1": 2.2,
+   "c3": 7
+  },
+  "shield_totem": {
+   "rank": 17,
+   "c1": 2.1,
+   "c3": 7
+  },
+  "heart_charm": {
+   "rank": 18,
+   "c1": 4,
+   "c3": 7
+  },
+  "martyrs_shield": {
+   "rank": 19,
+   "c1": 2.7,
+   "c3": 6.6
+  },
+  "sharpest_blade": {
+   "rank": 20,
+   "c1": 2.8,
+   "c3": 6.3
+  },
+  "necro_crown": {
+   "rank": 21,
+   "c1": 4.6,
+   "c3": 6.3
+  },
+  "tough_skin": {
+   "rank": 22,
+   "c1": 2.4,
+   "c3": 6.1
+  },
+  "electric_bomb": {
+   "rank": 23,
+   "c1": 2.8,
+   "c3": 6
+  },
+  "excalibur": {
+   "rank": 24,
+   "c1": 4.6,
+   "c3": 6
+  },
+  "phoenix_feather": {
+   "rank": 25,
+   "c1": 4.2,
+   "c3": 6
+  },
+  "chill_band": {
+   "rank": 26,
+   "c1": 4.8,
+   "c3": 5.9
+  },
+  "siege_cannon": {
+   "rank": 27,
+   "c1": 5,
+   "c3": 5.7
+  },
+  "frost_mantle": {
+   "rank": 28,
+   "c1": 2.9,
+   "c3": 5.7
+  },
+  "ember_charm": {
+   "rank": 29,
+   "c1": 3,
+   "c3": 5.5
+  },
+  "static_crystal": {
+   "rank": 30,
+   "c1": 3.4,
+   "c3": 5.4
+  },
+  "spirit_axe": {
+   "rank": 31,
+   "c1": 1.4,
+   "c3": 5.4
+  },
+  "gargoyle_idol": {
+   "rank": 32,
+   "c1": 3.9,
+   "c3": 5.2
+  },
+  "jolly_banner": {
+   "rank": 33,
+   "c1": 2.1,
+   "c3": 5.2
+  },
+  "war_banner": {
+   "rank": 34,
+   "c1": 2.1,
+   "c3": 5
+  },
+  "phoenix_hatchling": {
+   "rank": 35,
+   "c1": 4.9,
+   "c3": 4.8
+  },
+  "poison_bombs": {
+   "rank": 36,
+   "c1": 3,
+   "c3": 4.6
+  },
+  "bulwark_plate": {
+   "rank": 37,
+   "c1": 2.6,
+   "c3": 4.2
+  },
+  "aid_kit": {
+   "rank": 38,
+   "c1": 0.9,
+   "c3": 4.1
+  },
+  "fire_bombs": {
+   "rank": 39,
+   "c1": 3,
+   "c3": 4
+  },
+  "harvest_scythe": {
+   "rank": 40,
+   "c1": 2.3,
+   "c3": 4
+  },
+  "sharp_edge": {
+   "rank": 41,
+   "c1": 3.3,
+   "c3": 3.9
+  },
+  "thousand_cuts": {
+   "rank": 42,
+   "c1": 1.1,
+   "c3": 3.9
+  },
+  "blood_chalice": {
+   "rank": 43,
+   "c1": 2.1,
+   "c3": 3.8
+  },
+  "hunters_sigil": {
+   "rank": 44,
+   "c1": 2.4,
+   "c3": 3.8
+  },
+  "second_wind_flask": {
+   "rank": 45,
+   "c1": 2.9,
+   "c3": 3.7
+  },
+  "padded_vest": {
+   "rank": 46,
+   "c1": 2.1,
+   "c3": 3.6
+  },
+  "whetstone": {
+   "rank": 47,
+   "c1": 0.6,
+   "c3": 3.6
+  },
+  "bandage_roll": {
+   "rank": 48,
+   "c1": 2.9,
+   "c3": 3.6
+  },
+  "metronome": {
+   "rank": 49,
+   "c1": -0.5,
+   "c3": 3.4
+  },
+  "plague_flask": {
+   "rank": 50,
+   "c1": 3.3,
+   "c3": 3.4
+  },
+  "spirit_knight_banner": {
+   "rank": 51,
+   "c1": 1.8,
+   "c3": 3.3
+  },
+  "provokers_horn": {
+   "rank": 52,
+   "c1": 2.7,
+   "c3": 3.2
+  },
+  "rusty_nails": {
+   "rank": 53,
+   "c1": 1.6,
+   "c3": 3.1
+  },
+  "dread_bell": {
+   "rank": 54,
+   "c1": 3.1,
+   "c3": 3.1
+  },
+  "emergency_buckler": {
+   "rank": 55,
+   "c1": 0.9,
+   "c3": 3
+  },
+  "warding_charm": {
+   "rank": 56,
+   "c1": 0.5,
+   "c3": 3
+  },
+  "quick_gloves": {
+   "rank": 57,
+   "c1": 3.3,
+   "c3": 3
+  },
+  "venom_fang": {
+   "rank": 58,
+   "c1": 1,
+   "c3": 3
+  },
+  "conquerors_flag": {
+   "rank": 59,
+   "c1": -0.1,
+   "c3": 2.9
+  },
+  "frozen_thunderbolt": {
+   "rank": 60,
+   "c1": 1.6,
+   "c3": 2.9
+  },
+  "last_stand": {
+   "rank": 61,
+   "c1": 2.3,
+   "c3": 2.6
+  },
+  "shadow_charm": {
+   "rank": 62,
+   "c1": 0.2,
+   "c3": 2.5
+  },
+  "mirror_buckler": {
+   "rank": 63,
+   "c1": 3.5,
+   "c3": 2.5
+  },
+  "swarm_swatter": {
+   "rank": 64,
+   "c1": 3.3,
+   "c3": 2.5
+  },
+  "bone_charm": {
+   "rank": 65,
+   "c1": 1.3,
+   "c3": 2.3
+  },
+  "exploiters_lens": {
+   "rank": 66,
+   "c1": 0.2,
+   "c3": 2.3
+  },
+  "mimic_chest": {
+   "rank": 67,
+   "c1": 2.3,
+   "c3": 2.3
+  },
+  "thunderstruck": {
+   "rank": 68,
+   "c1": 1.5,
+   "c3": 2.3
+  },
+  "grave_dust": {
+   "rank": 69,
+   "c1": 2.9,
+   "c3": 2.3
+  },
+  "kindling": {
+   "rank": 70,
+   "c1": -0.6,
+   "c3": 2
+  },
+  "ember_collar": {
+   "rank": 71,
+   "c1": 0.7,
+   "c3": 2
+  },
+  "spite_mail": {
+   "rank": 72,
+   "c1": 0,
+   "c3": 1.9
+  },
+  "mage_cloak": {
+   "rank": 73,
+   "c1": 2.9,
+   "c3": 1.9
+  },
+  "serrated_edge": {
+   "rank": 74,
+   "c1": 0,
+   "c3": 1.9
+  },
+  "catalyst_vial": {
+   "rank": 75,
+   "c1": 2.1,
+   "c3": 1.9
+  },
+  "iron_will_talisman": {
+   "rank": 76,
+   "c1": 0.5,
+   "c3": 1.9
+  },
+  "feather_boots": {
+   "rank": 77,
+   "c1": 1.6,
+   "c3": 1.8
+  },
+  "magma_core": {
+   "rank": 78,
+   "c1": 1.1,
+   "c3": 1.8
+  },
+  "dark_bomb": {
+   "rank": 79,
+   "c1": 1.4,
+   "c3": 1.7
+  },
+  "frost_charm": {
+   "rank": 80,
+   "c1": 0.7,
+   "c3": 1.6
+  },
+  "reapers_bell": {
+   "rank": 81,
+   "c1": -0.1,
+   "c3": 1.6
+  },
+  "eagle_eye": {
+   "rank": 82,
+   "c1": 2.7,
+   "c3": 1.6
+  },
+  "riposte_cloak": {
+   "rank": 83,
+   "c1": 2.8,
+   "c3": 1.6
+  },
+  "overheal_ring": {
+   "rank": 84,
+   "c1": 1.2,
+   "c3": 1.6
+  },
+  "quick_fingers": {
+   "rank": 85,
+   "c1": -0.6,
+   "c3": 1.5
+  },
+  "ice_bomb": {
+   "rank": 86,
+   "c1": 3.2,
+   "c3": 1.5
+  },
+  "frost_collar": {
+   "rank": 87,
+   "c1": -0.1,
+   "c3": 1.2
+  },
+  "elites_badge": {
+   "rank": 88,
+   "c1": 0.6,
+   "c3": 1.1
+  },
+  "executioners_axe": {
+   "rank": 89,
+   "c1": -0.6,
+   "c3": 1.1
+  },
+  "full_vigor": {
+   "rank": 90,
+   "c1": -0.5,
+   "c3": 1
+  },
+  "brawlers_streak": {
+   "rank": 91,
+   "c1": 1.9,
+   "c3": 0.9
+  },
+  "ghastly_fire": {
+   "rank": 92,
+   "c1": 0.3,
+   "c3": 0.9
+  },
+  "storm_charm": {
+   "rank": 93,
+   "c1": 1.8,
+   "c3": 0.9
+  },
+  "conductors_baton": {
+   "rank": 94,
+   "c1": -0.1,
+   "c3": 0.9
+  },
+  "euclid_of_elements": {
+   "rank": 95,
+   "c1": 0.5,
+   "c3": 0.9
+  },
+  "spiked_aegis": {
+   "rank": 96,
+   "c1": 0.1,
+   "c3": 0.9
+  },
+  "better_odds": {
+   "rank": 97,
+   "c1": 3.5,
+   "c3": 0.8
+  },
+  "life_crystal": {
+   "rank": 98,
+   "c1": 1,
+   "c3": 0.8
+  },
+  "scholars_bookmark": {
+   "rank": 99,
+   "c1": 0.7,
+   "c3": 0.8
+  },
+  "lucky_coin": {
+   "rank": 100,
+   "c1": 2,
+   "c3": 0.8
+  },
+  "sucker_punch_glove": {
+   "rank": 101,
+   "c1": 0.3,
+   "c3": 0.7
+  },
+  "lost_clerics_grimoire": {
+   "rank": 102,
+   "c1": -0.4,
+   "c3": 0.7
+  },
+  "hourglass": {
+   "rank": 103,
+   "c1": -0.7,
+   "c3": 0.6
+  },
+  "spotters_lens": {
+   "rank": 104,
+   "c1": 1.5,
+   "c3": 0.2
+  },
+  "hex_doll": {
+   "rank": 105,
+   "c1": 2.3,
+   "c3": 0.2
+  },
+  "hunters_badge": {
+   "rank": 106,
+   "c1": 0.5,
+   "c3": 0.2
+  },
+  "kinetic_coil": {
+   "rank": 107,
+   "c1": 0.7,
+   "c3": 0.2
+  },
+  "quiver_of_plenty": {
+   "rank": 108,
+   "c1": 1.7,
+   "c3": 0.1
+  },
+  "opening_horn": {
+   "rank": 109,
+   "c1": -0.4,
+   "c3": 0
+  },
+  "sweeping_strap": {
+   "rank": 110,
+   "c1": 0.6,
+   "c3": 0
+  },
+  "gag_rune": {
+   "rank": 111,
+   "c1": -0.1,
+   "c3": -0.1
+  },
+  "giantslayers_brand": {
+   "rank": 112,
+   "c1": -0.1,
+   "c3": -0.3
+  },
+  "echo_rune": {
+   "rank": 113,
+   "c1": -0.7,
+   "c3": -0.3
+  },
+  "overseers_whistle": {
+   "rank": 114,
+   "c1": -0.1,
+   "c3": -0.5
+  },
+  "storm_collar": {
+   "rank": 115,
+   "c1": -0.3,
+   "c3": -0.7
+  },
+  "shadow_collar": {
+   "rank": 116,
+   "c1": -0.8,
+   "c3": -1
+  },
+  "shatter_hammer": {
+   "rank": 117,
+   "c1": -1.9,
+   "c3": -1.4
+  }
+ }
+}

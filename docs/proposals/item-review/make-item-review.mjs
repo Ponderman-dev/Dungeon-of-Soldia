@@ -38,23 +38,17 @@ const popIds = new Set([...rulesSrc.matchAll(/itemId: '([a-z_]+)'/g)].map((m) =>
 for (const [id, it] of Object.entries(items)) for (const e of it.effects || []) if (e.proc && !e.silent) popIds.add(id);
 for (const [id, v] of Object.entries(itemFxData)) if (v && v.noPop) popIds.delete(id);
 
-// Round 3: the 21 new items (session 27). Those with a look get a clip recorded in a real fight
-// (docs/proposals/item-fx-review/record.mjs, published next to the page as clips/<clip>.mp4 + .webm).
-const NEW_ITEMS = ['hunters_badge', 'elites_badge', 'swarm_swatter', 'better_odds', 'opening_horn', 'quick_fingers', 'life_crystal', 'emergency_buckler', 'rally_flag', 'frost_mantle', 'reapers_bell', 'ice_bomb', 'electric_bomb', 'dark_bomb', 'poison_bombs', 'bombardiers_barrel', 'sweeping_strap', 'kinetic_coil', 'sharpest_blade', 'euclid_of_elements', 'frozen_demon_head'];
+// Round 4 (session 33): the items built or changed from the session 31/32 decisions and the balance changes after the
+// item ranking. Each card also shows its ranking result (ranking-s33.json). Clips of items whose look changed are gone.
+const NEW_ITEMS = ['sharp_edge', 'eagle_eye', 'sucker_punch_glove', 'executioners_axe', 'brawlers_streak', 'swarm_swatter', 'better_odds', 'giantslayers_brand', 'elites_badge', 'metronome', 'catalyst_vial', 'serrated_edge', 'thunderstruck', 'second_wind_flask', 'aid_kit', 'phoenix_feather', 'heart_charm', 'heart_of_the_beast', 'overheal_ring', 'soul_lantern', 'fire_bombs', 'poison_bombs', 'kindling', 'euclid_of_elements', 'ghastly_fire', 'frozen_thunderbolt', 'reapers_bell', 'ember_charm', 'magma_core', 'frost_mantle', 'frozen_demon_head', 'chill_band', 'kinetic_coil', 'overseers_whistle', 'necro_crown', 'fire_imp_brazier', 'mimic_chest', 'phoenix_hatchling', 'ember_collar', 'frost_collar', 'storm_collar', 'shadow_collar', 'spite_mail', 'shield_totem', 'emergency_buckler', 'war_banner', 'rally_flag', 'spirit_knight_banner', 'conquerors_flag', 'sweeping_strap', 'dread_bell', 'guardians_banner', 'bloodlust_mask', 'assault_breastplate', 'lost_clerics_grimoire', 'echo_rune', 'spiked_aegis'];
+const RANK = JSON.parse(fs.readFileSync(new URL('./ranking-s33.json', import.meta.url), 'utf8')).items;
 const BOMBS = 'Fire Bombs\' bomb in each element\'s colours: ice (Knight), electric + dark (Rogue), poison (Archer).';
 const CLIPS = {
   ice_bomb: ['bombs', BOMBS], electric_bomb: ['bombs', BOMBS], dark_bomb: ['bombs', BOMBS], poison_bombs: ['bombs', BOMBS],
   bombardiers_barrel: ['barrel', 'Archer with all 5 bombs: when a bomb goes off, 2-4 more fly 0.15s apart (\'Bombs away!\').'],
   life_crystal: ['life-crystal', 'A kill pops a green orb out of the dead enemy, small orbs fly to the heroes it heals.'],
-  reapers_bell: ['reapers-bell', 'Every kill explodes in a purple cloud (the Puffshroom cloud) and can chain.'],
   frozen_demon_head: ['demon-head', 'The Mage stores ice; when full, a giant icicle (your sketch) traps the enemy, holds it still while frozen, then shatters.'],
-  euclid_of_elements: ['euclid', 'A hit with 2+ elements casts 3 more times, 0.15s apart: a fireball / icicle / white bolt flies for each (Archer: fire + ice + electric charms).'],
   sharpest_blade: ['sharpest-blade', '\'Heart strike!\' (4.5x + stun): a huge bright-yellow slash through the enemy.'],
-  kinetic_coil: ['kinetic-coil', 'Rogue dodges store charges for an electric hit. Open: the charges have NO look yet (sparks on the hero?).'],
-  emergency_buckler: ['emergency-buckler', 'Each kill gives the killer a small shield (normal shield look) that fades over 4s.'],
-  rally_flag: ['rally-flag', 'The Knight drops under 30%: every hero gets a shield (normal shield look).'],
-  sweeping_strap: ['sweeping-strap', 'Every strap hit: one Sven-style cleave crescent bursts out of the target (reach 60px).'],
-  frost_mantle: ['frost-mantle', 'A melee enemy that hits the holder gets chilled (icon pop + snowflake status).'],
 };
 
 const ORDER = ['common', 'rare', 'epic', 'legendary'];
@@ -64,6 +58,7 @@ const list = Object.entries(items)
     id, name: it.name, rarity: it.rarity, type: it.type || '', desc: it.description || '', perStack: it.perStack || '',
     isNew: NEW_ITEMS.includes(id), clip: CLIPS[id] ? CLIPS[id][0] : '', clipNote: CLIPS[id] ? CLIPS[id][1] : '',
     pop: popIds.has(id), fx: FX[id] || [],
+    sim: RANK[id] ? `Ranking sim: #${RANK[id].rank} of 117 · 1 copy ${RANK[id].c1 >= 0 ? '+' : ''}${RANK[id].c1} floors · 3 copies ${RANK[id].c3 >= 0 ? '+' : ''}${RANK[id].c3} floors` : '',
     icon: packGrid(framedIconPixels(icons[id], rarities[it.rarity] && rarities[it.rarity].frame)),
   }))
   .sort((a, b) => ORDER.indexOf(a.rarity) - ORDER.indexOf(b.rarity) || a.name.localeCompare(b.name));

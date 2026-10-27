@@ -91,7 +91,7 @@ and suggest a fresh session per task.
   publish to https://claude.ai/artifact/1azV1LBUimRkeavNpQBgc7 (has `db`; omit `capabilities` on republish)
 - Monster House demo: copy `house-demo-page.html` as `monster-house-demo.html`, https://claude.ai/artifact/4vMvwYLs9sUHr5KcxZ75aH
 - Brood Mother demo (floor 40 on repeat): `npm run build:brood-demo`, copy `brood-demo-page.html` as `brood-mother-demo.html`, https://claude.ai/artifact/3ZPdABV5GtWPAFnMU5bAkz
-- Item review page (user notes in db `notes`): https://claude.ai/artifact/S7cbuLJoStsdi5hpg2SBef
+- Item review page (user notes in db `notes4` this round; rebuild: `node docs/proposals/item-review/make-item-review.mjs <out>`): https://claude.ai/artifact/S7cbuLJoStsdi5hpg2SBef
 - Old proposal pages (kept, not updated any more): `docs/proposals/README.md`.
 
 ## Layout

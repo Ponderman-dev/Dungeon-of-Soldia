@@ -57,6 +57,7 @@ textarea::placeholder { color: #6e6385; }
 .saved { font-size: 12px; color: var(--muted); min-height: 1em; }
 .saved.ok { color: var(--ok); }
 .saved.bad { color: var(--warn); }
+.sim { font-size: 12px; color: var(--muted); margin-top: 4px; }
 .empty { color: var(--muted); padding: 24px 0; }
 .general { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
 .general textarea { min-height: 200px; }
@@ -67,7 +68,7 @@ textarea::placeholder { color: #6e6385; }
 <div class="wrap">
   <header>
     <h1>Item Review</h1>
-    <p class="lede">Round 3: the 21 NEW items. Each new item that shows something has a clip of it going off in a real fight (recorded from the game, chance pushed up so it shows quickly). Write what you think of the look (and anything else) in the box under it. The other items are still here under "All items". Everything saves by itself.</p>
+    <p class="lede">Round 4 (session 33): the items built or changed this session (the session 31/32 decisions, the new Collars, Conqueror's Flag and Shield Totem, and the balance changes after the item ranking). Each card shows its ranking result: how many extra floors runs reached with 1 and 3 copies (60 runs each; under about 3 floors is noise; taken BEFORE the banner, Bloodlust Mask and weak-item changes). The new icons are first drafts. Write your notes in the box under each item; the other items are under "All items". Everything saves by itself.</p>
   </header>
   <div class="general">
     <label for="note-general">GENERAL NOTES (about all items, ideas, anything)</label>
@@ -75,7 +76,7 @@ textarea::placeholder { color: #6e6385; }
     <div class="saved" id="saved-general"></div>
   </div>
   <div class="bar" role="toolbar" aria-label="Filter">
-    <button class="chip" id="f-new" data-f="new" aria-pressed="true">New items <span class="n"></span></button>
+    <button class="chip" id="f-new" data-f="new" aria-pressed="true">Changed this session <span class="n"></span></button>
     <button class="chip" id="f-all" data-f="all" aria-pressed="false">All items <span class="n"></span></button>
     <button class="chip" id="f-notes" data-f="notes" aria-pressed="false">With notes <span class="n"></span></button>
     <span class="status" id="status" aria-live="polite">Connecting…</span>
@@ -93,7 +94,7 @@ const STAGE = new FX.FxStage();
 const SZ = 2; // screen pixels per character pixel on the little stages
 const notes = {}; // item id -> text (from the database, or typed here)
 let filter = 'new';
-const COL = 'notes3'; // round 3 notes: the new items' looks (round 1 = `notes`, round 2 = `notes2`)
+const COL = 'notes4'; // round 4 notes: session 33 changes (round 1 = `notes`, 2 = `notes2`, 3 = `notes3`)
 let db = null;
 
 // One framed icon onto a canvas, `s` screen pixels per icon pixel.
@@ -115,7 +116,7 @@ function makeCard(it) {
   const el = document.createElement('article');
   el.className = 'card ' + it.rarity;
   el.innerHTML = `<div class="top"><div class="icons"><canvas class="big"></canvas><canvas class="small"></canvas><span class="cap">battle size</span></div>
-    <div class="info"><div class="nm"></div><div class="tags"><span class="tag rar"></span><span class="tag type"></span></div><div class="desc"></div><div class="per"></div></div></div>
+    <div class="info"><div class="nm"></div><div class="tags"><span class="tag rar"></span><span class="tag type"></span></div><div class="desc"></div><div class="per"></div><div class="sim"></div></div></div>
     ${it.clip ? `<div class="fight"><label>IN A REAL FIGHT</label><video class="clip" muted loop playsinline controls preload="metadata" aria-label="${it.name} in a real fight"><source src="clips/${it.clip}.mp4" type="video/mp4"><source src="clips/${it.clip}.webm" type="video/webm"></video><p class="see"></p></div>` : ''}
     <div class="fight"><label>${it.clip ? 'ITS ICON POP' : 'IN A FIGHT'}</label><canvas class="scene" width="240" height="120" role="img"></canvas><p class="see"></p></div>
     <label for="note-${it.id}">YOUR NOTES (numbers, text, keep / cut, look)</label>
@@ -131,6 +132,8 @@ function makeCard(it) {
   if (it.clip) el.querySelector('.fight .see').textContent = it.clipNote;
   const per = el.querySelector('.per');
   if (it.perStack) per.textContent = 'Per stack: ' + it.perStack; else per.hidden = true;
+  const sim = el.querySelector('.sim');
+  if (it.sim) sim.textContent = it.sim; else sim.hidden = true;
   const ta = el.querySelector('textarea');
   const saved = el.querySelector('.saved');
   let timer = null;
@@ -151,8 +154,8 @@ function makeCard(it) {
 }
 
 // Drafts stay in this browser too, so nothing typed is lost if the database is not reachable.
-function draft(id, text) { try { localStorage.setItem('soldia-item-note3-' + id, text); } catch (e) {} }
-function readDraft(id) { try { return localStorage.getItem('soldia-item-note3-' + id); } catch (e) { return null; } }
+function draft(id, text) { try { localStorage.setItem('soldia-item-note4-' + id, text); } catch (e) {} }
+function readDraft(id) { try { return localStorage.getItem('soldia-item-note4-' + id); } catch (e) { return null; } }
 
 async function saveNote(it, text, saved) {
   if (!db) { saved.textContent = 'Kept in this browser only (not saved online)'; saved.className = 'saved bad'; return; }
@@ -178,7 +181,7 @@ function render() {
   const main = document.getElementById('list');
   main.innerHTML = '';
   const groups = filter === 'new'
-    ? [['New items', null, DATA.items.filter((it) => it.isNew)]]
+    ? [['Changed this session', null, DATA.items.filter((it) => it.isNew)]]
     : Object.keys(DATA.rarities).map((r) => [DATA.rarities[r].label[0] + DATA.rarities[r].label.slice(1).toLowerCase(), DATA.rarities[r].color, DATA.items.filter((it) => it.rarity === r && show(it, filter))]);
   let any = false;
   for (const [title, color, items] of groups) {
@@ -259,7 +262,7 @@ genTa.addEventListener('input', () => { draft(GEN.id, genTa.value); genSaved.tex
 genTa.addEventListener('blur', () => { if (genTimer) genSave(); });
 requestAnimationFrame(frame);
 
-// The notes database: everyone's notes for each item (collection `notes2`, doc = item id; `_general` = the top box).
+// The notes database: everyone's notes for each item (collection COL, doc = item id; `_general` = the top box).
 (async () => {
   const status = document.getElementById('status');
   db = window.claude ? await window.claude.use('db') : null;

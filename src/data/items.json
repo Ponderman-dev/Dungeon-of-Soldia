@@ -319,7 +319,7 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "NUMBING COLD: every attack adds 1 Chill (5 Chill = Freeze). Chilled enemies deal 10% less damage.",
+    "description": "Every attack adds 1 Chill (5 Chill = Freeze). Chilled enemies deal 10% less damage.",
     "effects": [
       {
         "proc": "onAttack",
@@ -688,7 +688,7 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "BURNING SKIN: +15 resist. Melee attackers that hit this hero are Burned for 3s.",
+    "description": "+15 resist. Melee attackers that hit this hero are Burned for 3s.",
     "effects": [
       {
         "stat": "resist",
@@ -826,7 +826,7 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "FEAR RING: 5% on attack: the enemy and every enemy near it are Feared for 1s (3s cooldown). Bosses are immune to fear.",
+    "description": "5% on attack: the enemy and every enemy near it are Feared for 1s (3s cooldown). Bosses are immune to fear.",
     "effects": [
       {
         "special": "fearRing",
@@ -883,7 +883,7 @@
     "rarity": "epic",
     "type": "onhit",
     "scope": "self",
-    "description": "ERUPTION: burns from this hero deal +40% damage, and when a Burn ends the enemy explodes for 150% fire damage nearby.",
+    "description": "Burns from this hero deal +40% damage, and when a Burn ends the enemy explodes for 150% fire damage nearby.",
     "effects": [
       {
         "special": "magmaBurn",
@@ -1670,7 +1670,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "BIG GAME: +60% damage to bosses and elites.",
+    "description": "+60% damage to bosses and elites.",
     "effects": [
       {
         "special": "bigGame",
@@ -2101,7 +2101,7 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "BOUNTY: when an elite dies, the squad heals 10% max health and gets +50% XP from it.",
+    "description": "When an elite dies, the squad heals 10% max health and gets +50% XP from it.",
     "effects": [
       {
         "special": "bounty",
@@ -2242,7 +2242,7 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "FROST SKIN: +15 defense. Every melee attacker that hits this hero gets 1 Chill.",
+    "description": "+15 defense. Every melee attacker that hits this hero gets 1 Chill.",
     "effects": [
       {
         "stat": "defense",
@@ -2458,7 +2458,7 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "CLEAVE: every 3rd melee attack also hits ALL enemies in front of this hero for 70% damage.",
+    "description": "Every 3rd melee attack also hits ALL enemies in front of this hero for 70% damage.",
     "effects": [
       {
         "special": "sweep",

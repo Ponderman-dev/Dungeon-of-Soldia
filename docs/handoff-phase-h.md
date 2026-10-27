@@ -9,6 +9,8 @@
   Then: item RANKING sim of all 117 items (scripts/tests/rankitems.mjs, report docs/item-ranking-s33.md) and the user's
   balance picks: Guardian's Banner + Assault Breastplate -> legendary, Cautious Banner -> epic, Conqueror's Flag 10% (+5),
   Bloodlust Mask nerf (extra copies +20% speed / +2% lifesteal, no squad share), 9 weak items buffed (item-decisions.md end).
+  Item texts: no CAPS mechanic labels (user: 'FEAR RING' etc. removed from 8 descriptions); keep texts plain.
+  Game page NOT rebuilt since the weak-item buffs and text change: rebuild with the next visible batch.
 - ITEM REVIEW page round 4 (session 33 changes + each item's ranking result, notes in db collection `notes4`):
   https://claude.ai/artifact/S7cbuLJoStsdi5hpg2SBef. Read the notes when the user says they wrote some.
 - OPEN (later, user: 'fix this later'): weak items whose sim was unfair need a BUILD test with partner items (Euclid, Kinetic

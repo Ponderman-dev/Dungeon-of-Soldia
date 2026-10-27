@@ -566,3 +566,4 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Giantslayer's Brand +60% (+30). Echo Rune 25% chance, echo 80% power (`echoPower`). Spiked Aegis 60% reflect and
   +10% shields received. Ghastly Fire 40% dark, 8% slow (+2). Better Odds +7% (+3.5) per enemy.
 - Executioner's Axe: under 35% health (was 25%; `below` -> `executionerBelow`).
+- Item texts (user, session 33): the CAPS labels (FEAR RING, BIG GAME, BOUNTY, BURNING SKIN, FROST SKIN, ERUPTION, NUMBING COLD, CLEAVE) are removed from the descriptions; mechanics unchanged.

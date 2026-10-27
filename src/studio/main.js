@@ -390,6 +390,7 @@ const board = new Board($('board'), {
   },
   tool: () => tool,
   filled: () => $('filled').checked,
+  lighten: () => $('lighten').checked,
   dim: () => $('dim').checked,
   mirror: () => mirrorOn,
   trace: () => trace,
@@ -476,6 +477,8 @@ function renderBoardHint() {
     eraser: 'Eraser: remove pixels.',
     line: 'Line: drag from one end to the other.',
     rect: 'Rectangle: drag from corner to corner.',
+    ellipse: 'Ellipse: drag from corner to corner (a square box makes a circle).',
+    shade: 'Shade: rub over pixels to make them darker (Shift or "Shade lightens" = lighter).',
     fill: 'Fill: colours the area of one colour you tap.',
     picker: 'Pick: tap any pixel to take its colour.',
     anchor: 'Anchor: tap the pixel the part should turn around.',
@@ -1252,7 +1255,7 @@ document.addEventListener('keydown', (e) => {
     board.sel = null;
     return board.render();
   }
-  const keys = { b: 'pencil', e: 'eraser', l: 'line', r: 'rect', g: 'fill', i: 'picker', a: 'anchor', m: 'move', v: 'select' };
+  const keys = { b: 'pencil', e: 'eraser', l: 'line', r: 'rect', o: 'ellipse', d: 'shade', g: 'fill', i: 'picker', a: 'anchor', m: 'move', v: 'select' };
   if (k === 's') return toggleMirrorDraw();
   if (keys[k]) setTool(keys[k]);
 });

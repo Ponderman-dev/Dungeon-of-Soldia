@@ -77,6 +77,13 @@ export function mixColor(a, b, t) {
   return (m(16) << 16) | (m(8) << 8) | m(0);
 }
 
+// One shading step for the studio's shade brush: darker leans towards a deep purple, lighter towards
+// a warm cream (pixel-art style hue shift instead of plain black/white).
+export const SHADE = { dark: 0x1a1030, light: 0xfff2c8, step: 0.22 };
+export function shadeColor(c, lighter = false) {
+  return mixColor(c, lighter ? SHADE.light : SHADE.dark, SHADE.step);
+}
+
 // A short id for a picture, so the same picture makes the same texture.
 export function artKey(art) {
   const s = JSON.stringify(art);

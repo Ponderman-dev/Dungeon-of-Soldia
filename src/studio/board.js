@@ -1,7 +1,7 @@
 // The Character Studio's drawing board: the whole character on a pixel grid (one square = one
-// character pixel), where the selected part is drawn with pencil, eraser, line, rectangle, fill,
-// colour picker, anchor and move tools. Plain canvas, no Phaser. Part data shape: see pixelArt.js.
-import { partArt, artSize, partAnchor, artPixels, pixelsToArt } from '../systems/pixelArt.js';
+// character pixel), where the selected part is drawn with pencil, eraser, line, rectangle, ellipse,
+// fill, shade, colour picker, anchor and move tools. Plain canvas, no Phaser. Part data shape: see pixelArt.js.
+import { partArt, artSize, partAnchor, artPixels, pixelsToArt, shadeColor } from '../systems/pixelArt.js';
 
 export const VIEW = { minX: -20, minY: -38, cols: 40, rows: 44, cell: 12 };
 
@@ -147,9 +147,27 @@ function rectCells(x0, y0, x1, y1, filled) {
   return out;
 }
 
+// Every cell of an ellipse that fits the box between two corner cells (a circle when the box is
+// square). Not filled = only the 1-pixel edge: inside cells that touch an outside cell.
+export function ellipseCells(x0, y0, x1, y1, filled) {
+  const [ax, bx] = [Math.min(x0, x1), Math.max(x0, x1)];
+  const [ay, by] = [Math.min(y0, y1), Math.max(y0, y1)];
+  const rx = (bx - ax + 1) / 2;
+  const ry = (by - ay + 1) / 2;
+  const inside = (x, y) => ((x + 0.5 - ax - rx) / rx) ** 2 + ((y + 0.5 - ay - ry) / ry) ** 2 <= 1;
+  const out = [];
+  for (let y = ay; y <= by; y++)
+    for (let x = ax; x <= bx; x++) {
+      if (!inside(x, y)) continue;
+      if (filled || !inside(x + 1, y) || !inside(x - 1, y) || !inside(x, y + 1) || !inside(x, y - 1)) out.push([x, y]);
+    }
+  return out;
+}
+
 export default class Board {
   // hooks: look(), selected(), select(name), color() (number), pickColor(number), tool(), setTool(name),
-  // filled(), dim(), begin() (before an edit: for undo), end() (edit finished), changed(),
+  // filled(), lighten() (true = the shade brush lightens; Shift flips it), dim(),
+  // begin() (before an edit: for undo), end() (edit finished), changed(),
   // cancel() (throw away the edit in progress), holdPick(number) (touch and hold picked a colour),
   // mirror() (true = mirror drawing is on: everything drawn is copied to the other side),
   // trace() ({ img, alpha } a tracing picture shown faintly behind the grid, or null),
@@ -215,9 +233,9 @@ export default class Board {
     const p = this.part();
     if (!p) return;
     this.h.begin();
-    this.drag = { tool, start: cell, last: cell, x: p.x, y: p.y };
+    this.drag = { tool, start: cell, last: cell, x: p.x, y: p.y, shaded: new Set(), light: this.h.lighten() !== ev.shiftKey };
     // A finger (not the Apple Pencil) held still on one pixel picks its colour, like Procreate.
-    if (ev.pointerType === 'touch' && ['pencil', 'eraser', 'line', 'rect'].includes(tool)) {
+    if (ev.pointerType === 'touch' && ['pencil', 'eraser', 'line', 'rect', 'ellipse', 'shade'].includes(tool)) {
       this.hold = setTimeout(() => {
         const d = this.drag;
         if (!d || d.last[0] !== cell[0] || d.last[1] !== cell[1]) return;
@@ -228,6 +246,7 @@ export default class Board {
       }, 450);
     }
     if (tool === 'pencil' || tool === 'eraser') this.paint([cell]);
+    else if (tool === 'shade') this.shade([cell]);
     else if (tool === 'fill') {
       this.fill(cell);
       this.finish();
@@ -246,6 +265,8 @@ export default class Board {
     } else if (d) {
       if (d.tool === 'pencil' || d.tool === 'eraser') {
         this.paint(lineCells(d.last[0], d.last[1], cell[0], cell[1]));
+      } else if (d.tool === 'shade') {
+        this.shade(lineCells(d.last[0], d.last[1], cell[0], cell[1]));
       } else if (d.tool === 'anchor') {
         this.setAnchor(cell);
       } else if (d.tool === 'move') {
@@ -333,6 +354,7 @@ export default class Board {
     if (!d) return;
     if (d.tool === 'line') this.paint(lineCells(d.start[0], d.start[1], d.last[0], d.last[1]));
     if (d.tool === 'rect') this.paint(rectCells(d.start[0], d.start[1], d.last[0], d.last[1], this.h.filled()));
+    if (d.tool === 'ellipse') this.paint(ellipseCells(d.start[0], d.start[1], d.last[0], d.last[1], this.h.filled()));
     this.finish();
   }
 
@@ -353,6 +375,22 @@ export default class Board {
     const c = this.drag.tool === 'eraser' ? null : this.h.color();
     editPart(p, (set) => {
       for (const [x, y] of cells) set(x, y, c);
+    });
+    this.h.changed();
+  }
+
+  // Shade brush: makes the drawn pixels it passes over one step darker (or lighter), each pixel only
+  // once per stroke; empty pixels stay empty.
+  shade(cells) {
+    const d = this.drag;
+    editPart(this.part(), (set, get) => {
+      for (const [x, y] of this.withMirror(cells)) {
+        const k = x + ',' + y;
+        const c = get(x, y);
+        if (c === null || d.shaded.has(k)) continue;
+        d.shaded.add(k);
+        set(x, y, shadeColor(c, d.light));
+      }
     });
     this.h.changed();
   }
@@ -440,10 +478,11 @@ export default class Board {
     }
     ctx.globalAlpha = 1;
 
-    // Line / rectangle being dragged: shown before it is drawn.
+    // Line / rectangle / ellipse being dragged: shown before it is drawn.
     const d = this.drag;
-    if (d && (d.tool === 'line' || d.tool === 'rect')) {
-      const cells = this.withMirror(d.tool === 'line' ? lineCells(...d.start, ...d.last) : rectCells(...d.start, ...d.last, this.h.filled()));
+    const shapes = { line: (a, b) => lineCells(...a, ...b), rect: (a, b) => rectCells(...a, ...b, this.h.filled()), ellipse: (a, b) => ellipseCells(...a, ...b, this.h.filled()) };
+    if (d && shapes[d.tool]) {
+      const cells = this.withMirror(shapes[d.tool](d.start, d.last));
       ctx.globalAlpha = 0.75;
       ctx.fillStyle = hex(this.h.color());
       for (const [x, y] of cells) ctx.fillRect(X(x), Y(y), cell, cell);

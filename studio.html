@@ -238,7 +238,9 @@
             <button class="btn tool" data-tool="eraser" title="Eraser (E)" aria-label="Eraser"><svg viewBox="0 0 18 18"><path d="M2 12l7-7 6 6-4 4H6z M9 15h7"/></svg></button>
             <button class="btn tool" data-tool="line" title="Line (L)" aria-label="Line"><svg viewBox="0 0 18 18"><path d="M3 15L15 3"/></svg></button>
             <button class="btn tool" data-tool="rect" title="Rectangle (R)" aria-label="Rectangle"><svg viewBox="0 0 18 18"><path d="M3 4h12v10H3z"/></svg></button>
+            <button class="btn tool" data-tool="ellipse" title="Ellipse / circle (O)" aria-label="Ellipse"><svg viewBox="0 0 18 18"><ellipse cx="9" cy="9" rx="7" ry="5.5"/></svg></button>
             <button class="btn tool" data-tool="fill" title="Fill bucket (G)" aria-label="Fill bucket"><svg viewBox="0 0 18 18"><path d="M8 2l7 7-6 6-7-7z M16 12v4"/></svg></button>
+            <button class="btn tool" data-tool="shade" title="Shade: darker (Shift = lighter) (D)" aria-label="Shade"><svg viewBox="0 0 18 18"><path d="M3 3h12v12H3z"/><path d="M3 15L15 3 M8 15l7-7 M12 15l3-3"/></svg></button>
             <button class="btn tool" data-tool="picker" title="Pick a colour (I)" aria-label="Pick a colour"><svg viewBox="0 0 18 18"><path d="M3 15l7-7 M10 5l3-3 3 3-3 3z"/></svg></button>
             <button class="btn tool" data-tool="anchor" title="Anchor: the turning point (A)" aria-label="Anchor"><svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="3"/><path d="M9 1v4 M9 13v4 M1 9h4 M13 9h4"/></svg></button>
             <button class="btn tool" data-tool="move" title="Move / pick a part (M)" aria-label="Move"><svg viewBox="0 0 18 18"><path d="M9 1v16 M1 9h16 M6 4l3-3 3 3 M6 14l3 3 3-3 M4 6L1 9l3 3 M14 6l3 3-3 3"/></svg></button>
@@ -261,7 +263,8 @@
           <div class="swatches" id="swatches"></div>
           <div class="row">
             <input type="color" id="color" value="#3b6fd4" aria-label="Colour" />
-            <label class="check"><input type="checkbox" id="filled" /> Filled rectangle</label>
+            <label class="check"><input type="checkbox" id="filled" /> Filled shapes</label>
+            <label class="check"><input type="checkbox" id="lighten" /> Shade lightens</label>
             <label class="check"><input type="checkbox" id="dim" checked /> Dim other parts</label>
             <label class="btn" for="trace-file" title="Put a picture behind the grid to trace over">Tracing image…</label>
             <input type="file" id="trace-file" accept="image/*" hidden />
@@ -270,7 +273,7 @@
               <button id="trace-off" class="btn">Remove</button>
             </span>
           </div>
-          <p class="hint">Each square is one pixel. Drawing outside the part makes it bigger; erasing its edges shrinks it. The <b>anchor</b> (crosshair) is the point the part turns around: put a sword's anchor on its handle. Keys: <kbd>B</kbd> pencil, <kbd>E</kbd> eraser, <kbd>L</kbd> line, <kbd>R</kbd> rectangle, <kbd>G</kbd> fill, <kbd>I</kbd> pick colour, <kbd>A</kbd> anchor, <kbd>M</kbd> move, <kbd>V</kbd> select (then <kbd>Delete</kbd> / <kbd>Esc</kbd>), <kbd>S</kbd> mirror drawing (the dashed blue middle line). On iPad: <b>two-finger tap</b> = undo, <b>three-finger tap</b> = redo, <b>touch and hold</b> with a finger = pick that colour.</p>
+          <p class="hint">Each square is one pixel. Drawing outside the part makes it bigger; erasing its edges shrinks it. The <b>anchor</b> (crosshair) is the point the part turns around: put a sword's anchor on its handle. Keys: <kbd>B</kbd> pencil, <kbd>E</kbd> eraser, <kbd>L</kbd> line, <kbd>R</kbd> rectangle, <kbd>O</kbd> ellipse, <kbd>G</kbd> fill, <kbd>D</kbd> shade (hold <kbd>Shift</kbd> to lighten), <kbd>I</kbd> pick colour, <kbd>A</kbd> anchor, <kbd>M</kbd> move, <kbd>V</kbd> select (then <kbd>Delete</kbd> / <kbd>Esc</kbd>), <kbd>S</kbd> mirror drawing (the dashed blue middle line). On iPad: <b>two-finger tap</b> = undo, <b>three-finger tap</b> = redo, <b>touch and hold</b> with a finger = pick that colour.</p>
         </div>
         </section>
         <section class="col">

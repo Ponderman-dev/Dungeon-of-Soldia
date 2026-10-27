@@ -30,3 +30,16 @@ ok('quarter turn moves the anchor with its pixel', r.anchor.join() === '1.5,0.5'
 const o = outlineGrid([[5]], [0.5, 0.5], 9);
 ok('outline grows by 1 on each side, only next to pixels', o.grid.length === 3 && o.grid[1][0] === 9 && o.grid[0][0] === null && o.grid[1][1] === 5 && o.anchor.join() === '1.5,1.5');
 ok('colour swap', replaceColorGrid([[1, 2], [1, null]], 1, 7).flat().join() === '7,2,7,');
+
+// Studio: ellipse tool and shade brush.
+import { ellipseCells } from '../../src/studio/board.js';
+import { shadeColor } from '../../src/systems/pixelArt.js';
+const has = (cells, x, y) => cells.some(([a, b]) => a === x && b === y);
+const ring = ellipseCells(0, 0, 6, 6, false);
+const disc = ellipseCells(6, 6, 0, 0, true);
+ok('ellipse: a square box makes a round ring (no corners, middle empty)', has(ring, 3, 0) && has(ring, 0, 3) && !has(ring, 0, 0) && !has(ring, 3, 3));
+ok('ellipse: filled covers the middle, any drag direction', has(disc, 3, 3) && disc.length > ring.length && !has(disc, 6, 6));
+ok('ellipse: the ring is mirror-symmetric', ring.every(([x, y]) => has(ring, 6 - x, y) && has(ring, x, 6 - y)));
+ok('ellipse: a 1-pixel box is one pixel', ellipseCells(2, 2, 2, 2, false).length === 1);
+const lum = (c) => ((c >> 16) & 255) + ((c >> 8) & 255) + (c & 255);
+ok('shade: darker and lighter steps', lum(shadeColor(0x3b6fd4)) < lum(0x3b6fd4) && lum(shadeColor(0x3b6fd4, true)) > lum(0x3b6fd4));

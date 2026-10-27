@@ -2090,7 +2090,7 @@ export default class BattleState {
     if (sp.shatterHammer && kinds.has('freeze')) bonus += sp.shatterHammer; // Shatter Hammer (the freeze is broken after the hit)
     else if (sp.shatterChill && kinds.has('chill')) bonus += sp.shatterChill; // ...and a smaller bonus vs chilled enemies
     if (sp.exploiter && kinds.size >= 3) bonus += sp.exploiter; // Exploiter's Lens
-    if (sp.executioner && target.hp < target.maxHp * 0.25) { bonus += sp.executioner; this.bonusItems.push(['executioners_axe', 'Execute!']); } // Executioner's Axe
+    if (sp.executioner && target.hp < (target.maxHp * (sp.executionerBelow ?? 25)) / 100) { bonus += sp.executioner; this.bonusItems.push(['executioners_axe', 'Execute!']); } // Executioner's Axe
     if (sp.hornDamage && this.has(target, 'taunt')) bonus += sp.hornDamage; // Provoker's Horn: taunted enemies take more
     if (sp.spotter && (this.focusUid === target.uid || this.heroes.some((h) => h.alive && h.order === target.uid))) bonus += sp.spotter; // Spotter's Lens: the TAPPED (or drag-ordered) enemy takes more from the squad
     if (sp.bossDamage && target.def.boss) bonus += sp.bossDamage; // (old boss-only items)
@@ -3136,7 +3136,7 @@ export default class BattleState {
     if (!echo && chance > 0 && !skill.channel && !(skill.random && skill.random.intervalMs) && this.rng() * 100 < chance) {
       events.push({ type: 'proc', unit: hero, label: 'Echo!', itemId: 'echo_rune' });
       const copies = hero.specials.echoCopies || 1;
-      this.releaseSkill(hero, index, events, { spell: skill, power: 0.6 + 0.1 * (copies - 1) });
+      this.releaseSkill(hero, index, events, { spell: skill, power: (hero.specials.echoPower || 60) / 100 + 0.1 * (copies - 1) }); // Echo Rune: echo power, +10% per extra rune
     }
   }
 
@@ -3515,10 +3515,11 @@ export default class BattleState {
     const sp = unit.specials;
     if (!sp || !sp.soulEnergy || unit.side !== 'hero' || unit.minion || !unit.alive) return;
     // Lost Cleric's Grimoire: healing received is stored as Soul Energy (100% per copy). At 10% of max health it
-    // bursts out as a green fireball dealing 250% of the stored energy (at most one every 0.1s).
+    // bursts out as a green fireball dealing `soulDamage`% of the stored energy (at most one every 0.1s); it bursts at
+    // `soulFill`% of max health (7).
     unit.soul = (unit.soul || 0) + (got * sp.soulEnergy) / 100;
     const foes = this.targetableEnemies();
-    if (!foes.length || unit.soul < unit.maxHp * 0.1 || (unit.soulCd || 0) > 0) return;
+    if (!foes.length || unit.soul < (unit.maxHp * (sp.soulFill || 10)) / 100 || (unit.soulCd || 0) > 0) return;
     const target = foes[Math.floor(this.rng() * foes.length)];
     const damage = unit.soul * ((sp.soulDamage || 250) / 100);
     unit.soul = 0;

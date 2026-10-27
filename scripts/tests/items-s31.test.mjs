@@ -243,3 +243,13 @@ ok('Fire Imp Brazier is rare now', itemDefs.fire_imp_brazier.rarity === 'rare');
   const { s, k } = mk(); const a0 = k.stats.attackEfficiency, base = k.baseStats.attackEfficiency; give(s, k, 'bloodlust_mask', 3);
   ok('Bloodlust Mask: 3 copies = +' + (spd.percent + 2 * spd.perExtra) + '% speed, ' + (ls.percent + 2 * ls.perExtra) + '% lifesteal', Math.abs(k.stats.attackEfficiency - a0 - (base * (spd.percent + 2 * spd.perExtra)) / 100) < 1 && Math.abs(k.specials.lifesteal - ls.percent - 2 * ls.perExtra) < 1e-9, `${a0}->${k.stats.attackEfficiency} ${k.specials.lifesteal}`);
   ok('...no squad share any more', !k.specials.lifestealShare); }
+// Weak-item buffs (session 33): thresholds now live in the data.
+{ const ex = eff('executioners_axe', 'executioner'); const { s, e, k } = mk(); give(s, k, 'executioners_axe');
+  e.hp = e.maxHp * (ex.below - 1) / 100; const on = s.itemDamageBonus(k, e, {}); e.hp = e.maxHp * (ex.below + 1) / 100; const off = s.itemDamageBonus(k, e, {});
+  ok("Executioner's Axe: works under " + ex.below + '% health', on === ex.percent && off === 0, `${on} ${off}`); }
+{ const fill = eff('lost_clerics_grimoire', 'soulFill').percent; const { s, k } = mk(); give(s, k, 'lost_clerics_grimoire');
+  const ev = []; s.onHealed(k, (k.maxHp * (fill - 1)) / 100, ev); const before = ev.some((x) => x.label === 'Grimoire!');
+  s.onHealed(k, (k.maxHp * 2) / 100, ev);
+  ok("Lost Cleric's Grimoire: bursts at " + fill + '% of max health healed', !before && ev.some((x) => x.label === 'Grimoire!')); }
+{ const pw = eff('echo_rune', 'echoPower').percent; const { s, k } = mk(['goblin'], () => 0); give(s, k, 'echo_rune');
+  ok('Echo Rune: echo power ' + pw + '%', k.specials.echoPower === pw); }

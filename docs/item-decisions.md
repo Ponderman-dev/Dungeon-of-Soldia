@@ -559,3 +559,10 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   each extra copy +20% speed and +2% lifesteal (3 = +82%, 9%; 5 = +122%, 13%). The squad lifesteal SHARE is removed.
 - Assault Breastplate epic -> LEGENDARY (user; numbers unchanged, it was +10.7 floors). Summon items (Imp, Wisp,
   Rat Cage) and Tough Skin left as they are (user).
+
+## Session 33: weak-item buffs after the item ranking (user; no re-check sim)
+- Lost Cleric's Grimoire: fireball 350% -> 500%, bursts at 7% of max health healed (was 10%; `soulFill`).
+- Thunderstruck: 5% -> 8% chance. Frozen Thunderbolt: shatter 150% -> 250% (+150 per extra), at 2 Chill (was 3).
+- Giantslayer's Brand +60% (+30). Echo Rune 25% chance, echo 80% power (`echoPower`). Spiked Aegis 60% reflect and
+  +10% shields received. Ghastly Fire 40% dark, 8% slow (+2). Better Odds +7% (+3.5) per enemy.
+- Executioner's Axe: under 35% health (was 25%; `below` -> `executionerBelow`).

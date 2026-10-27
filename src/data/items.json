@@ -868,11 +868,12 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "+40% damage to enemies under 25% health.",
+    "description": "+40% damage to enemies under 35% health.",
     "effects": [
       {
         "special": "executioner",
-        "percent": 40
+        "percent": 40,
+        "below": 35
       }
     ],
     "perStack": "+40% damage"
@@ -1038,11 +1039,12 @@
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "Electric hits add a small ice hit (30%) and 1 Chill. At 3 Chill (or Frozen) the enemy shatters: 150% ice on it and its neighbours. Electric + ice count as ONE element for mixing.",
+    "description": "Electric hits add a small ice hit (30%) and 1 Chill. At 2 Chill (or Frozen) the enemy shatters: 250% ice on it and its neighbours. Electric + ice count as ONE element for mixing.",
     "effects": [
       {
         "special": "frozenThunderbolt",
-        "percent": 150
+        "percent": 250,
+        "perExtra": 150
       },
       {
         "special": "thunderIce",
@@ -1050,7 +1052,7 @@
       },
       {
         "special": "thunderShatterAt",
-        "percent": 3,
+        "percent": 2,
         "unique": true
       }
     ],
@@ -1106,16 +1108,20 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "While this hero has a shield, melee attackers take 40% of their hit back.",
+    "description": "Shields on this hero are 10% bigger. While it has a shield, melee attackers take 60% of their hit back.",
     "effects": [
       {
         "special": "shieldThorns",
-        "percent": 40
+        "percent": 60
+      },
+      {
+        "special": "shieldBonus",
+        "percent": 10
       }
     ],
     "dropWeight": 80,
     "needs": "shield",
-    "perStack": "+40% reflected while shielded"
+    "perStack": "+60% reflected while shielded, +10% shields"
   },
   "provokers_horn": {
     "name": "Provoker's Horn",
@@ -1230,7 +1236,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Healing on this hero is stored; at 10% of max health it bursts out as a green fireball (350%).",
+    "description": "Healing on this hero is stored; at 7% of max health it bursts out as a green fireball (500%).",
     "effects": [
       {
         "special": "soulEnergy",
@@ -1238,7 +1244,12 @@
       },
       {
         "special": "soulDamage",
-        "percent": 350,
+        "percent": 500,
+        "unique": true
+      },
+      {
+        "special": "soulFill",
+        "percent": 7,
         "unique": true
       }
     ],
@@ -1269,16 +1280,21 @@
     "rarity": "epic",
     "type": "skill",
     "scope": "self",
-    "description": "15% chance a skill casts twice (the echo has 60% power).",
+    "description": "25% chance a skill casts twice (the echo has 80% power).",
     "effects": [
       {
         "special": "echo",
-        "percent": 15,
+        "percent": 25,
         "falloffRatio": 0.833333
       },
       {
         "special": "echoCopies",
         "percent": 1
+      },
+      {
+        "special": "echoPower",
+        "percent": 80,
+        "unique": true
       }
     ],
     "dropWeight": 90,
@@ -1654,16 +1670,16 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "BIG GAME: +40% damage to bosses and elites.",
+    "description": "BIG GAME: +60% damage to bosses and elites.",
     "effects": [
       {
         "special": "bigGame",
-        "percent": 40,
-        "perExtra": 20
+        "percent": 60,
+        "perExtra": 30
       }
     ],
     "dropWeight": 90,
-    "perStack": "+20% damage"
+    "perStack": "+30% damage"
   },
   "catalyst_vial": {
     "name": "Catalyst Vial",
@@ -1876,15 +1892,15 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "Fire hits and burns from this hero also deal 28% as dark. Burning enemies attack 5% slower. Fire + dark count as ONE element for mixing.",
+    "description": "Fire hits and burns from this hero also deal 40% as dark. Burning enemies attack 8% slower. Fire + dark count as ONE element for mixing.",
     "effects": [
       {
         "special": "ghastly",
-        "percent": 28
+        "percent": 40
       },
       {
         "special": "ghastlySlow",
-        "percent": 5,
+        "percent": 8,
         "perExtra": 2
       }
     ],
@@ -1893,7 +1909,7 @@
     "provides": [
       "dark"
     ],
-    "perStack": "+28% dark, +2% slow",
+    "perStack": "+40% dark, +2% slow",
     "fuses": [
       "fire",
       "dark"
@@ -1944,11 +1960,11 @@
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "5% on attack: a circle grows under the strongest enemy, then a giant THUNDERBOLT hits it for 700% (sets off your on-hit items).",
+    "description": "8% on attack: a circle grows under the strongest enemy, then a giant THUNDERBOLT hits it for 700% (sets off your on-hit items).",
     "effects": [
       {
         "proc": "onAttack",
-        "chance": 5,
+        "chance": 8,
         "unique": true,
         "silent": true,
         "label": "Thunderstruck!",
@@ -2122,16 +2138,16 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "+5% damage for every enemy alive.",
+    "description": "+7% damage for every enemy alive.",
     "effects": [
       {
         "special": "betterOdds",
-        "percent": 5,
-        "perExtra": 2.5
+        "percent": 7,
+        "perExtra": 3.5
       }
     ],
     "dropWeight": 90,
-    "perStack": "+2.5% per enemy"
+    "perStack": "+3.5% per enemy"
   },
   "opening_horn": {
     "name": "Opening Horn",

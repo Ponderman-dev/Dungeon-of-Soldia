@@ -1985,7 +1985,7 @@
   },
   "assault_breastplate": {
     "name": "Assault Breastplate",
-    "rarity": "epic",
+    "rarity": "legendary",
     "type": "special",
     "scope": "self",
     "description": "+35 defense. From 0.5s into each floor, every enemy has 8 less defense while this hero lives.",

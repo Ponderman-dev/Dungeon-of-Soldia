@@ -557,3 +557,5 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - War Banner, Jolly Banner, Last Stand unchanged. No re-check sim (user).
 - Bloodlust Mask (user, after the ranking: #2, +18.6 floors with 3): first copy +42% attack speed and 5% lifesteal,
   each extra copy +20% speed and +2% lifesteal (3 = +82%, 9%; 5 = +122%, 13%). The squad lifesteal SHARE is removed.
+- Assault Breastplate epic -> LEGENDARY (user; numbers unchanged, it was +10.7 floors). Summon items (Imp, Wisp,
+  Rat Cage) and Tough Skin left as they are (user).

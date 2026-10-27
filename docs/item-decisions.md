@@ -555,3 +555,5 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Cautious Banner rare -> EPIC (numbers unchanged; +9 floors, above most legendaries).
 - Conqueror's Flag 6% (+3) -> 10% (+5) heal for the other heroes per kill (was +2.9 floors, weak for a legendary).
 - War Banner, Jolly Banner, Last Stand unchanged. No re-check sim (user).
+- Bloodlust Mask (user, after the ranking: #2, +18.6 floors with 3): first copy +42% attack speed and 5% lifesteal,
+  each extra copy +20% speed and +2% lifesteal (3 = +82%, 9%; 5 = +122%, 13%). The squad lifesteal SHARE is removed.

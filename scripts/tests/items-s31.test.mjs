@@ -236,3 +236,10 @@ ok('Fire Imp Brazier is rare now', itemDefs.fire_imp_brazier.rarity === 'rare');
   for (const e of es) e.statuses = []; s.landAttack(k, es[0], []); ok('...then a ' + fr.cooldownMs / 1000 + 's cooldown', !f(es[0]));
   s.floorMs = fr.cooldownMs + 1; s.landAttack(k, es[0], []); ok('...ready again after it', !!f(es[0]));
   const bosses = Object.values(r('enemies.json')).filter((e) => e.boss); ok('...every boss is immune to fear', bosses.length && bosses.every((b) => (b.statusImmune || []).includes('fear'))); }
+
+// ---- after the item ranking (session 33) ----
+// Bloodlust Mask: extra copies weaker, no squad share.
+{ const sp = itemDefs.bloodlust_mask.effects; const spd = sp.find((e) => e.stat === 'attackEfficiency'), ls = sp.find((e) => e.special === 'lifesteal');
+  const { s, k } = mk(); const a0 = k.stats.attackEfficiency, base = k.baseStats.attackEfficiency; give(s, k, 'bloodlust_mask', 3);
+  ok('Bloodlust Mask: 3 copies = +' + (spd.percent + 2 * spd.perExtra) + '% speed, ' + (ls.percent + 2 * ls.perExtra) + '% lifesteal', Math.abs(k.stats.attackEfficiency - a0 - (base * (spd.percent + 2 * spd.perExtra)) / 100) < 1 && Math.abs(k.specials.lifesteal - ls.percent - 2 * ls.perExtra) < 1e-9, `${a0}->${k.stats.attackEfficiency} ${k.specials.lifesteal}`);
+  ok('...no squad share any more', !k.specials.lifestealShare); }

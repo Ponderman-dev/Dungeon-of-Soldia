@@ -220,23 +220,20 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "+42% attack speed. Heals 5% of damage dealt; 10% chance to share it with the squad.",
+    "description": "+42% attack speed. Heals 5% of damage dealt.",
     "effects": [
       {
         "stat": "attackEfficiency",
-        "percent": 42
+        "percent": 42,
+        "perExtra": 20
       },
       {
         "special": "lifesteal",
-        "percent": 5
-      },
-      {
-        "special": "lifestealShare",
-        "percent": 10,
-        "cooldownMs": 3000
+        "percent": 5,
+        "perExtra": 2
       }
     ],
-    "perStack": "+42% attack speed, +5% lifesteal"
+    "perStack": "+20% attack speed, +2% lifesteal"
   },
   "gamblers_dice": {
     "name": "Gambler's Dice",

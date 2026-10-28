@@ -1,0 +1,138 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+<style>
+:root{--bg:#14101f;--panel:#1d1830;--line:#342c4d;--fg:#ece6f7;--muted:#9a90b3;--accent:#f2b33d;--good:#57c26a;--warn:#e0773f;
+--fd:'Pixelify Sans',monospace;--fb:'IBM Plex Sans',sans-serif;--fm:'IBM Plex Mono',monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px var(--fb)}
+.top{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.top h1{font:700 20px var(--fd);margin:0}.top h1 span{color:var(--accent)}
+.modes{display:flex;border:1px solid var(--line);border-radius:8px;padding:3px}
+.mode{padding:5px 14px;border-radius:6px;font:700 14px var(--fd);color:var(--muted)}.mode.on{background:var(--accent);color:#241a05}
+.sel{border:1px solid var(--line);border-radius:6px;padding:6px 10px;background:var(--bg);display:inline-flex;gap:10px;align-items:center;justify-content:space-between}
+.sel::after{content:'▾';color:var(--muted)}
+.btn{border:1px solid var(--line);border-radius:6px;padding:6px 10px;background:var(--panel);display:inline-flex;align-items:center;gap:6px}
+.btn.on{border-color:var(--accent);color:var(--accent)}.btn.pri{background:var(--accent);color:#241a05;font-weight:600;border-color:var(--accent)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+h2{font:700 14px var(--fd);margin:0 0 8px}
+.lbl{font:11px var(--fm);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tb{display:flex;flex-direction:column;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px}
+.t{width:38px;height:38px;border:1px solid var(--line);border-radius:6px;display:grid;place-items:center;color:var(--fg)}
+.t.on{border-color:var(--accent);color:var(--accent)}.t svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6}
+.sep{height:1px;background:var(--line);margin:3px 0}
+.sw{width:22px;height:22px;border-radius:4px;border:1px solid #0006}.sw.cur{outline:2px solid var(--accent);outline-offset:1px}
+.part{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;margin-bottom:4px}
+.part.on{border-color:var(--accent);color:var(--accent)}.part .dots{margin-left:auto;color:var(--muted)}
+.note{position:absolute;background:#2b6cff;color:#fff;font:600 12px var(--fb);padding:3px 8px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 6px #0008}
+canvas{image-rendering:pixelated;display:block}
+.cell{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:6px;position:relative}
+.cell.act{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.mini{width:30px;height:30px;border:1px solid var(--line);border-radius:5px;background:var(--bg)}
+.mini.on{border-color:var(--accent)}
+</style></head><body>
+<script src="data.js"></script>
+<div id="root"></div>
+<script>
+const view = new URLSearchParams(location.search).get('view') || 'draw';
+const D = window.DATA, hex = (c) => '#' + c.toString(16).padStart(6, '0');
+const ICON = {
+ pencil:'<path d="M3 15l2-5 8-8 3 3-8 8z"/>', eraser:'<path d="M2 12l7-7 6 6-4 4H6z M9 15h7"/>', line:'<path d="M3 15L15 3"/>',
+ rect:'<path d="M3 4h12v10H3z"/>', ellipse:'<ellipse cx="9" cy="9" rx="7" ry="5.5"/>', fill:'<path d="M8 2l7 7-6 6-7-7z M16 12v4"/>',
+ shade:'<path d="M3 3h12v12H3z"/><path d="M3 15L15 3 M8 15l7-7 M12 15l3-3"/>', picker:'<path d="M3 15l7-7 M10 5l3-3 3 3-3 3z"/>',
+ anchor:'<circle cx="9" cy="9" r="3"/><path d="M9 1v4 M9 13v4 M1 9h4 M13 9h4"/>', move:'<path d="M9 1v16 M1 9h16 M6 4l3-3 3 3 M6 14l3 3 3-3 M4 6L1 9l3 3 M14 6l3 3-3 3"/>',
+ select:'<path d="M2 2h14v14H2z" stroke-dasharray="3 2"/>', mirror:'<path d="M9 1v16" stroke-dasharray="2 2"/><path d="M7 4L2 13h5z M11 4l5 9h-5z"/>',
+ undo:'<path d="M6 3L2 7l4 4 M2 7h9a4 4 0 010 8H8"/>', redo:'<path d="M12 3l4 4-4 4 M16 7H7a4 4 0 000 8h3"/>'};
+const tool = (n, on) => `<div class="t ${on?'on':''}" title="${n}"><svg viewBox="0 0 18 18">${ICON[n]}</svg></div>`;
+const toolNames = ['pencil','eraser','line','rect','ellipse','fill','shade','picker','select','move','anchor'];
+const starter = [0x1a1020,0x3a2f5a,0x6b5f8f,0xc8ccd6,0xffffff,0xf2c9a0,0xc68a5a,0x7a4b2a,0xc0392b,0xe67e3a,0xf2b33d,0xffe08a,0x57c26a,0x2e6b3a,0x3b6fd4,0x7a52c0];
+const colorsOf = (u) => [...new Set(u.parts.flatMap((p) => p.grid.flat().filter((c) => c !== null)))];
+const swatches = (cols, cur) => cols.map((c) => `<div class="sw ${c===cur?'cur':''}" style="background:${hex(c)}"></div>`).join('');
+
+// draws a unit on a canvas: cell px per pixel, grid optional
+function drawUnit(cv, u, cell, opt = {}) {
+  const minX = opt.minX ?? -14, minY = opt.minY ?? -30, cols = opt.cols ?? 28, rows = opt.rows ?? 34;
+  cv.width = cols * cell; cv.height = rows * cell;
+  const x = cv.getContext('2d'); x.fillStyle = '#0e0b17'; x.fillRect(0, 0, cv.width, cv.height);
+  if (opt.grid) for (let i = 0; i <= cols; i++) { x.fillStyle = (i + minX) % 8 ? '#1b1629' : '#2c2444'; x.fillRect(i * cell, 0, 1, cv.height); }
+  if (opt.grid) for (let j = 0; j <= rows; j++) { x.fillStyle = (j + minY) % 8 ? '#1b1629' : '#2c2444'; x.fillRect(0, j * cell, cv.width, 1); }
+  x.fillStyle = '#f2b33d'; x.fillRect(0, (0 - minY) * cell, cv.width, 2);
+  for (const p of u.parts) {
+    x.globalAlpha = opt.dim && p.n !== opt.dim ? 0.35 : 1;
+    p.grid.forEach((r, j) => r.forEach((c, i) => { if (c === null) return; x.fillStyle = hex(c); x.fillRect((p.left + i - minX) * cell, (p.top + j - minY) * cell, cell, cell); }));
+  }
+  x.globalAlpha = 1;
+}
+function drawIcon(cv, g, cell, grid) {
+  const n = g.length; cv.width = cv.height = n * cell; const x = cv.getContext('2d');
+  x.fillStyle = '#0e0b17'; x.fillRect(0, 0, cv.width, cv.height);
+  if (grid) for (let i = 0; i <= n; i++) { x.fillStyle = '#1b1629'; x.fillRect(i * cell, 0, 1, cv.height); x.fillRect(0, i * cell, cv.width, 1); }
+  g.forEach((r, j) => r.forEach((c, i) => { if (c === null) return; x.fillStyle = hex(c); x.fillRect(i * cell, j * cell, cell, cell); }));
+}
+const note = (txt, l, t) => `<div class="note" style="left:${l}px;top:${t}px">${txt}</div>`;
+const header = (sect, extra) => `<header class="top"><h1>Soldia <span>Character Studio</span></h1>
+ <div class="modes">${['Units','Items','Effects','Sheet'].map((s) => `<div class="mode ${s===sect?'on':''}">${s}${s==='Sheet'?' ✦':''}</div>`).join('')}</div>${extra}
+ <span style="flex:1"></span><span class="lbl" style="color:var(--warn)">● unsaved</span><div class="btn pri">Save</div><div class="btn">?</div></header>`;
+
+const R = document.getElementById('root');
+if (view === 'draw') {
+  const k = D.units.knight, kc = colorsOf(k);
+  R.innerHTML = header('Units', `<div class="sel" style="width:200px">Knight</div><div class="modes"><div class="mode on">Draw</div><div class="mode">Animate</div><div class="mode">Line-up</div></div>`) +
+  `<main style="display:grid;grid-template-columns:330px 1fr;gap:14px;padding:14px;position:relative;height:calc(100vh - 62px)">
+   <aside style="display:flex;flex-direction:column;gap:12px;min-height:0">
+     <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Preview</h2><div class="btn">Mirror</div></div>
+       <canvas id="pv" style="margin-top:8px"></canvas>
+       <div class="row" style="margin-top:8px"><div class="sel" style="flex:1">Idle</div><div class="btn">▶</div><div class="btn">Arena</div><div class="sel">9x</div><div class="sel">1×</div></div>
+     </div>
+     <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Parts</h2><div class="btn">+ New</div></div>
+       ${k.parts.map((p, i) => `<div class="part ${p.n==='body'?'on':''}"><canvas class="mini ${p.n==='body'?'on':''}" data-kpart="${i}" style="width:26px;height:26px"></canvas>${p.n}<span class="dots">↑ ↓ ⋯</span></div>`).join('')}
+     </div>
+     <div class="card" style="flex:1"><h2>Whole character</h2><div class="row"><span class="lbl">Health bar</span><input type="range" style="flex:1"><span>24</span></div>
+       <div class="row" style="margin-top:10px"><div class="btn">Swap colour</div><div class="btn">Versions ▾</div><div class="btn">Trace…</div></div>
+       <div class="row" style="margin-top:6px"><div class="btn">Undo unsaved</div><div class="btn">Back to game</div></div></div>
+   </aside>
+   <section style="display:flex;gap:8px;min-height:0">
+     <div class="tb" style="align-self:flex-start">${toolNames.map((n, i) => tool(n, i === 4)).join('')}<div class="sep"></div>${tool('mirror')}${tool('undo')}${tool('redo')}</div>
+     <div class="card" style="flex:1;display:flex;flex-direction:column;gap:8px;min-width:0">
+       <div class="row"><span class="lbl">Ellipse</span><label class="row" style="color:var(--muted)"><input type="checkbox" checked> Filled</label>
+         <span style="flex:1"></span><div class="btn">−</div><div class="btn">100%</div><div class="btn">+</div></div>
+       <canvas id="bd" style="flex:1;min-height:0;width:100%;object-fit:contain"></canvas>
+       <div class="row" style="flex-wrap:nowrap"><div class="sw cur" style="width:34px;height:28px;background:#3b6fd4"></div><span class="lbl">Knight</span>${swatches(kc, 0x3b6fd4)}<span style="width:10px"></span><span class="lbl">Starter</span>${swatches(starter)}</div>
+     </div>
+   </section>
+   ${note('preview + parts + character all in one column', 40, 0)}${note('board fills the rest', 700, 0)}
+  </main>`;
+  drawUnit(document.getElementById('pv'), k, 11, { minX: -12, minY: -26, cols: 28, rows: 28, grid: true });
+  drawUnit(document.getElementById('bd'), k, 20, { minX: -22, minY: -31, cols: 44, rows: 34, grid: true, dim: 'body' });
+  document.querySelectorAll('[data-kpart]').forEach((c) => { const p = k.parts[+c.dataset.kpart]; const g = p.grid, n = Math.max(g.length, g[0].length), cell = Math.max(1, Math.floor(26 / n));
+    c.width = c.height = 26; const x = c.getContext('2d'); x.fillStyle = '#0e0b17'; x.fillRect(0, 0, 26, 26); const ox = (26 - g[0].length * cell) / 2 | 0, oy = (26 - g.length * cell) / 2 | 0;
+    g.forEach((r, j) => r.forEach((col, q) => { if (col === null) return; x.fillStyle = hex(col); x.fillRect(ox + q * cell, oy + j * cell, cell, cell); })); });
+} else {
+  const picks = ['knight', 'goblin', 'mage', null, 'skeletonArcher', 'slime'];
+  const names = { knight: 'Knight', goblin: 'Goblin', mage: 'Mage', skeletonArcher: 'Skeleton Archer', slime: 'Slime' };
+  const cells = picks.map((id, n) => {
+    if (!id) return `<div class="cell" style="height:360px"><div class="row"><div class="sel" style="flex:1">Item icons</div><div class="btn on" title="item mode">▦</div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;flex:1">${Object.keys(D.icons).map((ic, i) => `<div style="display:flex;flex-direction:column;gap:3px;align-items:center"><div class="sel" style="font-size:10px;padding:2px 4px;width:100%">${ic.replace('_',' ')}</div><canvas data-icon="${ic}" ${i===4?'style="outline:2px solid var(--accent)"':''}></canvas></div>`).join('')}</div></div>`;
+    const u = D.units[id];
+    return `<div class="cell ${n===0?'act':''}" style="height:360px"><div class="row"><div class="sel" style="flex:1">${names[id]}</div><div class="btn" title="item mode">▦</div></div>
+      <div style="display:flex;gap:6px;flex:1"><canvas data-unit="${id}"></canvas>
+      <div style="display:flex;flex-direction:column;gap:4px;width:30px">${u.parts.map((p, i) => `<canvas class="mini ${n===0&&i===0?'on':''}" data-part="${id}:${i}" title="${p.n}"></canvas>`).join('')}</div></div></div>`;
+  }).join('');
+  R.innerHTML = header('Sheet', '') + `<main style="padding:14px;display:flex;flex-direction:column;gap:12px;position:relative">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">${cells}</div>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:12px">
+      <div class="card"><div class="row"><h2 style="margin:0 8px 0 0">Swatches</h2><div class="sw cur" style="width:34px;height:28px;background:#3b6fd4"></div>${swatches(colorsOf(D.units.knight), 0x3b6fd4)}</div>
+        <div class="row" style="margin-top:6px"><span class="lbl" style="width:62px">Starter</span>${swatches(starter)}</div></div>
+      <div class="card"><div class="row"><h2 style="margin:0 8px 0 0">Tools</h2>${toolNames.map((t, i) => tool(t, i === 0)).join('')}${tool('mirror')}${tool('undo')}${tool('redo')}</div></div>
+    </div>
+    ${note('pick any sprite per canvas', 150, 6)}${note('parts = small thumbnails (tap to pick)', 250, 112)}${note('▦ = switch to item mode', 290, 6)}${note('item mode: 9 icons, each its own drop-down', 120, 384)}
+    ${note('tap a canvas to draw on it (gold = active)', 18, 330)}${note('shared by all 6 canvases', 900, 790)}
+  </main>`;
+  document.querySelectorAll('[data-unit]').forEach((c) => drawUnit(c, D.units[c.dataset.unit], 10, { minX: -18, minY: -28, cols: 36, rows: 30, grid: true, dim: c.dataset.unit === 'knight' ? 'body' : null }));
+  document.querySelectorAll('[data-part]').forEach((c) => { const [id, i] = c.dataset.part.split(':'); const p = D.units[id].parts[+i];
+    const g = p.grid, n = Math.max(g.length, g[0].length), cell = Math.max(1, Math.floor(28 / n)); c.width = c.height = 30; const x = c.getContext('2d');
+    x.fillStyle = '#0e0b17'; x.fillRect(0, 0, 30, 30); const ox = (30 - g[0].length * cell) / 2 | 0, oy = (30 - g.length * cell) / 2 | 0;
+    g.forEach((r, j) => r.forEach((col, k) => { if (col === null) return; x.fillStyle = hex(col); x.fillRect(ox + k * cell, oy + j * cell, cell, cell); })); });
+  document.querySelectorAll('[data-icon]').forEach((c) => drawIcon(c, D.icons[c.dataset.icon], 5, true));
+}
+</script></body></html>

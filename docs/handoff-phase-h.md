@@ -1,32 +1,37 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 34): NEXT = CHARACTER STUDIO (pixel sprite editor) work (user: 'I want to get back on the pixel sprite editor')
-- BRANCH: `main` has EVERYTHING (session 33 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- Studio: read docs/systems/studio.md first; build/publish steps there (url https://claude.ai/artifact/1azV1LBUimRkeavNpQBgc7).
-  Ask the user what they want in the editor; nothing is planned yet.
-- SESSION 33 DONE: every '[planned]' item of sessions 31/32 is BUILT (docs/item-decisions.md, now tagged '[built session 33]';
-  mechanics in docs/systems/items.md 'Session 33 batch 1-3', test scripts/tests/items-s31.test.mjs uses the REAL items.json).
-  Then: item RANKING sim of all 117 items (scripts/tests/rankitems.mjs, report docs/item-ranking-s33.md) and the user's
-  balance picks: Guardian's Banner + Assault Breastplate -> legendary, Cautious Banner -> epic, Conqueror's Flag 10% (+5),
-  Bloodlust Mask nerf (extra copies +20% speed / +2% lifesteal, no squad share), 9 weak items buffed (item-decisions.md end).
-  Item texts: no CAPS mechanic labels (user: 'FEAR RING' etc. removed from 8 descriptions); keep texts plain.
-  Game page NOT rebuilt since the weak-item buffs and text change: rebuild with the next visible batch.
-- ITEM REVIEW page round 4 (session 33 changes + each item's ranking result, notes in db collection `notes4`):
-  https://claude.ai/artifact/S7cbuLJoStsdi5hpg2SBef. Read the notes when the user says they wrote some.
-- OPEN (later, user: 'fix this later'): weak items whose sim was unfair need a BUILD test with partner items (Euclid, Kinetic
-  Coil, the 4 Collars, Overseer's Whistle, Gag Rune, Shatter Hammer). Placeholder choices to confirm: Euclid prism fill 1000%
-  / burst 300%, Collar names (planned 'element totems'), Thunderstruck no longer once per run, Eruption +75%/copy,
-  Kindling burn chance flat. FIRST-DRAFT LOOKS never approved: Collar / Conqueror's Flag / Sigil / cleave-axe icons, Shield
-  Totem sprite (minions.json), Fear Ring + Prism Burst have no own look yet (reuse effects). Conqueror's Flag: holder's
-  MINION kills still don't count (as written).
-- ALSO WAITING: MOVE ORDERS (tap floor = squad walks there, drag a hero onto floor = that hero walks; back to fighting on
-  arrival). Boss rework 80 / 100 (archive).
+## START HERE (session 35): NEXT = BUILD THE STUDIO UI (user: 'let's build the sprite editor'; hero pixel art is KIV = parked)
+- BRANCH: `main` has EVERYTHING (session 34 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- Studio: read docs/systems/studio.md first (build/publish steps there). Session 34 added the ELLIPSE tool (O) and SHADE
+  brush (D, Shift / "Shade lightens" = lighter); the studio page is NOT republished since: republish with this work.
+- PLAN (user-shaped through mock-ups; show a screenshot of the REAL studio before/after each step, ask before big moves):
+  1) SIMPLER DRAW SCREEN = docs/proposals/studio-ui/mock-draw.png (source mock.html?view=draw, a fake page, not code).
+     No empty columns (user: 'the left and right is empty, rearrange'): LEFT column = preview (Play drop-down + play +
+     Arena + zoom + speed drop-downs, Mirror) + PARTS list (small picture of each part, up/down, '...' menu = copy,
+     delete, rename, flip, turn, outline, copy to) + WHOLE CHARACTER (health bar slider, swap colour, versions, trace,
+     undo unsaved, back to game). RIGHT = ONE vertical tool strip (+ mirror, undo, redo) + the board filling the rest;
+     the picked tool's options in a row above the board (+ board zoom); ONE colour strip under it (current, character,
+     starter); long help text -> a '?' button + tooltips. Animate / Items / Effects: same look where it applies.
+  2) NEW 'SHEET' TAB = docs/proposals/studio-ui/mock-sheet.png (from the user's sketch): 6 canvases (3 x 2), each with a
+     drop-down to pick ANY sprite and its parts as SMALL thumbnails on its right (user: the parts column was 'super
+     big'); a button per canvas switches it to ITEM MODE = 3 x 3 small canvases, each with its own item-icon drop-down;
+     tap a canvas to draw on it (gold border); one shared SWATCHES bar + one TOOLS bar at the bottom.
+- HERO ART (KIV, user will come back to it): 20+ directions drawn as pixel mock-ups in docs/proposals/hero-art/
+  (styles.html = all drawings as letter grids + a renderer, `?only=<keys>`; PNGs of each round). User's LATEST: their own
+  3 KNIGHT SKETCHES (barred helmet + plume, floating fist with sword, shield, big head; angry / sleepy / 3/4) drawn as
+  `ks`, then WITHOUT outline (`ksn`, styles-ksn.png). Rejected / dropped: shading-only variants ('I want different
+  sprites'), the round-head + wide-legs sketch (O-O5, 'ditch this'). Nothing is in the game.
+- OPEN from session 33 (unchanged, see archive 'session 34 start note'): weak-item build tests, placeholder item choices,
+  first-draft item looks, MOVE ORDERS, boss rework 80 / 100. Game page not rebuilt since the session 33 item buffs.
 - PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish again
   (if refused as 'identical', publish once more). Fresh clone: `npm install` first.
 
 ## How we work with this user
 - 'Discuss first' / 'Hold on' / 'let me write first' (session 30) = STOP and wait for their text; no building meanwhile.
 - Unfair luck bothers them ('potentially BS'): when a random move can pile up on one hero, show sims (hits per hero) and spread rules.
+- MOCK-UPS (session 34): 'before doing anything show me a png' = fake HTML page in the scratchpad + Playwright PNG
+  (SendUserFile), no code changes; then small rounds of their tweaks. Art: they want DIFFERENT SPRITES (shapes), not
+  shading variants; they send phone sketches to copy; hero sprites ~24 px tall like today's.
 - ART changes: show in-game clips/frames (SendUserFile, plus a slow-motion copy), then the question tool; the user
   answers with sketches or references (e.g. 'like Sven's cleave') and wants ONE clean line, not layered effects.
 - NUMBERS: the user wants to SEE stats (tables in chat, floors side by side, real enemies like Goblin/Orc Brute) before

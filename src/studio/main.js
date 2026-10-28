@@ -7,6 +7,7 @@ import Phaser from 'phaser';
 import Character from '../entities/Character.js';
 import Board, { partBox, transformPart } from './board.js';
 import Timeline, { mainColor } from './timeline.js';
+import Sheet from './sheet.js';
 import EffectsEditor from './effects.js';
 import { partArt, artPixels, flipGridH, flipGridV, rotateGrid90, outlineGrid, replaceColorGrid, pixelsToArt, OUTLINE } from '../systems/pixelArt.js';
 import heroes from '../data/heroes.json';
@@ -379,7 +380,7 @@ const hex = (c) => '#' + c.toString(16).padStart(6, '0');
 const toHex = (c) => '#' + String(c).replace(/^0x/, '').padStart(6, '0');
 const fromHex = (h) => '0x' + h.replace('#', '');
 
-const board = new Board($('board'), {
+const boardHooks = {
   look,
   selected: () => selected,
   select: (name) => select(name),
@@ -403,7 +404,35 @@ const board = new Board($('board'), {
     setColor(c);
     toast('Colour picked');
   },
-});
+};
+const board = new Board($('board'), boardHooks);
+
+// The Sheet tab: 6 canvases, each its own Board; tapping one makes its sprite the one being edited.
+let sheet = null; // built the first time the tab is opened
+function makeSheet() {
+  return new Sheet($('sheet-pane'), {
+    characters,
+    look: (key) => working[key],
+    drawThumb,
+    boardHooks: (ref) => ({
+      ...boardHooks,
+      look: () => working[ref.key],
+      selected: () => (sheet && sheet.ref() === ref ? ref.sel : null), // only the active canvas shows its part box
+      select: (name) => {
+        ref.sel = name;
+        select(name);
+      },
+      trace: () => null,
+    }),
+    activate: (key, sel) => {
+      if (key !== current) endEdit();
+      current = key;
+      selected = sel;
+      timeline.selKey = null;
+      renderAll();
+    },
+  });
+}
 
 const timeline = new Timeline($('timeline'), {
   look,
@@ -452,10 +481,17 @@ function toggleMirrorDraw() {
   } catch {
     /* fine */
   }
-  $('mirror-draw').classList.toggle('on', mirrorOn);
-  $('mirror-draw').setAttribute('aria-pressed', String(mirrorOn));
+  showMirrorDraw();
   board.render();
+  if (sheet) sheet.refresh();
   toast(mirrorOn ? 'Mirror drawing on' : 'Mirror drawing off');
+}
+
+function showMirrorDraw() {
+  for (const b of document.querySelectorAll('#mirror-draw, #sheet-mirror')) {
+    b.classList.toggle('on', mirrorOn);
+    b.setAttribute('aria-pressed', String(mirrorOn));
+  }
 }
 
 function setTool(name) {
@@ -470,6 +506,7 @@ function setTool(name) {
 function setColor(c) {
   color = c;
   $('color').value = hex(c);
+  $('sheet-color').value = hex(c);
   renderSwatches();
 }
 
@@ -507,9 +544,11 @@ function renderSwatches() {
   if (st) st.style.background = hex(color);
   const sw = (c) =>
     `<button class="sw${c === color ? ' sel' : ''}" data-color="${c}" style="background:${hex(c)}" aria-label="Colour ${hex(c)}"></button>`;
-  $('swatches').innerHTML =
+  const html =
     `<span class="label sw-lbl">${byKey[current].name}</span>${used.map(sw).join('')}` +
     `<span class="label sw-lbl">Starter</span>${STARTER.map(sw).join('')}`;
+  $('swatches').innerHTML = html;
+  $('sheet-swatches').innerHTML = html;
 }
 
 // ---- Undo / redo ----------------------------------------------------------------------------------
@@ -571,8 +610,8 @@ function undoRedo(from, to) {
 
 function renderUndo() {
   const h = hist();
-  $('undo').disabled = !h.undo.length;
-  $('redo').disabled = !h.redo.length;
+  $('undo').disabled = $('sheet-undo').disabled = !h.undo.length;
+  $('redo').disabled = $('sheet-redo').disabled = !h.redo.length;
 }
 
 // ---- Page UI ------------------------------------------------------------------------------------
@@ -586,6 +625,21 @@ function setSection(s) {
   section = s;
   document.querySelectorAll('[data-sect]').forEach((b) => b.classList.toggle('on', b.dataset.sect === s));
   const fx = s === 'effects';
+  const sh = s === 'sheet';
+  $('sheet-pane').hidden = !sh;
+  closePops();
+  if (sh) {
+    $('effects-pane').hidden = true;
+    $('unit-pane').hidden = true;
+    $('pick').hidden = true;
+    $('mode-tabs').hidden = true;
+    $('status').hidden = false;
+    $('save').hidden = false;
+    if (!sheet) sheet = makeSheet();
+    const r = sheet.ref();
+    sheet.h.activate(r.key, r.sel);
+    return;
+  }
   $('effects-pane').hidden = !fx;
   if (fx && !effectsEditor) effectsEditor = new EffectsEditor($('effects-pane'));
   if (fx && effectsDb !== undefined && !effectsEditor.store) effectsEditor.connect(effectsDb, LOCAL_KEY);
@@ -787,6 +841,7 @@ function renderAll() {
   renderBoardHint();
   board.render();
   timeline.render();
+  if (sheet && !$('sheet-pane').hidden) sheet.refresh();
 }
 
 function select(name) {
@@ -796,6 +851,7 @@ function select(name) {
   renderBoardHint();
   board.render();
   timeline.render();
+  if (sheet && !$('sheet-pane').hidden) sheet.refresh();
 }
 
 // Something in the data changed: redraw the preview, the board and the labels.
@@ -812,6 +868,7 @@ function changed({ keepEditor = false, fromTimeline = false } = {}) {
   renderUndo();
   if (!keepEditor) renderEditor();
   else updateEditorNumbers();
+  if (sheet && !$('sheet-pane').hidden) sheet.refresh();
   persistDraft();
 }
 
@@ -869,8 +926,9 @@ document.addEventListener('input', (e) => {
     softEdit();
     look().parts[selected].color = fromHex(t.value);
     changed({ keepEditor: true });
-  } else if (t.id === 'color') {
+  } else if (t.id === 'color' || t.id === 'sheet-color') {
     color = parseInt(t.value.slice(1), 16);
+    $('color').value = $('sheet-color').value = t.value;
     renderSwatches();
   } else if (t.id === 'trace-alpha') {
     if (trace) trace.alpha = Number(t.value);
@@ -883,6 +941,9 @@ document.addEventListener('input', (e) => {
 document.addEventListener('change', (e) => {
   const t = e.target;
   if (t.id === 'anim-pick') return playAnim(t.value);
+  // The Sheet's tool options are twins of the Draw screen's.
+  const twins = { filled: 'sheet-filled', 'sheet-filled': 'filled', lighten: 'sheet-lighten', 'sheet-lighten': 'lighten' };
+  if (twins[t.id]) return ($(twins[t.id]).checked = t.checked);
   if (t.id === 'speed-pick') return setSpeed(Number(t.value));
   if (t.id === 'zoom-pick') {
     zoom = Number(t.value);
@@ -1011,7 +1072,7 @@ document.addEventListener('click', (e) => {
   if (t.dataset.sect) return setSection(t.dataset.sect);
   if (t.dataset.mode) return setMode(t.dataset.mode);
   if (t.dataset.tool) return setTool(t.dataset.tool);
-  if (t.id === 'mirror-draw') return toggleMirrorDraw();
+  if (t.id === 'mirror-draw' || t.id === 'sheet-mirror') return toggleMirrorDraw();
   if (t.dataset.color) return setColor(Number(t.dataset.color));
   if (t.dataset.anim) return playAnim(t.dataset.anim);
   if (t.id === 'replay') return playAnim($('anim-pick').value);
@@ -1104,7 +1165,9 @@ document.addEventListener('click', (e) => {
         delete p.pivotY;
       });
     case 'undo':
+    case 'sheet-undo':
       return undoRedo('undo', 'redo');
+    case 'sheet-redo':
     case 'redo':
       return undoRedo('redo', 'undo');
     case 'revert':
@@ -1483,8 +1546,7 @@ async function connect() {
   redraw();
 }
 
-$('mirror-draw').classList.toggle('on', mirrorOn);
-$('mirror-draw').setAttribute('aria-pressed', String(mirrorOn));
+showMirrorDraw();
 loadDraft();
 try {
   const savedTrace = localStorage.getItem('soldia-studio-trace');

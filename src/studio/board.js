@@ -172,7 +172,12 @@ export default class Board {
   // mirror() (true = mirror drawing is on: everything drawn is copied to the other side),
   // trace() ({ img, alpha } a tracing picture shown faintly behind the grid, or null),
   // copyMove() (true = moving a selection leaves a copy behind)
-  constructor(canvas, hooks) {
+  // view: which part of the character grid is shown (default VIEW); plain: true = no health bar line (item icons)
+  constructor(canvas, hooks, { view = VIEW, plain = false } = {}) {
+    this.view = view;
+    this.plain = plain;
+    canvas.width = view.cols * view.cell;
+    canvas.height = view.rows * view.cell;
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.h = hooks;
@@ -192,7 +197,8 @@ export default class Board {
     const r = this.canvas.getBoundingClientRect();
     const mx = ((ev.clientX - r.left) / r.width) * this.canvas.width;
     const my = ((ev.clientY - r.top) / r.height) * this.canvas.height;
-    return [Math.floor(mx / VIEW.cell) + VIEW.minX, Math.floor(my / VIEW.cell) + VIEW.minY];
+    const v = this.view;
+    return [Math.floor(mx / v.cell) + v.minX, Math.floor(my / v.cell) + v.minY];
   }
 
   part() {
@@ -432,7 +438,7 @@ export default class Board {
 
   render() {
     const { ctx } = this;
-    const { cell, minX, minY, cols, rows } = VIEW;
+    const { cell, minX, minY, cols, rows } = this.view;
     const W = cols * cell;
     const H = rows * cell;
     const X = (cx) => (cx - minX) * cell;
@@ -462,7 +468,7 @@ export default class Board {
     ctx.fillStyle = '#f2b33d';
     ctx.fillRect(0, Y(0), W, 2);
     ctx.fillStyle = '#d65b5b';
-    for (let x = 0; x < W; x += 12) ctx.fillRect(x, Y(-look.height), 6, 2);
+    if (!this.plain) for (let x = 0; x < W; x += 12) ctx.fillRect(x, Y(-look.height), 6, 2);
 
     const sel = this.h.selected();
     for (const [name, p] of Object.entries(look.parts)) {

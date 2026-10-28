@@ -63,3 +63,13 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
 - TO EXPEDITION text is 'normal' size (`camp.json ui.expedition.size`, was 'big'; user 2026-10-22: room between box and text). '< CAMP' on the squad screen slides back down to the hub.
 - 2026-10-22 (user): TO EXPEDITION arrows are real arrows (`ui.expedition.arrow` {head, stemW, stemH} in `cell` px; the old 3-row one read as '+'), inset 36. Everything keeps 24px from the screen sides (user: 'buttons hug the sides'): expedition w 342, menu `side` 24 / `gap` 6 / h 100, settings x 24, profile right 24.
 - MENU IN/OUT (user 2026-10-22): TO EXPEDITION, BEGIN DESCENT (all squad-screen buttons leave together) and '< CAMP' first move the screen's buttons out (top ones up, bottom ones down, fading; `uiKit.uiShift`, `camp.json ui.uiShiftMs` 160), then slide (slideMs), then the new screen's buttons come in. Base `uiParts` / Squad `uiParts` = what drawUi adds (split top/bottom by draw order; Send back buttons only fade). Scene data `fromCamp` / `fromSquad` = start hidden, no taps (`leaving`; Squad `shifting` keeps BEGIN / Send back drawn while they fade).
+
+## 5. MENU SCREENS (session 35, mock-ups only, nothing built) — `docs/proposals/menu/*.png`
+- GLOSSARY = a book: chapters Basics, Statuses, Enemies, Bosses, Items, Heroes (no small grey lines, user), gold found
+  counts; entries fill in as you meet them (??? / dark shadow until then). Enemies = sprite grid + tap for a stat card.
+  Heroes chapter = hero list + a page (stats, attack/support skill, perk, passive). Not picked yet in detail.
+- HEROES button (user: lore, unlock progress, hero records, skins). First try (tabs Lore/Stats/Looks) replaced by the
+  user's sketch: PICKED VARIATION C (`hero-page-variations.png`, right): one big card = the user's own pixel art on top
+  (Studio), the hero big on a real dungeon floor (`floorArtPixels`) with name + role over it, swipe / arrows = looks
+  (skins), look name window + dots; a small HP/ATK/DEF/RES strip; LORE and STATS buttons. Locked heroes: shadow +
+  their real unlock goal and a progress bar (unlocks.json). Skins, lore and per-hero records are NEW systems.

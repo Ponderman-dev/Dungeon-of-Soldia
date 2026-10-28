@@ -462,6 +462,8 @@ function setTool(name) {
   if (name !== tool) board.sel = null;
   tool = name;
   document.querySelectorAll('[data-tool]').forEach((b) => b.classList.toggle('on', b.dataset.tool === name));
+  // The row above the board shows only the picked tool's options.
+  document.querySelectorAll('[data-opt]').forEach((el) => (el.hidden = !el.dataset.opt.split(' ').includes(name)));
   renderBoardHint();
 }
 
@@ -485,7 +487,9 @@ function renderBoardHint() {
     move: 'Move: tap a part to pick it, drag to move it.',
     select: 'Select: drag a box, then drag inside it to move those pixels. Delete clears them, Esc lets go.',
   };
-  $('board-hint').textContent = selected ? hints[tool] : 'Tap a part to pick it, then draw.';
+  const names = { rect: 'Rectangle', picker: 'Pick colour' };
+  $('tool-name').textContent = names[tool] || tool[0].toUpperCase() + tool.slice(1);
+  $('board').title = selected ? hints[tool] : 'Tap a part to pick it, then draw.';
 }
 
 function usedColors() {
@@ -504,8 +508,8 @@ function renderSwatches() {
   const sw = (c) =>
     `<button class="sw${c === color ? ' sel' : ''}" data-color="${c}" style="background:${hex(c)}" aria-label="Colour ${hex(c)}"></button>`;
   $('swatches').innerHTML =
-    `<span class="label">This character</span>${used.map(sw).join('')}` +
-    `<span class="label">Starter colours</span>${STARTER.map(sw).join('')}`;
+    `<span class="label sw-lbl">${byKey[current].name}</span>${used.map(sw).join('')}` +
+    `<span class="label sw-lbl">Starter</span>${STARTER.map(sw).join('')}`;
 }
 
 // ---- Undo / redo ----------------------------------------------------------------------------------
@@ -623,13 +627,60 @@ function renderStatus() {
 }
 
 
+// One row per part (drawn later = lower = in front): a small picture, up / down, and the '...' menu.
 function renderParts() {
-  $('parts').innerHTML = Object.entries(look().parts)
+  const entries = Object.entries(look().parts);
+  $('parts').innerHTML = entries
     .map(
-      ([n, p]) =>
-        `<button class="chip${n === selected ? ' sel' : ''}" data-part="${n}"><i style="background:${mainColor(p)}"></i>${n}</button>`,
+      ([n], i) =>
+        `<div class="prow${n === selected ? ' sel' : ''}">
+          <button class="pname" data-part="${n}"><canvas width="28" height="28" data-thumb="${n}"></canvas>${n}</button>
+          <button class="pbtn" data-move="-1" data-for="${n}" title="Draw earlier (behind)" aria-label="Move ${n} up"${i ? '' : ' disabled'}>↑</button>
+          <button class="pbtn" data-move="1" data-for="${n}" title="Draw later (in front)" aria-label="Move ${n} down"${i < entries.length - 1 ? '' : ' disabled'}>↓</button>
+          <button class="pbtn" data-menu="${n}" title="More: rename, flip, turn, outline, copy, delete…" aria-label="More for ${n}">⋯</button>
+        </div>`,
     )
     .join('');
+  for (const cv of $('parts').querySelectorAll('[data-thumb]')) drawThumb(cv, look().parts[cv.dataset.thumb]);
+}
+
+// A part's pixels, as big as fits, in the middle of a small canvas.
+function drawThumb(cv, p) {
+  const grid = artPixels(partArt(p));
+  const h = grid.length;
+  const w = grid[0] ? grid[0].length : 1;
+  const s = Math.max(1, Math.floor(Math.min(cv.width / w, cv.height / h)));
+  const ox = Math.floor((cv.width - w * s) / 2);
+  const oy = Math.floor((cv.height - h * s) / 2);
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  grid.forEach((row, y) =>
+    row.forEach((c, x) => {
+      if (c === null) return;
+      ctx.fillStyle = hex(c);
+      ctx.fillRect(ox + x * s, oy + y * s, s, s);
+    }),
+  );
+}
+
+// The part '...' menu: a pop-up next to the button with everything about that part.
+let menuFor = null;
+function openPartMenu(name, btn) {
+  if (menuFor === name && !$('part-menu').hidden) return closePops();
+  closePops();
+  const r = btn.getBoundingClientRect(); // before select() redraws the list
+  select(name);
+  menuFor = name;
+  const m = $('part-menu');
+  m.hidden = false;
+  m.style.left = Math.min(r.right + 8, innerWidth - m.offsetWidth - 12) + 'px';
+  m.style.top = Math.max(12, Math.min(r.top - 12, innerHeight - m.offsetHeight - 12)) + 'px';
+}
+function closePops() {
+  menuFor = null;
+  $('part-menu').hidden = true;
+  $('help-pop').hidden = true;
+  $('help').setAttribute('aria-expanded', 'false');
 }
 
 function field(id, label, value, { min, max, step = 1 }) {
@@ -642,7 +693,7 @@ function renderEditor() {
   const ed = $('editor');
   const p = selected && look().parts[selected];
   if (!p) {
-    ed.innerHTML = '<h2>Part</h2><p class="hint">Tap a part on the drawing board, in the preview or in the list above.</p>';
+    ed.innerHTML = '<h2>Part</h2><p class="hint">Tap a part on the drawing board, in the preview or in the parts list.</p>';
     return;
   }
   const idle = p.idle || {};
@@ -674,8 +725,11 @@ function renderEditor() {
     ${field('f-angle', 'Tilt (deg)', idle.angle || 0, { min: -45, max: 45 })}
     ${field('f-dur', 'Speed (ms)', idle.duration || 500, { min: 100, max: 2000, step: 10 })}
     ${field('f-delay', 'Delay (ms)', idle.delay || 0, { min: 0, max: 1000, step: 10 })}
-    <p id="name-err" class="note" hidden></p>`;
+    <p id="name-err" class="note" hidden></p>
+    <div class="row"><button id="dupe" class="btn">Copy part</button><button id="remove" class="btn danger">Delete part</button></div>`;
 }
+
+let swapOpen = false; // the "Swap colour" row is open
 
 // Saved versions of each character (newest first), loaded when the character is opened.
 const versions = {};
@@ -697,24 +751,25 @@ function waitingForGame() {
 function renderWhole() {
   const l = look();
   loadVersions(current);
-  let html = field('w-height', 'Health bar at', l.height, { min: 4, max: 44 });
+  let html = field('w-height', 'Health bar', l.height, { min: 4, max: 44 });
   if (l.hover !== undefined) html += field('w-hover', 'Flies at', l.hover, { min: 0, max: 80 });
   // Colour swap: every pixel of one colour, in every part, becomes the current colour.
   const used = usedColors();
-  html += `<div class="sub">Swap a colour</div>
-    <div class="row"><select id="swap-from" aria-label="Colour to replace">${used
+  const vs = versions[current] || [];
+  html += `<div class="row">
+      <button id="swap-open" class="btn sm${swapOpen ? ' on' : ''}" aria-expanded="${swapOpen}">Swap colour</button>
+      <select id="version-pick" aria-label="Load a saved version" title="Load a saved version (as unsaved changes; Undo brings back what you had)"${
+        vs.length ? '' : ' disabled'
+      }><option value="">${vs.length ? `Versions (${vs.length})` : 'No versions yet'}</option>${vs
+        .map((v, i) => `<option value="${i}">${new Date(v.savedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</option>`)
+        .join('')}</select>
+      <label class="btn sm" for="trace-file" title="Put a picture behind the grid to trace over">Trace…</label></div>
+    <div class="row"${swapOpen ? '' : ' hidden'}><select id="swap-from" aria-label="Colour to replace">${used
       .map((c) => `<option value="${c}" style="background:${hex(c)}">${hex(c)}</option>`)
       .join('')}</select>
       <span class="hint">→ the current colour</span>
       <i class="swapto" style="background:${hex(color)}"></i>
       <button id="swap-colour" class="btn">Swap everywhere</button></div>`;
-  const vs = versions[current] || [];
-  html += `<div class="sub">Saved versions</div>
-    <div class="row"><select id="version-pick" aria-label="Load a saved version"${vs.length ? '' : ' disabled'}><option value="">${
-      vs.length ? `Load a saved version (${vs.length})…` : 'No saved versions yet'
-    }</option>${vs
-      .map((v, i) => `<option value="${i}">${new Date(v.savedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</option>`)
-      .join('')}</select><span class="hint">Loads it as unsaved changes; Undo brings back what you had.</span></div>`;
   const waiting = waitingForGame();
   if (waiting.length)
     html += `<p class="tl-banner own">Saved, not in the game yet: <b>${waiting.join(', ')}</b>. Tell Claude “apply the studio designs”.</p>`;
@@ -827,6 +882,12 @@ document.addEventListener('input', (e) => {
 
 document.addEventListener('change', (e) => {
   const t = e.target;
+  if (t.id === 'anim-pick') return playAnim(t.value);
+  if (t.id === 'speed-pick') return setSpeed(Number(t.value));
+  if (t.id === 'zoom-pick') {
+    zoom = Number(t.value);
+    return redraw();
+  }
   if (t.id === 'pick') {
     endEdit();
     current = t.value;
@@ -889,6 +950,25 @@ document.addEventListener('change', (e) => {
   }
 });
 
+// Plays one of the preview's animations (or the Arena) like the game, taking the preview back from the timeline.
+function playAnim(a) {
+  anim = a;
+  tlShow = null;
+  if (timeline.playing) timeline.togglePlay();
+  document.querySelectorAll('[data-anim]').forEach((b) => b.classList.toggle('on', b.dataset.anim === a));
+  if (a !== 'arena') $('anim-pick').value = a;
+  redraw();
+}
+
+function setSpeed(v) {
+  speed = v;
+  $('speed-pick').value = String(v);
+  if (scene && scene.grid) {
+    scene.tweens.timeScale = speed;
+    scene.time.timeScale = speed;
+  }
+}
+
 // Moves the selected part earlier (-1, drawn behind) or later (+1, drawn in front).
 function reorder(dir) {
   if (!selected) return;
@@ -918,38 +998,36 @@ function act(fn) {
 }
 
 document.addEventListener('click', (e) => {
+  // A tap outside a pop-up closes it.
+  if (!e.target.closest('.pop, [data-menu], #help')) closePops();
   const t = e.target.closest('button');
   if (!t) return;
+  if (t.dataset.menu) return openPartMenu(t.dataset.menu, t);
+  if (t.dataset.move) {
+    select(t.dataset.for);
+    return reorder(Number(t.dataset.move));
+  }
   if (t.dataset.part) return select(t.dataset.part);
   if (t.dataset.sect) return setSection(t.dataset.sect);
   if (t.dataset.mode) return setMode(t.dataset.mode);
   if (t.dataset.tool) return setTool(t.dataset.tool);
   if (t.id === 'mirror-draw') return toggleMirrorDraw();
   if (t.dataset.color) return setColor(Number(t.dataset.color));
-  if (t.dataset.anim) {
-    anim = t.dataset.anim;
-    tlShow = null; // back to playing like the game
-    if (timeline.playing) timeline.togglePlay();
-    document.querySelectorAll('[data-anim]').forEach((b) => b.classList.toggle('on', b === t));
-    return redraw();
+  if (t.dataset.anim) return playAnim(t.dataset.anim);
+  if (t.id === 'replay') return playAnim($('anim-pick').value);
+  if (t.id === 'help') {
+    const open = $('help-pop').hidden;
+    closePops();
+    $('help-pop').hidden = !open;
+    return t.setAttribute('aria-expanded', String(open));
+  }
+  if (t.id === 'swap-open') {
+    swapOpen = !swapOpen;
+    return renderWhole();
   }
   if (t.id === 'mirror') {
     mirror = !mirror;
     t.classList.toggle('on', mirror);
-    return redraw();
-  }
-  if (t.dataset.speed) {
-    speed = Number(t.dataset.speed);
-    document.querySelectorAll('[data-speed]').forEach((b) => b.classList.toggle('on', b === t));
-    if (scene && scene.grid) {
-      scene.tweens.timeScale = speed;
-      scene.time.timeScale = speed;
-    }
-    return;
-  }
-  if (t.dataset.zoom) {
-    zoom = Number(t.dataset.zoom);
-    document.querySelectorAll('[data-zoom]').forEach((b) => b.classList.toggle('on', b === t));
     return redraw();
   }
   const p = selected && look().parts[selected];
@@ -973,16 +1051,13 @@ document.addEventListener('click', (e) => {
       });
     case 'remove':
       if (!p || Object.keys(look().parts).length <= 1) return;
+      closePops();
       return act(() => {
         delete look().parts[selected];
         for (const clip of Object.values(look().anims || {})) delete clip.tracks[selected];
         timeline.selKey = null;
         selected = null;
       });
-    case 'up':
-      return reorder(-1);
-    case 'down':
-      return reorder(1);
     case 'anchor-mid':
     case 'anchor-bottom':
       if (!p) return;
@@ -1057,31 +1132,40 @@ function setMode(m) {
   $('mode-anim').hidden = m !== 'anim';
   $('mode-lineup').hidden = m !== 'lineup';
   if (m === 'lineup') drawLineup();
+  closePops();
   $('play-row').hidden = m === 'anim';
+  // Parts and Whole character belong to drawing (the timeline has its own layer list).
+  $('parts-card').hidden = m !== 'draw';
+  $('whole-card').hidden = m !== 'draw';
+  $('stage-hint').hidden = m !== 'anim';
   if (m === 'anim') {
     $('stage-hint').textContent = 'Drag a part in the preview to move it at the playhead (adds X / Y keyframes).';
     timeline.render();
     timeline.show();
   } else {
-    $('stage-hint').textContent = 'Tap a part in the preview to pick it.';
     if (timeline.playing) timeline.togglePlay();
-    tlShow = null;
-    anim = 'idle';
-    document.querySelectorAll('[data-anim]').forEach((b) => b.classList.toggle('on', b.dataset.anim === 'idle'));
-    redraw();
+    playAnim('idle');
   }
+  if (m === 'draw') fitBoard();
 }
 
 // ---- Board zoom (buttons, or pinch with two fingers on the iPad) -------------------------------------
 
+// 100% = the whole board fits its box (it fills the space next to the tool strip); more scrolls inside it.
 let boardZoom = 1;
 function setBoardZoom(z) {
   boardZoom = Math.max(1, Math.min(4, z));
-  const cv = $('board');
-  cv.style.width = boardZoom * 100 + '%';
-  cv.style.maxWidth = boardZoom > 1 ? 'none' : '';
   $('board-fit').textContent = Math.round(boardZoom * 100) + '%';
+  fitBoard();
 }
+function fitBoard() {
+  const wrap = document.querySelector('.boardwrap');
+  const cv = $('board');
+  if (!wrap.clientWidth) return; // hidden
+  const fit = Math.min((wrap.clientWidth - 2) / cv.width, (wrap.clientHeight - 2) / cv.height);
+  cv.style.width = Math.floor(cv.width * fit * boardZoom) + 'px';
+}
+new ResizeObserver(fitBoard).observe(document.querySelector('.boardwrap'));
 
 // ---- Tracing picture (behind the drawing board) ------------------------------------------------------
 
@@ -1251,6 +1335,7 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     return board.clearSelection();
   }
+  if (k === 'escape' && (!$('part-menu').hidden || !$('help-pop').hidden)) return closePops();
   if (k === 'escape' && board.sel) {
     board.sel = null;
     return board.render();
@@ -1274,10 +1359,10 @@ async function save() {
     // Every save is also kept as an older version (the newest 15 per character).
     store.keep(current, doc).catch(() => {});
     versions[current] = [doc, ...(versions[current] || [])].slice(0, 15);
-    btn.textContent = 'Save design';
+    btn.textContent = 'Save';
     renderAll();
   } catch (err) {
-    btn.textContent = 'Save design';
+    btn.textContent = 'Save';
     btn.disabled = false;
     const note = $('dbnote');
     note.hidden = false;
@@ -1407,5 +1492,6 @@ try {
 } catch {
   /* none */
 }
+setTool(tool);
 renderAll();
 connect();

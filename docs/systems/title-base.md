@@ -105,3 +105,11 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   UNLOCKED banners from bosses / achievements, DRAW NEW IN STUDIO, SET AS BANNER). Mock banners = title forest crops.
   Mock helper (scratchpad, gone next session): node script dumps hero sprites (parts composited), floor patch, title
   layers and item icons into assets.js; HTML draws them on canvases (image-rendering: pixelated).
+- GAME OVER (replaces today's `BattleScene.showDefeat()`) PICKED B (`gameover-picked-B.png`; others tried:
+  `gameover-variations.png`; a first all-on-one-page try was 'not neat'). User wants EVERYTHING, split by taps: red
+  SQUAD DEFEATED; run card = FLOOR / TIME / KILLS in 3 columns + gold 'NEW BEST!' tag + old best; the 3 heroes on the
+  dungeon floor: TAP A HERO = that hero gets a gold 1-art-pixel OUTLINE around the sprite and pops up BIGGER (4x vs 3x;
+  user: no yellow box); below, the picked hero's card: fell on floor N, damage / healing / kills / damage taken, their
+  items, and the killer enemy sprite + name in red. BOSSES N and ITEMS N buttons open pages (BOSSES = each beaten
+  boss big, floor, time to beat, 'next boss: floor 60'; ITEMS = icon grid, tap one = name, who held it, what it does).
+  Bottom: CAMP + gold TRY AGAIN. Needs NEW run stats tracking (per-hero damage/heal/taken/kills, boss times).

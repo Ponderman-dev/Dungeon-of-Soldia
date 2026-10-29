@@ -73,3 +73,8 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   (Studio), the hero big on a real dungeon floor (`floorArtPixels`) with name + role over it, swipe / arrows = looks
   (skins), look name window + dots; a small HP/ATK/DEF/RES strip; LORE and STATS buttons. Locked heroes: shadow +
   their real unlock goal and a progress bar (unlocks.json). Skins, lore and per-hero records are NEW systems.
+- LEADERS button: PICKED A = PODIUM (`leaderboard-variations.png`, left): WEEK / ALL TIME tabs; top 3 stand on a stone
+  podium (gold / silver / bronze numbers) on the dungeon floor, each shown by their first hero; then rows (rank, name,
+  3-hero squad, best floor); your own row pinned at the bottom in gold. ALL player names the same small 8px (user).
+  Tap a player (D) = their run: squad on the floor, floor reached, bosses / kills / time / ended by, item icons.
+  Needs an online server (later); look only for now.

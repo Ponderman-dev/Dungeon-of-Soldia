@@ -95,3 +95,13 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   (gold name, 8px hint line, buttons under it). SOUND: MUSIC / EFFECTS = '-' bar of 10 '+' with the number top right.
   GAME: BATTLE SPEED 1X/2X (new, user asked), SCREEN SHAKE, DAMAGE NUMBERS, VIBRATION (ON/OFF). MORE: WALLET
   (CONNECT), SAVE (kept on this phone, BACK UP), CREDITS + HELP, red DELETE SAVE; version at the bottom.
+- PROFILE (camp profile box) PICKED D (`profile-picked-D.png`; others tried: `profile-variations.png`). User: set ONE
+  hero for your profile, a custom art BANNER, then stats and achievements. Top card = banner (EDIT top right) with the
+  profile hero standing on the black name strip, NO frame or floor tile behind him (user), head over the banner art;
+  CHANGE under him; name + 'Knight main' to his right. Tabs STATS / ACHIEVE.: STATS = 2-column boxes (runs, best floor,
+  bosses, kills, play time, items found, top hero, deaths); ACHIEVE. = '12 / 40 EARNED' gold bar + 4-column medal grid
+  (item-icon style medals, gold line = earned, dark shadow + '???' = not yet). CHANGE = PROFILE HERO page (pick big on
+  the floor, 10-hero grid, locked = shadow, SET AS PROFILE). EDIT = BANNER page (YOUR ART from the Studio + '+' new,
+  UNLOCKED banners from bosses / achievements, DRAW NEW IN STUDIO, SET AS BANNER). Mock banners = title forest crops.
+  Mock helper (scratchpad, gone next session): node script dumps hero sprites (parts composited), floor patch, title
+  layers and item icons into assets.js; HTML draws them on canvases (image-rendering: pixelated).

@@ -113,3 +113,6 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   items, and the killer enemy sprite + name in red. BOSSES N and ITEMS N buttons open pages (BOSSES = each beaten
   boss big, floor, time to beat, 'next boss: floor 60'; ITEMS = icon grid, tap one = name, who held it, what it does).
   Bottom: CAMP + gold TRY AGAIN. Needs NEW run stats tracking (per-hero damage/heal/taken/kills, boss times).
+  FLOW (user, session 36): last hero falls -> today's defeat screen stays (dim, SQUAD DEFEATED, floor + flavour
+  line from defeat.json) -> its BACK button becomes CONTINUE -> the game-over summary (B) -> TRY AGAIN = squad
+  select screen (pick 3 for a new run), CAMP = back to the camp.

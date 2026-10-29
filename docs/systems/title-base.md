@@ -89,3 +89,9 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   3-column grid (look, name, hero, price). Tap a look = try-on page (big on the floor, arrows, 'Looks only. No stat
   change.', BUY + price). GEMS = 4 packs, prices in USD ('$' is missing from the pixel font), card / SOL = placeholder.
   'Gems' is a stand-in name. Other layouts tried: `shop-variations.png`.
+- SETTINGS (gear button) PICKED D (`settings-picked-D.png`; others tried: `settings-variations.png` = A paired
+  buttons, B switches, C classic RPG '< value >' list). User found a lone ON button unclear ('how do I interact'), so
+  every choice is shown as big buttons, the chosen one FILLED gold. Tabs SOUND / GAME / MORE; each setting is a card
+  (gold name, 8px hint line, buttons under it). SOUND: MUSIC / EFFECTS = '-' bar of 10 '+' with the number top right.
+  GAME: BATTLE SPEED 1X/2X (new, user asked), SCREEN SHAKE, DAMAGE NUMBERS, VIBRATION (ON/OFF). MORE: WALLET
+  (CONNECT), SAVE (kept on this phone, BACK UP), CREDITS + HELP, red DELETE SAVE; version at the bottom.

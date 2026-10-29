@@ -1,0 +1,33 @@
+{
+  "_about": "Heroes button (HeroesScene, user's pick C: docs/proposals/menu/hero-page-variations.png right + glossary-heroes-spaced.png). LIST = 2-column grid (locked = shadow, short goal, progress bar). HERO PAGE = card: 'your pixel art' box on top (user's art later), the hero big on the dungeon floor with name + role, the look name (looks = skins, one 'CLASSIC' each for now) + dots, HP/ATK/DEF/RES strip, LORE and STATS. STATS = RECORDS (this hero's runs, kept from session 37 on) / KIT (skills, perk, passive). lore = 2-3 lines per hero (draft, user to review). shortGoals = the unlock goal in a list tile. shortNames = names too long for a list tile.",
+  "lookName": "CLASSIC",
+  "shortNames": { "necromancer": "NECRO" },
+  "shortGoals": { "bestFloor": "Floor {value}", "totalKills": "{value} kills", "totalFloors": "{value} floors", "runs": "{value} runs" },
+  "lore": {
+    "knight": "Once the captain of Soldia's gate. When the gate fell to the things below, the Knight walked down into the dark to finish the fight in person.",
+    "berserker": "Thrown out of three war camps for starting fights. The dungeon is the first place that never asks for calm.",
+    "rogue": "Stole one coin too many from the wrong lord. Down here nobody checks a purse, and the treasure has no owners left.",
+    "archer": "A hunter from the forest around the tower. When the beasts of the woods began crawling out of the dungeon, the hunt moved underground.",
+    "samurai": "A wandering blade bound by an old master's last order: one perfect cut, at the bottom of the deepest dungeon.",
+    "mage": "Fire, ice and storm in one stubborn student. Expelled for melting the academy library; down here, only monsters are left to burn.",
+    "cleric": "A healer from the chapel of the dawn. Where the light does not reach, someone has to carry it.",
+    "necromancer": "Studied death to stop it, and learned to borrow it instead. The bones down here answer to a gentle voice.",
+    "bard": "Sings the songs of every squad that never came back, and means to write a better ending.",
+    "alchemist": "Every bottle is an experiment, and every experiment explodes. Down here, that is a feature."
+  },
+  "layout": {
+    "side": 24,
+    "pad": 16,
+    "back": { "x": 24, "y": 16, "w": 96, "h": 44 },
+    "titleY": 76,
+    "list": { "y": 124, "h": 120, "gap": 12, "heroScale": 3, "barH": 6 },
+    "card": { "y": 72, "artH": 180, "floorH": 316, "heroScale": 6, "nameY": 18, "roleY": 64, "feetDy": 246, "lookY": 262 },
+    "strip": { "y": 584, "h": 48 },
+    "buttons": { "y": 646, "h": 60, "gap": 12 },
+    "tabs": { "y": 124, "h": 44, "gap": 12 },
+    "records": { "y": 184, "h": 64, "gap": 12 },
+    "kit": { "y": 184, "gap": 10 },
+    "dim": "0x55556a",
+    "bg": "0x0c0b10"
+  }
+}

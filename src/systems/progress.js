@@ -6,7 +6,7 @@ export const SAVE_KEY = 'dungeon-of-soldia-save-v1';
 export function emptyProgress() {
   return {
     version: 1,
-    stats: { bestFloor: 0, totalKills: 0, totalFloors: 0, runs: 0, bossesBeaten: 0, bossIds: [], playMs: 0, itemsFound: 0, heroRuns: {}, deaths: 0 },
+    stats: { bestFloor: 0, totalKills: 0, totalFloors: 0, runs: 0, bossesBeaten: 0, bossIds: [], playMs: 0, itemsFound: 0, heroRuns: {}, deaths: 0, heroRecords: {} },
     profile: {}, // name, profile hero, banner (ProfileScene; defaults in profile.json)
     achievements: [], // ids earned (systems/achievements.js)
     seenUnlocked: [], // heroes the player has already seen unlocked on the squad screen (for the NEW badge)
@@ -70,7 +70,7 @@ export function deleteProgress(storage = defaultStorage()) {
 // A run is over: add its results to the saved stats. `floor` is the floor the squad died on (reaching a
 // floor counts), `kills` the enemies killed in the run. Optional (the Profile's stats): `ms` run time, `bosses` the
 // boss ids beaten, `items` item copies held at the end, `heroes` the squad's hero ids (each fell = one death).
-export function recordRun(progress, { floor, kills, ms = 0, bosses = [], items = 0, heroes = [] }) {
+export function recordRun(progress, { floor, kills, ms = 0, bosses = [], items = 0, heroes = [], heroStats = [] }) {
   const s = progress.stats;
   s.runs += 1;
   s.totalKills += kills || 0;
@@ -83,6 +83,18 @@ export function recordRun(progress, { floor, kills, ms = 0, bosses = [], items =
   s.deaths = (s.deaths || 0) + heroes.length;
   s.heroRuns = { ...(s.heroRuns || {}) };
   for (const id of heroes) s.heroRuns[id] = (s.heroRuns[id] || 0) + 1;
+  // Per-hero records (Heroes page STATS): heroStats = the run summary's heroes (runStats.js finishRun).
+  s.heroRecords = { ...(s.heroRecords || {}) };
+  for (const h of heroStats) {
+    const r = { runs: 0, bestFloor: 0, kills: 0, damage: 0, healing: 0, deaths: 0, ...s.heroRecords[h.id] };
+    r.runs += 1;
+    r.bestFloor = Math.max(r.bestFloor, h.fellFloor || 0);
+    r.kills += h.kills || 0;
+    r.damage += h.damage || 0;
+    r.healing += h.healing || 0;
+    r.deaths += 1;
+    s.heroRecords[h.id] = r;
+  }
   return progress;
 }
 

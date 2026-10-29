@@ -114,7 +114,7 @@ export default class BaseScene extends Phaser.Scene {
       const icon = propLayer(b.icon, false);
       ui.push(this.add.image(x + w / 2, M.y + M.iconY, layerTexture(this, `camp-icon-${b.id}`, icon)).setScale(M.iconPx));
       ui.push(uiText(this, x + w / 2, M.y + M.labelY, b.label, M.labelSize).setOrigin(0.5));
-      this.add.zone(x + w / 2, M.y + M.h / 2, w, M.h).setInteractive().on('pointerup', () => this.comingSoon(b.label, b.who));
+      this.add.zone(x + w / 2, M.y + M.h / 2, w, M.h).setInteractive().on('pointerup', () => (b.scene ? this.openOver(b.scene) : this.comingSoon(b.label, b.who)));
     });
 
     const n1 = this.children.list.length;

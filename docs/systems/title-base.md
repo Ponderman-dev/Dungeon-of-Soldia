@@ -68,6 +68,12 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
 - GLOSSARY = a book: chapters Basics, Statuses, Enemies, Bosses, Items, Heroes (no small grey lines, user), gold found
   counts; entries fill in as you meet them (??? / dark shadow until then). Enemies = sprite grid + tap for a stat card.
   Heroes chapter = hero list + a page (stats, attack/support skill, perk, passive). Not picked yet in detail.
+- HEROES — BUILT (session 37): `HeroesScene` (camp HEROES button: camp.json menu button `scene`, opened over the
+  camp like Settings), data `heroPage.json` (lore drafts, shortGoals, shortNames, lookName, layout). LIST (2 columns,
+  locked = shadow + short goal + bar; tap = full goal) -> HERO PAGE C (YOUR PIXEL ART box, hero 6x on the floor, name
+  window + role, look 'CLASSIC' + 1 dot, no arrows: one look each until skins exist; HP/ATK/DEF/RES strip) -> LORE
+  (story + summary + first tip) / STATS (RECORDS = progress.stats.heroRecords from recordRun heroStats; KIT = stats,
+  attack, support, perk, passive). Lore lines are DRAFTS for the user to review.
 - HEROES button (user: lore, unlock progress, hero records, skins). First try (tabs Lore/Stats/Looks) replaced by the
   user's sketch: PICKED VARIATION C (`hero-page-variations.png`, right): one big card = the user's own pixel art on top
   (Studio), the hero big on a real dungeon floor (`floorArtPixels`) with name + role over it, swipe / arrows = looks

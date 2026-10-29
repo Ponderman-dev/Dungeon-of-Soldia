@@ -3165,7 +3165,7 @@ export default class BattleScene extends Phaser.Scene {
     const summary = finishRun(this.runStats || newRunStats(this.state.heroes), this.state.heroes, {
       floor: this.floor, kills: this.state.kills || 0, ms: Date.now() - this.runStartedAt, bestBefore, bossFloors: Object.keys(this.dungeon.bosses || {}),
     });
-    recordRun(progress, { floor: this.floor, kills: this.state.kills || 0, ms: summary.ms, bosses: summary.bosses.map((b) => b.id), items: summary.itemCount, heroes: summary.heroes.map((h) => h.id) });
+    recordRun(progress, { floor: this.floor, kills: this.state.kills || 0, ms: summary.ms, bosses: summary.bosses.map((b) => b.id), items: summary.itemCount, heroes: summary.heroes.map((h) => h.id), heroStats: summary.heroes });
     const newly = unlockedIds(allHeroDefs, progress, unlocks).filter((id) => !before.includes(id));
     // Achievements (profile.json): kept in the save; the run's new ones ride along in the summary.
     summary.achievements = checkAchievements(progress, profileData.achievements, { summary, itemDefs, heroesUnlocked: unlockedIds(allHeroDefs, { ...progress, unlockAll: false }, unlocks).length }); // the test toggle does not count

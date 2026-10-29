@@ -38,3 +38,11 @@ ok('Bandits needs BOTH Rask and Vesh', !isMet(ach('bandits'), { stats: { bossIds
   ok('run: all 3 heroes reach floor 20 (lowest counts)', isMet(ach('together'), p, { summary: run() }) && !isMet(ach('together'), p, { summary: run({ heroes: [{ fellFloor: 19 }, { fellFloor: 40 }] }) }));
   ok('run achievements need a run', !isMet(ach('medic'), p, {})); }
 ok('ROSTER = every hero unlocked', ach('all_heroes').when.value === heroes.length);
+// Heroes page: per-hero records (progress.recordRun heroStats) and the page's data.
+{ const p = emptyProgress(), hp = r('heroPage.json');
+  recordRun(p, { floor: 30, kills: 50, heroes: ['knight', 'mage'], heroStats: [{ id: 'knight', fellFloor: 28, kills: 20, damage: 5000, healing: 10 }, { id: 'mage', fellFloor: 30, kills: 30, damage: 9000, healing: 0 }] });
+  recordRun(p, { floor: 12, kills: 5, heroes: ['knight'], heroStats: [{ id: 'knight', fellFloor: 12, kills: 5, damage: 700, healing: 0 }] });
+  const k = p.stats.heroRecords.knight;
+  ok('hero records add up per hero; best floor = the best floor they lived to', k.runs === 2 && k.bestFloor === 28 && k.kills === 25 && k.damage === 5700 && k.deaths === 2 && p.stats.heroRecords.mage.runs === 1);
+  ok('every hero has lore', heroes.every((h) => hp.lore[h.id]));
+  ok('every unlock goal type has a short goal', Object.values(r('unlocks.json').requirements).every((q) => hp.shortGoals[q.type])); }

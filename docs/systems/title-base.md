@@ -78,3 +78,7 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   3-hero squad, best floor); your own row pinned at the bottom in gold. ALL player names the same small 8px (user).
   Tap a player (D) = their run: squad on the floor, floor reached, bosses / kills / time / ended by, item icons.
   Needs an online server (later); look only for now.
+- SPACING (user, 2026-10-29: 'better border margin and white space', applied to every menu mock): back button 96x44 at
+  (24,16), title at y 76, 12-16px gaps between boxes, 16px inside every box. Leaders: timer bar under the WEEK/ALL TIME
+  tabs (hourglass + 'ENDS IN 3D 14:22:05', week resets Monday); ALL TIME shows a crown + 'HALL OF FAME' there
+  (`leaderboard-week-alltime.png`). Glossary + Heroes redone the same way (`glossary-heroes-spaced.png`).

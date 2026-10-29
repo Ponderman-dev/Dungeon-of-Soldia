@@ -82,3 +82,10 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   (24,16), title at y 76, 12-16px gaps between boxes, 16px inside every box. Leaders: timer bar under the WEEK/ALL TIME
   tabs (hourglass + 'ENDS IN 3D 14:22:05', week resets Monday); ALL TIME shows a crown + 'HALL OF FAME' there
   (`leaderboard-week-alltime.png`). Glossary + Heroes redone the same way (`glossary-heroes-spaced.png`).
+- SHOP button (user: sells LOOKS only, daily deals + timer, premium currency = real money / crypto; NO gold from runs):
+  PICKED A (`shop-picked-A.png`): gem balance + '+' top right on every tab; tabs DEALS / LOOKS / GEMS. DEALS = the camp
+  merchant (camp.json npcs 'shop') on the dungeon floor with a white speech bubble, timer bar 'NEW DEALS IN 08:14:33'
+  (daily), 3 deal rows (look on a floor tile, name, hero, price with the old price struck out, red -33% tag). LOOKS =
+  3-column grid (look, name, hero, price). Tap a look = try-on page (big on the floor, arrows, 'Looks only. No stat
+  change.', BUY + price). GEMS = 4 packs, prices in USD ('$' is missing from the pixel font), card / SOL = placeholder.
+  'Gems' is a stand-in name. Other layouts tried: `shop-variations.png`.

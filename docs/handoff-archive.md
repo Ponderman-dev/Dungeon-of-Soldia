@@ -1,6 +1,27 @@
 # Handoff ARCHIVE (sessions 2-35, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
 
+## (session 36 start note, 2026-10-29; all done in session 36: settings D, profile D, game-over B) START HERE (session 36): NEXT = MOCK-UPS: SETTINGS, then PROFILE, then GAME-OVER ANALYTICS screen (user's order)
+- BRANCH: `main` has EVERYTHING (session 35 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- Session 35 = camp menu screens as MOCK-UPS ONLY (nothing in the game code): read docs/systems/title-base.md section 5
+  (all picks + the spacing rule) and look at docs/proposals/menu/*.png. Picks: Glossary = book with chapters, fills in
+  as you meet things; Heroes = list with unlock bars + hero page C (user's own art on top, hero on a dungeon floor,
+  swipe looks); Leaders = podium + WEEK timer / ALL TIME hall of fame; Shop = A (tabs Deals/Looks/Gems, daily timer).
+- HOW the mocks were made: a fake HTML page in the scratchpad (390x844 screens side by side) using the real fonts
+  (src/assets/fonts), real sprites (heroes.json / enemies.json parts, itemIcons.json, camp.json npcs) and a real floor
+  patch (`floorArtPixels` from systems/floorArt.js, 112x112 at 3x), Playwright PNG, SendUserFile. Scratchpad files are
+  gone in a new session: rebuild helpers from that description. Same look as section 5: back button 96x44 at (24,16),
+  title y 76, 12-16 px gaps, 16 px inside boxes, ALL small text Press Start 2P 8px, no '$' (missing from the font).
+- Flow the user liked: one mock -> their tweak ('names too big', 'more white space') -> 'make variations' (3-4 side by
+  side, A = last one) -> they pick a letter -> save PNG + notes in title-base.md + commit.
+- Game-over analytics = the screen after a run ends (today: `BattleScene.showDefeat()`, docs/systems/ui.md 'Defeat
+  screen'); ask the user what stats they want before drawing.
+- OPEN (unchanged): STUDIO UI plan (archive 'session 35 start note': simpler draw screen + new SHEET tab, mock-ups in
+  docs/proposals/studio-ui/), hero pixel art KIV, session 33 leftovers (weak-item tests, placeholder items, MOVE ORDERS,
+  boss rework 80/100). Game page not rebuilt since the session 33 item buffs; studio page not republished since s34.
+- PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish again
+  (if refused as 'identical', publish once more). Fresh clone: `npm install` first.
+
 ## (session 35 start note, 2026-10-28; session 35 did MENU SCREEN MOCK-UPS instead, studio UI still open) START HERE (session 35): NEXT = BUILD THE STUDIO UI (user: 'let's build the sprite editor'; hero pixel art is KIV = parked)
 - BRANCH: `main` has EVERYTHING (session 34 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
 - Studio: read docs/systems/studio.md first (build/publish steps there). Session 34 added the ELLIPSE tool (O) and SHADE

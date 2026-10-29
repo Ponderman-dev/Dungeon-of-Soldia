@@ -1,23 +1,24 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 36): NEXT = MOCK-UPS: SETTINGS, then PROFILE, then GAME-OVER ANALYTICS screen (user's order)
-- BRANCH: `main` has EVERYTHING (session 35 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- Session 35 = camp menu screens as MOCK-UPS ONLY (nothing in the game code): read docs/systems/title-base.md section 5
-  (all picks + the spacing rule) and look at docs/proposals/menu/*.png. Picks: Glossary = book with chapters, fills in
-  as you meet things; Heroes = list with unlock bars + hero page C (user's own art on top, hero on a dungeon floor,
-  swipe looks); Leaders = podium + WEEK timer / ALL TIME hall of fame; Shop = A (tabs Deals/Looks/Gems, daily timer).
-- HOW the mocks were made: a fake HTML page in the scratchpad (390x844 screens side by side) using the real fonts
-  (src/assets/fonts), real sprites (heroes.json / enemies.json parts, itemIcons.json, camp.json npcs) and a real floor
-  patch (`floorArtPixels` from systems/floorArt.js, 112x112 at 3x), Playwright PNG, SendUserFile. Scratchpad files are
-  gone in a new session: rebuild helpers from that description. Same look as section 5: back button 96x44 at (24,16),
-  title y 76, 12-16 px gaps, 16 px inside boxes, ALL small text Press Start 2P 8px, no '$' (missing from the font).
-- Flow the user liked: one mock -> their tweak ('names too big', 'more white space') -> 'make variations' (3-4 side by
-  side, A = last one) -> they pick a letter -> save PNG + notes in title-base.md + commit.
-- Game-over analytics = the screen after a run ends (today: `BattleScene.showDefeat()`, docs/systems/ui.md 'Defeat
-  screen'); ask the user what stats they want before drawing.
-- OPEN (unchanged): STUDIO UI plan (archive 'session 35 start note': simpler draw screen + new SHEET tab, mock-ups in
-  docs/proposals/studio-ui/), hero pixel art KIV, session 33 leftovers (weak-item tests, placeholder items, MOVE ORDERS,
-  boss rework 80/100). Game page not rebuilt since the session 33 item buffs; studio page not republished since s34.
+## START HERE (session 37): NEXT = BUILD THE MENU SCREENS IN THE GAME (user: 'do all the menu in-game')
+- BRANCH: `main` has EVERYTHING (session 36 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- ALL menu mock-ups are picked (sessions 35-36, nothing built yet): read docs/systems/title-base.md section 5 (every
+  pick, spacing rule, notes) + look at docs/proposals/menu/*-picked-*.png (and glossary/heroes/leaderboard PNGs).
+  Picks: Glossary = book with chapters; Heroes = hero page C; Leaders = podium; Shop = A; SETTINGS = D (tabs SOUND /
+  GAME / MORE, big buttons, chosen = FILLED gold; battle speed 1X/2X); PROFILE = D (banner + profile hero on the name
+  strip, STATS / ACHIEVE. tabs, hero + banner pickers); GAME OVER = B (tap a hero = gold outline + bigger, BOSSES /
+  ITEMS pages) with the FLOW: defeat screen (flavour line) -> CONTINUE -> summary -> TRY AGAIN = squad screen / CAMP.
+- SUGGESTED ORDER (ask the user to confirm): 1 GAME-OVER summary (needs new run stats: per-hero damage / healing /
+  taken / kills / items, boss beat times; logic in src/systems, no Phaser) -> 2 SETTINGS (battle speed is real; sound
+  sliders can be inert, sound ON HOLD; save in progress.js) -> 3 PROFILE (achievements + banners + profile hero = new
+  systems; banner art from the Studio) -> 4 HEROES page -> 5 GLOSSARY -> 6 SHOP / LEADERS (look only, no server).
+  Camp buttons today open `comingSoonWindow()` (uiKit.js): replace them one by one. ONE SCREEN PER STEP, show
+  in-game screenshots (scratchpad copy + Playwright) before each, commit after each.
+- Mock helper (scratchpad, gone): HTML 390x844 screens + assets.js from a node script (hero sprites composited from
+  parts via pixelArt.js, floorArtPixels patch, titleArt layers, itemIcons). In the game use the real uiKit + textures.
+- OPEN (unchanged): STUDIO UI plan (archive 'session 35 start note'), hero pixel art KIV, session 33 leftovers
+  (weak-item tests, placeholder items, MOVE ORDERS, boss rework 80/100). Game page not rebuilt since session 33 item
+  buffs; studio page not republished since s34.
 - PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish again
   (if refused as 'identical', publish once more). Fresh clone: `npm install` first.
 

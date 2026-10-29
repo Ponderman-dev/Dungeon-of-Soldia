@@ -1,5 +1,31 @@
-# Handoff ARCHIVE (sessions 2-34, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-35, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## (session 35 start note, 2026-10-28; session 35 did MENU SCREEN MOCK-UPS instead, studio UI still open) START HERE (session 35): NEXT = BUILD THE STUDIO UI (user: 'let's build the sprite editor'; hero pixel art is KIV = parked)
+- BRANCH: `main` has EVERYTHING (session 34 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- Studio: read docs/systems/studio.md first (build/publish steps there). Session 34 added the ELLIPSE tool (O) and SHADE
+  brush (D, Shift / "Shade lightens" = lighter); the studio page is NOT republished since: republish with this work.
+- PLAN (user-shaped through mock-ups; show a screenshot of the REAL studio before/after each step, ask before big moves):
+  1) SIMPLER DRAW SCREEN = docs/proposals/studio-ui/mock-draw.png (source mock.html?view=draw, a fake page, not code).
+     No empty columns (user: 'the left and right is empty, rearrange'): LEFT column = preview (Play drop-down + play +
+     Arena + zoom + speed drop-downs, Mirror) + PARTS list (small picture of each part, up/down, '...' menu = copy,
+     delete, rename, flip, turn, outline, copy to) + WHOLE CHARACTER (health bar slider, swap colour, versions, trace,
+     undo unsaved, back to game). RIGHT = ONE vertical tool strip (+ mirror, undo, redo) + the board filling the rest;
+     the picked tool's options in a row above the board (+ board zoom); ONE colour strip under it (current, character,
+     starter); long help text -> a '?' button + tooltips. Animate / Items / Effects: same look where it applies.
+  2) NEW 'SHEET' TAB = docs/proposals/studio-ui/mock-sheet.png (from the user's sketch): 6 canvases (3 x 2), each with a
+     drop-down to pick ANY sprite and its parts as SMALL thumbnails on its right (user: the parts column was 'super
+     big'); a button per canvas switches it to ITEM MODE = 3 x 3 small canvases, each with its own item-icon drop-down;
+     tap a canvas to draw on it (gold border); one shared SWATCHES bar + one TOOLS bar at the bottom.
+- HERO ART (KIV, user will come back to it): 20+ directions drawn as pixel mock-ups in docs/proposals/hero-art/
+  (styles.html = all drawings as letter grids + a renderer, `?only=<keys>`; PNGs of each round). User's LATEST: their own
+  3 KNIGHT SKETCHES (barred helmet + plume, floating fist with sword, shield, big head; angry / sleepy / 3/4) drawn as
+  `ks`, then WITHOUT outline (`ksn`, styles-ksn.png). Rejected / dropped: shading-only variants ('I want different
+  sprites'), the round-head + wide-legs sketch (O-O5, 'ditch this'). Nothing is in the game.
+- OPEN from session 33 (unchanged, see archive 'session 34 start note'): weak-item build tests, placeholder item choices,
+  first-draft item looks, MOVE ORDERS, boss rework 80 / 100. Game page not rebuilt since the session 33 item buffs.
+- PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish again
+  (if refused as 'identical', publish once more). Fresh clone: `npm install` first.
 
 ## (session 34 start note, 2026-10-27; session 34 did studio tools + studio UI mock-ups + hero art exploration instead) START HERE (session 34): NEXT = CHARACTER STUDIO (pixel sprite editor) work (user: 'I want to get back on the pixel sprite editor')
 - BRANCH: `main` has EVERYTHING (session 33 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).

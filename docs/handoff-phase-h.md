@@ -1,28 +1,23 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 35): NEXT = BUILD THE STUDIO UI (user: 'let's build the sprite editor'; hero pixel art is KIV = parked)
-- BRANCH: `main` has EVERYTHING (session 34 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- Studio: read docs/systems/studio.md first (build/publish steps there). Session 34 added the ELLIPSE tool (O) and SHADE
-  brush (D, Shift / "Shade lightens" = lighter); the studio page is NOT republished since: republish with this work.
-- PLAN (user-shaped through mock-ups; show a screenshot of the REAL studio before/after each step, ask before big moves):
-  1) SIMPLER DRAW SCREEN = docs/proposals/studio-ui/mock-draw.png (source mock.html?view=draw, a fake page, not code).
-     No empty columns (user: 'the left and right is empty, rearrange'): LEFT column = preview (Play drop-down + play +
-     Arena + zoom + speed drop-downs, Mirror) + PARTS list (small picture of each part, up/down, '...' menu = copy,
-     delete, rename, flip, turn, outline, copy to) + WHOLE CHARACTER (health bar slider, swap colour, versions, trace,
-     undo unsaved, back to game). RIGHT = ONE vertical tool strip (+ mirror, undo, redo) + the board filling the rest;
-     the picked tool's options in a row above the board (+ board zoom); ONE colour strip under it (current, character,
-     starter); long help text -> a '?' button + tooltips. Animate / Items / Effects: same look where it applies.
-  2) NEW 'SHEET' TAB = docs/proposals/studio-ui/mock-sheet.png (from the user's sketch): 6 canvases (3 x 2), each with a
-     drop-down to pick ANY sprite and its parts as SMALL thumbnails on its right (user: the parts column was 'super
-     big'); a button per canvas switches it to ITEM MODE = 3 x 3 small canvases, each with its own item-icon drop-down;
-     tap a canvas to draw on it (gold border); one shared SWATCHES bar + one TOOLS bar at the bottom.
-- HERO ART (KIV, user will come back to it): 20+ directions drawn as pixel mock-ups in docs/proposals/hero-art/
-  (styles.html = all drawings as letter grids + a renderer, `?only=<keys>`; PNGs of each round). User's LATEST: their own
-  3 KNIGHT SKETCHES (barred helmet + plume, floating fist with sword, shield, big head; angry / sleepy / 3/4) drawn as
-  `ks`, then WITHOUT outline (`ksn`, styles-ksn.png). Rejected / dropped: shading-only variants ('I want different
-  sprites'), the round-head + wide-legs sketch (O-O5, 'ditch this'). Nothing is in the game.
-- OPEN from session 33 (unchanged, see archive 'session 34 start note'): weak-item build tests, placeholder item choices,
-  first-draft item looks, MOVE ORDERS, boss rework 80 / 100. Game page not rebuilt since the session 33 item buffs.
+## START HERE (session 36): NEXT = MOCK-UPS: SETTINGS, then PROFILE, then GAME-OVER ANALYTICS screen (user's order)
+- BRANCH: `main` has EVERYTHING (session 35 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- Session 35 = camp menu screens as MOCK-UPS ONLY (nothing in the game code): read docs/systems/title-base.md section 5
+  (all picks + the spacing rule) and look at docs/proposals/menu/*.png. Picks: Glossary = book with chapters, fills in
+  as you meet things; Heroes = list with unlock bars + hero page C (user's own art on top, hero on a dungeon floor,
+  swipe looks); Leaders = podium + WEEK timer / ALL TIME hall of fame; Shop = A (tabs Deals/Looks/Gems, daily timer).
+- HOW the mocks were made: a fake HTML page in the scratchpad (390x844 screens side by side) using the real fonts
+  (src/assets/fonts), real sprites (heroes.json / enemies.json parts, itemIcons.json, camp.json npcs) and a real floor
+  patch (`floorArtPixels` from systems/floorArt.js, 112x112 at 3x), Playwright PNG, SendUserFile. Scratchpad files are
+  gone in a new session: rebuild helpers from that description. Same look as section 5: back button 96x44 at (24,16),
+  title y 76, 12-16 px gaps, 16 px inside boxes, ALL small text Press Start 2P 8px, no '$' (missing from the font).
+- Flow the user liked: one mock -> their tweak ('names too big', 'more white space') -> 'make variations' (3-4 side by
+  side, A = last one) -> they pick a letter -> save PNG + notes in title-base.md + commit.
+- Game-over analytics = the screen after a run ends (today: `BattleScene.showDefeat()`, docs/systems/ui.md 'Defeat
+  screen'); ask the user what stats they want before drawing.
+- OPEN (unchanged): STUDIO UI plan (archive 'session 35 start note': simpler draw screen + new SHEET tab, mock-ups in
+  docs/proposals/studio-ui/), hero pixel art KIV, session 33 leftovers (weak-item tests, placeholder items, MOVE ORDERS,
+  boss rework 80/100). Game page not rebuilt since the session 33 item buffs; studio page not republished since s34.
 - PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish again
   (if refused as 'identical', publish once more). Fresh clone: `npm install` first.
 
@@ -42,6 +37,7 @@
   stop hook will nag; explain, don't commit). Preview only when they ask.
 - Beginner, vibe coding: explain simply, small steps, ask before design changes. Picks: use the QUESTION TOOL (user asks
   'questions'); include what each extra copy adds (stacking). If it comes back '[No preference]', ask again, don't guess.
+- MENU MOCK-UPS (session 35): they draw phone/iPad sketches ('custom pixel art here'); copy the sketch, then variations.
 - Show ideas on the EXISTING review page first (docs/proposals/skill-fx), build into the game only after the user's OK.
 - 'Propose several designs' = 3 real in-game screenshots side by side, then the question tool; if all are rejected,
   ask WHAT feels wrong (question tool with typical reasons) before drawing more.

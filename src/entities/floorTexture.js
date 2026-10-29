@@ -25,3 +25,12 @@ export function floorTextureKey(scene, tint, variant, wallH) {
   tex.refresh();
   return key;
 }
+
+// A window-sized piece of the battle floor (below the wall), as an image cropped to (x, y, w, h) on screen.
+// wallH must be the battle floors' wall height: the texture is shared by key.
+export function floorCrop(scene, tint, wallH, x, y, w, h) {
+  const P = floorArt.pixel;
+  const img = scene.add.image(0, y - Math.round(GAME_HEIGHT / 2 / P) * P, floorTextureKey(scene, tint, 0, wallH)).setOrigin(0).setScale(P);
+  img.setCrop(x / P, (y - img.y) / P, w / P, h / P);
+  return img;
+}

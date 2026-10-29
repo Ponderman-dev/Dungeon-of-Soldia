@@ -6,7 +6,9 @@ export const SAVE_KEY = 'dungeon-of-soldia-save-v1';
 export function emptyProgress() {
   return {
     version: 1,
-    stats: { bestFloor: 0, totalKills: 0, totalFloors: 0, runs: 0 },
+    stats: { bestFloor: 0, totalKills: 0, totalFloors: 0, runs: 0, bossesBeaten: 0, bossIds: [], playMs: 0, itemsFound: 0, heroRuns: {}, deaths: 0 },
+    profile: {}, // name, profile hero, banner (ProfileScene; defaults in profile.json)
+    achievements: [], // ids earned (systems/achievements.js)
     seenUnlocked: [], // heroes the player has already seen unlocked on the squad screen (for the NEW badge)
     unlockAll: false, // the "unlock every hero" toggle
     lastSquad: null,
@@ -34,6 +36,8 @@ export function loadProgress(storage = defaultStorage()) {
       ...data,
       stats: { ...fresh.stats, ...(data && data.stats) },
       seenUnlocked: Array.isArray(data && data.seenUnlocked) ? data.seenUnlocked : [],
+      profile: { ...((data && data.profile) || {}) },
+      achievements: Array.isArray(data && data.achievements) ? data.achievements : [],
       settings: { ...fresh.settings, ...(data && data.settings) },
     };
   } catch {
@@ -64,14 +68,28 @@ export function deleteProgress(storage = defaultStorage()) {
 }
 
 // A run is over: add its results to the saved stats. `floor` is the floor the squad died on (reaching a
-// floor counts), `kills` the enemies killed in the run.
-export function recordRun(progress, { floor, kills }) {
+// floor counts), `kills` the enemies killed in the run. Optional (the Profile's stats): `ms` run time, `bosses` the
+// boss ids beaten, `items` item copies held at the end, `heroes` the squad's hero ids (each fell = one death).
+export function recordRun(progress, { floor, kills, ms = 0, bosses = [], items = 0, heroes = [] }) {
   const s = progress.stats;
   s.runs += 1;
   s.totalKills += kills || 0;
   s.totalFloors += Math.max(0, floor - 1); // floors CLEARED (the last one was lost)
   s.bestFloor = Math.max(s.bestFloor, floor);
+  s.playMs = (s.playMs || 0) + ms;
+  s.bossesBeaten = (s.bossesBeaten || 0) + bosses.length;
+  s.bossIds = [...new Set([...(s.bossIds || []), ...bosses])];
+  s.itemsFound = (s.itemsFound || 0) + items;
+  s.deaths = (s.deaths || 0) + heroes.length;
+  s.heroRuns = { ...(s.heroRuns || {}) };
+  for (const id of heroes) s.heroRuns[id] = (s.heroRuns[id] || 0) + 1;
   return progress;
+}
+
+// The hero played in the most runs (null before the first run).
+export function topHero(progress) {
+  const runs = progress.stats.heroRuns || {};
+  return Object.keys(runs).sort((a, b) => runs[b] - runs[a])[0] || null;
 }
 
 // How far along a requirement is: { have, need, done }.

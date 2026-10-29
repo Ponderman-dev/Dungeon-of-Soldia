@@ -1,0 +1,48 @@
+{
+  "_about": "Profile screen (ProfileScene, user's pick D: docs/proposals/menu/profile-picked-D.png). defaults = a new player's name / profile hero / banner (saved in progress.profile). achievements: earned at the end of a run (systems/achievements.js), each with a medal (an item icon) and a short label; `when` = stat (lifetime, progress.stats or heroesUnlocked) >= value, boss = every listed boss beaten once, run = something in ONE run (legendaryItem, itemKinds, heroDamage, heroHealing, allReach = every hero lived to floor N). banners = crops of the title forest (systems/banners.js), `unlock` = an achievement id (null = from the start). nameMax = letters in a name. shortNames = hero names in the small hero tiles (long ones do not fit).",
+  "defaults": { "name": "Adventurer", "hero": "knight", "banner": "night" },
+  "nameMax": 12,
+  "shortNames": { "berserker": "BERSERK", "necromancer": "NECRO", "alchemist": "ALCHEM" },
+  "achievements": [
+    { "id": "floor_10", "label": "FLOOR 10", "text": "Reach floor 10.", "icon": "opening_horn", "when": { "stat": "bestFloor", "value": 10 } },
+    { "id": "floor_25", "label": "FLOOR 25", "text": "Reach floor 25.", "icon": "rally_flag", "when": { "stat": "bestFloor", "value": 25 } },
+    { "id": "floor_50", "label": "FLOOR 50", "text": "Reach floor 50.", "icon": "war_banner", "when": { "stat": "bestFloor", "value": 50 } },
+    { "id": "floor_100", "label": "FLOOR 100", "text": "Reach floor 100.", "icon": "conquerors_flag", "when": { "stat": "bestFloor", "value": 100 } },
+    { "id": "first_boss", "label": "1ST BOSS", "text": "Beat any boss.", "icon": "giantslayers_brand", "when": { "stat": "bossesBeaten", "value": 1 } },
+    { "id": "grukk", "label": "GRUKK", "text": "Beat Grukk the War Drum.", "icon": "dread_bell", "when": { "boss": ["grukk"] } },
+    { "id": "brood_mother", "label": "BROOD", "text": "Beat the Brood Mother.", "icon": "venom_fang", "when": { "boss": ["brood_mother"] } },
+    { "id": "frost_warden", "label": "WARDEN", "text": "Beat the Frost Warden.", "icon": "frozen_demon_head", "when": { "boss": ["frost_warden"] } },
+    { "id": "bandits", "label": "BANDITS", "text": "Beat Rask and Vesh.", "icon": "gamblers_dice", "when": { "boss": ["rask", "vesh"] } },
+    { "id": "morthul", "label": "ARCHON", "text": "Beat Morthul the Bone Archon.", "icon": "necro_crown", "when": { "boss": ["morthul"] } },
+    { "id": "kills_1000", "label": "SLAYER", "text": "Defeat 1 000 enemies.", "icon": "executioners_axe", "when": { "stat": "totalKills", "value": 1000 } },
+    { "id": "kills_10000", "label": "BUTCHER", "text": "Defeat 10 000 enemies.", "icon": "harvest_scythe", "when": { "stat": "totalKills", "value": 10000 } },
+    { "id": "runs_25", "label": "REGULAR", "text": "Play 25 runs.", "icon": "hourglass", "when": { "stat": "runs", "value": 25 } },
+    { "id": "all_heroes", "label": "ROSTER", "text": "Unlock every hero.", "icon": "guardians_banner", "when": { "stat": "heroesUnlocked", "value": 10 } },
+    { "id": "items_500", "label": "FINDER", "text": "Find 500 items.", "icon": "lucky_coin", "when": { "stat": "itemsFound", "value": 500 } },
+    { "id": "legendary", "label": "LEGEND", "text": "Hold a legendary item.", "icon": "excalibur", "when": { "run": "legendaryItem" } },
+    { "id": "hoarder", "label": "HOARDER", "text": "10 kinds of items in one run.", "icon": "mimic_chest", "when": { "run": "itemKinds", "value": 10 } },
+    { "id": "heavy_hitter", "label": "HITTER", "text": "One hero deals 50 000 damage in a run.", "icon": "shatter_hammer", "when": { "run": "heroDamage", "value": 50000 } },
+    { "id": "medic", "label": "MEDIC", "text": "One hero heals 20 000 in a run.", "icon": "aid_kit", "when": { "run": "heroHealing", "value": 20000 } },
+    { "id": "together", "label": "UNITED", "text": "All 3 heroes reach floor 20.", "icon": "heart_charm", "when": { "run": "allReach", "value": 20 } }
+  ],
+  "banners": [
+    { "id": "night", "name": "Night Tower", "crop": [0, 72], "unlock": null },
+    { "id": "moon", "name": "Full Moon", "crop": [18, 18], "unlock": "floor_10" },
+    { "id": "stars", "name": "Moonrise", "crop": [9, 0], "unlock": "floor_25" },
+    { "id": "forest", "name": "Deep Forest", "crop": [9, 150], "unlock": "first_boss" }
+  ],
+  "layout": {
+    "side": 24,
+    "pad": 16,
+    "back": { "x": 24, "y": 16, "w": 96, "h": 44 },
+    "titleY": 76,
+    "card": { "y": 124, "h": 180, "bannerH": 120, "artW": 112, "artH": 40, "heroX": 72, "heroScale": 4, "nameX": 136, "edit": { "w": 64, "h": 30 }, "change": { "w": 92, "h": 28 } },
+    "tabs": { "y": 340, "h": 44, "gap": 12 },
+    "stats": { "y": 400, "h": 64, "gap": 12 },
+    "medals": { "y": 400, "barH": 10, "gridY": 422, "cols": 4, "cell": 76, "h": 70, "gap": 8, "iconY": 26, "iconScale": 2 },
+    "pick": { "y": 124, "h": 200, "gridY": 340, "cols": 4, "cell": 76, "gap": 12, "scale": 6 },
+    "banner": { "y": 124, "listY": 268, "tileW": 104, "tileH": 64, "gap": 15 },
+    "dim": "0x55556a",
+    "bg": "0x0c0b10"
+  }
+}

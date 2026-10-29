@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
 import { drawWindow, uiText } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
-import { floorTextureKey, FLOOR_PIXEL } from '../entities/floorTexture.js';
+import { floorCrop } from '../entities/floorTexture.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
 import G from '../data/gameOver.json';
 import heroes from '../data/heroes.json';
@@ -107,11 +107,8 @@ export default class GameOverScene extends Phaser.Scene {
   drawStrip(page) {
     const T = G.strip, x = G.side, n = this.summary.heroes.length;
     page.add(drawWindow(this.add.graphics(), x, T.y, W, T.h));
-    // A crop of the battle floor (no wall) inside the window's line.
-    const key = floorTextureKey(this, dungeons.A.tileColors[0], 0, T.wallH), P = FLOOR_PIXEL; // the battle floor texture (same wall: the key is shared)
-    const floor = this.add.image(0, T.y - Math.round((GAME_HEIGHT / 2) / P) * P, key).setOrigin(0).setScale(P);
-    const top = (T.y + 2 - floor.y) / P;
-    floor.setCrop((x + 2) / P, top, (W - 4) / P, (T.h - 4) / P);
+    // A crop of the battle floor (below the wall) inside the window's line.
+    const floor = floorCrop(this, dungeons.A.tileColors[0], T.wallH, x + 2, T.y + 2, W - 4, T.h - 4);
     page.add(floor);
     this.stripHeroes = this.summary.heroes.map((h, i) => {
       const def = heroDef(h.id), hx = Math.round(x + (W * (i * 2 + 1)) / (n * 2)), feet = T.y + T.feetY;

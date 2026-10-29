@@ -10,6 +10,7 @@ import Character from '../entities/Character.js';
 import heroes from '../data/heroes.json';
 import unlocks from '../data/unlocks.json';
 import { loadProgress, unlockedIds } from '../systems/progress.js';
+import profileData from '../data/profile.json';
 import * as sfx from '../audio/sfx.js';
 
 // The Base: a campfire camp on the dungeon's flagstones (docs/systems/title-base.md). Pixel art: systems/campArt.js,
@@ -120,20 +121,23 @@ export default class BaseScene extends Phaser.Scene {
     // Settings (top left): a gear in a small window.
     const G = U.settings;
     ui.push(drawGear(drawWindow(this.add.graphics(), G.x, G.y, G.size, G.size), G.x + G.size / 2, G.y + G.size / 2));
-    this.add.zone(G.x + G.size / 2, G.y + G.size / 2, G.size + 8, G.size + 8).setInteractive().on('pointerup', () => this.openSettings());
+    this.add.zone(G.x + G.size / 2, G.y + G.size / 2, G.size + 8, G.size + 8).setInteractive().on('pointerup', () => this.openOver('Settings'));
 
     // Profile (top right): a name box tucked under a round portrait (a little person for now).
     const Pr = U.profile, d = Pr.portrait, px = GAME_WIDTH - Pr.right - d, barX = px - Pr.barW + d / 2;
     const g = this.add.graphics();
     drawWindow(g, barX, Pr.y + (d - Pr.barH) / 2, Pr.barW, Pr.barH);
-    ui.push(g, uiText(this, barX + 12, Pr.y + d / 2, Pr.name, 'small').setOrigin(0, 0.5));
+    const playerName = () => (loadProgress().profile.name || profileData.defaults.name);
+    const nameText = uiText(this, barX + 12, Pr.y + d / 2, playerName(), 'small').setOrigin(0, 0.5);
+    this.events.on(Phaser.Scenes.Events.RESUME, () => nameText.setText(playerName())); // renamed on the Profile
+    ui.push(g, nameText);
     const c = this.add.graphics();
     pixelDisc(c, px + d / 2, Pr.y + d / 2, d / 2, 0xffffff);
     pixelDisc(c, px + d / 2, Pr.y + d / 2, d / 2 - 2, 0x000000);
     const m = px + d / 2, t = Pr.y + 13;
     c.fillStyle(0xffffff, 1).fillRect(m - 5, t, 10, 10).fillRect(m - 11, t + 13, 22, 4).fillRect(m - 13, t + 17, 26, 6);
     ui.push(c);
-    this.add.zone(px + d / 2 - Pr.barW / 2 + d / 4, Pr.y + d / 2, Pr.barW + d / 2, d).setInteractive().on('pointerup', () => this.comingSoon(Pr.title, Pr.who));
+    this.add.zone(px + d / 2 - Pr.barW / 2 + d / 4, Pr.y + d / 2, Pr.barW + d / 2, d).setInteractive().on('pointerup', () => this.openOver('Profile'));
     for (const o of ui) o.setDepth(DEPTH.ui);
     const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));
     this.uiParts = { down: shown(this.children.list.slice(n0, n1)), up: shown(this.children.list.slice(n1)) };
@@ -146,14 +150,14 @@ export default class BaseScene extends Phaser.Scene {
     this.modal = comingSoonWindow(this, title, who, { w: U.soon.w, h: U.soon.h, depth: DEPTH.modal, onClose: () => { this.modal = null; } });
   }
 
-  // The gear: the Settings screen opens over the camp (the camp waits, paused). The tap that closes it must not
-  // reach the camp's buttons, so taps stay off for a moment after it comes back.
-  openSettings() {
+  // The gear (Settings) and the profile box (Profile) open their screen over the camp (the camp waits, paused). The
+  // tap that closes it must not reach the camp's buttons, so taps stay off for a moment after it comes back.
+  openOver(key) {
     if (this.modal || this.leaving) return;
     sfx.play('tap');
     this.leaving = true;
     this.events.once(Phaser.Scenes.Events.RESUME, () => this.time.delayedCall(150, () => { this.leaving = false; }));
-    this.scene.launch('Settings', { from: 'Base' });
+    this.scene.launch(key, { from: 'Base' });
     this.scene.pause();
   }
 

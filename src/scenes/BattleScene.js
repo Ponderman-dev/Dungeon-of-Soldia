@@ -50,6 +50,8 @@ import { loadProgress, saveProgress, recordRun, unlockedIds } from '../systems/p
 import settingsDefs from '../data/settings.json';
 import { readSettings } from '../systems/settings.js';
 import { newRunStats, countEvents, finishRun } from '../systems/runStats.js';
+import profileData from '../data/profile.json';
+import { checkAchievements } from '../systems/achievements.js';
 import unlocks from '../data/unlocks.json';
 import defeatData from '../data/defeat.json';
 import { roomMethods } from './roomMethods.js';
@@ -3160,13 +3162,15 @@ export default class BattleScene extends Phaser.Scene {
     const progress = loadProgress();
     const bestBefore = progress.stats.bestFloor;
     const before = unlockedIds(allHeroDefs, progress, unlocks);
-    recordRun(progress, { floor: this.floor, kills: this.state.kills || 0 });
-    saveProgress(progress);
-    const newly = unlockedIds(allHeroDefs, progress, unlocks).filter((id) => !before.includes(id));
-    const lastRun = { floor: this.floor, kills: this.state.kills || 0, newly };
     const summary = finishRun(this.runStats || newRunStats(this.state.heroes), this.state.heroes, {
       floor: this.floor, kills: this.state.kills || 0, ms: Date.now() - this.runStartedAt, bestBefore, bossFloors: Object.keys(this.dungeon.bosses || {}),
     });
+    recordRun(progress, { floor: this.floor, kills: this.state.kills || 0, ms: summary.ms, bosses: summary.bosses.map((b) => b.id), items: summary.itemCount, heroes: summary.heroes.map((h) => h.id) });
+    const newly = unlockedIds(allHeroDefs, progress, unlocks).filter((id) => !before.includes(id));
+    // Achievements (profile.json): kept in the save; the run's new ones ride along in the summary.
+    summary.achievements = checkAchievements(progress, profileData.achievements, { summary, itemDefs, heroesUnlocked: unlockedIds(allHeroDefs, { ...progress, unlockAll: false }, unlocks).length }); // the test toggle does not count
+    saveProgress(progress);
+    const lastRun = { floor: this.floor, kills: this.state.kills || 0, newly };
     this.showDefeat(() => this.scene.start('GameOver', { summary, lastRun }));
   }
 

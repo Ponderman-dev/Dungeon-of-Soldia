@@ -102,6 +102,15 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   (gold name, 8px hint line, buttons under it). SOUND: MUSIC / EFFECTS = '-' bar of 10 '+' with the number top right.
   GAME: BATTLE SPEED 1X/2X (new, user asked), SCREEN SHAKE, DAMAGE NUMBERS, VIBRATION (ON/OFF). MORE: WALLET
   (CONNECT), SAVE (kept on this phone, BACK UP), CREDITS + HELP, red DELETE SAVE; version at the bottom.
+- PROFILE — BUILT (session 37): `ProfileScene` (camp profile box; camp pauses like Settings, `BaseScene.openOver`),
+  data `profile.json` (defaults, 20 achievements, 4 banners, shortNames, layout). Main page = banner card (profile hero
+  on the name strip, EDIT, CHANGE; tap the name = rename: a see-through <input> over the name field opens the phone
+  keyboard, letters/numbers/spaces, max 12) + STATS / ACHIEVE. tabs (medal = bare item icon `bareIconKey`, locked =
+  dark shape + '???', tap = what it asks). PROFILE HERO page (unlocked heroes only), BANNER page (built-in banners =
+  title forest crops, `systems/banners.js`; locked ones say their achievement; YOUR ART '+' and DRAW NEW IN STUDIO =
+  Coming soon). Achievements: `systems/achievements.js`, checked in BattleScene.onLoss after recordRun (the test
+  'unlock all' toggle does not count for ROSTER). Lifetime stats added to progress.stats (playMs, bossesBeaten,
+  bossIds, itemsFound, heroRuns, deaths). The camp's name box shows the saved name. Test: achievements.test.mjs.
 - PROFILE (camp profile box) PICKED D (`profile-picked-D.png`; others tried: `profile-variations.png`). User: set ONE
   hero for your profile, a custom art BANNER, then stats and achievements. Top card = banner (EDIT top right) with the
   profile hero standing on the black name strip, NO frame or floor tile behind him (user), head over the banner art;

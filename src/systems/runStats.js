@@ -79,6 +79,7 @@ export function finishRun(rs, heroUnits, { floor, kills, ms, bestBefore = 0, bos
   const next = bossFloors.map(Number).filter((f) => f > floor).sort((a, b) => a - b)[0] || null;
   return {
     floor, kills, ms: Math.round(ms),
+    itemCount: heroUnits.reduce((n, u) => n + (u.items || []).length, 0), // item copies held at the end
     newBest: floor > bestBefore, oldBest: bestBefore,
     heroes, bosses: rs.bosses.slice(), items, nextBoss: next,
   };

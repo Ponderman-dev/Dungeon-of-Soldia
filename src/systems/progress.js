@@ -9,6 +9,7 @@ export function emptyProgress() {
     stats: { bestFloor: 0, totalKills: 0, totalFloors: 0, runs: 0, bossesBeaten: 0, bossIds: [], playMs: 0, itemsFound: 0, heroRuns: {}, deaths: 0, heroRecords: {} },
     profile: {}, // name, profile hero, banner (ProfileScene; defaults in profile.json)
     achievements: [], // ids earned (systems/achievements.js)
+    seen: { met: [], beaten: {}, statuses: [], items: [] }, // the Glossary's memory (systems/glossary.js)
     seenUnlocked: [], // heroes the player has already seen unlocked on the squad screen (for the NEW badge)
     unlockAll: false, // the "unlock every hero" toggle
     lastSquad: null,
@@ -38,6 +39,7 @@ export function loadProgress(storage = defaultStorage()) {
       seenUnlocked: Array.isArray(data && data.seenUnlocked) ? data.seenUnlocked : [],
       profile: { ...((data && data.profile) || {}) },
       achievements: Array.isArray(data && data.achievements) ? data.achievements : [],
+      seen: { ...fresh.seen, ...((data && data.seen) || {}) },
       settings: { ...fresh.settings, ...(data && data.settings) },
     };
   } catch {

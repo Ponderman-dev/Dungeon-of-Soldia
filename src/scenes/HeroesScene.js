@@ -86,7 +86,7 @@ export default class HeroesScene extends Phaser.Scene {
 
   showList() {
     const page = this.newPage(), Li = L.list, x = L.side, w = (W - Li.gap) / 2;
-    this.top(page, '< CAMP', 'HEROES', () => this.close());
+    this.top(page, this.from === 'Base' ? '< CAMP' : '< BACK', 'HEROES', () => this.close());
     heroes.forEach((def, i) => {
       const cx = x + (i % 2) * (w + Li.gap), cy = Li.y + Math.floor(i / 2) * (Li.h + Li.gap), open = this.isOpen(def.id);
       page.add(drawWindow(this.add.graphics(), cx, cy, w, Li.h, { line: open ? UI.line : DIM }));

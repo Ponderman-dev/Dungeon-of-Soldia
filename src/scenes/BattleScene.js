@@ -52,6 +52,7 @@ import { readSettings } from '../systems/settings.js';
 import { newRunStats, countEvents, finishRun } from '../systems/runStats.js';
 import profileData from '../data/profile.json';
 import { checkAchievements } from '../systems/achievements.js';
+import { newSeenBuffer, noteEvents, mergeSeen } from '../systems/glossary.js';
 import unlocks from '../data/unlocks.json';
 import defeatData from '../data/defeat.json';
 import { roomMethods } from './roomMethods.js';
@@ -145,6 +146,7 @@ export default class BattleScene extends Phaser.Scene {
     });
     this.runStats = newRunStats(this.state.heroes); // per-hero damage, healing, kills... for the game-over summary (systems/runStats.js)
     this.runStartedAt = Date.now();
+    this.seenBuf = newSeenBuffer(); // what the Glossary learns this run (saved at each floor clear and at the end)
     // A demo page: the squad exactly as the smart player had it before the demo floor (src/data/demoSquad.json,
     // made by scripts/tests/make-demo-squad.mjs): its levels, items and skill pages.
     if (demo) {
@@ -1687,6 +1689,7 @@ export default class BattleScene extends Phaser.Scene {
   // Only the drawing waits: the fight itself (BattleState) has already done it all.
   showEvents(events) {
     if (this.runStats) countEvents(this.runStats, events, { floor: this.floor, floorMs: this.state.floorMs }); // for the game-over summary
+    if (this.seenBuf) noteEvents(this.seenBuf, events); // for the Glossary
     let hold = null;
     for (const e of events) {
       if (hold && e.type === 'projectile' && e.from === hold.unit && (hold.swallow || []).includes(e.kind)) continue;
@@ -2973,6 +2976,8 @@ export default class BattleScene extends Phaser.Scene {
     this.layer.setDoorOpen(true);
 
     this.state.clearStatuses();
+    const saved = loadProgress(); // the Glossary keeps what this floor showed, even if the run is left half-way
+    saveProgress(mergeSeen(saved, this.seenBuf, { enemies: this.state.enemies, heroes: this.state.heroes }));
     for (const h of this.state.heroes) {
       const v = this.views.get(h.uid);
       v.lookAt = null;
@@ -3168,6 +3173,7 @@ export default class BattleScene extends Phaser.Scene {
     recordRun(progress, { floor: this.floor, kills: this.state.kills || 0, ms: summary.ms, bosses: summary.bosses.map((b) => b.id), items: summary.itemCount, heroes: summary.heroes.map((h) => h.id), heroStats: summary.heroes });
     const newly = unlockedIds(allHeroDefs, progress, unlocks).filter((id) => !before.includes(id));
     // Achievements (profile.json): kept in the save; the run's new ones ride along in the summary.
+    mergeSeen(progress, this.seenBuf, { enemies: this.state.enemies, heroes: this.state.heroes });
     summary.achievements = checkAchievements(progress, profileData.achievements, { summary, itemDefs, heroesUnlocked: unlockedIds(allHeroDefs, { ...progress, unlockAll: false }, unlocks).length }); // the test toggle does not count
     saveProgress(progress);
     const lastRun = { floor: this.floor, kills: this.state.kills || 0, newly };

@@ -65,6 +65,13 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
 - MENU IN/OUT (user 2026-10-22): TO EXPEDITION, BEGIN DESCENT (all squad-screen buttons leave together) and '< CAMP' first move the screen's buttons out (top ones up, bottom ones down, fading; `uiKit.uiShift`, `camp.json ui.uiShiftMs` 160), then slide (slideMs), then the new screen's buttons come in. Base `uiParts` / Squad `uiParts` = what drawUi adds (split top/bottom by draw order; Send back buttons only fade). Scene data `fromCamp` / `fromSquad` = start hidden, no taps (`leaving`; Squad `shifting` keeps BEGIN / Send back drawn while they fade).
 
 ## 5. MENU SCREENS (session 35, mock-ups only, nothing built) — `docs/proposals/menu/*.png`
+- GLOSSARY — BUILT (session 37): `GlossaryScene` (camp GLOSSARY button, camp.json `scene`), data `glossary.json`
+  (12 basics pages, one line per status + tab bad/good/control, shortNames, hiddenEnemies, layout). Chapters with found
+  counts: BASICS (2 pages), STATUSES (tabs, coloured tag or '???'), ENEMIES (12 per page + card: floor-1 stats, hits
+  with, weak/resists, times beaten), BOSSES (shadows + floor until beaten), ITEMS (36 per page + card), HEROES (opens
+  HeroesScene with from 'Glossary', '< BACK'). Memory: `systems/glossary.js` (noteEvents in BattleScene.showEvents:
+  deaths = beaten, status apply = learned; mergeSeen at every floor clear and in onLoss: floor enemies = met, held
+  items = found) -> progress.seen. Test: glossary.test.mjs.
 - GLOSSARY = a book: chapters Basics, Statuses, Enemies, Bosses, Items, Heroes (no small grey lines, user), gold found
   counts; entries fill in as you meet them (??? / dark shadow until then). Enemies = sprite grid + tap for a stat card.
   Heroes chapter = hero list + a page (stats, attack/support skill, perk, passive). Not picked yet in detail.

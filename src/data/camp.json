@@ -249,6 +249,7 @@
       "buttons": [
         {
           "id": "glossary",
+          "scene": "Glossary",
           "label": "Glossary",
           "who": "Old Scholar",
           "icon": {

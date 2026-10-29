@@ -29,3 +29,9 @@ ok('basics pages all have a title and text', G.basics.every((b) => b.title && b.
 { const tile = (id) => { const n = enemies[id].name.toUpperCase(); return G.shortNames[id] || (n.length <= 9 ? n : n.split(' ').pop()); };
   const bad = Object.keys(enemies).filter((id) => !id.startsWith('_') && !enemies[id].boss && !G.hiddenEnemies.includes(id) && tile(id).length > 9);
   ok('every enemy tile name fits (9 letters)', bad.length === 0, bad.join()); }
+// Leaders (look only): the sample players use real heroes, enemies and items.
+{ const Ld = r('leaders.json'), items = r('items.json'), heroIds = r('heroes.json').map((h) => h.id);
+  const all = [...Ld.week, ...Ld.allTime];
+  ok('leaders: every sample squad is 3 real heroes', all.every((p) => p.heroes.length === 3 && p.heroes.every((id) => heroIds.includes(id))));
+  ok('leaders: every "ended by" is a real enemy and every item a real item', all.every((p) => enemies[p.endedBy] && p.items.every((id) => items[id])), all.flatMap((p) => p.items.filter((id) => !items[id])).join());
+  ok('leaders: each board is sorted by floor, best first', [Ld.week, Ld.allTime].every((b) => b.every((p, i) => !i || b[i - 1].floor >= p.floor))); }

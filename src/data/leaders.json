@@ -1,0 +1,37 @@
+{
+  "_about": "Leaders button (LeadersScene, user's pick A = podium: docs/proposals/menu/leaderboard-week-alltime.png; tap a player = their run, leaderboard-variations.png right). LOOK ONLY: there is no server yet, so `week` / `allTime` are SAMPLE players (made-up names) and `youRank` a stand-in rank; your own row uses your saved name, best floor and last squad. The week ends Monday 00:00 (the phone's time). Item ids show as icons on a player's run page.",
+  "sampleNote": "Sample board. Online ranks come later.",
+  "youRank": { "week": 214, "allTime": 1873 },
+  "week": [
+    { "name": "Ironmaw", "heroes": ["knight", "rogue", "cleric"], "floor": 112, "bosses": 5, "kills": 2914, "ms": 2892000, "endedBy": "brood_mother", "items": ["whetstone", "lucky_coin", "war_banner", "heart_charm", "spirit_axe", "exploiters_lens"] },
+    { "name": "Solkid", "heroes": ["mage", "necromancer", "bard"], "floor": 97, "bosses": 4, "kills": 2410, "ms": 2510000, "endedBy": "morthul", "items": ["kindling", "catalyst_vial", "ghastly_fire", "soul_lantern"] },
+    { "name": "Dragonbr.", "heroes": ["samurai", "archer", "cleric"], "floor": 88, "bosses": 4, "kills": 2150, "ms": 2302000, "endedBy": "orcBrute", "items": ["sharp_edge", "eagle_eye", "quiver_of_plenty"] },
+    { "name": "Pixelpal", "heroes": ["berserker", "rogue", "archer"], "floor": 74, "bosses": 3, "kills": 1790, "ms": 1980000, "endedBy": "golem", "items": ["bloodlust_mask", "venom_fang"] },
+    { "name": "Nightowl", "heroes": ["knight", "mage", "cleric"], "floor": 71, "bosses": 3, "kills": 1702, "ms": 1914000, "endedBy": "frost_warden", "items": ["spite_mail", "frost_charm", "aid_kit"] },
+    { "name": "Rookie_7", "heroes": ["rogue", "archer", "knight"], "floor": 66, "bosses": 3, "kills": 1540, "ms": 1802000, "endedBy": "bandit", "items": ["lucky_coin", "hourglass"] }
+  ],
+  "allTime": [
+    { "name": "Gravedigger", "heroes": ["necromancer", "cleric", "bard"], "floor": 241, "bosses": 12, "kills": 7120, "ms": 6120000, "endedBy": "vharox", "items": ["necro_crown", "bone_charm", "grave_dust", "overseers_whistle"] },
+    { "name": "Ironmaw", "heroes": ["knight", "rogue", "cleric"], "floor": 203, "bosses": 10, "kills": 6044, "ms": 5400000, "endedBy": "sela", "items": ["bulwark_plate", "spite_mail", "mirror_buckler"] },
+    { "name": "Quietfox", "heroes": ["samurai", "rogue", "alchemist"], "floor": 188, "bosses": 9, "kills": 5600, "ms": 5100000, "endedBy": "ignatius", "items": ["excalibur", "fire_bombs", "poison_bombs"] },
+    { "name": "Solkid", "heroes": ["mage", "necromancer", "bard"], "floor": 176, "bosses": 8, "kills": 5210, "ms": 4800000, "endedBy": "vharox", "items": ["frozen_thunderbolt", "static_crystal"] },
+    { "name": "Blaze", "heroes": ["berserker", "mage", "archer"], "floor": 160, "bosses": 8, "kills": 4900, "ms": 4500000, "endedBy": "sela", "items": ["fire_heart", "ember_charm", "magma_core"] },
+    { "name": "Mossback", "heroes": ["alchemist", "bard", "knight"], "floor": 152, "bosses": 7, "kills": 4620, "ms": 4300000, "endedBy": "ignatius", "items": ["plague_flask", "jolly_banner"] }
+  ],
+  "layout": {
+    "side": 24,
+    "pad": 16,
+    "back": { "x": 24, "y": 16, "w": 96, "h": 44 },
+    "titleY": 76,
+    "tabs": { "y": 124, "h": 44, "gap": 12 },
+    "timer": { "y": 180, "h": 40 },
+    "podium": { "y": 232, "h": 220, "blockW": 92, "heights": [64, 48, 36], "heroScale": 3, "tagY": 26 },
+    "rows": { "y": 464, "h": 76, "gap": 12, "count": 3 },
+    "noteY": 736,
+    "you": { "y": 760, "h": 64 },
+    "run": { "y": 72, "h": 280 },
+    "colors": { "gold": "0xffd84a", "silver": "0xd8dce8", "bronze": "0xd8834a", "stone": "0x55534e", "stoneTop": "0x6e6b64", "stoneDark": "0x3e3c38" },
+    "dim": "0x55556a",
+    "bg": "0x0c0b10"
+  }
+}

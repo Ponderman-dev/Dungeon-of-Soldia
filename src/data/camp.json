@@ -295,6 +295,7 @@
         },
         {
           "id": "leaderboard",
+          "scene": "Leaders",
           "label": "Leaders",
           "who": "Herald",
           "icon": {

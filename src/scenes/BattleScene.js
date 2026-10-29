@@ -47,6 +47,8 @@ import { rollChoices } from '../systems/rewards.js';
 import bookData from '../data/skillBooks.json';
 import { maybeAddBook } from '../systems/books.js';
 import { loadProgress, saveProgress, recordRun, unlockedIds } from '../systems/progress.js';
+import settingsDefs from '../data/settings.json';
+import { readSettings } from '../systems/settings.js';
 import unlocks from '../data/unlocks.json';
 import defeatData from '../data/defeat.json';
 import { roomMethods } from './roomMethods.js';
@@ -113,6 +115,7 @@ export default class BattleScene extends Phaser.Scene {
     this.orderInput = false; // the scene's input listeners are gone too
     this.fxList = [];
     this.iceBreaks = [];
+    this.applySettings();
     // The squad: from squad.json, or the one the TEST squad button picked (registry `squadIds`).
     const demo = !!DEMO;
     const heroDefs = pickSquad(allHeroDefs, demo ? demoSquad.heroes.map((h) => h.id) : this.registry.get('squadIds') || squadIds); // the demo page always uses its saved squad
@@ -1603,6 +1606,29 @@ export default class BattleScene extends Phaser.Scene {
     });
   }
 
+  // The player's Settings (systems/settings.js): battle speed runs the whole scene (fight, tweens, timers) faster;
+  // screen shake off = the camera never shakes; damage numbers off = popText skips numbers; vibration = buzz().
+  applySettings() {
+    const set = readSettings(loadProgress(), settingsDefs);
+    this.speed = set.battleSpeed;
+    this.time.timeScale = this.speed;
+    this.tweens.timeScale = this.speed;
+    const cam = this.cameras.main;
+    if (!set.shake) cam.shake = function () { return this; };
+    else delete cam.shake;
+    this.showNumbers = set.damageNumbers;
+    this.vibrate = set.vibration;
+    this.lastBuzz = -Infinity;
+  }
+
+  // A short phone buzz (Settings VIBRATION on), never more often than settings.json vibration.gapMs.
+  buzz() {
+    const V = settingsDefs.vibration, now = performance.now();
+    if (!this.vibrate || now - this.lastBuzz < V.gapMs) return;
+    this.lastBuzz = now;
+    try { if (navigator.vibrate) navigator.vibrate(V.ms); } catch { /* no buzz on this device */ }
+  }
+
   update(time, delta) {
     this.refreshHud();
     this.placeSpeech();
@@ -1622,7 +1648,7 @@ export default class BattleScene extends Phaser.Scene {
       return;
     }
     // Cap the step so switching browser tabs doesn't cause a huge jump.
-    const events = this.state.update(Math.min(delta, 100));
+    const events = this.state.update(Math.min(delta, 100) * this.speed);
     this.showEvents(events);
     this.followPositions();
     this.drawTornados();
@@ -1734,6 +1760,7 @@ export default class BattleScene extends Phaser.Scene {
       }
       this.hitSound(e);
       this.setBar(t);
+      if (t.unit.side === 'hero' && e.result.amount > 0) this.buzz();
       this.drawChips(t); // the shield tag shows what is left
       if (e.result.absorbed > 0) {
         sfx.play('shieldSoak');
@@ -2896,6 +2923,7 @@ export default class BattleScene extends Phaser.Scene {
   popText(view, text, color, big = false, sizePx = null) {
     // The same WORD (Counter!, Blocked!) already floating over this fighter is not shown again: a Samurai
     // countering a lot made an unreadable pile. Numbers always show.
+    if (!this.showNumbers && !/[a-z]/i.test(text)) return; // Settings: DAMAGE NUMBERS off
     const now = this.time.now;
     view.recentPops = view.recentPops || {};
     if (/[a-z]/i.test(text)) {

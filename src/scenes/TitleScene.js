@@ -4,7 +4,7 @@ import title from '../data/title.json';
 import pkg from '../../package.json';
 import { skyLayer, twinkleSpots, moonLayers, cloudLayer, canopyLayer } from '../systems/titleArt.js';
 import { layerTexture } from '../entities/pixelLayer.js';
-import { drawWindow, uiText, comingSoonWindow, drawGear } from '../entities/uiKit.js';
+import { drawWindow, uiText, drawGear } from '../entities/uiKit.js';
 import { loadProgress } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
 
@@ -21,6 +21,7 @@ export default class TitleScene extends Phaser.Scene {
 
   create() {
     this.busy = false;
+    this.modal = null; // (the scene is reused: a Settings flag from last time must not stick)
     const width = Math.ceil(GAME_WIDTH / P), height = Math.ceil(GAME_HEIGHT / P);
     const img = (key, lay, x, y, depth) => this.add.image(x, y, layerTexture(this, key, lay)).setOrigin(lay.ax / lay.w, lay.ay / lay.h).setScale(P).setDepth(depth);
 
@@ -74,7 +75,7 @@ export default class TitleScene extends Phaser.Scene {
     const best = loadProgress().stats.bestFloor;
     if (best > 0) ui.push(uiText(this, cx, title.best.y, title.best.text.replace('{n}', best), 'small', UI.text, outline).setOrigin(0.5));
     ui.push(uiText(this, GAME_WIDTH - 8, GAME_HEIGHT - 8, `v${pkg.version}`, 'small', UI.dim).setOrigin(1, 1));
-    // Settings (top left): a small gear in a window, 'Coming soon' for now.
+    // Settings (top left): a small gear in a window; opens the Settings screen over the title (paused till it closes).
     const G = title.settings, g = this.add.graphics();
     drawWindow(g, G.x, G.y, G.size, G.size);
     const m = G.x + G.size / 2, n = G.y + G.size / 2;
@@ -83,7 +84,11 @@ export default class TitleScene extends Phaser.Scene {
     this.add.zone(G.x + G.size / 2, G.y + G.size / 2, G.size + 10, G.size + 10).setInteractive().on('pointerup', (p, x, y, ev) => {
       ev.stopPropagation();
       if (this.busy || this.modal) return;
-      this.modal = comingSoonWindow(this, G.name, G.who, { depth: DEPTH.modal, onClose: () => this.time.delayedCall(0, () => { this.modal = null; }) });
+      sfx.play('tap');
+      this.modal = true; // no TAP TO START while Settings is open, nor from the tap that closes it
+      this.events.once(Phaser.Scenes.Events.RESUME, () => this.time.delayedCall(150, () => { this.modal = null; }));
+      this.scene.launch('Settings', { from: 'Title' });
+      this.scene.pause();
     });
     this.ui = ui.map((o) => o.setDepth(DEPTH.ui));
   }

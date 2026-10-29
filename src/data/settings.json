@@ -1,0 +1,57 @@
+{
+  "_about": "Settings screen (SettingsScene, logic systems/settings.js; user's pick D, docs/proposals/menu/settings-picked-D.png). Tabs of cards: 'bar' = a '-' 0..max '+' level, 'choice' = big buttons (chosen = FILLED gold), 'action' = one button. defaults = a new player's settings. layout = screen px (spacing rule: back 96x44 at 24,16; title y 76; 12-16px gaps; 16px inside boxes). vibration = buzz length and the least time between buzzes.",
+  "defaults": { "music": 7, "effects": 9, "battleSpeed": 1, "shake": true, "damageNumbers": true, "vibration": false },
+  "vibration": { "ms": 30, "gapMs": 400 },
+  "layout": {
+    "side": 24,
+    "back": { "x": 24, "y": 16, "w": 96, "h": 44 },
+    "titleY": 76,
+    "tabs": { "y": 128, "h": 44, "gap": 12 },
+    "cardsY": 188,
+    "cardGap": 12,
+    "pad": 16,
+    "nameY": 14,
+    "hintY": 42,
+    "rowY": 60,
+    "rowH": 36,
+    "cardH": 112,
+    "rowGap": 12,
+    "barCellH": 18,
+    "barGap": 4,
+    "plainH": 44,
+    "backLabels": { "Base": "< CAMP", "Title": "< BACK" },
+    "dim": "0x55556a",
+    "bg": "0x0c0b10",
+    "versionY": 828
+  },
+  "tabs": [
+    {
+      "id": "sound",
+      "label": "SOUND",
+      "cards": [
+        { "type": "bar", "id": "music", "name": "MUSIC", "hint": "Songs in camp and fights.", "max": 10 },
+        { "type": "bar", "id": "effects", "name": "EFFECTS", "hint": "Hits, skills and doors.", "max": 10 }
+      ]
+    },
+    {
+      "id": "game",
+      "label": "GAME",
+      "cards": [
+        { "type": "choice", "id": "battleSpeed", "name": "BATTLE SPEED", "hint": "How fast fights play.", "options": [{ "label": "1X", "value": 1 }, { "label": "2X", "value": 2 }] },
+        { "type": "choice", "id": "shake", "name": "SCREEN SHAKE", "hint": "Shake on big hits.", "options": [{ "label": "ON", "value": true }, { "label": "OFF", "value": false }] },
+        { "type": "choice", "id": "damageNumbers", "name": "DAMAGE NUMBERS", "hint": "Numbers over the fighters.", "options": [{ "label": "ON", "value": true }, { "label": "OFF", "value": false }] },
+        { "type": "choice", "id": "vibration", "name": "VIBRATION", "hint": "Phone buzz when hit.", "options": [{ "label": "ON", "value": true }, { "label": "OFF", "value": false }] }
+      ]
+    },
+    {
+      "id": "more",
+      "label": "MORE",
+      "cards": [
+        { "type": "action", "id": "wallet", "name": "WALLET", "hint": "Not connected.", "button": "CONNECT", "gold": true, "soon": "Solana wallet for the shop" },
+        { "type": "action", "id": "backup", "name": "SAVE", "hint": "Kept on this phone.", "button": "BACK UP", "dim": true, "soon": "Keep your save online" },
+        { "type": "pair", "buttons": [{ "id": "credits", "label": "CREDITS", "soon": "Who made the game" }, { "id": "help", "label": "HELP", "soon": "How to play" }] },
+        { "type": "danger", "id": "deleteSave", "label": "DELETE SAVE", "confirm": "Delete ALL progress? Heroes, records and settings. This cannot be undone.", "yes": "DELETE", "no": "KEEP" }
+      ]
+    }
+  ]
+}

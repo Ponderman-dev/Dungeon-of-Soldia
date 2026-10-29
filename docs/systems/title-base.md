@@ -89,6 +89,13 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   3-column grid (look, name, hero, price). Tap a look = try-on page (big on the floor, arrows, 'Looks only. No stat
   change.', BUY + price). GEMS = 4 packs, prices in USD ('$' is missing from the pixel font), card / SOL = placeholder.
   'Gems' is a stand-in name. Other layouts tried: `shop-variations.png`.
+- SETTINGS — BUILT (session 37): `SettingsScene` (opened by the gear on the camp AND the title; that scene pauses, '< CAMP' /
+  '< BACK' resumes it), data `settings.json` (tabs, cards, defaults, layout), logic `systems/settings.js` (readSettings /
+  changeSetting / stepSetting; values saved in progress.settings). REAL: BATTLE SPEED (BattleScene.applySettings: scene
+  time + tweens + fight step x speed), SCREEN SHAKE off (camera shake does nothing), DAMAGE NUMBERS off (popText skips
+  numbers, words still show), VIBRATION (navigator.vibrate on hero hits, gap in settings.json), EFFECTS volume (sfx.refresh,
+  0 = silent). MUSIC is saved but there is no music yet. WALLET / BACK UP / CREDITS / HELP = 'Coming soon'. DELETE SAVE =
+  red KEEP / DELETE window, then `progress.deleteProgress()` and back to the title. Test: settings.test.mjs.
 - SETTINGS (gear button) PICKED D (`settings-picked-D.png`; others tried: `settings-variations.png` = A paired
   buttons, B switches, C classic RPG '< value >' list). User found a lone ON button unclear ('how do I interact'), so
   every choice is shown as big buttons, the chosen one FILLED gold. Tabs SOUND / GAME / MORE; each setting is a card

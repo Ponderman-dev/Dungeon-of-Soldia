@@ -4,6 +4,8 @@
 // a tap; before that, play() does nothing.
 import soundData from '../data/sounds.json';
 import { loadProgress, saveProgress } from '../systems/progress.js';
+import settingsDefs from '../data/settings.json';
+import { readSettings } from '../systems/settings.js';
 
 const files = import.meta.glob('../assets/sounds/**/*.mp3', { eager: true, query: '?inline', import: 'default' });
 
@@ -13,6 +15,7 @@ const buffers = {};
 const lastPlayed = {};
 let voices = 0; // busy fight sounds playing right now (never more than maxVoices at once)
 let muted = !!(loadProgress().settings || {}).muted;
+let effects = 1; // the Settings EFFECTS level, 0..1
 
 function audioContext() {
   if (ctx) return ctx;
@@ -20,7 +23,7 @@ function audioContext() {
   if (!AC) return null;
   ctx = new AC();
   master = ctx.createGain();
-  master.gain.value = soundData.masterVolume ?? 1;
+  master.gain.value = (soundData.masterVolume ?? 1) * effects;
   master.connect(ctx.destination);
   return ctx;
 }
@@ -50,7 +53,7 @@ async function bufferFor(name) {
 // Plays a cue from sounds.json (e.g. 'tap', 'levelUp'). Never throws: a sound can never break the game.
 export async function play(cue) {
   try {
-    if (muted) return;
+    if (muted || !effects) return;
     const c = soundData.cues[cue];
     if (!c) return;
     const now = typeof performance !== 'undefined' ? performance.now() : 0;
@@ -91,6 +94,16 @@ export function has(cue) {
 export function isMuted() {
   return muted;
 }
+
+// Reads mute and the EFFECTS volume from the save again (after the Settings screen changed them or the save was deleted).
+export function refresh() {
+  const p = loadProgress();
+  muted = !!(p.settings || {}).muted;
+  const card = settingsDefs.tabs.flatMap((t) => t.cards).find((c) => c.id === 'effects');
+  effects = readSettings(p, settingsDefs).effects / card.max;
+  if (master) master.gain.value = (soundData.masterVolume ?? 1) * effects;
+}
+refresh();
 
 // Turns sound on/off and remembers it in the save.
 export function setMuted(on) {

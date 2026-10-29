@@ -10,7 +10,7 @@ export function emptyProgress() {
     seenUnlocked: [], // heroes the player has already seen unlocked on the squad screen (for the NEW badge)
     unlockAll: false, // the "unlock every hero" toggle
     lastSquad: null,
-    settings: { muted: false }, // player settings (sound on/off)
+    settings: { muted: false }, // player settings: sound on/off + the Settings screen's (systems/settings.js)
   };
 }
 
@@ -45,6 +45,18 @@ export function saveProgress(progress, storage = defaultStorage()) {
   try {
     if (!storage) return false;
     storage.setItem(SAVE_KEY, JSON.stringify(progress));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// DELETE SAVE (Settings): the save is wiped; the next load is a new player.
+export function deleteProgress(storage = defaultStorage()) {
+  try {
+    if (!storage) return false;
+    if (storage.removeItem) storage.removeItem(SAVE_KEY);
+    else storage.setItem(SAVE_KEY, '');
     return true;
   } catch {
     return false;

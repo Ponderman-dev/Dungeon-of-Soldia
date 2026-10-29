@@ -120,7 +120,7 @@ export default class BaseScene extends Phaser.Scene {
     // Settings (top left): a gear in a small window.
     const G = U.settings;
     ui.push(drawGear(drawWindow(this.add.graphics(), G.x, G.y, G.size, G.size), G.x + G.size / 2, G.y + G.size / 2));
-    this.add.zone(G.x + G.size / 2, G.y + G.size / 2, G.size + 8, G.size + 8).setInteractive().on('pointerup', () => this.comingSoon(G.name, G.who));
+    this.add.zone(G.x + G.size / 2, G.y + G.size / 2, G.size + 8, G.size + 8).setInteractive().on('pointerup', () => this.openSettings());
 
     // Profile (top right): a name box tucked under a round portrait (a little person for now).
     const Pr = U.profile, d = Pr.portrait, px = GAME_WIDTH - Pr.right - d, barX = px - Pr.barW + d / 2;
@@ -144,6 +144,17 @@ export default class BaseScene extends Phaser.Scene {
   comingSoon(title, who) {
     if (this.modal || this.leaving) return;
     this.modal = comingSoonWindow(this, title, who, { w: U.soon.w, h: U.soon.h, depth: DEPTH.modal, onClose: () => { this.modal = null; } });
+  }
+
+  // The gear: the Settings screen opens over the camp (the camp waits, paused). The tap that closes it must not
+  // reach the camp's buttons, so taps stay off for a moment after it comes back.
+  openSettings() {
+    if (this.modal || this.leaving) return;
+    sfx.play('tap');
+    this.leaving = true;
+    this.events.once(Phaser.Scenes.Events.RESUME, () => this.time.delayedCall(150, () => { this.leaving = false; }));
+    this.scene.launch('Settings', { from: 'Base' });
+    this.scene.pause();
   }
 
   // TO EXPEDITION: the screen slides up into the squad screen.

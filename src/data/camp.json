@@ -318,6 +318,7 @@
         },
         {
           "id": "shop",
+          "scene": "Shop",
           "label": "Shop",
           "who": "Merchant",
           "icon": {

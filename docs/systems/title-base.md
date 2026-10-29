@@ -101,6 +101,12 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   (24,16), title at y 76, 12-16px gaps between boxes, 16px inside every box. Leaders: timer bar under the WEEK/ALL TIME
   tabs (hourglass + 'ENDS IN 3D 14:22:05', week resets Monday); ALL TIME shows a crown + 'HALL OF FAME' there
   (`leaderboard-week-alltime.png`). Glossary + Heroes redone the same way (`glossary-heroes-spaced.png`).
+- SHOP — BUILT, LOOK ONLY (session 37): `ShopScene` (camp SHOP button), data `shop.json`. Gem balance + '+' top right
+  (progress.gems, 0: no payments yet), tabs DEALS (merchant npc + bubble, timer to midnight, 3 daily deals from the date
+  with -33/-40/-20%) / LOOKS (3-col grid) / GEMS (4 packs, Coming soon). Tap a look = try-on (big on the floor, arrows =
+  other looks, BUY: enough gems -> progress.looks, else 'Not enough gems'). Looks are STAND-IN recolours
+  (`systems/looks.js` lookDef: hue / sat / metal on the hero's palette; real looks = new sprites later; owned looks are
+  not worn in fights yet). Test: shop.test.mjs.
 - SHOP button (user: sells LOOKS only, daily deals + timer, premium currency = real money / crypto; NO gold from runs):
   PICKED A (`shop-picked-A.png`): gem balance + '+' top right on every tab; tabs DEALS / LOOKS / GEMS. DEALS = the camp
   merchant (camp.json npcs 'shop') on the dungeon floor with a white speech bubble, timer bar 'NEW DEALS IN 08:14:33'

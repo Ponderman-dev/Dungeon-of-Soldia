@@ -10,6 +10,8 @@ export function emptyProgress() {
     profile: {}, // name, profile hero, banner (ProfileScene; defaults in profile.json)
     achievements: [], // ids earned (systems/achievements.js)
     seen: { met: [], beaten: {}, statuses: [], items: [] }, // the Glossary's memory (systems/glossary.js)
+    gems: 0, // Shop currency (paid packs later)
+    looks: [], // looks bought in the Shop (shop.json ids)
     seenUnlocked: [], // heroes the player has already seen unlocked on the squad screen (for the NEW badge)
     unlockAll: false, // the "unlock every hero" toggle
     lastSquad: null,

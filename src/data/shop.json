@@ -1,0 +1,42 @@
+{
+  "_about": "Shop (ShopScene, user's pick A: docs/proposals/menu/shop-picked-A.png). Sells LOOKS only (no stat change), paid in gems ('Gems' is a stand-in name); gems = real money / SOL later, so for now packs say Coming soon and a new player has 0 gems (progress.gems; owned looks in progress.looks). looks = STAND-IN recolours of the hero sprites (systems/looks.js: hue turns coloured pixels by `hue` degrees, `sat` scales their colour, `metal` tints the grey armour/cloth); the real looks will be new sprites. deals = `count` looks a day picked from the date, each with one of `discounts`; they change at midnight. packs = gem packs (prices in USD).",
+  "currency": "GEMS",
+  "looks": [
+    { "id": "ember", "name": "Ember", "hero": "knight", "price": 300, "hue": 150, "sat": 1.2, "metal": "0xe0b040" },
+    { "id": "royal", "name": "Royal", "hero": "knight", "price": 500, "hue": 150, "sat": 1, "metal": "0x9ee0c0" },
+    { "id": "viper", "name": "Viper", "hero": "rogue", "price": 300, "hue": -100, "sat": 1, "metal": null },
+    { "id": "autumn", "name": "Autumn", "hero": "archer", "price": 300, "hue": 150, "sat": 1, "metal": null },
+    { "id": "frost", "name": "Frost", "hero": "mage", "price": 300, "hue": 130, "sat": 1.1, "metal": null },
+    { "id": "dawn", "name": "Dawn", "hero": "cleric", "price": 500, "hue": 180, "sat": 1.4, "metal": "0xc8d8ff" },
+    { "id": "jade", "name": "Jade", "hero": "samurai", "price": 300, "hue": 110, "sat": 1, "metal": null },
+    { "id": "jester", "name": "Jester", "hero": "bard", "price": 500, "hue": -90, "sat": 1.2, "metal": null },
+    { "id": "toxic", "name": "Toxic", "hero": "necromancer", "price": 800, "hue": 60, "sat": 1.3, "metal": null }
+  ],
+  "deals": { "count": 3, "discounts": [33, 40, 20] },
+  "merchantLine": "Fresh stock,\njust for today!",
+  "packs": [
+    { "gems": 100, "price": "0.99 USD" },
+    { "gems": 550, "price": "4.99 USD" },
+    { "gems": 1200, "price": "9.99 USD", "tag": "BEST VALUE" },
+    { "gems": 2600, "price": "19.99 USD" }
+  ],
+  "payNote": "Pay with card or SOL (placeholder)",
+  "layout": {
+    "side": 24,
+    "pad": 16,
+    "back": { "x": 24, "y": 16, "w": 96, "h": 44 },
+    "balance": { "w": 150, "h": 44 },
+    "tabs": { "y": 76, "h": 44, "gap": 12 },
+    "merchant": { "y": 136, "h": 148 },
+    "timer": { "y": 296, "h": 40 },
+    "dealRows": { "y": 348, "h": 140, "gap": 12, "tileW": 140 },
+    "grid": { "y": 136, "cols": 3, "h": 212, "gap": 10, "tileH": 120 },
+    "tryOn": { "y": 76, "h": 420, "scale": 7 },
+    "packs": { "y": 136, "h": 100, "gap": 12 },
+    "gem": "0x6ec8ff",
+    "gemDark": "0x2a78c8",
+    "red": "0xc8323a",
+    "dim": "0x55556a",
+    "bg": "0x0c0b10"
+  }
+}

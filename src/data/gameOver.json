@@ -1,0 +1,18 @@
+{
+  "_about": "Game-over summary (GameOverScene, user's pick B: docs/proposals/menu/gameover-picked-B.png). Reached from the defeat screen's CONTINUE. Run card (FLOOR / TIME / KILLS, NEW BEST!), the 3 heroes on the dungeon floor (tap = gold outline + bigger: heroScale -> pickedScale), the picked hero's card, BOSSES / ITEMS pages, CAMP / TRY AGAIN. Stats: systems/runStats.js. Screen px; spacing rule: back 96x44 at 24,16, title y 76, 12-16px gaps, 16px inside boxes.",
+  "side": 24,
+  "pad": 16,
+  "title": { "y": 22, "text": "SQUAD DEFEATED" },
+  "run": { "y": 72, "h": 100, "labelY": 16, "valueY": 34, "bestY": 74 },
+  "strip": { "y": 184, "h": 128, "wallH": 200, "feetY": 104, "heroScale": 3, "pickedScale": 4, "outline": "0xffd84a" },
+  "tapHint": { "y": 322, "text": "Tap a hero." },
+  "card": { "y": 342, "h": 234, "nameY": 14, "fellY": 40, "row1Y": 64, "row2Y": 110, "valueDy": 14, "colX": 150, "itemsY": 158, "iconsY": 178, "iconGap": 4, "iconBig": 2, "killerX": 52, "killerFeetY": 104, "killerScale": 2, "killerNameY": 112 },
+  "pages": { "y": 590, "h": 60, "gap": 12 },
+  "bottom": { "y": 772, "h": 52, "gap": 12 },
+  "back": { "x": 24, "y": 16, "w": 96, "h": 44 },
+  "pageTitleY": 76,
+  "bossList": { "y": 124, "h": 112, "gap": 12, "spriteX": 64, "textX": 128, "maxScale": 2 },
+  "itemGrid": { "y": 140, "cols": 5, "cell": 62, "gap": 8, "iconScale": 2, "manyCols": 7, "manyCell": 44, "manyIconScale": 1, "manyAfter": 25, "infoH": 132 },
+  "dim": "0x55556a",
+  "bg": "0x0c0b10"
+}

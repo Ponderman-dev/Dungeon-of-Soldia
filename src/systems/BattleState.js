@@ -277,7 +277,7 @@ export default class BattleState {
       if (!mine) continue;
       const amount = Math.max(1, Math.round(computeDotDamage(unit, (mine * pct) / 100, 'dark', this.rules, this.damageTypes, {})));
       const d = this.dealDamage(unit, amount, events);
-      events.push({ type: 'dot', unit, amount: d.immune ? 0 : amount - d.absorbed, absorbed: d.absorbed, immune: d.immune, damageType: 'dark', status: 'burn', stacks: 0 });
+      events.push({ type: 'dot', unit, amount: d.immune ? 0 : amount - d.absorbed, absorbed: d.absorbed, immune: d.immune, damageType: 'dark', status: 'burn', stacks: 0, shares: { [h.uid]: 1 } });
       if (!d.immune) this.storeDark(h, amount - d.absorbed, events);
       this.breakEffects(unit, d.broken, events);
     }
@@ -1559,7 +1559,7 @@ export default class BattleState {
 
   // A heal from the Cleric: if it lands on SOMEONE ELSE she gets Grace's self buff. Returns the health restored.
   clericHeal(cleric, ally, amount, events) {
-    const got = this.healUnit(ally, amount, events, { aura: false });
+    const got = this.healUnit(ally, amount, events, { aura: false, by: cleric });
     const G = cleric.def.passive && cleric.def.passive.grace;
     if (G && G.selfBuff && ally !== cleric && got > 0) this.applyStatus(cleric, { status: 'buff', durationMs: G.selfBuff.durationMs, mods: G.selfBuff.mods }, cleric, 'grace', events);
     return got;
@@ -1877,7 +1877,7 @@ export default class BattleState {
     if (!ally) return false;
     const h = counter.heal || {};
     const amount = Math.max(1, Math.round(((h.percentMaxHp || 0) * ally.maxHp) / 100 + (h.attackMultiplier || 0) * holder.stats.attack));
-    this.healUnit(ally, amount, events, { aura: false });
+    this.healUnit(ally, amount, events, { aura: false, by: holder });
     return true;
   }
 
@@ -2300,7 +2300,7 @@ export default class BattleState {
       if (share > 0 && hurt.length && attacker.shareCd <= 0 && this.rng() * 100 < share) { // only when someone can use it
         attacker.shareCd = attacker.specials.lifestealShareCooldownMs || 3000;
         events.push({ type: 'proc', unit: attacker, label: 'Life Share!', itemId: 'bloodlust_mask' });
-        for (const ally of hurt) this.healUnit(ally, base, events, { aura: false });
+        for (const ally of hurt) this.healUnit(ally, base, events, { aura: false, by: attacker });
       }
     }
     // Harvest Scythe: a crit heals the attacker `critHeal`% (8 per copy) of the damage it dealt, at most `critHealCap`%
@@ -2874,7 +2874,9 @@ export default class BattleState {
         const { damageType, ignoresArmor } = stacks[0];
         const amount = computeDotDamage(unit, total, damageType, this.rules, this.damageTypes, { ignoresArmor });
         const d = this.dealDamage(unit, amount, events);
-        events.push({ type: 'dot', unit, amount: d.immune ? 0 : amount - d.absorbed, absorbed: d.absorbed, immune: d.immune, damageType, status: type, stacks: stacks.length, crit });
+        const shares = {}; // who put the stacks on, as parts of the tick (run stats)
+        for (const st of stacks) if (st.sourceUid != null && total > 0) shares[st.sourceUid] = (shares[st.sourceUid] || 0) + (st.damage * mult(st)) / total;
+        events.push({ type: 'dot', unit, amount: d.immune ? 0 : amount - d.absorbed, absorbed: d.absorbed, immune: d.immune, damageType, status: type, stacks: stacks.length, crit, shares });
         if (damageType === 'dark' && type !== 'doom' && !d.immune) for (const h of this.heroes) { const mine = stacks.filter((x) => x.sourceUid === h.uid).reduce((n, x) => n + x.damage, 0); if (mine) this.storeDark(h, ((amount - d.absorbed) * mine) / total, events); }
         if (type === 'burn' && unit.alive && unit.hp > 0) this.ghastlyBurn(unit, stacks, events); // Ghastly Fire: burns also deal dark damage
         this.breakEffects(unit, d.broken, events);
@@ -3193,7 +3195,7 @@ export default class BattleState {
       // Blood Price: the most hurt allies heal, the caster pays (never below 1 health).
       if (m.allyHeal) {
         const allies = this.heroes.filter((h) => h.alive && h !== hero).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp).slice(0, m.allyHeal.count);
-        for (const a of allies) this.healUnit(a, Math.round((a.maxHp * m.allyHeal.percentMaxHp) / 100), events);
+        for (const a of allies) this.healUnit(a, Math.round((a.maxHp * m.allyHeal.percentMaxHp) / 100), events, { by: hero });
       }
       if (m.selfCostPercent) {
         const cost = Math.round((hero.hp * m.selfCostPercent) / 100);
@@ -3373,7 +3375,7 @@ export default class BattleState {
       if (skill.healShare && !result.dodged) {
         const ally = this.lowestHealthAlly();
         const amount = Math.round(((result.amount - (result.absorbed || 0)) * skill.healShare) / 100);
-        if (ally && amount > 0) this.healUnit(ally, amount, events);
+        if (ally && amount > 0) this.healUnit(ally, amount, events, { by: hero });
       }
       // Death Coil: a kill raises a skeleton.
       if (!target.alive && skill.onKill && skill.onKill.raise) {
@@ -3385,7 +3387,7 @@ export default class BattleState {
       if (result.crit) for (const spec of skill.onCrit || []) this.applyStatus(target, spec, hero, `${slotId}_crit`, events);
     }
     for (const spec of skill.apply || []) this.applyStatus(target, spec, hero, slotId, events);
-    if (skill.heal) this.healUnit(target, this.healAmount(hero, target, skill.heal), events);
+    if (skill.heal) this.healUnit(target, this.healAmount(hero, target, skill.heal), events, { by: hero });
     return result;
   }
 
@@ -3504,7 +3506,7 @@ export default class BattleState {
     const got = Math.min(room, raw);
     if (got <= 0) return 0;
     unit.hp += got;
-    events.push({ type: 'heal', unit, amount: got });
+    events.push({ type: 'heal', unit, amount: got, by: opts.by || null }); // by: the healer (run stats), when the caller names one
     this.onHealed(unit, got, events);
     return got;
   }

@@ -112,6 +112,12 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   UNLOCKED banners from bosses / achievements, DRAW NEW IN STUDIO, SET AS BANNER). Mock banners = title forest crops.
   Mock helper (scratchpad, gone next session): node script dumps hero sprites (parts composited), floor patch, title
   layers and item icons into assets.js; HTML draws them on canvases (image-rendering: pixelated).
+- GAME OVER — BUILT (session 37): defeat screen's button is now CONTINUE (defeat.json) -> `GameOverScene` (data
+  `gameOver.json`): run card, hero strip (picked = 4x + gold outline made of 4 gold-filled copies 1 art px out), hero
+  card, BOSSES / ITEMS pages, CAMP (Base) / TRY AGAIN (Squad, with lastRun for unlock notices). Stats: `systems/runStats.js`
+  (newRunStats at Battle create, countEvents in showEvents, finishRun in onLoss). BattleState events now carry who did
+  it: heal `by` (skill/item heals that name a healer, else the healed hero), dot `shares` (uid -> part of the tick).
+  Minions count for their holder; slow regen is not counted as healing. Test: run-stats.test.mjs.
 - GAME OVER (replaces today's `BattleScene.showDefeat()`) PICKED B (`gameover-picked-B.png`; others tried:
   `gameover-variations.png`; a first all-on-one-page try was 'not neat'). User wants EVERYTHING, split by taps: red
   SQUAD DEFEATED; run card = FLOOR / TIME / KILLS in 3 columns + gold 'NEW BEST!' tag + old best; the 3 heroes on the

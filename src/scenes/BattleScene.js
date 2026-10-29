@@ -49,6 +49,7 @@ import { maybeAddBook } from '../systems/books.js';
 import { loadProgress, saveProgress, recordRun, unlockedIds } from '../systems/progress.js';
 import settingsDefs from '../data/settings.json';
 import { readSettings } from '../systems/settings.js';
+import { newRunStats, countEvents, finishRun } from '../systems/runStats.js';
 import unlocks from '../data/unlocks.json';
 import defeatData from '../data/defeat.json';
 import { roomMethods } from './roomMethods.js';
@@ -140,6 +141,8 @@ export default class BattleScene extends Phaser.Scene {
       damageTypes,
       leveling,
     });
+    this.runStats = newRunStats(this.state.heroes); // per-hero damage, healing, kills... for the game-over summary (systems/runStats.js)
+    this.runStartedAt = Date.now();
     // A demo page: the squad exactly as the smart player had it before the demo floor (src/data/demoSquad.json,
     // made by scripts/tests/make-demo-squad.mjs): its levels, items and skill pages.
     if (demo) {
@@ -1681,6 +1684,7 @@ export default class BattleScene extends Phaser.Scene {
   // + staggerMs per target in the look's target order), and projectiles the look already draws are not drawn again.
   // Only the drawing waits: the fight itself (BattleState) has already done it all.
   showEvents(events) {
+    if (this.runStats) countEvents(this.runStats, events, { floor: this.floor, floorMs: this.state.floorMs }); // for the game-over summary
     let hold = null;
     for (const e of events) {
       if (hold && e.type === 'projectile' && e.from === hold.unit && (hold.swallow || []).includes(e.kind)) continue;
@@ -3154,12 +3158,16 @@ export default class BattleScene extends Phaser.Scene {
     this.banner.setText('');
     // Save the run (floor reached, enemies defeated) and see which heroes it unlocked.
     const progress = loadProgress();
+    const bestBefore = progress.stats.bestFloor;
     const before = unlockedIds(allHeroDefs, progress, unlocks);
     recordRun(progress, { floor: this.floor, kills: this.state.kills || 0 });
     saveProgress(progress);
     const newly = unlockedIds(allHeroDefs, progress, unlocks).filter((id) => !before.includes(id));
     const lastRun = { floor: this.floor, kills: this.state.kills || 0, newly };
-    this.showDefeat(() => this.scene.start('Squad', { lastRun }));
+    const summary = finishRun(this.runStats || newRunStats(this.state.heroes), this.state.heroes, {
+      floor: this.floor, kills: this.state.kills || 0, ms: Date.now() - this.runStartedAt, bestBefore, bossFloors: Object.keys(this.dungeon.bosses || {}),
+    });
+    this.showDefeat(() => this.scene.start('GameOver', { summary, lastRun }));
   }
 
   // The defeat screen (user): the screen dims first, then SQUAD DEFEATED pops in, then how far the squad got and a

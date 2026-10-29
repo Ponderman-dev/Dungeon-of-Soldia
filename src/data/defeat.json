@@ -1,12 +1,12 @@
 {
-  "_about": "The defeat screen (BattleScene.onLoss): the screen dims to black (dimAlpha, over dimMs), then SQUAD DEFEATED pops in big (titleDelayMs after the dim starts, titlePx), then the story line (storyDelayMs): '<story>' with {floor}, then ' before ' + a random line. withKiller lines name the enemy that landed the last blow ({enemy}); noKiller lines are used when nobody did (a poison tick, a trap...). Then the Back button (buttonDelayMs) goes to the squad screen.",
+  "_about": "The defeat screen (BattleScene.onLoss): the screen dims to black (dimAlpha, over dimMs), then SQUAD DEFEATED pops in big (titleDelayMs after the dim starts, titlePx), then the story line (storyDelayMs): '<story>' with {floor}, then ' before ' + a random line. withKiller lines name the enemy that landed the last blow ({enemy}); noKiller lines are used when nobody did (a poison tick, a trap...). Then the CONTINUE button (buttonDelayMs) opens the game-over summary (GameOverScene).",
   "dimMs": 700,
   "dimAlpha": 0.8,
   "titleDelayMs": 800,
   "titlePx": 32,
   "storyDelayMs": 1700,
   "buttonDelayMs": 2700,
-  "button": "BACK",
+  "button": "CONTINUE",
   "story": "The squad reached floor {floor},",
   "withKiller": [
     "a {enemy} sent them home in pieces.",

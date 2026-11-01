@@ -3,15 +3,10 @@
 User's pick (session 6, proposal page https://claude.ai/artifact/PBDU3qq4XzyMV43ujcfUkC, look D + font Press Start 2P,
 note: "black menu with white strokes like the early Dragon Quest style of UI").
 
-- **STONE LOOK (session 37, replaces the black/white windows below):** after 7 rounds of style trials (borders, moods,
-  palettes, the session-6 page colours, game styles) the user picked 'Gothic shape + Torchlit Stone colours, stone frame'
-  made neater (S2). `uiKit.drawWindow`: dark outline, 2px stone frame, soft top-to-bottom stone fill (bands), faint top
-  highlight, small corner marks on windows bigger than `UI.stone.cornerMin`. Chosen = gold frame (+ gold corners); a
-  dim line = darker frame; fill gold = gold button with a darker lip (black text); pressed = lighter stone + gold label.
-  Colours in `config.js` UI (text cream #efe6d2, gold #e3b553, dim #8a8070, `UI.stone`); menu pages use bg 0x18151d
-  (each screen's json `bg`). Rejected this session: border styles (stone/wood/SNES/arcane/iron), chunky/parchment/
-  gothic/modern moods and their palettes, Pokemon/EarthBound/Octopath/Hollow Knight, tactical/comic/Game Boy/pastel/neon.
-- (Before session 37) Rules: every window, card and button is a BLACK window with a WHITE 2px line and stepped (pixel) corners. White text.
+- **STONE LOOK REVERTED (session 38):** session 37's stone windows (gothic shape + Torchlit Stone colours, commit 5627e48,
+  `git show 5627e48` to get it back) looked fine in trials but the user did not like them IN ACTION on the phone; back to
+  the black windows with white lines below. Lesson: check a new UI look in the real running game before choosing.
+- Rules: every window, card and button is a BLACK window with a WHITE 2px line and stepped (pixel) corners. White text.
   Colour only where it means something: gold (`UI.gold`) = chosen / rarity / stacks / important numbers, red = attack,
   green = support / heals, grey (`UI.dim`) = disabled. The chosen card gets a GOLD line; a ready button gets the
   blinking ▶ cursor. No rounded rectangles, no gradients, no smooth fonts.

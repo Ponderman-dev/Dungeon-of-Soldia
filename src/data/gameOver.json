@@ -14,5 +14,5 @@
   "bossList": { "y": 124, "h": 112, "gap": 12, "spriteX": 64, "textX": 128, "maxScale": 2 },
   "itemGrid": { "y": 140, "cols": 5, "cell": 62, "gap": 8, "iconScale": 2, "manyCols": 7, "manyCell": 44, "manyIconScale": 1, "manyAfter": 25, "infoH": 132 },
   "dim": "0x55556a",
-  "bg": "0x18151d"
+  "bg": "0x0c0b10"
 }

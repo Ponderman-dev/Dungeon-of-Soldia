@@ -111,48 +111,13 @@ export function uiText(scene, x, y, str, size = 'normal', color = UI.text, extra
   return scene.add.text(x, y, str, uiStyle(size, color, extra));
 }
 
-// A window in the STONE look (config.js UI.stone): dark outline, 2px frame, a soft stone fill from top to bottom, a
-// faint highlight line on top, small corner marks on big windows. `line`: UI.line = the stone frame, gold = chosen,
-// a dim colour = the dim frame, any other colour = that colour. `fill`: UI.window = the stone fill, gold = a filled
-// gold button (darker lip at the bottom), UI.pressed = lighter stone, anything else = that colour.
-// Drawn into Graphics `g` (call g.clear() yourself). Returns g.
-const STONE = UI.stone;
-const GOLD_N = parseInt(UI.gold.slice(1), 16);
-const DIM_LINES = [0x55556a, 0x4a4a5a, 0x8a8a9a, parseInt(UI.dim.slice(1), 16)];
-const mix = (a, b, t) => {
-  const ch = (s) => Math.round(((a >> s) & 255) * (1 - t) + ((b >> s) & 255) * t);
-  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
-};
-const shade = (c, f) => mix(0, c, f);
+// A window: the stepped outline in `line`, filled with `fill`. Drawn into Graphics `g` (call g.clear() yourself).
 export function drawWindow(g, x, y, w, h, { fill = UI.window, line = UI.line, alpha = 1 } = {}) {
   x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
-  const F = (c, a = 1) => g.fillStyle(c, a * alpha);
-  const goldFill = fill === GOLD_N || fill === 0xffd84a, goldLine = line === GOLD_N || line === 0xffd84a;
-  const edge = goldLine && !goldFill ? GOLD_N : line === UI.line || goldFill ? STONE.frame : DIM_LINES.includes(line) ? STONE.frameDim : line;
-  F(STONE.outer).fillRect(x - 1, y - 1, w + 2, h + 2);
-  F(edge).fillRect(x, y, w, h);
-  if (goldFill) { // a gold button: lighter top half, darker lip at the bottom
-    F(GOLD_N).fillRect(x + 2, y + 2, w - 4, Math.ceil((h - 4) / 2));
-    F(shade(GOLD_N, 0.88)).fillRect(x + 2, y + 2 + Math.ceil((h - 4) / 2), w - 4, Math.floor((h - 4) / 2));
-    F(shade(GOLD_N, 0.6)).fillRect(x + 2, y + h - 4, w - 4, 2);
-    return g;
-  }
-  if (fill !== UI.window && fill !== UI.pressed) { F(fill).fillRect(x + 2, y + 2, w - 4, h - 4); return g; }
-  // The stone fill: a few bands from top to bottom (more on taller windows).
-  const top = fill === UI.pressed ? STONE.pressed : STONE.top, n = Math.max(2, Math.min(STONE.maxBands, Math.floor(h / 8)));
-  for (let i = 0; i < n; i++) {
-    const y0 = y + 2 + Math.floor(((h - 4) * i) / n), y1 = y + 2 + Math.floor(((h - 4) * (i + 1)) / n);
-    F(mix(top, STONE.bot, n === 1 ? 0 : i / (n - 1))).fillRect(x + 2, y0, w - 4, y1 - y0);
-  }
-  F(STONE.hi, 0.6).fillRect(x + 2, y + 2, w - 4, 1);
-  if (w > STONE.cornerMin[0] && h > STONE.cornerMin[1]) { // small corner marks
-    const c = STONE.corner;
-    F(goldLine ? GOLD_N : STONE.hi);
-    for (const [cx, cy, dx, dy] of [[x, y, 1, 1], [x + w, y, -1, 1], [x, y + h, 1, -1], [x + w, y + h, -1, -1]]) {
-      g.fillRect(dx > 0 ? cx : cx - c, dy > 0 ? cy : cy - 2, c, 2);
-      g.fillRect(dx > 0 ? cx : cx - 2, dy > 0 ? cy : cy - c, 2, c);
-    }
-  }
+  g.fillStyle(line, alpha);
+  g.fillRect(x + 4, y, w - 8, h).fillRect(x + 2, y + 2, w - 4, h - 4).fillRect(x, y + 4, w, h - 8);
+  g.fillStyle(fill, alpha);
+  g.fillRect(x + 4, y + 2, w - 8, h - 4).fillRect(x + 2, y + 4, w - 4, h - 8);
   return g;
 }
 
@@ -180,7 +145,7 @@ export function drawCursor(g, x, y, color = UI.line, px = 2) {
   return g;
 }
 
-// A button: a window with a centred label. `selected` adds the blinking ▶ cursor; pressing lights the stone up.
+// A button: a window with a centred label. `selected` adds the blinking ▶ cursor; pressing flips it to white.
 // Returns { container, hit, setLabel, setSelected, setEnabled }.
 export function uiButton(scene, x, y, w, h, label, { size = 'normal', selected = false, enabled = true, onTap = null, depth = 0 } = {}) {
   const container = scene.add.container(x, y).setDepth(depth);
@@ -192,9 +157,9 @@ export function uiButton(scene, x, y, w, h, label, { size = 'normal', selected =
   const draw = () => {
     g.clear();
     drawWindow(g, 0, 0, w, h, pressed ? { fill: UI.pressed } : {});
-    text.setColor(!enabled ? UI.dim : pressed ? UI.gold : UI.text); // pressed = lighter stone, gold label
+    text.setColor(!enabled ? UI.dim : pressed ? '#000000' : UI.text);
     cur.clear();
-    if (selected) drawCursor(cur, Math.round(w / 2 - text.width / 2 - 16), Math.round(h / 2), pressed ? GOLD_N : UI.line);
+    if (selected) drawCursor(cur, Math.round(w / 2 - text.width / 2 - 16), Math.round(h / 2), pressed ? 0x000000 : UI.line);
   };
   draw();
   const blink = scene.time.addEvent({ delay: 500, loop: true, callback: () => cur.setVisible(!cur.visible) });

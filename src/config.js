@@ -24,15 +24,11 @@ export const UI = {
   // are drawn one by one on whole pixels and every edge pixel is snapped (alpha >= snap), so nothing blurs.
   smallFont: { family: "'PressStart2P', monospace", maxPx: 8, px: 8, snap: 110, letterSpacing: 0.01 },
   size: { small: 8, normal: 16, big: 24, huge: 32 },
-  window: 0x000000, // 'the default window': drawn as a STONE window (stone below); any other fill is used as is
-  line: 0xffffff, // 'the default line': the stone frame; gold = chosen, dim = disabled, other colours = that colour
-  text: '#efe6d2', // warm cream (Torchlit Stone)
-  dim: '#8a8070', // disabled / hints
-  gold: '#e3b553', // chosen, rarity, stacks, important numbers (torch gold)
-  // STONE WINDOWS (user's pick, session 37: 'gothic shape + Torchlit Stone colours, stone frame', made neater = S2):
-  // a dark outline, a 2px frame, a soft top-to-bottom stone fill (`bands` steps), a faint highlight line on top and
-  // small corner marks on big windows. Chosen = gold frame; filled gold = a gold button with a darker lip.
-  stone: { page: 0x18151d, outer: 0x0d0b10, frame: 0x5d5569, frameDim: 0x3a3442, top: 0x3a3442, bot: 0x2a2532, pressed: 0x6a6280, hi: 0x6e6680, maxBands: 8, cornerMin: [60, 40], corner: 6 },
+  window: 0x000000, // window fill
+  line: 0xffffff, // window line
+  text: '#ffffff',
+  dim: '#8a8a9a', // disabled / hints
+  gold: '#ffd84a', // rarity, stacks, important numbers
   red: '#ff7a5a', // attack skills, damage
   green: '#6ee07a', // support skills, heals
   pressed: 0xffffff, // a pressed button flips to white with black text

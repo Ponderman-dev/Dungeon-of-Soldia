@@ -32,6 +32,6 @@
     "run": { "y": 72, "h": 280 },
     "colors": { "gold": "0xffd84a", "silver": "0xd8dce8", "bronze": "0xd8834a", "stone": "0x55534e", "stoneTop": "0x6e6b64", "stoneDark": "0x3e3c38" },
     "dim": "0x55556a",
-    "bg": "0x18151d"
+    "bg": "0x0c0b10"
   }
 }

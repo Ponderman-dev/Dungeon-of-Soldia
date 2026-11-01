@@ -1,23 +1,23 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 39): NEXT = THE USER PICKS FROM THE KIV LIST BELOW (one per session)
-- BRANCH: `main` has EVERYTHING (session 38 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- DONE session 38: MOVE ORDERS (tap floor = squad walks there side by side, drag a hero onto the floor = that hero walks;
-  no attacks while walking, back to fighting on arrival; user: 'it feels great'; movement.md 'MOVE ORDERS'). STONE UI
-  REVERTED (user saw it on the phone: 'doesn't feel good in action'): back to black windows + white lines (ui.md; the
-  stone look = commit 5627e48 if ever wanted). `.claude/settings.json` now allows artifact publishing without prompts.
-  Game page REBUILT + republished at the end of session 38 (move orders + all session 37 screens, old UI look).
+## START HERE (session 40): NEXT = THE USER PICKS FROM THE KIV LIST BELOW (one per session)
+- BRANCH: `main` has EVERYTHING (session 39 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- DONE session 39 (KIV 'hit effects', effects.md 'SESSION 39'): Cleric/holy basic hit = short light streak + small
+  splash (no pillar); electric basic hit = small spark (no bolt; big bolts stay for skills/items); elemental MELEE basic
+  hits = melee slash in the element colour (`impactFx(..., melee)`, `ELEMENT_SLASH`). Cleric/holy HIT SOUND = 'thump +
+  sparkle' (ffmpeg-made, sound.md; the bell chime was rejected). Game page republished with all of it.
+  Not done (ask if wanted): a melee hero's element-charm rider still shows the old shot-style impact on top of the slash.
+- SOUND PICKS (session 39, worked well): make 5 short mp3 options with ffmpeg in the scratchpad, SendUserFile them
+  (lettered, one line each), user answers a letter / 'next' / 'more soft'. No sound board page needed.
+- PERMISSIONS: publishing still asks once per publish though `.claude/settings.json` allows the 4 publish tools; Claude
+  may not edit that file (auto-mode block). User may add `"mcp__claude-artifacts"` to its allow list on main themselves.
 - KIV / OPEN (ask the user which first; one per session):
-  1. HIT EFFECTS (user, session 38; `src/systems/hitFx.js`, effects.md): a. CLERIC basic attack look is far too much
-     (holy light column + burst): bolts of light ONLY. b. ELECTRIC basic hits: the lightning bolt on EVERY hit stops
-     feeling special; tone it down (ask how: bolt only sometimes / on big hits, or a small spark and the bolt for skills).
-     c. ELEMENTAL MELEE basic hits (fire/ice/electric/dark/holy melee) need their own look: likely a recoloured melee slash.
-  2. HERO ART (docs/proposals/hero-art/, user's own 3 knight sketches drawn as `ks` / `ksn`; nothing in the game).
-  3. STUDIO UI (simpler draw screen + new SHEET tab, archive 'session 35 start note', docs/proposals/studio-ui/).
-  4. BOSS REWORK floors 80 (Rask & Vesh) and 100 (Morthul) (archive 'session 31 start note').
-  5. Session 33 item leftovers: weak-item build tests, placeholder item choices, first-draft item looks.
-  6. SOUND (ON HOLD since session 5; MUSIC slider in Settings is saved but there is no music yet).
-  7. From session 37: REAL hero looks (shop sells stand-in recolours; owned looks not worn in fights), banners drawn in
+  1. HERO ART (docs/proposals/hero-art/, user's own 3 knight sketches drawn as `ks` / `ksn`; nothing in the game).
+  2. STUDIO UI (simpler draw screen + new SHEET tab, archive 'session 35 start note', docs/proposals/studio-ui/).
+  3. BOSS REWORK floors 80 (Rask & Vesh) and 100 (Morthul) (archive 'session 31 start note').
+  4. Session 33 item leftovers: weak-item build tests, placeholder item choices, first-draft item looks.
+  5. SOUND (ON HOLD since session 5; MUSIC slider in Settings is saved but there is no music yet).
+  6. From session 37: REAL hero looks (shop sells stand-in recolours; owned looks not worn in fights), banners drawn in
      the Studio (YOUR ART '+'), lore + glossary basics/status lines to review, wallet / payments / online leaderboard
      (server), OUTLINE style for sprites (archive), early floors a bit harder (archive). A new UI look only if the user
      asks (test it IN THE RUNNING GAME on the phone page first; the stone look failed there).

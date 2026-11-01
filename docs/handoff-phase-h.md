@@ -16,6 +16,11 @@
   7. From session 37: REAL hero looks (shop sells stand-in recolours; owned looks not worn in fights), banners drawn in
      the Studio (YOUR ART '+'), lore + glossary basics/status lines to review, wallet / payments / online leaderboard
      (server), OUTLINE style for sprites (archive), early floors a bit harder (archive).
+  8. HIT EFFECTS (user, session 38; `src/systems/hitFx.js`, docs/systems/effects.md):
+     a. CLERIC basic attack look is far too much (holy impact = light column + burst): replace with BOLTS OF LIGHT only.
+     b. ELECTRIC basic attacks: the lightning bolt plays on EVERY hit, so it stops feeling special; tone it down.
+     c. ELEMENTAL MELEE basic attacks (fire/ice/electric/dark/holy melee hits) need their own look: likely a
+        recoloured copy of the melee slash per element.
   Game page NOT rebuilt since session 33 (all session 37 screens unseen on the phone): rebuild when the user says
   'show me'. Studio page not republished since s34.
 - UI style trials lived in /home/user/ui-trials (a repo copy with `?ui=` themes; gone in a new session). Lesson: check

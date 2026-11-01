@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { CHAR_SCALE } from '../config.js';
+import { CHAR_SCALE, SHOOT_MOTION } from '../config.js';
 import { partArt, artSize, partAnchor, artPixels, mixColor, artKey } from '../systems/pixelArt.js';
 import { samplePose } from '../systems/animClips.js';
 import { iceColor } from '../systems/statusFx.js';
@@ -448,6 +448,34 @@ export default class Character extends Phaser.GameObjects.Container {
         weapon.angle = start;
         this.swingTween = null;
       },
+    });
+  }
+
+  // A shooter's attack (bow, staff, lute, flask...): plays the attack clip if it has one, else the weapon
+  // kicks up and the whole body leans back a little, then both settle. Moves only the parts, so it works
+  // wherever the character stands (the old jab only played from its home spot).
+  shoot() {
+    const M = SHOOT_MOTION;
+    if (this.playClip('attack', M.up + M.back)) return;
+    this.stopAttack();
+    const weapon = this.parts.weapon;
+    const w = this.def.parts.weapon;
+    const back = w && w.x < 0 ? 1 : -1; // the art looks the way its weapon points; "back" is the other way
+    const parts = Object.values(this.parts);
+    const set = (p) => {
+      for (const part of parts) part.x = part.restX + back * M.lean * p;
+      if (weapon) weapon.angle = weapon.restAngle - M.kick * p;
+    };
+    const out = (k) => 1 - (1 - k) * (1 - k); // fast start
+    const inOut = (k) => (k < 0.5 ? 2 * k * k : 1 - 2 * (1 - k) * (1 - k));
+    this.swingTween = this.scene.tweens.addCounter({
+      from: 0, to: M.up + M.back, duration: M.up + M.back, // quick kick out, slower settle back
+      onUpdate: (t) => {
+        const ms = t.getValue();
+        set(ms < M.up ? out(ms / M.up) : 1 - inOut((ms - M.up) / M.back));
+      },
+      onComplete: () => { set(0); this.swingTween = null; },
+      onStop: () => set(0),
     });
   }
 

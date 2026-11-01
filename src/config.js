@@ -6,6 +6,10 @@ export const BG_COLOR = '#14101f';
 // Characters are designed on a ~32x32 pixel grid, then scaled up by this whole number.
 export const CHAR_SCALE = 3;
 
+// A shooter's built-in attack motion (no attack clip drawn): the weapon kicks up and the body leans back.
+// kick = degrees, lean = pixels back (art pixels), up/back = ms for the kick and the return.
+export const SHOOT_MOTION = { kick: 30, lean: 2, up: 70, back: 170 };
+
 // Skill squares: attack skills are red, support skills are green (fill when ready / not ready).
 export const SKILL_COLORS = {
   attack: { ready: 0xb8402a, idle: 0x47201b },

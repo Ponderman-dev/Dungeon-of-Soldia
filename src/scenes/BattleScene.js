@@ -2163,7 +2163,7 @@ export default class BattleScene extends Phaser.Scene {
     if (a.unit.specials && a.unit.specials.demonHead && ['fire', 'electric', 'dark'].includes(arrow.kind)) arrow.kind = 'ice'; // Frozen Demon Head: its shots are ice
     a.arrow = arrow;
     this.flyArrow(a, arrow, t, hitInMs);
-    a.ch.lunge(t.ch.x, t.ch.y); // a small recoil-like jab as it shoots
+    a.ch.shoot(); // weapon kick + lean back (works wherever it stands)
   }
 
   // Flies an arrow from where it is now to a target (which may move), arriving after `ms`.
@@ -2218,7 +2218,7 @@ export default class BattleScene extends Phaser.Scene {
     const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
     this.addFx(Math.max(200, hitInMs * 2), (q, now) => { if (to.ch.active) b = this.fxPoint(to); return shotFx('flask', q, a, b, now, seed, color); }, ['shot', 'flask']);
     this.time.delayedCall(Math.max(100, hitInMs), () => sfx.play('flaskBreak'));
-    from.ch.lunge(to.ch.x, to.ch.y);
+    from.ch.shoot();
   }
 
   showProjectile(from, to, kind) {

@@ -43,6 +43,6 @@
     "pick": { "y": 124, "h": 200, "gridY": 340, "cols": 4, "cell": 76, "gap": 12, "scale": 6 },
     "banner": { "y": 124, "listY": 268, "tileW": 104, "tileH": 64, "gap": 15 },
     "dim": "0x55556a",
-    "bg": "0x0c0b10"
+    "bg": "0x18151d"
   }
 }

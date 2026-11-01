@@ -59,6 +59,6 @@
     "bossList": { "y": 124, "h": 68, "gap": 8 },
     "itemGrid": { "countY": 116, "y": 136, "cols": 6, "rows": 6, "cell": 50, "pagerY": 488, "cardY": 540, "cardH": 150 },
     "dim": "0x55556a",
-    "bg": "0x0c0b10"
+    "bg": "0x18151d"
   }
 }

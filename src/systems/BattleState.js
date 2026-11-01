@@ -114,6 +114,7 @@ export default class BattleState {
       moving: false, // walked this update (the scene makes it hop)
       walked: 0, // total distance walked (the scene uses it for the hop rhythm)
       knock: null, // being knocked back: { vx, vy, remaining }
+      walkTo: null, // MOVE ORDER: a floor spot the player sent this hero to { x, y, left } (setMove)
       casting: null, // a skill winding up: { index, remaining, total }
       regenAcc: 0, // health gained from regen this second
       regenClock: 0,
@@ -307,6 +308,7 @@ export default class BattleState {
       h.pending = null; // attacks aimed at the last floor's enemies are gone
       h.foe = null;
       h.order = null; // drag orders end with the floor
+      h.walkTo = null; // ...and so do move orders
       h.casting = null;
     }
     this.floorNo = floor;
@@ -333,6 +335,37 @@ export default class BattleState {
     hero.order = enemy.uid;
     if (hero.damageType === 'melee') hero.foe = enemy.uid;
     return true;
+  }
+
+  // MOVE ORDERS (user's pick, session 30/38): drag a hero onto the floor = that hero walks there; tap the floor = the whole
+  // squad walks there (side by side, `moveOrders.gatherSpacingPx` apart, in squad order). While walking a hero does not
+  // attack (an attack it had started is dropped); on arrival it goes straight back to fighting (a melee hero walks back
+  // to its target, a ranged one shoots from its new spot). A move order replaces that hero's drag order (attack order).
+  // Fear and knockback still win while they last; a skill wind-up finishes first. Gives up after `moveOrders.maxMs`
+  // (blocked in a crowd). Spots are kept inside the fight floor. Returns true when it was set.
+  setMove(heroUid, x, y, events = null) {
+    const hero = this.heroes.find((h) => h.uid === heroUid);
+    if (!hero || !hero.alive || hero.minion || !this.hasPositions(hero)) return false;
+    const L = this.rules.movement.layout;
+    const MO = this.rules.moveOrders;
+    hero.walkTo = {
+      x: Math.min(L.width - L.marginX, Math.max(L.marginX, x)),
+      y: Math.min(L.heroY, Math.max(L.enemyY + L.topMarginY, y)),
+      left: MO.maxMs,
+    };
+    hero.order = null;
+    if (hero.pending) {
+      hero.pending = null;
+      if (events) events.push({ type: 'attackCancel', unit: hero, reason: 'move' });
+    }
+    return true;
+  }
+
+  // Tap the floor: every living hero walks to the spot, side by side around it. Returns the heroes that got the order.
+  moveSquad(x, y, events = null) {
+    const living = this.heroes.filter((h) => h.alive && this.hasPositions(h));
+    const gap = this.rules.moveOrders.gatherSpacingPx;
+    return living.filter((h, i) => this.setMove(h.uid, x + (i - (living.length - 1) / 2) * gap, y, events));
   }
 
   // The enemy a hero was ordered to attack, if it is still there and can be hit.
@@ -561,7 +594,13 @@ export default class BattleState {
       if (this.isStunned(u) || u.pending || u.casting || u.bossCast || u.def.object || u.dust || u.burrowed) continue; // frozen in place, busy, an object, underground
       let goal = null;
       // A lit Kobold Sapper bomb is NOT avoided (user: it blocked walking and the bomb never hit): fighters keep going.
+      if (u.walkTo && !this.has(u, 'fear')) {
+        u.walkTo.left -= dt;
+        const far = Math.hypot(u.walkTo.x - u.x, u.walkTo.y - u.y);
+        if (far <= this.rules.moveOrders.arrivePx || u.walkTo.left <= 0) u.walkTo = null; // arrived (or stuck): back to fighting
+      }
       if (this.has(u, 'fear')) goal = { x: u.homeX, y: u.homeY, stop: 0 };
+      else if (u.walkTo) goal = { x: u.walkTo.x, y: u.walkTo.y }; // a move order (setMove)
       else if (u.damageType === 'melee') {
         const target = this.pickTarget(u);
         if (target && !this.inReach(u, target)) goal = { x: target.x, y: target.y };
@@ -681,6 +720,7 @@ export default class BattleState {
     target.pending = null; // an attack it had started never lands
     target.casting = null;
     target.moving = false;
+    target.walkTo = null;
     for (const u of this.allUnits()) {
       if (u.foe === target.uid) u.foe = null;
       if (u.order === target.uid) u.order = null; // a drag order ends with its enemy
@@ -1134,6 +1174,7 @@ export default class BattleState {
       if (unit.def.object || unit.dust || this.untargetable(unit)) continue; // objects never attack; dust / in the sky cannot
       unit.timer += dt;
       const interval = this.interval(unit);
+      if (unit.walkTo) { unit.timer = Math.min(unit.timer, interval); continue; } // walking to a move-order spot: attacks on arrival
       if (unit.timer < interval) continue;
       if (unit.pending) {
         unit.timer = interval; // still busy with the last attack: start the next one right after

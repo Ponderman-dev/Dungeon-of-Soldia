@@ -238,6 +238,12 @@
       "enemyRowGapMax": 160
     }
   },
+  "moveOrders": {
+    "_about": "MOVE ORDERS (BattleState.setMove / moveSquad): drag a hero onto the floor = it walks there, tap the floor = the whole squad walks there side by side gatherSpacingPx apart. No attacks while walking; arrived within arrivePx = back to fighting; gives up after maxMs (stuck in a crowd).",
+    "gatherSpacingPx": 54,
+    "arrivePx": 4,
+    "maxMs": 4000
+  },
   "attackMotion": {
     "hopHeight": 7,
     "hopLengthPx": 38,

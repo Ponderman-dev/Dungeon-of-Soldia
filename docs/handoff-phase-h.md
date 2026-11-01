@@ -1,32 +1,30 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 38): NEXT = THE USER PICKS FROM THE KIV LIST BELOW (session 37 ended on 'let's revisit our kivs')
-- BRANCH: `main` has EVERYTHING (session 37 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- DONE session 37 (all in the game, docs/systems/title-base.md section 5 + ui.md): SETTINGS, GAME-OVER summary (+ run
-  stats, systems/runStats.js), PROFILE (achievements, banners, rename), HEROES page (lore DRAFTS), GLOSSARY (learns as you
-  play: progress.seen), LEADERS + SHOP (look only, sample players, stand-in recolour looks), and the new UI LOOK: STONE
-  windows (user's pick after 7 rounds: 'gothic shape + Torchlit Stone colours, stone frame', neat version S2; ui.md).
+## START HERE (session 39): NEXT = THE USER PICKS FROM THE KIV LIST BELOW (one per session)
+- BRANCH: `main` has EVERYTHING (session 38 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- DONE session 38: MOVE ORDERS (tap floor = squad walks there side by side, drag a hero onto the floor = that hero walks;
+  no attacks while walking, back to fighting on arrival; user: 'it feels great'; movement.md 'MOVE ORDERS'). STONE UI
+  REVERTED (user saw it on the phone: 'doesn't feel good in action'): back to black windows + white lines (ui.md; the
+  stone look = commit 5627e48 if ever wanted). `.claude/settings.json` now allows artifact publishing without prompts.
+  Game page REBUILT + republished at the end of session 38 (move orders + all session 37 screens, old UI look).
 - KIV / OPEN (ask the user which first; one per session):
-  1. HERO ART (docs/proposals/hero-art/, user's own 3 knight sketches drawn as `ks` / `ksn`; nothing in the game).
-  2. STUDIO UI (simpler draw screen + new SHEET tab, archive 'session 35 start note', docs/proposals/studio-ui/).
-  3. MOVE ORDERS (tap floor = squad walks there, drag a hero onto floor = that hero walks; back to fighting on arrival).
+  1. HIT EFFECTS (user, session 38; `src/systems/hitFx.js`, effects.md): a. CLERIC basic attack look is far too much
+     (holy light column + burst): bolts of light ONLY. b. ELECTRIC basic hits: the lightning bolt on EVERY hit stops
+     feeling special; tone it down (ask how: bolt only sometimes / on big hits, or a small spark and the bolt for skills).
+     c. ELEMENTAL MELEE basic hits (fire/ice/electric/dark/holy melee) need their own look: likely a recoloured melee slash.
+  2. HERO ART (docs/proposals/hero-art/, user's own 3 knight sketches drawn as `ks` / `ksn`; nothing in the game).
+  3. STUDIO UI (simpler draw screen + new SHEET tab, archive 'session 35 start note', docs/proposals/studio-ui/).
   4. BOSS REWORK floors 80 (Rask & Vesh) and 100 (Morthul) (archive 'session 31 start note').
   5. Session 33 item leftovers: weak-item build tests, placeholder item choices, first-draft item looks.
   6. SOUND (ON HOLD since session 5; MUSIC slider in Settings is saved but there is no music yet).
   7. From session 37: REAL hero looks (shop sells stand-in recolours; owned looks not worn in fights), banners drawn in
      the Studio (YOUR ART '+'), lore + glossary basics/status lines to review, wallet / payments / online leaderboard
-     (server), OUTLINE style for sprites (archive), early floors a bit harder (archive).
-  8. HIT EFFECTS (user, session 38; `src/systems/hitFx.js`, docs/systems/effects.md):
-     a. CLERIC basic attack look is far too much (holy impact = light column + burst): replace with BOLTS OF LIGHT only.
-     b. ELECTRIC basic attacks: the lightning bolt plays on EVERY hit, so it stops feeling special; tone it down.
-     c. ELEMENTAL MELEE basic attacks (fire/ice/electric/dark/holy melee hits) need their own look: likely a
-        recoloured copy of the melee slash per element.
-  Game page NOT rebuilt since session 33 (all session 37 screens unseen on the phone): rebuild when the user says
-  'show me'. Studio page not republished since s34.
-- UI style trials lived in /home/user/ui-trials (a repo copy with `?ui=` themes; gone in a new session). Lesson: check
-  ui.md / the session-6 page (https://claude.ai/artifact/PBDU3qq4XzyMV43ujcfUkC) before proposing UI looks again.
-- PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish again
-  (if refused as 'identical', publish once more). Fresh clone: `npm install` first.
+     (server), OUTLINE style for sprites (archive), early floors a bit harder (archive). A new UI look only if the user
+     asks (test it IN THE RUNNING GAME on the phone page first; the stone look failed there).
+  Studio page not republished since s34.
+- PUBLISH: `npm run build:page`, then `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > dungeon-of-soldia.html` IN THE
+  REPO (publish_files only reads repo files and needs the doctype), publish_files to slug
+  f5023580-38b8-441a-879b-fb80bc2d607d (get_artifact for base_version), then delete the copy. Fresh clone: `npm install`.
 
 ## How we work with this user
 - UI LOOK rounds (session 37): they reject a lot and say 'try more first'; show the real game (camp + 4 menus) per style,

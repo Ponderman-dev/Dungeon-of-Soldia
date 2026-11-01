@@ -85,7 +85,7 @@ and suggest a fresh session per task.
   (`docs/proposals/skill-fx`, swap its content per topic, keep it small). New page only if the user asks.
 - NEVER read a published page back (the game page is our own 2.5 MB build): publish the file; if it is refused as
   'not viewed', the live copy is saved to a file: don't open it, just publish again.
-- Game: `npm run build:page`, copy `dist-page.html` to the scratchpad as `dungeon-of-soldia.html`,
+- Game: `npm run build:page`, copy `dist-page.html` IN THE REPO as `dungeon-of-soldia.html` with `<!DOCTYPE html>` on top (delete after),
   publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr
 - Studio: `npm run build:studio`, copy `studio-page.html` as `soldia-studio.html`,
   publish to https://claude.ai/artifact/1azV1LBUimRkeavNpQBgc7 (has `db`; omit `capabilities` on republish)

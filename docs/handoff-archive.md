@@ -1,5 +1,33 @@
-# Handoff ARCHIVE (sessions 2-37, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-38, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## (session 38 start note, 2026-11-01; session 38 did MOVE ORDERS + reverted the stone UI) START HERE (session 38): NEXT = THE USER PICKS FROM THE KIV LIST BELOW (session 37 ended on 'let's revisit our kivs')
+- BRANCH: `main` has EVERYTHING (session 37 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- DONE session 37 (all in the game, docs/systems/title-base.md section 5 + ui.md): SETTINGS, GAME-OVER summary (+ run
+  stats, systems/runStats.js), PROFILE (achievements, banners, rename), HEROES page (lore DRAFTS), GLOSSARY (learns as you
+  play: progress.seen), LEADERS + SHOP (look only, sample players, stand-in recolour looks), and the new UI LOOK: STONE
+  windows (user's pick after 7 rounds: 'gothic shape + Torchlit Stone colours, stone frame', neat version S2; ui.md).
+- KIV / OPEN (ask the user which first; one per session):
+  1. HERO ART (docs/proposals/hero-art/, user's own 3 knight sketches drawn as `ks` / `ksn`; nothing in the game).
+  2. STUDIO UI (simpler draw screen + new SHEET tab, archive 'session 35 start note', docs/proposals/studio-ui/).
+  3. MOVE ORDERS (tap floor = squad walks there, drag a hero onto floor = that hero walks; back to fighting on arrival).
+  4. BOSS REWORK floors 80 (Rask & Vesh) and 100 (Morthul) (archive 'session 31 start note').
+  5. Session 33 item leftovers: weak-item build tests, placeholder item choices, first-draft item looks.
+  6. SOUND (ON HOLD since session 5; MUSIC slider in Settings is saved but there is no music yet).
+  7. From session 37: REAL hero looks (shop sells stand-in recolours; owned looks not worn in fights), banners drawn in
+     the Studio (YOUR ART '+'), lore + glossary basics/status lines to review, wallet / payments / online leaderboard
+     (server), OUTLINE style for sprites (archive), early floors a bit harder (archive).
+  8. HIT EFFECTS (user, session 38; `src/systems/hitFx.js`, docs/systems/effects.md):
+     a. CLERIC basic attack look is far too much (holy impact = light column + burst): replace with BOLTS OF LIGHT only.
+     b. ELECTRIC basic attacks: the lightning bolt plays on EVERY hit, so it stops feeling special; tone it down.
+     c. ELEMENTAL MELEE basic attacks (fire/ice/electric/dark/holy melee hits) need their own look: likely a
+        recoloured copy of the melee slash per element.
+  Game page NOT rebuilt since session 33 (all session 37 screens unseen on the phone): rebuild when the user says
+  'show me'. Studio page not republished since s34.
+- UI style trials lived in /home/user/ui-trials (a repo copy with `?ui=` themes; gone in a new session). Lesson: check
+  ui.md / the session-6 page (https://claude.ai/artifact/PBDU3qq4XzyMV43ujcfUkC) before proposing UI looks again.
+- PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish again
+  (if refused as 'identical', publish once more). Fresh clone: `npm install` first.
 
 ## (session 37 start note, 2026-10-29; all done in session 37: every menu screen built + stone UI look) START HERE (session 37): NEXT = BUILD THE MENU SCREENS IN THE GAME (user: 'do all the menu in-game')
 - BRANCH: `main` has EVERYTHING (session 36 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).

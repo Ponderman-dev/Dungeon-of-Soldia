@@ -185,6 +185,9 @@ export default class BattleScene extends Phaser.Scene {
       .setDepth(DEPTH.hud);
     // Any tap closes an open passive text (not the tap that opened it: same moment).
     this.input.on('pointerdown', () => { if (this.passiveTip && this.passiveTip.active && this.time.now !== this.passiveTip.shownAt) this.hidePassive(); });
+    // MOVE ORDERS: a tap on the empty fight floor = the whole squad walks there (see floorTap).
+    this.input.on('pointerdown', (p, over) => { this.floorPress = { x: p.worldX, y: p.worldY, free: over.length === 0 && !this.passiveTip?.active }; });
+    this.input.on('pointerup', (p) => this.floorTap(p));
     this.dangerGlow = this.add.graphics().setDepth(DEPTH.heroBar - 0.5); // low-health glow at the bottom edge (drawDangerGlow)
     this.focusMarker = this.add.ellipse(0, 0, 70, 18).setStrokeStyle(2, 0xff4d4d).setVisible(false).setDepth(DEPTH.marker);
 
@@ -552,10 +555,44 @@ export default class BattleScene extends Phaser.Scene {
     // The enemy under the finger, or the one that was lit up a moment ago (small enemies walk; fingers are big).
     const lit = drag.over && drag.over.unit.alive && this.views.get(drag.over.unit.uid) === drag.over ? drag.over : null;
     const target = this.enemyAt(p.worldX, p.worldY) || lit;
-    if (!target || !this.state.setOrder(drag.view.unit.uid, target.unit.uid)) return;
+    if (!target) { // let go over the floor = only that hero walks there (move order)
+      const from = this.center(drag.view);
+      if (Math.hypot(p.worldX - from.x, p.worldY - from.y) >= 12 && this.onFloor(p.worldX, p.worldY)) this.orderMove([drag.view.unit], p.worldX, p.worldY);
+      return;
+    }
+    if (!this.state.setOrder(drag.view.unit.uid, target.unit.uid)) return;
     sfx.play('tap');
     this.ring(target, 0xffa040);
     this.popText(drag.view, 'On it!', '#ffa040');
+  }
+
+  // Is a point on the fight floor (where fighters can stand)? Same band the rules keep fighters in.
+  onFloor(x, y) {
+    const L = combatRules.movement.layout;
+    return x >= 0 && x <= L.width && y >= L.enemyY + L.topMarginY - 10 && y <= L.heroY + 10;
+  }
+
+  // MOVE ORDERS (user's pick): a short tap on the empty fight floor (nothing tappable under the finger, no hero drag)
+  // = the whole squad walks there side by side (BattleState.moveSquad). A tap just next to an enemy still focuses it.
+  floorTap(p) {
+    const press = this.floorPress;
+    this.floorPress = null;
+    if (!press || !press.free || this.mode !== 'fighting' || this.orderDrag) return;
+    if (Math.hypot(p.worldX - press.x, p.worldY - press.y) > 12 || !this.onFloor(p.worldX, p.worldY)) return;
+    const near = this.enemyAt(p.worldX, p.worldY);
+    if (near) { this.state.setFocus(near.unit.uid); return; }
+    this.orderMove(null, p.worldX, p.worldY);
+  }
+
+  // Sends heroes (null = the whole squad) to a floor spot; the spot gets a small white ring and the heroes say 'Moving!'.
+  orderMove(heroes, x, y) {
+    const events = [];
+    const moved = heroes ? heroes.filter((h) => this.state.setMove(h.uid, x, y, events)) : this.state.moveSquad(x, y, events);
+    if (!moved.length) return;
+    this.showEvents(events);
+    sfx.play('tap');
+    if (heroes) this.popText(this.views.get(moved[0].uid), 'Moving!', '#ffffff');
+    this.moveTap = { x, y, at: this.time.now };
   }
 
   // Every frame: the drag arrow (while dragging), and for every hero with an order a thin orange ring under its
@@ -575,6 +612,10 @@ export default class BattleScene extends Phaser.Scene {
       g.lineStyle(2, 0xffa040, 0.9).strokeEllipse(tf.x, tf.y, 54, 14);
       g.lineStyle(2, 0xffa040, 0.6).strokeEllipse(hf.x, hf.y, 34, 9);
     }
+    // Move orders: a small white ring on the floor where each walking hero is going, and a short ripple where you tapped.
+    for (const h of this.state.heroes) if (h.alive && h.walkTo) g.lineStyle(2, 0xffffff, 0.75).strokeEllipse(h.walkTo.x, h.walkTo.y + 4, 30, 9);
+    const mt = this.moveTap, mq = mt ? (this.time.now - mt.at) / 300 : 1;
+    if (mq < 1) g.lineStyle(2, 0xffffff, 0.8 * (1 - mq)).strokeEllipse(mt.x, mt.y + 4, 20 + 30 * mq, 6 + 9 * mq);
     const d = this.orderDrag;
     if (!d || !d.view.unit.alive || this.mode !== 'fighting') { if (d) this.orderDrag = null; return; }
     const from = this.center(d.view);
@@ -583,11 +624,14 @@ export default class BattleScene extends Phaser.Scene {
     const to = over ? this.center(over) : { x: d.x, y: d.y };
     const ang = Math.atan2(to.y - from.y, to.x - from.x), len = Math.hypot(to.x - from.x, to.y - from.y);
     if (len < 12) return; // a tap, not a drag yet
+    if (!over && !d.over && !this.onFloor(d.x, d.y)) return; // off the floor: letting go here does nothing
+    const col = over || d.over ? 0xff4d4d : 0xffffff; // red = attack that enemy, white = walk to this spot
     a.lineStyle(6, 0x1a1020, 0.8).lineBetween(from.x, from.y, to.x - Math.cos(ang) * 10, to.y - Math.sin(ang) * 10);
-    a.lineStyle(3, 0xff4d4d, 1).lineBetween(from.x, from.y, to.x - Math.cos(ang) * 10, to.y - Math.sin(ang) * 10);
+    a.lineStyle(3, col, 1).lineBetween(from.x, from.y, to.x - Math.cos(ang) * 10, to.y - Math.sin(ang) * 10);
     const head = (k, w) => [to.x - Math.cos(ang) * k + Math.cos(ang + Math.PI / 2) * w, to.y - Math.sin(ang) * k + Math.sin(ang + Math.PI / 2) * w];
     const [l1, l2] = head(16, 9), [r1, r2] = head(16, -9);
-    a.fillStyle(0xff4d4d, 1).fillTriangle(to.x, to.y, l1, l2, r1, r2);
+    a.fillStyle(col, 1).fillTriangle(to.x, to.y, l1, l2, r1, r2);
+    if (!over && !d.over) a.lineStyle(2, 0xffffff, 0.9).strokeEllipse(to.x, to.y + 4, 30, 9);
     if (over) { const f = foot(over); a.lineStyle(3, 0xff4d4d, 1).strokeEllipse(f.x, f.y, 62, 16); }
   }
 

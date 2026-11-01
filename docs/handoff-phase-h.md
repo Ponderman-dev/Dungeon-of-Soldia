@@ -1,28 +1,31 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 37): NEXT = BUILD THE MENU SCREENS IN THE GAME (user: 'do all the menu in-game')
-- BRANCH: `main` has EVERYTHING (session 36 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- ALL menu mock-ups are picked (sessions 35-36, nothing built yet): read docs/systems/title-base.md section 5 (every
-  pick, spacing rule, notes) + look at docs/proposals/menu/*-picked-*.png (and glossary/heroes/leaderboard PNGs).
-  Picks: Glossary = book with chapters; Heroes = hero page C; Leaders = podium; Shop = A; SETTINGS = D (tabs SOUND /
-  GAME / MORE, big buttons, chosen = FILLED gold; battle speed 1X/2X); PROFILE = D (banner + profile hero on the name
-  strip, STATS / ACHIEVE. tabs, hero + banner pickers); GAME OVER = B (tap a hero = gold outline + bigger, BOSSES /
-  ITEMS pages) with the FLOW: defeat screen (flavour line) -> CONTINUE -> summary -> TRY AGAIN = squad screen / CAMP.
-- SUGGESTED ORDER (ask the user to confirm): 1 GAME-OVER summary (needs new run stats: per-hero damage / healing /
-  taken / kills / items, boss beat times; logic in src/systems, no Phaser) -> 2 SETTINGS (battle speed is real; sound
-  sliders can be inert, sound ON HOLD; save in progress.js) -> 3 PROFILE (achievements + banners + profile hero = new
-  systems; banner art from the Studio) -> 4 HEROES page -> 5 GLOSSARY -> 6 SHOP / LEADERS (look only, no server).
-  Camp buttons today open `comingSoonWindow()` (uiKit.js): replace them one by one. ONE SCREEN PER STEP, show
-  in-game screenshots (scratchpad copy + Playwright) before each, commit after each.
-- Mock helper (scratchpad, gone): HTML 390x844 screens + assets.js from a node script (hero sprites composited from
-  parts via pixelArt.js, floorArtPixels patch, titleArt layers, itemIcons). In the game use the real uiKit + textures.
-- OPEN (unchanged): STUDIO UI plan (archive 'session 35 start note'), hero pixel art KIV, session 33 leftovers
-  (weak-item tests, placeholder items, MOVE ORDERS, boss rework 80/100). Game page not rebuilt since session 33 item
-  buffs; studio page not republished since s34.
+## START HERE (session 38): NEXT = THE USER PICKS FROM THE KIV LIST BELOW (session 37 ended on 'let's revisit our kivs')
+- BRANCH: `main` has EVERYTHING (session 37 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- DONE session 37 (all in the game, docs/systems/title-base.md section 5 + ui.md): SETTINGS, GAME-OVER summary (+ run
+  stats, systems/runStats.js), PROFILE (achievements, banners, rename), HEROES page (lore DRAFTS), GLOSSARY (learns as you
+  play: progress.seen), LEADERS + SHOP (look only, sample players, stand-in recolour looks), and the new UI LOOK: STONE
+  windows (user's pick after 7 rounds: 'gothic shape + Torchlit Stone colours, stone frame', neat version S2; ui.md).
+- KIV / OPEN (ask the user which first; one per session):
+  1. HERO ART (docs/proposals/hero-art/, user's own 3 knight sketches drawn as `ks` / `ksn`; nothing in the game).
+  2. STUDIO UI (simpler draw screen + new SHEET tab, archive 'session 35 start note', docs/proposals/studio-ui/).
+  3. MOVE ORDERS (tap floor = squad walks there, drag a hero onto floor = that hero walks; back to fighting on arrival).
+  4. BOSS REWORK floors 80 (Rask & Vesh) and 100 (Morthul) (archive 'session 31 start note').
+  5. Session 33 item leftovers: weak-item build tests, placeholder item choices, first-draft item looks.
+  6. SOUND (ON HOLD since session 5; MUSIC slider in Settings is saved but there is no music yet).
+  7. From session 37: REAL hero looks (shop sells stand-in recolours; owned looks not worn in fights), banners drawn in
+     the Studio (YOUR ART '+'), lore + glossary basics/status lines to review, wallet / payments / online leaderboard
+     (server), OUTLINE style for sprites (archive), early floors a bit harder (archive).
+  Game page NOT rebuilt since session 33 (all session 37 screens unseen on the phone): rebuild when the user says
+  'show me'. Studio page not republished since s34.
+- UI style trials lived in /home/user/ui-trials (a repo copy with `?ui=` themes; gone in a new session). Lesson: check
+  ui.md / the session-6 page (https://claude.ai/artifact/PBDU3qq4XzyMV43ujcfUkC) before proposing UI looks again.
 - PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish again
   (if refused as 'identical', publish once more). Fresh clone: `npm install` first.
 
 ## How we work with this user
+- UI LOOK rounds (session 37): they reject a lot and say 'try more first'; show the real game (camp + 4 menus) per style,
+  label each, and offer palettes / 'neater' versions of the one they half-like. '[No preference]' = ask again in text.
 - 'Discuss first' / 'Hold on' / 'let me write first' (session 30) = STOP and wait for their text; no building meanwhile.
 - Unfair luck bothers them ('potentially BS'): when a random move can pile up on one hero, show sims (hits per hero) and spread rules.
 - MOCK-UPS (session 34): 'before doing anything show me a png' = fake HTML page in the scratchpad + Playwright PNG

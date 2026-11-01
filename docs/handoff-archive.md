@@ -1,5 +1,27 @@
-# Handoff ARCHIVE (sessions 2-35, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-37, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## (session 37 start note, 2026-10-29; all done in session 37: every menu screen built + stone UI look) START HERE (session 37): NEXT = BUILD THE MENU SCREENS IN THE GAME (user: 'do all the menu in-game')
+- BRANCH: `main` has EVERYTHING (session 36 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- ALL menu mock-ups are picked (sessions 35-36, nothing built yet): read docs/systems/title-base.md section 5 (every
+  pick, spacing rule, notes) + look at docs/proposals/menu/*-picked-*.png (and glossary/heroes/leaderboard PNGs).
+  Picks: Glossary = book with chapters; Heroes = hero page C; Leaders = podium; Shop = A; SETTINGS = D (tabs SOUND /
+  GAME / MORE, big buttons, chosen = FILLED gold; battle speed 1X/2X); PROFILE = D (banner + profile hero on the name
+  strip, STATS / ACHIEVE. tabs, hero + banner pickers); GAME OVER = B (tap a hero = gold outline + bigger, BOSSES /
+  ITEMS pages) with the FLOW: defeat screen (flavour line) -> CONTINUE -> summary -> TRY AGAIN = squad screen / CAMP.
+- SUGGESTED ORDER (ask the user to confirm): 1 GAME-OVER summary (needs new run stats: per-hero damage / healing /
+  taken / kills / items, boss beat times; logic in src/systems, no Phaser) -> 2 SETTINGS (battle speed is real; sound
+  sliders can be inert, sound ON HOLD; save in progress.js) -> 3 PROFILE (achievements + banners + profile hero = new
+  systems; banner art from the Studio) -> 4 HEROES page -> 5 GLOSSARY -> 6 SHOP / LEADERS (look only, no server).
+  Camp buttons today open `comingSoonWindow()` (uiKit.js): replace them one by one. ONE SCREEN PER STEP, show
+  in-game screenshots (scratchpad copy + Playwright) before each, commit after each.
+- Mock helper (scratchpad, gone): HTML 390x844 screens + assets.js from a node script (hero sprites composited from
+  parts via pixelArt.js, floorArtPixels patch, titleArt layers, itemIcons). In the game use the real uiKit + textures.
+- OPEN (unchanged): STUDIO UI plan (archive 'session 35 start note'), hero pixel art KIV, session 33 leftovers
+  (weak-item tests, placeholder items, MOVE ORDERS, boss rework 80/100). Game page not rebuilt since session 33 item
+  buffs; studio page not republished since s34.
+- PUBLISH: the first publish per session is refused ('not viewed'): Read 1-8 lines of the saved live copy, publish again
+  (if refused as 'identical', publish once more). Fresh clone: `npm install` first.
 
 ## (session 36 start note, 2026-10-29; all done in session 36: settings D, profile D, game-over B) START HERE (session 36): NEXT = MOCK-UPS: SETTINGS, then PROFILE, then GAME-OVER ANALYTICS screen (user's order)
 - BRANCH: `main` has EVERYTHING (session 35 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).

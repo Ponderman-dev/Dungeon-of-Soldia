@@ -135,11 +135,11 @@
       "source": "new_100-cc0-sfx-weird-05.mp3"
     },
     "hitHoly": {
-      "volume": 0.2,
+      "volume": 0.3,
       "pitchJitter": 0.05,
       "minGapMs": 90,
       "file": "picked/hitHoly",
-      "source": "kenney impactBell_heavy_002 (CC0) pitched x2.1, cut to 0.36s (session 39, user: a soft chime / bell for the Cleric)"
+      "source": "made with ffmpeg (session 39, user pick S 'thump + sparkle'): a soft low thump (160 Hz falling) + a faint high sparkle (2349 Hz), 0.4s"
     },
     "crit": {
       "volume": 0.5,

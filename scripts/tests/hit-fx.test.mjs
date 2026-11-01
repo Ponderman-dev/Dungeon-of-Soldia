@@ -33,3 +33,12 @@ ok('every moment shows something', Object.values(mom).every((fn) => [0.1, 0.3, 0
 ok('a dodge steps AWAY from the attacker and comes back', dodgeFx(0.3, ub).dx > 0 && dodgeFx(0.3, { ...ub, side: 1 }).dx < 0 && dodgeFx(1, ub).dx === 0);
 ok('a heal glows green for a moment', healFx(0.35, ub).tint && healFx(0.95, ub).tint === null);
 ok('the death puff is gone at the end', deathPuffFx(1, 60, 50).length === 0);
+// Session 39 (user): calmer holy and electric basic hits, elemental melee = a coloured slash.
+import { ELEMENT_SLASH } from '../../src/systems/hitFx.js';
+const span = (d) => d.length ? Math.max(...d.map((p) => p[1])) - Math.min(...d.map((p) => p[1])) : 0;
+ok('holy hit: no tall light column any more', [0.1, 0.3, 0.6].every((q) => span(impactFx('holy', q, u, 0, 1).draws) < 20));
+ok('electric hit: no bolt from the attacker', [0.1, 0.3, 0.6].every((q) => impactFx('electric', q, u, 0, 1, { x: 0, y: 40 }).draws.every((p) => p[0] > 40)));
+ok('electric shot: a short spark, not a line from the shooter', projectileFx('electric', { x: 0, y: 0 }, { x: 40, y: 0 }, 0, 1).every((p) => p[0] > 30));
+ok('elemental melee: a slash in the element colour on the attacker side', Object.entries(ELEMENT_SLASH).every(([k, [c]]) => { const d = impactFx(k, 0.3, u, 0, 1, null, true).draws; return d.some((p) => p[4] === c) && d.every((p) => p[0] <= u.x); }));
+ok('elemental melee looks different from the plain slash and from the shot impact', Object.keys(ELEMENT_SLASH).every((k) => { const m = JSON.stringify(impactFx(k, 0.3, u, 0, 1, null, true).draws); return m !== JSON.stringify(impactFx('melee', 0.3, u, 0, 1).draws) && m !== JSON.stringify(impactFx(k, 0.3, u, 0, 1).draws); }));
+ok('elemental melee is over when it ends', Object.keys(ELEMENT_SLASH).every((k) => impactFx(k, 1, u, 0, 1, null, true).draws.length === 0));

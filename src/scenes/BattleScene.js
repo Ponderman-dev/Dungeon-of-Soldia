@@ -34,7 +34,7 @@ import { iconList, iconLayout, ICON_PX } from '../systems/statusIcons.js';
 import { statusLook, iceBreak, bodyBox } from '../systems/statusFx.js';
 import { eliteGlow, crownPixels } from '../systems/eliteFx.js';
 import * as bossFx from '../systems/bossFx.js';
-import { projectileFx, impactFx, critFx, IMPACT_MS, CRIT_MS, MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, deathPuffFx } from '../systems/hitFx.js';
+import { projectileFx, impactFx, critFx, IMPACT_MS, ELEMENT_SLASH, CRIT_MS, MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, deathPuffFx } from '../systems/hitFx.js';
 import BattleState from '../systems/BattleState.js';
 import dialogue from '../data/dialogue.json';
 import { pickSpeech, clearSpeech } from '../systems/dialogue.js';
@@ -750,7 +750,7 @@ export default class BattleScene extends Phaser.Scene {
         else if (h.kind === 'heal') { const o = healFx(q, u, h.seed); paint('heal', o.draws); if (o.tint && !v.hitTint) v.hitTint = [TUNE.color('hit', 'heal', o.tint[0]), o.tint[1]]; }
         continue;
       }
-      const out = impactFx(h.type, q, u, now, h.seed, h.attacker && h.attacker.ch.active ? at(h.attacker) : null);
+      const out = impactFx(h.type, q, u, now, h.seed, h.attacker && h.attacker.ch.active ? at(h.attacker) : null, h.melee);
       if (h.ghastly) { draw(TUNE.paint('item', 'ghastlyFire', itemFx.ghastlyDraws(out.draws, u))); continue; } // Ghastly Fire: the fire hit, bigger and purple
       paint(h.type, out.draws);
       if (out.tint && (!v.hitTint || out.tint[1] > v.hitTint[1])) v.hitTint = [TUNE.color('hit', h.type, out.tint[0]), out.tint[1]];
@@ -1058,7 +1058,10 @@ export default class BattleScene extends Phaser.Scene {
     const side = a && a.ch.x < t.ch.x ? -1 : 1;
     const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
     const ghastly = type === 'fire' && e.attacker.side === 'hero' && !e.attacker.minion && e.attacker.specials && e.attacker.specials.ghastly > 0;
-    (this.impacts = this.impacts || []).push({ type, start: this.time.now, ms: TUNE.ms('hit', type, IMPACT_MS[type]), view: t, attacker: a, side, seed, ghastly });
+    // An elemental MELEE basic hit (a fire elite's sword, Ice Spirit Knight): the slash in the element's colour.
+    const melee = !!e.basic && !e.rider && !ghastly && e.attacker.damageType === 'melee' && !!ELEMENT_SLASH[type];
+    const ms = melee ? TUNE.ms('hit', 'melee', IMPACT_MS.melee) : TUNE.ms('hit', type, IMPACT_MS[type]);
+    (this.impacts = this.impacts || []).push({ type, start: this.time.now, ms, view: t, attacker: a, side, seed, ghastly, melee });
     if (e.result.crit) {
       this.impacts.push({ crit: true, start: this.time.now, ms: TUNE.ms('hit', 'crit', CRIT_MS), view: t, attacker: a, side, seed });
       this.cameras.main.shake(90, 0.003); // a tiny shake for crits
@@ -1827,7 +1830,7 @@ export default class BattleScene extends Phaser.Scene {
       if (!e.skill && t && !e.ghastly && !e.noImpact) this.addImpact(e, a, t); // the hit's own look, per damage type (systems/hitFx.js)
       // Element charms ride inside the hit (one number): their element's hit look and sound play with it.
       for (const r of e.result.riders || []) {
-        if (t) this.addImpact({ ...e, damageType: r.damageType, result: { ...e.result, crit: false } }, a, t);
+        if (t) this.addImpact({ ...e, rider: true, damageType: r.damageType, result: { ...e.result, crit: false } }, a, t);
         this.hitSound({ ...e, damageType: r.damageType, result: { crit: false } });
       }
       if (e.skill) {

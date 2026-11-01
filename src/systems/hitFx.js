@@ -57,15 +57,18 @@ export function projectileFx(type, start, head, t, seed = 0) {
     const r = Math.floor(t / 40) % 2; // it spins
     g.px(head.x, head.y, C.white); g.px(head.x + (r ? 1 : 0), head.y + (r ? 0 : 1), C.ice); g.px(head.x - (r ? 1 : 0), head.y - (r ? 0 : 1), C.ice);
     const [tx, ty] = back(2); g.px(tx, ty, C.ice2, 0.5);
-  } else if (type === 'electric') {
-    if (Math.floor(t / 70) % 2 === 0) bolt(g, start.x, start.y, head.x, head.y, C.elec, seed + Math.floor(t / 70), Math.max(2, Math.round(d / 6)), 3);
+  } else if (type === 'electric') { // (user, session 39: the full bolt on every shot was too much) a short crackling spark
+    const [tx, ty] = back(Math.min(7, d));
+    if (Math.floor(t / 70) % 2 === 0) bolt(g, tx, ty, head.x, head.y, C.elec, seed + Math.floor(t / 70), 2, 2);
+    else g.px(tx, ty, C.elec, 0.6);
     g.px(head.x, head.y, C.white);
   } else if (type === 'dark') {
     for (let i = 1; i < 7; i++) { const [x, y] = back(i * 1.1); g.px(x, y + Math.sin(t / 60 + i) * 1.5, C.dark2, 1 - i / 7); }
     g.disc(head.x, head.y, 2, C.dark); g.px(head.x, head.y, C.white);
-  } else if (type === 'holy') {
-    for (let i = 1; i < 4; i++) { const [x, y] = back(i * 1.5); g.px(x, y, C.holy, 1 - i / 4); }
-    g.disc(head.x, head.y, 1, C.gold); g.px(head.x, head.y, C.white);
+  } else if (type === 'holy') { // a bolt of light: a bright white-gold streak (user, session 39: bolts of light only)
+    const [x, y] = back(Math.min(8, d)); g.line(x, y, head.x, head.y, C.holy, 0.7);
+    const [x2, y2] = back(Math.min(4, d)); g.line(x2, y2, head.x, head.y, C.white);
+    g.px(head.x, head.y - 1, C.holy, 0.6); g.px(head.x, head.y + 1, C.holy, 0.6);
   } else { // ranged: an arrow, shaft trailing behind a white tip
     const [x, y] = back(5); g.line(x, y, head.x - ux, head.y - uy, ARROW); g.px(head.x, head.y, C.white);
   }
@@ -75,12 +78,19 @@ export function projectileFx(type, start, head, t, seed = 0) {
 // Where it lands. q = 0..1 over IMPACT_MS[type]; u = the target's body in character pixels:
 // { x (body middle), y (feet), top, mid, hw, side } where side = -1 if the attacker is on its left (the
 // hit lands on that side). from = where an electric bolt comes from (the attacker), or null.
+// melee = true: an elemental MELEE hit (a fire elite's sword...): the melee slash in the element's colour.
 // Returns { draws, tint: [colour, amount] | null, dx (a twitch) }.
-export function impactFx(type, q, u, t, seed = 0, from = null) {
+export const ELEMENT_SLASH = { fire: [C.fire, C.fire2], ice: [C.ice, C.white], electric: [C.elec, C.white], dark: [C.dark, C.dark2], holy: [C.holy, C.gold] };
+export function impactFx(type, q, u, t, seed = 0, from = null, melee = false) {
   const g = pen();
   const fx = u.x + u.side * u.hw, fy = u.mid; // the front of the body, facing the attacker
   let tint = null, dx = 0;
-  if (type === 'melee') {
+  if (melee && ELEMENT_SLASH[type]) { // (user, session 39) recoloured slash + a few bits of the element + its tint
+    const [c1, c2] = ELEMENT_SLASH[type];
+    slash(g, fx, fy, 8, c1, q, u.side);
+    burst(g, fx, fy, 5, [c1, c2], ph(q, 0.15, 1), 7, 3 + seed, type === 'fire' ? 1 : 0);
+    if (type !== 'holy' && type !== 'electric') tint = [c1, 0.3 * (1 - q)];
+  } else if (type === 'melee') {
     slash(g, fx, fy, 8, C.grey, q, u.side);
     burst(g, fx, fy, 6, [C.white, C.grey], ph(q, 0.15, 1), 7, 3 + seed);
   } else if (type === 'ranged') {
@@ -97,21 +107,17 @@ export function impactFx(type, q, u, t, seed = 0, from = null) {
     }
     tint = [C.ice, 0.5 * (1 - q)];
   } else if (type === 'electric') {
-    if (from && q < 1 && Math.floor(t / 70) % 2 === 0) bolt(g, from.x, from.y, fx, fy, C.elec, seed + Math.floor(t / 70), 6, 4);
-    burst(g, fx, fy, 8, [C.elec, C.white], ph(q, 0.05, 1), 8, 7 + seed);
-    if (q < 1) { tint = Math.floor(t / 60) % 2 ? [C.white, 0.8] : null; dx = Math.floor(t / 50) % 2 ? 1 : -1; }
+    // (user, session 39) a small spark, no bolt from the attacker (the big bolt is for skills / items); a short flicker
+    if (q > 0 && q < 0.3) { const L = 2 + Math.round(q * 6); for (const [ax, ay] of [[1, -1], [-1, 1], [1, 1], [-1, -1]]) g.line(fx, fy, fx + ax * L * (rnd(seed + ax + ay * 3) * 0.5 + 0.5), fy + ay * L * 0.6, C.elec, 1 - q / 0.3); }
+    burst(g, fx, fy, 6, [C.elec, C.white], ph(q, 0.05, 1), 7, 7 + seed);
+    if (q < 0.35) { tint = Math.floor(t / 60) % 2 ? [C.white, 0.5] : null; dx = Math.floor(t / 50) % 2 ? 1 : -1; }
   } else if (type === 'dark') {
     const r = ph(q, 0, 0.5); if (r > 0 && r < 1) g.ring(u.x, u.mid, 8 * (1 - r), C.dark);
     for (let i = 0; i < 4; i++) { const w = ph(q, 0.15 + i * 0.1, 0.8 + i * 0.05); if (w > 0 && w < 1) g.px(u.x - 4 + i * 3, u.mid - w * 12, i % 2 ? C.dark : C.dark2, 1 - w); }
     tint = [C.dark2, 0.5 * (1 - q)];
-  } else if (type === 'holy') {
-    if (q > 0 && q < 1) {
-      const w = Math.round(4 * (1 - q)) + 1; const top = q < 0.2 ? u.mid - (q / 0.2) * 60 : u.mid - 60;
-      for (let y = Math.round(top); y < u.y; y++) for (let x = -w; x <= w; x++) g.px(u.x + x, y, Math.abs(x) < w / 2 ? C.white : C.holy, 0.8 * (1 - q));
-      g.ring(u.x, u.y, 4 + q * 10, C.gold, 1 - q, 1 + q * 3);
-      tint = [C.white, 0.8 * (1 - q)];
-    }
-    burst(g, u.x, u.mid, 8, [C.holy, C.white], ph(q, 0.08, 1), 9, 4 + seed);
+  } else if (type === 'holy') { // (user, session 39: the light column + burst was far too much) a small light splash
+    burst(g, fx, fy, 6, [C.holy, C.white], q, 7, 4 + seed);
+    if (q < 0.4) tint = [C.white, 0.4 * (1 - q / 0.4)];
   }
   if (tint) tint = [tint[0], Math.round(clamp(tint[1]) * 20) / 20];
   if (tint && tint[1] <= 0) tint = null;

@@ -25,3 +25,13 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
 - Page-2 picks applied (2026-10-21, db `assign`): tap = 3 random takes (picked/tap_1-3: New: Door 05, PIXABAY Button, Yours: Retro click), skill_alch_barrage (Flask Barrage) = New: Glass breaking 06, descend (BEGIN DESCENT) = PIXABAY Appear magic (replaces the gong). Applied by hand (apply-picks.py still takes page-1 picks only).
 - TAP = ONE sound again (2026-10-21, user picked on the review page: remove take 1 Door 05 and take 3 Retro click): tap = PIXABAY Button only (`picked/tap.mp3`, was tap_2); tap_1 / tap_3 deleted.
 - hitHoly = THUMP + SPARKLE (session 39, user: the Cleric's attack sound must change; the bell chime 'doesn't feel good', 4 batches of options sent as mp3 files, user picked S): a soft low thump + a faint high sparkle, made with ffmpeg (aevalsrc), 0.4s; same cue for every holy hit.
+- ROUND 10 BOARD (session 40, user: 'put the Cleric's attack sound and skill sound on the sound board'): a CLERIC group
+  at the top: hitHoly, skill_holy_nova, skill_sanctuary and a NEW moment `grace` (her Grace heal + bless motion every
+  7s; NO cue in sounds.json yet, so the game plays nothing there). `add-cleric.py` makes the new options with ffmpeg
+  (peak -1 dB, mean <= -19 dB like the game files) into `docs/proposals/sounds/round10/` (kept in the repo: apply the
+  picks from there) and `round10/cleric-rows.js`, which is pasted into the live page right before
+  `// ---------- audio` (the board is 4.4 MB: the Artifact tool's `read` with `path: index.html` saves it to a file).
+  At runtime it moves those rows out of Hits / Hero skills into the Cleric group, sets A to the game's CURRENT sound
+  (`cleric_now_<cue>.mp3`), keeps the old options (same letters, saved picks stay right) and adds the NEW ones after.
+  Applying a pick of a NEW option: copy `round10/<file>` to `src/assets/sounds/picked/<cue>.mp3`; for `grace` also add
+  the cue (volume 0.3, minGapMs 120) and play it in BattleScene where `e.grace` calls `ch.bless()`.

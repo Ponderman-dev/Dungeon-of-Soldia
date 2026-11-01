@@ -82,6 +82,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
     - **Cleric** HOLY BATTLE-HEALER (built session 6): MENDING (base regen aura + every-4th-attack heal counter) REMOVED.
       GRACE (`passive.grace` + `regenAura` with base 0 / heal items +25%): every `everyMs` 5s of a fight (`hero.floor.grace`,
       `tickGrace()`) she heals the most hurt hero (8% + 1x attack, x aura factor; waits charged if nobody is hurt);
+      LOOK (session 40): the Grace `flask` event has `grace: true`, BattleScene calls `ch.bless()` = her `bless` clip if drawn, else hop + staff raised high + short gold glow (`BLESS_MOTION` in config.js; skipped during a skill wind-up), then the gold mote flies.
       `clericHeal()`: a heal on SOMEONE ELSE gives HER `selfBuff` +20% attack +20% attack speed 4s. HOLY NOVA (`holy_nova`,
       `holyNova()`): heals the most hurt hero (12% + 1x attack, x aura factor) and every enemy within 110px of THAT hero
       takes holy damage = 60% + 25% of the heal (no on-hit items); `wave` event draws the zone; cast effect `holyNova`

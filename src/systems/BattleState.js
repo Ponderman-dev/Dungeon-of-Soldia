@@ -1594,7 +1594,7 @@ export default class BattleState {
     const ally = this.lowestHealthPercent();
     if (!ally || ally.hp >= ally.maxHp) { hero.floor.grace = G.everyMs; return; } // nobody hurt: it waits, charged
     hero.floor.grace = 0;
-    events.push({ type: 'flask', unit: hero, target: ally, flask: { color: '0xfff2a0' } }); // a holy mote lobbed over
+    events.push({ type: 'flask', unit: hero, target: ally, flask: { color: '0xfff2a0' }, grace: true }); // a holy mote lobbed over (grace: she plays her bless motion)
     this.clericHeal(hero, ally, this.healAmount(hero, ally, G.heal) * this.regenAura().factor, events);
   }
 

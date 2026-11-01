@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { CHAR_SCALE, SHOOT_MOTION } from '../config.js';
+import { CHAR_SCALE, SHOOT_MOTION, BLESS_MOTION } from '../config.js';
 import { partArt, artSize, partAnchor, artPixels, mixColor, artKey } from '../systems/pixelArt.js';
 import { samplePose } from '../systems/animClips.js';
 import { iceColor } from '../systems/statusFx.js';
@@ -477,6 +477,26 @@ export default class Character extends Phaser.GameObjects.Container {
       onComplete: () => { set(0); this.swingTween = null; },
       onStop: () => set(0),
     });
+  }
+
+  // A blessing (the Cleric's Grace heal): her `bless` clip if she has one, else a small hop with the staff raised
+  // high, held, then lowered, and a short gold glow. Skipped while a skill is winding up (that pose wins).
+  bless() {
+    const M = BLESS_MOTION;
+    if (this.action && this.action.id === 'windup') return;
+    if ((this.castTweens || []).some((t) => t.isPlaying())) return;
+    this.flash(M.glow, M.glowMs);
+    if (this.playClip('bless', M.up + M.hold + M.down)) return;
+    this.stopAttack();
+    const w = this.parts.weapon;
+    const tw = this.scene.tweens;
+    this.castTweens = [tw.add({ targets: this, castLift: M.lift, duration: M.up, hold: M.hold, yoyo: true, ease: 'Quad.easeOut' })];
+    if (w) {
+      this.castTweens.push(tw.add({
+        targets: w, angle: w.restAngle - M.raise, duration: M.up, hold: M.hold, ease: 'Quad.easeOut',
+        yoyo: true, onComplete: () => (w.angle = w.restAngle),
+      }));
+    }
   }
 
   // Lights up all parts in one colour for a moment (white = a normal hit).

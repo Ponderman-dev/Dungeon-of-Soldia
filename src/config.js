@@ -9,6 +9,9 @@ export const CHAR_SCALE = 3;
 // A shooter's built-in attack motion (no attack clip drawn): the weapon kicks up and the body leans back.
 // kick = degrees, lean = pixels back (art pixels), up/back = ms for the kick and the return.
 export const SHOOT_MOTION = { kick: 30, lean: 2, up: 70, back: 170 };
+// The Cleric's Grace heal (built-in, when she has no `bless` clip): she hops up `lift` px with her staff raised
+// `raise` degrees, holds it `hold` ms, then lowers it; she glows `glow` colour for `glowMs`.
+export const BLESS_MOTION = { lift: 6, raise: 70, up: 120, hold: 220, down: 200, glow: 0xfff2a0, glowMs: 160 };
 
 // Skill squares: attack skills are red, support skills are green (fill when ready / not ready).
 export const SKILL_COLORS = {

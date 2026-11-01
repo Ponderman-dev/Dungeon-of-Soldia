@@ -1908,6 +1908,7 @@ export default class BattleScene extends Phaser.Scene {
         this.tweens.add({ targets: ring, radius: 24 + e.wave * 10, alpha: 0, duration: 400, onComplete: () => ring.destroy() });
       }
     } else if (e.type === 'flask') {
+      if (e.grace) { const cv = this.views.get(e.unit.uid); if (cv) cv.ch.bless(); } // Cleric's Grace: she raises her staff
       if (e.flask.name && e.unit.side === 'hero') this.playFlaskLook(this.views.get(e.unit.uid), this.views.get(e.target.uid), e.flask); // Alchemist v2 look
       else this.showFlask(this.views.get(e.unit.uid), this.views.get(e.target.uid), Number(e.flask.color));
     } else if (e.type === 'minionSpawn') {

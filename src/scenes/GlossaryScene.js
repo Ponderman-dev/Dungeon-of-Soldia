@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, drawCursor, drawButton, buttonTextColor, drawStrip, isGoldTheme, pageEnter, pageLeave } from '../entities/uiKit.js';
+import { drawWindow, uiText, drawCursor, drawButton, buttonTextColor, drawStrip, isGoldTheme, pageEnter, pageLeave, markBar } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
 import G from '../data/glossary.json';
@@ -81,22 +81,26 @@ export default class GlossaryScene extends Phaser.Scene {
   }
 
   top(page, back, title, onBack) {
+    const n0 = page.list.length; // the back button row = the page's top bar (uiKit markBar)
     if (isGoldTheme()) { // gold theme trial: a solid gold back button; the chapters page puts its title in its panel's strip
       const B = L.back;
       page.add(drawButton(this.add.graphics(), B.x, B.y, B.w, B.h));
       page.add(uiText(this, B.x + B.w / 2, B.y + B.h / 2, back, 'normal', buttonTextColor()).setOrigin(0.5));
       page.add(this.add.zone(B.x, B.y, B.w, B.h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx.play('tap'); onBack(); }));
+      markBar(page.list.slice(n0));
       if (title !== 'GLOSSARY') this.text(page, GAME_WIDTH / 2, L.titleY, title, 'big', UI.goldTheme.title).setOrigin(0.5, 0);
       return;
     }
     if (TRIAL.bar) { // a title bar: one window across the top, the back button inside on the left, the title centred
       page.add(drawWindow(this.add.graphics(), L.side, 14, W, 60));
       this.button(page, L.side + 8, 22, 44, 44, '<', () => { sfx.play('tap'); onBack(); });
+      markBar(page.list.slice(n0));
       this.text(page, GAME_WIDTH / 2 + 14, 44, title, 'big').setOrigin(0.5);
       return;
     }
     const B = L.back;
     this.button(page, B.x, B.y, B.w, B.h, back, () => { sfx.play('tap'); onBack(); });
+    markBar(page.list.slice(n0));
     this.text(page, GAME_WIDTH / 2, L.titleY, title, 'big').setOrigin(0.5, 0);
   }
 

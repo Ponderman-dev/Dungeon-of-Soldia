@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave, markBar } from '../entities/uiKit.js';
 import defs from '../data/settings.json';
 import pkg from '../../package.json';
 import { loadProgress, saveProgress, deleteProgress } from '../systems/progress.js';
@@ -32,8 +32,9 @@ export default class SettingsScene extends Phaser.Scene {
     this.scene.bringToTop();
     this.progress = loadProgress();
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, Number(L.bg)).setOrigin(0).setInteractive(); // blocks taps below
-    const B = L.back;
+    const B = L.back, n0 = this.children.list.length;
     this.button(B.x, B.y, B.w, B.h, L.backLabels[this.from] || L.backLabels.Base, { look: 'solid', onTap: () => this.close() });
+    markBar(this.children.list.slice(n0)); // the page's top bar (uiKit)
     uiText(this, GAME_WIDTH / 2, L.titleY, 'SETTINGS', 'big').setOrigin(0.5, 0);
     uiText(this, GAME_WIDTH / 2, L.versionY, `v${pkg.version}`, 'small', UI.dim).setOrigin(0.5);
     this.page = null;

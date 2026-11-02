@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave, markBar } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
@@ -87,13 +87,14 @@ export default class ShopScene extends Phaser.Scene {
 
   // '< CAMP' (or '< BACK') and the gem balance with '+' (opens GEMS).
   header(page, back, onBack) {
-    const B = L.back, Bl = L.balance, x = GAME_WIDTH - L.side - Bl.w;
+    const B = L.back, Bl = L.balance, x = GAME_WIDTH - L.side - Bl.w, n0 = page.list.length;
     this.button(page, B.x, B.y, B.w, B.h, back, onBack, UI.line, UI.text, true);
     page.add(drawWindow(this.add.graphics(), x, B.y, Bl.w, Bl.h));
     this.gem(page, x + 22, B.y + Bl.h / 2, 2);
     this.text(page, x + 40, B.y + Bl.h / 2, num(this.gems()), 'normal', GEM_CSS).setOrigin(0, 0.5);
     this.text(page, x + Bl.w - 16, B.y + Bl.h / 2, '+', 'normal', UI.gold).setOrigin(0.5);
     page.add(this.add.zone(x, B.y, Bl.w, Bl.h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.modal) { sfx.play('tap'); this.showTab('gems'); } }));
+    markBar(page.list.slice(n0)); // the whole header = the page's top bar (uiKit)
   }
 
   // A look standing on a floor tile at (x, y, w, h); `scale` = sprite size.

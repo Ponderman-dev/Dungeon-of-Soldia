@@ -158,9 +158,10 @@ export default class BaseScene extends Phaser.Scene {
     if (this.modal || this.leaving) return;
     sfx.play('tap');
     this.leaving = true;
-    this.events.once(Phaser.Scenes.Events.RESUME, () => this.time.delayedCall(150, () => { this.leaving = false; }));
-    this.scene.launch(key, { from: 'Base' });
-    this.scene.pause();
+    // Like TO EXPEDITION (user, session 41): the camp's buttons leave first, then the page comes in; when it has gone
+    // again the buttons come back in (taps stay off until they are home).
+    this.events.once(Phaser.Scenes.Events.RESUME, () => uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = false; } }));
+    uiShift(this, this.uiParts, false, { onDone: () => { this.scene.launch(key, { from: 'Base' }); this.scene.pause(); } });
   }
 
   // TO EXPEDITION: the screen slides up into the squad screen.

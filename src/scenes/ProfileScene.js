@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave, markBar } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
@@ -87,8 +87,9 @@ export default class ProfileScene extends Phaser.Scene {
   }
 
   top(page, back, name, onBack) {
-    const B = L.back;
+    const B = L.back, n0 = page.list.length;
     this.button(page, B.x, B.y, B.w, B.h, back, () => { sfx.play('tap'); onBack(); }, 'solid');
+    markBar(page.list.slice(n0)); // the page's top bar (uiKit)
     this.text(page, GAME_WIDTH / 2, L.titleY, name, 'big').setOrigin(0.5, 0);
   }
 

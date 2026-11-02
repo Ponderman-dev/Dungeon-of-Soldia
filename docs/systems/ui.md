@@ -88,4 +88,10 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   only fades), `slideSwap(scene, outParts, inParts, dir)` (+1 next = content moves left, -1 back), `sceneFade(scene,
   key, data)` / `sceneFadeIn(scene)`. `comingSoonWindow` uses popIn/popOut. Retimed to tokens: title fly (story) +
   fade (slow), camp fade-in (slow), camp <-> squad slide (slow) + button shift (fast), menu pages (normal in / fast
-  out), Game Over fades (normal). camp.json `slideMs/uiShiftMs/hero.fadeMs` and title.json `zoom.ms/fadeMs` are gone.
+  out), Game Over fades (normal).
+- MENU PAGES IN THREE BEATS (session 41, user: 'like main screen -> expedition, for each main page'): opening a page
+  from the camp (BaseScene.openOver) = the camp's buttons leave (uiShift) -> the page rises in with its TOP BAR hidden
+  -> the top bar slides down in. Closing = the top bar slides up away -> the page drops away -> the camp resumes and its
+  buttons come back in (taps off until home). Top bar = objects a page marks with `markBar(list)` when it draws its
+  back row (every page's '< CAMP'; the Shop's whole header with the gems box); `pageBar(scene)` finds them (tap zones
+  stay put). Pages opened over another page (Glossary -> Heroes) only get the page's own beats. camp.json `slideMs/uiShiftMs/hero.fadeMs` and title.json `zoom.ms/fadeMs` are gone.

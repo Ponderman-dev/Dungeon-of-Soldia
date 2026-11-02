@@ -305,25 +305,39 @@ export function uiShift(scene, parts, show, { ms = UI.motion.fast, dy = 28, inst
   }
 }
 
-// MENU PAGE TRANSITIONS (user, session 40): a menu page rises a little from below while fading in (pageEnter, in its
-// create()), and drops back while fading out before it closes (pageLeave(scene, done): `done` resumes the camp and
-// stops the page). Timing: systems/motion.js pagePlan (UI.motion). A second close while leaving is ignored.
+// MENU PAGE TRANSITIONS (user, session 41: like camp -> squad, in three beats). Opening: the camp's buttons leave
+// (BaseScene.openOver), then the page rises in from below while fading in (pageEnter, in its create(); its top bar is
+// hidden meanwhile), then its top bar ('< CAMP', the Shop's gems) slides down into place. Closing (pageLeave(scene,
+// done)): the top bar slides up and away, then the page drops back while fading out, then `done` resumes the camp,
+// whose buttons come back in. Timing: systems/motion.js. A second close while leaving is ignored.
+// The top bar = objects marked with markBar (each page marks its back button row when it draws it); tap zones stay put.
+export const markBar = (list) => { for (const o of list) o.pageBar = true; return list; };
+export function pageBar(scene) {
+  const out = [];
+  const walk = (list) => { for (const o of list) { if (o.pageBar) { if (o.type !== 'Zone') out.push(o); } else if (o.list) walk(o.list); } };
+  walk(scene.children.list);
+  return out;
+}
 export function pageEnter(scene) {
   const P = pagePlan(true), cam = scene.cameras.main;
   scene.pageLeaving = false; // Phaser reuses a scene between visits: a fresh page can close again
   scene.input.enabled = true;
+  uiShift(scene, { up: pageBar(scene) }, false, { instant: true }); // the bar waits until the page is in
   cam.scrollY = P.fromScrollY;
   cam.fadeIn(P.ms, 0, 0, 0);
   scene.tweens.add({ targets: cam, scrollY: P.toScrollY, duration: P.ms, ease: P.ease });
+  scene.time.delayedCall(P.ms, () => { if (!scene.pageLeaving) uiShift(scene, { up: pageBar(scene) }, true); });
 }
 export function pageLeave(scene, done) {
   if (scene.pageLeaving) return;
   scene.pageLeaving = true;
   const P = pagePlan(false), cam = scene.cameras.main;
   scene.input.enabled = false; // no taps while it goes
-  scene.tweens.add({ targets: cam, scrollY: P.toScrollY, duration: P.ms, ease: P.ease });
-  cam.fadeOut(P.ms, 0, 0, 0);
-  scene.time.delayedCall(P.ms, done);
+  uiShift(scene, { up: pageBar(scene) }, false, { onDone: () => { // the bar leaves first, then the page
+    scene.tweens.add({ targets: cam, scrollY: P.toScrollY, duration: P.ms, ease: P.ease });
+    cam.fadeOut(P.ms, 0, 0, 0);
+    scene.time.delayedCall(P.ms, done);
+  } });
 }
 
 // The objects' resting spot (x, y, alpha), saved the first time a helper moves them.

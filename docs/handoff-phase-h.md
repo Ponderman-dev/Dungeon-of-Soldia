@@ -1,32 +1,39 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 40): NEXT = THE USER PICKS FROM THE KIV LIST BELOW (one per session)
-- BRANCH: `main` has EVERYTHING (session 39 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- DONE session 39 (KIV 'hit effects', effects.md 'SESSION 39'): Cleric/holy basic hit = short light streak + small
-  splash (no pillar); electric basic hit = small spark (no bolt; big bolts stay for skills/items); elemental MELEE basic
-  hits = melee slash in the element colour (`impactFx(..., melee)`, `ELEMENT_SLASH`). Cleric/holy HIT SOUND = 'thump +
-  sparkle' (ffmpeg-made, sound.md; the bell chime was rejected). Game page republished with all of it.
-  Not done (ask if wanted): a melee hero's element-charm rider still shows the old shot-style impact on top of the slash.
-- SOUND PICKS (session 39, worked well): make 5 short mp3 options with ffmpeg in the scratchpad, SendUserFile them
-  (lettered, one line each), user answers a letter / 'next' / 'more soft'. No sound board page needed.
-- PERMISSIONS: publishing still asks once per publish though `.claude/settings.json` allows the 4 publish tools; Claude
-  may not edit that file (auto-mode block). User may add `"mcp__claude-artifacts"` to its allow list on main themselves.
-- KIV / OPEN (ask the user which first; one per session):
-  1. HERO ART (docs/proposals/hero-art/, user's own 3 knight sketches drawn as `ks` / `ksn`; nothing in the game).
-  2. STUDIO UI (simpler draw screen + new SHEET tab, archive 'session 35 start note', docs/proposals/studio-ui/).
-  3. BOSS REWORK floors 80 (Rask & Vesh) and 100 (Morthul) (archive 'session 31 start note').
-  4. Session 33 item leftovers: weak-item build tests, placeholder item choices, first-draft item looks.
-  5. SOUND (ON HOLD since session 5; MUSIC slider in Settings is saved but there is no music yet).
-  6. From session 37: REAL hero looks (shop sells stand-in recolours; owned looks not worn in fights), banners drawn in
-     the Studio (YOUR ART '+'), lore + glossary basics/status lines to review, wallet / payments / online leaderboard
-     (server), OUTLINE style for sprites (archive), early floors a bit harder (archive). A new UI look only if the user
-     asks (test it IN THE RUNNING GAME on the phone page first; the stone look failed there).
-  Studio page not republished since s34.
-- PUBLISH: `npm run build:page`, then `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > dungeon-of-soldia.html` IN THE
-  REPO (publish_files only reads repo files and needs the doctype), publish_files to slug
-  f5023580-38b8-441a-879b-fb80bc2d607d (get_artifact for base_version), then delete the copy. Fresh clone: `npm install`.
+## START HERE (session 41): NEXT = TRANSITIONS PHASE 1 (docs/transition-plan.md), after the user answers its 4 questions
+- BRANCH: `main` has EVERYTHING (session 40 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- FIRST ask the 4 questions in `docs/transition-plan.md` section 4 (quick vs cinematic, page content slide vs fade, pop-ups
+  grow vs drop, sounds yes/no/later) with the question tool, then build PHASE 1 (motion tokens `UI.motion`, uiKit
+  `popIn/popOut`, `slideSwap`, `sceneFade`, retime rows 2/3/4/13), show CLIPS (Playwright recordVideo) on the review page.
+- DONE session 40 (details in the system docs, all in the game + preview page):
+  - Shooters' attack motion `ch.shoot()` (weapon kick + lean; art.md); Cleric Grace = `ch.bless()` + calm gold buff
+    `graceFx` (no projectile) + its own sound `grace`; Cleric hit sound = RPG spell 02 (sound.md).
+  - Projectile review (3 rounds, user OK on all): round holy orb, real tumbling Alchemist flask (slower, `lobbed.flightMs`
+    450), bigger slower bombs whose hit waits for the landing, bandage roll + white first-aid kit that land as a heal,
+    Plague Flask = bubbly acid (effects.md). Element charm on MELEE = one slash in the charm colour (effects.md).
+  - QUIVER OF PLENTY = DOUBLE SHOT at the same enemy (item-decisions.md; user kept it stronger: +2.1 / +7.0 floors).
+  - Sound board: Cleric group (round 10), dramatic music loop removed, chest/puzzle picks applied (sound.md).
+  - UI = CRIMSON AND GOLD framed theme (user picked F from 5 palettes; `UI.theme` 'gold' + `UI.palette` 'crimson';
+    'mono' still works): gold-framed wine panels, title strips, SOLID buttons; PRIMARY bright red = TO EXPEDITION and
+    BEGIN DESCENT only, every other button = calm secondary; menu pages rise in / drop away (`pageEnter/pageLeave`);
+    title = no button (tap anywhere), readable Best floor; TEST buttons = one small top-middle 'TEST' tab (ui.md).
+- NOT DONE: fight HUD + reward sheet only got the new frame colours (not redesigned in the crimson style); the CAMP's look
+  (user wants it changed: ask what); dev-only trial code still in (GlossaryScene `TRIAL` ?bar/?list, `?frame=` styles):
+  remove once the look is settled. Review page (Skill Effects url) now shows the menu-look trial.
+- PUBLISH (Artifact tool now): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
+  dungeon-of-soldia.html`, Artifact publish with url https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. The first publish
+  of a session is refused 'not viewed': Read a few lines of the saved live copy it names, publish again. Big pages
+  (sound board 4.4 MB): Artifact `read` with `path: index.html` saves it to a file without loading it.
+- KIV (older, ask before starting): hero art (user's knight sketches), Studio UI, boss rework floors 80/100, session 33
+  item leftovers, music (none yet), real hero looks / banners / lore / wallet / outlines (archive 'session 40 start note').
+- Browser checks: run vite + Playwright scripts FROM THE SCRATCHPAD dir (session 40: running them from the repo dropped a
+  stray `ui/` folder and `board.png` into the repo).
 
 ## How we work with this user
+- REFERENCE PICTURES (session 40): the user sends screenshots of other games ('like this'); make OUR OWN take, try it in
+  the real game, show real screenshots on the review page; they then ask for 'more variations / other palettes'.
+- They reply with short fixes after trying the preview on the phone (overlaps, readability, which button is red):
+  fix all in one round, rebuild the preview once.
 - UI LOOK rounds (session 37): they reject a lot and say 'try more first'; show the real game (camp + 4 menus) per style,
   label each, and offer palettes / 'neater' versions of the one they half-like. '[No preference]' = ask again in text.
 - 'Discuss first' / 'Hold on' / 'let me write first' (session 30) = STOP and wait for their text; no building meanwhile.

@@ -48,3 +48,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   plays it; both LAND AS A HEAL (`healLand`: green ring, plus signs, sparkles), no splash, no glass sound. PLAGUE FLASK
   = bubbly acid (itemFx `plagueFx(q, a, b, t)`: wobbling green blob, popping bubbles, drips, an acid splash).
   Page notes: round-2 docs `<id>@2` (grace `@3`); holy@2 not marked yet.
+- **ELEMENT CHARM ON MELEE (session 40, user):** a MELEE hero's basic hit with an element rider (Frost / Storm /
+  Shadow... charm, `e.result.riders`) shows ONE slash in the first rider's element colour (`addImpact` with that
+  damageType -> the `melee` element-slash path) and NO rider splash; rider sounds still play. Ranged shooters keep
+  the rider's shot-style impact on top of the arrow. (Ember Charm is a burn proc, not a rider: unchanged.)

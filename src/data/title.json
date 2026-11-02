@@ -152,8 +152,7 @@
     "who": "Sound and options"
   },
   "zoom": {
-    "ms": 1500,
-    "scale": 5,
-    "fadeMs": 450
+    "_about": "timing: config.js UI.motion (story = the fly, slow = the fade at its end)",
+    "scale": 5
   }
 }

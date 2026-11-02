@@ -105,12 +105,12 @@ export default class TitleScene extends Phaser.Scene {
     if (this.busy || this.modal) return;
     this.busy = true;
     sfx.play('tap');
-    const Z = title.zoom, cam = this.cameras.main;
+    const Z = title.zoom, M = UI.motion, cam = this.cameras.main;
     this.tweens.killTweensOf(this.ui); // stop the blink, so the fade wins
-    this.tweens.add({ targets: this.ui, alpha: 0, duration: 250 });
-    cam.pan(this.door.x, this.door.y, Z.ms, 'Sine.easeIn');
-    cam.zoomTo(Z.scale, Z.ms, 'Sine.easeIn');
-    this.time.delayedCall(Z.ms - Z.fadeMs, () => cam.fadeOut(Z.fadeMs, 0, 0, 0));
+    this.tweens.add({ targets: this.ui, alpha: 0, duration: M.normal, ease: M.easeIn });
+    cam.pan(this.door.x, this.door.y, M.story, 'Sine.easeIn');
+    cam.zoomTo(Z.scale, M.story, 'Sine.easeIn');
+    this.time.delayedCall(M.story - M.slow, () => cam.fadeOut(M.slow, 0, 0, 0));
     cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start('Base', { fromTitle: true }));
   }
 }

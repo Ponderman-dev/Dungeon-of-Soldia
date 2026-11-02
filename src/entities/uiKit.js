@@ -5,6 +5,7 @@ import fontUrl from '../assets/fonts/ironslab.ttf?inline';
 import smallFontUrl from '../assets/fonts/press-start-2p.woff2?inline';
 import { UI } from '../config.js';
 import * as sfx from '../audio/sfx.js';
+import { popPlan, slidePlan, fadePlan, pagePlan } from '../systems/motion.js';
 
 // Loads the packed font before the first screen draws. The font comes from its data: URL with atob, never fetch():
 // the claude.ai preview frame blocks fetch (the same trick as the sounds). If it fails the game uses monospace.
@@ -277,8 +278,12 @@ export function comingSoonWindow(scene, title, who, { w = 280, h = 160, depth = 
     uiText(scene, cx, y + h - 22, 'Tap to close', 'small', UI.dim).setOrigin(0.5, 0),
   ]).setDepth(depth);
   sfx.play('cardOpen');
+  popIn(scene, box.list.slice(1), [shadeRect]);
   // A short wait, so the tap that opened it does not close it at once.
-  scene.time.delayedCall(150, () => shadeRect.once('pointerup', () => { sfx.play('cardClose'); box.destroy(); if (onClose) onClose(); }));
+  scene.time.delayedCall(150, () => shadeRect.once('pointerup', () => {
+    sfx.play('cardClose');
+    popOut(scene, box.list.slice(1), [shadeRect], () => { box.destroy(); if (onClose) onClose(); });
+  }));
   return box;
 }
 
@@ -286,7 +291,7 @@ export function comingSoonWindow(scene, title, who, { w = 280, h = 160, depth = 
 // after; fast). `parts` = { up: [...], down: [...], fade: [...] }: `up` slide up and fade, `down` slide down and fade,
 // `fade` only fade. show = false: out from where they are; show = true: in from off-set and invisible. `instant` puts
 // them at the hidden spot at once (a screen that waits for its slide). onDone runs once when all are done.
-export function uiShift(scene, parts, show, { ms = 160, dy = 28, instant = false, onDone = null } = {}) {
+export function uiShift(scene, parts, show, { ms = UI.motion.fast, dy = 28, instant = false, onDone = null } = {}) {
   const all = [];
   for (const [kind, list] of Object.entries(parts)) for (const o of list) if (o && o.active) all.push([o, kind === 'up' ? -dy : kind === 'down' ? dy : 0]);
   for (const [o] of all) if (!o.uiHome) o.uiHome = { y: o.y, alpha: o.alpha };
@@ -296,27 +301,91 @@ export function uiShift(scene, parts, show, { ms = 160, dy = 28, instant = false
   const done = () => { if (--left === 0 && onDone) onDone(); };
   for (const [o, off] of all) {
     scene.tweens.add({ targets: o, y: o.uiHome.y + (show ? 0 : off), alpha: show ? o.uiHome.alpha : 0, duration: ms,
-      ease: show ? 'Quad.easeOut' : 'Quad.easeIn', onComplete: done });
+      ease: show ? UI.motion.easeOut : UI.motion.easeIn, onComplete: done });
   }
 }
 
 // MENU PAGE TRANSITIONS (user, session 40): a menu page rises a little from below while fading in (pageEnter, in its
 // create()), and drops back while fading out before it closes (pageLeave(scene, done): `done` resumes the camp and
-// stops the page). UI.page = { slidePx, inMs, outMs }. A second close while leaving is ignored.
+// stops the page). Timing: systems/motion.js pagePlan (UI.motion). A second close while leaving is ignored.
 export function pageEnter(scene) {
-  const P = UI.page, cam = scene.cameras.main;
+  const P = pagePlan(true), cam = scene.cameras.main;
   scene.pageLeaving = false; // Phaser reuses a scene between visits: a fresh page can close again
   scene.input.enabled = true;
-  cam.scrollY = -P.slidePx;
-  cam.fadeIn(P.inMs, 0, 0, 0);
-  scene.tweens.add({ targets: cam, scrollY: 0, duration: P.inMs, ease: 'Cubic.easeOut' });
+  cam.scrollY = P.fromScrollY;
+  cam.fadeIn(P.ms, 0, 0, 0);
+  scene.tweens.add({ targets: cam, scrollY: P.toScrollY, duration: P.ms, ease: P.ease });
 }
 export function pageLeave(scene, done) {
   if (scene.pageLeaving) return;
   scene.pageLeaving = true;
-  const P = UI.page, cam = scene.cameras.main;
+  const P = pagePlan(false), cam = scene.cameras.main;
   scene.input.enabled = false; // no taps while it goes
-  scene.tweens.add({ targets: cam, scrollY: -P.slidePx, duration: P.outMs, ease: 'Cubic.easeIn' });
-  cam.fadeOut(P.outMs, 0, 0, 0);
-  scene.time.delayedCall(P.outMs, done);
+  scene.tweens.add({ targets: cam, scrollY: P.toScrollY, duration: P.ms, ease: P.ease });
+  cam.fadeOut(P.ms, 0, 0, 0);
+  scene.time.delayedCall(P.ms, done);
+}
+
+// The objects' resting spot (x, y, alpha), saved the first time a helper moves them.
+const home = (o) => (o.motionHome ||= { x: o.x, y: o.y, alpha: o.alpha });
+const live = (list) => (list || []).filter((o) => o && o.active);
+
+// POP-UP WINDOW IN (user, session 41: drops from above): `parts` (the window, its text...) drop in from
+// UI.motion.popDropPx above and settle; `shades` (the dark cover) only fade in. A tap while it drops finishes it at
+// once (never trap the player). onDone runs when it has landed.
+export function popIn(scene, parts, shades = [], onDone = null) {
+  const P = popPlan(true), box = live(parts), sh = live(shades), tweens = [];
+  for (const o of box) { const h = home(o); o.setY(h.y + P.box.fromDy).setAlpha(h.alpha * P.box.fromAlpha); }
+  for (const o of sh) { const h = home(o); o.setAlpha(h.alpha * P.shade.fromAlpha); }
+  let left = box.length + sh.length;
+  const finish = () => { scene.input.off('pointerdown', skip); if (onDone) onDone(); };
+  const skip = () => { for (const t of tweens) if (t.isPlaying()) t.complete(); };
+  const one = () => { if (--left === 0) finish(); };
+  if (!left) { if (onDone) onDone(); return; }
+  scene.input.on('pointerdown', skip);
+  for (const o of box) tweens.push(scene.tweens.add({ targets: o, y: home(o).y, alpha: home(o).alpha, duration: P.ms, ease: P.box.ease, onComplete: one }));
+  for (const o of sh) tweens.push(scene.tweens.add({ targets: o, alpha: home(o).alpha, duration: P.ms, ease: P.shade.ease, onComplete: one }));
+}
+
+// POP-UP WINDOW OUT: the reverse of popIn (the window lifts back up and fades, the shade fades), then onDone (destroy
+// it there). Taps on the window are off while it goes.
+export function popOut(scene, parts, shades = [], onDone = null) {
+  const P = popPlan(false), box = live(parts), sh = live(shades);
+  let left = box.length + sh.length;
+  if (!left) { if (onDone) onDone(); return; }
+  const one = () => { if (--left === 0 && onDone) onDone(); };
+  for (const o of [...box, ...sh]) { scene.tweens.killTweensOf(o); if (o.input) o.disableInteractive(); }
+  for (const o of box) scene.tweens.add({ targets: o, y: home(o).y + P.box.toDy, alpha: 0, duration: P.ms, ease: P.box.ease, onComplete: one });
+  for (const o of sh) scene.tweens.add({ targets: o, alpha: 0, duration: P.ms, ease: P.shade.ease, onComplete: one });
+}
+
+// TAB / CHAPTER CONTENT SWAP (user, session 41: slides SIDEWAYS; the frame stays still): `outParts` slide away and
+// fade, `inParts` come in from the other side. dir = +1 next tab (content moves left), -1 back (moves right). The old
+// parts are destroyed when gone unless keepOut. onDone runs when the new content has arrived.
+export function slideSwap(scene, outParts, inParts, dir = 1, { keepOut = false, onDone = null } = {}) {
+  const P = slidePlan(dir), olds = live(outParts), news = live(inParts);
+  for (const o of news) { const h = home(o); o.setX(h.x + P.in.fromDx).setAlpha(h.alpha * P.in.fromAlpha); }
+  for (const o of olds) {
+    const h = home(o);
+    scene.tweens.killTweensOf(o);
+    scene.tweens.add({ targets: o, x: h.x + P.out.toDx, alpha: 0, duration: P.ms, ease: P.out.ease,
+      onComplete: () => { if (keepOut) o.setX(h.x); else o.destroy(); } });
+  }
+  let left = news.length;
+  if (!left) { if (onDone) onDone(); return; }
+  for (const o of news) scene.tweens.add({ targets: o, x: home(o).x, alpha: home(o).alpha, duration: P.ms, ease: P.in.ease,
+    onComplete: () => { if (--left === 0 && onDone) onDone(); } });
+}
+
+// SCENE TO SCENE: fade to black (taps off), then start `key` with `data`. sceneFadeIn: the new scene fades in from
+// black (call it in create()). kind = a UI.motion token ('normal' by default).
+export function sceneFade(scene, key, data, kind = 'normal') {
+  const cam = scene.cameras.main;
+  scene.input.enabled = false;
+  cam.fadeOut(fadePlan(kind).outMs, 0, 0, 0);
+  cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => scene.scene.start(key, data));
+}
+export function sceneFadeIn(scene, kind = 'normal') {
+  scene.input.enabled = true;
+  scene.cameras.main.fadeIn(fadePlan(kind).inMs, 0, 0, 0);
 }

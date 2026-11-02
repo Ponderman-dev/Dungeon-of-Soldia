@@ -222,8 +222,7 @@
       } } }
   ],
   "ui": {
-    "_about": "Base screen interface (screen px). expedition = the big black window (tap = its buttons leave in uiShiftMs, the screen slides up into the squad screen in slideMs, then the squad screen's buttons come in; '< CAMP' does the same back), arrows bobbing on both sides. menu = the row of square buttons at the bottom (`scene` = the screen it opens, else 'Coming soon'): icon = pixel rows drawn iconPx per art px. settings = the gear top left. profile = the name box + round portrait top right. soon = the 'Coming soon' window.",
-    "slideMs": 700, "uiShiftMs": 160,
+    "_about": "Base screen interface (screen px). expedition = the big black window (tap = its buttons leave (UI.motion.fast), the screen slides up into the squad screen (UI.motion.slow), then the squad screen's buttons come in; '< CAMP' does the same back), arrows bobbing on both sides. menu = the row of square buttons at the bottom (`scene` = the screen it opens, else 'Coming soon'): icon = pixel rows drawn iconPx per art px. settings = the gear top left. profile = the name box + round portrait top right. soon = the 'Coming soon' window.",
     "soon": {"w": 280, "h": 160},
     "expedition": {"y": 628, "w": 342, "h": 80, "text": "TO EXPEDITION", "size": "normal", "cell": 3, "arrow": {"head": 5, "stemW": 3, "stemH": 4}, "arrowInset": 36, "bob": 4, "bobMs": 600},
     "settings": {"x": 24, "y": 14, "size": 44, "name": "Settings", "who": "Sound, language, controls"},
@@ -343,11 +342,10 @@
     }
   },
   "hero": {
-    "_about": "3 random unlocked heroes (fewer if fewer are unlocked) stand round the fire at `spots` (screen px, feet) and idly wander: after a pause (pauseMs) each walks to a random point up to radiusPx [x, y] from its spot at speed px/s, then faces the fire. From the title the camp fades in over fadeMs.",
+    "_about": "3 random unlocked heroes (fewer if fewer are unlocked) stand round the fire at `spots` (screen px, feet) and idly wander: after a pause (pauseMs) each walks to a random point up to radiusPx [x, y] from its spot at speed px/s, then faces the fire. From the title the camp fades in (config.js UI.motion.slow).",
     "spots": [[195, 304], [108, 404], [284, 430]],
     "radiusPx": [26, 14],
     "pauseMs": [1800, 4200],
-    "speed": 34,
-    "fadeMs": 600
+    "speed": 34
   }
 }

@@ -73,7 +73,7 @@ export default class SquadScene extends Phaser.Scene {
     if (this.fromCamp) { // hidden until the slide up has ended; no taps before that
       this.leaving = this.shifting = true;
       uiShift(this, this.uiParts, false, { instant: true });
-      this.time.delayedCall(camp.ui.slideMs, () => uiShift(this, this.uiParts, true, { ms: camp.ui.uiShiftMs, onDone: () => { this.leaving = this.shifting = false; } }));
+      this.time.delayedCall(UI.motion.slow, () => uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = this.shifting = false; } }));
     }
 
     // Every hero figure: on the bench, or standing in its slot.
@@ -514,16 +514,16 @@ export default class SquadScene extends Phaser.Scene {
     if (this.panel || this.leaving) return;
     this.leaving = this.shifting = true;
     sfx.play('tap');
-    uiShift(this, this.uiParts, false, { ms: camp.ui.uiShiftMs, onDone: () => this.slideToCamp() }); // the buttons leave first
+    uiShift(this, this.uiParts, false, { onDone: () => this.slideToCamp() }); // the buttons leave first
   }
 
   slideToCamp() {
     const base = this.scene.get('Base');
     base.events.once(Phaser.Scenes.Events.CREATE, () => {
-      const cam = base.cameras.main, mine = this.cameras.main, ms = camp.ui.slideMs;
+      const cam = base.cameras.main, mine = this.cameras.main, ms = UI.motion.slow;
       cam.scrollY = -GAME_HEIGHT; // the camp starts just below this screen
-      this.tweens.add({ targets: cam, scrollY: 0, duration: ms, ease: 'Sine.easeInOut' });
-      this.tweens.add({ targets: mine, scrollY: GAME_HEIGHT, duration: ms, ease: 'Sine.easeInOut', onComplete: () => this.scene.stop() });
+      this.tweens.add({ targets: cam, scrollY: 0, duration: ms, ease: UI.motion.easeMove });
+      this.tweens.add({ targets: mine, scrollY: GAME_HEIGHT, duration: ms, ease: UI.motion.easeMove, onComplete: () => this.scene.stop() });
     });
     this.scene.launch('Base', { fromSquad: true });
   }
@@ -532,7 +532,7 @@ export default class SquadScene extends Phaser.Scene {
     if (!this.ready() || this.panel || this.leaving || this.walkers.size) return;
     sfx.play('descend');
     this.leaving = this.shifting = true;
-    uiShift(this, this.uiParts, false, { ms: camp.ui.uiShiftMs }); // every button leaves (user: not only BEGIN DESCENT)
+    uiShift(this, this.uiParts, false); // every button leaves (user: not only BEGIN DESCENT)
     const ids = squadOrder(this.slots);
     this.progress.lastSquad = [...ids];
     this.progress.seenUnlocked = this.openIds(); // the NEW tags are gone next time

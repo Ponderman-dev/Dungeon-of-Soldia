@@ -57,8 +57,19 @@ export const UI = {
     second: 0x3e3a4a, secondDark: 0x2c2936, secondLight: 0x5a5568, secondText: '#ffe7a8',
   },
   // How a menu page (Glossary, Heroes, Leaders, Shop, Settings, Profile) comes and goes (uiKit pageEnter / pageLeave):
-  // it rises `slidePx` from below while fading in, and drops back while fading out.
-  page: { slidePx: 64, inMs: 220, outMs: 170 },
+  // it rises `slidePx` from below while fading in (motion.normal), and drops back while fading out (motion.fast).
+  page: { slidePx: 64 },
+  // ONE MOTION LANGUAGE (docs/transition-plan.md; user, session 41: QUICK and snappy, tab content slides SIDEWAYS,
+  // pop-ups DROP from above, sounds later). Every transition takes its time from here (systems/motion.js):
+  // fast = tabs, buttons, pop-ups; normal = menu pages, sheets, scene fades; slow = big moves (camp <-> squad, into the
+  // camp); story = the title's fly to the tower (only story moments may run past ~0.6s). Arriving things ease OUT,
+  // leaving things ease IN, big camera moves ease in-out. popDropPx = how far a pop-up drops in from; slidePx = how
+  // far tab content slides sideways.
+  motion: {
+    fast: 140, normal: 220, slow: 450, story: 1100,
+    easeIn: 'Cubic.easeIn', easeOut: 'Cubic.easeOut', easeMove: 'Sine.easeInOut', easeDrop: 'Back.easeOut',
+    popDropPx: 48, slidePx: 40,
+  },
   // Other palettes for the same framed theme (dev flag ?pal=silver|copper|jade|crimson): they replace these keys of
   // goldTheme (session 40 trial, user: 'more variations, other palettes').
   palettes: {

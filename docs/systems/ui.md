@@ -81,3 +81,11 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   (64) from below + fades in (220ms); `close()` -> `pageLeave(scene, done)` = drops back + fades out (170ms), taps off,
   then resumes the camp and stops the page (a second close while leaving is ignored; pageEnter resets it because
   Phaser reuses the scene object).
+- MOTION (session 41, `docs/transition-plan.md`): user picked QUICK, tab content slides SIDEWAYS, pop-ups DROP from
+  above, sounds later. Tokens `UI.motion` (config.js): fast 140 / normal 220 / slow 450 / story 1100 + eases.
+  `systems/motion.js` (no Phaser, test `motion.test.mjs`) = the plans; uiKit helpers: `popIn/popOut(scene, parts,
+  shades, onDone)` (window drops popDropPx from above with a small settle, a tap while it drops finishes it; the shade
+  only fades), `slideSwap(scene, outParts, inParts, dir)` (+1 next = content moves left, -1 back), `sceneFade(scene,
+  key, data)` / `sceneFadeIn(scene)`. `comingSoonWindow` uses popIn/popOut. Retimed to tokens: title fly (story) +
+  fade (slow), camp fade-in (slow), camp <-> squad slide (slow) + button shift (fast), menu pages (normal in / fast
+  out), Game Over fades (normal). camp.json `slideMs/uiShiftMs/hero.fadeMs` and title.json `zoom.ms/fadeMs` are gone.

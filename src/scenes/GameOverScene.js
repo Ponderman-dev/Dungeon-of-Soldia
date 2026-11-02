@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText } from '../entities/uiKit.js';
+import { drawWindow, uiText, sceneFade, sceneFadeIn } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
@@ -41,7 +41,7 @@ export default class GameOverScene extends Phaser.Scene {
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, Number(G.bg)).setOrigin(0);
     this.page = null;
     this.showSummary();
-    this.cameras.main.fadeIn(250, 0, 0, 0);
+    sceneFadeIn(this);
   }
 
   // A new page: the old one (and its characters) is thrown away.
@@ -236,7 +236,6 @@ export default class GameOverScene extends Phaser.Scene {
     if (this.leaving) return;
     this.leaving = true;
     sfx.play('tap');
-    this.cameras.main.fadeOut(250, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start(key, data));
+    sceneFade(this, key, data);
   }
 }

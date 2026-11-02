@@ -44,7 +44,8 @@ liked clips, session 26), then rolled out.
 4. **The run:** rows 8, 9, 10, 11, 12 (title card, floor number, cards dealing, room iris, boss letterbox).
 5. **Sound:** a soft cue per kind, picked on the sound board.
 
-## 4. Questions for the user before phase 1
+## 4. Answers (session 41): QUICK, tabs SLIDE sideways, pop-ups DROP from above, sounds LATER
+PHASE 1 DONE in session 41 (ui.md 'MOTION'). The old questions were:
 - Feel: QUICK and snappy (classic RPG menus) or SMOOTH and cinematic (slower, more easing)?
 - Inside pages: content slides SIDEWAYS (like turning a page) or simply FADES?
 - Pop-up windows: GROW from the middle, or DROP down from above?

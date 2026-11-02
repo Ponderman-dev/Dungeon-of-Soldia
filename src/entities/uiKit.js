@@ -183,7 +183,14 @@ let themeCache = null;
 function themeName() {
   if (themeCache) return themeCache;
   let t = UI.theme;
-  try { if (import.meta.env.DEV) t = new URLSearchParams(location.search).get('theme') || t; } catch (e) { /* no location (tests) */ }
+  try {
+    if (import.meta.env.DEV) {
+      const q = new URLSearchParams(location.search);
+      t = q.get('theme') || t;
+      const pal = UI.palettes[q.get('pal')];
+      if (pal) Object.assign(UI.goldTheme, pal); // another palette for the framed theme (trial)
+    }
+  } catch (e) { /* no location (tests) */ }
   return (themeCache = t);
 }
 

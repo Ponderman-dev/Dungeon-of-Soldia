@@ -52,4 +52,12 @@ export const UI = {
     stripLine: 0x15131b, slot: 0x18161f, chosen: 0xfff0b0, dim: 0x5a5666, pressedFill: 0x3a3446,
     button: 0xe8b444, buttonDark: 0xb98428, buttonLight: 0xffe08a, buttonText: '#2b1c0a', title: '#ffe7a8',
   },
+  // Other palettes for the same framed theme (dev flag ?pal=silver|copper|jade|crimson): they replace these keys of
+  // goldTheme (session 40 trial, user: 'more variations, other palettes').
+  palettes: {
+    silver: { frame: 0xc8ced8, frameDark: 0x5a6070, stud: 0xffffff, fill: 0x1b2130, strip: 0x2a3244, stripLine: 0x10141d, slot: 0x151a26, chosen: 0xffe08a, dim: 0x4e5466, pressedFill: 0x30384a, button: 0xc8ced8, buttonDark: 0x8e96a6, buttonLight: 0xffffff, buttonText: '#141a26', title: '#e8eef8' },
+    copper: { frame: 0xd2834a, frameDark: 0x6e3a1e, stud: 0xffc89a, fill: 0x2a1f1a, strip: 0x3c2c24, stripLine: 0x170f0c, slot: 0x201814, chosen: 0xffe2a0, dim: 0x5e5048, pressedFill: 0x45352c, button: 0xe08a4c, buttonDark: 0xa85a2c, buttonLight: 0xffc89a, buttonText: '#2a1408', title: '#ffd6b0' },
+    jade: { frame: 0x5fc4a0, frameDark: 0x245a4a, stud: 0xc8ffe8, fill: 0x142220, strip: 0x1f3430, stripLine: 0x0b1412, slot: 0x101b19, chosen: 0xffe08a, dim: 0x46585a, pressedFill: 0x2a403c, button: 0x6fd2ac, buttonDark: 0x3c9a7a, buttonLight: 0xc8ffe8, buttonText: '#0c231c', title: '#c8ffe8' },
+    crimson: { frame: 0xd8a640, frameDark: 0x6a2028, stud: 0xffe39a, fill: 0x261418, strip: 0x3a1c22, stripLine: 0x140a0c, slot: 0x1e1013, chosen: 0xfff0b0, dim: 0x5a4448, pressedFill: 0x45262c, button: 0xc8423a, buttonDark: 0x8e2824, buttonLight: 0xff8a7a, buttonText: '#fff0d8', title: '#ffe7a8' },
+  },
 };

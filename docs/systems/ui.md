@@ -57,3 +57,5 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   Glossary (gold back button; chapters = one panel with a GLOSSARY strip, recessed row slots, gold cursor). Every other
   window gets the gold frame automatically; Squad screen buttons and the white profile disc are not converted yet.
   On the review page as section 'NEW' (A = today, B = slate and gold).
+  PALETTES (session 40, user: 'more variations, other palettes'): dev flag `?pal=silver|copper|jade|crimson` (with
+  `?theme=gold`) swaps `UI.goldTheme` keys for `UI.palettes[pal]`; on the review page as theme options C-F.

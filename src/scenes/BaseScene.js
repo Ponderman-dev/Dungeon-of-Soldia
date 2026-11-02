@@ -95,7 +95,7 @@ export default class BaseScene extends Phaser.Scene {
     box.add(uiText(this, 0, 0, T.text, T.size, buttonTextColor()).setOrigin(0.5)); // 'normal' (user: room between box and text)
     const cell = T.cell;
     for (const side of [-1, 1]) {
-      const arrow = this.add.graphics().fillStyle(isGoldTheme() ? 0x2b1c0a : 0xffffff, 1);
+      const arrow = this.add.graphics().fillStyle(isGoldTheme() ? Number('0x' + UI.goldTheme.buttonText.slice(1)) : 0xffffff, 1);
       // A real up-arrow (user: the old 3-row one read as a '+'): a wide head, then a thick stem.
       const A = T.arrow;
       for (let i = 0; i < A.head; i++) arrow.fillRect(-(i + 0.5) * cell, i * cell, (2 * i + 1) * cell, cell);

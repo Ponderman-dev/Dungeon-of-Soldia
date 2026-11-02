@@ -28,7 +28,11 @@ def option(group, letter, name, desc, shots):
 <p>{desc}</p><div class="shots">{pics}</div><button class="btn pk" type="button" aria-pressed="false">PICK {letter}</button></div>'''
 frames = ''.join(option('frame', l, n, d, [(s, img(f'{s}-{f}.png', (0, 0, 390, 844))) for s in ('Base', 'Settings', 'Shop')]) for l, f, n, d in FRAMES)
 THEMES = [('A', 'single', 'Black and white (today)', 'Black windows, one white line, white text; buttons look like windows.'),
-          ('B', 'gold', 'NEW: Slate and gold', 'From your reference pictures: dark slate panels in a gold frame with corner studs, a title strip inside the panel, SOLID gold buttons with dark text (a button never looks like a panel), a gold cursor.')]
+          ('B', 'gold', 'NEW: Slate and gold', 'From your reference pictures: dark slate panels in a gold frame with corner studs, a title strip inside the panel, SOLID gold buttons with dark text (a button never looks like a panel), a gold cursor.'),
+          ('C', 'silver', 'Steel and silver', 'The same framed look, cooler: silver frames and buttons on dark blue-grey panels. Calm, knightly.'),
+          ('D', 'copper', 'Copper and brown', 'Warm: copper frames and buttons on dark brown panels, like an old leather and metal chest.'),
+          ('E', 'jade', 'Jade', 'Jade green frames and buttons on deep teal-black panels: mystic, a bit magical.'),
+          ('F', 'crimson', 'Crimson and gold', 'Gold frames on deep wine-red panels, crimson buttons with cream text: royal, dramatic.')]
 themes = ''.join(option('theme', l, n, d, [(s, img(f'{s}-{f}.png', (0, 0, 390, 844))) for s in ('Base', 'Glossary', 'Settings', 'Shop', 'Heroes', 'Squad')]) for l, f, n, d in THEMES)
 layouts = ''.join(option('layout', l, n, d, [('Glossary', img(f'layout-{f}.png', (0, 0, 390, 560)))]) for l, f, n, d in LAYOUTS)
 html = open(os.path.join(os.path.dirname(__file__), 'ui-review.html')).read()

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, SKILL_COLORS, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import D from '../data/heroPage.json';
@@ -53,9 +53,9 @@ export default class HeroesScene extends Phaser.Scene {
   }
 
   button(page, x, y, w, h, label, onTap, look = 'plain', size = 'normal') {
-    const line = { plain: UI.line, gold: GOLD, dim: DIM }[look];
-    page.add(drawWindow(this.add.graphics(), x, y, w, h, { line }));
-    page.add(uiText(this, x + w / 2, y + h / 2, label, size, { plain: UI.text, gold: UI.gold, dim: UI.dim }[look]).setOrigin(0.5));
+    const line = { plain: UI.line, gold: GOLD, dim: DIM, solid: UI.line }[look];
+    page.add(look === 'solid' ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line }));
+    page.add(uiText(this, x + w / 2, y + h / 2, label, size, { plain: UI.text, gold: UI.gold, dim: UI.dim, solid: buttonTextColor() }[look]).setOrigin(0.5));
     page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.modal) onTap(); }));
   }
 
@@ -67,7 +67,7 @@ export default class HeroesScene extends Phaser.Scene {
 
   top(page, back, title, onBack) {
     const B = L.back;
-    this.button(page, B.x, B.y, B.w, B.h, back, () => { sfx.play('tap'); onBack(); });
+    this.button(page, B.x, B.y, B.w, B.h, back, () => { sfx.play('tap'); onBack(); }, 'solid');
     if (title) this.text(page, GAME_WIDTH / 2, L.titleY, title, 'big').setOrigin(0.5, 0);
   }
 
@@ -145,8 +145,8 @@ export default class HeroesScene extends Phaser.Scene {
       this.text(page, sx + a.width + 8, S.y + S.h / 2, String(v), 'small', UI.gold).setOrigin(0, 0.5);
     });
     const B = L.buttons, bw = (W - B.gap) / 2;
-    this.button(page, x, B.y, bw, B.h, 'LORE', () => { sfx.play('tap'); this.showLore(def); });
-    this.button(page, x + bw + B.gap, B.y, bw, B.h, 'STATS', () => { sfx.play('tap'); this.showStats(def, 'records'); });
+    this.button(page, x, B.y, bw, B.h, 'LORE', () => { sfx.play('tap'); this.showLore(def); }, 'solid');
+    this.button(page, x + bw + B.gap, B.y, bw, B.h, 'STATS', () => { sfx.play('tap'); this.showStats(def, 'records'); }, 'solid');
   }
 
   // ---- LORE --------------------------------------------------------------------------------------

@@ -59,3 +59,13 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   On the review page as section 'NEW' (A = today, B = slate and gold).
   PALETTES (session 40, user: 'more variations, other palettes'): dev flag `?pal=silver|copper|jade|crimson` (with
   `?theme=gold`) swaps `UI.goldTheme` keys for `UI.palettes[pal]`; on the review page as theme options C-F.
+- **CHOSEN: F = CRIMSON AND GOLD (session 40).** `UI.theme` 'gold' (the framed theme) + `UI.palette` 'crimson'
+  (`UI.palettes.crimson` is merged into `UI.goldTheme` by uiKit `themeName()` at load). 'mono' + no palette = the old
+  black and white (still works; every new piece falls back to it). Dev trials still work: `?theme=mono|gold`,
+  `?pal=gold|silver|copper|jade|crimson`. ACTION BUTTONS are SOLID (`drawButton` + `buttonTextColor()`): every back
+  button ('< CAMP' / '< BACK': Glossary, Heroes, Shop, Profile, Leaders, Settings), TO EXPEDITION, TAP TO START, BEGIN
+  DESCENT, CAMP / RANDOM, Send back, Profile EDIT / CHANGE / SET AS ..., Settings - / + and its row buttons, Shop gem
+  price buttons, Glossary pager arrows, every uiButton (Puzzle, defeat BACK). Tabs, cards and info panels stay FRAMED
+  (chosen = pale gold frame, locked = grey frame). Scene helpers take look 'solid' (Heroes, Profile, Settings,
+  Glossary) or a `solid` flag (Shop, Leaders). Camp profile disc = gold ring on a panel disc. The fight HUD and reward
+  sheet only got the new frames (not redesigned). Glossary chapters = one panel with a title strip (gold theme).

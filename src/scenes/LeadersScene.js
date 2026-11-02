@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText } from '../entities/uiKit.js';
+import { drawWindow, uiText, drawButton, buttonTextColor } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
@@ -72,9 +72,9 @@ export default class LeadersScene extends Phaser.Scene {
     return t;
   }
 
-  button(page, x, y, w, h, label, onTap, gold = false) {
-    page.add(drawWindow(this.add.graphics(), x, y, w, h, { line: gold ? C.gold : UI.line }));
-    if (label) page.add(uiText(this, x + w / 2, y + h / 2, label, 'normal', gold ? UI.gold : UI.text).setOrigin(0.5));
+  button(page, x, y, w, h, label, onTap, gold = false, solid = false) {
+    page.add(solid ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line: gold ? C.gold : UI.line }));
+    if (label) page.add(uiText(this, x + w / 2, y + h / 2, label, 'normal', solid ? buttonTextColor() : gold ? UI.gold : UI.text).setOrigin(0.5));
     if (onTap) page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', onTap));
   }
 
@@ -107,7 +107,7 @@ export default class LeadersScene extends Phaser.Scene {
     lastTab = tab;
     const page = this.newPage(), x = L.side, list = tab === 'week' ? D.week : D.allTime;
     const B = L.back;
-    this.button(page, B.x, B.y, B.w, B.h, this.from === 'Base' ? '< CAMP' : '< BACK', () => this.close());
+    this.button(page, B.x, B.y, B.w, B.h, this.from === 'Base' ? '< CAMP' : '< BACK', () => this.close(), false, true);
     this.text(page, GAME_WIDTH / 2, L.titleY, 'LEADERS', 'big').setOrigin(0.5, 0);
     const T = L.tabs, tw = (W - T.gap) / 2;
     [['week', 'WEEK'], ['allTime', 'ALL TIME']].forEach(([id, label], i) => {
@@ -184,7 +184,7 @@ export default class LeadersScene extends Phaser.Scene {
     sfx.play('tap');
     const page = this.newPage(), x = L.side, R = L.run, P = L.pad;
     const B = L.back;
-    this.button(page, B.x, B.y, B.w, B.h, '< BACK', () => { sfx.play('tap'); this.showBoard(tab); });
+    this.button(page, B.x, B.y, B.w, B.h, '< BACK', () => { sfx.play('tap'); this.showBoard(tab); }, false, true);
     page.add(drawWindow(this.add.graphics(), x, R.y, W, R.h, { line: C.gold }));
     page.add(floorCrop(this, dungeons.A.tileColors[0], 200, x + 2, R.y + 2, W - 4, R.h - 4));
     this.tag(page, GAME_WIDTH / 2, R.y + 16, `${rank}. ${pl.name}`, true);

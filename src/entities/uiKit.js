@@ -182,17 +182,18 @@ export const isGoldTheme = () => themeName() === 'gold';
 let themeCache = null;
 function themeName() {
   if (themeCache) return themeCache;
-  let t = UI.theme;
+  let t = UI.theme, pal = UI.palette;
   try {
-    if (import.meta.env.DEV) {
+    if (import.meta.env.DEV) { // trials: ?theme=mono|gold, ?pal=gold|silver|copper|jade|crimson
       const q = new URLSearchParams(location.search);
       t = q.get('theme') || t;
-      const pal = UI.palettes[q.get('pal')];
-      if (pal) Object.assign(UI.goldTheme, pal); // another palette for the framed theme (trial)
+      pal = q.get('pal') || pal;
     }
   } catch (e) { /* no location (tests) */ }
+  if (UI.palettes[pal]) Object.assign(UI.goldTheme, UI.palettes[pal]); // 'gold' = goldTheme as it is
   return (themeCache = t);
 }
+themeName(); // pick the palette at once, before any screen reads UI.goldTheme
 
 // The frame style: UI.frame, or the dev server's ?frame= url flag (trials).
 let frameCache = null;

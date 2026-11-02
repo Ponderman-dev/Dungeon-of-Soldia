@@ -132,10 +132,12 @@ export default class BaseScene extends Phaser.Scene {
     this.events.on(Phaser.Scenes.Events.RESUME, () => nameText.setText(playerName())); // renamed on the Profile
     ui.push(g, nameText);
     const c = this.add.graphics();
-    pixelDisc(c, px + d / 2, Pr.y + d / 2, d / 2, 0xffffff);
-    pixelDisc(c, px + d / 2, Pr.y + d / 2, d / 2 - 2, 0x000000);
+    const TH = isGoldTheme() ? UI.goldTheme : null; // the framed theme: a gold ring round a dark panel disc
+    if (TH) pixelDisc(c, px + d / 2, Pr.y + d / 2, d / 2 + 2, TH.outline);
+    pixelDisc(c, px + d / 2, Pr.y + d / 2, d / 2, TH ? TH.frame : 0xffffff);
+    pixelDisc(c, px + d / 2, Pr.y + d / 2, d / 2 - (TH ? 4 : 2), TH ? TH.fill : 0x000000);
     const m = px + d / 2, t = Pr.y + 13;
-    c.fillStyle(0xffffff, 1).fillRect(m - 5, t, 10, 10).fillRect(m - 11, t + 13, 22, 4).fillRect(m - 13, t + 17, 26, 6);
+    c.fillStyle(TH ? TH.stud : 0xffffff, 1).fillRect(m - 5, t, 10, 10).fillRect(m - 11, t + 13, 22, 4).fillRect(m - 13, t + 17, 26, 6);
     ui.push(c);
     this.add.zone(px + d / 2 - Pr.barW / 2 + d / 4, Pr.y + d / 2, Pr.barW + d / 2, d).setInteractive().on('pointerup', () => this.openOver('Profile'));
     for (const o of ui) o.setDepth(DEPTH.ui);

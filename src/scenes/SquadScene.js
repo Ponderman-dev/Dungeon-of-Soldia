@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, SKILL_COLORS, UI } from '../config.js';
-import { drawWindow, drawCursor, uiShift } from '../entities/uiKit.js';
+import { drawWindow, drawCursor, uiShift, drawButton, buttonTextColor, isGoldTheme } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
 import { skillIconKey } from '../entities/skillIconTexture.js';
@@ -130,8 +130,8 @@ export default class SquadScene extends Phaser.Scene {
       // A small "Send back" button under a filled slot (the hero walks back to the bench).
       const back = this.add.container(s.x, s.y + 42).setDepth(DEPTH.ui);
       const bg = this.add.graphics();
-      drawWindow(bg, -52, -15, 104, 30); // roomy (user: more space between box and text)
-      back.add([bg, this.add.text(0, 0, 'Send back', { fontFamily: FONT, fontSize: '8px', color: INK }).setOrigin(0.5)]);
+      drawButton(bg, -52, -15, 104, 30); // roomy (user: more space between box and text); a solid button (framed theme)
+      back.add([bg, this.add.text(0, 0, 'Send back', { fontFamily: FONT, fontSize: '8px', color: isGoldTheme() ? buttonTextColor() : INK }).setOrigin(0.5)]);
       return { shadow, ring, num, back };
     });
   }
@@ -182,18 +182,18 @@ export default class SquadScene extends Phaser.Scene {
     // "Begin descent": only when all 3 slots are filled, at the bottom over RANDOM.
     this.begin = this.add.container(DOOR_X, BEGIN_Y).setDepth(DEPTH.ui);
     const bg = this.add.graphics();
-    drawWindow(bg, -150, -28, 300, 56);
-    const cur = drawCursor(this.add.graphics(), -128, 0); // the blinking ▶ cursor: everything is ready
+    drawButton(bg, -150, -28, 300, 56);
+    const cur = drawCursor(this.add.graphics(), -128, 0, isGoldTheme() ? Number('0x' + buttonTextColor().slice(1)) : undefined); // the blinking ▶ cursor: everything is ready
     this.time.addEvent({ delay: 500, loop: true, callback: () => cur.setVisible(!cur.visible) });
-    this.begin.add([bg, cur, this.add.text(8, 1, 'BEGIN DESCENT', { fontFamily: FONT, fontSize: '16px', color: INK }).setOrigin(0.5)]);
+    this.begin.add([bg, cur, this.add.text(8, 1, 'BEGIN DESCENT', { fontFamily: FONT, fontSize: '16px', color: isGoldTheme() ? buttonTextColor() : INK }).setOrigin(0.5)]);
     this.add.zone(DOOR_X, BEGIN_Y, 300, 56).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.descend());
 
     // The bottom row: '< CAMP' (back to the camp hub, user: at the bottom for the flow) and RANDOM; then the small test
     // toggle at the very bottom.
     const rb = this.add.graphics().setDepth(DEPTH.ui);
     [['< CAMP', 30, () => this.toCamp()], ['RANDOM', GAME_WIDTH - 180, () => this.pickRandom()]].forEach(([label, x, onTap]) => {
-      drawWindow(rb, x, 744, 150, 46);
-      this.add.text(x + 75, 767, label, { fontFamily: FONT, fontSize: '16px', color: INK }).setOrigin(0.5).setDepth(DEPTH.ui);
+      drawButton(rb, x, 744, 150, 46);
+      this.add.text(x + 75, 767, label, { fontFamily: FONT, fontSize: '16px', color: isGoldTheme() ? buttonTextColor() : INK }).setOrigin(0.5).setDepth(DEPTH.ui);
       this.add.zone(x + 75, 767, 150, 46).setInteractive().setDepth(DEPTH.ui).on('pointerdown', onTap);
     });
     const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));

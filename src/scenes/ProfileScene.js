@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
@@ -72,8 +72,9 @@ export default class ProfileScene extends Phaser.Scene {
   // A window button. look: 'plain', 'gold' (gold line + text), 'filled' (gold, black text), 'dim'. Returns the zone.
   button(page, x, y, w, h, label, onTap, look = 'plain', size = 'normal') {
     const line = { plain: UI.line, gold: GOLD, filled: GOLD, dim: DIM }[look];
-    page.add(drawWindow(this.add.graphics(), x, y, w, h, { line, fill: look === 'filled' ? GOLD : UI.window }));
-    page.add(uiText(this, x + w / 2, y + h / 2, label, size, { plain: UI.text, gold: UI.gold, filled: '#000000', dim: UI.dim }[look]).setOrigin(0.5));
+    const solid = look === 'filled' || look === 'solid'; // a solid button (the framed theme's gold / crimson button)
+    page.add(solid ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line }));
+    page.add(uiText(this, x + w / 2, y + h / 2, label, size, solid ? buttonTextColor() : { plain: UI.text, gold: UI.gold, dim: UI.dim }[look]).setOrigin(0.5));
     const z = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.modal) onTap(); });
     page.add(z);
     return z;
@@ -87,7 +88,7 @@ export default class ProfileScene extends Phaser.Scene {
 
   top(page, back, name, onBack) {
     const B = L.back;
-    this.button(page, B.x, B.y, B.w, B.h, back, () => { sfx.play('tap'); onBack(); });
+    this.button(page, B.x, B.y, B.w, B.h, back, () => { sfx.play('tap'); onBack(); }, 'solid');
     this.text(page, GAME_WIDTH / 2, L.titleY, name, 'big').setOrigin(0.5, 0);
   }
 
@@ -118,9 +119,9 @@ export default class ProfileScene extends Phaser.Scene {
     this.banner(page, this.profile.banner, x + 2, y + 2, W - 4, C.bannerH);
     this.hero(page, hero.id, x + C.heroX, y + C.h - 18, C.heroScale);
     const E = C.edit;
-    this.button(page, x + W - E.w - 10, y + 10, E.w, E.h, 'EDIT', () => { sfx.play('tap'); this.showBanners(); }, 'plain', 'small');
+    this.button(page, x + W - E.w - 10, y + 10, E.w, E.h, 'EDIT', () => { sfx.play('tap'); this.showBanners(); }, 'solid', 'small');
     const Ch = C.change;
-    this.button(page, x + C.heroX - Ch.w / 2, y + C.h - Ch.h / 2, Ch.w, Ch.h, 'CHANGE', () => { sfx.play('tap'); this.showHeroPicker(); }, 'plain', 'small');
+    this.button(page, x + C.heroX - Ch.w / 2, y + C.h - Ch.h / 2, Ch.w, Ch.h, 'CHANGE', () => { sfx.play('tap'); this.showHeroPicker(); }, 'solid', 'small');
     const name = this.text(page, x + C.nameX, y + C.bannerH + 14, this.profile.name.toUpperCase(), 'normal');
     this.text(page, x + C.nameX, y + C.bannerH + 38, `${hero.name} main`, 'small', UI.gold);
     page.add(this.add.zone(x + C.nameX - 6, y + C.bannerH + 4, W - C.nameX, C.h - C.bannerH - 8).setOrigin(0)

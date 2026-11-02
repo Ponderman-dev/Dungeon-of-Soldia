@@ -4,7 +4,7 @@ import title from '../data/title.json';
 import pkg from '../../package.json';
 import { skyLayer, twinkleSpots, moonLayers, cloudLayer, canopyLayer } from '../systems/titleArt.js';
 import { layerTexture } from '../entities/pixelLayer.js';
-import { drawWindow, uiText, drawGear } from '../entities/uiKit.js';
+import { drawWindow, uiText, drawGear, drawButton, buttonTextColor } from '../entities/uiKit.js';
 import { loadProgress } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
 
@@ -68,8 +68,8 @@ export default class TitleScene extends Phaser.Scene {
       uiText(this, cx, L.bigY, L.big, 'big', UI.gold, { stroke: '#000000', strokeThickness: 4 }).setOrigin(0.5).setScale(L.bigScale),
     ];
     const S = title.start, box = this.add.graphics();
-    drawWindow(box, cx - S.w / 2, S.y - S.h / 2, S.w, S.h);
-    const tap = uiText(this, cx, S.y, S.text, 'big').setOrigin(0.5);
+    drawButton(box, cx - S.w / 2, S.y - S.h / 2, S.w, S.h);
+    const tap = uiText(this, cx, S.y, S.text, 'big', buttonTextColor()).setOrigin(0.5);
     this.tweens.add({ targets: tap, alpha: S.blinkAlpha, duration: S.blinkMs, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }); // a soft blink
     ui.push(box, tap);
     const best = loadProgress().stats.bestFloor;

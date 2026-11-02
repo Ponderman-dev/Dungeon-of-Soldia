@@ -68,9 +68,9 @@ export default class GlossaryScene extends Phaser.Scene {
   }
 
   button(page, x, y, w, h, label, onTap, look = 'plain', size = 'normal') {
-    const line = { plain: UI.line, gold: GOLD, dim: DIM }[look];
-    page.add(drawWindow(this.add.graphics(), x, y, w, h, { line }));
-    if (label) page.add(uiText(this, x + w / 2, y + h / 2, label, size, { plain: UI.text, gold: UI.gold, dim: UI.dim }[look]).setOrigin(0.5));
+    const line = { plain: UI.line, gold: GOLD, dim: DIM, solid: UI.line }[look];
+    page.add(look === 'solid' ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line }));
+    if (label) page.add(uiText(this, x + w / 2, y + h / 2, label, size, { plain: UI.text, gold: UI.gold, dim: UI.dim, solid: buttonTextColor() }[look]).setOrigin(0.5));
     if (onTap) page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', onTap));
   }
 
@@ -113,8 +113,8 @@ export default class GlossaryScene extends Phaser.Scene {
   pager(page, y, at, pages, go) {
     if (pages <= 1) return;
     const x = L.side;
-    this.button(page, x, y, 64, 40, '<', at > 0 ? () => { sfx.play('tap'); go(at - 1); } : null, at > 0 ? 'plain' : 'dim');
-    this.button(page, x + W - 64, y, 64, 40, '>', at < pages - 1 ? () => { sfx.play('tap'); go(at + 1); } : null, at < pages - 1 ? 'plain' : 'dim');
+    this.button(page, x, y, 64, 40, '<', at > 0 ? () => { sfx.play('tap'); go(at - 1); } : null, at > 0 ? 'solid' : 'dim');
+    this.button(page, x + W - 64, y, 64, 40, '>', at < pages - 1 ? () => { sfx.play('tap'); go(at + 1); } : null, at < pages - 1 ? 'solid' : 'dim');
     this.text(page, GAME_WIDTH / 2, y + 20, `${at + 1} / ${pages}`, 'small', UI.dim).setOrigin(0.5);
   }
 

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
@@ -71,9 +71,9 @@ export default class ShopScene extends Phaser.Scene {
     return t;
   }
 
-  button(page, x, y, w, h, label, onTap, line = UI.line, color = UI.text) {
-    page.add(drawWindow(this.add.graphics(), x, y, w, h, { line }));
-    if (label) page.add(uiText(this, x + w / 2, y + h / 2, label, 'normal', color).setOrigin(0.5));
+  button(page, x, y, w, h, label, onTap, line = UI.line, color = UI.text, solid = false) {
+    page.add(solid ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line }));
+    if (label) page.add(uiText(this, x + w / 2, y + h / 2, label, 'normal', solid ? buttonTextColor() : color).setOrigin(0.5));
     if (onTap) page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.modal) onTap(); }));
   }
 
@@ -88,7 +88,7 @@ export default class ShopScene extends Phaser.Scene {
   // '< CAMP' (or '< BACK') and the gem balance with '+' (opens GEMS).
   header(page, back, onBack) {
     const B = L.back, Bl = L.balance, x = GAME_WIDTH - L.side - Bl.w;
-    this.button(page, B.x, B.y, B.w, B.h, back, onBack);
+    this.button(page, B.x, B.y, B.w, B.h, back, onBack, UI.line, UI.text, true);
     page.add(drawWindow(this.add.graphics(), x, B.y, Bl.w, Bl.h));
     this.gem(page, x + 22, B.y + Bl.h / 2, 2);
     this.text(page, x + 40, B.y + Bl.h / 2, num(this.gems()), 'normal', GEM_CSS).setOrigin(0, 0.5);
@@ -197,8 +197,8 @@ export default class ShopScene extends Phaser.Scene {
       if (pk.tag) this.text(page, x + 76, y + 18, pk.tag, 'small', UI.gold);
       this.text(page, x + 76, y + P.h / 2 + 4, num(pk.gems), 'big', GEM_CSS).setOrigin(0, 0.5);
       const bw = 128, bx = x + W - bw - 16;
-      page.add(drawWindow(this.add.graphics(), bx, y + P.h / 2 - 20, bw, 40));
-      this.text(page, bx + bw / 2, y + P.h / 2, pk.price, 'normal').setOrigin(0.5);
+      page.add(drawButton(this.add.graphics(), bx, y + P.h / 2 - 20, bw, 40));
+      this.text(page, bx + bw / 2, y + P.h / 2, pk.price, 'normal', buttonTextColor()).setOrigin(0.5);
     });
     this.text(page, GAME_WIDTH / 2, P.y + S.packs.length * (P.h + P.gap) + 16, S.payNote, 'small', UI.dim).setOrigin(0.5, 0);
   }

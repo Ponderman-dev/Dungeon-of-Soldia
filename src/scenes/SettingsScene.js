@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor } from '../entities/uiKit.js';
 import defs from '../data/settings.json';
 import pkg from '../../package.json';
 import { loadProgress, saveProgress, deleteProgress } from '../systems/progress.js';
@@ -33,7 +33,7 @@ export default class SettingsScene extends Phaser.Scene {
     this.progress = loadProgress();
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, Number(L.bg)).setOrigin(0).setInteractive(); // blocks taps below
     const B = L.back;
-    this.button(B.x, B.y, B.w, B.h, L.backLabels[this.from] || L.backLabels.Base, { onTap: () => this.close() });
+    this.button(B.x, B.y, B.w, B.h, L.backLabels[this.from] || L.backLabels.Base, { look: 'solid', onTap: () => this.close() });
     uiText(this, GAME_WIDTH / 2, L.titleY, 'SETTINGS', 'big').setOrigin(0.5, 0);
     uiText(this, GAME_WIDTH / 2, L.versionY, `v${pkg.version}`, 'small', UI.dim).setOrigin(0.5);
     this.page = null;
@@ -44,9 +44,10 @@ export default class SettingsScene extends Phaser.Scene {
   // A window button: `look` = 'plain' (white), 'gold' (gold line), 'filled' (gold, black text), 'dim', 'red'.
   // Added to `into` (a container) when given. Returns the tap zone.
   button(x, y, w, h, label, { look = 'plain', size = 'normal', onTap = null, into = null } = {}) {
-    const line = { plain: UI.line, gold: GOLD, filled: GOLD, dim: DIM, red: RED }[look];
-    const ink = { plain: UI.text, gold: UI.gold, filled: '#000000', dim: DIM_TEXT, red: UI.red }[look];
-    const g = drawWindow(this.add.graphics(), x, y, w, h, { line, fill: look === 'filled' ? GOLD : UI.window });
+    const line = { plain: UI.line, gold: GOLD, filled: GOLD, dim: DIM, red: RED, solid: UI.line }[look];
+    const solid = look === 'filled' || look === 'solid'; // a solid button (the framed theme's gold / crimson button)
+    const ink = solid ? buttonTextColor() : { plain: UI.text, gold: UI.gold, dim: DIM_TEXT, red: UI.red }[look];
+    const g = solid ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line });
     const t = uiText(this, x + w / 2, y + h / 2, label, size, ink).setOrigin(0.5);
     const zone = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true });
     if (onTap) zone.on('pointerup', () => { if (!this.modal) onTap(); });
@@ -77,7 +78,7 @@ export default class SettingsScene extends Phaser.Scene {
     const x = L.side, W = GAME_WIDTH - L.side * 2, P = L.pad, inner = W - P * 2;
     if (c.type === 'pair') { // two plain buttons side by side, no card
       const w = (W - L.rowGap) / 2;
-      c.buttons.forEach((b, i) => this.button(x + i * (w + L.rowGap), y, w, L.plainH, b.label, { into: page, onTap: () => this.soon(b.label, b.soon) }));
+      c.buttons.forEach((b, i) => this.button(x + i * (w + L.rowGap), y, w, L.plainH, b.label, { look: 'solid', into: page, onTap: () => this.soon(b.label, b.soon) }));
       return y + L.plainH;
     }
     if (c.type === 'danger') {
@@ -92,8 +93,8 @@ export default class SettingsScene extends Phaser.Scene {
       const v = set[c.id];
       page.add(uiText(this, x + W - P, y + L.nameY, String(v), 'normal').setOrigin(1, 0));
       const step = (dir) => { if (stepSetting(this.progress, defs, c.id, dir)) this.save(); };
-      this.button(x + P, ry, h + 8, h, '-', { into: page, onTap: () => step(-1) });
-      this.button(x + W - P - h - 8, ry, h + 8, h, '+', { into: page, onTap: () => step(1) });
+      this.button(x + P, ry, h + 8, h, '-', { look: 'solid', into: page, onTap: () => step(-1) });
+      this.button(x + W - P - h - 8, ry, h + 8, h, '+', { look: 'solid', into: page, onTap: () => step(1) });
       // The level: max cells between the buttons, the first v filled gold.
       const left = x + P + h + 8 + L.rowGap, room = inner - (h + 8 + L.rowGap) * 2;
       const cw = Math.floor((room - L.barGap * (c.max - 1)) / c.max), x0 = left + Math.floor((room - (cw * c.max + L.barGap * (c.max - 1))) / 2);

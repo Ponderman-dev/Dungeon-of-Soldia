@@ -265,16 +265,17 @@
     "chestOpen": {
       "file": "picked/chestOpen",
       "volume": 0.5,
-      "source": "pixabay_game-bonus-144751.mp3"
+      "source": "new_80-cc0-rpg-sfx-lock-03.mp3"
     },
     "fountain": {
       "file": "picked/potion",
       "volume": 0.7
     },
     "puzzleSlide": {
-      "file": "press",
+      "file": "picked/puzzleSlide",
       "volume": 0.5,
-      "pitchJitter": 0.05
+      "pitchJitter": 0.05,
+      "source": "new_80-cc0-rpg-sfx-stones-01.mp3"
     },
     "puzzleSolved": {
       "file": "picked/puzzleSolved",

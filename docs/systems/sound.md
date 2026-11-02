@@ -35,3 +35,6 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   (`cleric_now_<cue>.mp3`), keeps the old options (same letters, saved picks stay right) and adds the NEW ones after.
   Applying a pick of a NEW option: copy `round10/<file>` to `src/assets/sounds/picked/<cue>.mp3`; for `grace` also add
   the cue (volume 0.3, minGapMs 120) and play it in BattleScene where `e.grace` calls `ch.bless()`.
+- Picks applied (session 40, board db `picks`): chestOpen = New: RPG lock 03 (`new_80-cc0-rpg-sfx-lock-03`),
+  puzzleSlide = New: RPG stones 01 (was the Organic `press`); files taken from the saved board's BLOBS. No Cleric
+  picks yet (hitHoly / holy_nova / sanctuary picks in the db are the old, already-applied ones; `grace` has none).

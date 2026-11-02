@@ -1270,10 +1270,10 @@ export default class BattleScene extends Phaser.Scene {
         const kindColor = slot.kind === 'attack' ? UI.red : UI.green;
         const element = skill.rotation && damageTypes[spell.damageType] ? Phaser.Display.Color.HexStringToColor(damageTypes[spell.damageType].color).color : null;
         const line = element ?? (ready ? SKILL_COLORS[slot.kind].ready : 0x4a4a5a);
-        drawWindow(g, b.x, b.y, SKILL_W, SKILL_H, { line, alpha: hero.alive ? 1 : 0.5 });
+        const inset = this.drawSkillFrame(g, b, line, ready, hero.alive);
         if (slot.cooldownLeft > 0) {
           const frac = slot.cooldownLeft / skill.cooldownMs;
-          g.fillStyle(0x2a2a36, 1).fillRect(b.x + 4, b.y + 4, SKILL_W - 8, Math.round((SKILL_H - 8) * frac));
+          g.fillStyle(0x2a2a36, 1).fillRect(b.x + inset, b.y + inset, SKILL_W - 2 * inset, Math.round((SKILL_H - 2 * inset) * frac));
         }
         this.drawPageMarks(g, b, slot, hero.alive);
         b.cd.setText(slot.cooldownLeft > 0 ? String(Math.ceil(slot.cooldownLeft / 1000)) : '');
@@ -1284,6 +1284,17 @@ export default class BattleScene extends Phaser.Scene {
         else b.code.setTint(hero.alive ? 0x5a5a66 : 0x2a2a30); // the icon darkens while it cools down (the number shows on it)
       });
     }
+  }
+
+  // A skill square's frame (session 41, user picked A: the gold theme frame was too distracting): a thin 2px line in
+  // the skill's colour (red attack / green support / grey cooling / the Mage's next element) round a dark tile.
+  // Returns the inset (where the cooldown shade starts).
+  drawSkillFrame(g, b, line, ready, alive) {
+    const alpha = alive ? 1 : 0.5, x = b.x, y = b.y, w = SKILL_W, h = SKILL_H;
+    const tile = (i, c) => { g.fillStyle(c, alpha).fillRect(x + i + 2, y + i, w - 2 * i - 4, h - 2 * i).fillRect(x + i, y + i + 2, w - 2 * i, h - 2 * i - 4); };
+    tile(0, line);
+    tile(2, UI.goldTheme.slot);
+    return 2;
   }
 
   // Skill book pages on a skill square: a small white dot per stat page along the bottom edge (rows of 5, going up),

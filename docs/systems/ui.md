@@ -101,3 +101,5 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
 - PANEL COLOUR (session 41, user picked C of 4 trial palettes: 'the dark red is a bit too bright'): the 'crimson' palette's
   panels are now EMBER BROWN (fill 0x1a1412, strip 0x2a201c, frameDark 0x4a2e22...; gold frames and the red primary
   buttons unchanged).
+- SKILL SQUARES (battle HUD, session 41, user picked A of 3): no gold theme frame (too distracting): a thin 2px line in
+  the skill colour (red / green, grey while cooling, Mage = next element) round a dark tile (`BattleScene.drawSkillFrame`).

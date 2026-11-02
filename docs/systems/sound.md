@@ -38,3 +38,6 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
 - Picks applied (session 40, board db `picks`): chestOpen = New: RPG lock 03 (`new_80-cc0-rpg-sfx-lock-03`),
   puzzleSlide = New: RPG stones 01 (was the Organic `press`); files taken from the saved board's BLOBS. No Cleric
   picks yet (hitHoly / holy_nova / sanctuary picks in the db are the old, already-applied ones; `grace` has none).
+- REMOVED (session 40, user: 'remove the pixabay dramatic music loop entirely'): `PIXABAY Dramatic music loop`
+  (291244) is gone from the board (page 2 library, every 'All my sounds' drop-down, its blob), from add-pixabay.py's
+  MAP and from both credit lists. It was never in the game.

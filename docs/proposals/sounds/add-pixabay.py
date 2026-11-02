@@ -48,7 +48,6 @@ MAP = {
  '351023': ('Rising bubbly pop', 1.1, ['potion', 'fountain', 'skill_alch_brew']),
  '417465': ('Game over', 3.1, ['defeat']),
  '43894': ('Videogame death', 3.2, ['heroFall', 'defeat']),
- '291244': ('Dramatic music loop', 24.1, []),
 }
 def letter(i):
     return chr(65 + i) if i < 26 else chr(64 + i // 26) + chr(65 + i % 26)

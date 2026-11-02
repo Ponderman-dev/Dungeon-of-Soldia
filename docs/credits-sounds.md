@@ -16,7 +16,6 @@ Data: `docs/proposals/sounds/pixabay-credits.json` (written by `add-pixabay.py`)
 | Button | freesound_gamestudio | button | [394464](https://pixabay.com/sound-effects/button-394464/) |
 | Button click | freesoundeffects | button click | [289742](https://pixabay.com/sound-effects/button-click-289742/) |
 | Casting magic 3 | yodguard | casting magic 3 | [382381](https://pixabay.com/sound-effects/casting-magic-3-382381/) |
-| Dramatic music loop | freesoundeffects | dramatic background music loop | [291244](https://pixabay.com/sound-effects/dramatic-background-music-loop-291244/) |
 | Earth magic 6 | yodguard | earth magic 6 | [378601](https://pixabay.com/sound-effects/earth-magic-6-378601/) |
 | Electric shock | creatorshome | electric shock | [334777](https://pixabay.com/sound-effects/electric-shock-334777/) |
 | Fire magic 5 | yodguard | fire magic 5 | [378639](https://pixabay.com/sound-effects/fire-magic-5-378639/) |

@@ -41,3 +41,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
 - REMOVED (session 40, user: 'remove the pixabay dramatic music loop entirely'): `PIXABAY Dramatic music loop`
   (291244) is gone from the board (page 2 library, every 'All my sounds' drop-down, its blob), from add-pixabay.py's
   MAP and from both credit lists. It was never in the game.
+- CLERIC picks applied (session 40, round 10 board): hitHoly = New: RPG spell 02 (`new_80-cc0-rpg-sfx-spell-02`,
+  replaces session 39's thump + sparkle); NEW cue `grace` = Yours: Fast magic game spell (volume 0.3, minGapMs 120),
+  played by BattleScene when Grace heals (with `ch.bless()`). Holy Nova / Sanctuary not re-picked (unchanged).
+  Page-2 `assign` fountain = potion drink = already the game's sound.

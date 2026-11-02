@@ -1918,6 +1918,7 @@ export default class BattleScene extends Phaser.Scene {
     } else if (e.type === 'flask') {
       if (e.grace) { // Cleric's Grace: she raises her staff and the hurt hero shines (a buff, not a shot: user, session 40)
         const cv = this.views.get(e.unit.uid); if (cv) cv.ch.bless();
+        sfx.play('grace');
         this.addMoment('grace', this.views.get(e.target.uid));
         return;
       }

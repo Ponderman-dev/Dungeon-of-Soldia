@@ -139,7 +139,7 @@
       "pitchJitter": 0.05,
       "minGapMs": 90,
       "file": "picked/hitHoly",
-      "source": "made with ffmpeg (session 39, user pick S 'thump + sparkle'): a soft low thump (160 Hz falling) + a faint high sparkle (2349 Hz), 0.4s"
+      "source": "new_80-cc0-rpg-sfx-spell-02.mp3"
     },
     "crit": {
       "volume": 0.5,
@@ -452,6 +452,13 @@
       "file": "picked/skill_mage_rotation",
       "source": "pixabay_lightning-spell-386163.mp3",
       "always": true
+    },
+    "grace": {
+      "volume": 0.3,
+      "pitchJitter": 0.05,
+      "minGapMs": 120,
+      "file": "picked/grace",
+      "source": "yours_fast-magic-game-spell-883.mp3"
     }
   },
   "maxVoices": 8

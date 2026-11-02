@@ -57,9 +57,14 @@ export const UI = {
     second: 0x3e3a4a, secondDark: 0x2c2936, secondLight: 0x5a5568, secondText: '#ffe7a8',
   },
   // How a menu page (Glossary, Heroes, Leaders, Shop, Settings, Profile) comes and goes (uiKit pageEnter / pageLeave):
-  // it slides in from the side over the screen behind (user, session 41: 'slides from the side instead of appearing'),
-  // and slides back out the same side. from = 'right' | 'left'; both ways take motion.normal.
-  page: { from: 'right' },
+  // it slides in over the screen behind and back out the same side, motion.normal both ways (user, session 41: 'slides
+  // from the side instead of appearing', then 'variationize, not all from one side'). from = the side each page comes
+  // from, matching where its camp button sits ('left' | 'right' | 'top' | 'bottom'); a page opened over another page
+  // (Glossary -> Heroes) comes from `overPage`; any other page from `fallback`.
+  page: {
+    from: { Glossary: 'left', Heroes: 'bottom', Leaders: 'bottom', Shop: 'right', Settings: 'top', Profile: 'top' },
+    overPage: 'right', fallback: 'right',
+  },
   // ONE MOTION LANGUAGE (docs/transition-plan.md; user, session 41: QUICK and snappy, tab content slides SIDEWAYS,
   // pop-ups DROP from above, sounds later). Every transition takes its time from here (systems/motion.js):
   // fast = tabs, buttons, pop-ups; normal = menu pages, sheets, scene fades; slow = big moves (camp <-> squad, into the

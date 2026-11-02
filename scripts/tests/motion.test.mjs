@@ -1,6 +1,6 @@
 // One motion language (systems/motion.js + config.js UI.motion, docs/transition-plan.md): timings and directions.
 import { UI } from '../../src/config.js';
-import { motionMs, easeFor, popPlan, slidePlan, fadePlan, pagePlan } from '../../src/systems/motion.js';
+import { motionMs, easeFor, popPlan, slidePlan, fadePlan, pagePlan, pageSide } from '../../src/systems/motion.js';
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const M = UI.motion;
 
@@ -21,6 +21,10 @@ ok('back is the exact mirror', back.out.toDx === -next.out.toDx && back.in.fromD
 ok('tab slides are fast and ease right', next.ms === M.fast && next.in.ease === M.easeOut && next.out.ease === M.easeIn);
 
 ok('scene fade uses the normal token by default', fadePlan().outMs === M.normal && fadePlan('slow').inMs === M.slow);
-const pe = pagePlan(true), pl = pagePlan(false);
-ok('menu page slides in from a full screen to the side and leaves the same way', Math.abs(pe.fromScrollX) === 390 && pe.toScrollX === 0 && pl.toScrollX === pe.fromScrollX && pe.ease === M.easeOut && pl.ease === M.easeIn);
-ok('from the right = the camera starts scrolled left (page sits to the right)', UI.page.from !== 'right' || pe.fromScrollX < 0);
+for (const side of ['left', 'right', 'top', 'bottom']) {
+  const pe = pagePlan(true, side), pl = pagePlan(false, side);
+  ok(`page from ${side}: one screen away, lands home, leaves the same way`, Math.abs(pe.from) === (pe.axis === 'scrollX' ? 390 : 844) && pe.to === 0 && pl.to === pe.from && pe.ease === M.easeOut && pl.ease === M.easeIn);
+}
+ok('camera offsets point the right way (right/bottom = negative scroll)', pagePlan(true, 'right').from < 0 && pagePlan(true, 'left').from > 0 && pagePlan(true, 'bottom').axis === 'scrollY' && pagePlan(true, 'bottom').from < 0 && pagePlan(true, 'top').from > 0);
+ok('pages do not all come from one side', new Set(Object.values(UI.page.from)).size >= 3);
+ok('a page over another page comes from overPage; unknown pages from fallback', pageSide('Heroes', 'Glossary') === UI.page.overPage && pageSide('Heroes', 'Base') === UI.page.from.Heroes && pageSide('Nope', 'Base') === UI.page.fallback);

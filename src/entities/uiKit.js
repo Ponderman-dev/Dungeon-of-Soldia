@@ -5,7 +5,7 @@ import fontUrl from '../assets/fonts/ironslab.ttf?inline';
 import smallFontUrl from '../assets/fonts/press-start-2p.woff2?inline';
 import { UI } from '../config.js';
 import * as sfx from '../audio/sfx.js';
-import { popPlan, slidePlan, fadePlan, pagePlan } from '../systems/motion.js';
+import { popPlan, slidePlan, fadePlan, pagePlan, pageSide } from '../systems/motion.js';
 
 // Loads the packed font before the first screen draws. The font comes from its data: URL with atob, never fetch():
 // the claude.ai preview frame blocks fetch (the same trick as the sounds). If it fails the game uses monospace.
@@ -306,7 +306,7 @@ export function uiShift(scene, parts, show, { ms = UI.motion.fast, dy = 28, inst
 }
 
 // MENU PAGE TRANSITIONS (user, session 41: like camp -> squad, in three beats). Opening: the camp's buttons leave
-// (BaseScene.openOver), then the page slides in from the side (pageEnter, in its create(); its top bar is
+// (BaseScene.openOver), then the page slides in from its own side (UI.page.from; pageEnter, in its create(); its top bar is
 // hidden meanwhile), then its top bar ('< CAMP', the Shop's gems) slides down into place. Closing (pageLeave(scene,
 // done)): the top bar slides up and away, then the page slides back out the same side, then `done` resumes the camp,
 // whose buttons come back in. Timing: systems/motion.js. A second close while leaving is ignored.
@@ -319,21 +319,22 @@ export function pageBar(scene) {
   return out;
 }
 export function pageEnter(scene) {
-  const P = pagePlan(true), cam = scene.cameras.main;
+  scene.pageSide = pageSide(scene.scene.key, scene.from); // each page has its own side (UI.page.from)
+  const P = pagePlan(true, scene.pageSide), cam = scene.cameras.main;
   scene.pageLeaving = false; // Phaser reuses a scene between visits: a fresh page can close again
   scene.input.enabled = true;
   uiShift(scene, { up: pageBar(scene) }, false, { instant: true }); // the bar waits until the page is in
-  cam.scrollX = P.fromScrollX; // the page waits one screen to the side, then slides over the screen behind
-  scene.tweens.add({ targets: cam, scrollX: P.toScrollX, duration: P.ms, ease: P.ease });
+  cam[P.axis] = P.from; // the page waits one screen away, then slides over the screen behind
+  scene.tweens.add({ targets: cam, [P.axis]: P.to, duration: P.ms, ease: P.ease });
   scene.time.delayedCall(P.ms, () => { if (!scene.pageLeaving) uiShift(scene, { up: pageBar(scene) }, true); });
 }
 export function pageLeave(scene, done) {
   if (scene.pageLeaving) return;
   scene.pageLeaving = true;
-  const P = pagePlan(false), cam = scene.cameras.main;
+  const P = pagePlan(false, scene.pageSide), cam = scene.cameras.main;
   scene.input.enabled = false; // no taps while it goes
   uiShift(scene, { up: pageBar(scene) }, false, { onDone: () => { // the bar leaves first, then the page
-    scene.tweens.add({ targets: cam, scrollX: P.toScrollX, duration: P.ms, ease: P.ease });
+    scene.tweens.add({ targets: cam, [P.axis]: P.to, duration: P.ms, ease: P.ease });
     scene.time.delayedCall(P.ms, done);
   } });
 }

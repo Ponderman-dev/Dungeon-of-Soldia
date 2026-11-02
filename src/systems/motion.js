@@ -1,7 +1,7 @@
 // ONE MOTION LANGUAGE (docs/transition-plan.md): the timing and direction of every screen / page / window change, with
 // no Phaser, so tests can check it. uiKit's helpers (popIn/popOut, slideSwap, sceneFade, pageEnter/pageLeave, uiShift)
 // turn these plans into tweens. Tokens live in config.js `UI.motion`.
-import { UI, GAME_WIDTH } from '../config.js';
+import { UI, GAME_WIDTH, GAME_HEIGHT } from '../config.js';
 
 const M = () => UI.motion;
 
@@ -43,10 +43,19 @@ export function fadePlan(kind = 'normal') {
   return { outMs: motionMs(kind), inMs: motionMs(kind) };
 }
 
-// Menu page (Glossary, Heroes...): slides in from the side (UI.page.from) over the screen behind, and back out the same
-// side. The camera scrolls: scrollX = -width puts the page one screen to the right, +width one screen to the left.
-export function pagePlan(show, width = GAME_WIDTH) {
-  const m = M(), off = UI.page.from === 'left' ? width : -width;
-  return show ? { ms: m.normal, fromScrollX: off, toScrollX: 0, ease: m.easeOut }
-    : { ms: m.normal, fromScrollX: 0, toScrollX: off, ease: m.easeIn };
+// Which side a menu page comes from: its own side (UI.page.from), or overPage when opened over another menu page.
+export function pageSide(key, from) {
+  const P = UI.page;
+  if (from && P.from[from]) return P.overPage;
+  return P.from[key] || P.fallback;
+}
+
+// Menu page: slides in from `side` over the screen behind, and back out the same side. The camera scrolls one screen
+// away: scrollX -W = page to the right, +W = to the left; scrollY -H = page below, +H = above.
+export function pagePlan(show, side = 'right', width = GAME_WIDTH, height = GAME_HEIGHT) {
+  const m = M();
+  const axis = side === 'top' || side === 'bottom' ? 'scrollY' : 'scrollX';
+  const off = { right: -width, left: width, bottom: -height, top: height }[side];
+  if (off === undefined) throw new Error(`unknown page side '${side}'`);
+  return show ? { ms: m.normal, axis, from: off, to: 0, ease: m.easeOut } : { ms: m.normal, axis, from: 0, to: off, ease: m.easeIn };
 }

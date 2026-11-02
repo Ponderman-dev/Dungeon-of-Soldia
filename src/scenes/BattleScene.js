@@ -34,7 +34,7 @@ import { iconList, iconLayout, ICON_PX } from '../systems/statusIcons.js';
 import { statusLook, iceBreak, bodyBox } from '../systems/statusFx.js';
 import { eliteGlow, crownPixels } from '../systems/eliteFx.js';
 import * as bossFx from '../systems/bossFx.js';
-import { projectileFx, impactFx, critFx, IMPACT_MS, ELEMENT_SLASH, CRIT_MS, MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, deathPuffFx } from '../systems/hitFx.js';
+import { projectileFx, impactFx, critFx, IMPACT_MS, ELEMENT_SLASH, CRIT_MS, MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, graceFx, deathPuffFx } from '../systems/hitFx.js';
 import BattleState from '../systems/BattleState.js';
 import dialogue from '../data/dialogue.json';
 import { pickSpeech, clearSpeech } from '../systems/dialogue.js';
@@ -747,6 +747,7 @@ export default class BattleScene extends Phaser.Scene {
         else if (h.kind === 'block') paint('block', blockFx(q, u));
         else if (h.kind === 'soak') paint('soak', soakFx(q, u));
         else if (h.kind === 'shieldBreak') paint('shieldBreak', shieldBreakFx(q, u));
+        else if (h.kind === 'grace') { const o = graceFx(q, u, now); paint('grace', o.draws); if (o.tint) v.hitTint = [TUNE.color('hit', 'grace', o.tint[0]), o.tint[1]]; }
         else if (h.kind === 'heal') { const o = healFx(q, u, h.seed); paint('heal', o.draws); if (o.tint && !v.hitTint) v.hitTint = [TUNE.color('hit', 'heal', o.tint[0]), o.tint[1]]; }
         continue;
       }
@@ -1761,15 +1762,22 @@ export default class BattleScene extends Phaser.Scene {
     if (e.type === 'flask' && e.flask && e.flask.name) return { unit: e.unit, ms: FX.flask.hitMs, stagger: 0, order: [e.target] };
     // A crescent that is not part of a Wind Cutter (those are swallowed by its cast hold) is a Counter Stance counter-cut.
     if (e.type === 'projectile' && e.kind === 'crescent' && e.from.side === 'hero') return { unit: e.from, ms: FX.counter.hitMs, stagger: 0, order: [e.to] };
+    // A bomb (Fire Bombs...): its hit shows when the lobbed bomb lands (user, session 40: slower bombs), not at the throw.
+    if (e.type === 'projectile' && itemFx.BOMB_KINDS[e.kind]) return { unit: e.from, ms: TUNE.ms('item', 'bomb', itemFx.ITEM_MS.bomb) * itemFx.BOMB_LAND, stagger: 0, order: [e.to], attacksOnly: true };
     return undefined;
   }
 
   // How long an event waits under a hold (0 = now).
   heldMs(hold, e) {
     const at = (u) => hold.ms + hold.stagger * Math.max(0, hold.order.indexOf(u));
+    if (hold.attacksOnly && e.type === 'attack') { // a bomb: only ITS hit waits (the next hit by the thrower on that enemy)
+      if (hold.done || e.attacker !== hold.unit || e.basic || !hold.order.includes(e.target)) return 0;
+      hold.done = true;
+      return hold.ms;
+    }
     if (e.type === 'attack' && e.attacker === hold.unit && !e.basic) return at(e.target);
-    if (e.type === 'heal') return hold.ms;
-    if (e.type === 'death' && e.unit.side === 'enemy') return at(e.unit) + 1;
+    if (e.type === 'heal') return hold.attacksOnly ? 0 : hold.ms;
+    if (e.type === 'death' && e.unit.side === 'enemy') return hold.attacksOnly && !hold.order.includes(e.unit) ? 0 : at(e.unit) + 1;
     return 0;
   }
 
@@ -1908,7 +1916,11 @@ export default class BattleScene extends Phaser.Scene {
         this.tweens.add({ targets: ring, radius: 24 + e.wave * 10, alpha: 0, duration: 400, onComplete: () => ring.destroy() });
       }
     } else if (e.type === 'flask') {
-      if (e.grace) { const cv = this.views.get(e.unit.uid); if (cv) cv.ch.bless(); } // Cleric's Grace: she raises her staff
+      if (e.grace) { // Cleric's Grace: she raises her staff and the hurt hero shines (a buff, not a shot: user, session 40)
+        const cv = this.views.get(e.unit.uid); if (cv) cv.ch.bless();
+        this.addMoment('grace', this.views.get(e.target.uid));
+        return;
+      }
       if (e.flask.name && e.unit.side === 'hero') this.playFlaskLook(this.views.get(e.unit.uid), this.views.get(e.target.uid), e.flask); // Alchemist v2 look
       else this.showFlask(this.views.get(e.unit.uid), this.views.get(e.target.uid), Number(e.flask.color));
     } else if (e.type === 'minionSpawn') {

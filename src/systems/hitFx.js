@@ -65,10 +65,11 @@ export function projectileFx(type, start, head, t, seed = 0) {
   } else if (type === 'dark') {
     for (let i = 1; i < 7; i++) { const [x, y] = back(i * 1.1); g.px(x, y + Math.sin(t / 60 + i) * 1.5, C.dark2, 1 - i / 7); }
     g.disc(head.x, head.y, 2, C.dark); g.px(head.x, head.y, C.white);
-  } else if (type === 'holy') { // a bolt of light: a bright white-gold streak (user, session 39: bolts of light only)
-    const [x, y] = back(Math.min(8, d)); g.line(x, y, head.x, head.y, C.holy, 0.7);
-    const [x2, y2] = back(Math.min(4, d)); g.line(x2, y2, head.x, head.y, C.white);
-    g.px(head.x, head.y - 1, C.holy, 0.6); g.px(head.x, head.y + 1, C.holy, 0.6);
+  } else if (type === 'holy') { // (user, session 40: a round shot) a round orb of light: pale halo, gold ball, white core,
+    // a short trail of twinkling sparks behind it
+    const k = Math.floor(t / 60);
+    for (let i = 1; i < 6; i++) { const [x, y] = back(i * 1.5); g.px(x + (rnd(i + k) - 0.5) * 2, y + (rnd(i * 3 + k) - 0.5) * 2, i % 2 ? C.holy : C.white, 0.85 - i * 0.14); }
+    g.disc(head.x, head.y, 3.2, C.holy, 0.3); g.disc(head.x, head.y, 2.2, C.holy); g.disc(head.x - 0.4, head.y - 0.4, 1.1, C.white);
   } else { // ranged: an arrow, shaft trailing behind a white tip
     const [x, y] = back(5); g.line(x, y, head.x - ux, head.y - uy, ARROW); g.px(head.x, head.y, C.white);
   }
@@ -137,7 +138,7 @@ export function critFx(q, u, t) {
 
 // ---- the other hit moments (miss, block, shield, heal, death) ----------------------------------
 // Each takes q = 0..1 over its own time in MOMENT_MS and the unit's body u (as impactFx, plus bot).
-export const MOMENT_MS = { dodge: 600, block: 320, soak: 460, shieldBreak: 660, heal: 900, puff: 570 };
+export const MOMENT_MS = { dodge: 600, block: 320, soak: 460, shieldBreak: 660, heal: 900, puff: 570, grace: 1100 };
 
 // Dodge: it side-steps away from the attacker and comes back; grey speed lines where it stood.
 // Returns { draws, dx } (dx = how far it is pushed sideways, in character pixels).
@@ -188,6 +189,29 @@ export function healFx(q, u, seed = 0) {
   }
   const glow = q > 0 && q < 0.75 ? 0.35 * Math.sin((q / 0.75) * Math.PI) : 0;
   return { draws: g.out, tint: glow > 0.02 ? [C.heal, Math.round(glow * 20) / 20] : null };
+}
+// The Cleric's GRACE heal (user, session 40: 'not a projectile, a shiny healing buff'): a soft column of gold light
+// comes down over the hero, gold four-point stars twinkle round the body one after another, little gold motes rise,
+// the hero glows gold. Returns { draws, tint }.
+export function graceFx(q, u, t) {
+  const g = pen();
+  const w = u.hw + 3, top = Math.round(u.top - 16);
+  const c = ph(q, 0, 0.5);
+  if (c > 0 && c < 1) for (let x = -w; x <= w; x++) { const e = Math.abs(x) / w; g.rect(u.x + x, top, 1, u.y - top, e < 0.35 ? C.white : C.holy, (1 - e) * 0.32 * Math.sin(c * Math.PI)); }
+  const STARS = [[-1, 0.15], [0.9, 0.35], [-0.7, 0.6], [1, 0.75], [0.1, -0.05], [-1.1, 0.9]]; // [x across the body, height 0 top .. 1 feet]
+  STARS.forEach(([sx, sy], i) => {
+    const p = ph(q, 0.1 + i * 0.1, 0.45 + i * 0.1);
+    if (p <= 0 || p >= 1) return;
+    const r = Math.round(Math.sin(p * Math.PI) * 3), x = u.x + sx * (u.hw + 2), y = u.top + sy * (u.bot - u.top);
+    g.px(x, y, C.white);
+    for (let k = 1; k <= r; k++) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) g.px(x + a * k, y + b * k, k === r ? C.holy : C.white, 1 - k / (r + 1));
+  });
+  for (let i = 0; i < 7; i++) {
+    const p = ph(q, 0.25 + i * 0.06, 0.8 + i * 0.03);
+    if (p > 0 && p < 1) g.px(u.x + (rnd(i * 7 + 1) - 0.5) * (u.hw * 2 + 4) + Math.sin(t / 120 + i) * 0.8, u.y - 3 - p * 24, i % 2 ? C.holy : C.white, 1 - p);
+  }
+  const glow = q > 0 && q < 0.85 ? 0.4 * Math.sin((q / 0.85) * Math.PI) : 0;
+  return { draws: g.out, tint: glow > 0.02 ? [C.holy, Math.round(glow * 20) / 20] : null };
 }
 // The grey puff where an enemy died (x, y = its feet).
 export function deathPuffFx(q, x, y) {

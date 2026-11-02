@@ -34,3 +34,11 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   electric, Alchemist flask, Grace mote; items bombs x5, lightning, ghost fire, moon, dark spirit. Skill shots are left
   out (approved hero looks). User notes in the page's db, collection `shots` (doc = shot id or `general`:
   `{verdict: 'ok'|'change'|null, text}`): read them with ArtifactData list.
+  ROUND 1 notes applied (session 40): HOLY basic shot = a round orb (gold ball, white core, halo, spark trail; hitFx).
+  ALCHEMIST flask = a real tumbling flask (skillFx `flask`, also used by Bandage Roll / Aid Kit / Mystery Brew-less
+  flasks) and SLOWER: `passive.lobbed.flightMs` 450 (BattleState.hitDelay; his hit lands with it; review 15 runs:
+  34.7 vs 35.7 = noise). BOMBS bigger + slower (itemFx `bombFx`, ITEM_MS.bomb 800 -> 1150, `BOMB_LAND` 0.6) and the
+  bomb's hit (number, impact, kill) now WAITS until it lands (BattleScene `holdFor` bomb hold, `attacksOnly`: heals
+  and other hits are not held). GRACE = no projectile: a 'grace' moment on the healed hero (`graceFx`: gold light
+  column, twinkling stars, rising motes, gold glow; MOMENT_MS.grace). Round 2 on the page: changed shots use doc
+  `<id>@2`; new rows (bandage, aidkit, lifesteal, plague, euclid) were missed in round 1.

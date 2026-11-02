@@ -62,6 +62,10 @@ ul.ideas li b { color: var(--fg); font-weight: 600; }
 .card h3 { font: 11px/1.5 var(--display); margin: 0; color: var(--steel); }
 .card .users { margin: 0; font-size: 13px; color: var(--muted); }
 .grp { font: 12px var(--display); color: var(--gold); margin: 8px 0 0; }
+.card h3 .tag { font-size: 8px; color: #000; background: var(--gold); padding: 3px 5px; margin-left: 8px; vertical-align: middle; }
+.card h3 .tag.new { background: var(--steel); }
+.card .was { margin: 0; font-size: 13px; color: var(--fg); border-left: 3px solid var(--gold); padding-left: 8px; }
+.card .was b { color: var(--gold); font-weight: 600; }
 
 </style>
 
@@ -69,6 +73,7 @@ ul.ideas li b { color: var(--fg); font-weight: 600; }
   <header>
     <h1>Projectiles: what flies</h1>
     <p class="lede">Every shot in the game that flies from a fighter to its target, drawn by the game's own code at the game's speed and size. Heroes stand at the bottom, enemies at the top, like in a fight. Skill shots are not here: they are part of the hero skill looks you already approved. For each shot, tap <b>OK</b> or <b>CHANGE</b> and write what you want (bigger, a different colour, a trail, a spin, a different hit when it lands...). Tap a scene to replay it. <b>Slow x4</b> lets you see each pixel.</p>
+    <p class="lede"><b>ROUND 2:</b> the 4 shots you marked CHANGE are redone (gold <b>ROUND 2</b> tag: your note and what changed are on the card; please mark them again). <b>NEW</b> (blue tag): the bandage and the 4 other flying item effects we had missed. The rest keep your OK.</p>
   </header>
   <div class="bar">
     <div class="seg" role="group" aria-label="Speed"><button id="sp1" aria-pressed="true">Normal</button><button id="sp4" aria-pressed="false">Slow x4</button></div>
@@ -101,8 +106,10 @@ function wireText(docId, ta, saved) {
   ta.addEventListener('blur', () => { if (timer) { clearTimeout(timer); timer = null; save(docId, { text: ta.value }, saved); } });
 }
 for (const s of S.SHOTS) {
+  const doc = s.round ? s.id + '@' + s.round : s.id; // a redone shot gets a fresh note (round 2)
   const card = document.createElement('div'); card.className = 'card'; card.id = 'shot-' + s.id;
   const h = document.createElement('h3'); h.textContent = s.name;
+  if (s.round || s.isNew) { const tg = document.createElement('span'); tg.className = 'tag' + (s.isNew ? ' new' : ''); tg.textContent = s.isNew ? 'NEW' : 'ROUND ' + s.round; h.append(tg); }
   const u = document.createElement('p'); u.className = 'users'; u.textContent = s.users;
   const cv = document.createElement('canvas'); cv.className = 'scene'; cv.width = S.W * S.Z; cv.height = S.H * S.Z; cv.tabIndex = 0;
   cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', s.name + ' (tap to replay)');
@@ -117,11 +124,13 @@ for (const s of S.SHOTS) {
   const lab = document.createElement('label'); lab.textContent = 'NOTE ON THE ' + s.name.toUpperCase();
   const ta = document.createElement('textarea'); ta.id = 'note-' + s.id; lab.htmlFor = ta.id; ta.placeholder = 'e.g. bigger, a longer trail, it should spin, a brighter hit…';
   const saved = document.createElement('div'); saved.className = 'saved';
-  for (const [b, v] of [[ok, 'ok'], [chg, 'change']]) b.addEventListener('click', () => { const cur = (notes[s.id] || {}).verdict; save(s.id, { verdict: cur === v ? null : v }, saved); });
-  wireText(s.id, ta, saved);
-  card.append(h, u, cv, btns, lab, ta, saved);
+  for (const [b, v] of [[ok, 'ok'], [chg, 'change']]) b.addEventListener('click', () => { const cur = (notes[doc] || {}).verdict; save(doc, { verdict: cur === v ? null : v }, saved); });
+  wireText(doc, ta, saved);
+  card.append(h, u);
+  if (s.round) { const w = document.createElement('p'); w.className = 'was'; w.innerHTML = '<b>Your note:</b> '; w.append(s.note); const d = document.createElement('p'); d.className = 'was'; d.innerHTML = '<b>Changed:</b> '; d.append(s.did); card.append(w, d); }
+  card.append(cv, btns, lab, ta, saved);
   document.getElementById(s.group).append(card);
-  ui[s.id] = { card, ok, chg };
+  ui[doc] = { card, ok, chg, ta };
 }
 wireText('general', document.getElementById('note-general'), document.getElementById('saved-general'));
 
@@ -133,7 +142,8 @@ function render() {
   }
 }
 function fillTexts() {
-  for (const id of [...Object.keys(ui), 'general']) { const ta = document.getElementById('note-' + id); if (ta && document.activeElement !== ta) ta.value = (notes[id] || {}).text || ''; }
+  for (const [id, u] of Object.entries(ui)) if (document.activeElement !== u.ta) u.ta.value = (notes[id] || {}).text || '';
+  const g = document.getElementById('note-general'); if (document.activeElement !== g) g.value = (notes.general || {}).text || '';
 }
 function local(v) { try { if (v === undefined) return JSON.parse(localStorage.getItem('soldia-shots') || 'null'); localStorage.setItem('soldia-shots', JSON.stringify(v)); } catch (e) { return null; } }
 async function save(docId, patch, savedEl) {

@@ -9,7 +9,7 @@ import combat from '../../../src/data/combat.json';
 import effectsData from '../../../src/data/effects.json';
 import { artPixels, partArt } from '../../../src/systems/pixelArt.js';
 import { bodyBox } from '../../../src/systems/statusFx.js';
-import { projectileFx, impactFx, IMPACT_MS } from '../../../src/systems/hitFx.js';
+import { projectileFx, impactFx, IMPACT_MS, graceFx, MOMENT_MS } from '../../../src/systems/hitFx.js';
 import { shotFx, SHOT_MS } from '../../../src/systems/skillFx.js';
 import * as itemFx from '../../../src/systems/itemFx.js';
 import { makeTuner } from '../../../src/systems/fxTune.js';
@@ -64,20 +64,25 @@ function paint(ctx, draws) {
 export const SHOTS = [
   { id: 'arrow', group: 'basic', name: 'Arrow', users: 'Archer, Bard, Skeleton / Goblin Archer, Quiver of Plenty', shooter: 'archer', kind: 'basic', type: 'ranged' },
   { id: 'fire', group: 'basic', name: 'Fire bolt', users: 'Mage, Fire Imp, fire elites', shooter: 'mage', kind: 'basic', type: 'fire' },
-  { id: 'holy', group: 'basic', name: 'Holy light', users: 'Cleric', shooter: 'cleric', kind: 'basic', type: 'holy' },
+  { id: 'holy', group: 'basic', name: 'Holy light', users: 'Cleric', shooter: 'cleric', kind: 'basic', type: 'holy', round: 2, note: 'make it a round projectile', did: 'Now a round orb of light: a gold ball with a white core and a soft halo, twinkling sparks behind it.' },
   { id: 'dark', group: 'basic', name: 'Dark orb', users: 'Necromancer, Cultist, Shaman, Banshee, dark elites', shooter: 'necromancer', kind: 'basic', type: 'dark' },
   { id: 'ice', group: 'basic', name: 'Ice shard', users: 'Frost Wisp, ice elites', shooter: 'frostWisp', who: 'enemy', kind: 'basic', type: 'ice' },
   { id: 'electric', group: 'basic', name: 'Electric spark', users: 'Storm Sprite, electric elites', shooter: 'stormSprite', who: 'enemy', kind: 'basic', type: 'electric' },
-  { id: 'flask', group: 'basic', name: 'Poison flask', users: 'Alchemist (his normal attack is a lobbed flask)', shooter: 'alchemist', kind: 'flask', color: Number(hero('alchemist').passive.lobbed.color), ms: Math.max(200, FLY * 2), type: 'ranged' },
-  { id: 'grace', group: 'basic', name: 'Grace mote', users: 'Cleric passive: every 7s a gold mote heals the most hurt hero', shooter: 'cleric', who: 'ally', kind: 'flask', color: 0xfff2a0, ms: SHOT_MS.flask },
-  { id: 'bombs', group: 'item', name: 'Bombs (5 elements)', users: 'Fire Bombs, Ice Bomb, Electric Bomb, Dark Bomb, Poison Bombs (one after the other)', shooter: 'knight', kind: 'bombs' },
+  { id: 'flask', group: 'basic', name: 'Poison flask', users: 'Alchemist (his normal attack is a lobbed flask)', shooter: 'alchemist', kind: 'flask', color: Number(hero('alchemist').passive.lobbed.color), ms: Math.max(200, (hero('alchemist').passive.lobbed.flightMs || FLY) * 2), type: 'ranged', round: 2, note: 'need a bigger projectile and slower speed', did: 'Now a real little flask (round green body, glass neck, cork, a shine) that tumbles end over end, in a higher arc. It flies 0.45s instead of 0.26s (his hit lands when it does; tested: he is as strong as before).' },
+  { id: 'grace', group: 'basic', name: 'Grace heal', users: 'Cleric passive: every 7s she heals the most hurt hero', shooter: 'cleric', who: 'ally', kind: 'moment', moment: 'grace', round: 2, note: 'this should not be a projectile, it should look like a shiny healing buff instead', did: 'Nothing flies any more. She raises her staff (from step 2) and the hurt hero shines: a soft column of gold light over them, gold stars twinkle round their body one after another, gold motes rise, and they glow gold. The usual green heal and number still show.' },
+  { id: 'bandage', group: 'basic', name: 'Bandage', users: 'Bandage Roll: every 6s a bandage goes to the most hurt hero', shooter: 'knight', who: 'ally', kind: 'flask', color: 0xf2e6cc, ms: SHOT_MS.flask, isNew: true },
+  { id: 'aidkit', group: 'basic', name: 'Red-cross kit', users: 'Aid Kit (Triage): a kit is thrown to a hero who drops low', shooter: 'knight', who: 'ally', kind: 'flask', color: 0xff6b6b, ms: SHOT_MS.flask, isNew: true },
+  { id: 'bombs', group: 'item', name: 'Bombs (5 elements)', users: 'Fire Bombs, Ice Bomb, Electric Bomb, Dark Bomb, Poison Bombs (one after the other)', shooter: 'knight', kind: 'bombs', round: 2, note: 'slower speed and bigger projectile', did: 'Now a big round bomb with a shine, a band in its element colour and a sparking fuse, in a higher, slower arc (0.69s instead of 0.48s), and a bigger blast. The damage number now waits until it lands (before, it showed as the bomb was thrown).' },
   { id: 'lightning', group: 'item', name: 'Lightning bolt', users: 'Static Crystal, Mage Chain Lightning', shooter: 'mage', kind: 'item', fn: 'lightningFx', ms: itemFx.ITEM_MS.lightning, type: 'electric' },
   { id: 'greenfire', group: 'item', name: 'Green ghost fire', users: "Lost Cleric's Grimoire", shooter: 'cleric', kind: 'item', fn: 'greenfireFx', ms: itemFx.ITEM_MS.greenfire, type: 'fire' },
   { id: 'moon', group: 'item', name: 'Moon crescent', users: 'Moonlight Twinblade', shooter: 'samurai', kind: 'item', fn: 'moonFx', ms: itemFx.ITEM_MS.moon },
+  { id: 'lifesteal', group: 'item', name: 'Lifesteal drops', users: 'Lifesteal (Vampire items, Blood Feast): red drops fly from the enemy back into the hero', shooter: 'berserker', who: 'back', kind: 'item', fn: 'lifestealFx', ms: itemFx.ITEM_MS.lifesteal, isNew: true },
+  { id: 'plague', group: 'item', name: 'Plague wisp', users: 'Plague Flask: when a poisoned enemy dies, a green wisp leaps to the next one', shooter: 'alchemist', who: 'foes', kind: 'item', fn: 'plagueFx', ms: itemFx.ITEM_MS.plague, isNew: true },
+  { id: 'euclid', group: 'item', name: 'Element orbs', users: 'Euclid of Elements: extra fire / ice / lightning orbs after a spell', shooter: 'mage', kind: 'item', fn: 'euclidFx', ms: itemFx.ITEM_MS.euclid, isNew: true },
   { id: 'spiritfire', group: 'item', name: 'Dark spirit', users: "Dark Spirit, Reaper's Bell, Eclipse Idol", shooter: 'necromancer', kind: 'item', fn: 'spiritFireFx', ms: itemFx.ITEM_MS.spiritfire, type: 'dark' },
 ];
 const BOMBS = ['fire', 'ice', 'electric', 'dark', 'poison'];
-const flightMs = (s) => (s.kind === 'basic' ? FLY : s.ms || itemFx.ITEM_MS.bomb);
+const flightMs = (s) => (s.kind === 'basic' ? FLY : s.kind === 'moment' ? MOMENT_MS[s.moment] : s.ms || itemFx.ITEM_MS.bomb);
 const oneMs = (s) => flightMs(s) + (s.kind === 'basic' || (s.kind === 'flask' && s.type) ? IMPACT_MS[s.type] : 0) + PAUSE;
 export const shotLoopMs = (id) => { const s = SHOTS.find((x) => x.id === id); return s.kind === 'bombs' ? BOMBS.length * (itemFx.ITEM_MS.bomb + PAUSE) : oneMs(s); };
 
@@ -89,6 +94,8 @@ function cast(s) {
   let from, to, extra = [];
   if (s.who === 'enemy') { from = top(enemies[s.shooter]); to = bottom(hero('knight')); }
   else if (s.who === 'ally') { from = actor(hero('cleric'), 34, 86, false); to = actor(hero('knight'), 92, 84, true); extra = [top(enemies.goblin)]; }
+  else if (s.who === 'back') { from = top(enemies.goblin); to = bottom(hero(s.shooter)); }
+  else if (s.who === 'foes') { from = actor(enemies.goblin, 30, 40, false); to = top(enemies.goblin); extra = [bottom(hero(s.shooter))]; }
   else { from = bottom(hero(s.shooter)); to = top(enemies.goblin); }
   return (cache[s.id] = { from, to, extra });
 }
@@ -109,6 +116,7 @@ export function drawShot(ctx, id, t) {
     const head = { x: a.x + (b.x - a.x) * p, y: a.y + (b.y - a.y) * p };
     draws.push(...TUNE.paint('shot', s.type, projectileFx(s.type, a, head, t * TUNE.speed('shot', s.type), 1)));
   } else if (s.kind === 'flask' && k < fly) draws.push(...TUNE.paint('shot', 'flask', shotFx('flask', k / fly, a, b, t, 1, s.color)));
+  else if (s.kind === 'moment' && k < fly) { const o = graceFx(k / fly, body(to), t); draws.push(...TUNE.paint('hit', 'grace', o.draws)); if (o.tint) tint = o.tint; }
   else if (s.kind === 'item' && k < fly) draws.push(...TUNE.paint('item', s.id, itemFx[s.fn](k / fly, a, b, t, 1)));
   else if (bomb && k < fly) draws.push(...TUNE.paint('item', 'bomb', itemFx.bombFx(k / fly, a, b, t, 1, bomb)));
   // the hit where it lands (basic shots and the Alchemist's flask: the game's per-damage-type impact)

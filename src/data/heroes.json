@@ -1691,6 +1691,7 @@
         "splashMultiplier": 0.4,
         "attackSpeedPercent": -25,
         "color": "0x6bd16a",
+      "flightMs": 450,
         "apply": [
           {
             "status": "poison",

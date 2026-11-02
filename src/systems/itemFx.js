@@ -12,7 +12,7 @@ const lerp = (a, b, p) => a + (b - a) * p;
 const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p - Math.sin(p * Math.PI) * arc];
 const BOMB = 0x4a4a5a, KNIFE = 0xe4e8f0, HILT = 0x6b4a2a, BANNER = 0xf2d03a, GREEN = 0x3aa84a, GREEN2 = 0xc8ffd0;
 
-export const ITEM_MS = { bomb: 800, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 700, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340, thunderstruck: 520, iceSpike: 1800, heartSlash: 620, euclid: 620, cleave: 380 };
+export const ITEM_MS = { bomb: 1150, lightning: 320, greenfire: 800, battleCry: 800, shatter: 600, knifeBurst: 450, plague: 600, thunderbolt: 560, aegisBlast: 400, thorns: 320, lifesteal: 520, suckerPunch: 320, executioner: 420, dice: 650, mimic: 700, spiritAxe: 700, moon: 420, spiritfire: 900, soulLantern: 700, ghastlyFire: 340, thunderstruck: 520, iceSpike: 1800, heartSlash: 620, euclid: 620, cleave: 380 };
 export const ITEM_FX = Object.keys(ITEM_MS);
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
@@ -46,14 +46,23 @@ function spikes(g, u, p, size = 1) {
 // explodes in its element's colours.
 const BOMB_COLORS = { fire: [C.fire, C.fire2, C.blood], ice: [C.ice, C.ice2, C.white], electric: [C.elec, C.white, C.gold], dark: [C.dark, 0xd6a8ff, C.dark2], poison: [C.poison, GREEN2, GREEN] };
 export const BOMB_KINDS = { bomb: 'fire', iceBomb: 'ice', electricBomb: 'electric', darkBomb: 'dark', poisonBomb: 'poison' }; // projectile kind -> element
+export const BOMB_LAND = 0.6; // the bomb lands (and its hit shows) at this part of ITEM_MS.bomb
+// (user, session 40: 'slower and bigger') a round bomb 7 px wide with a shine, a band in its element's colour and a
+// sputtering fuse with sparks, lobbed in a higher arc; a bigger blast.
 export function bombFx(q, a, b, t, seed = 0, element = 'fire') {
   const [c1, c2, c3] = BOMB_COLORS[element] || BOMB_COLORS.fire;
   const g = pen();
-  const p = ph(q, 0, 0.6);
-  if (p > 0 && p < 1) { const [x, y] = fly(a, b, p, 18); g.disc(x, y, 2, BOMB); g.px(x + 1, y - 3, Math.floor(t / 60) % 2 ? C.fire2 : C.fire); }
-  const e = ph(q, 0.6, 1);
-  if (e > 0 && e < 1) { g.disc(b.x, b.y, 3 + e * 6, c2, (1 - e) * 0.9); g.ring(b.x, b.y, 4 + e * 10, c1, 1 - e); }
-  burst(g, b.x, b.y, 14, [c1, c2, c3, BOMB], e, 14, 2, 1);
+  const p = ph(q, 0, BOMB_LAND);
+  if (p > 0 && p < 1) {
+    const [x, y] = fly(a, b, p, 26);
+    g.disc(x, y, 3.4, BOMB); g.rect(x - 3, y, 7, 1, c1); g.px(x - 1, y - 2, 0x9a9aaa); g.px(x - 2, y - 1, 0x9a9aaa, 0.6);
+    g.px(x + 1, y - 4, 0x8a6a4a); g.px(x + 2, y - 5, 0x8a6a4a);
+    const f = Math.floor(t / 50) % 3;
+    g.px(x + 3, y - 6, f ? C.fire2 : C.white); if (f !== 1) g.px(x + 3 + (f ? 1 : -1), y - 7, C.fire, 0.8);
+  }
+  const e = ph(q, BOMB_LAND, 1);
+  if (e > 0 && e < 1) { g.disc(b.x, b.y, 4 + e * 8, c2, (1 - e) * 0.9); g.ring(b.x, b.y, 5 + e * 13, c1, 1 - e); }
+  burst(g, b.x, b.y, 18, [c1, c2, c3, BOMB], e, 18, 2, 1);
   return g.out;
 }
 // Static Crystal / chain lightning: a flickering bolt from a to b, sparks on b.

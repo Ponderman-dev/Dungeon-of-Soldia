@@ -1233,6 +1233,8 @@ export default class BattleState {
   // Ranged: the shot's flight (`rangedHitMs`).
   hitDelay(unit) {
     const timing = (this.rules.attackTiming && this.rules.attackTiming[unit.side]) || {};
+    const lob = unit.def.passive && unit.def.passive.lobbed; // the Alchemist's flask flies slower (`lobbed.flightMs`)
+    if (lob && lob.flightMs && unit.damageType !== 'melee') return lob.flightMs;
     return (unit.damageType === 'melee' ? timing.swingMs : timing.rangedHitMs) || 0;
   }
 

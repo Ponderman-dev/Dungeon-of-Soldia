@@ -348,8 +348,15 @@ const SHOT = {
   },
   // Alchemist flasks: a flask lobs over (first half) and splashes in its colour; a green one leaves a cloud.
   flask(q, a, b, t, seed, color = C.fire) {
+    // (user, session 40: 'bigger and slower') a real little flask: round body in its colour, a glass neck, a cork, a
+    // shine; it tumbles end over end (4 poses) on the way.
     const g = pen(); const p = ph(q, 0, 0.5);
-    if (p > 0 && p < 1) { const [x, y] = fly(a, b, p, 16); g.rect(x - 1, y - 1, 3, 3, color); g.px(x, y - 2, C.grey); }
+    if (p > 0 && p < 1) {
+      const [x, y] = fly(a, b, p, 20);
+      const turn = Math.floor(t / 90) % 4, dx = [0, 1, 0, -1][turn], dy = [-1, 0, 1, 0][turn]; // where the neck points
+      g.disc(x, y, 2.6, color); g.px(x - dy - 1, y + dx - 1, C.white, 0.9); // body + shine
+      g.px(x + dx * 3, y + dy * 3, 0xd8e8f0); g.px(x + dx * 4, y + dy * 4, 0x8a6a4a); // neck + cork
+    }
     const e = ph(q, 0.5, 1);
     burst(g, b.x, b.y, 10, [color, C.white], e, 10, seed, 1);
     if (e > 0 && e < 1) g.ring(b.x, b.y, 2 + e * 6, color, 1 - e);

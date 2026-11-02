@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave } from '../entities/uiKit.js';
 import defs from '../data/settings.json';
 import pkg from '../../package.json';
 import { loadProgress, saveProgress, deleteProgress } from '../systems/progress.js';
@@ -38,7 +38,7 @@ export default class SettingsScene extends Phaser.Scene {
     uiText(this, GAME_WIDTH / 2, L.versionY, `v${pkg.version}`, 'small', UI.dim).setOrigin(0.5);
     this.page = null;
     this.showTab(lastTab);
-    this.cameras.main.fadeIn(120, 0, 0, 0);
+    pageEnter(this); // the page rises in (uiKit)
   }
 
   // A window button: `look` = 'plain' (white), 'gold' (gold line), 'filled' (gold, black text), 'dim', 'red'.
@@ -154,8 +154,8 @@ export default class SettingsScene extends Phaser.Scene {
 
   // Back to the screen that opened Settings.
   close() {
+    if (this.pageLeaving) return;
     sfx.play('tap');
-    this.scene.resume(this.from);
-    this.scene.stop();
+    pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page drops away first (uiKit)
   }
 }

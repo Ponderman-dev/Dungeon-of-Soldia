@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, drawButton, buttonTextColor } from '../entities/uiKit.js';
+import { drawWindow, uiText, drawButton, buttonTextColor, pageEnter, pageLeave } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
@@ -54,7 +54,7 @@ export default class LeadersScene extends Phaser.Scene {
     this.page = null;
     this.clock = null;
     this.showBoard(lastTab);
-    this.cameras.main.fadeIn(120, 0, 0, 0);
+    pageEnter(this); // the page rises in (uiKit)
   }
 
   // ---- helpers -----------------------------------------------------------------------------------
@@ -209,9 +209,9 @@ export default class LeadersScene extends Phaser.Scene {
   }
 
   close() {
+    if (this.pageLeaving) return;
     sfx.play('tap');
     if (this.clock) this.clock.remove();
-    this.scene.resume(this.from);
-    this.scene.stop();
+    pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page drops away first (uiKit)
   }
 }

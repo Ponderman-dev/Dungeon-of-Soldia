@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, SKILL_COLORS, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import D from '../data/heroPage.json';
@@ -41,7 +41,7 @@ export default class HeroesScene extends Phaser.Scene {
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, Number(L.bg)).setOrigin(0).setInteractive();
     this.page = null;
     this.showList();
-    this.cameras.main.fadeIn(120, 0, 0, 0);
+    pageEnter(this); // the page rises in (uiKit)
   }
 
   // ---- helpers -----------------------------------------------------------------------------------
@@ -226,7 +226,7 @@ export default class HeroesScene extends Phaser.Scene {
   }
 
   close() {
-    this.scene.resume(this.from);
-    this.scene.stop();
+    if (this.pageLeaving) return;
+    pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page drops away first (uiKit)
   }
 }

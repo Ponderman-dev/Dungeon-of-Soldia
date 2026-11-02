@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, drawCursor, drawButton, buttonTextColor, drawStrip, isGoldTheme } from '../entities/uiKit.js';
+import { drawWindow, uiText, drawCursor, drawButton, buttonTextColor, drawStrip, isGoldTheme, pageEnter, pageLeave } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
 import G from '../data/glossary.json';
@@ -56,7 +56,7 @@ export default class GlossaryScene extends Phaser.Scene {
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, Number(L.bg)).setOrigin(0).setInteractive();
     this.page = null;
     this.showChapters();
-    this.cameras.main.fadeIn(120, 0, 0, 0);
+    pageEnter(this); // the page rises in (uiKit)
   }
 
   // ---- helpers -----------------------------------------------------------------------------------
@@ -303,8 +303,8 @@ export default class GlossaryScene extends Phaser.Scene {
   }
 
   close() {
+    if (this.pageLeaving) return;
     sfx.play('tap');
-    this.scene.resume(this.from);
-    this.scene.stop();
+    pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page drops away first (uiKit)
   }
 }

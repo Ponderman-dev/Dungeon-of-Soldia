@@ -150,9 +150,10 @@ function goldWindow(g, x, y, w, h, block, { fill, line, alpha }) {
   return g;
 }
 
-// A solid BUTTON (gold theme: gold body with a light top edge and a darker bottom half, dark text; mono theme: the
-// plain window). pressed = pushed down. Returns g. Use buttonTextColor() for its label.
-export function drawButton(g, x, y, w, h, { pressed = false, enabled = true } = {}) {
+// A solid BUTTON (framed theme: a raised body with a light top edge and a darker bottom half; mono theme: the plain
+// window). primary = THE main action of the screen (bright: BEGIN DESCENT); others are the calm secondary colour.
+// pressed = pushed down. Returns g. Use buttonTextColor(enabled, pressed, primary) for its label.
+export function drawButton(g, x, y, w, h, { pressed = false, enabled = true, primary = false } = {}) {
   if (themeName() !== 'gold') return drawWindow(g, x, y, w, h, pressed ? { fill: UI.pressed } : {});
   const T = UI.goldTheme;
   x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
@@ -164,11 +165,12 @@ export function drawButton(g, x, y, w, h, { pressed = false, enabled = true } = 
   };
   block(0, T.outline);
   if (!enabled) { block(2, T.dim); return g; }
-  block(2, pressed ? T.buttonDark : T.button);
-  if (!pressed) { g.fillStyle(T.buttonLight, 1).fillRect(x + 6, y + 4, w - 12, 2); g.fillStyle(T.buttonDark, 1).fillRect(x + 4, y + Math.round(h / 2) + 2, w - 8, Math.round(h / 2) - 6); }
+  const [body, dark, light] = primary ? [T.button, T.buttonDark, T.buttonLight] : [T.second, T.secondDark, T.secondLight];
+  block(2, pressed ? dark : body);
+  if (!pressed) { g.fillStyle(light, 1).fillRect(x + 6, y + 4, w - 12, 2); g.fillStyle(dark, 1).fillRect(x + 4, y + Math.round(h / 2) + 2, w - 8, Math.round(h / 2) - 6); }
   return g;
 }
-export const buttonTextColor = (enabled = true, pressed = false) => (themeName() !== 'gold' ? (!enabled ? UI.dim : pressed ? '#000000' : UI.text) : enabled ? UI.goldTheme.buttonText : '#9a96a6');
+export const buttonTextColor = (enabled = true, pressed = false, primary = false) => (themeName() !== 'gold' ? (!enabled ? UI.dim : pressed ? '#000000' : UI.text) : !enabled ? '#9a96a6' : primary ? UI.goldTheme.buttonText : UI.goldTheme.secondText);
 // A title strip across the top of a panel (gold theme), h px tall, `i` px inside the panel's left/top edge.
 export function drawStrip(g, x, y, w, h) {
   const T = UI.goldTheme;
@@ -296,4 +298,25 @@ export function uiShift(scene, parts, show, { ms = 160, dy = 28, instant = false
     scene.tweens.add({ targets: o, y: o.uiHome.y + (show ? 0 : off), alpha: show ? o.uiHome.alpha : 0, duration: ms,
       ease: show ? 'Quad.easeOut' : 'Quad.easeIn', onComplete: done });
   }
+}
+
+// MENU PAGE TRANSITIONS (user, session 40): a menu page rises a little from below while fading in (pageEnter, in its
+// create()), and drops back while fading out before it closes (pageLeave(scene, done): `done` resumes the camp and
+// stops the page). UI.page = { slidePx, inMs, outMs }. A second close while leaving is ignored.
+export function pageEnter(scene) {
+  const P = UI.page, cam = scene.cameras.main;
+  scene.pageLeaving = false; // Phaser reuses a scene between visits: a fresh page can close again
+  scene.input.enabled = true;
+  cam.scrollY = -P.slidePx;
+  cam.fadeIn(P.inMs, 0, 0, 0);
+  scene.tweens.add({ targets: cam, scrollY: 0, duration: P.inMs, ease: 'Cubic.easeOut' });
+}
+export function pageLeave(scene, done) {
+  if (scene.pageLeaving) return;
+  scene.pageLeaving = true;
+  const P = UI.page, cam = scene.cameras.main;
+  scene.input.enabled = false; // no taps while it goes
+  scene.tweens.add({ targets: cam, scrollY: -P.slidePx, duration: P.outMs, ease: 'Cubic.easeIn' });
+  cam.fadeOut(P.outMs, 0, 0, 0);
+  scene.time.delayedCall(P.outMs, done);
 }

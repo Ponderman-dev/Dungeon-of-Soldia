@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
@@ -49,7 +49,7 @@ export default class ProfileScene extends Phaser.Scene {
     this.page = null;
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.closeInput());
     this.showMain();
-    this.cameras.main.fadeIn(120, 0, 0, 0);
+    pageEnter(this); // the page rises in (uiKit)
   }
 
   isOpen(heroId) {
@@ -300,8 +300,8 @@ export default class ProfileScene extends Phaser.Scene {
   }
 
   close() {
+    if (this.pageLeaving) return;
     this.closeInput();
-    this.scene.resume(this.from);
-    this.scene.stop();
+    pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page drops away first (uiKit)
   }
 }

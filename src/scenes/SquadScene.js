@@ -182,10 +182,10 @@ export default class SquadScene extends Phaser.Scene {
     // "Begin descent": only when all 3 slots are filled, at the bottom over RANDOM.
     this.begin = this.add.container(DOOR_X, BEGIN_Y).setDepth(DEPTH.ui);
     const bg = this.add.graphics();
-    drawButton(bg, -150, -28, 300, 56);
-    const cur = drawCursor(this.add.graphics(), -128, 0, isGoldTheme() ? Number('0x' + buttonTextColor().slice(1)) : undefined); // the blinking ▶ cursor: everything is ready
+    drawButton(bg, -150, -28, 300, 56, { primary: true }); // THE bright button (user: only this one is red)
+    const cur = drawCursor(this.add.graphics(), -128, 0, isGoldTheme() ? Number('0x' + buttonTextColor(true, false, true).slice(1)) : undefined); // the blinking ▶ cursor: everything is ready
     this.time.addEvent({ delay: 500, loop: true, callback: () => cur.setVisible(!cur.visible) });
-    this.begin.add([bg, cur, this.add.text(8, 1, 'BEGIN DESCENT', { fontFamily: FONT, fontSize: '16px', color: isGoldTheme() ? buttonTextColor() : INK }).setOrigin(0.5)]);
+    this.begin.add([bg, cur, this.add.text(8, 1, 'BEGIN DESCENT', { fontFamily: FONT, fontSize: '16px', color: isGoldTheme() ? buttonTextColor(true, false, true) : INK }).setOrigin(0.5)]);
     this.add.zone(DOOR_X, BEGIN_Y, 300, 56).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.descend());
 
     // The bottom row: '< CAMP' (back to the camp hub, user: at the bottom for the flow) and RANDOM; then the small test

@@ -138,7 +138,7 @@ export function critFx(q, u, t) {
 
 // ---- the other hit moments (miss, block, shield, heal, death) ----------------------------------
 // Each takes q = 0..1 over its own time in MOMENT_MS and the unit's body u (as impactFx, plus bot).
-export const MOMENT_MS = { dodge: 600, block: 320, soak: 460, shieldBreak: 660, heal: 900, puff: 570, grace: 1100 };
+export const MOMENT_MS = { dodge: 600, block: 320, soak: 460, shieldBreak: 660, heal: 900, puff: 570, grace: 900 };
 
 // Dodge: it side-steps away from the attacker and comes back; grey speed lines where it stood.
 // Returns { draws, dx } (dx = how far it is pushed sideways, in character pixels).
@@ -190,27 +190,24 @@ export function healFx(q, u, seed = 0) {
   const glow = q > 0 && q < 0.75 ? 0.35 * Math.sin((q / 0.75) * Math.PI) : 0;
   return { draws: g.out, tint: glow > 0.02 ? [C.heal, Math.round(glow * 20) / 20] : null };
 }
-// The Cleric's GRACE heal (user, session 40: 'not a projectile, a shiny healing buff'): a soft column of gold light
-// comes down over the hero, gold four-point stars twinkle round the body one after another, little gold motes rise,
-// the hero glows gold. Returns { draws, tint }.
+// The Cleric's GRACE heal (user, session 40: 'a shiny healing buff, not a projectile', then 'too fancy, bring it
+// down'): three small gold twinkles round the body one after another, a few gold motes drift up, a faint gold glow.
+// Returns { draws, tint }.
 export function graceFx(q, u, t) {
   const g = pen();
-  const w = u.hw + 3, top = Math.round(u.top - 16);
-  const c = ph(q, 0, 0.5);
-  if (c > 0 && c < 1) for (let x = -w; x <= w; x++) { const e = Math.abs(x) / w; g.rect(u.x + x, top, 1, u.y - top, e < 0.35 ? C.white : C.holy, (1 - e) * 0.32 * Math.sin(c * Math.PI)); }
-  const STARS = [[-1, 0.15], [0.9, 0.35], [-0.7, 0.6], [1, 0.75], [0.1, -0.05], [-1.1, 0.9]]; // [x across the body, height 0 top .. 1 feet]
+  const STARS = [[-0.9, 0.25], [0.9, 0.45], [-0.4, 0.75]]; // [x across the body, height 0 top .. 1 feet]
   STARS.forEach(([sx, sy], i) => {
-    const p = ph(q, 0.1 + i * 0.1, 0.45 + i * 0.1);
+    const p = ph(q, 0.05 + i * 0.15, 0.4 + i * 0.15);
     if (p <= 0 || p >= 1) return;
-    const r = Math.round(Math.sin(p * Math.PI) * 3), x = u.x + sx * (u.hw + 2), y = u.top + sy * (u.bot - u.top);
-    g.px(x, y, C.white);
-    for (let k = 1; k <= r; k++) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) g.px(x + a * k, y + b * k, k === r ? C.holy : C.white, 1 - k / (r + 1));
+    const r = Math.round(Math.sin(p * Math.PI) * 2), x = u.x + sx * (u.hw + 1), y = u.top + sy * (u.bot - u.top);
+    g.px(x, y, C.white, 0.9);
+    for (let k = 1; k <= r; k++) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) g.px(x + a * k, y + b * k, C.holy, 0.8 - k * 0.25);
   });
-  for (let i = 0; i < 7; i++) {
-    const p = ph(q, 0.25 + i * 0.06, 0.8 + i * 0.03);
-    if (p > 0 && p < 1) g.px(u.x + (rnd(i * 7 + 1) - 0.5) * (u.hw * 2 + 4) + Math.sin(t / 120 + i) * 0.8, u.y - 3 - p * 24, i % 2 ? C.holy : C.white, 1 - p);
+  for (let i = 0; i < 4; i++) {
+    const p = ph(q, 0.2 + i * 0.1, 0.75 + i * 0.06);
+    if (p > 0 && p < 1) g.px(u.x + (rnd(i * 7 + 1) - 0.5) * (u.hw * 2 + 2), u.y - 4 - p * 16, C.holy, (1 - p) * 0.8);
   }
-  const glow = q > 0 && q < 0.85 ? 0.4 * Math.sin((q / 0.85) * Math.PI) : 0;
+  const glow = q > 0 && q < 0.8 ? 0.18 * Math.sin((q / 0.8) * Math.PI) : 0;
   return { draws: g.out, tint: glow > 0.02 ? [C.holy, Math.round(glow * 20) / 20] : null };
 }
 // The grey puff where an enemy died (x, y = its feet).

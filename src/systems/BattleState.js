@@ -1450,7 +1450,7 @@ export default class BattleState {
     if (!needy.length) return;
     const ally = needy.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a));
     events.push({ type: 'proc', unit: hero, label: 'Bandage!', itemId: 'bandage_roll' });
-    events.push({ type: 'flask', unit: hero, target: ally, flask: { color: '0xf2e6cc' } }); // drawn as a lobbed bandage
+    events.push({ type: 'flask', unit: hero, target: ally, flask: { color: '0xf2e6cc', look: 'bandage' } }); // drawn as a lobbed bandage roll (skillFx `bandage`)
     for (let i = 0; i < (hero.specials.bandageCount || 1); i++) {
       const kinds = debuffs(ally).map((st) => st.type);
       if (!kinds.length) break;
@@ -2525,7 +2525,7 @@ export default class BattleState {
       if (target.hp >= (target.maxHp * (sp.triageBelow || 30)) / 100) return;
       h.triageCd = sp.triageCooldownMs || 10000;
       events.push({ type: 'proc', unit: h, label: 'Triage!', itemId: 'aid_kit', target });
-      if (h !== target) events.push({ type: 'flask', unit: h, target, flask: { color: '0xff6b6b' } }); // a red-cross kit lobbed over
+      if (h !== target) events.push({ type: 'flask', unit: h, target, flask: { color: '0xff6b6b', look: 'kit' } }); // a white first-aid kit lobbed over (skillFx `kit`)
       this.healUnit(target, (target.maxHp * sp.triage) / 100, events, { aura: false });
       return;
     }

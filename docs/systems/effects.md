@@ -42,3 +42,9 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   and other hits are not held). GRACE = no projectile: a 'grace' moment on the healed hero (`graceFx`: gold light
   column, twinkling stars, rising motes, gold glow; MOMENT_MS.grace). Round 2 on the page: changed shots use doc
   `<id>@2`; new rows (bandage, aidkit, lifesteal, plague, euclid) were missed in round 1.
+  ROUND 2 notes applied (session 40): GRACE calmer (3 small gold twinkles, 4 motes, faint glow; no light column;
+  MOMENT_MS.grace 900). BANDAGE ROLL and AID KIT have their own shots (skillFx `bandage` = a cream roll with a loose
+  strip, `kit` = a white first-aid kit with a red cross; `SHOT_MS`): the flask event carries `flask.look`, showFlask
+  plays it; both LAND AS A HEAL (`healLand`: green ring, plus signs, sparkles), no splash, no glass sound. PLAGUE FLASK
+  = bubbly acid (itemFx `plagueFx(q, a, b, t)`: wobbling green blob, popping bubbles, drips, an acid splash).
+  Page notes: round-2 docs `<id>@2` (grace `@3`); holy@2 not marked yet.

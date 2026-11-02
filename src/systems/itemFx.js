@@ -131,11 +131,29 @@ export function knifeBurstFx(q, x, mid) {
   burst(g, x, mid, 6, [C.blood], q, 6, 1, 1);
   return g.out;
 }
-// Plague Flask: a green wisp leaps from the dead enemy (a) to the next one (b).
-export function plagueFx(q, a, b) {
+// Plague Flask (user, session 40: 'bubbly acid'): a wobbling blob of green acid lobs from the dead enemy (a) to the next
+// one (b): bubbles swell and pop off it, drops drip behind; it lands in a small bubbling acid splash.
+const ACID = 0x7ae03a, ACID_DARK = 0x3f8a1e, ACID_PALE = 0xd8ffb0;
+export function plagueFx(q, a, b, t = 0) {
   const g = pen();
-  const p = ph(q, 0, 0.85);
-  if (p > 0 && p < 1) { const [x, y] = fly(a, b, p, 10); g.disc(x, y, 1.5, C.poison); g.px(x - 2, y + 1, C.poison, 0.5); }
+  const p = ph(q, 0, 0.7);
+  if (p > 0 && p < 1) {
+    const [x, y] = fly(a, b, p, 14);
+    const wob = Math.sin(t / 40) * 0.5;
+    g.disc(x, y, 3.6 + wob, ACID_DARK); g.disc(x, y - 0.5, 2.9 + wob, ACID); g.px(x - 1, y - 2, ACID_PALE); g.px(x - 2, y - 1, ACID_PALE, 0.7); // the blob + a shine
+    for (let i = 0; i < 3; i++) { // bubbles grow on it and pop
+      const k = ((t / 160) + i / 3) % 1, ang = i * 2.1 + Math.floor(t / 480);
+      const bx = x + Math.cos(ang) * 4, by = y + Math.sin(ang) * 3.4 - k * 3;
+      if (k < 0.8) g.ring(bx, by, 0.6 + k * 1.6, ACID_PALE, 0.9); else g.px(bx, by - 1, ACID_PALE, 0.6);
+    }
+    for (let k = 1; k <= 3; k++) { const [dx, dy] = fly(a, b, Math.max(0, p - k * 0.07), 14); g.px(dx, dy + k * 1.5, k === 1 ? ACID : ACID_DARK, 0.9 - k * 0.22); } // drips
+  }
+  const e = ph(q, 0.7, 1);
+  if (e > 0 && e < 1) {
+    g.disc(b.x, b.y + 2, 1 + e * 4, ACID, (1 - e) * 0.7);
+    for (let i = 0; i < 6; i++) { const ang = (i / 6) * Math.PI * 2; const d = 2 + e * 6; g.px(b.x + Math.cos(ang) * d, b.y + Math.sin(ang) * d * 0.6 - e * 3, i % 2 ? ACID_PALE : ACID, 1 - e); }
+    for (let i = 0; i < 3; i++) { const k = ph(e, i * 0.2, 0.6 + i * 0.2); if (k > 0 && k < 1) g.ring(b.x + (i - 1) * 3, b.y - k * 5, 0.6 + k, ACID_PALE, 1 - k); }
+  }
   return g.out;
 }
 // Frozen Thunderbolt: a frost ring spreads from the target to its neighbours, with ice sparks.

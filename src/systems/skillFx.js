@@ -16,7 +16,7 @@ const fly = (a, b, p, arc = 0) => [a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p 
 const DUST = 0xc9b18a, KNIFE = 0xe4e8f0, ARROW = 0xc68a5e, NOTE = 0xf06ab4, RUNE = 0x9b4dff, ROAR = 0xff4a4a, DULL = 0x6f6890, GREENEYE = 0x6dff8a, BONE = 0xebe5cf, PETAL = 0xf6a8c8, STANCE = 0xffd27a;
 
 export const CAST_MS = { rogueDash: 160, rogueSlash: 260, rogueCharge: 400, shieldBash: 800, challenge: 1200, knightCharge: 500, bloodPact: 1000, eviscerate: 600, changeSong: 1100, groundPound: 700, rallyCry: 1100, smokeBomb: 1600, huntersMark: 900, savageLeap: 750, warCry: 900, windCutter: 500, focusStance: 700, frostNova: 800, arcaneWard: 1200, divineShield: 700, holyNova: 800, boneWard: 1200, ballad: 1600 };
-export const SHOT_MS = { knife: 200, rain: 300, note: 320, fireball: 720, darkbolt: 520, holybolt: 520, flask: 900 };
+export const SHOT_MS = { knife: 200, rain: 300, note: 320, fireball: 720, darkbolt: 520, holybolt: 520, flask: 900, bandage: 900, kit: 900 };
 
 function burst(g, x, y, n, cols, p, dist = 12, seed = 1, grav = 0) {
   if (p <= 0 || p >= 1) return;
@@ -346,6 +346,30 @@ const SHOT = {
     if (q > 0 && q < 1) { const w = Math.round(5 * (1 - q)) + 1; const top = b.y - 70; for (let y = Math.round(top); y < b.y + 8; y++) for (let x = -w; x <= w; x++) g.px(b.x + x, y, Math.abs(x) < w / 2 ? C.white : C.holy, 0.85 * (1 - q)); }
     return g.out;
   },
+  // (user, session 40) Bandage Roll: a cream bandage roll tumbles over, a strip fluttering behind it; Aid Kit: a white
+  // first-aid kit with a red cross. Both land as a HEAL (soft green plus signs and sparkles rise), not a splash.
+  bandage(q, a, b, t, seed) {
+    const g = pen(); const p = ph(q, 0, 0.5);
+    if (p > 0 && p < 1) {
+      const [x, y] = fly(a, b, p, 18);
+      const [tx, ty] = fly(a, b, Math.max(0, p - 0.06), 18);
+      g.line(tx, ty + Math.sin(t / 50) * 1.2, x, y, 0xf2e6cc, 0.8); // the loose strip
+      g.disc(x, y, 2.2, 0xf2e6cc); g.px(x, y, 0xb8a888); g.px(x + 1, y - 1, 0xffffff); // the roll, its middle, a shine
+    }
+    healLand(g, b, ph(q, 0.5, 1), seed);
+    return g.out;
+  },
+  kit(q, a, b, t, seed) {
+    const g = pen(); const p = ph(q, 0, 0.5);
+    if (p > 0 && p < 1) {
+      const [x, y] = fly(a, b, p, 18);
+      const tilt = Math.floor(t / 110) % 2; // it rocks as it flies
+      g.rect(x - 3, y - 2 + tilt, 7, 5, 0xf4f4f4); g.rect(x - 3, y + 3 + tilt, 7, 1, 0xb8bcc8); g.rect(x - 1, y - 3 + tilt, 3, 1, 0x8c909c); // box, shade, handle
+      g.rect(x - 1, y + tilt, 3, 1, 0xe03a3a); g.rect(x, y - 1 + tilt, 1, 3, 0xe03a3a); // the red cross
+    }
+    healLand(g, b, ph(q, 0.5, 1), seed);
+    return g.out;
+  },
   // Alchemist flasks: a flask lobs over (first half) and splashes in its colour; a green one leaves a cloud.
   flask(q, a, b, t, seed, color = C.fire) {
     // (user, session 40: 'bigger and slower') a real little flask: round body in its colour, a glass neck, a cork, a
@@ -364,4 +388,14 @@ const SHOT = {
   },
 };
 export const SHOT_FX = Object.keys(SHOT);
+// A heal landing (bandage, aid kit): a quick soft green ring, green plus signs and sparkles rising round the spot.
+function healLand(g, b, e, seed) {
+  if (e <= 0 || e >= 1) return;
+  if (e < 0.4) g.ring(b.x, b.y, 2 + e * 12, C.heal, (1 - e / 0.4) * 0.6);
+  for (let i = 0; i < 5; i++) {
+    const x = b.x + (rnd(seed + i * 5) - 0.5) * 14, y = b.y + 4 - e * (10 + rnd(seed + i) * 8);
+    g.px(x, y, i % 2 ? 0xffffff : C.heal, 1 - e);
+    if (i % 2 === 0) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) g.px(x + dx, y + dy, C.heal, 1 - e);
+  }
+}
 export function shotFx(kind, q, a, b, t, seed = 0, color) { return SHOT[kind] ? SHOT[kind](q, a, b, t, seed, color) : []; }

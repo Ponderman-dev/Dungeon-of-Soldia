@@ -868,7 +868,7 @@ export default class BattleScene extends Phaser.Scene {
       const a = this.fxPoint(fv);
       for (const o of e.to) {
         const ov = this.views.get(o.uid);
-        if (ov) this.addFx(ms, (q) => itemFx.plagueFx(q, a, ov.ch.active ? this.fxPoint(ov) : a), tag);
+        if (ov) this.addFx(ms, (q, now) => itemFx.plagueFx(q, a, ov.ch.active ? this.fxPoint(ov) : a, now), tag);
       }
     } else if (spec.effect === 'thunderbolt' && tv) {
       this.addFx(ms, (q) => (tv.ch.active ? itemFx.thunderboltFx(q, this.fxBody(tv)) : []), tag);
@@ -1922,7 +1922,7 @@ export default class BattleScene extends Phaser.Scene {
         return;
       }
       if (e.flask.name && e.unit.side === 'hero') this.playFlaskLook(this.views.get(e.unit.uid), this.views.get(e.target.uid), e.flask); // Alchemist v2 look
-      else this.showFlask(this.views.get(e.unit.uid), this.views.get(e.target.uid), Number(e.flask.color));
+      else this.showFlask(this.views.get(e.unit.uid), this.views.get(e.target.uid), Number(e.flask.color), e.flask.look);
     } else if (e.type === 'minionSpawn') {
       this.showMinion(e.unit);
     } else if (e.type === 'tornadoSpawn') {
@@ -2212,14 +2212,15 @@ export default class BattleScene extends Phaser.Scene {
   // Placeholder projectiles: a fire bomb flies to its target (and follows it), lightning is a zig-zag
   // line between the two fighters (drawn where they stand now) that fades.
   // A flask lobbed in an arc from the thrower to the target, in the flask's colour.
-  showFlask(from, to, color) {
+  showFlask(from, to, color, look = null) {
     if (!from || !to) return;
     // A pixel flask lobbed over that splashes in its colour (systems/skillFx.js); it aims at where the target is NOW.
     const a = this.fxPoint(from);
     let b = this.fxPoint(to);
     const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
-    this.addFx(SHOT_MS.flask, (q, now) => { if (to.ch.active) b = this.fxPoint(to); return shotFx('flask', q, a, b, now, seed, color); }, ['shot', 'flask']);
-    this.time.delayedCall(SHOT_MS.flask / 2, () => sfx.play('flaskBreak')); // the glass breaks as it lands (half-way)
+    const kind = look && SHOT_MS[look] ? look : 'flask'; // a bandage roll / aid kit has its own look (lands as a heal)
+    this.addFx(SHOT_MS[kind], (q, now) => { if (to.ch.active) b = this.fxPoint(to); return shotFx(kind, q, a, b, now, seed, color); }, ['shot', kind]);
+    if (kind === 'flask') this.time.delayedCall(SHOT_MS.flask / 2, () => sfx.play('flaskBreak')); // the glass breaks as it lands (half-way)
   }
 
 

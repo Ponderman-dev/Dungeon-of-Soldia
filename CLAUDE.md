@@ -66,6 +66,7 @@ and suggest a fresh session per task.
 - `docs/systems/title-base.md`: title page (forest from above) + Base camp hub (NPCs, walk-in, To dungeon).
 - `docs/systems/ui.md`: interface look (black windows, white lines, Press Start 2P), `entities/uiKit.js`.
 - `docs/systems/studio.md`: Character Studio page (draw, animate, effects editor, applying studio designs).
+- `docs/transition-plan.md`: screen/page/window transitions plan (motion tokens, helpers, phases).
 - Older plans: `docs/big-update-plan.md` (phases A-H), `docs/item-list.md` (old 72-item list).
 
 ## Commands

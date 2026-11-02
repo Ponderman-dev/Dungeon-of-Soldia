@@ -1,7 +1,7 @@
 // ONE MOTION LANGUAGE (docs/transition-plan.md): the timing and direction of every screen / page / window change, with
 // no Phaser, so tests can check it. uiKit's helpers (popIn/popOut, slideSwap, sceneFade, pageEnter/pageLeave, uiShift)
 // turn these plans into tweens. Tokens live in config.js `UI.motion`.
-import { UI } from '../config.js';
+import { UI, GAME_WIDTH } from '../config.js';
 
 const M = () => UI.motion;
 
@@ -43,9 +43,10 @@ export function fadePlan(kind = 'normal') {
   return { outMs: motionMs(kind), inMs: motionMs(kind) };
 }
 
-// Menu page (Glossary, Heroes...): rises from below and fades in, drops back and fades out (leaving is quicker).
-export function pagePlan(show) {
-  const m = M();
-  return show ? { ms: m.normal, fromScrollY: -UI.page.slidePx, toScrollY: 0, ease: m.easeOut }
-    : { ms: m.fast, fromScrollY: 0, toScrollY: -UI.page.slidePx, ease: m.easeIn };
+// Menu page (Glossary, Heroes...): slides in from the side (UI.page.from) over the screen behind, and back out the same
+// side. The camera scrolls: scrollX = -width puts the page one screen to the right, +width one screen to the left.
+export function pagePlan(show, width = GAME_WIDTH) {
+  const m = M(), off = UI.page.from === 'left' ? width : -width;
+  return show ? { ms: m.normal, fromScrollX: off, toScrollX: 0, ease: m.easeOut }
+    : { ms: m.normal, fromScrollX: 0, toScrollX: off, ease: m.easeIn };
 }

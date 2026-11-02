@@ -306,9 +306,9 @@ export function uiShift(scene, parts, show, { ms = UI.motion.fast, dy = 28, inst
 }
 
 // MENU PAGE TRANSITIONS (user, session 41: like camp -> squad, in three beats). Opening: the camp's buttons leave
-// (BaseScene.openOver), then the page rises in from below while fading in (pageEnter, in its create(); its top bar is
+// (BaseScene.openOver), then the page slides in from the side (pageEnter, in its create(); its top bar is
 // hidden meanwhile), then its top bar ('< CAMP', the Shop's gems) slides down into place. Closing (pageLeave(scene,
-// done)): the top bar slides up and away, then the page drops back while fading out, then `done` resumes the camp,
+// done)): the top bar slides up and away, then the page slides back out the same side, then `done` resumes the camp,
 // whose buttons come back in. Timing: systems/motion.js. A second close while leaving is ignored.
 // The top bar = objects marked with markBar (each page marks its back button row when it draws it); tap zones stay put.
 export const markBar = (list) => { for (const o of list) o.pageBar = true; return list; };
@@ -323,9 +323,8 @@ export function pageEnter(scene) {
   scene.pageLeaving = false; // Phaser reuses a scene between visits: a fresh page can close again
   scene.input.enabled = true;
   uiShift(scene, { up: pageBar(scene) }, false, { instant: true }); // the bar waits until the page is in
-  cam.scrollY = P.fromScrollY;
-  cam.fadeIn(P.ms, 0, 0, 0);
-  scene.tweens.add({ targets: cam, scrollY: P.toScrollY, duration: P.ms, ease: P.ease });
+  cam.scrollX = P.fromScrollX; // the page waits one screen to the side, then slides over the screen behind
+  scene.tweens.add({ targets: cam, scrollX: P.toScrollX, duration: P.ms, ease: P.ease });
   scene.time.delayedCall(P.ms, () => { if (!scene.pageLeaving) uiShift(scene, { up: pageBar(scene) }, true); });
 }
 export function pageLeave(scene, done) {
@@ -334,8 +333,7 @@ export function pageLeave(scene, done) {
   const P = pagePlan(false), cam = scene.cameras.main;
   scene.input.enabled = false; // no taps while it goes
   uiShift(scene, { up: pageBar(scene) }, false, { onDone: () => { // the bar leaves first, then the page
-    scene.tweens.add({ targets: cam, scrollY: P.toScrollY, duration: P.ms, ease: P.ease });
-    cam.fadeOut(P.ms, 0, 0, 0);
+    scene.tweens.add({ targets: cam, scrollX: P.toScrollX, duration: P.ms, ease: P.ease });
     scene.time.delayedCall(P.ms, done);
   } });
 }

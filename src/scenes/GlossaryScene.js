@@ -56,7 +56,7 @@ export default class GlossaryScene extends Phaser.Scene {
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, Number(L.bg)).setOrigin(0).setInteractive();
     this.page = null;
     this.showChapters();
-    pageEnter(this); // the page rises in (uiKit)
+    pageEnter(this); // the page slides in from the side (uiKit)
   }
 
   // ---- helpers -----------------------------------------------------------------------------------
@@ -309,6 +309,6 @@ export default class GlossaryScene extends Phaser.Scene {
   close() {
     if (this.pageLeaving) return;
     sfx.play('tap');
-    pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page drops away first (uiKit)
+    pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page slides away first (uiKit)
   }
 }

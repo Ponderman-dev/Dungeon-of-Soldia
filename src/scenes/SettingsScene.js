@@ -39,7 +39,7 @@ export default class SettingsScene extends Phaser.Scene {
     uiText(this, GAME_WIDTH / 2, L.versionY, `v${pkg.version}`, 'small', UI.dim).setOrigin(0.5);
     this.page = null;
     this.showTab(lastTab);
-    pageEnter(this); // the page rises in (uiKit)
+    pageEnter(this); // the page slides in from the side (uiKit)
   }
 
   // A window button: `look` = 'plain' (white), 'gold' (gold line), 'filled' (gold, black text), 'dim', 'red'.
@@ -157,6 +157,6 @@ export default class SettingsScene extends Phaser.Scene {
   close() {
     if (this.pageLeaving) return;
     sfx.play('tap');
-    pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page drops away first (uiKit)
+    pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page slides away first (uiKit)
   }
 }

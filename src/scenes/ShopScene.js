@@ -50,7 +50,7 @@ export default class ShopScene extends Phaser.Scene {
     this.page = null;
     this.clock = null;
     this.showTab(lastTab);
-    pageEnter(this); // the page rises in (uiKit)
+    pageEnter(this); // the page slides in from the side (uiKit)
   }
 
   gems() { return this.progress.gems || 0; }
@@ -265,6 +265,6 @@ export default class ShopScene extends Phaser.Scene {
     if (this.pageLeaving) return;
     sfx.play('tap');
     if (this.clock) this.clock.remove();
-    pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page drops away first (uiKit)
+    pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page slides away first (uiKit)
   }
 }

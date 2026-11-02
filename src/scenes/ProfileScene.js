@@ -49,7 +49,7 @@ export default class ProfileScene extends Phaser.Scene {
     this.page = null;
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.closeInput());
     this.showMain();
-    pageEnter(this); // the page rises in (uiKit)
+    pageEnter(this); // the page slides in from the side (uiKit)
   }
 
   isOpen(heroId) {
@@ -303,6 +303,6 @@ export default class ProfileScene extends Phaser.Scene {
   close() {
     if (this.pageLeaving) return;
     this.closeInput();
-    pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page drops away first (uiKit)
+    pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page slides away first (uiKit)
   }
 }

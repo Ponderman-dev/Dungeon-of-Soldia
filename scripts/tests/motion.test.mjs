@@ -22,4 +22,5 @@ ok('tab slides are fast and ease right', next.ms === M.fast && next.in.ease === 
 
 ok('scene fade uses the normal token by default', fadePlan().outMs === M.normal && fadePlan('slow').inMs === M.slow);
 const pe = pagePlan(true), pl = pagePlan(false);
-ok('menu page rises in (normal) and drops away quicker (fast)', pe.fromScrollY < 0 && pe.toScrollY === 0 && pl.toScrollY === pe.fromScrollY && pe.ms === M.normal && pl.ms === M.fast);
+ok('menu page slides in from a full screen to the side and leaves the same way', Math.abs(pe.fromScrollX) === 390 && pe.toScrollX === 0 && pl.toScrollX === pe.fromScrollX && pe.ease === M.easeOut && pl.ease === M.easeIn);
+ok('from the right = the camera starts scrolled left (page sits to the right)', UI.page.from !== 'right' || pe.fromScrollX < 0);

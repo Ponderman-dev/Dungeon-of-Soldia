@@ -69,3 +69,8 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   (chosen = pale gold frame, locked = grey frame). Scene helpers take look 'solid' (Heroes, Profile, Settings,
   Glossary) or a `solid` flag (Shop, Leaders). Camp profile disc = gold ring on a panel disc. The fight HUD and reward
   sheet only got the new frames (not redesigned). Glossary chapters = one panel with a title strip (gold theme).
+- Fixes (session 40, user on the phone): the TEST buttons (DebugScene) are ONE small 'TEST' tab at the top middle that
+  opens 'restart run' / 'tools' under it (they covered the camp profile). TITLE: no button box any more (a tap
+  anywhere starts), 'TAP TO START' in the normal size with a black outline, blinking; 'Best floor: N' in the normal
+  size, gold with a black outline on a dark strip (title.json `start.size`, `best.size`, `best.stripAlpha`; the strip
+  sits one depth under the text).

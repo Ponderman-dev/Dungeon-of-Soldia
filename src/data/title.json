@@ -134,12 +134,15 @@
     "w": 280,
     "h": 64,
     "text": "TAP TO START",
+    "size": "normal",
     "blinkMs": 700,
     "blinkAlpha": 0.2
   },
   "best": {
     "y": 790,
-    "text": "Best floor: {n}"
+    "text": "Best floor: {n}",
+    "size": "normal",
+    "stripAlpha": 0.55
   },
   "settings": {
     "x": 14,

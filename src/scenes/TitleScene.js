@@ -4,7 +4,7 @@ import title from '../data/title.json';
 import pkg from '../../package.json';
 import { skyLayer, twinkleSpots, moonLayers, cloudLayer, canopyLayer } from '../systems/titleArt.js';
 import { layerTexture } from '../entities/pixelLayer.js';
-import { drawWindow, uiText, drawGear, drawButton, buttonTextColor } from '../entities/uiKit.js';
+import { drawWindow, uiText, drawGear } from '../entities/uiKit.js';
 import { loadProgress } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
 
@@ -67,13 +67,19 @@ export default class TitleScene extends Phaser.Scene {
       uiText(this, cx, L.smallY, L.small, 'big', UI.text, outline).setOrigin(0.5),
       uiText(this, cx, L.bigY, L.big, 'big', UI.gold, { stroke: '#000000', strokeThickness: 4 }).setOrigin(0.5).setScale(L.bigScale),
     ];
-    const S = title.start, box = this.add.graphics();
-    drawButton(box, cx - S.w / 2, S.y - S.h / 2, S.w, S.h);
-    const tap = uiText(this, cx, S.y, S.text, 'big', buttonTextColor()).setOrigin(0.5);
+    // TAP TO START (user, session 40): no button box (a tap ANYWHERE starts), just the words, smaller, blinking softly.
+    const S = title.start;
+    const tap = uiText(this, cx, S.y, S.text, S.size, UI.text, outline).setOrigin(0.5);
     this.tweens.add({ targets: tap, alpha: S.blinkAlpha, duration: S.blinkMs, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }); // a soft blink
-    ui.push(box, tap);
+    ui.push(tap);
+    // Best floor (user: unreadable small): the big pixel font in gold on a dark strip.
     const best = loadProgress().stats.bestFloor;
-    if (best > 0) ui.push(uiText(this, cx, title.best.y, title.best.text.replace('{n}', best), 'small', UI.text, outline).setOrigin(0.5));
+    if (best > 0) {
+      const B = title.best, label = uiText(this, cx, B.y, B.text.replace('{n}', best), B.size, UI.gold, { stroke: '#000000', strokeThickness: 4 }).setOrigin(0.5);
+      const strip = this.add.graphics().fillStyle(0x000000, B.stripAlpha).fillRect(Math.round(cx - label.width / 2 - 12), Math.round(B.y - label.height / 2 - 4), Math.round(label.width + 24), Math.round(label.height + 8));
+      this.bestStrip = strip; // drawn one layer under the text (set below)
+      ui.push(strip, label);
+    }
     ui.push(uiText(this, GAME_WIDTH - 8, GAME_HEIGHT - 8, `v${pkg.version}`, 'small', UI.dim).setOrigin(1, 1));
     // Settings (top left): a small gear in a window; opens the Settings screen over the title (paused till it closes).
     const G = title.settings, g = this.add.graphics();
@@ -91,6 +97,7 @@ export default class TitleScene extends Phaser.Scene {
       this.scene.pause();
     });
     this.ui = ui.map((o) => o.setDepth(DEPTH.ui));
+    if (this.bestStrip) this.bestStrip.setDepth(DEPTH.ui - 1); // the best floor's dark strip stays UNDER its text
   }
 
   // Tap to start: the interface fades, the camera flies to the dungeon tower, then fades into the camp.

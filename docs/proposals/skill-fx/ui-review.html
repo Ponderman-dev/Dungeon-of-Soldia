@@ -48,6 +48,15 @@ textarea { width: 100%; min-height: 60px; resize: vertical; font: 14px/1.45 var(
   </header>
 
   <section class="win">
+    <h2>NEW: Clearer look (your reference pictures)</h2>
+    <p>Your idea: framed panels and solid buttons, for clearer navigation. Our own take on it, tried in the real game on 6 screens. If you pick B, sections 1 and 2 below no longer matter (B has its own frame and layout); tell me what to change in the note.</p>
+    <div class="opts"><!--THEMES--></div>
+    <label for="note-theme">NOTE ON THE NEW LOOK</label>
+    <textarea id="note-theme" placeholder="e.g. B, but the gold less bright, the panels darker…"></textarea>
+    <div class="saved" id="saved-theme"></div>
+  </section>
+
+  <section class="win">
     <h2>1. Window frame</h2>
     <p>Today every window is one white line. Pick the frame for all windows and buttons.</p>
     <div class="opts"><!--FRAMES--></div>
@@ -82,7 +91,7 @@ function render() {
     const on = (notes[o.dataset.group] || {}).pick === o.dataset.id;
     o.classList.toggle('sel', on); o.querySelector('.btn').setAttribute('aria-pressed', String(on));
   }
-  for (const id of ['frame', 'layout', 'general']) { const ta = document.getElementById('note-' + id); if (document.activeElement !== ta) ta.value = (notes[id] || {}).text || ''; }
+  for (const id of ['theme', 'frame', 'layout', 'general']) { const ta = document.getElementById('note-' + id); if (document.activeElement !== ta) ta.value = (notes[id] || {}).text || ''; }
 }
 async function save(id, patch, el) {
   const cur = { ...(notes[id] || {}), ...patch }; notes[id] = cur; local(notes); render();
@@ -97,7 +106,7 @@ for (const o of document.querySelectorAll('.opt')) o.querySelector('.btn').addEv
   const g = o.dataset.group, cur = (notes[g] || {}).pick;
   save(g, { pick: cur === o.dataset.id ? null : o.dataset.id }, document.getElementById('saved-' + g));
 });
-for (const id of ['frame', 'layout', 'general']) {
+for (const id of ['theme', 'frame', 'layout', 'general']) {
   const ta = document.getElementById('note-' + id), el = document.getElementById('saved-' + id); let t = null;
   ta.addEventListener('input', () => { el.textContent = 'Typing…'; el.className = 'saved'; clearTimeout(t); t = setTimeout(() => save(id, { text: ta.value }, el), 900); });
   ta.addEventListener('blur', () => { if (t) { clearTimeout(t); t = null; save(id, { text: ta.value }, el); } });

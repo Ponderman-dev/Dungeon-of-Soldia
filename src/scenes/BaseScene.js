@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc, uiShift } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc, uiShift, drawButton, buttonTextColor, isGoldTheme } from '../entities/uiKit.js';
 import camp from '../data/camp.json';
 import { openFloor, darkLayer, lightTint, fireLayers, propLayer } from '../systems/campArt.js';
 import floorArt from '../data/floorArt.json';
@@ -91,11 +91,11 @@ export default class BaseScene extends Phaser.Scene {
     // side, bobbing.
     const T = U.expedition, cx = GAME_WIDTH / 2;
     const box = this.add.container(cx, T.y).setDepth(DEPTH.ui);
-    box.add(drawWindow(this.add.graphics(), -T.w / 2, -T.h / 2, T.w, T.h));
-    box.add(uiText(this, 0, 0, T.text, T.size).setOrigin(0.5)); // 'normal' (user: room between box and text)
+    box.add(drawButton(this.add.graphics(), -T.w / 2, -T.h / 2, T.w, T.h)); // (gold theme trial: a solid gold button)
+    box.add(uiText(this, 0, 0, T.text, T.size, buttonTextColor()).setOrigin(0.5)); // 'normal' (user: room between box and text)
     const cell = T.cell;
     for (const side of [-1, 1]) {
-      const arrow = this.add.graphics().fillStyle(0xffffff, 1);
+      const arrow = this.add.graphics().fillStyle(isGoldTheme() ? 0x2b1c0a : 0xffffff, 1);
       // A real up-arrow (user: the old 3-row one read as a '+'): a wide head, then a thick stem.
       const A = T.arrow;
       for (let i = 0; i < A.head; i++) arrow.fillRect(-(i + 0.5) * cell, i * cell, (2 * i + 1) * cell, cell);

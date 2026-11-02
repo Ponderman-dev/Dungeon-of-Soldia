@@ -27,8 +27,11 @@ def option(group, letter, name, desc, shots):
     return f'''<div class="opt" data-group="{group}" data-id="{letter}"><div class="ttl"><span class="ltr">{letter}</span><span class="nm">{name}</span></div>
 <p>{desc}</p><div class="shots">{pics}</div><button class="btn pk" type="button" aria-pressed="false">PICK {letter}</button></div>'''
 frames = ''.join(option('frame', l, n, d, [(s, img(f'{s}-{f}.png', (0, 0, 390, 844))) for s in ('Base', 'Settings', 'Shop')]) for l, f, n, d in FRAMES)
+THEMES = [('A', 'single', 'Black and white (today)', 'Black windows, one white line, white text; buttons look like windows.'),
+          ('B', 'gold', 'NEW: Slate and gold', 'From your reference pictures: dark slate panels in a gold frame with corner studs, a title strip inside the panel, SOLID gold buttons with dark text (a button never looks like a panel), a gold cursor.')]
+themes = ''.join(option('theme', l, n, d, [(s, img(f'{s}-{f}.png', (0, 0, 390, 844))) for s in ('Base', 'Glossary', 'Settings', 'Shop', 'Heroes', 'Squad')]) for l, f, n, d in THEMES)
 layouts = ''.join(option('layout', l, n, d, [('Glossary', img(f'layout-{f}.png', (0, 0, 390, 560)))]) for l, f, n, d in LAYOUTS)
 html = open(os.path.join(os.path.dirname(__file__), 'ui-review.html')).read()
-html = html.replace('/*FONT*/', 'data:font/woff2;base64,' + FONT).replace('<!--FRAMES-->', frames).replace('<!--LAYOUTS-->', layouts)
+html = html.replace('/*FONT*/', 'data:font/woff2;base64,' + FONT).replace('<!--FRAMES-->', frames).replace('<!--LAYOUTS-->', layouts).replace('<!--THEMES-->', themes)
 open(OUT, 'w').write(html)
 print(len(html) // 1024, 'KB')

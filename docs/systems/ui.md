@@ -49,3 +49,11 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   <out>` + `ui-review.html`) published over the Skill Effects page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN;
   picks in its db collection `ui` (docs `frame`, `layout`, `general`). After the pick: set UI.frame, roll the layout
   out to every menu, remove the unused trial code.
+- **GOLD THEME TRIAL (session 40, user's reference pictures: 'way more clear navigation'):** dev flag `?theme=gold`
+  (`UI.theme`, colours in `UI.goldTheme`): uiKit `drawWindow` -> `goldWindow` (dark outline, gold frame, dark gold
+  inner edge, slate fill, pale corner studs; a gold line = chosen -> pale gold, dim -> grey), `drawButton` (SOLID gold
+  button, light top edge, darker bottom half, dark text via `buttonTextColor()`; uiButton uses it), `drawStrip` (a
+  title strip inside a panel), `isGoldTheme()`. Wired so far: Base camp TO EXPEDITION (solid button, dark arrows),
+  Glossary (gold back button; chapters = one panel with a GLOSSARY strip, recessed row slots, gold cursor). Every other
+  window gets the gold frame automatically; Squad screen buttons and the white profile disc are not converted yet.
+  On the review page as section 'NEW' (A = today, B = slate and gold).

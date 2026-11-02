@@ -44,4 +44,12 @@ export const UI = {
   // 'rivets' = white line + square corner plates.
   frame: 'single',
   frameShadow: 0x4a4a58, // the grey inner line of the 'shadow' frame
+  // THEME TRIAL (session 40, user's reference pictures: framed panels, solid buttons, clearer navigation): dev url flag
+  // ?theme=gold = dark slate panels with a gold frame + corner studs, solid gold buttons with dark text, title strips.
+  theme: 'mono',
+  goldTheme: {
+    outline: 0x0d0b12, frame: 0xd8a640, frameDark: 0x7a5a22, stud: 0xffe39a, fill: 0x221f2b, strip: 0x34303f,
+    stripLine: 0x15131b, slot: 0x18161f, chosen: 0xfff0b0, dim: 0x5a5666, pressedFill: 0x3a3446,
+    button: 0xe8b444, buttonDark: 0xb98428, buttonLight: 0xffe08a, buttonText: '#2b1c0a', title: '#ffe7a8',
+  },
 };

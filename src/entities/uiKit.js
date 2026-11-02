@@ -121,6 +121,7 @@ export function drawWindow(g, x, y, w, h, { fill = UI.window, line = UI.line, al
     g.fillStyle(c, alpha);
     g.fillRect(X + 4, Y, W - 8, H).fillRect(X + 2, Y + 2, W - 4, H - 4).fillRect(X, Y + 4, W, H - 8);
   };
+  if (themeName() === 'gold') return goldWindow(g, x, y, w, h, block, { fill, line, alpha });
   const frame = frameStyle();
   block(0, line);
   if (frame === 'double' && w >= 30 && h >= 26) { block(2, fill); block(4, line); block(5, fill); } // classic RPG: thick + thin line
@@ -133,6 +134,57 @@ export function drawWindow(g, x, y, w, h, { fill = UI.window, line = UI.line, al
     }
   }
   return g;
+}
+
+// GOLD THEME window: a dark outline, a gold frame with a darker inner edge, a slate fill, pale gold studs on the corners.
+// A window asked for with another line colour keeps that meaning: gold = chosen (pale gold frame), dim = grey frame.
+function goldWindow(g, x, y, w, h, block, { fill, line, alpha }) {
+  const T = UI.goldTheme;
+  const frame = line === UI.line ? T.frame : line === 0x8a8a9a || line === 0x55556a ? T.dim : T.chosen;
+  const body = fill === UI.window ? T.fill : fill === UI.pressed ? T.pressedFill : fill;
+  block(0, T.outline); block(2, frame); block(4, T.frameDark); block(6, body);
+  if (w >= 30 && h >= 26) {
+    g.fillStyle(T.stud, alpha);
+    for (const [cx, cy] of [[x + 4, y + 4], [x + w - 8, y + 4], [x + 4, y + h - 8], [x + w - 8, y + h - 8]]) g.fillRect(cx, cy, 4, 4);
+  }
+  return g;
+}
+
+// A solid BUTTON (gold theme: gold body with a light top edge and a darker bottom half, dark text; mono theme: the
+// plain window). pressed = pushed down. Returns g. Use buttonTextColor() for its label.
+export function drawButton(g, x, y, w, h, { pressed = false, enabled = true } = {}) {
+  if (themeName() !== 'gold') return drawWindow(g, x, y, w, h, pressed ? { fill: UI.pressed } : {});
+  const T = UI.goldTheme;
+  x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
+  const block = (i, c, top = 0, bottom = 0) => {
+    const X = x + i, Y = y + i + top, W = w - 2 * i, H = h - 2 * i - top - bottom;
+    if (W < 6 || H < 4) return;
+    g.fillStyle(c, 1);
+    g.fillRect(X + 4, Y, W - 8, H).fillRect(X + 2, Y + 2, W - 4, Math.max(0, H - 4)).fillRect(X, Y + 4, W, Math.max(0, H - 8));
+  };
+  block(0, T.outline);
+  if (!enabled) { block(2, T.dim); return g; }
+  block(2, pressed ? T.buttonDark : T.button);
+  if (!pressed) { g.fillStyle(T.buttonLight, 1).fillRect(x + 6, y + 4, w - 12, 2); g.fillStyle(T.buttonDark, 1).fillRect(x + 4, y + Math.round(h / 2) + 2, w - 8, Math.round(h / 2) - 6); }
+  return g;
+}
+export const buttonTextColor = (enabled = true, pressed = false) => (themeName() !== 'gold' ? (!enabled ? UI.dim : pressed ? '#000000' : UI.text) : enabled ? UI.goldTheme.buttonText : '#9a96a6');
+// A title strip across the top of a panel (gold theme), h px tall, `i` px inside the panel's left/top edge.
+export function drawStrip(g, x, y, w, h) {
+  const T = UI.goldTheme;
+  g.fillStyle(T.strip, 1).fillRect(x, y, w, h);
+  g.fillStyle(T.stripLine, 1).fillRect(x, y + h, w, 2);
+  return g;
+}
+export const isGoldTheme = () => themeName() === 'gold';
+
+// The theme: UI.theme, or the dev server's ?theme= url flag (trials).
+let themeCache = null;
+function themeName() {
+  if (themeCache) return themeCache;
+  let t = UI.theme;
+  try { if (import.meta.env.DEV) t = new URLSearchParams(location.search).get('theme') || t; } catch (e) { /* no location (tests) */ }
+  return (themeCache = t);
 }
 
 // The frame style: UI.frame, or the dev server's ?frame= url flag (trials).
@@ -179,10 +231,10 @@ export function uiButton(scene, x, y, w, h, label, { size = 'normal', selected =
   let pressed = false;
   const draw = () => {
     g.clear();
-    drawWindow(g, 0, 0, w, h, pressed ? { fill: UI.pressed } : {});
-    text.setColor(!enabled ? UI.dim : pressed ? '#000000' : UI.text);
+    drawButton(g, 0, 0, w, h, { pressed, enabled });
+    text.setColor(buttonTextColor(enabled, pressed));
     cur.clear();
-    if (selected) drawCursor(cur, Math.round(w / 2 - text.width / 2 - 16), Math.round(h / 2), pressed ? 0x000000 : UI.line);
+    if (selected) drawCursor(cur, Math.round(w / 2 - text.width / 2 - 16), Math.round(h / 2), isGoldTheme() || pressed ? 0x000000 : UI.line);
   };
   draw();
   const blink = scene.time.addEvent({ delay: 500, loop: true, callback: () => cur.setVisible(!cur.visible) });

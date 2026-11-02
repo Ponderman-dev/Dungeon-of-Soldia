@@ -1,0 +1,178 @@
+<title>Soldia Projectiles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: the game's own look (black windows, white lines, Press Start 2P headings) on a dungeon-dark page.
+   A grid of shot cards (one column on phones); each card = one live scene + OK / CHANGE + a note. */
+@font-face { font-family: "Press Start 2P"; src: url(/*FONT*/) format("woff2"); font-display: block; }
+:root {
+  --bg: #0e0b16; --panel: #000000; --line: #ffffff; --soft: #3a3150; --fg: #f0ecf8; --muted: #aaa0c0;
+  --steel: #9cc8ff; --gold: #f2c544; --ok: #7fe0a0; --warn: #ff8a6a;
+  --display: "Press Start 2P", "Courier New", monospace;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 900px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; display: flex; flex-direction: column; gap: 22px; }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(18px, 4.4vw, 26px); line-height: 1.4; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 400; font-size: 14px; line-height: 1.5; margin: 0; color: var(--steel); text-wrap: balance; }
+.lede { color: var(--muted); max-width: 68ch; margin: 10px 0 0; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--soft); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 14px; }
+.bar .status { margin-left: auto; color: var(--muted); font-size: 13px; }
+.bar .status.bad { color: var(--warn); }
+.seg { display: inline-flex; border: 2px solid var(--line); }
+.seg button { font: 10px var(--display); color: var(--fg); background: var(--panel); border: 0; padding: 8px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--line); color: #000; }
+section.win { background: var(--panel); border: 3px solid var(--line); outline: 3px solid #000; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+section.win > p { margin: 0; color: var(--muted); max-width: 70ch; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+.tile { border: 2px solid var(--soft); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tile.picked { border-color: var(--gold); }
+.tile .ttl { display: flex; gap: 10px; align-items: baseline; }
+.tile .ltr { font: 12px var(--display); color: var(--gold); }
+.tile .nm { font-weight: 600; }
+.tile p { margin: 0; font-size: 13px; color: var(--muted); }
+canvas.scene { width: 100%; max-width: 390px; aspect-ratio: 390 / 288; height: auto; image-rendering: pixelated; border: 2px solid var(--soft); background: #000; cursor: pointer; align-self: center; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { font: 10px var(--display); color: var(--fg); background: var(--panel); border: 2px solid var(--line); padding: 9px 12px; cursor: pointer; }
+.btn[aria-pressed="true"].ok { background: var(--ok); border-color: var(--ok); color: #000; }
+.btn[aria-pressed="true"].chg { background: var(--warn); border-color: var(--warn); color: #000; }
+.btn[aria-pressed="true"].pk { background: var(--gold); border-color: var(--gold); color: #000; }
+.btn:focus-visible, textarea:focus-visible, .seg button:focus-visible, canvas.scene:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+label { font: 9px var(--display); color: var(--muted); letter-spacing: .04em; }
+textarea { width: 100%; min-height: 56px; resize: vertical; font: 14px/1.45 var(--body); color: var(--fg); background: #15101f; border: 1px solid var(--soft); padding: 8px 10px; }
+textarea::placeholder { color: #6e6385; }
+.saved { font-size: 12px; color: var(--muted); min-height: 1em; }
+.saved.ok { color: var(--ok); } .saved.bad { color: var(--warn); }
+.beats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .beats { grid-template-columns: 1fr; } }
+.beat { border-left: 3px solid var(--steel); padding: 2px 0 2px 10px; font-size: 14px; }
+.beat b { font: 10px var(--display); color: var(--steel); display: block; margin-bottom: 4px; }
+ul.ideas { margin: 0; padding-left: 18px; color: var(--muted); }
+ul.ideas li b { color: var(--fg); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { canvas.scene { cursor: default; } }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 3px solid var(--line); outline: 3px solid #000; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card.ok { border-color: var(--ok); } .card.change { border-color: var(--warn); }
+.card h3 { font: 11px/1.5 var(--display); margin: 0; color: var(--steel); }
+.card .users { margin: 0; font-size: 13px; color: var(--muted); }
+.grp { font: 12px var(--display); color: var(--gold); margin: 8px 0 0; }
+
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Projectiles: what flies</h1>
+    <p class="lede">Every shot in the game that flies from a fighter to its target, drawn by the game's own code at the game's speed and size. Heroes stand at the bottom, enemies at the top, like in a fight. Skill shots are not here: they are part of the hero skill looks you already approved. For each shot, tap <b>OK</b> or <b>CHANGE</b> and write what you want (bigger, a different colour, a trail, a spin, a different hit when it lands...). Tap a scene to replay it. <b>Slow x4</b> lets you see each pixel.</p>
+  </header>
+  <div class="bar">
+    <div class="seg" role="group" aria-label="Speed"><button id="sp1" aria-pressed="true">Normal</button><button id="sp4" aria-pressed="false">Slow x4</button></div>
+    <span class="status" id="status" aria-live="polite">Connecting…</span>
+  </div>
+  <h2 class="grp">Basic attacks</h2>
+  <div class="grid" id="basic"></div>
+  <h2 class="grp">Item shots</h2>
+  <div class="grid" id="item"></div>
+  <section class="win">
+    <h2>Anything else</h2>
+    <p>Ideas for all shots at once (e.g. every shot a bit bigger, all trails longer), or a shot that is missing here.</p>
+    <label for="note-general">NOTE</label>
+    <textarea id="note-general" placeholder="Other ideas or changes…"></textarea>
+    <div class="saved" id="saved-general"></div>
+  </section>
+</div>
+
+<script>/*BUNDLE*/</script>
+<script>
+const S = window.SoldiaShots;
+const notes = {}; // doc id -> { verdict, text }
+let db = null, speed = 1;
+const scenes = [];
+const ui = {};
+
+function wireText(docId, ta, saved) {
+  let timer = null;
+  ta.addEventListener('input', () => { saved.textContent = 'Typing…'; saved.className = 'saved'; clearTimeout(timer); timer = setTimeout(() => save(docId, { text: ta.value }, saved), 900); });
+  ta.addEventListener('blur', () => { if (timer) { clearTimeout(timer); timer = null; save(docId, { text: ta.value }, saved); } });
+}
+for (const s of S.SHOTS) {
+  const card = document.createElement('div'); card.className = 'card'; card.id = 'shot-' + s.id;
+  const h = document.createElement('h3'); h.textContent = s.name;
+  const u = document.createElement('p'); u.className = 'users'; u.textContent = s.users;
+  const cv = document.createElement('canvas'); cv.className = 'scene'; cv.width = S.W * S.Z; cv.height = S.H * S.Z; cv.tabIndex = 0;
+  cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', s.name + ' (tap to replay)');
+  const sc = { cv, id: s.id, clock: 0, last: performance.now() };
+  const replay = () => { sc.clock = 0; };
+  cv.addEventListener('click', replay); cv.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); replay(); } });
+  scenes.push(sc);
+  const btns = document.createElement('div'); btns.className = 'btns';
+  const ok = document.createElement('button'); ok.className = 'btn ok'; ok.textContent = 'OK'; ok.setAttribute('aria-pressed', 'false');
+  const chg = document.createElement('button'); chg.className = 'btn chg'; chg.textContent = 'CHANGE'; chg.setAttribute('aria-pressed', 'false');
+  btns.append(ok, chg);
+  const lab = document.createElement('label'); lab.textContent = 'NOTE ON THE ' + s.name.toUpperCase();
+  const ta = document.createElement('textarea'); ta.id = 'note-' + s.id; lab.htmlFor = ta.id; ta.placeholder = 'e.g. bigger, a longer trail, it should spin, a brighter hit…';
+  const saved = document.createElement('div'); saved.className = 'saved';
+  for (const [b, v] of [[ok, 'ok'], [chg, 'change']]) b.addEventListener('click', () => { const cur = (notes[s.id] || {}).verdict; save(s.id, { verdict: cur === v ? null : v }, saved); });
+  wireText(s.id, ta, saved);
+  card.append(h, u, cv, btns, lab, ta, saved);
+  document.getElementById(s.group).append(card);
+  ui[s.id] = { card, ok, chg };
+}
+wireText('general', document.getElementById('note-general'), document.getElementById('saved-general'));
+
+function render() {
+  for (const [id, u] of Object.entries(ui)) {
+    const v = (notes[id] || {}).verdict;
+    u.ok.setAttribute('aria-pressed', String(v === 'ok')); u.chg.setAttribute('aria-pressed', String(v === 'change'));
+    u.card.classList.toggle('ok', v === 'ok'); u.card.classList.toggle('change', v === 'change');
+  }
+}
+function fillTexts() {
+  for (const id of [...Object.keys(ui), 'general']) { const ta = document.getElementById('note-' + id); if (ta && document.activeElement !== ta) ta.value = (notes[id] || {}).text || ''; }
+}
+function local(v) { try { if (v === undefined) return JSON.parse(localStorage.getItem('soldia-shots') || 'null'); localStorage.setItem('soldia-shots', JSON.stringify(v)); } catch (e) { return null; } }
+async function save(docId, patch, savedEl) {
+  const cur = { ...(notes[docId] || {}), ...patch };
+  notes[docId] = cur; local(notes); render();
+  if (!db) { savedEl.textContent = 'Kept in this browser only (not saved online)'; savedEl.className = 'saved bad'; return; }
+  try {
+    const ref = db.collection('shots').doc(docId);
+    if (!cur.verdict && !(cur.text || '').trim()) await ref.delete(); else await ref.set({ verdict: cur.verdict || null, text: cur.text || '', updatedAt: new Date().toISOString() });
+    savedEl.textContent = 'Saved'; savedEl.className = 'saved ok';
+  } catch (e) { savedEl.textContent = 'Could not save: ' + (e && e.message ? e.message : 'try again'); savedEl.className = 'saved bad'; }
+}
+Object.assign(notes, local() || {}); fillTexts(); render();
+
+for (const [id, v] of [['sp1', 1], ['sp4', 0.25]]) document.getElementById(id).addEventListener('click', () => {
+  speed = v; document.getElementById('sp1').setAttribute('aria-pressed', String(v === 1)); document.getElementById('sp4').setAttribute('aria-pressed', String(v !== 1));
+});
+
+const visible = new Set();
+const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((x) => (x.isIntersecting ? visible.add(x.target) : visible.delete(x.target))), { rootMargin: '80px' }) : null;
+for (const sc of scenes) if (io) io.observe(sc.cv);
+function frame(now) {
+  for (const sc of scenes) {
+    const dt = Math.min(100, now - sc.last); sc.last = now; sc.clock += dt * speed;
+    if (io && !visible.has(sc.cv)) continue;
+    try { S.drawShot(sc.cv.getContext('2d'), sc.id, sc.clock); } catch (e) { /* keep the page alive */ }
+  }
+  requestAnimationFrame(frame);
+}
+(document.fonts && document.fonts.load ? document.fonts.load('16px "Press Start 2P"') : Promise.resolve()).catch(() => {}).then(() => requestAnimationFrame(frame));
+
+(async () => {
+  const status = document.getElementById('status');
+  db = window.claude ? await window.claude.use('db') : null;
+  if (!db) { status.textContent = 'Notes stay in this browser (sign in to claude.ai to save them)'; status.classList.add('bad'); return; }
+  status.textContent = 'Notes save automatically';
+  db.collection('shots').onSnapshot((snap) => {
+    for (const d of snap.docs) { const v = d.data() || {}; notes[d.id] = { verdict: v.verdict || null, text: v.text || '' }; }
+    local(notes); fillTexts(); render();
+  });
+})();
+</script>

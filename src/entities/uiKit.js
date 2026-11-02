@@ -114,11 +114,34 @@ export function uiText(scene, x, y, str, size = 'normal', color = UI.text, extra
 // A window: the stepped outline in `line`, filled with `fill`. Drawn into Graphics `g` (call g.clear() yourself).
 export function drawWindow(g, x, y, w, h, { fill = UI.window, line = UI.line, alpha = 1 } = {}) {
   x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
-  g.fillStyle(line, alpha);
-  g.fillRect(x + 4, y, w - 8, h).fillRect(x + 2, y + 2, w - 4, h - 4).fillRect(x, y + 4, w, h - 8);
-  g.fillStyle(fill, alpha);
-  g.fillRect(x + 4, y + 2, w - 8, h - 4).fillRect(x + 2, y + 4, w - 4, h - 8);
+  // A stepped (pixel-cornered) block `i` px inside the window, in colour c.
+  const block = (i, c) => {
+    const X = x + i, Y = y + i, W = w - 2 * i, H = h - 2 * i;
+    if (W < 10 || H < 10) return;
+    g.fillStyle(c, alpha);
+    g.fillRect(X + 4, Y, W - 8, H).fillRect(X + 2, Y + 2, W - 4, H - 4).fillRect(X, Y + 4, W, H - 8);
+  };
+  const frame = frameStyle();
+  block(0, line);
+  if (frame === 'double' && w >= 30 && h >= 26) { block(2, fill); block(4, line); block(5, fill); } // classic RPG: thick + thin line
+  else if (frame === 'shadow') { block(2, UI.frameShadow); block(4, fill); } // white line, a grey line inside it
+  else block(2, fill);
+  if (frame === 'rivets' && w >= 30 && h >= 26) { // square corner plates with a black dot
+    for (const [cx, cy] of [[x, y], [x + w - 8, y], [x, y + h - 8], [x + w - 8, y + h - 8]]) {
+      g.fillStyle(line, alpha).fillRect(cx, cy, 8, 8);
+      g.fillStyle(fill, alpha).fillRect(cx + 3, cy + 3, 2, 2);
+    }
+  }
   return g;
+}
+
+// The frame style: UI.frame, or the dev server's ?frame= url flag (trials).
+let frameCache = null;
+function frameStyle() {
+  if (frameCache) return frameCache;
+  let f = UI.frame;
+  try { if (import.meta.env.DEV) f = new URLSearchParams(location.search).get('frame') || f; } catch (e) { /* no location (tests) */ }
+  return (frameCache = f);
 }
 
 // A gear (white, 28px across) centred on (m, n), for a Settings button. Returns g.

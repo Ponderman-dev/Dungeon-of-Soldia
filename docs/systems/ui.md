@@ -42,3 +42,10 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   win heal). 'Floor N cleared!' sits higher (combat.json `transition.clearBannerY`, 422) so it misses the bubbles. Nothing waits for a bubble (user, session 21: the wait broke the pace): the clear pause is
   1.2s (`clearPauseMs`, user 2026-10-21: the bubble needs 1.2s before the reward screen); the bubble is removed `goneAfterRewardMs` (0.2s) after the reward screen pops up, never seen after it. SHORT lines (user 2026-10-22: 'too long': every line rewritten to 2-5 words, bubble `maxWidthPx` 140, `padPx` 6; 8px is the smallest crisp text). Lines + timings in `src/data/dialogue.json` (per hero; a missing kind uses `clear`); `systems/dialogue.js`
   picks a living hero (not the last speaker) and goes through all its lines before repeating. Test: `dialogue.test.mjs`.
+- **SESSION 40 TRIALS (user: 'give me variations', camp + menus, black and white):** dev url flags (dev server only):
+  `?frame=single|double|shadow|rivets` = window frame style for EVERY window (`UI.frame` in config.js, drawn by
+  uiKit `drawWindow`; 'single' = today), `?bar=1` / `?list=1` = Glossary title bar / cursor-list chapters (trial code
+  in GlossaryScene `TRIAL`). Review page (real screenshots, `docs/proposals/skill-fx/make-ui-review.py <shots dir>
+  <out>` + `ui-review.html`) published over the Skill Effects page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN;
+  picks in its db collection `ui` (docs `frame`, `layout`, `general`). After the pick: set UI.frame, roll the layout
+  out to every menu, remove the unused trial code.

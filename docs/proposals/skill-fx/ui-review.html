@@ -1,0 +1,113 @@
+<title>Soldia Menu Looks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: the game's own look (black windows, white lines, pixel headings). Two sections (frame, layout); each option
+   is a column of real game screenshots shown at 1:1 pixels, side by side on wide screens, stacked on phones. */
+@font-face { font-family: "Press Start 2P"; src: url(/*FONT*/) format("woff2"); font-display: block; }
+:root {
+  --bg: #0e0b16; --panel: #000000; --line: #ffffff; --soft: #3a3150; --fg: #f0ecf8; --muted: #aaa0c0;
+  --gold: #ffd84a; --ok: #7fe0a0; --warn: #ff8a6a;
+  --display: "Press Start 2P", "Courier New", monospace;
+  --body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.55; margin: 0; }
+.wrap { max-width: 1700px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right, 0px)) 64px max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 22px; }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(16px, 4vw, 24px); line-height: 1.4; margin: 0; }
+h2 { font-family: var(--display); font-weight: 400; font-size: 14px; margin: 0; color: var(--gold); }
+.lede { color: var(--muted); max-width: 72ch; margin: 10px 0 0; }
+.status { color: var(--muted); font-size: 13px; }
+.status.bad { color: var(--warn); }
+section.win { background: var(--panel); border: 3px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+section.win > p { margin: 0; color: var(--muted); max-width: 72ch; }
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 410px), 1fr)); gap: 14px; }
+.opt { border: 2px solid var(--soft); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.opt.sel { border-color: var(--gold); }
+.ttl { display: flex; gap: 10px; align-items: baseline; }
+.ltr { font: 14px var(--display); color: var(--gold); }
+.nm { font-weight: 600; }
+.opt p { margin: 0; font-size: 13px; color: var(--muted); }
+.shots { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+.shots img { image-rendering: pixelated; width: 390px; max-width: none; height: auto; border: 1px solid var(--soft); flex: none; }
+.shots .cap { display: none; }
+.btn { font: 10px var(--display); color: var(--fg); background: var(--panel); border: 2px solid var(--line); padding: 10px 12px; cursor: pointer; align-self: flex-start; }
+.btn[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: #000; }
+.btn:focus-visible, textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+label { font: 9px var(--display); color: var(--muted); }
+textarea { width: 100%; min-height: 60px; resize: vertical; font: 14px/1.45 var(--body); color: var(--fg); background: #15101f; border: 1px solid var(--soft); padding: 8px 10px; }
+.saved { font-size: 12px; color: var(--muted); min-height: 1em; }
+.saved.ok { color: var(--ok); } .saved.bad { color: var(--warn); }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Menus: which look?</h1>
+    <p class="lede">Every picture is a real screenshot of the game, at phone size, pixel for pixel. Still black and white. Two separate choices: the <b>frame</b> every window and button gets (shown on the Camp, Settings and Shop), and the <b>layout</b> of a menu screen (tried on the Glossary; the one you pick goes to every menu). Scroll sideways inside an option to see all its screens. Tap <b>PICK</b> and add a note if you want a mix (e.g. "C but thinner").</p>
+    <p class="status" id="status" aria-live="polite">Connecting…</p>
+  </header>
+
+  <section class="win">
+    <h2>1. Window frame</h2>
+    <p>Today every window is one white line. Pick the frame for all windows and buttons.</p>
+    <div class="opts"><!--FRAMES--></div>
+    <label for="note-frame">NOTE ON THE FRAME</label>
+    <textarea id="note-frame" placeholder="e.g. B but the inner line further in…"></textarea>
+    <div class="saved" id="saved-frame"></div>
+  </section>
+
+  <section class="win">
+    <h2>2. Menu layout</h2>
+    <p>How a menu screen is laid out: where the title and back button sit, and how a list of choices looks.</p>
+    <div class="opts"><!--LAYOUTS--></div>
+    <label for="note-layout">NOTE ON THE LAYOUT</label>
+    <textarea id="note-layout" placeholder="e.g. D, but keep the counts bigger…"></textarea>
+    <div class="saved" id="saved-layout"></div>
+  </section>
+
+  <section class="win">
+    <h2>Anything else</h2>
+    <p>Other menu ideas, and what you would like to change in the CAMP's look (that comes next).</p>
+    <label for="note-general">NOTE</label>
+    <textarea id="note-general" placeholder="Other ideas…"></textarea>
+    <div class="saved" id="saved-general"></div>
+  </section>
+</div>
+
+<script>
+const notes = {}; let db = null;
+function local(v) { try { if (v === undefined) return JSON.parse(localStorage.getItem('soldia-ui') || 'null'); localStorage.setItem('soldia-ui', JSON.stringify(v)); } catch (e) { return null; } }
+function render() {
+  for (const o of document.querySelectorAll('.opt')) {
+    const on = (notes[o.dataset.group] || {}).pick === o.dataset.id;
+    o.classList.toggle('sel', on); o.querySelector('.btn').setAttribute('aria-pressed', String(on));
+  }
+  for (const id of ['frame', 'layout', 'general']) { const ta = document.getElementById('note-' + id); if (document.activeElement !== ta) ta.value = (notes[id] || {}).text || ''; }
+}
+async function save(id, patch, el) {
+  const cur = { ...(notes[id] || {}), ...patch }; notes[id] = cur; local(notes); render();
+  if (!db) { el.textContent = 'Kept in this browser only (not saved online)'; el.className = 'saved bad'; return; }
+  try {
+    const ref = db.collection('ui').doc(id);
+    if (!cur.pick && !(cur.text || '').trim()) await ref.delete(); else await ref.set({ pick: cur.pick || null, text: cur.text || '', updatedAt: new Date().toISOString() });
+    el.textContent = 'Saved'; el.className = 'saved ok';
+  } catch (e) { el.textContent = 'Could not save: ' + (e && e.message ? e.message : 'try again'); el.className = 'saved bad'; }
+}
+for (const o of document.querySelectorAll('.opt')) o.querySelector('.btn').addEventListener('click', () => {
+  const g = o.dataset.group, cur = (notes[g] || {}).pick;
+  save(g, { pick: cur === o.dataset.id ? null : o.dataset.id }, document.getElementById('saved-' + g));
+});
+for (const id of ['frame', 'layout', 'general']) {
+  const ta = document.getElementById('note-' + id), el = document.getElementById('saved-' + id); let t = null;
+  ta.addEventListener('input', () => { el.textContent = 'Typing…'; el.className = 'saved'; clearTimeout(t); t = setTimeout(() => save(id, { text: ta.value }, el), 900); });
+  ta.addEventListener('blur', () => { if (t) { clearTimeout(t); t = null; save(id, { text: ta.value }, el); } });
+}
+Object.assign(notes, local() || {}); render();
+(async () => {
+  const st = document.getElementById('status');
+  db = window.claude ? await window.claude.use('db') : null;
+  if (!db) { st.textContent = 'Picks stay in this browser (sign in to claude.ai to save them)'; st.classList.add('bad'); return; }
+  st.textContent = 'Picks and notes save automatically';
+  db.collection('ui').onSnapshot((snap) => { for (const d of snap.docs) { const v = d.data() || {}; notes[d.id] = { pick: v.pick || null, text: v.text || '' }; } local(notes); render(); });
+})();
+</script>

@@ -39,4 +39,9 @@ export const UI = {
   red: '#ff7a5a', // attack skills, damage
   green: '#6ee07a', // support skills, heals
   pressed: 0xffffff, // a pressed button flips to white with black text
+  // Window frame style (uiKit drawWindow): 'single' = one 2px white line (today). Session 40 trials (dev url flag
+  // ?frame=double|shadow|rivets): 'double' = classic RPG double line, 'shadow' = white line + grey inner line,
+  // 'rivets' = white line + square corner plates.
+  frame: 'single',
+  frameShadow: 0x4a4a58, // the grey inner line of the 'shadow' frame
 };

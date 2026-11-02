@@ -1857,7 +1857,7 @@ export default class BattleScene extends Phaser.Scene {
       this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : color, crit);
     } else if (e.type === 'projectile') {
       if (e.kind === 'crescent' && e.from.side === 'hero') this.playCounterLook(this.views.get(e.from.uid), this.views.get(e.to.uid)); // Counter Stance
-      else this.showProjectile(this.views.get(e.from.uid), this.views.get(e.to.uid), e.kind);
+      else this.showProjectile(this.views.get(e.from.uid), this.views.get(e.to.uid), e.kind, e.ms);
     } else if (e.type === 'castStart' && e.boss) {
       // A boss winds up a move: its name in red over it, and a red bar fills (drawCastBars).
       sfx.play('bossWarn');
@@ -2239,9 +2239,9 @@ export default class BattleScene extends Phaser.Scene {
     from.ch.shoot();
   }
 
-  showProjectile(from, to, kind) {
+  showProjectile(from, to, kind, ms) {
     if (!from || !to) return;
-    if (kind === 'arrow') return this.shootArrow(from, to, 200); // Quiver of Plenty's extra arrow: a normal shot
+    if (kind === 'arrow') return this.shootArrow(from, to, ms || 200); // Quiver of Plenty's extra arrow: a normal shot (it lands with its hit)
     const start = this.center(from);
     // Skill shots in pixels (systems/skillFx.js); they aim at where the target is NOW.
     if (SHOT_MS[kind] || kind === 'crescent') {

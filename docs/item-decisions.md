@@ -567,3 +567,9 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   +10% shields received. Ghastly Fire 40% dark, 8% slow (+2). Better Odds +7% (+3.5) per enemy.
 - Executioner's Axe: under 35% health (was 25%; `below` -> `executionerBelow`).
 - Item texts (user, session 33): the CAPS labels (FEAR RING, BIG GAME, BOUNTY, BURNING SKIN, FROST SKIN, ERUPTION, NUMBING COLD, CLEAVE) are removed from the descriptions; mechanics unchanged.
+- [session 40] QUIVER OF PLENTY = DOUBLE SHOT (user: 'instead of a different enemy, shoot the same enemy twice'):
+  25% (+8% per extra copy) on a ranged basic attack to fire a second full-damage arrow at the SAME enemy (past 100% a
+  third, max 2 extra); fired as the shot lands (`combat.json attackTiming.extraArrowGapMs` 120 between extras), hits
+  when it arrives (`rangedHitMs`); the shot killed it / it died meanwhile -> another enemy. Archer Volley +1 arrow per
+  Quiver unchanged. Full runs, a ranged hero holds it (10 runs x 3 squads): old 0/1/3 copies 28.0 / -0.4 / +1.8;
+  NEW 27.3 / +2.1 / +7.0 (stronger: focus fire kills faster).

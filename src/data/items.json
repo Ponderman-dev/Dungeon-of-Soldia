@@ -1638,7 +1638,7 @@
     "rarity": "rare",
     "type": "onhit",
     "scope": "self",
-    "description": "Ranged attacks: 25% chance to shoot an extra arrow at another enemy.",
+    "description": "Ranged attacks: 25% chance to shoot a second arrow at the same enemy.",
     "effects": [
       {
         "special": "extraArrow",

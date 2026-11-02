@@ -76,7 +76,7 @@
       "swingMs": 220,
       "rangedHitMs": 260
     },
-    "retargetMinMs": 200
+    "retargetMinMs": 200, "extraArrowGapMs": 120
   },
   "phoenixFeather": {
     "_about": "Phoenix Feather save (session 31): invulnerable this long, heals back to healToPercent over healMs, every OTHER living hero heals squadHealPercent of max health.",

@@ -1406,21 +1406,39 @@ export default class BattleState {
     }
   }
 
-  // Quiver of Plenty: a RANGED basic attack of the holder has `extraArrow`% (15 per copy) to shoot one more arrow at a
-  // DIFFERENT enemy (full damage, on-hit items roll); past 100% the rest is the chance for a third arrow (max 2 extra).
+  // Quiver of Plenty (DOUBLE SHOT, user session 40): a RANGED basic attack of the holder has `extraArrow`% (25, +8 per
+  // extra copy) to shoot one more arrow at the SAME enemy (full damage, on-hit items roll); past 100% the rest is the
+  // chance for a third arrow (max 2 extra). Each extra arrow is fired as the shot lands (the next one
+  // `extraArrowGapMs` later) and hits when it arrives (`rangedHitMs`). If the target is already dead (the shot killed
+  // it) or dies before the arrow lands, the arrow goes to another enemy instead.
   extraArrows(unit, target, events) {
     const ch = (unit.specials && unit.specials.extraArrow) || 0;
     if (!ch || unit.minion || unit.side !== 'hero' || unit.damageType === 'melee') return;
-    let n = Math.min(2, Math.floor(ch / 100) + (this.rng() * 100 < ch % 100 ? 1 : 0));
-    const hit = new Set([target]);
-    while (n-- > 0) {
-      const others = this.targetableEnemies().filter((e) => !hit.has(e));
-      if (!others.length) return;
-      const other = others[Math.floor(this.rng() * others.length)];
-      hit.add(other);
-      events.push({ type: 'proc', unit, label: 'Extra arrow!', itemId: 'quiver_of_plenty', target: other });
-      const res = this.strike(unit, other, events, { projectile: 'arrow', riders: true });
-      this.rollProcs(unit, 'onAttack', events, { target: other, hit: !res.dodged, folded: true });
+    const n = Math.min(2, Math.floor(ch / 100) + (this.rng() * 100 < ch % 100 ? 1 : 0));
+    const timing = this.rules.attackTiming || {};
+    const fly = (timing.hero && timing.hero.rangedHitMs) || 0, gap = timing.extraArrowGapMs || 0;
+    const aim = () => { // the same enemy while it lives, else a random other one
+      if (target.alive && !this.untargetable(target)) return target;
+      const others = this.targetableEnemies();
+      return others.length ? others[Math.floor(this.rng() * others.length)] : null;
+    };
+    for (let i = 0; i < n; i++) {
+      const shoot = (ev) => {
+        if (!unit.alive) return;
+        const to = aim();
+        if (!to) return;
+        ev.push({ type: 'proc', unit, label: 'Extra arrow!', itemId: 'quiver_of_plenty', target: to });
+        ev.push({ type: 'projectile', from: unit, to, kind: 'arrow', ms: fly });
+        const land = (ev2) => {
+          if (!unit.alive) return;
+          const at = to.alive && !this.untargetable(to) ? to : aim();
+          if (!at) return;
+          const res = this.strike(unit, at, ev2, { riders: true });
+          this.rollProcs(unit, 'onAttack', ev2, { target: at, hit: !res.dodged, folded: true });
+        };
+        if (fly > 0) this.later(fly, land); else land(ev);
+      };
+      if (i * gap > 0) this.later(i * gap, shoot); else shoot(events);
     }
   }
 

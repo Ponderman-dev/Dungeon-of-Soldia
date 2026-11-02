@@ -21,13 +21,26 @@ const near = (v, t, tol = 0.03) => Math.abs(v / t - 1) < tol;
 const NEW = ['quiver_of_plenty', 'spotters_lens', 'giantslayers_brand', 'catalyst_vial', 'scholars_bookmark', 'mirror_buckler', 'soul_lantern', 'phoenix_feather', 'iron_will_talisman'];
 ok('all 10 new items exist with an icon', NEW.every((id) => itemDefs[id] && r('itemIcons.json')[id]));
 
-// Quiver of Plenty
+// Quiver of Plenty (DOUBLE SHOT, session 40): the extra arrow flies at the SAME enemy and hits when it lands
+const wait = (s, ms, ev) => { for (let t = 0; t < ms; t += 20) s.tickDelays(20, ev); };
+const T = r('combat.json').attackTiming;
 { const { s, es, h } = mk(['archer', 'knight', 'rogue'], ['goblin', 'goblin', 'goblin'], () => 0); const a = h[0]; give(s, a, 'quiver_of_plenty');
-  const ev = []; s.landAttack(a, es[0], ev); const others = ev.filter((e) => e.type === 'attack' && e.target !== es[0] && e.damageType === 'ranged');
-  ok('Quiver: a ranged attack shoots an extra arrow at a DIFFERENT enemy', others.length === 1 && ev.some((e) => e.type === 'projectile' && e.kind === 'arrow')); }
+  a.volleyCount = -99; // no Archer volley in this check
+  const ev = []; s.landAttack(a, es[0], ev);
+  const before = ev.filter((e) => e.type === 'attack' && e.attacker === a).length;
+  const flew = ev.some((e) => e.type === 'projectile' && e.kind === 'arrow' && e.to === es[0] && e.ms === T.hero.rangedHitMs);
+  wait(s, T.hero.rangedHitMs + 40, ev);
+  const hits = ev.filter((e) => e.type === 'attack' && e.attacker === a);
+  ok('Quiver: a second arrow flies at the SAME enemy', flew);
+  ok('...and hits it when it lands (not at once), full damage, no other enemy hit', before === 1 && hits.length === 2 && hits.every((e) => e.target === es[0]) && hits[1].result.amount === hits[0].result.amount, `${before} ${hits.length}`); }
 { const { s, es, h } = mk(['archer', 'knight', 'rogue'], ['goblin', 'goblin', 'goblin'], () => 0); const a = h[0]; give(s, a, 'quiver_of_plenty', 8);
-  const ev = []; s.landAttack(a, es[0], ev); const t = new Set(ev.filter((e) => e.type === 'attack' && e.damageType === 'ranged').map((e) => e.target));
-  ok('...8 quivers (120%): a sure extra arrow + a chance for a third (3 enemies hit)', t.size === 3, `${t.size}`); }
+  a.volleyCount = -99; const ev = []; s.landAttack(a, es[0], ev); wait(s, T.hero.rangedHitMs + T.extraArrowGapMs + 40, ev);
+  const hits = ev.filter((e) => e.type === 'attack' && e.attacker === a);
+  ok('...past 100%: a third arrow too (3 hits on the same enemy, max 2 extra)', hits.length === 3 && hits.every((e) => e.target === es[0]), `${hits.length}`); }
+{ const { s, es, h } = mk(['archer', 'knight', 'rogue'], ['goblin', 'goblin'], () => 0); const a = h[0]; give(s, a, 'quiver_of_plenty');
+  a.volleyCount = -99; es[0].hp = 0; es[0].alive = false; // the shot killed it
+  const ev = []; s.extraArrows(a, es[0], ev); wait(s, T.hero.rangedHitMs + 40, ev);
+  ok('...if the shot killed the enemy, the extra arrow goes to another one', ev.some((e) => e.type === 'attack' && e.attacker === a && e.target === es[1])); }
 { const { s, es, k } = mk(['knight', 'archer', 'rogue'], ['goblin', 'goblin'], () => 0); give(s, k, 'quiver_of_plenty', 3);
   const ev = []; s.landAttack(k, es[0], ev); ok('...melee heroes get nothing', !ev.some((e) => e.itemId === 'quiver_of_plenty')); }
 // Spotter's Lens

@@ -91,11 +91,11 @@ export default class BaseScene extends Phaser.Scene {
     // side, bobbing.
     const T = U.expedition, cx = GAME_WIDTH / 2;
     const box = this.add.container(cx, T.y).setDepth(DEPTH.ui);
-    box.add(drawButton(this.add.graphics(), -T.w / 2, -T.h / 2, T.w, T.h)); // (gold theme trial: a solid gold button)
-    box.add(uiText(this, 0, 0, T.text, T.size, buttonTextColor()).setOrigin(0.5)); // 'normal' (user: room between box and text)
+    box.add(drawButton(this.add.graphics(), -T.w / 2, -T.h / 2, T.w, T.h, { primary: true })); // the camp's main action: the bright button (user)
+    box.add(uiText(this, 0, 0, T.text, T.size, buttonTextColor(true, false, true)).setOrigin(0.5)); // 'normal' (user: room between box and text)
     const cell = T.cell;
     for (const side of [-1, 1]) {
-      const arrow = this.add.graphics().fillStyle(isGoldTheme() ? Number('0x' + buttonTextColor().slice(1)) : 0xffffff, 1);
+      const arrow = this.add.graphics().fillStyle(isGoldTheme() ? Number('0x' + buttonTextColor(true, false, true).slice(1)) : 0xffffff, 1);
       // A real up-arrow (user: the old 3-row one read as a '+'): a wide head, then a thick stem.
       const A = T.arrow;
       for (let i = 0; i < A.head; i++) arrow.fillRect(-(i + 0.5) * cell, i * cell, (2 * i + 1) * cell, cell);

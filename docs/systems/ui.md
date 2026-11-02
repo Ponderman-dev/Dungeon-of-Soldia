@@ -75,8 +75,8 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   size, gold with a black outline on a dark strip (title.json `start.size`, `best.size`, `best.stripAlpha`; the strip
   sits one depth under the text).
 - BUTTON LEVELS + PAGE TRANSITIONS (session 40, user): `drawButton(..., { primary })`: PRIMARY = the bright crimson
-  button, ONLY 'BEGIN DESCENT' (user: 'only begin descent in red'); every other solid button is SECONDARY = dark wine
-  with cream text (`goldTheme.second*`, `buttonTextColor(enabled, pressed, primary)`), TO EXPEDITION included. MENU
+  button: 'BEGIN DESCENT' and 'TO EXPEDITION' (user); every other solid button is SECONDARY = dark wine
+  with cream text (`goldTheme.second*`, `buttonTextColor(enabled, pressed, primary)`). MENU
   PAGES (Glossary, Heroes, Leaders, Shop, Settings, Profile): `pageEnter(scene)` in create() = rises `UI.page.slidePx`
   (64) from below + fades in (220ms); `close()` -> `pageLeave(scene, done)` = drops back + fades out (170ms), taps off,
   then resumes the camp and stops the page (a second close while leaving is ignored; pageEnter resets it because

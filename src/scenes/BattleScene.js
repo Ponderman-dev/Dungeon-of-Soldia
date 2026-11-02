@@ -3091,7 +3091,7 @@ export default class BattleScene extends Phaser.Scene {
     const t = uiText(this, 0, 0, s.text, R.sizePx, R.textColor, { align: 'center', wordWrap: { width: R.maxWidthPx - 2 * R.padPx } }).setOrigin(0.5, 1);
     const w = Math.ceil((t.width + 2 * R.padPx) / 2) * 2, h = Math.ceil((t.height + 2 * R.padPx) / 2) * 2;
     t.setPosition(0, -R.tailPx - R.padPx + 2);
-    const box = drawWindow(this.add.graphics(), -w / 2, -R.tailPx - h, w, h, { fill: R.fill, line: R.line }); // white bubble, black line: not like the black UI windows
+    const box = drawWindow(this.add.graphics(), -w / 2, -R.tailPx - h, w, h, { fill: R.fill, line: R.line, plain: true }); // off-white bubble, dark line (user, session 41): never themed
     const tail = this.add.graphics();
     const c = this.add.container(0, 0, [box, tail, t]).setDepth(DEPTH.popup + 3).setScale(0.6).setAlpha(0);
     this.speech = { c, v, box, tail, w };

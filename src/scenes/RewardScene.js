@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, drawCursor } from '../entities/uiKit.js';
+import { drawWindow, drawCursor, drawRarityFrame, rarityShine, tintFrame } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import itemTypes from '../data/itemTypes.json';
 import rarities from '../data/rarities.json';
@@ -28,8 +28,10 @@ const CARD_W = GAME_WIDTH - PAD * 2;
 const ROW_ITEM_LINES = 3; // a hero row on 'Who gets it?' grows for up to this many lines of item icons
 const ROW_NAME_H = 14; // hero row: the name's height down to its baseline (the level sits on it)
 const ROW_GAP = 8; // hero row: the gap under the name and under the change line
-const TEXT_X = 112; // where a card's text starts (right of the icon)
-const ICON_W = 98; // the icon column
+const ICON_PAD = 18; // the icon's gap from the card's left edge (user, session 41: neater gaps)
+const ICON_PX = 80; // the framed item icon at 4x
+const ICON_X = ICON_PAD + ICON_PX / 2; // the icon column's middle
+const TEXT_X = ICON_PAD + ICON_PX + 16; // where a card's text starts (the same gap again right of the icon)
 const DESC_PX = 8; // description text size
 const BACK_W = 84; // the Back pill's width (top right of the sheet)
 const TITLE_H = 54; // the step title above the cards
@@ -190,14 +192,16 @@ export default class RewardScene extends Phaser.Scene {
     const card = this.add.container(x, y);
     this.track(card);
     const g = this.add.graphics();
+    const R = rarities[item.rarity];
     const paint = (lit) => {
       g.clear();
-      drawWindow(g, 0, 0, CARD_W, h, { line: lit ? COLORS.gold : UI.line }); // the chosen card gets a gold line
+      drawRarityFrame(g, 0, 0, CARD_W, h, R, { lit }); // the card's frame = its rarity (the chosen card lights up)
     };
     paint(highlighted);
     card.add(g);
-    card.add(this.add.image(ICON_W / 2, h / 2 - 9, itemIconKey(this, item.id, item.rarity)).setScale(4));
-    card.add(this.add.text(ICON_W / 2, h / 2 + 42, itemTypes[item.type].label.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5));
+    if (item.rarity === 'legendary') rarityShine(this, card, CARD_W, h, R);
+    card.add(this.add.image(ICON_X, h / 2 - 9, itemIconKey(this, item.id, item.rarity)).setScale(4));
+    card.add(this.add.text(ICON_X, h / 2 + 42, itemTypes[item.type].label.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5));
     card.add(this.add.text(TEXT_X, 16, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : item.kind === 'book' ? 'BOOK' : 'ITEM'}`.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: hex(rc) }));
     // The name: 16px, or two 16px lines when it is long (never an in-between size: they blur).
     const name = this.add.text(TEXT_X, 32, item.name, { fontFamily: FONT, fontSize: '16px', color: INK, lineSpacing: 6, wordWrap: { width: CARD_W - TEXT_X - 12, useAdvancedWrap: true } });
@@ -267,8 +271,8 @@ export default class RewardScene extends Phaser.Scene {
   // Page card sizes: normal, or COMPACT when a book shows more than 3 pages (the Skill Dealer's 5) so all fit.
   pageLook() {
     return this.compactPages
-      ? { iconW: 84, textX: 88, desc: 8, name: 16, label: 8, nameY: 24, descY: 48, minH: 84, iconScale: 3, gap: 10 }
-      : { iconW: 104, textX: 108, desc: DESC_PX, name: 16, label: 8, nameY: 32, descY: 60, minH: 112, iconScale: 4, gap: 14 }; // big icons (user): each page gets its own icon later
+      ? { iconX: ICON_PAD + 30, textX: ICON_PAD + 60 + 14, desc: 8, name: 16, label: 8, nameY: 24, descY: 48, minH: 84, iconScale: 3, gap: 10 }
+      : { iconX: ICON_X, textX: TEXT_X, desc: DESC_PX, name: 16, label: 8, nameY: 32, descY: 60, minH: 112, iconScale: 4, gap: 14 }; // big icons (user): each page gets its own icon later
   }
 
   pageHeight(page) {
@@ -286,13 +290,16 @@ export default class RewardScene extends Phaser.Scene {
     const rc = page.kind === 'stat' ? 0x7f9fe8 : 0xc8a0ff;
     const L = this.pageLook();
     const g = this.add.graphics();
+    const book = Object.values(bookData.cards).find((c) => c.book === (this.chosen && this.chosen.book));
+    const R = rarities[(book && book.rarity) || 'rare']; // a page card wears its BOOK's rarity frame
     const paint = (on) => {
       g.clear();
-      drawWindow(g, 0, 0, CARD_W, h, { line: on ? COLORS.gold : UI.line });
+      drawRarityFrame(g, 0, 0, CARD_W, h, R, { lit: on });
     };
     paint(lit);
     card.add(g);
-    card.add(this.add.image(L.iconW / 2, h / 2 - (this.compactPages ? 0 : 8), bookPageIconKey(this, page, golden)).setScale(L.iconScale)); // the book's colour = the page type
+    if (R === rarities.legendary) rarityShine(this, card, CARD_W, h, R);
+    card.add(this.add.image(L.iconX, h / 2 - (this.compactPages ? 0 : 8), bookPageIconKey(this, page, golden)).setScale(L.iconScale)); // the book's colour = the page type
     card.add(this.add.text(L.textX, this.compactPages ? 9 : 14, page.kind === 'stat' ? 'STAT PAGE' : `MODIFIER - ${(page.tag || '').toUpperCase()}`, { fontFamily: FONT, fontSize: `${L.label}px`, color: hex(rc) }));
     card.add(this.add.text(L.textX, L.nameY, page.name, { fontFamily: FONT, fontSize: `${L.name}px`, color: INK }));
     card.add(this.add.text(L.textX, L.descY, page.text, { fontFamily: FONT, fontSize: `${L.desc}px`, color: MUTE, lineSpacing: 4, wordWrap: { width: CARD_W - L.textX - 16, useAdvancedWrap: true } }));
@@ -346,7 +353,8 @@ export default class RewardScene extends Phaser.Scene {
     this.skillButtons = [];
     for (const hero of heroes) {
       const g = this.track(this.add.graphics());
-      drawWindow(g, PAD, y, CARD_W, rowH - 10);
+      const HC = tintFrame(hero.def.color || '0x8a8a9a'); // each hero's row + skill boxes wear the hero's own colour (user)
+      drawRarityFrame(g, PAD, y, CARD_W, rowH - 10, HC);
       const ch = new Character(this, PAD + 36, y + rowH - 26, hero.def);
       ch.setScale(2.5).setAlpha(hero.alive ? 1 : 0.35);
       this.track(ch);
@@ -365,12 +373,14 @@ export default class RewardScene extends Phaser.Scene {
         const btn = { bg, bx, by, bw, bh, hero, idx, fit, col };
         btn.paint = (on) => {
           bg.clear();
-          drawWindow(bg, bx, by, bw, bh, { line: on ? COLORS.gold : usable ? col.ready : COLORS.dim });
+          if (usable) drawRarityFrame(bg, bx, by, bw, bh, HC, { lit: on });
+          else drawWindow(bg, bx, by, bw, bh, { line: COLORS.dim });
         };
         btn.paint(false);
-        this.fitText(bx + 8, by + 6, skillDefs[slot.id].name, 13, usable ? INK : MUTE, bw - 16, 34, true);
+        const IN = 12; // the text's gap from the box's frame (user: neater)
+        this.fitText(bx + IN, by + IN - 2, skillDefs[slot.id].name, 13, usable ? INK : MUTE, bw - 2 * IN, 34, true);
         const note = fit === 'dead' ? 'Fallen' : fit === 'full' ? 'Stat pages full' : fit === 'duplicate' ? 'Already has it' : fit === 'replace' ? 'Full: replaces one' : `${stats}${limits.maxStatPages != null ? '/' + limits.maxStatPages : ''} stats\n${mods}${limits.modifierSlots != null ? '/' + limits.modifierSlots : ''} mods`;
-        this.fitText(bx + 8, by + bh - 30, note, 11, fit === 'replace' ? '#ffd9a0' : MUTE, bw - 16, 26); // shrinks to stay inside the box
+        this.fitText(bx + IN, by + bh - 30 - IN + 6, note, 11, fit === 'replace' ? '#ffd9a0' : MUTE, bw - 2 * IN, 26); // shrinks to stay inside the box
         if (usable) this.track(this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive()).on('pointerdown', () => this.selectSkill(btn));
         this.skillButtons.push(btn);
       });

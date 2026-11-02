@@ -11,3 +11,10 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
 - GAIN TEXT (2026-10-18, user: the '+Item' popup was 'super stretchy and big'): a new item shows its icon pop + its NAME at a fixed 8px over the hero (no "+", never scaled, follows the hero, fades; the icon pop follows its hero too): `BattleScene.gainText()`, combat.json `gainText`. Skill book pages use it too. Names still showing on the same hero stack upwards (`view.gains`), e.g. a boss's item then its golden book page. The reward sheet's taps now use the plain `press` click (sound.md).
 - HERO ROWS NEATER (2026-10-21, user): on 'Who gets it?' each row's text block (name, 'Lv N' in 8px on the name's baseline, the green change line, the item icons) is centred in the row with an 8px gap between lines (`ROW_NAME_H`, `ROW_GAP` in RewardScene.js); the change line no longer touches the name.
 - **Boss floor reward (session 25, user):** after a boss the item cards are always 2 EPIC + 1 LEGENDARY (`rewards.json` `bossRarities`, `rollChoices({ rarities })`: one card per listed rarity, falls back to the floor odds if that rarity is empty), no potion and no skill book card; the free golden book still follows. The bots (smartbot, review, bosscheck) do the same.
+- **Card frames by rarity (session 41, user):** every reward card is framed in its RARITY colour (`uiKit.drawRarityFrame`:
+  dark outline, edge colour, light inner line, dark rarity-tinted body, corner studs; data = rarities.json `frame`);
+  the tapped card lights up (edge -> hi). LEGENDARY cards shine (`rarityShine`: a glint runs round the frame + two
+  corner sparkles, `UI.cardShine`). Book page cards wear their BOOK's rarity frame (blue = rare, Dealer = epic,
+  Golden = legendary + shine). Icon column: `ICON_PAD` 18 from the card edge, the same gap again before the text.
+  'Which skill?': each hero's row and skill boxes use the hero's own colour (heroes.json `color`, `uiKit.tintFrame`),
+  text 12px inside the box frame; a skill that cannot take the page stays a dim grey box.

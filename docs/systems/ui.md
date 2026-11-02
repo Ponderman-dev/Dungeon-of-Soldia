@@ -34,7 +34,7 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   test button. Next: per-screen changes with the user (reward, battle, hero select, puzzle).
 - **Defeat screen (screen review, user):** `BattleScene.showDefeat()`: the screen dims to black first, then a big red SQUAD DEFEATED pops in (small shake), then "The squad reached floor N, before <line>" (a random line from `src/data/defeat.json`: `withKiller` lines name the enemy whose hit felled the last hero, `death` events carry `killer`; `noKiller` when nobody did), then a BACK button to the squad screen (the old 3s auto-return, `restartDelayMs`, is gone). Timings and texts in defeat.json.
 - **Pop-ups and bars at the edges (2026-10-19):** the same WORD popped over one fighter again within `POP_REPEAT_MS` (600) is skipped (a Samurai's 'Counter! Blocked! Counter!' pile); numbers always show. Health bars (+ Lv label, shields, chips) are clamped inside the screen when a fighter stands at a side wall (`BattleScene.syncBar`). Skill names (`BattleScene.skillName`) never land on another skill name or the 'Floor cleared!' banner: they go above them. Reward sheet: when a step changes the sheet's size, the new step's content waits hidden until the sheet has resized, then fades in (no title over the banner while it moves).
-- **Speech bubbles (session 20, user idea, purely for show):** a hero says a short line in a small WHITE window (black line, black text: unlike the black UI windows, user) with
+- **Speech bubbles (session 20, user idea, purely for show):** a hero says a short line in a small OFF-WHITE window (dark line + dark text, `drawWindow(..., { plain: true })` so the theme never repaints it; session 41 user: the themed dark box was unreadable) with
   a stepped tail over its head (`BattleScene.sayLine` / `placeSpeech`, the bubble follows the hero). When: the run's
   first floor after the walk-in (`start`, the fight starts at once), and every cleared floor (`clear`; `boss` after a
   boss, `fallen` when a squad mate fell that floor, `close` / `hurt` when a hero ended the floor at or below 25% / 50%
@@ -98,3 +98,6 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   buttons come back in (taps off until home). Top bar = objects a page marks with `markBar(list)` when it draws its
   back row (every page's '< CAMP'; the Shop's whole header with the gems box); `pageBar(scene)` finds them (tap zones
   stay put). Pages opened over another page (Glossary -> Heroes) only get the page's own beats. camp.json `slideMs/uiShiftMs/hero.fadeMs` and title.json `zoom.ms/fadeMs` are gone.
+- PANEL COLOUR (session 41, user picked C of 4 trial palettes: 'the dark red is a bit too bright'): the 'crimson' palette's
+  panels are now EMBER BROWN (fill 0x1a1412, strip 0x2a201c, frameDark 0x4a2e22...; gold frames and the red primary
+  buttons unchanged).

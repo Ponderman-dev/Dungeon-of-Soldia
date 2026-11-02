@@ -47,7 +47,7 @@ export const UI = {
   // THEME TRIAL (session 40, user's reference pictures: framed panels, solid buttons, clearer navigation): dev url flag
   // ?theme=gold = dark slate panels with a gold frame + corner studs, solid gold buttons with dark text, title strips.
   theme: 'gold', // the framed theme is ON (user picked F, session 40); 'mono' = the old black and white
-  palette: 'crimson', // user's pick F: gold frames, deep wine-red panels, crimson buttons with cream text
+  palette: 'crimson', // user's pick F: gold frames, dark panels (session 41: ember brown), crimson buttons with cream text
   goldTheme: {
     outline: 0x0d0b12, frame: 0xd8a640, frameDark: 0x7a5a22, stud: 0xffe39a, fill: 0x221f2b, strip: 0x34303f,
     stripLine: 0x15131b, slot: 0x18161f, chosen: 0xfff0b0, dim: 0x5a5666, pressedFill: 0x3a3446,
@@ -71,6 +71,10 @@ export const UI = {
   // camp); story = the title's fly to the tower (only story moments may run past ~0.6s). Arriving things ease OUT,
   // leaving things ease IN, big camera moves ease in-out. popDropPx = how far a pop-up drops in from; slidePx = how
   // far tab content slides sideways.
+  // Reward / book page cards (uiKit drawRarityFrame, rarityShine): the frame's dark outline, and the legendary shine
+  // (a glint glintPx long runs round the frame in loopMs, then waits pauseMs; corner sparkles twinkle).
+  cardOutline: 0x0e0a0c,
+  cardShine: { glintPx: 28, loopMs: 1600, pauseMs: 900, twinkleMs: 700, twinkleGapMs: 1300 },
   motion: {
     fast: 140, normal: 220, slow: 450, story: 1100,
     easeIn: 'Cubic.easeIn', easeOut: 'Cubic.easeOut', easeMove: 'Sine.easeInOut', easeDrop: 'Back.easeOut',
@@ -82,6 +86,6 @@ export const UI = {
     silver: { frame: 0xc8ced8, frameDark: 0x5a6070, stud: 0xffffff, fill: 0x1b2130, strip: 0x2a3244, stripLine: 0x10141d, slot: 0x151a26, chosen: 0xffe08a, dim: 0x4e5466, pressedFill: 0x30384a, button: 0xc8ced8, buttonDark: 0x8e96a6, buttonLight: 0xffffff, buttonText: '#141a26', title: '#e8eef8' },
     copper: { frame: 0xd2834a, frameDark: 0x6e3a1e, stud: 0xffc89a, fill: 0x2a1f1a, strip: 0x3c2c24, stripLine: 0x170f0c, slot: 0x201814, chosen: 0xffe2a0, dim: 0x5e5048, pressedFill: 0x45352c, button: 0xe08a4c, buttonDark: 0xa85a2c, buttonLight: 0xffc89a, buttonText: '#2a1408', title: '#ffd6b0' },
     jade: { frame: 0x5fc4a0, frameDark: 0x245a4a, stud: 0xc8ffe8, fill: 0x142220, strip: 0x1f3430, stripLine: 0x0b1412, slot: 0x101b19, chosen: 0xffe08a, dim: 0x46585a, pressedFill: 0x2a403c, button: 0x6fd2ac, buttonDark: 0x3c9a7a, buttonLight: 0xc8ffe8, buttonText: '#0c231c', title: '#c8ffe8' },
-    crimson: { frame: 0xd8a640, frameDark: 0x6a2028, stud: 0xffe39a, fill: 0x261418, strip: 0x3a1c22, stripLine: 0x140a0c, slot: 0x1e1013, chosen: 0xfff0b0, dim: 0x5a4448, pressedFill: 0x45262c, button: 0xc8423a, buttonDark: 0x8e2824, buttonLight: 0xff8a7a, buttonText: '#fff0d8', title: '#ffe7a8', second: 0x4a2a30, secondDark: 0x33191e, secondLight: 0x6e4048, secondText: '#ffe7a8' },
+    crimson: { frame: 0xd8a640, frameDark: 0x4a2e22, stud: 0xffe39a, fill: 0x1a1412, strip: 0x2a201c, stripLine: 0x0c0908, slot: 0x14100e, chosen: 0xfff0b0, dim: 0x4e4640, pressedFill: 0x32261f, button: 0xc8423a, buttonDark: 0x8e2824, buttonLight: 0xff8a7a, buttonText: '#fff0d8', title: '#ffe7a8', second: 0x382a24, secondDark: 0x261c18, secondLight: 0x56443a, secondText: '#ffe7a8' }, // session 41: ember brown (user: the old wine red was too bright / saturated)
   },
 };

@@ -113,7 +113,8 @@ export function uiText(scene, x, y, str, size = 'normal', color = UI.text, extra
 }
 
 // A window: the stepped outline in `line`, filled with `fill`. Drawn into Graphics `g` (call g.clear() yourself).
-export function drawWindow(g, x, y, w, h, { fill = UI.window, line = UI.line, alpha = 1 } = {}) {
+// plain = ignore the theme (exactly `fill` + `line`; the speech bubble).
+export function drawWindow(g, x, y, w, h, { fill = UI.window, line = UI.line, alpha = 1, plain = false } = {}) {
   x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
   // A stepped (pixel-cornered) block `i` px inside the window, in colour c.
   const block = (i, c) => {
@@ -122,6 +123,7 @@ export function drawWindow(g, x, y, w, h, { fill = UI.window, line = UI.line, al
     g.fillStyle(c, alpha);
     g.fillRect(X + 4, Y, W - 8, H).fillRect(X + 2, Y + 2, W - 4, H - 4).fillRect(X, Y + 4, W, H - 8);
   };
+  if (plain) { block(0, line); block(2, fill); return g; }
   if (themeName() === 'gold') return goldWindow(g, x, y, w, h, block, { fill, line, alpha });
   const frame = frameStyle();
   block(0, line);
@@ -148,6 +150,77 @@ function goldWindow(g, x, y, w, h, block, { fill, line, alpha }) {
     g.fillStyle(T.stud, alpha);
     for (const [cx, cy] of [[x + 4, y + 4], [x + w - 8, y + 4], [x + 4, y + h - 8], [x + w - 8, y + h - 8]]) g.fillRect(cx, cy, 4, 4);
   }
+  return g;
+}
+
+// RARITY CARD FRAME (user, session 41: 'item boxes in their own rarity colour, a better border, legendary a bit
+// shiny'): a dark outline, a 2px frame in the rarity's edge colour, a 1px light inner line (hi), a dark rarity-tinted
+// body (rarities.json `frame`), and 4px corner studs (`stud` for epic / legendary, else hi). lit = the tapped card:
+// the frame turns to the light colour. `R` = one rarities.json entry. Stepped pixel corners like every window.
+export function drawRarityFrame(g, x, y, w, h, R, { lit = false } = {}) {
+  x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
+  const F = R.frame, num = (c) => Number(c);
+  const block = (i, c, t = 0) => {
+    const X = x + i, Y = y + i, W = w - 2 * i, H = h - 2 * i;
+    if (W < 10 || H < 10) return;
+    g.fillStyle(c, 1).fillRect(X + 4, Y, W - 8, H).fillRect(X + 2, Y + 2, W - 4, H - 4).fillRect(X, Y + 4, W, H - 8);
+  };
+  block(0, UI.cardOutline);
+  block(2, num(lit ? F.hi : F.edge));
+  block(4, num(lit ? 0xffffff : F.hi));
+  block(5, num(F.edge));
+  block(6, num(F.fill));
+  const stud = num(F.stud || F.hi);
+  g.fillStyle(stud, 1);
+  for (const [cx, cy] of [[x + 2, y + 2], [x + w - 6, y + 2], [x + 2, y + h - 6], [x + w - 6, y + h - 6]]) g.fillRect(cx, cy, 4, 4);
+  return g;
+}
+
+// Mixes two 0xRRGGBB colours (t = 0 -> a, 1 -> b).
+function mixColor(a, b, t) {
+  let out = 0;
+  for (const sh of [16, 8, 0]) out |= Math.round(((a >> sh) & 255) * (1 - t) + ((b >> sh) & 255) * t) << sh;
+  return out;
+}
+// A card frame set (like rarities.json `frame`) made from one colour: edge = it, hi = it mixed with white, fill = a dark
+// tint of it (a hero's own colour on the reward 'Which skill?' boxes, heroes.json `color`).
+export function tintFrame(color) {
+  const c = Number(color);
+  return { frame: { edge: c, hi: mixColor(c, 0xffffff, 0.55), fill: mixColor(c, 0x140c12, 0.84) } };
+}
+
+// LEGENDARY SHINE: a bright glint runs round the card's frame now and then, and two corner sparkles twinkle. Added to
+// `parent` (a container at the card's top left); the tweens die with the parent. Returns the graphics.
+export function rarityShine(scene, parent, w, h, R) {
+  const S = UI.cardShine, hi = Number(R.frame.hi);
+  const g = scene.add.graphics();
+  parent.add(g);
+  const per = 2 * (w + h), inset = 3;
+  // a point `d` px along the frame (clockwise from the top left)
+  const at = (d) => {
+    d = ((d % per) + per) % per;
+    if (d < w) return [d, inset];
+    if (d < w + h) return [w - inset - 2, d - w];
+    if (d < 2 * w + h) return [w - (d - w - h), h - inset - 2];
+    return [inset, h - (d - 2 * w - h)];
+  };
+  const state = { t: 0, tw: 0 };
+  const draw = () => {
+    g.clear();
+    if (state.t > 0 && state.t < 1) {
+      const head = state.t * per;
+      for (let k = 0; k < S.glintPx; k += 2) {
+        const [px, py] = at(head - k);
+        g.fillStyle(k < S.glintPx / 3 ? 0xffffff : hi, 1 - k / S.glintPx).fillRect(Math.round(px), Math.round(py), 2, 2);
+      }
+    }
+    const a = Math.sin(state.tw * Math.PI); // the corner sparkles: a little + of light
+    if (a > 0.05) for (const [cx, cy] of [[w - 4, 4], [4, h - 4]]) {
+      g.fillStyle(0xffffff, a).fillRect(cx - 1, cy - 4, 2, 8).fillRect(cx - 4, cy - 1, 8, 2);
+    }
+  };
+  scene.tweens.add({ targets: state, t: 1, duration: S.loopMs, repeat: -1, repeatDelay: S.pauseMs, onUpdate: draw });
+  scene.tweens.add({ targets: state, tw: 1, duration: S.twinkleMs, repeat: -1, repeatDelay: S.twinkleGapMs, onUpdate: draw });
   return g;
 }
 

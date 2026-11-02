@@ -3,6 +3,7 @@
     "id": "knight",
     "name": "Knight",
     "role": "Tank",
+    "color": "0x8aa4c8",
     "summary": "The iron wall: enemies crash into him, and his defense becomes damage.",
     "tips": [
       "Defense Bash hits for his attack PLUS 3x his defense, and stuns: defense items are damage items for him.",
@@ -175,6 +176,7 @@
     "id": "berserker",
     "name": "Berserker",
     "role": "Bruiser",
+    "color": "0xe07a30",
     "summary": "Wades into crowds; stronger and thirstier when hurt.",
     "tips": [
       "Bloodthirst: below half health he gets +40% attack and double lifesteal (it lasts 3s after he heals back up).",
@@ -341,6 +343,7 @@
     "id": "rogue",
     "name": "Rogue",
     "role": "Assassin",
+    "color": "0x9a5ad8",
     "summary": "Fast hits, many procs, bleeding enemies.",
     "tips": [
       "Dirty Fighting: 15% of his hits make the enemy Bleed, and enemies he has debuffed miss 20% of their attacks on him.",
@@ -518,6 +521,7 @@
     "id": "archer",
     "name": "Archer",
     "role": "Volley Gunner",
+    "color": "0x58b04a",
     "summary": "Arrows at many enemies; every arrow sets off her on-hit items.",
     "tips": [
       "Volley: every 4th shot fires at 3 enemies; Quiver of Plenty adds an arrow to each volley.",
@@ -691,6 +695,7 @@
     "id": "samurai",
     "name": "Samurai",
     "role": "Duelist",
+    "color": "0xd03a3a",
     "summary": "Few, perfect, deadly cuts: his counters and Wind Cutter always crit.",
     "tips": [
       "Iaido: every 3rd hit on him is parried; parried, blocked or dodged hits get a counter-cut that ALWAYS crits.",
@@ -861,6 +866,7 @@
     "id": "mage",
     "name": "Mage",
     "role": "Elementalist",
+    "color": "0x3a6ae0",
     "summary": "Mixes fire, ice and lightning into chain reactions.",
     "tips": [
       "Element Cycle: her attacks go fire > ice > lightning, so they keep setting off reactions.",
@@ -1050,6 +1056,7 @@
     "id": "cleric",
     "name": "Cleric",
     "role": "Healer",
+    "color": "0xe8c050",
     "summary": "Holy battle-healer: her healing turns into holy damage.",
     "tips": [
       "Grace: every 7s she heals the most hurt hero; healing someone else gives her +20% attack and attack speed for 4s.",
@@ -1235,6 +1242,7 @@
     "id": "necromancer",
     "name": "Necromancer",
     "role": "Summoner",
+    "color": "0x3ab8a0",
     "summary": "Commands an army of the dead: more minions, more power.",
     "tips": [
       "Legion: skeletons rise all fight and grow 3% stronger per Necromancer level; minion items count double for him.",
@@ -1411,6 +1419,7 @@
     "id": "bard",
     "name": "Bard",
     "role": "Support",
+    "color": "0xe060a8",
     "summary": "Pure support: makes squad items stronger and plays boosts for the team.",
     "tips": [
       "Battle Hymn: squad items (War Banner, Jolly Banner, Spotter's Lens, Last Stand Banner) work 35% stronger while he lives.",
@@ -1645,6 +1654,7 @@
     "id": "alchemist",
     "name": "Alchemist",
     "role": "Bomber",
+    "color": "0xa8c83a",
     "summary": "Mad bomber: every shot is a splashing poison flask.",
     "tips": [
       "Lobbed Shots: his attacks are flasks that splash 40% on nearby enemies and poison them all, but he attacks 25% slower.",

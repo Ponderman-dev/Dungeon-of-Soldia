@@ -1,35 +1,42 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 41): NEXT = TRANSITIONS PHASE 1 (docs/transition-plan.md), after the user answers its 4 questions
-- BRANCH: `main` has EVERYTHING (session 40 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- FIRST ask the 4 questions in `docs/transition-plan.md` section 4 (quick vs cinematic, page content slide vs fade, pop-ups
-  grow vs drop, sounds yes/no/later) with the question tool, then build PHASE 1 (motion tokens `UI.motion`, uiKit
-  `popIn/popOut`, `slideSwap`, `sceneFade`, retime rows 2/3/4/13), show CLIPS (Playwright recordVideo) on the review page.
-- DONE session 40 (details in the system docs, all in the game + preview page):
-  - Shooters' attack motion `ch.shoot()` (weapon kick + lean; art.md); Cleric Grace = `ch.bless()` + calm gold buff
-    `graceFx` (no projectile) + its own sound `grace`; Cleric hit sound = RPG spell 02 (sound.md).
-  - Projectile review (3 rounds, user OK on all): round holy orb, real tumbling Alchemist flask (slower, `lobbed.flightMs`
-    450), bigger slower bombs whose hit waits for the landing, bandage roll + white first-aid kit that land as a heal,
-    Plague Flask = bubbly acid (effects.md). Element charm on MELEE = one slash in the charm colour (effects.md).
-  - QUIVER OF PLENTY = DOUBLE SHOT at the same enemy (item-decisions.md; user kept it stronger: +2.1 / +7.0 floors).
-  - Sound board: Cleric group (round 10), dramatic music loop removed, chest/puzzle picks applied (sound.md).
-  - UI = CRIMSON AND GOLD framed theme (user picked F from 5 palettes; `UI.theme` 'gold' + `UI.palette` 'crimson';
-    'mono' still works): gold-framed wine panels, title strips, SOLID buttons; PRIMARY bright red = TO EXPEDITION and
-    BEGIN DESCENT only, every other button = calm secondary; menu pages rise in / drop away (`pageEnter/pageLeave`);
-    title = no button (tap anywhere), readable Best floor; TEST buttons = one small top-middle 'TEST' tab (ui.md).
-- NOT DONE: fight HUD + reward sheet only got the new frame colours (not redesigned in the crimson style); the CAMP's look
-  (user wants it changed: ask what); dev-only trial code still in (GlossaryScene `TRIAL` ?bar/?list, `?frame=` styles):
-  remove once the look is settled. Review page (Skill Effects url) now shows the menu-look trial.
-- PUBLISH (Artifact tool now): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
-  dungeon-of-soldia.html`, Artifact publish with url https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. The first publish
-  of a session is refused 'not viewed': Read a few lines of the saved live copy it names, publish again. Big pages
-  (sound board 4.4 MB): Artifact `read` with `path: index.html` saves it to a file without loading it.
-- KIV (older, ask before starting): hero art (user's knight sketches), Studio UI, boss rework floors 80/100, session 33
-  item leftovers, music (none yet), real hero looks / banners / lore / wallet / outlines (archive 'session 40 start note').
-- Browser checks: run vite + Playwright scripts FROM THE SCRATCHPAD dir (session 40: running them from the repo dropped a
-  stray `ui/` folder and `board.png` into the repo).
+## START HERE (session 42): NEXT = THE USER PICKS ONE OPEN ITEM BELOW (one per session; ask with the question tool)
+- BRANCH: `main` has EVERYTHING (session 41 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- DONE session 41 (details in ui.md 'MOTION' / 'MENU PAGES IN THREE BEATS' / 'PANEL COLOUR' / 'SKILL SQUARES', rewards.md
+  'Card frames by rarity', transition-plan.md section 4); game preview page republished with all of it:
+  - Transitions PHASE 1: `UI.motion` tokens (QUICK: fast 140 / normal 220 / slow 450 / story 1100), `systems/motion.js`
+    (+ `motion.test.mjs`), uiKit `popIn/popOut` (pop-ups DROP from above), `slideSwap` (tabs slide sideways), `sceneFade`.
+    User answers: quick, tabs slide SIDEWAYS, pop-ups DROP, sounds LATER. Only 'Coming soon' uses popIn so far.
+  - Menu pages in THREE BEATS like camp -> squad: camp buttons leave, the page SLIDES IN FROM ITS OWN SIDE (`UI.page.from`:
+    Glossary left, Shop right, Heroes/Leaders bottom, Settings/Profile top; over another page = right), then its top bar
+    (`markBar`) drops in; closing is the reverse.
+  - Reward cards framed in their RARITY colour (`drawRarityFrame`), LEGENDARY shines (`rarityShine`), book page cards wear
+    their book's rarity, icon gaps even; 'Which skill?' rows/boxes in each HERO's colour (heroes.json `color`).
+  - Speech bubble = off-white box, dark text (`drawWindow plain`). Panels = EMBER BROWN (user picked C of 4).
+  - Battle skill squares = thin 2px skill-colour line (user picked A of 3), no gold frame.
+- OPEN (ask which first):
+  1. TRANSITIONS PHASE 2 (menus): tab/chapter content `slideSwap` (Glossary chapters, Leaders, Shop, Settings, Profile
+     tabs) + every pop-up `popIn/popOut` (item/hero cards, confirms, Who gets it, passive tip). Recommended next.
+  2. PHASE 3 opening (boot fade, logo drops in, TAP TO START last) and PHASE 4 the run ('FLOOR 1' card, floor number
+     slides in, reward cards deal in, boss letterbox), PHASE 5 sounds (transition-plan.md).
+  3. FIGHT HUD redesign in the crimson/ember style (only recoloured so far).
+  4. CAMP look: user wants it changed: ask WHAT first.
+  5. PASSIVE icons (left of the skill squares) still gold-framed: ask if they get the thin skill-square look.
+  6. Clean-up: dev-only trial code (GlossaryScene `TRIAL` ?bar/?list, `?frame=`, `?pal=` palettes, `?theme=`).
+  KIV (older): hero art (user's knight sketches), Studio UI, boss rework floors 80/100, session 33 item leftovers, music.
+- PUBLISH (Artifact tool): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
+  dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. First publish of a session is
+  refused 'not viewed': Read a few lines of the saved live copy, check the differing lines are only our old build, then
+  publish again UNCHANGED (it goes through on the third call if refused twice).
+- Browser checks: vite + Playwright FROM THE SCRATCHPAD dir (`vite <repo> --port 5190`, `window.__game` in dev). A battle
+  without the menus: `g.registry.set('squadIds', [...]); g.scene.start('Battle')`; reward screen: `battle.scene.launch(
+  'Reward', { state: battle.state, choices, floor, onDone })` with items from `await import('/src/data/items.json')`.
 
 ## How we work with this user
+- LOOK TRIALS (session 41, worked well): a dev url flag per variant (?pal=, ?skf=), Playwright screenshots side by side
+  (2x zoom crops for small HUD bits), SendUserFile + the question tool; apply the pick, delete the trial code.
+- Ambiguous 'the box colour' (session 41): ask WHICH box before building variations (I guessed wrong once).
+- Look changes stay UNCOMMITTED until the user OKs them ('great' counts); explain to the stop hook instead of committing.
 - REFERENCE PICTURES (session 40): the user sends screenshots of other games ('like this'); make OUR OWN take, try it in
   the real game, show real screenshots on the review page; they then ask for 'more variations / other palettes'.
 - They reply with short fixes after trying the preview on the phone (overlaps, readability, which button is red):

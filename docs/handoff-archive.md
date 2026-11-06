@@ -1,5 +1,34 @@
-# Handoff ARCHIVE (sessions 2-40, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-41, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## (session 41 start note, 2026-11-02; session 41 did transitions phase 1, three-beat menu pages sliding from their own side, rarity reward cards, hero-coloured skill boxes, off-white bubble, ember brown panels, thin skill squares) START HERE (session 41): NEXT = TRANSITIONS PHASE 1 (docs/transition-plan.md), after the user answers its 4 questions
+- BRANCH: `main` has EVERYTHING (session 40 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- FIRST ask the 4 questions in `docs/transition-plan.md` section 4 (quick vs cinematic, page content slide vs fade, pop-ups
+  grow vs drop, sounds yes/no/later) with the question tool, then build PHASE 1 (motion tokens `UI.motion`, uiKit
+  `popIn/popOut`, `slideSwap`, `sceneFade`, retime rows 2/3/4/13), show CLIPS (Playwright recordVideo) on the review page.
+- DONE session 40 (details in the system docs, all in the game + preview page):
+  - Shooters' attack motion `ch.shoot()` (weapon kick + lean; art.md); Cleric Grace = `ch.bless()` + calm gold buff
+    `graceFx` (no projectile) + its own sound `grace`; Cleric hit sound = RPG spell 02 (sound.md).
+  - Projectile review (3 rounds, user OK on all): round holy orb, real tumbling Alchemist flask (slower, `lobbed.flightMs`
+    450), bigger slower bombs whose hit waits for the landing, bandage roll + white first-aid kit that land as a heal,
+    Plague Flask = bubbly acid (effects.md). Element charm on MELEE = one slash in the charm colour (effects.md).
+  - QUIVER OF PLENTY = DOUBLE SHOT at the same enemy (item-decisions.md; user kept it stronger: +2.1 / +7.0 floors).
+  - Sound board: Cleric group (round 10), dramatic music loop removed, chest/puzzle picks applied (sound.md).
+  - UI = CRIMSON AND GOLD framed theme (user picked F from 5 palettes; `UI.theme` 'gold' + `UI.palette` 'crimson';
+    'mono' still works): gold-framed wine panels, title strips, SOLID buttons; PRIMARY bright red = TO EXPEDITION and
+    BEGIN DESCENT only, every other button = calm secondary; menu pages rise in / drop away (`pageEnter/pageLeave`);
+    title = no button (tap anywhere), readable Best floor; TEST buttons = one small top-middle 'TEST' tab (ui.md).
+- NOT DONE: fight HUD + reward sheet only got the new frame colours (not redesigned in the crimson style); the CAMP's look
+  (user wants it changed: ask what); dev-only trial code still in (GlossaryScene `TRIAL` ?bar/?list, `?frame=` styles):
+  remove once the look is settled. Review page (Skill Effects url) now shows the menu-look trial.
+- PUBLISH (Artifact tool now): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
+  dungeon-of-soldia.html`, Artifact publish with url https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. The first publish
+  of a session is refused 'not viewed': Read a few lines of the saved live copy it names, publish again. Big pages
+  (sound board 4.4 MB): Artifact `read` with `path: index.html` saves it to a file without loading it.
+- KIV (older, ask before starting): hero art (user's knight sketches), Studio UI, boss rework floors 80/100, session 33
+  item leftovers, music (none yet), real hero looks / banners / lore / wallet / outlines (archive 'session 40 start note').
+- Browser checks: run vite + Playwright scripts FROM THE SCRATCHPAD dir (session 40: running them from the repo dropped a
+  stray `ui/` folder and `board.png` into the repo).
 
 ## (session 40 start note, 2026-11-01; session 40 did ranged/bless anims, Cleric sounds, projectile review x3, charm slash, Quiver double shot, CRIMSON UI + page transitions, transition plan) START HERE (session 40): NEXT = THE USER PICKS FROM THE KIV LIST BELOW (one per session)
 - BRANCH: `main` has EVERYTHING (session 39 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).

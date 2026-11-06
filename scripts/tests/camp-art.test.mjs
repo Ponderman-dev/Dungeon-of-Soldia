@@ -1,5 +1,5 @@
 // Base camp pixel art (systems/campArt.js, camp.json): the open floor has no wall left, the firelight is clear near the
-// fire and dark far away, prop rows are all one width, flame frames share one size, the hub's heroes and menu buttons fit the screen.
+// fire and dark far away, prop rows are all one width, flame frames share one size, the hub's heroes, header, EXPEDITION and tabs fit the screen.
 import fs from 'fs';
 import { openFloor, darkLayer, lightTint, fireLayers, propLayer } from '../../src/systems/campArt.js';
 const camp = JSON.parse(fs.readFileSync(new URL('../../src/data/camp.json', import.meta.url)));
@@ -23,11 +23,13 @@ ok('fire: 2+ flame frames, all one size', F.flames.length >= 2 && F.flames.every
 ok('fire: glow alpha between 0 and 1', [...F.glow.alpha].every((v) => v >= 0 && v <= 1));
 ok('flip mirrors a prop', propLayer(camp.props.tent, true).pixels[0] === propLayer(camp.props.tent).pixels[propLayer(camp.props.tent).w - 1]);
 ok('3 hero spots round the fire, on screen', camp.hero.spots.length === 3 && camp.hero.spots.every(([x, y]) => x > 0 && x < 390 && y > 0 && y < camp.ui.expedition.y));
-const M = camp.ui.menu;
-ok('menu: 4 buttons, different names, inside the screen', M.buttons.length === 4 && new Set(M.buttons.map((b) => b.label)).size === 4 && M.y + M.h <= 844);
-for (const b of M.buttons) {
-  ok(`menu icon ${b.id}: rows all one width`, b.icon.rows.every((r) => r.length === b.icon.rows[0].length));
-  ok(`menu icon ${b.id}: colours exist`, [...b.icon.rows.join('')].every((ch) => ch === '.' || b.icon.palette[Number(ch)]));
+const M = camp.ui.tabs;
+ok('tabs: 4 buttons, different names, inside the screen', M.buttons.length === 4 && new Set(M.buttons.map((b) => b.label)).size === 4 && M.y + M.pad + M.h <= 844);
+ok('hub: header above the heroes, EXPEDITION between the heroes and the tabs', camp.ui.header.y + camp.ui.header.h < Math.min(...camp.hero.spots.map(([, y]) => y)) - 40 && camp.ui.expedition.y + camp.ui.expedition.h <= M.y);
+const icons = { ...Object.fromEntries(M.buttons.map((b) => [b.id, b.icon])), gem: camp.ui.header.gem, swords: camp.ui.expedition.swords };
+for (const [id, icon] of Object.entries(icons)) {
+  ok(`icon ${id}: rows all one width`, icon.rows.every((r) => r.length === icon.rows[0].length));
+  ok(`icon ${id}: colours exist`, [...icon.rows.join('')].every((ch) => ch === '.' || icon.palette[Number(ch)]));
 }
 for (const n of camp.npcs) {
   const parts = Object.entries(n.def.parts);

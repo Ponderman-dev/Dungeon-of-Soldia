@@ -8,8 +8,8 @@
   },
   "light": {
     "x": 65,
-    "y": 124,
-    "radius": 105,
+    "y": 140,
+    "radius": 100,
     "squash": 1.3,
     "ambient": 0.72,
     "steps": 8,
@@ -18,7 +18,7 @@
   },
   "fire": {
     "x": 195,
-    "y": 372,
+    "y": 420,
     "pit": {
       "rx": 14,
       "ry": 5,
@@ -195,9 +195,7 @@
     }
   },
   "place": [
-    ["tent", 66, 236, false], ["tent", 324, 236, true],
-    ["barrel", 26, 552, false], ["woodpile", 54, 566, false],
-    ["crate", 362, 566, false], ["barrel", 336, 556, false]
+    ["tent", 195, 286, false], ["barrel", 44, 560, false], ["crate", 348, 566, false]
   ],
   "npcs": [
     {"id": "glossary", "name": "Glossary", "who": "Old Scholar", "x": 78, "y": 412, "face": 1, "def": { "height": 24, "parts": {
@@ -222,57 +220,27 @@
       } } }
   ],
   "ui": {
-    "_about": "Base screen interface (screen px). expedition = the big black window (tap = its buttons leave (UI.motion.fast), the screen slides up into the squad screen (UI.motion.slow), then the squad screen's buttons come in; '< CAMP' does the same back), arrows bobbing on both sides. menu = the row of square buttons at the bottom (`scene` = the screen it opens, else 'Coming soon'): icon = pixel rows drawn iconPx per art px. settings = the gear top left. profile = the name box + round portrait top right. soon = the 'Coming soon' window.",
+    "_about": "Base screen interface (screen px), a mobile-game hub (user, session 42: picked A1 + header H1). side = the gap to the screen sides. header = ONE gold panel at the top: round portrait + name + best floor (tap = Profile), then thin dividers, gems (progress.gems), and the settings gear (tap = Settings); gemsW / gearW = the widths of the two right cells. expedition = the big crimson button in a gold frame (frame px), crossed swords on the left, text + sub line ('{n}' = the first boss floor past the best floor; after the last boss: subDone). Tap = its buttons leave (UI.motion.fast), the screen slides up into the squad screen. tabs = the bar at the bottom (a gold line, a dark band) with 4 buttons: icon (pixel rows, iconPx per art px) + label; `scene` = the screen it opens. soon = the 'Coming soon' window.",
+    "side": 24,
     "soon": {"w": 280, "h": 160},
-    "expedition": {"y": 628, "w": 342, "h": 80, "text": "TO EXPEDITION", "size": "normal", "cell": 3, "arrow": {"head": 5, "stemW": 3, "stemH": 4}, "arrowInset": 36, "bob": 4, "bobMs": 600},
-    "settings": {"x": 24, "y": 14, "size": 44, "name": "Settings", "who": "Sound, language, controls"},
-    "profile": {
-      "right": 24,
-      "y": 14,
-      "portrait": 52,
-      "barW": 132,
-      "barH": 36,
-      "name": "Adventurer",
-      "title": "Profile",
-      "who": "Achievements, records, stats"
-    },
-    "menu": {
-      "y": 706,
-      "h": 100,
-      "gap": 6,
-      "side": 24,
-      "iconPx": 3,
-      "iconY": 34,
-      "labelY": 80,
+    "header": {"y": 12, "h": 60, "portraitR": 20, "textX": 64, "nameY": 20, "bestY": 38, "best": "BEST FLOOR {n}", "gemsW": 74, "gearW": 56, "divider": 12,
+      "gem": {"palette": ["0x2a7ad8", "0x6ac8ff", "0xd8f4ff", "0x1a4a8a"], "rows": ["..1111..", ".122211.", "12221110", "01111103", ".011103.", "..0103..", "...03..."]}},
+    "expedition": {"y": 588, "h": 96, "frame": 6, "text": "EXPEDITION", "size": "normal", "sub": "NEXT BOSS: FLOOR {n}", "subDone": "HOW DEEP CAN YOU GO?", "textX": 26, "swordsX": 52, "swordsPx": 4,
+      "swords": {"palette": ["0xe8e8f0", "0x9a9aaa", "0x8a5a32", "0xffd84a"], "rows": ["0..........0", "10........01", ".10......01.", "..10....01..", "...10..01...", "....1001....", "....0110....", "...01..10...", "..33....33..", ".22......22.", "22........22", "2..........2"]}},
+    "tabs": {
+      "y": 708,
+      "pad": 18,
+      "h": 96,
+      "gap": 8,
+      "iconPx": 4,
+      "iconY": 38,
+      "labelY": 78,
       "labelSize": "small",
       "buttons": [
         {
-          "id": "glossary",
-          "scene": "Glossary",
-          "label": "Glossary",
-          "who": "Old Scholar",
-          "icon": {
-            "palette": ["0x7a4a2a", "0xe8dcc0", "0xb0a080", "0xc9452a"],
-            "rows": [
-              "............",
-              ".0000..0000.",
-              "011110011110",
-              "011110011110",
-              "022110011220",
-              "011110011110",
-              "022110011220",
-              "011110011110",
-              "011110011110",
-              "000003300000",
-              "......33....",
-              "............"
-            ]
-          }
-        },
-        {
           "id": "heroes",
           "scene": "Heroes",
-          "label": "Heroes",
+          "label": "HEROES",
           "who": "Captain",
           "icon": {
             "palette": ["0x8a8a9a", "0xd0d0dc", "0x2a2a34", "0xc9452a"],
@@ -293,9 +261,32 @@
           }
         },
         {
+          "id": "glossary",
+          "scene": "Glossary",
+          "label": "GLOSSARY",
+          "who": "Old Scholar",
+          "icon": {
+            "palette": ["0x7a4a2a", "0xe8dcc0", "0xb0a080", "0xc9452a"],
+            "rows": [
+              "............",
+              ".0000..0000.",
+              "011110011110",
+              "011110011110",
+              "022110011220",
+              "011110011110",
+              "022110011220",
+              "011110011110",
+              "011110011110",
+              "000003300000",
+              "......33....",
+              "............"
+            ]
+          }
+        },
+        {
           "id": "leaderboard",
           "scene": "Leaders",
-          "label": "Leaders",
+          "label": "LEADERS",
           "who": "Herald",
           "icon": {
             "palette": ["0xc99a2a", "0xffd84a", "0x8a6a1a", "0xfff0a0"],
@@ -318,7 +309,7 @@
         {
           "id": "shop",
           "scene": "Shop",
-          "label": "Shop",
+          "label": "SHOP",
           "who": "Merchant",
           "icon": {
             "palette": ["0x7a5030", "0xb07a48", "0xffd84a", "0x4a3020"],
@@ -343,7 +334,7 @@
   },
   "hero": {
     "_about": "3 random unlocked heroes (fewer if fewer are unlocked) stand round the fire at `spots` (screen px, feet) and idly wander: after a pause (pauseMs) each walks to a random point up to radiusPx [x, y] from its spot at speed px/s, then faces the fire. From the title the camp fades in (config.js UI.motion.slow).",
-    "spots": [[195, 304], [108, 404], [284, 430]],
+    "spots": [[118, 432], [195, 346], [274, 440]],
     "radiusPx": [26, 14],
     "pauseMs": [1800, 4200],
     "speed": 34

@@ -1,7 +1,7 @@
 // Floors from 4 on pick their enemies at random from the dungeon roster (dungeons.json `roster`):
 // an enemy only shows up from its `from` floor, old ones stop after `until`, `max` caps one per fight.
 import fs from 'fs';
-import { enemiesForFloor, rosterFor, randomEnemies } from '../../src/systems/dungeon.js';
+import { enemiesForFloor, rosterFor, randomEnemies, nextBossFloor } from '../../src/systems/dungeon.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const A = r('dungeons.json').A, enemies = r('enemies.json');
@@ -31,3 +31,5 @@ ok('weights are respected (about 75% a)', a > 2800 && a < 3200, String(a));
 import { validateDungeon } from '../../src/systems/validate.js';
 ok('validateDungeon accepts random floors and checks the roster', validateDungeon(A, enemies).length === 0 && validateDungeon({ floors: [{ floor: 1, enemies: 2 }], roster: [{ id: 'nope', from: 1 }] }, enemies).length === 1);
 ok('boss floors 20-160 return their fixed boss line-up', [20, 40, 60, 80, 100, 120, 140, 160].every((n) => JSON.stringify(enemiesForFloor(A, n, rng)) === JSON.stringify(A.bosses[n])));
+const bossFloors = Object.keys(A.bosses).map(Number).sort((a, b) => a - b);
+ok('camp next boss: the first boss floor past the best floor, null after the last', nextBossFloor(A, 0) === bossFloors[0] && nextBossFloor(A, bossFloors[0]) === bossFloors[1] && nextBossFloor(A, bossFloors[0] - 1) === bossFloors[0] && nextBossFloor(A, bossFloors.at(-1)) === null);

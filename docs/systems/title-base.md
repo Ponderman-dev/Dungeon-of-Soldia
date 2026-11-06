@@ -64,6 +64,16 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
 - 2026-10-22 (user): TO EXPEDITION arrows are real arrows (`ui.expedition.arrow` {head, stemW, stemH} in `cell` px; the old 3-row one read as '+'), inset 36. Everything keeps 24px from the screen sides (user: 'buttons hug the sides'): expedition w 342, menu `side` 24 / `gap` 6 / h 100, settings x 24, profile right 24.
 - MENU IN/OUT (user 2026-10-22): TO EXPEDITION, BEGIN DESCENT (all squad-screen buttons leave together) and '< CAMP' first move the screen's buttons out (top ones up, bottom ones down, fading; `uiKit.uiShift`, `camp.json ui.uiShiftMs` 160), then slide (slideMs), then the new screen's buttons come in. Base `uiParts` / Squad `uiParts` = what drawUi adds (split top/bottom by draw order; Send back buttons only fade). Scene data `fromCamp` / `fromSquad` = start hidden, no taps (`leaving`; Squad `shifting` keeps BEGIN / Send back drawn while they fade).
 
+## 4b. HUB v2 (session 42, user: 'everything, more like a hub' -> 'mobile game menu', 'neater and more concise') — BUILT
+- Tried in a scratch copy: A mobile menu, B dungeon entrance (gate + NPC stations), then neater A1 (no side buttons) / A2
+  (icon column), headers H1 / H2. User picked A1 + H1 + a GOLD BORDER on EXPEDITION.
+- Header = ONE gold panel (camp.json `ui.header`): portrait + name + BEST FLOOR n (tap = Profile) | gems (progress.gems,
+  pixel gem `gem`) | gear (tap = Settings), thin frameDark dividers.
+- EXPEDITION (`ui.expedition`): gold window + crimson button inset `frame` px, crossed swords (`swords` rows), sub line
+  'NEXT BOSS: FLOOR n' (`dungeon.js nextBossFloor`: first boss floor past the best floor; `subDone` after the last).
+- Tab bar (`ui.tabs`): gold line + dark band, 4 raised buttons HEROES / GLOSSARY / LEADERS / SHOP (icon 4x + label).
+- Fire moved to y 420, one tent behind it, barrel + crate; heroes `spots` round it. No red '!' dots (nothing new to flag yet).
+
 ## 5. MENU SCREENS (session 35, mock-ups only, nothing built) — `docs/proposals/menu/*.png`
 - GLOSSARY — BUILT (session 37): `GlossaryScene` (camp GLOSSARY button, camp.json `scene`), data `glossary.json`
   (12 basics pages, one line per status + tab bad/good/control, shortNames, hiddenEnemies, layout). Chapters with found

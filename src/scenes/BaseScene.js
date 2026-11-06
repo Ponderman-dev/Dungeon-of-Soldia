@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc, uiShift, drawButton, buttonTextColor, isGoldTheme } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc, uiShift, drawButton, buttonTextColor } from '../entities/uiKit.js';
+import { nextBossFloor } from '../systems/dungeon.js';
 import camp from '../data/camp.json';
 import { openFloor, darkLayer, lightTint, fireLayers, propLayer } from '../systems/campArt.js';
 import floorArt from '../data/floorArt.json';
@@ -14,8 +15,8 @@ import profileData from '../data/profile.json';
 import * as sfx from '../audio/sfx.js';
 
 // The Base: a campfire camp on the dungeon's flagstones (docs/systems/title-base.md). Pixel art: systems/campArt.js,
-// camp.json. A mobile-game hub (user's sketch, 2026-10-21): 3 heroes idle round the fire in the middle, settings and
-// profile at the top, TO EXPEDITION (slides up into the squad screen) and a row of menu buttons ('Coming soon') below.
+// camp.json. A mobile-game hub: a gold header (profile, gems, settings), 3 heroes idle round the fire in the middle,
+// the gold-framed EXPEDITION button (slides up into the squad screen) and a bar of 4 tabs at the bottom.
 const P = camp.pixel;
 const U = camp.ui;
 const DEPTH = { ui: 2000, modal: 3000 };
@@ -83,63 +84,56 @@ export default class BaseScene extends Phaser.Scene {
     } });
   }
 
-  // Settings gear (top left), profile (top right), TO EXPEDITION and the row of menu buttons at the bottom.
+  // The hub (user, session 42: 'more like a mobile game menu', picked A1 + header H1): one gold header panel at the top
+  // (profile, gems, settings), the big gold-framed EXPEDITION button, and a bar of 4 tabs at the bottom.
   drawUi() {
     const ui = [];
     const n0 = this.children.list.length; // what drawUi adds: the bottom part first, then the top (for uiShift)
-    // TO EXPEDITION: the biggest thing on screen. A black window with big letters and a white pixel up-arrow on each
-    // side, bobbing.
-    const T = U.expedition, cx = GAME_WIDTH / 2;
-    const box = this.add.container(cx, T.y).setDepth(DEPTH.ui);
-    box.add(drawButton(this.add.graphics(), -T.w / 2, -T.h / 2, T.w, T.h, { primary: true })); // the camp's main action: the bright button (user)
-    box.add(uiText(this, 0, 0, T.text, T.size, buttonTextColor(true, false, true)).setOrigin(0.5)); // 'normal' (user: room between box and text)
-    const cell = T.cell;
-    for (const side of [-1, 1]) {
-      const arrow = this.add.graphics().fillStyle(isGoldTheme() ? Number('0x' + buttonTextColor(true, false, true).slice(1)) : 0xffffff, 1);
-      // A real up-arrow (user: the old 3-row one read as a '+'): a wide head, then a thick stem.
-      const A = T.arrow;
-      for (let i = 0; i < A.head; i++) arrow.fillRect(-(i + 0.5) * cell, i * cell, (2 * i + 1) * cell, cell);
-      arrow.fillRect(-(A.stemW / 2) * cell, A.head * cell, A.stemW * cell, A.stemH * cell);
-      arrow.setPosition(side * (T.w / 2 - T.arrowInset), -((A.head + A.stemH) / 2) * cell);
-      box.add(arrow);
-      this.tweens.add({ targets: arrow, y: arrow.y - T.bob, duration: T.bobMs, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    }
-    this.add.zone(cx, T.y, T.w, T.h).setInteractive().on('pointerup', () => this.toExpedition());
+    const W = GAME_WIDTH, S = U.side, T = UI.goldTheme, cx = W / 2;
+    const progress = loadProgress();
 
-    // The menu row: square buttons with a pixel icon and a name; each opens its 'Coming soon' window for now.
-    const M = U.menu, n = M.buttons.length, w = Math.floor((GAME_WIDTH - M.side * 2 - M.gap * (n - 1)) / n);
-    M.buttons.forEach((b, i) => {
-      const x = M.side + i * (w + M.gap);
-      ui.push(drawWindow(this.add.graphics(), x, M.y, w, M.h));
-      const icon = propLayer(b.icon, false);
-      ui.push(this.add.image(x + w / 2, M.y + M.iconY, layerTexture(this, `camp-icon-${b.id}`, icon)).setScale(M.iconPx));
-      ui.push(uiText(this, x + w / 2, M.y + M.labelY, b.label, M.labelSize).setOrigin(0.5));
-      this.add.zone(x + w / 2, M.y + M.h / 2, w, M.h).setInteractive().on('pointerup', () => (b.scene ? this.openOver(b.scene) : this.comingSoon(b.label, b.who)));
+    // EXPEDITION: the camp's main action. A gold frame, the bright button inside, crossed swords, the next boss floor.
+    const E = U.expedition, ew = W - 2 * S, ey = E.y + E.h / 2;
+    const box = this.add.container(cx, ey).setDepth(DEPTH.ui);
+    box.add(drawWindow(this.add.graphics(), -ew / 2, -E.h / 2, ew, E.h));
+    box.add(drawButton(this.add.graphics(), -ew / 2 + E.frame, -E.h / 2 + E.frame, ew - 2 * E.frame, E.h - 2 * E.frame, { primary: true }));
+    box.add(this.add.image(-ew / 2 + E.swordsX, 0, layerTexture(this, 'camp-swords', propLayer(E.swords, false))).setScale(E.swordsPx));
+    const color = buttonTextColor(true, false, true), boss = nextBossFloor(dungeons.A, progress.stats.bestFloor);
+    box.add(uiText(this, E.textX, -12, E.text, E.size, color).setOrigin(0.5));
+    box.add(uiText(this, E.textX, 18, boss ? E.sub.replace('{n}', boss) : E.subDone, 'small', color).setOrigin(0.5));
+    this.add.zone(cx, ey, ew, E.h).setInteractive().on('pointerup', () => this.toExpedition());
+
+    // The tab bar: a gold line, a dark band, 4 buttons (icon + name) that open their screen over the camp.
+    const B = U.tabs, n = B.buttons.length, tw = (W - 2 * S - B.gap * (n - 1)) / n, ty = B.y + B.pad;
+    ui.push(this.add.graphics().fillStyle(T.frame, 1).fillRect(0, B.y, W, 2).fillStyle(T.outline, 0.9).fillRect(0, B.y + 2, W, GAME_HEIGHT - B.y));
+    B.buttons.forEach((b, i) => {
+      const x = S + i * (tw + B.gap);
+      ui.push(drawButton(this.add.graphics(), x, ty, tw, B.h));
+      ui.push(this.add.image(x + tw / 2, ty + B.iconY, layerTexture(this, `camp-icon-${b.id}`, propLayer(b.icon, false))).setScale(B.iconPx));
+      ui.push(uiText(this, x + tw / 2, ty + B.labelY, b.label, B.labelSize, buttonTextColor()).setOrigin(0.5));
+      this.add.zone(x + tw / 2, ty + B.h / 2, tw, B.h).setInteractive().on('pointerup', () => (b.scene ? this.openOver(b.scene) : this.comingSoon(b.label, b.who)));
     });
 
     const n1 = this.children.list.length;
-    // Settings (top left): a gear in a small window.
-    const G = U.settings;
-    ui.push(drawGear(drawWindow(this.add.graphics(), G.x, G.y, G.size, G.size), G.x + G.size / 2, G.y + G.size / 2));
-    this.add.zone(G.x + G.size / 2, G.y + G.size / 2, G.size + 8, G.size + 8).setInteractive().on('pointerup', () => this.openOver('Settings'));
-
-    // Profile (top right): a name box tucked under a round portrait (a little person for now).
-    const Pr = U.profile, d = Pr.portrait, px = GAME_WIDTH - Pr.right - d, barX = px - Pr.barW + d / 2;
-    const g = this.add.graphics();
-    drawWindow(g, barX, Pr.y + (d - Pr.barH) / 2, Pr.barW, Pr.barH);
+    // The header: ONE gold panel. Portrait + name + best floor (tap = Profile) | gems | settings gear.
+    const H = U.header, hy = H.y, mid = hy + H.h / 2, g = this.add.graphics();
+    drawWindow(g, S, hy, W - 2 * S, H.h);
+    const r = H.portraitR, px = S + 14 + r;
+    pixelDisc(g, px, mid, r + 2, T.outline); pixelDisc(g, px, mid, r, T.frame); pixelDisc(g, px, mid, r - 4, T.fill);
+    g.fillStyle(T.stud, 1).fillRect(px - 4, mid - 11, 8, 8).fillRect(px - 9, mid, 18, 4).fillRect(px - 11, mid + 4, 22, 5); // a little person (for now)
+    const gearL = W - S - H.gearW, gemsL = gearL - H.gemsW;
+    g.fillStyle(T.frameDark, 1).fillRect(gemsL, hy + H.divider, 2, H.h - 2 * H.divider).fillRect(gearL, hy + H.divider, 2, H.h - 2 * H.divider);
+    drawGear(g, (gearL + W - S) / 2 + 1, mid);
     const playerName = () => (loadProgress().profile.name || profileData.defaults.name);
-    const nameText = uiText(this, barX + 12, Pr.y + d / 2, playerName(), 'small').setOrigin(0, 0.5);
+    const nameText = uiText(this, S + H.textX, hy + H.nameY, playerName(), 'small');
     this.events.on(Phaser.Scenes.Events.RESUME, () => nameText.setText(playerName())); // renamed on the Profile
-    ui.push(g, nameText);
-    const c = this.add.graphics();
-    const TH = isGoldTheme() ? UI.goldTheme : null; // the framed theme: a gold ring round a dark panel disc
-    if (TH) pixelDisc(c, px + d / 2, Pr.y + d / 2, d / 2 + 2, TH.outline);
-    pixelDisc(c, px + d / 2, Pr.y + d / 2, d / 2, TH ? TH.frame : 0xffffff);
-    pixelDisc(c, px + d / 2, Pr.y + d / 2, d / 2 - (TH ? 4 : 2), TH ? TH.fill : 0x000000);
-    const m = px + d / 2, t = Pr.y + 13;
-    c.fillStyle(TH ? TH.stud : 0xffffff, 1).fillRect(m - 5, t, 10, 10).fillRect(m - 11, t + 13, 22, 4).fillRect(m - 13, t + 17, 26, 6);
-    ui.push(c);
-    this.add.zone(px + d / 2 - Pr.barW / 2 + d / 4, Pr.y + d / 2, Pr.barW + d / 2, d).setInteractive().on('pointerup', () => this.openOver('Profile'));
+    const best = uiText(this, S + H.textX, hy + H.bestY, H.best.replace('{n}', progress.stats.bestFloor), 'small', UI.gold);
+    const gem = this.add.image(gemsL + 20, mid, layerTexture(this, 'camp-gem', propLayer(H.gem, false))).setScale(3);
+    const gems = uiText(this, gemsL + 36, mid + 1, String(progress.gems || 0), 'small').setOrigin(0, 0.5);
+    ui.push(g, nameText, best, gem, gems);
+    this.add.zone((S + gemsL) / 2, mid, gemsL - S, H.h).setInteractive().on('pointerup', () => this.openOver('Profile'));
+    this.add.zone((gearL + W - S) / 2, mid, W - S - gearL, H.h).setInteractive().on('pointerup', () => this.openOver('Settings'));
+
     for (const o of ui) o.setDepth(DEPTH.ui);
     const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));
     this.uiParts = { down: shown(this.children.list.slice(n0, n1)), up: shown(this.children.list.slice(n1)) };

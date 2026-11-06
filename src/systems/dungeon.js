@@ -153,3 +153,9 @@ function pickWeighted(list, weightOf, rng) {
   let roll = rng() * total;
   return list.find((x) => (roll -= weightOf(x)) < 0) || list[list.length - 1];
 }
+
+// The camp's EXPEDITION line: the first boss floor deeper than `best` (the best floor reached), or null after the last.
+export function nextBossFloor(dungeon, best = 0) {
+  const floors = Object.keys(dungeon.bosses || {}).map(Number).sort((a, b) => a - b);
+  return floors.find((f) => f > best) ?? null;
+}

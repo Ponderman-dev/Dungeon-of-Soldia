@@ -1,5 +1,37 @@
-# Handoff ARCHIVE (sessions 2-41, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-42, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## (session 42 start note, 2026-11-06; session 42 did the camp hub v2 (mobile-game menu, gold header, tab bar) + richer camp props in the floor style) START HERE (session 42): NEXT = THE USER PICKS ONE OPEN ITEM BELOW
+- BRANCH: `main` has EVERYTHING (session 41 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- DONE session 41 (details in ui.md 'MOTION' / 'MENU PAGES IN THREE BEATS' / 'PANEL COLOUR' / 'SKILL SQUARES', rewards.md
+  'Card frames by rarity', transition-plan.md section 4); game preview page republished with all of it:
+  - Transitions PHASE 1: `UI.motion` tokens (QUICK: fast 140 / normal 220 / slow 450 / story 1100), `systems/motion.js`
+    (+ `motion.test.mjs`), uiKit `popIn/popOut` (pop-ups DROP from above), `slideSwap` (tabs slide sideways), `sceneFade`.
+    User answers: quick, tabs slide SIDEWAYS, pop-ups DROP, sounds LATER. Only 'Coming soon' uses popIn so far.
+  - Menu pages in THREE BEATS like camp -> squad: camp buttons leave, the page SLIDES IN FROM ITS OWN SIDE (`UI.page.from`:
+    Glossary left, Shop right, Heroes/Leaders bottom, Settings/Profile top; over another page = right), then its top bar
+    (`markBar`) drops in; closing is the reverse.
+  - Reward cards framed in their RARITY colour (`drawRarityFrame`), LEGENDARY shines (`rarityShine`), book page cards wear
+    their book's rarity, icon gaps even; 'Which skill?' rows/boxes in each HERO's colour (heroes.json `color`).
+  - Speech bubble = off-white box, dark text (`drawWindow plain`). Panels = EMBER BROWN (user picked C of 4).
+  - Battle skill squares = thin 2px skill-colour line (user picked A of 3), no gold frame.
+- OPEN (ask which first):
+  1. TRANSITIONS PHASE 2 (menus): tab/chapter content `slideSwap` (Glossary chapters, Leaders, Shop, Settings, Profile
+     tabs) + every pop-up `popIn/popOut` (item/hero cards, confirms, Who gets it, passive tip). Recommended next.
+  2. PHASE 3 opening (boot fade, logo drops in, TAP TO START last) and PHASE 4 the run ('FLOOR 1' card, floor number
+     slides in, reward cards deal in, boss letterbox), PHASE 5 sounds (transition-plan.md).
+  3. FIGHT HUD redesign in the crimson/ember style (only recoloured so far).
+  4. CAMP look: user wants it changed: ask WHAT first.
+  5. PASSIVE icons (left of the skill squares) still gold-framed: ask if they get the thin skill-square look.
+  6. Clean-up: dev-only trial code (GlossaryScene `TRIAL` ?bar/?list, `?frame=`, `?pal=` palettes, `?theme=`).
+  KIV (older): hero art (user's knight sketches), Studio UI, boss rework floors 80/100, session 33 item leftovers, music.
+- PUBLISH (Artifact tool): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
+  dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. First publish of a session is
+  refused 'not viewed': Read a few lines of the saved live copy, check the differing lines are only our old build, then
+  publish again UNCHANGED (it goes through on the third call if refused twice).
+- Browser checks: vite + Playwright FROM THE SCRATCHPAD dir (`vite <repo> --port 5190`, `window.__game` in dev). A battle
+  without the menus: `g.registry.set('squadIds', [...]); g.scene.start('Battle')`; reward screen: `battle.scene.launch(
+  'Reward', { state: battle.state, choices, floor, onDone })` with items from `await import('/src/data/items.json')`.
 
 ## (session 41 start note, 2026-11-02; session 41 did transitions phase 1, three-beat menu pages sliding from their own side, rarity reward cards, hero-coloured skill boxes, off-white bubble, ember brown panels, thin skill squares) START HERE (session 41): NEXT = TRANSITIONS PHASE 1 (docs/transition-plan.md), after the user answers its 4 questions
 - BRANCH: `main` has EVERYTHING (session 40 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).

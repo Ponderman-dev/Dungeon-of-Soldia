@@ -1,38 +1,39 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 42): NEXT = THE USER PICKS ONE OPEN ITEM BELOW (one per session; ask with the question tool)
-- BRANCH: `main` has EVERYTHING (session 41 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
-- DONE session 41 (details in ui.md 'MOTION' / 'MENU PAGES IN THREE BEATS' / 'PANEL COLOUR' / 'SKILL SQUARES', rewards.md
-  'Card frames by rarity', transition-plan.md section 4); game preview page republished with all of it:
-  - Transitions PHASE 1: `UI.motion` tokens (QUICK: fast 140 / normal 220 / slow 450 / story 1100), `systems/motion.js`
-    (+ `motion.test.mjs`), uiKit `popIn/popOut` (pop-ups DROP from above), `slideSwap` (tabs slide sideways), `sceneFade`.
-    User answers: quick, tabs slide SIDEWAYS, pop-ups DROP, sounds LATER. Only 'Coming soon' uses popIn so far.
-  - Menu pages in THREE BEATS like camp -> squad: camp buttons leave, the page SLIDES IN FROM ITS OWN SIDE (`UI.page.from`:
-    Glossary left, Shop right, Heroes/Leaders bottom, Settings/Profile top; over another page = right), then its top bar
-    (`markBar`) drops in; closing is the reverse.
-  - Reward cards framed in their RARITY colour (`drawRarityFrame`), LEGENDARY shines (`rarityShine`), book page cards wear
-    their book's rarity, icon gaps even; 'Which skill?' rows/boxes in each HERO's colour (heroes.json `color`).
-  - Speech bubble = off-white box, dark text (`drawWindow plain`). Panels = EMBER BROWN (user picked C of 4).
-  - Battle skill squares = thin 2px skill-colour line (user picked A of 3), no gold frame.
-- OPEN (ask which first):
-  1. TRANSITIONS PHASE 2 (menus): tab/chapter content `slideSwap` (Glossary chapters, Leaders, Shop, Settings, Profile
-     tabs) + every pop-up `popIn/popOut` (item/hero cards, confirms, Who gets it, passive tip). Recommended next.
-  2. PHASE 3 opening (boot fade, logo drops in, TAP TO START last) and PHASE 4 the run ('FLOOR 1' card, floor number
-     slides in, reward cards deal in, boss letterbox), PHASE 5 sounds (transition-plan.md).
-  3. FIGHT HUD redesign in the crimson/ember style (only recoloured so far).
-  4. CAMP look: user wants it changed: ask WHAT first.
-  5. PASSIVE icons (left of the skill squares) still gold-framed: ask if they get the thin skill-square look.
-  6. Clean-up: dev-only trial code (GlossaryScene `TRIAL` ?bar/?list, `?frame=`, `?pal=` palettes, `?theme=`).
-  KIV (older): hero art (user's knight sketches), Studio UI, boss rework floors 80/100, session 33 item leftovers, music.
+## START HERE (session 43): NEXT = BOSSES REWORK (user asked at the end of session 42)
+- BRANCH: `main` has EVERYTHING (session 42 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- FIRST read `docs/systems/bosses.md` (one long line per boss), then ASK with the question tool: WHICH bosses (the old
+  plan was 'especially 60, 80, 100'; 60 Frost Warden was reworked in session 30, so 80 Rask & Vesh and 100 Morthul are
+  next, then 120 Ignatius / 140 Sela / 160 Vharox) and WHAT is wrong (too easy, boring, unfair, looks). The user often
+  wants to WRITE the design themselves ('let me write first' = stop and wait): offer mechanics + numbers, don't push.
+- COPY SESSION 30's FLOW (Frost Warden; archive: search 'session 31 start note'): rules + tests first, then each new
+  look ONE at a time IN THE GAME (clip + slow-motion x3 + frames, question tool), then numbers with the smart curve
+  (`node scripts/tests/curve.mjs 8 smart`, ~2 min, 3/squad is too few past floor 60) and `bosscheck.mjs`, then a full
+  recorded fight. Recording recipe + 'show a boss move' trick: archive, same note. Effects: `src/systems/bossFx.js`.
+- Last boss numbers (bosses.md, smart bot, squads that REACH the boss): Grukk ~87-93%, Brood Mother ~73-80%, Frost
+  Warden 39-55%, Rask & Vesh ~10% (fixed tool) / ~97% (session 30 curve: numbers disagree, re-run first), Morthul
+  ~67-100%, Ignatius ~32%, Sela ~85%, Vharox ~43%. Show NUMBERS in tables before changing any.
+- Dev url flags for a boss floor: `?floor=80` (also `?elite=1`, `?lineup=`); Brood Mother demo page exists (CLAUDE.md).
+- DONE session 42 (title-base.md '4b. HUB v2'), game page republished: camp = mobile-game hub (ONE gold header panel:
+  profile, best floor, gems, gear; gold-framed EXPEDITION with 'NEXT BOSS: FLOOR n' (`dungeon.js nextBossFloor`); tab bar
+  HEROES / GLOSSARY / LEADERS / SHOP); richer camp props (banner, stone brazier with glow, weapon rack + shield, cooking
+  pot, sleeping dog, rolled bedroll, supplies), loose clusters, NO outlines, drawn in the FLOOR's style (`propLook`:
+  under the floor light, muted + speckle + dark edge); tent removed (prop kept).
+- STILL OPEN (other topics, one per session): transitions phase 2 (menu tabs slideSwap + pop-ups popIn), phase 3-5
+  (opening, the run, sounds), FIGHT HUD redesign, PASSIVE icons gold frame, dev trial code clean-up (`?frame=`, `?pal=`,
+  `?theme=`, GlossaryScene TRIAL). KIV: hero art (knight sketches), Studio UI, session 33 item leftovers, music.
 - PUBLISH (Artifact tool): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
-  dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. First publish of a session is
-  refused 'not viewed': Read a few lines of the saved live copy, check the differing lines are only our old build, then
-  publish again UNCHANGED (it goes through on the third call if refused twice).
-- Browser checks: vite + Playwright FROM THE SCRATCHPAD dir (`vite <repo> --port 5190`, `window.__game` in dev). A battle
-  without the menus: `g.registry.set('squadIds', [...]); g.scene.start('Battle')`; reward screen: `battle.scene.launch(
-  'Reward', { state: battle.state, choices, floor, onDone })` with items from `await import('/src/data/items.json')`.
+  dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. The first publish of a session
+  is refused 'not viewed', the second as 'unchanged': Read the LAST 3 lines of the saved live copy (offset), then the
+  third identical publish goes through.
+- Browser checks: vite + Playwright FROM THE SCRATCHPAD dir (`<repo>/node_modules/.bin/vite <repo> --port 5190`, it dies
+  when the worker restarts: start it again). Fresh clone: `npm install` first. Camp: stop 'Title', start 'Base'.
 
 ## How we work with this user
+- LOOK ROUNDS (session 42): a SCRATCH COPY of the repo (`tar` to the scratchpad, symlink node_modules, own vite port,
+  `?hub=` flags) for big layout trials; 3-up PNG sheets on the real floor for new prop shapes (python draws pixel rows).
+  Their answers are often a new direction in 'Other' ('neater', 'simpler', 'not that kinda dim'): ask what they mean
+  with options before building. Keep the stop hook waiting until they say 'great'.
 - LOOK TRIALS (session 41, worked well): a dev url flag per variant (?pal=, ?skf=), Playwright screenshots side by side
   (2x zoom crops for small HUD bits), SendUserFile + the question tool; apply the pick, delete the trial code.
 - Ambiguous 'the box colour' (session 41): ask WHICH box before building variations (I guessed wrong once).

@@ -19,9 +19,12 @@
 //         `gapMs` (every `aimEvery`th where a hero stands then), each warned for `warnMs` then it lands:
 //         every hero within `radius` loses `percentMaxHp`% health and freezes for `freezeMs`,
 //       clones: { statPercent }, shatterClones: { multiplier },
-//       charge: { widthPx, overshootPx, ms }   Gang Charge (Rask): at the wind-up start a lane is drawn from the boss
-//         through its target (+ overshootPx); on release he dashes to its end and EVERY defender inside the lane
-//         (widthPx wide) at that moment is hit (damageMultiplier + apply). Events 'castStart' (+ lane), 'charge'.
+//       charge: { lanes, jumpMs, topY, ms, exitY, returnMs, returnBox: { x0, x1, y0, y1 } }   Gang Charge (Rask): the
+//         floor is `lanes` big columns; at the wind-up start he JUMPS to the top (topY) of the column with the most
+//         heroes (jumpMs = looks), the column is warned for the rest of the wind-up, then he dashes straight down it
+//         and OFF the bottom of the screen (exitY) in `ms`: every defender in that column is hit as he passes it
+//         (damageMultiplier + apply). Off screen he can't be hit (`chargeAway`) until he leaps back in to a random
+//         spot in returnBox (`returnMs` after the dash). Events 'castStart' (+ lane), 'charge' (+ spot).
 //       lane: { warnMs, heightPx, clones, damageMultiplier, stacks, apply }   Shadow Kunai (Vesh): a row across the WHOLE
 //         floor at a random hero's height is warned for warnMs (`clones` shadow copies throw from one side: looks), then
 //         every defender within heightPx/2 of it is hit and gets `apply` x `stacks`. Events 'laneWarn', 'laneLand'.
@@ -45,6 +48,12 @@
 //   mirror: { atStart, atHp: [..], statPercent }                       glass clones of the heroes (Sela)
 //   sky: { atHp: [..], durationMs, strikeEveryMs, strike, summon, groundedMs, vulnerable }   flies out of reach (Vharox)
 
+// How far along a lane (0 = its start, 1 = its end) a point is.
+function laneProgress(lane) {
+  const vx = lane.x2 - lane.x1, vy = lane.y2 - lane.y1, l2 = vx * vx + vy * vy || 1;
+  return (p) => Math.max(0, Math.min(1, ((p.x - lane.x1) * vx + (p.y - lane.y1) * vy) / l2));
+}
+
 export const bossMethods = {
   // Called for every new enemy (makeUnit): the boss's own state.
   initBoss(u) {
@@ -65,7 +74,7 @@ export const bossMethods = {
 
   // Can heroes aim at it? (Morthul's dust and Vharox in the sky cannot be hit.)
   untargetable(u) {
-    return !!(u.dust || u.burrowed || (u.statuses && u.statuses.some((s) => s.type === 'airborne'))); // Cave Worm underground
+    return !!(u.dust || u.burrowed || u.chargeAway > 0 || (u.statuses && u.statuses.some((s) => s.type === 'airborne'))); // Cave Worm underground
   },
 
   // Enemies that heroes can hit right now.
@@ -119,6 +128,8 @@ export const bossMethods = {
       if (d.bomber) { this.tickBomber(u, events); continue; }
       if (u.spikes && u.spikes.length) this.tickSpikes(u, dt, events);
       if (u.lanes && u.lanes.length) this.tickLanes(u, dt, events);
+      if (u.chargeHits && u.chargeHits.length) this.tickChargeHits(u, dt, events);
+      if (u.chargeAway > 0) u.chargeAway -= dt; // Gang Charge: off the screen / leaping back in
       if (u.sweeps && u.sweeps.length) this.tickSweeps(u, dt, events);
       if (d.reformFor) this.tickPhylactery(u, dt, events);
       if (d.heat) this.tickHeat(u, dt, events);
@@ -274,6 +285,7 @@ export const bossMethods = {
     const slow = this.heroes.filter((h) => h.alive && h.specials).reduce((n, h) => n + (h.specials.bossWindup || 0), 0);
     const castMs = (a.castMs || 0) * (1 + slow / 100);
     const lane = a.charge ? this.chargeLane(u, a) : null; // Gang Charge: the lane is fixed when the wind-up starts
+    if (lane && lane.x1 !== undefined) { u.x = lane.x1; u.y = lane.y1; } // ...and he jumps to its top (the scene shows the leap)
     if (castMs <= 0 && !a.channel) return this.releaseAbility(u, a, events, { lane });
     u.bossCast = { def: a, remaining: castMs, total: castMs, channel: null, lane };
     events.push({ type: 'castStart', unit: u, skill: { name: a.name, kind: 'attack' }, castMs, boss: true, ability: a, lane });
@@ -568,18 +580,19 @@ export const bossMethods = {
   },
 
   // ---- Rask: Gang Charge ------------------------------------------------------------------------
-  // The lane: from the boss through its target, `overshootPx` further, kept on the fight floor. null without positions.
+  // The floor is split into `lanes` big columns (user, session 43). He picks the column with the MOST heroes (a tie:
+  // one of them at random), jumps to its top and charges straight down it to just behind the heroes.
+  // Without positions (tests): a random hero is the one hit.
   chargeLane(u, a) {
-    const t = this.abilityTargets(u, a.target, a.radius, a.count)[0];
-    if (!t) return null;
-    if (!this.hasPositions(u) || !this.hasPositions(t)) return { target: t };
-    const L = this.rules.movement.layout;
-    const dx = t.x - u.x, dy = t.y - u.y, len = Math.hypot(dx, dy) || 1;
-    const go = len + (a.charge.overshootPx || 0);
-    let x2 = u.x + (dx / len) * go, y2 = u.y + (dy / len) * go;
-    x2 = Math.min(L.width - L.marginX, Math.max(L.marginX, x2));
-    y2 = Math.min(L.heroY + 40, Math.max(L.enemyY + L.topMarginY, y2));
-    return { target: t, x1: u.x, y1: u.y, x2, y2, widthPx: a.charge.widthPx };
+    const heroes = this.heroes.filter((h) => h.alive);
+    if (!heroes.length) return null;
+    if (!this.hasPositions(u) || !heroes.every((h) => this.hasPositions(h))) return { target: heroes[Math.floor(this.rng() * heroes.length)] };
+    const L = this.rules.movement.layout, n = a.charge.lanes || 3, w = L.width / n;
+    const counts = Array(n).fill(0);
+    for (const h of heroes) counts[Math.min(n - 1, Math.max(0, Math.floor(h.x / w)))]++;
+    const best = Math.max(...counts), tied = counts.map((c, i) => (c === best ? i : -1)).filter((i) => i >= 0);
+    const lane = tied[Math.floor(this.rng() * tied.length)], cx = (lane + 0.5) * w;
+    return { lane, fromX: u.x, fromY: u.y, x1: cx, y1: a.charge.topY ?? L.enemyY + L.topMarginY, x2: cx, y2: a.charge.exitY ?? L.heroY + 20, widthPx: w, jumpMs: a.charge.jumpMs || 0 };
   },
 
   // How far point p is from the segment (x1,y1)-(x2,y2).
@@ -597,12 +610,37 @@ export const bossMethods = {
     if (lane.x1 === undefined) hit = lane.target.alive ? [lane.target] : [];
     else {
       hit = this.defenders().filter((h) => h.alive && this.hasPositions(h) && this.segmentDistance(h, lane) <= lane.widthPx / 2);
-      u.x = lane.x2; u.y = lane.y2;
+    }
+    const c = a.charge, ms = c.ms || 300;
+    let spot = null;
+    if (lane.x1 !== undefined) {
+      // Off the screen, then back in with a leap to a random spot in the middle (the rules put him there at once;
+      // until he lands he can't be hit and does nothing).
+      const box = c.returnBox;
+      spot = box ? { x: box.x0 + this.rng() * (box.x1 - box.x0), y: box.y0 + this.rng() * (box.y1 - box.y0) } : { x: lane.x2, y: lane.y2 };
+      u.x = spot.x; u.y = spot.y;
+      u.chargeAway = ms + (c.returnMs || 0);
+      u.pending = null;
+      for (const x of this.allUnits()) if (x.foe === u.uid) x.foe = null;
+      this.retargetAttacksOn(u, events);
+      if (this.focusUid === u.uid) this.focusUid = null;
     }
     events.push({ type: 'bossAbility', unit: u, ability: a, targets: hit });
-    events.push({ type: 'charge', unit: u, lane, ms: a.charge.ms || 300, targets: hit });
-    for (const t of hit) {
-      if (!t.alive) continue;
+    events.push({ type: 'charge', unit: u, lane, ms, returnMs: c.returnMs || 0, spot, targets: hit });
+    // Each one caught is hit when he gets to it on his dash (who is caught was decided now: the wind-up was the dodge).
+    const f = lane.x1 === undefined ? null : laneProgress(lane);
+    u.chargeHits = hit.map((t) => ({ t, a, remaining: f ? ms * f(t) : 0 }));
+    this.tickChargeHits(u, 0, events);
+  },
+
+  tickChargeHits(u, dt, events) {
+    for (const ch of [...u.chargeHits]) {
+      ch.remaining -= dt;
+      if (ch.remaining > 0) continue;
+      u.chargeHits.splice(u.chargeHits.indexOf(ch), 1);
+      const { t, a } = ch;
+      if (!t.alive || !u.alive) continue;
+      events.push({ type: 'chargeHit', unit: t, from: u }); // the scene shakes the hero hard
       if (a.damageMultiplier) this.strike(u, t, events, { multiplier: a.damageMultiplier, damageType: a.damageType, ability: true });
       if (t.alive) for (const spec of a.apply || []) this.applyStatus(t, spec, u, `boss_${a.id}`, events);
     }

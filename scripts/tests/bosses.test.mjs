@@ -187,17 +187,25 @@ ok('Spiderling: EVERY hit poisons (a weak poison)', enemies.spiderling.onHit.som
   ok('...regen does nothing either', k.hp <= 50, k.hp);
   run(s, 3200); k.hp = 50;
   ok('...and when it wears off healing works again', s.healUnit(k, 30, []) === 30); }
-// Gang Charge: everyone in the lane at release is hit + knocked back; someone who stepped out is not.
+// Gang Charge: the floor = 3 big lanes; he jumps to the top of the lane with the most heroes and dashes down it.
 { const { s, es, h } = mk(['rask'], 80); s.placeLines(); const [rask] = es;
-  const a = rask.def.abilities.find((x) => x.charge);
-  const [t, other, far] = h; t.x = rask.x; t.y = rask.y + 200; other.x = rask.x; other.y = rask.y + 120; far.x = rask.x + 150; far.y = rask.y + 200;
+  const a = rask.def.abilities.find((x) => x.charge), W = rules.movement.layout.width, w = W / a.charge.lanes;
+  const [t, other, far] = h; t.x = w * 0.3; t.y = 720; other.x = w * 0.7; other.y = 600; far.x = W - w * 0.5; far.y = 720; // 2 left, 1 right
   for (const x of h) s.applyStatus(x, { status: 'stun', durationMs: 5000 }, x, 'hold', []); // they stay where they are
-  s.startAbility(rask, { ...a, target: 'frontHero' }, []);
+  s.startAbility(rask, a, []);
   const lane = rask.bossCast.lane;
-  ok('Gang Charge: the lane is fixed at the wind-up start, past its target', lane && lane.target === other && lane.y2 > other.y);
-  const hp = h.map((x) => x.hp); const ev = run(s, a.castMs + 100);
-  ok('...on release he dashes to its end, hitting everyone IN the lane', ev.some((e) => e.type === 'charge') && t.hp < hp[0] && other.hp < hp[1] && Math.abs(rask.y - lane.y2) < 40);
-  ok('...a hero outside the lane is not hit', far.hp === hp[2]); }
+  ok('Gang Charge: he picks the lane with the MOST heroes and jumps to its top', lane && lane.lane === 0 && Math.abs(rask.x - w / 2) < 1 && rask.y === lane.y1 && lane.y2 > t.y);
+  const hp = h.map((x) => x.hp); const evEarly = run(s, a.castMs + 50);
+  ok('...the hit lands when he reaches a hero, not at once', evEarly.some((e) => e.type === 'charge') && t.hp === hp[0]);
+  const ev = run(s, a.charge.ms + 100);
+  ok('...he dashes straight down it (off the screen), hitting everyone IN the lane', t.hp < hp[0] && other.hp < hp[1] && lane.y2 > 844);
+  ok('...a hero in another lane is not hit', far.hp === hp[2]);
+  const stun = a.apply.find((x) => x.status === 'stun');
+  ok('...the heroes it hits are STUNNED (3.5s), the one in another lane is not', !!stun && [t, other].every((x) => x.statuses.some((st) => st.type === 'stun' && st.key.endsWith('boss_gang_charge') && st.remaining > stun.durationMs - 1000)) && !far.statuses.some((x) => x.type === 'stun' && x.key.endsWith('boss_gang_charge')));
+  const box = a.charge.returnBox;
+  ok('...off screen he cannot be hit; he comes back to a random spot in the middle', s.untargetable(rask) && rask.x >= box.x0 && rask.x <= box.x1 && rask.y >= box.y0 && rask.y <= box.y1);
+  run(s, a.charge.returnMs + 100);
+  ok('...and once he lands he can be hit again', !s.untargetable(rask) && s.targetableEnemies().includes(rask)); }
 { const { s, es, h } = mk(['rask'], 80); s.placeLines(); const [rask] = es; const a = rask.def.abilities.find((x) => x.charge);
   s.startAbility(rask, a, []); s.applyStatus(rask, { status: 'stun', durationMs: 2000 }, h[0], 'test', []);
   const ev = run(s, a.castMs + 100);

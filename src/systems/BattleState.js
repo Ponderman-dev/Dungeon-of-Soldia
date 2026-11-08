@@ -591,7 +591,7 @@ export default class BattleState {
         if (u.knock.remaining <= 0) u.knock = null;
         continue;
       }
-      if (this.isStunned(u) || u.pending || u.casting || u.bossCast || u.def.object || u.dust || u.burrowed) continue; // frozen in place, busy, an object, underground
+      if (this.isStunned(u) || u.pending || u.casting || u.bossCast || u.def.object || u.dust || u.burrowed || u.chargeAway > 0) continue; // frozen in place, busy, an object, underground
       let goal = null;
       // A lit Kobold Sapper bomb is NOT avoided (user: it blocked walking and the bomb never hit): fighters keep going.
       if (u.walkTo && !this.has(u, 'fear')) {
@@ -622,6 +622,7 @@ export default class BattleState {
     const settled = M.settledPushShare ?? 1;
     const share = (u, other) => {
       if (u.def.object) return 0; // objects (War Drum, eggs) never budge
+      if (u.bossCast && u.bossCast.lane) return 0; // Rask on top of his Gang Charge lane stays put
       if (u.minion !== other.minion) return u.minion ? 1 : 0; // minions always make way (they never block a hero or shove an enemy)
       if ((u.size || 1) >= (other.size || 1) * M.bigHoldRatio) return 0; // a big body (boss) is not shoved around by small ones
       if (u.damageType !== 'melee' && other.damageType === 'melee') return 0; // ranged hold their ground
@@ -668,8 +669,10 @@ export default class BattleState {
       }
     }
     for (const u of units) {
-      u.x = Math.min(L.width - L.marginX, Math.max(L.marginX, u.x));
-      u.y = Math.min(L.heroY, Math.max(L.enemyY + L.topMarginY, u.y));
+      if (!(u.bossCast && u.bossCast.lane)) { // Gang Charge: he stands above the normal top line, at the lane's top
+        u.x = Math.min(L.width - L.marginX, Math.max(L.marginX, u.x));
+        u.y = Math.min(L.heroY, Math.max(L.enemyY + L.topMarginY, u.y));
+      }
       const b = before.get(u);
       const moved = Math.hypot(u.x - b.x, u.y - b.y);
       u.moving = moved > 0.05;

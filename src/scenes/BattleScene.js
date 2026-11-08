@@ -793,7 +793,37 @@ export default class BattleScene extends Phaser.Scene {
         return { ...out, draws: TUNE.paint(group, name, out.draws || []), tints: (out.tints || []).map(([v, t]) => [v, t && [TUNE.color(group, name, t[0]), t[1]]]) };
       };
     }
-    (this.fxList = this.fxList || []).push({ start: this.time.now, ms, fn: run });
+    const fx = { start: this.time.now, ms, fn: run };
+    (this.fxList = this.fxList || []).push(fx);
+    return fx; // a caller may end it early (dropFx)
+  }
+
+  dropFx(fx) {
+    if (fx && this.fxList) this.fxList = this.fxList.filter((x) => x !== fx);
+  }
+
+  // Where the middle of a fighter's drawn pixels is, left/right of its feet point, in its own pixels (facing right;
+  // weapon part left out). Rask's art has his axe on one side, so his feet point is not his middle.
+  bodyMiddle(v) {
+    if (v.bodyMid !== undefined) return v.bodyMid;
+    let sum = 0, n = 0;
+    for (const [name, p] of Object.entries(v.ch.parts)) {
+      if (name === 'weapon') continue;
+      p.pixels.forEach((row) => row.forEach((c, x) => { if (c !== null) { sum += p.x - p.anchor[0] + x + 0.5; n++; } }));
+    }
+    return (v.bodyMid = n ? sum / n : 0);
+  }
+
+  // A copy of the fighter's body as it is right now, filled with one colour, that fades away (Gang Charge's afterimages).
+  afterimage(v, color, ms = 260) {
+    const ch = v.ch;
+    const ghost = this.add.container(ch.x, ch.y).setScale(ch.scaleX, ch.scaleY).setDepth(ch.depth - 0.001);
+    for (const img of ch.list) {
+      if (!img.visible || !img.texture) continue;
+      ghost.add(this.add.image(img.x, img.y, img.texture.key).setOrigin(img.originX, img.originY).setAngle(img.angle).setFlipX(img.flipX).setTint(color).setTintMode(Phaser.TintModes.FILL));
+    }
+    ghost.setAlpha(0.55);
+    this.tweens.add({ targets: ghost, alpha: 0, duration: ms, onComplete: () => ghost.destroy() });
   }
 
   // Where a fighter is, in character pixels: its middle (pt) and its body (body, as the fx recipes want it).
@@ -1161,7 +1191,8 @@ export default class BattleScene extends Phaser.Scene {
       const was = v.hopAmt || 0;
       v.hopAmt = was + (want - was) * Math.min(1, this.game.loop.delta / (want > was ? M.hopStartMs : M.hopEaseMs)); // starts slowly: a one-frame step doesn't lift it
       v.ch.hopOffset = Math.abs(Math.sin((u.walked / M.hopLengthPx) * Math.PI)) * M.hopHeight * v.hopAmt;
-      v.ch.setPosition(u.x + (v.leapX || 0) + (v.stepX || 0), u.y + (v.leapY || 0) + (v.stepY || 0) - hover - v.ch.hopOffset - v.ch.castLift - (v.leapLift || 0));
+      const nudge = v.laneNudge ? Math.round(-this.bodyMiddle(v) * v.ch.scaleX) : 0; // Gang Charge: his BODY sits in the lane's middle
+      v.ch.setPosition(u.x + nudge + (v.leapX || 0) + (v.stepX || 0) + (v.shakeX || 0), u.y + (v.leapY || 0) + (v.stepY || 0) + (v.shakeY || 0) - hover - v.ch.hopOffset - v.ch.castLift - (v.leapLift || 0));
       // Look at whoever it is fighting (so the weapon swings towards it).
       const foe = (u.pending && u.pending.target) || (this.views.get(u.foe) || {}).unit || v.lookAt;
       if (foe && foe.alive && foe.x !== undefined && Math.abs(foe.x - u.x) > 6) v.ch.face(foe.x < u.x ? -1 : 1);
@@ -1875,6 +1906,22 @@ export default class BattleScene extends Phaser.Scene {
       const bv = this.views.get(e.unit.uid);
       if (bv) { this.popText(bv, e.skill.name, '#ff7a6a', true); bv.ch.flash(0xff4a3a, 140); }
       // A slam move (Grukk's Quake Jump): it rises into the air during the wind-up (it crashes down in 'bossAbility').
+      // Gang Charge (Rask): he LEAPS to the top of the lane (the rules already put him there), lands in a puff of dust,
+      // then the whole lane blinks red for the rest of the wind-up.
+      if (bv && e.lane && e.lane.x1 !== undefined) {
+        const S = CHAR_SCALE, l = e.lane, lane = { x1: l.x1 / S, y1: l.y1 / S, x2: l.x2 / S, y2: l.y2 / S, w: l.widthPx / S };
+        const jump = Math.min(l.jumpMs || 0, e.castMs);
+        // His feet point is not his body's middle (the axe side): shift him so his BODY sits in the middle of the lane.
+        bv.laneNudge = true;
+        Object.assign(bv, { leapX: l.fromX - l.x1, leapY: l.fromY - l.y1, leapLift: 0 });
+        const arc = { p: jump > 0 ? 0 : 1 };
+        const place = () => { bv.leapX = (l.fromX - l.x1) * (1 - arc.p); bv.leapY = (l.fromY - l.y1) * (1 - arc.p); bv.leapLift = Math.sin(arc.p * Math.PI) * 60; };
+        place();
+        if (jump > 0) this.tweens.add({ targets: arc, p: 1, duration: jump, ease: 'Sine.easeInOut', onUpdate: place,
+          onComplete: () => { place(); this.puff(bv.ch.x, bv.ch.y, 0x8a7a6a, 10); this.cameras.main.shake(100, 0.004); } });
+        const up = Math.min((bv.unit.def.height || 30) * charScale(bv.unit.def) / S + 6, (l.y1 - 155) / S); // over his head, under the boss bars
+        bv.laneFx = this.addFx(e.castMs, (q, now) => bossFx.chargeLaneFx(q, lane, now, jump / e.castMs, up), ['boss', 'chargeLane']);
+      }
       if (bv && e.ability && e.ability.slam) this.tweens.add({ targets: Object.assign(bv, { leapLift: bv.leapLift || 0 }), leapLift: e.ability.slam.liftPx, duration: e.castMs, ease: 'Quad.easeOut' });
     } else if (e.type === 'castStart') {
       // The hero winds up and a charge bar fills (see drawCastBars); its name shows when it goes off (skillName).
@@ -1885,6 +1932,7 @@ export default class BattleScene extends Phaser.Scene {
       const cv = this.views.get(e.unit.uid);
       if (!cv) return;
       cv.ch.castCancel();
+      if (cv.laneFx) { this.dropFx(cv.laneFx); cv.laneFx = null; cv.laneNudge = false; } // a stopped Gang Charge: its lane goes away
       if (cv.leapLift && e.unit.side === 'enemy' && !e.unit.statuses.some((st) => st.type === 'airborne')) this.tweens.add({ targets: cv, leapLift: 0, duration: 200, ease: 'Quad.easeIn' }); // a stopped slam drops
       if (e.reason === 'interrupted') { this.popText(this.views.get(e.unit.uid), 'Interrupted!', '#ff8a5c', true); sfx.play('interrupted'); }
     } else if (e.type === 'cast') {
@@ -2896,6 +2944,43 @@ export default class BattleScene extends Phaser.Scene {
         this.popText(v, 'ENRAGED!', '#ff4a3a', true);
         this.drawChips(v);
         return true;
+      case 'charge': { // Gang Charge: he DASHES down the lane and off the screen (red afterimages + a bright streak),
+        // then LEAPS back in from below to his new spot in the middle (the rules already put him there).
+        if (!v) return true;
+        if (v.laneFx) { this.dropFx(v.laneFx); v.laneFx = null; }
+        const S = CHAR_SCALE, l = e.lane, sp = e.spot;
+        if (l.x1 === undefined || !sp) return true;
+        const lane = { x1: l.x1 / S, y1: l.y1 / S, x2: l.x2 / S, y2: l.y2 / S, w: l.widthPx / S };
+        this.addFx(bossFx.CHARGE_TRAIL_MS, (q) => bossFx.chargeTrailFx(q, lane, e.ms / bossFx.CHARGE_TRAIL_MS), ['boss', 'chargeTrail']);
+        this.cameras.main.shake(e.ms, 0.006);
+        v.ch.flash(0xffffff, e.ms);
+        const dash = { p: 0 };
+        let ghostAt = 0;
+        let at = (x, y) => { v.leapX = x - sp.x; v.leapY = y - sp.y; };
+        at(l.x1, l.y1);
+        this.tweens.add({ targets: dash, p: 1, duration: e.ms, ease: 'Quad.easeIn',
+          onUpdate: () => {
+            at(l.x1, l.y1 + (l.y2 - l.y1) * dash.p);
+            if (this.time.now - ghostAt > 35) { ghostAt = this.time.now; this.followPositions(); this.afterimage(v, 0xff3a2a); }
+          },
+          onComplete: () => { // off the bottom of the screen; now he leaps back in to his spot
+            v.laneNudge = false;
+            const back = { p: 0 };
+            this.tweens.add({ targets: back, p: 1, duration: e.returnMs || 1, ease: 'Sine.easeOut',
+              onUpdate: () => { at(sp.x, l.y2 + (sp.y - l.y2) * back.p); v.leapLift = Math.sin(back.p * Math.PI) * 90; },
+              onComplete: () => { v.leapX = v.leapY = v.leapLift = 0; this.puff(v.ch.x, v.ch.y, 0x8a7a6a, 12); this.cameras.main.shake(120, 0.005); } });
+          } });
+        return true;
+      }
+      case 'chargeHit': { // Gang Charge hit: the hero shakes violently for a moment
+        if (!v) return true;
+        const k = { p: 0 };
+        this.tweens.add({ targets: k, p: 1, duration: 420,
+          onUpdate: () => { const a = 7 * (1 - k.p); v.shakeX = (Math.random() * 2 - 1) * a; v.shakeY = (Math.random() * 2 - 1) * a * 0.6; },
+          onComplete: () => { v.shakeX = v.shakeY = 0; } });
+        v.ch.flash(0xffffff, 120);
+        return true;
+      }
       case 'swap': {
         const w = this.views.get(e.with.uid);
         for (const x of [v, w]) if (x) this.puff(x.ch.x, x.ch.y, 0x4a3a6a, 6);

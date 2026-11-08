@@ -2027,18 +2027,30 @@
         "name": "Gang Charge",
         "everyMs": 10000,
         "firstMs": 5000,
-        "castMs": 1200,
-        "target": "randomHero",
+        "castMs": 2000,
         "damageMultiplier": 1.5,
         "apply": [
           {
             "status": "knockback"
+          },
+          {
+            "status": "stun",
+            "durationMs": 3500
           }
         ],
         "charge": {
-          "widthPx": 50,
-          "overshootPx": 60,
-          "ms": 300
+          "lanes": 3,
+          "jumpMs": 500,
+          "topY": 250,
+          "ms": 380,
+          "exitY": 960,
+          "returnMs": 700,
+          "returnBox": {
+            "x0": 120,
+            "x1": 270,
+            "y0": 430,
+            "y1": 520
+          }
         }
       },
       {

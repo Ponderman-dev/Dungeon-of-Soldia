@@ -194,3 +194,50 @@ export function plateBreakFx(q, at) {
   }
   return g.out;
 }
+
+// ---- Rask & Vesh (session 43) ----------------------------------------------------------------------
+// GANG CHARGE warning (user's pick: no outline): the whole lane (one of the 3 big columns) turns red and blinks faster
+// as the charge comes; it reaches `upPx` above his feet so he stands inside it. lane in char px (x1,y1 -> x2,y2, w wide);
+// q = 0..1 over the whole wind-up; nothing shows during the first `waitQ` (he is still jumping), t = clock.
+const RED = 0xff3a2a, RED2 = 0xffb0a0;
+function laneFrame(lane) {
+  const dx = lane.x2 - lane.x1, dy = lane.y2 - lane.y1, L = Math.max(1, Math.hypot(dx, dy));
+  const ux = dx / L, uy = dy / L;
+  return { L, ux, uy, at: (s, k) => ({ x: lane.x1 + ux * s - uy * k, y: lane.y1 + uy * s + ux * k }) };
+}
+export function chargeLaneFx(q, lane, t, waitQ = 0, upPx = 0) {
+  const g = pen();
+  if (q < waitQ) return g.out;
+  const p = (q - waitQ) / Math.max(0.001, 1 - waitQ);
+  const fast = 0.5 + 0.5 * Math.sin(t / (30 + 120 * (1 - p)));
+  const x0 = Math.round(Math.min(lane.x1, lane.x2) - lane.w / 2), x1 = Math.round(Math.max(lane.x1, lane.x2) + lane.w / 2);
+  const y0 = Math.round(Math.min(lane.y1, lane.y2) - upPx), y1 = Math.round(Math.max(lane.y1, lane.y2));
+  const appear = Math.min(1, p * 5); // fades in quickly once he has landed
+  g.rect(x0, y0, x1 - x0, y1 - y0, RED, (0.14 + 0.2 * fast) * appear);
+  return g.out;
+}
+
+// GANG CHARGE dash: a bright streak down the lane behind him (white core, red glow), speed lines and dust, all fading.
+// q = 0..1 over CHARGE_TRAIL_MS; the dash itself takes the first `dashQ` of it.
+export const CHARGE_TRAIL_MS = 900;
+export function chargeTrailFx(q, lane, dashQ = 0.4) {
+  const g = pen();
+  const f = laneFrame(lane), hw = lane.w / 2;
+  const front = Math.min(1, q / dashQ) * f.L; // where he is
+  const fade = 1 - clamp((q - dashQ) / (1 - dashQ));
+  for (let s = 0; s < front; s++) { // the streak: brightest just behind him
+    const near = clamp(1 - (front - s) / 60);
+    const a = fade * (0.35 + 0.65 * near);
+    for (let k = -4; k <= 4; k++) { const p = f.at(s, k); g.px(p.x, p.y, Math.abs(k) <= 1 ? 0xffffff : Math.abs(k) <= 2 ? RED2 : RED, a * (Math.abs(k) <= 2 ? 1 : 0.55)); }
+  }
+  for (let i = 0; i < 24; i++) { // speed lines in the lane
+    const k = (rnd(i * 3 + 1) - 0.5) * lane.w * 0.9, len = 10 + rnd(i * 3 + 2) * 24, s1 = front - rnd(i * 3 + 3) * 40;
+    for (let s = Math.max(0, s1 - len); s < s1; s++) { const p = f.at(s, k); g.px(p.x, p.y, i % 3 ? 0xffffff : RED2, 0.75 * fade * ((s - (s1 - len)) / len)); }
+  }
+  for (let i = 0; i < 30; i++) { // dust kicked up where his feet hit the floor
+    const s = rnd(i * 5 + 7) * front, side = (rnd(i * 5 + 8) - 0.5) * 14;
+    const age = clamp((front - s) / 50 + q * 0.4), p = f.at(s, side);
+    g.disc(p.x, p.y - age * 3, 1 + age * 2, i % 2 ? 0xb8a68a : 0x8a7a6a, (1 - age) * 0.7 * fade);
+  }
+  return g.out;
+}

@@ -54,14 +54,42 @@ export function darkLayer(art, { width, height }) {
   return { w: width, h: height, ax: 0, ay: 0, pixels, alpha };
 }
 
-// A prop's rows (camp.json props) as a layer, anchored at its bottom centre; `flip` mirrors it.
-export function propLayer(def, flip = false) {
+// A prop's rows (camp.json props) as a layer, anchored at its bottom centre; `flip` mirrors it. noOutline = drop the
+// dark outer line: colour '0' pixels that touch the outside (a '.' or the edge) are left out (user, session 42).
+// style = draw it like the floor stones (user: 'same art style'): colours muted (sat) and darkened (bright), a speckle
+// of +-noise per pixel (seeded, the same every time), and the pixels on its outer edge darker by `edge`. Palette
+// indices in def.bright (a brazier's flame) are left as they are.
+export function propLayer(def, flip = false, { noOutline = false, style = null } = {}) {
   const h = def.rows.length, w = def.rows[0].length;
   const pixels = new Int32Array(w * h).fill(-1);
+  const at = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? '.' : def.rows[y][x]);
+  const outer = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => at(x + dx, y + dy) === '.');
+  const keep = new Set(def.bright || []), rand = style ? seeded(style.seed || 1) : null;
   def.rows.forEach((r, y) => [...r].forEach((ch, x) => {
-    if (ch !== '.') pixels[y * w + (flip ? w - 1 - x : x)] = num(def.palette[Number(ch)]);
+    if (ch === '.' || (noOutline && ch === '0' && outer(x, y))) return;
+    let c = num(def.palette[Number(ch)]);
+    if (style && !keep.has(Number(ch))) {
+      const edge = noOutline ? [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => { const n = at(x + dx, y + dy); return n === '.' || n === '0' && outer(x + dx, y + dy); }) : outer(x, y);
+      c = stoneLook(c, style, (rand() * 2 - 1) * style.noise - (edge ? style.edge : 0));
+    }
+    pixels[y * w + (flip ? w - 1 - x : x)] = c;
   }));
   return { w, h, ax: Math.floor(w / 2), ay: h, pixels };
+}
+
+// One colour in the floor's look: saturation x sat, brightness x bright, then `add` (noise / edge) on every channel.
+function stoneLook(c, S, add) {
+  const r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255, l = 0.3 * r + 0.59 * g + 0.11 * b;
+  const ch = (v) => Math.max(0, Math.min(255, Math.round((l + (v - l) * S.sat) * S.bright + add)));
+  return (ch(r) << 16) | (ch(g) << 8) | ch(b);
+}
+
+// A prop with its palette mixed `t` of the way toward `color` (camp props take on the floor's stone colour, user
+// session 42); palette indices in def.bright (a brazier's flame) stay as they are.
+export function blendProp(def, color, t) {
+  if (!t) return def;
+  const keep = new Set(def.bright || []);
+  return { ...def, palette: def.palette.map((c, i) => (keep.has(i) ? c : mix(num(c), num(color), t))) };
 }
 
 // The campfire: the back of the stone ring with ash and logs, the flames (frames), the front stones, the glow.

@@ -37,3 +37,15 @@ for (const n of camp.npcs) {
   ok(`npc ${n.id}: colours exist`, parts.every(([, p]) => [...p.art.rows.join('')].every((ch) => ch === '.' || p.art.palette[Number(ch)])));
 }
 ok('4 NPCs with different names', camp.npcs.length === 4 && new Set(camp.npcs.map((n) => n.name)).size === 4);
+const noOl = propLayer(camp.props.crate, false, { noOutline: true }), withOl = propLayer(camp.props.crate);
+ok('noOutline drops the outer dark line, keeps the inside', noOl.pixels[0] === -1 && withOl.pixels[0] >= 0 && noOl.pixels.filter((c) => c >= 0).length > withOl.pixels.filter((c) => c >= 0).length / 2);
+import { blendProp } from '../../src/systems/campArt.js';
+const br = camp.props.brazier, bl = blendProp(br, camp.propLook.toward, 0.5);
+ok('blendProp: colours lean toward the floor, the bright flame colours stay', bl.palette[1] !== br.palette[1] && br.bright.every((i) => bl.palette[i] === br.palette[i]));
+const st = camp.propLook.style, plain = propLayer(camp.props.crate, false, { noOutline: true }), styled = propLayer(camp.props.crate, false, { noOutline: true, style: st });
+const sat = (c) => Math.max((c >> 16) & 255, (c >> 8) & 255, c & 255) - Math.min((c >> 16) & 255, (c >> 8) & 255, c & 255);
+const avg = (l, f) => { const v = [...l.pixels].filter((c) => c >= 0); return v.reduce((a, c) => a + f(c), 0) / v.length; };
+ok('floor style: props come out duller and darker, same shape, same every time', avg(styled, sat) < avg(plain, sat) && avg(styled, lum) < avg(plain, lum) && styled.pixels.every((c, i) => (c < 0) === (plain.pixels[i] < 0)) && propLayer(camp.props.crate, false, { noOutline: true, style: st }).pixels.every((c, i) => c === styled.pixels[i]));
+const brS = propLayer(camp.props.brazier, false, { noOutline: true, style: st }), brP = propLayer(camp.props.brazier, false, { noOutline: true });
+const flame = Number(camp.props.brazier.palette[camp.props.brazier.bright[0]]);
+ok('floor style: the brazier flame keeps its colour', [...brP.pixels].some((c, i) => c === flame && brS.pixels[i] === flame));

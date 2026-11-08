@@ -3,7 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
 import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc, uiShift, drawButton, buttonTextColor } from '../entities/uiKit.js';
 import { nextBossFloor } from '../systems/dungeon.js';
 import camp from '../data/camp.json';
-import { openFloor, darkLayer, lightTint, fireLayers, propLayer } from '../systems/campArt.js';
+import { openFloor, darkLayer, lightTint, fireLayers, propLayer, blendProp } from '../systems/campArt.js';
 import floorArt from '../data/floorArt.json';
 import dungeons from '../data/dungeons.json';
 import { layerTexture } from '../entities/pixelLayer.js';
@@ -182,12 +182,23 @@ export default class BaseScene extends Phaser.Scene {
     return this.add.image(x, y, layerTexture(this, key, lay)).setOrigin(lay.ax / lay.w, lay.ay / lay.h).setScale(P);
   }
 
-  // Tents, logs, crates...: each stands on a soft shadow and takes the firelight where it stands; lower = in front.
+  // Tents, banner, weapon rack, cooking pot, dog...: each stands on a soft shadow, under the floor's darkness (camp.json
+  // propLook), its colours leaning toward the floor stone; a `lit` prop (the brazier) keeps its colours and glows.
   drawProps() {
+    const L = camp.propLook; // props sit UNDER the floor's darkness (same light as the floor) and lean toward its colour
     for (const [name, x, y, flip] of camp.place) {
-      const lay = propLayer(camp.props[name], flip);
-      this.add.ellipse(x, y - 1, lay.w * P * 0.9, 8, 0x000000, 0.3).setDepth(y - 0.5);
-      this.layer(`camp-${name}${flip ? '-flip' : ''}`, lay, x, y).setTint(lightTint(camp, x, y)).setDepth(y);
+      const def = blendProp(camp.props[name], L.toward, L.mix), under = L.underDark && !def.lit;
+      const lay = propLayer(def, flip, { noOutline: !camp.propOutline, style: L.style });
+      const depth = under ? 0.1 + (y / GAME_HEIGHT) * 0.3 : y; // under the dark layer (0.5), still lower = in front
+      this.add.ellipse(x, y - 1, lay.w * P * 0.9, 8, 0x000000, 0.3).setDepth(depth - 0.001);
+      const img = this.layer(`camp-${name}${flip ? '-flip' : ''}`, lay, x, y).setDepth(depth);
+      if (!def.lit && !under) img.setTint(lightTint(camp, x, y));
+      if (def.glow) { // its own soft light (the brazier), flickering a little
+        const G = def.glow, gx = x + ((flip ? lay.w - 1 - G.x : G.x) - lay.ax) * P, gy = y + (G.y - lay.ay) * P;
+        const glow = this.add.graphics().setDepth(1).setAlpha(G.alpha);
+        for (let i = G.steps; i >= 1; i--) pixelDisc(glow, gx, gy, Math.round((G.r * P * i) / G.steps / 2) * 2, Number(G.color));
+        this.tweens.add({ targets: glow, alpha: G.alpha * 1.6, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      }
     }
   }
 

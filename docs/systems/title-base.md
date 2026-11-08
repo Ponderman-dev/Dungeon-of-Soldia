@@ -73,6 +73,19 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   'NEXT BOSS: FLOOR n' (`dungeon.js nextBossFloor`: first boss floor past the best floor; `subDone` after the last).
 - Tab bar (`ui.tabs`): gold line + dark band, 4 raised buttons HEROES / GLOSSARY / LEADERS / SHOP (icon 4x + label).
 - Fire moved to y 420, one tent behind it, barrel + crate; heroes `spots` round it. No red '!' dots (nothing new to flag yet).
+- RICHER CAMP (user: 'camp visual need upgrade' -> 'richer camp'): new props (rows made with a small drawing script, then
+  stored in camp.json): banner (crimson, gold sun), lantern on a post (`lit` = no firelight tint, `glow` = its own soft
+  flickering light; now the brazier), weapon rack + round shield, cooking pot on a tripod, a sleeping dog by the fire, a bedroll, sack.
+  User: 'too uniform' -> 4 arrangements tried, picked V4 (tent + banner left, weapons right, pot by the fire, lantern
+  with barrel + crate bottom left), NO dark outline on props (`propOutline` false -> propLayer noOutline).
+  Then new looks picked from 3-up sheets: tent = simple canvas LEAN-TO (user: 'something simpler'), lamp = stone
+  BRAZIER (prop `brazier`, fire bowl, warm glow), bedroll = simple green ROLL with one strap.
+- PROPS IN THE FLOOR'S STYLE (user: 'dimmer, follow the floor' -> not a plain dim/colour mix -> 'same art style'):
+  camp.json `propLook`: props drawn UNDER the floor's dark layer (same light as the floor) and `style` = muted colours
+  (sat 0.55), darker (bright 0.82), a seeded per-pixel speckle (noise 7) and a darker outer edge (edge 14), like the
+  stones (`campArt.propLayer` style). The brazier flame (`bright` palette indices) keeps its colours. `mix` (lean toward
+  the stone colour) was tried and turned down: 0. Then the user removed the tent from the camp (the `tent` prop is kept
+  in camp.json, just not placed).
 
 ## 5. MENU SCREENS (session 35, mock-ups only, nothing built) — `docs/proposals/menu/*.png`
 - GLOSSARY — BUILT (session 37): `GlossaryScene` (camp GLOSSARY button, camp.json `scene`), data `glossary.json`

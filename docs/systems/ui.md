@@ -103,3 +103,12 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   buttons unchanged).
 - SKILL SQUARES (battle HUD, session 41, user picked A of 3): no gold theme frame (too distracting): a thin 2px line in
   the skill colour (red / green, grey while cooling, Mage = next element) round a dark tile (`BattleScene.drawSkillFrame`).
+
+## BATTLE PAUSE + SPEED BUTTONS (session 42, user: 'top left needs a play speed button and a pause button to go back to
+## the menu or settings')
+- Top RIGHT, on the floor counter's row (user moved them from under the counter; data `pause.json` buttons): a PAUSE square (two bars) and a SPEED button that cycles the
+  BATTLE SPEED choices of settings.json (1X / 2X, user's pick; saved like the Settings page; 2X shows in gold).
+- Pause = Battle pauses, `PauseScene` opens over it: PAUSED window with RESUME (main button), SETTINGS (the Settings page
+  over the pause window, '< BACK' returns; DELETE SAVE there also stops the fight), GIVE UP (red; asks 'GIVE UP? The run
+  ends here. Your best floor is kept.' FIGHT ON / GIVE UP) -> `BattleScene.giveUp()` = `onLoss()` (defeat screen, game
+  over summary, run saved). A run can't be saved halfway yet. Back in the fight the settings are read again.

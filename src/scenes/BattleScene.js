@@ -48,7 +48,8 @@ import bookData from '../data/skillBooks.json';
 import { maybeAddBook } from '../systems/books.js';
 import { loadProgress, saveProgress, recordRun, unlockedIds } from '../systems/progress.js';
 import settingsDefs from '../data/settings.json';
-import { readSettings } from '../systems/settings.js';
+import { readSettings, cardOf, changeSetting } from '../systems/settings.js';
+import pauseData from '../data/pause.json';
 import { newRunStats, countEvents, finishRun } from '../systems/runStats.js';
 import profileData from '../data/profile.json';
 import { checkAchievements } from '../systems/achievements.js';
@@ -179,6 +180,7 @@ export default class BattleScene extends Phaser.Scene {
     this.floorText = uiText(this, 20, 25, '', 'normal')
       .setOrigin(0, 0.5)
       .setDepth(DEPTH.hud);
+    this.drawControls(); // pause + battle speed, top right
     this.banner = this.add
       .text(GAME_WIDTH / 2, BANNER_Y, '', { fontFamily: UI.font, fontSize: '24px', color: '#ffffff', stroke: '#000000', strokeThickness: 4, align: 'center', wordWrap: { width: GAME_WIDTH - 32, useAdvancedWrap: true } }) // long lines wrap instead of running off the screen
       .setOrigin(0.5)
@@ -1670,6 +1672,51 @@ export default class BattleScene extends Phaser.Scene {
         done();
       },
     });
+  }
+
+  // PAUSE and BATTLE SPEED (user, session 42; data/pause.json): two small buttons top right (on the floor counter's row). Pause =
+  // this scene pauses and the Pause window opens over it; speed = cycles the BATTLE SPEED choices (saved, like the
+  // Settings page). Back from the pause window: the settings are read again (speed may have changed there).
+  drawControls() {
+    const B = pauseData.buttons, P = B.pause, Sp = B.speed, g = this.add.graphics().setDepth(DEPTH.hud);
+    drawWindow(g, P.x, B.y, P.w, B.h);
+    const mx = P.x + P.w / 2, my = B.y + B.h / 2;
+    g.fillStyle(0xffffff, 1).fillRect(mx - B.barGap / 2 - B.barW, my - B.barH / 2, B.barW, B.barH).fillRect(mx + B.barGap / 2, my - B.barH / 2, B.barW, B.barH);
+    drawWindow(g, Sp.x, B.y, Sp.w, B.h);
+    this.speedText = uiText(this, Sp.x + Sp.w / 2, my + 1, '', 'normal').setOrigin(0.5).setDepth(DEPTH.hud);
+    this.refreshSpeed();
+    this.add.zone(P.x, B.y, P.w, B.h).setOrigin(0).setInteractive().setDepth(DEPTH.hud).on('pointerup', () => this.openPause());
+    this.add.zone(Sp.x, B.y, Sp.w, B.h).setOrigin(0).setInteractive().setDepth(DEPTH.hud).on('pointerup', () => this.cycleSpeed());
+    this.events.on(Phaser.Scenes.Events.RESUME, () => { this.applySettings(); this.refreshSpeed(); });
+  }
+
+  refreshSpeed() {
+    const opt = cardOf(settingsDefs, 'battleSpeed').options.find((o) => o.value === this.speed);
+    this.speedText.setText(opt ? opt.label : `${this.speed}X`).setColor(this.speed > 1 ? UI.gold : UI.text);
+  }
+
+  cycleSpeed() {
+    if (this.mode === 'lost') return;
+    const opts = cardOf(settingsDefs, 'battleSpeed').options, i = opts.findIndex((o) => o.value === this.speed);
+    const progress = loadProgress();
+    changeSetting(progress, settingsDefs, 'battleSpeed', opts[(i + 1) % opts.length].value);
+    saveProgress(progress);
+    sfx.play('tap');
+    this.applySettings();
+    this.refreshSpeed();
+  }
+
+  openPause() {
+    if (this.mode === 'lost' || !this.scene.isActive()) return;
+    sfx.play('tap');
+    this.scene.launch('Pause');
+    this.scene.pause();
+  }
+
+  // GIVE UP (pause window): the run ends here like a defeat (game over summary, best floor kept).
+  giveUp() {
+    if (this.mode === 'lost') return;
+    this.onLoss();
   }
 
   // The player's Settings (systems/settings.js): battle speed runs the whole scene (fight, tweens, timers) faster;

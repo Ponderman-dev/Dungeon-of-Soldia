@@ -143,6 +143,7 @@ export default class SettingsScene extends Phaser.Scene {
       deleteProgress();
       sfx.refresh();
       this.scene.stop(this.from);
+      if (this.from === 'Pause') this.scene.stop('Battle'); // opened from a paused fight: that fight ends too
       this.scene.start('Title');
     };
     for (const [i, label, look, fn] of [[0, c.no, 'plain', keep], [1, c.yes, 'red', wipe]]) {

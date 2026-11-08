@@ -19,7 +19,7 @@
     "barCellH": 18,
     "barGap": 4,
     "plainH": 44,
-    "backLabels": { "Base": "< CAMP", "Title": "< BACK" },
+    "backLabels": { "Base": "< CAMP", "Title": "< BACK", "Pause": "< BACK" },
     "dim": "0x55556a",
     "bg": "0x0c0b10",
     "versionY": 828

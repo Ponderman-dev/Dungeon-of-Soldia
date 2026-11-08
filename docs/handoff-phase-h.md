@@ -19,6 +19,7 @@
   HEROES / GLOSSARY / LEADERS / SHOP); richer camp props (banner, stone brazier with glow, weapon rack + shield, cooking
   pot, sleeping dog, rolled bedroll, supplies), loose clusters, NO outlines, drawn in the FLOOR's style (`propLook`:
   under the floor light, muted + speckle + dark edge); tent removed (prop kept).
+  Battle PAUSE + SPEED buttons top right (ui.md; `pause.json`, `PauseScene`: RESUME / SETTINGS / GIVE UP = defeat).
 - STILL OPEN (other topics, one per session): transitions phase 2 (menu tabs slideSwap + pop-ups popIn), phase 3-5
   (opening, the run, sounds), FIGHT HUD redesign, PASSIVE icons gold frame, dev trial code clean-up (`?frame=`, `?pal=`,
   `?theme=`, GlossaryScene TRIAL). KIV: hero art (knight sketches), Studio UI, session 33 item leftovers, music.

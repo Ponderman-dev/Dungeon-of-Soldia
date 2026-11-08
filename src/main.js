@@ -7,6 +7,7 @@ import SquadScene from './scenes/SquadScene.js';
 import DebugScene from './scenes/DebugScene.js';
 import PuzzleScene from './scenes/PuzzleScene.js';
 import BaseScene from './scenes/BaseScene.js';
+import PauseScene from './scenes/PauseScene.js';
 import TitleScene from './scenes/TitleScene.js';
 import SettingsScene from './scenes/SettingsScene.js';
 import GameOverScene from './scenes/GameOverScene.js';
@@ -28,7 +29,7 @@ const game = new Phaser.Game({
     mode: Phaser.Scale.FIT, // scale the 390x844 screen to fit any phone/window
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, TitleScene, BaseScene, SquadScene, BattleScene, RewardScene, PuzzleScene, SettingsScene, GameOverScene, ProfileScene, HeroesScene, GlossaryScene, LeadersScene, ShopScene, DebugScene],
+  scene: [BootScene, TitleScene, BaseScene, SquadScene, BattleScene, RewardScene, PuzzleScene, PauseScene, SettingsScene, GameOverScene, ProfileScene, HeroesScene, GlossaryScene, LeadersScene, ShopScene, DebugScene],
 });
 
 // Dev server only (never in the built page): browser checks drive the game through this.

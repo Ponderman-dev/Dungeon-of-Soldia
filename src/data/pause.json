@@ -1,0 +1,9 @@
+{
+  "_about": "The battle's top-left controls and the PAUSE window (scenes/PauseScene.js; user, session 42: 'a play speed button and a pause button to go back to the menu or settings'). buttons = screen px, top RIGHT on the floor counter's row (user moved them there; the counter is 8, 8, 160 x 32): pause = a square with two bars, speed = cycles the BATTLE SPEED setting's choices (settings.json, saved like the Settings page). window = the pause window (centre of the screen): RESUME (main button), SETTINGS (the Settings page over it), GIVE UP (asks first; the run ends like a defeat: game over summary, best floor kept). A run can't be saved halfway yet.",
+  "buttons": { "y": 8, "h": 32, "pause": { "x": 342, "w": 40 }, "speed": { "x": 276, "w": 60 }, "barW": 5, "barH": 14, "barGap": 6 },
+  "window": { "w": 300, "pad": 20, "titleY": 26, "firstY": 70, "btnH": 48, "gap": 12, "shade": 0.6 },
+  "text": {
+    "title": "PAUSED", "resume": "RESUME", "settings": "SETTINGS", "giveUp": "GIVE UP",
+    "confirmTitle": "GIVE UP?", "confirm": "The run ends here.\nYour best floor is kept.", "keep": "FIGHT ON", "yes": "GIVE UP"
+  }
+}

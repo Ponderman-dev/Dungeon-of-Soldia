@@ -232,5 +232,13 @@
     "label": "SKY",
     "color": "#7ab0ff",
     "textColor": "#000000"
+  },
+  "noHeal": {
+    "popup": true,
+    "label": "NO HEAL",
+    "color": "#6a1a2a",
+    "textColor": "#ffffff",
+    "noHeal": true,
+    "debuff": true
   }
 }

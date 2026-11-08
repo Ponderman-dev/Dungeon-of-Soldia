@@ -18,7 +18,14 @@
 //       spikes: { count, aimEvery, aimTurns, aimSkipFrozen, spacing: { px, ms }, radius, warnMs, gapMs, percentMaxHp, freezeMs }   Ice Spikes: a barrage, one spot every
 //         `gapMs` (every `aimEvery`th where a hero stands then), each warned for `warnMs` then it lands:
 //         every hero within `radius` loses `percentMaxHp`% health and freezes for `freezeMs`,
-//       clones: { statPercent }, shatterClones: { multiplier } }
+//       clones: { statPercent }, shatterClones: { multiplier },
+//       charge: { widthPx, overshootPx, ms }   Gang Charge (Rask): at the wind-up start a lane is drawn from the boss
+//         through its target (+ overshootPx); on release he dashes to its end and EVERY defender inside the lane
+//         (widthPx wide) at that moment is hit (damageMultiplier + apply). Events 'castStart' (+ lane), 'charge'.
+//       lane: { warnMs, heightPx, clones, damageMultiplier, stacks, apply }   Shadow Kunai (Vesh): a row across the WHOLE
+//         floor at a random hero's height is warned for warnMs (`clones` shadow copies throw from one side: looks), then
+//         every defender within heightPx/2 of it is hit and gets `apply` x `stacks`. Events 'laneWarn', 'laneLand'.
+//       summon.enragedCount: an enraged twin calls that many instead of `count` }
 //     slam: { liftPx, dropMs, shakeMs, shakeIntensity } = looks only: it rises during the wind-up and crashes down (Grukk's Quake Jump)
 //     minor: true = a normal enemy's small move (a popup, no red banner); needsHurt: waits until an enemy is hurt;
 //     target also 'lowestAlly' (most hurt enemy) / 'lowestOtherAlly' (not itself) / 'otherAllies'; shield: { percentOwnHp, durationMs } on the target
@@ -31,6 +38,8 @@
 //   weakMultiplier / resistMultiplier        its own weak / resist numbers (default combat.json)
 //   statusImmune: [status ids]
 //   link: { partner, enrage: [mods], reviveMs, revivePercent }        twin bosses (Rask & Vesh)
+//   bomber: { damageMultiplier, stunMs }     Powder Bandit: runs at ONE random hero (keeps it) and blows itself up when in
+//                                            reach: that hero is hit and stunned; it never attacks normally
 //   phylactery: { id, hpPercent, reformMs, reformPercent, toughen, maxReforms }   a second life (Morthul; back at most maxReforms times)
 //   heat: { max, perSec, perFireHit, perIceHit, freezeDrop, chillDrop, eruption: { damageMultiplier, damageType, apply } }
 //   mirror: { atStart, atHp: [..], statPercent }                       glass clones of the heroes (Sela)
@@ -107,7 +116,9 @@ export const bossMethods = {
           continue;
         }
       }
+      if (d.bomber) { this.tickBomber(u, events); continue; }
       if (u.spikes && u.spikes.length) this.tickSpikes(u, dt, events);
+      if (u.lanes && u.lanes.length) this.tickLanes(u, dt, events);
       if (u.sweeps && u.sweeps.length) this.tickSweeps(u, dt, events);
       if (d.reformFor) this.tickPhylactery(u, dt, events);
       if (d.heat) this.tickHeat(u, dt, events);
@@ -210,7 +221,7 @@ export const bossMethods = {
       }
       if (c.remaining > 0) return;
       u.bossCast = null;
-      this.releaseAbility(u, c.def, events);
+      this.releaseAbility(u, c.def, events, c);
       return;
     }
     if (this.isStunned(u) || this.has(u, 'fear')) return;
@@ -262,9 +273,10 @@ export const bossMethods = {
     // Giantslayer's Brand: while a holder lives, boss wind-ups take `bossWindup`% longer (20 per copy).
     const slow = this.heroes.filter((h) => h.alive && h.specials).reduce((n, h) => n + (h.specials.bossWindup || 0), 0);
     const castMs = (a.castMs || 0) * (1 + slow / 100);
-    if (castMs <= 0 && !a.channel) return this.releaseAbility(u, a, events);
-    u.bossCast = { def: a, remaining: castMs, total: castMs, channel: null };
-    events.push({ type: 'castStart', unit: u, skill: { name: a.name, kind: 'attack' }, castMs, boss: true, ability: a });
+    const lane = a.charge ? this.chargeLane(u, a) : null; // Gang Charge: the lane is fixed when the wind-up starts
+    if (castMs <= 0 && !a.channel) return this.releaseAbility(u, a, events, { lane });
+    u.bossCast = { def: a, remaining: castMs, total: castMs, channel: null, lane };
+    events.push({ type: 'castStart', unit: u, skill: { name: a.name, kind: 'attack' }, castMs, boss: true, ability: a, lane });
   },
 
   // The heroes a move goes for.
@@ -298,7 +310,9 @@ export const bossMethods = {
   },
 
   // A boss move goes off.
-  releaseAbility(u, a, events) {
+  releaseAbility(u, a, events, cast = null) {
+    if (a.charge) return this.releaseCharge(u, a, cast && cast.lane, events);
+    if (a.lane) return this.startLane(u, a, events);
     if (a.channel) {
       u.bossCast = { def: a, remaining: a.channel.ticks * a.channel.intervalMs, total: a.channel.ticks * a.channel.intervalMs, channel: { spec: a.channel, timer: 0, tick: 0 } };
       events.push({ type: 'bossAbility', unit: u, ability: a, targets: [] });
@@ -361,7 +375,8 @@ export const bossMethods = {
     for (const sm of a.summon ? [].concat(a.summon) : []) {
       const have = this.enemies.filter((e) => e.alive && e.def.id === sm.id).length;
       const first = this.rng() < 0.5 ? -1 : 1; // `beside` (px): to its sides, every other one on the other side
-      for (let i = 0; i < sm.count && have + i < (sm.max ?? Infinity); i++) {
+      const count = u.enraged && sm.enragedCount ? sm.enragedCount : sm.count; // an enraged twin calls more
+      for (let i = 0; i < count && have + i < (sm.max ?? Infinity); i++) {
         const sp = this.spawnEnemyUnit(sm.id, u, events, sm.near ? 90 : 60, sm.beside ? { px: sm.beside, side: i % 2 ? -first : first } : null);
         if (sp && sm.hpPercent) sp.hp = sp.maxHp = Math.max(1, Math.round((sp.maxHp * sm.hpPercent) / 100)); // War Drum: weaker summoned goblins
       }
@@ -532,6 +547,7 @@ export const bossMethods = {
     if (!partner) return;
     this.applyStatus(partner, { status: 'buff', durationMs: 600000, mods: l.enrage }, partner, 'enrage', events);
     partner.reviveTimer = l.reviveMs;
+    partner.enraged = true;
     partner.reviveUid = dead.uid;
     events.push({ type: 'enrage', unit: partner, partner: dead });
   },
@@ -549,6 +565,95 @@ export const bossMethods = {
     dead.bossCast = null;
     if (this.hasPositions(dead)) { dead.x = dead.homeX; dead.y = dead.homeY; }
     events.push({ type: 'revive', unit: dead, by: u });
+  },
+
+  // ---- Rask: Gang Charge ------------------------------------------------------------------------
+  // The lane: from the boss through its target, `overshootPx` further, kept on the fight floor. null without positions.
+  chargeLane(u, a) {
+    const t = this.abilityTargets(u, a.target, a.radius, a.count)[0];
+    if (!t) return null;
+    if (!this.hasPositions(u) || !this.hasPositions(t)) return { target: t };
+    const L = this.rules.movement.layout;
+    const dx = t.x - u.x, dy = t.y - u.y, len = Math.hypot(dx, dy) || 1;
+    const go = len + (a.charge.overshootPx || 0);
+    let x2 = u.x + (dx / len) * go, y2 = u.y + (dy / len) * go;
+    x2 = Math.min(L.width - L.marginX, Math.max(L.marginX, x2));
+    y2 = Math.min(L.heroY + 40, Math.max(L.enemyY + L.topMarginY, y2));
+    return { target: t, x1: u.x, y1: u.y, x2, y2, widthPx: a.charge.widthPx };
+  },
+
+  // How far point p is from the segment (x1,y1)-(x2,y2).
+  segmentDistance(p, s) {
+    const vx = s.x2 - s.x1, vy = s.y2 - s.y1, l2 = vx * vx + vy * vy || 1;
+    const k = Math.max(0, Math.min(1, ((p.x - s.x1) * vx + (p.y - s.y1) * vy) / l2));
+    return Math.hypot(p.x - (s.x1 + k * vx), p.y - (s.y1 + k * vy));
+  },
+
+  // He dashes down the lane; everyone standing in it NOW is hit (dodge it with a move order).
+  releaseCharge(u, a, lane, events) {
+    if (!lane) lane = this.chargeLane(u, a);
+    if (!lane) return;
+    let hit;
+    if (lane.x1 === undefined) hit = lane.target.alive ? [lane.target] : [];
+    else {
+      hit = this.defenders().filter((h) => h.alive && this.hasPositions(h) && this.segmentDistance(h, lane) <= lane.widthPx / 2);
+      u.x = lane.x2; u.y = lane.y2;
+    }
+    events.push({ type: 'bossAbility', unit: u, ability: a, targets: hit });
+    events.push({ type: 'charge', unit: u, lane, ms: a.charge.ms || 300, targets: hit });
+    for (const t of hit) {
+      if (!t.alive) continue;
+      if (a.damageMultiplier) this.strike(u, t, events, { multiplier: a.damageMultiplier, damageType: a.damageType, ability: true });
+      if (t.alive) for (const spec of a.apply || []) this.applyStatus(t, spec, u, `boss_${a.id}`, events);
+    }
+  },
+
+  // ---- Vesh: Shadow Kunai (a warned row across the floor) -----------------------------------------
+  startLane(u, a, events) {
+    const heroes = this.heroes.filter((h) => h.alive);
+    if (!heroes.length) return;
+    const aim = heroes[Math.floor(this.rng() * heroes.length)];
+    const lane = { a, aim, y: this.hasPositions(aim) ? aim.y : null, side: this.rng() < 0.5 ? -1 : 1, remaining: a.lane.warnMs, total: a.lane.warnMs };
+    u.lanes = u.lanes || [];
+    u.lanes.push(lane);
+    events.push({ type: 'bossAbility', unit: u, ability: a, targets: [] });
+    events.push({ type: 'laneWarn', unit: u, lane });
+  },
+
+  tickLanes(u, dt, events) {
+    for (const ln of [...u.lanes]) {
+      ln.remaining -= dt;
+      if (ln.remaining > 0) continue;
+      u.lanes.splice(u.lanes.indexOf(ln), 1);
+      const s = ln.a.lane;
+      const hit = ln.y === null ? (ln.aim.alive ? [ln.aim] : [])
+        : this.defenders().filter((h) => h.alive && this.hasPositions(h) && Math.abs(h.y - ln.y) <= s.heightPx / 2);
+      events.push({ type: 'laneLand', unit: u, lane: ln, targets: hit });
+      for (const t of hit) {
+        if (!t.alive) continue;
+        if (s.damageMultiplier) this.strike(u, t, events, { multiplier: s.damageMultiplier, ability: true, projectile: 'knife' });
+        for (let i = 0; i < (s.stacks || 1) && t.alive; i++) for (const spec of s.apply || []) this.applyStatus(t, spec, u, `boss_${ln.a.id}`, events);
+      }
+    }
+  },
+
+  // ---- Powder Bandit: runs at one hero and blows up -----------------------------------------------
+  tickBomber(u, events) {
+    const heroes = this.heroes.filter((h) => h.alive);
+    let t = heroes.find((h) => h.uid === u.foe);
+    if (!t && !this.tauntedBy(u)) { // picks ONE random hero and keeps it (a new one if that hero falls)
+      t = heroes.length ? heroes[Math.floor(this.rng() * heroes.length)] : null;
+      this.setFoe(u, t);
+    }
+    if (this.tauntedBy(u)) t = this.tauntedBy(u);
+    if (!t || this.isStunned(u) || this.has(u, 'fear') || !this.inReach(u, t)) return;
+    const b = u.def.bomber;
+    events.push({ type: 'bomberBlast', unit: u, target: t });
+    this.strike(u, t, events, { multiplier: b.damageMultiplier, ability: true });
+    if (t.alive && b.stunMs) this.applyStatus(t, { status: 'stun', durationMs: b.stunMs }, u, 'powder_blast', events);
+    u.xpless = true;
+    u.hp = 0;
+    this.killUnit(u, events);
   },
 
   // ---- Morthul: phylactery (a second life) --------------------------------------------------------

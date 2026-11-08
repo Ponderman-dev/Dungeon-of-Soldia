@@ -1121,7 +1121,7 @@ export default class BattleState {
       const sp = hero.specials || {};
       const desperate = sp.desperate && hero.hp < (hero.maxHp * (sp.desperateBelow ?? 30)) / 100 ? sp.desperate : 1; // Heart of the Beast: x2 regen when low
       const regen = (sp.regen || 0) * desperate * aura.factor + aura.base + this.songRegen(); // % of max health per second
-      if (regen > 0) {
+      if (regen > 0 && !this.blocksHeal(hero)) {
         const gain = Math.min(hero.maxHp - hero.hp, (hero.maxHp * regen * dt) / 100000);
         hero.hp += gain;
         hero.regenAcc += gain;
@@ -1197,6 +1197,7 @@ export default class BattleState {
         continue;
       }
       unit.timer -= interval;
+      if (unit.def.bomber) continue; // Powder Bandit: never swings, it blows up (bosses.js tickBomber)
       if (unit.def.bait) { this.baitTaunt(unit, events); continue; } // Mimic: never attacks, taunts the enemies around it
 
       // The attack starts now and lands after `hitDelay` (melee: the swing, ranged: the shot's
@@ -3562,6 +3563,7 @@ export default class BattleState {
   // A heal that really restored health is a "heal received": the Lost Cleric's Grimoire reacts to it.
   // Returns the health restored.
   healUnit(unit, amount, events, opts = {}) {
+    if (this.blocksHeal(unit)) return 0; // No Heal (Vesh's daggers)
     const raw = Math.round(amount * (opts.aura === false ? 1 : this.regenAura().factor));
     const room = unit.maxHp - unit.hp;
     const got = Math.min(room, raw);
@@ -3570,6 +3572,11 @@ export default class BattleState {
     events.push({ type: 'heal', unit, amount: got, by: opts.by || null }); // by: the healer (run stats), when the caller names one
     this.onHealed(unit, got, events);
     return got;
+  }
+
+  // No Heal status: the unit cannot be healed at all (heals, lifesteal, regen).
+  blocksHeal(unit) {
+    return !!(unit.statuses && unit.statuses.some((s) => s.type === 'noHeal'));
   }
 
   // The unit was healed for `got` health: Lost Cleric's Grimoire launches green fire at a random enemy

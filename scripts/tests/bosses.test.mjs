@@ -173,6 +173,62 @@ ok('Spiderling: EVERY hit poisons (a weak poison)', enemies.spiderling.onHit.som
   const ev2 = run(s, 8200);
   ok('...and raises him again after 8s at 30% health', rask.alive && ev2.some((e) => e.type === 'revive') && Math.abs(rask.hp / rask.maxHp - 0.3) < 0.05); }
 
+// Rask & Vesh v2 (session 43): Gang Charge lane, Shadow Kunai row, Powder Bandit, No Heal, debuff hits.
+{ const ra = enemies.rask, ve = enemies.vesh;
+  ok('Rask hits HARDER and slower than Vesh, Vesh hits FASTER', ra.stats.attack > ve.stats.attack && ve.stats.attackEfficiency > ra.stats.attackEfficiency);
+  ok('...Rask\'s hits break armor, Vesh\'s hits bleed', ra.onHit.some((x) => x.status === 'armorBreak') && ve.onHit.some((x) => x.status === 'bleed'));
+  ok('...Switch! and Shoulder Bash are gone', ![...ra.abilities, ...ve.abilities].some((a) => a.swap || a.id === 'shoulder_bash'));
+  ok('...Smoke & Daggers blocks healing', ve.abilities.find((a) => a.id === 'smoke_daggers').daggers.apply.some((x) => x.status === 'noHeal')); }
+{ const { s, h } = mk(['rask', 'vesh']); const k = h[0]; k.hp = 50;
+  s.applyStatus(k, { status: 'noHeal', durationMs: 4000 }, k, 'test', []);
+  const got = s.healUnit(k, 30, []);
+  ok('No Heal: a heal does nothing', got === 0 && k.hp === 50);
+  k.specials = { ...(k.specials || {}), regen: 50 }; run(s, 1000);
+  ok('...regen does nothing either', k.hp <= 50, k.hp);
+  run(s, 3200); k.hp = 50;
+  ok('...and when it wears off healing works again', s.healUnit(k, 30, []) === 30); }
+// Gang Charge: everyone in the lane at release is hit + knocked back; someone who stepped out is not.
+{ const { s, es, h } = mk(['rask'], 80); s.placeLines(); const [rask] = es;
+  const a = rask.def.abilities.find((x) => x.charge);
+  const [t, other, far] = h; t.x = rask.x; t.y = rask.y + 200; other.x = rask.x; other.y = rask.y + 120; far.x = rask.x + 150; far.y = rask.y + 200;
+  for (const x of h) s.applyStatus(x, { status: 'stun', durationMs: 5000 }, x, 'hold', []); // they stay where they are
+  s.startAbility(rask, { ...a, target: 'frontHero' }, []);
+  const lane = rask.bossCast.lane;
+  ok('Gang Charge: the lane is fixed at the wind-up start, past its target', lane && lane.target === other && lane.y2 > other.y);
+  const hp = h.map((x) => x.hp); const ev = run(s, a.castMs + 100);
+  ok('...on release he dashes to its end, hitting everyone IN the lane', ev.some((e) => e.type === 'charge') && t.hp < hp[0] && other.hp < hp[1] && Math.abs(rask.y - lane.y2) < 40);
+  ok('...a hero outside the lane is not hit', far.hp === hp[2]); }
+{ const { s, es, h } = mk(['rask'], 80); s.placeLines(); const [rask] = es; const a = rask.def.abilities.find((x) => x.charge);
+  s.startAbility(rask, a, []); s.applyStatus(rask, { status: 'stun', durationMs: 2000 }, h[0], 'test', []);
+  const ev = run(s, a.castMs + 100);
+  ok('...a stun during the wind-up interrupts it', !ev.some((e) => e.type === 'charge') && ev.some((e) => e.type === 'castCancel')); }
+// Shadow Kunai: a warned row across the floor; heroes in that row bleed (stacks), heroes elsewhere don't.
+{ const { s, es, h } = mk(['vesh'], 80); s.placeLines(); const [vesh] = es; const a = vesh.def.abilities.find((x) => x.lane);
+  for (const x of h) { x.y = 720; s.applyStatus(x, { status: 'stun', durationMs: 5000 }, x, 'hold', []); } h[2].y = 500; // stunned = they stay in their row
+  s.rng = () => 0.01; // aims at hero 0 (row y 720)
+  const ev0 = []; s.releaseAbility(vesh, a, ev0); s.rng = Math.random;
+  ok('Shadow Kunai: a row is WARNED first (nothing hit yet)', ev0.some((e) => e.type === 'laneWarn' && e.lane.y === 720) && h.every((x) => !x.statuses.some((st) => st.type === 'bleed')));
+  const ev = run(s, a.lane.warnMs + 100);
+  const bleeds = (x) => x.statuses.filter((st) => st.type === 'bleed' && st.key.endsWith(`boss_${a.id}`)).length;
+  ok('...then everyone in that row gets the bleed stacks', ev.some((e) => e.type === 'laneLand') && bleeds(h[0]) === a.lane.stacks && bleeds(h[1]) === a.lane.stacks, `${bleeds(h[0])} ${bleeds(h[1])}`);
+  ok('...a hero in another row is safe', bleeds(h[2]) === 0); }
+// Powder Bandit: runs at ONE hero, blows up (damage + stun), never swings; an enraged twin calls 2.
+{ const { s, es, h } = mk(['rask', 'vesh'], 80); s.placeLines(); const [rask, vesh] = es;
+  rask.hp = rask.maxHp = vesh.hp = vesh.maxHp = 1e7;
+  const call = rask.def.abilities.find((x) => x.summon && x.summon.id === 'powder_bandit');
+  const ev = []; s.releaseAbility(rask, call, ev);
+  const pb = s.enemies.find((e) => e.def.id === 'powder_bandit');
+  ok('Powder Bandit: a twin calls one', pb && pb.alive);
+  run(s, 50); const t = h.find((x) => x.uid === pb.foe);
+  ok('...it picks one hero to run at', !!t);
+  const hp0 = t.hp; let blast = null;
+  for (let i = 0; i < 200 && !blast; i++) blast = s.update(50).find((e) => e.type === 'bomberBlast');
+  ok('...reaching it, it blows up: that hero is hurt and stunned, the bandit is gone', blast && blast.target === t && t.hp < hp0 && s.isStunned(t) && !pb.alive);
+  const ev2 = []; for (const e of s.enemies.filter((x) => x.def.id === 'powder_bandit')) { e.hp = 0; s.killUnit(e, ev2, h[0]); }
+  vesh.hp = 0; s.killUnit(vesh, ev2, h[0]);
+  s.releaseAbility(rask, call, ev2);
+  ok('...an enraged twin calls 2 at once', s.enemies.filter((e) => e.alive && e.def.id === 'powder_bandit').length === 2); }
+
 // ---- Morthul
 { const { s, es, h } = mk(['morthul']); const m = es[0];
   const ev = []; m.hp = 0; s.killUnit(m, ev, h[0]);

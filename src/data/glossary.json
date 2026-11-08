@@ -25,6 +25,7 @@
     "blind": { "tab": "bad", "text": "Some attacks miss." },
     "mark": { "tab": "bad", "text": "Takes more damage from everything." },
     "tangled": { "tab": "bad", "text": "Caught in sticky webs: much slower attacks." },
+    "noHeal": { "tab": "bad", "text": "Cannot be healed at all, not even by regen." },
     "chill": { "tab": "control", "text": "-10% attack speed per stack. 5 stacks = FREEZE." },
     "freeze": { "tab": "control", "text": "Frozen solid: cannot attack or cast." },
     "shock": { "tab": "control", "text": "Slower attacks, may fumble an attack." },

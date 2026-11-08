@@ -2002,9 +2002,9 @@
     "xp": 120,
     "stats": {
       "health": 1500,
-      "attack": 10,
+      "attack": 14,
       "defense": 10,
-      "attackEfficiency": 85
+      "attackEfficiency": 65
     },
     "link": {
       "partner": "vesh",
@@ -2023,31 +2023,47 @@
     },
     "abilities": [
       {
-        "id": "shoulder_bash",
-        "name": "Shoulder Bash",
-        "everyMs": 8000,
-        "firstMs": 4000,
-        "castMs": 600,
-        "target": "frontHero",
-        "damageMultiplier": 1.2,
+        "id": "gang_charge",
+        "name": "Gang Charge",
+        "everyMs": 10000,
+        "firstMs": 5000,
+        "castMs": 1200,
+        "target": "randomHero",
+        "damageMultiplier": 1.5,
         "apply": [
           {
-            "status": "stun",
-            "durationMs": 1000
+            "status": "knockback"
           }
-        ]
+        ],
+        "charge": {
+          "widthPx": 50,
+          "overshootPx": 60,
+          "ms": 300
+        }
       },
       {
-        "id": "switch",
-        "name": "Switch!",
-        "everyMs": 15000,
-        "firstMs": 12000,
-        "castMs": 0,
-        "swap": "vesh"
+        "id": "powder_bandit",
+        "name": "Powder Bandit!",
+        "everyMs": 14000,
+        "castMs": 400,
+        "summon": {
+          "id": "powder_bandit",
+          "count": 1,
+          "enragedCount": 2,
+          "max": 2
+        },
+        "firstMs": 7000
       }
     ],
     "statusImmune": [
       "fear"
+    ],
+    "onHit": [
+      {
+        "status": "armorBreak",
+        "chance": 100,
+        "durationMs": 4000
+      }
     ]
   },
   "vesh": {
@@ -2120,10 +2136,10 @@
     "xp": 120,
     "stats": {
       "health": 1100,
-      "attack": 9,
+      "attack": 6,
       "defense": 5,
       "evasion": 10,
-      "attackEfficiency": 100
+      "attackEfficiency": 190
     },
     "link": {
       "partner": "rask",
@@ -2162,14 +2178,146 @@
               "status": "bleed",
               "durationMs": 4000,
               "damageMultiplier": 0.2
+            },
+            {
+              "status": "noHeal",
+              "durationMs": 4000
             }
           ]
         }
+      },
+      {
+        "id": "shadow_kunai",
+        "name": "Shadow Kunai",
+        "everyMs": 14000,
+        "firstMs": 8000,
+        "castMs": 0,
+        "lane": {
+          "warnMs": 1200,
+          "heightPx": 50,
+          "clones": 3,
+          "damageMultiplier": 0.6,
+          "stacks": 3,
+          "apply": [
+            {
+              "status": "bleed",
+              "durationMs": 4000,
+              "damageMultiplier": 0.25
+            }
+          ]
+        }
+      },
+      {
+        "id": "powder_bandit",
+        "name": "Powder Bandit!",
+        "everyMs": 14000,
+        "castMs": 400,
+        "summon": {
+          "id": "powder_bandit",
+          "count": 1,
+          "enragedCount": 2,
+          "max": 2
+        },
+        "firstMs": 14000
       }
     ],
     "statusImmune": [
       "fear"
+    ],
+    "onHit": [
+      {
+        "status": "bleed",
+        "chance": 100,
+        "durationMs": 4000,
+        "damageMultiplier": 0.2
+      }
     ]
+  },
+  "powder_bandit": {
+    "name": "Powder Bandit",
+    "damageType": "melee",
+    "weak": [
+      "fire"
+    ],
+    "resists": [],
+    "stats": {
+      "health": 120,
+      "attack": 8,
+      "defense": 2,
+      "attackEfficiency": 100
+    },
+    "bomber": {
+      "damageMultiplier": 2,
+      "stunMs": 2000
+    },
+    "xp": 6,
+    "flying": false,
+    "height": 14,
+    "parts": {
+      "body": {
+        "x": -1.5,
+        "y": -7,
+        "w": 11,
+        "h": 14,
+        "art": {
+          "palette": [
+            "0x6a5440",
+            "0x1a1020",
+            "0xf2c9a0",
+            "0xb03a3a",
+            "0x4a5a3a"
+          ],
+          "rows": [
+            "....0000...",
+            "...000000..",
+            "..0001221..",
+            "..0002222..",
+            "..0333333..",
+            ".444444444.",
+            "44444444442",
+            "4444444444.",
+            ".44444444..",
+            ".4444444...",
+            "..00..00...",
+            "..00..00...",
+            "..00..00...",
+            ".000..000.."
+          ]
+        },
+        "anchor": [
+          5.5,
+          7
+        ],
+        "idle": {
+          "dy": -1,
+          "duration": 520
+        }
+      },
+      "weapon": {
+        "x": 5.5,
+        "y": -5.5,
+        "w": 3,
+        "h": 3,
+        "art": {
+          "palette": [
+            "0xc9ccd6"
+          ],
+          "rows": [
+            "0..",
+            ".0.",
+            "..0"
+          ]
+        },
+        "anchor": [
+          0.5,
+          0.5
+        ],
+        "idle": {
+          "angle": 8,
+          "duration": 650
+        }
+      }
+    }
   },
   "morthul": {
     "name": "Morthul the Bone Archon",

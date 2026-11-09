@@ -102,6 +102,8 @@ and suggest a fresh session per task.
 - `src/scenes/`  one file per scene (BattleScene, RewardScene, SquadScene, PuzzleScene, roomMethods.js...)
 - `src/entities/`  reusable game objects (Character built from parts, Door, textures)
 - `src/systems/`  logic with no Phaser (BattleState, combat, items, rewards, bosses, elites, fx recipes...)
+- `src/systems/battle/`  BattleState's rules by topic (movement, minions, itemAttacks, itemReactions, heroes, statuses,
+  skills, skillBooks, stats); `BattleState.js` itself = the core loop. Find a method: `grep -rn "  name(" src/systems`
 - `src/data/`  JSON game data
 - `src/audio/`, `src/assets/sounds/`  sound
 - `src/studio/`  Character Studio

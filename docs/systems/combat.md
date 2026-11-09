@@ -1,5 +1,13 @@
 # Core fight rules
 
+**WHERE THE CODE IS (cleanup session):** `BattleState` is ONE class in several files. `src/systems/BattleState.js` = the
+core (making units, `update()`, basic attacks, `strike()`, `dealDamage()`, kills). The rest are method lists mixed into
+the class at the bottom of that file (same trick as `bosses.js` / `elites.js`), in `src/systems/battle/`: `movement.js`,
+`minions.js`, `itemAttacks.js` (procs, bombs, extra hits), `itemReactions.js` (saves, shields, on-kill / on-heal items),
+`heroes.js` (kits, passives, counters), `statuses.js`, `skills.js`, `skillBooks.js`, `stats.js` (XP, levels, stat
+refresh, room effects). Every method is still called as `state.method()`; when docs say 'BattleState `foo()`', find
+it with `grep -rn "  foo(" src/systems`. A new method goes in the topic file (end it with a comma).
+
 Damage maths, attack timing, perks, morale, levelling, tap focus and drag orders.
 Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system changes.
 

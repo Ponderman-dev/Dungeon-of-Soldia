@@ -20,5 +20,5 @@ const stray = [...cues].filter((c) => c.startsWith('skill_') && !skillIds.includ
 ok('every skill_<id> sound belongs to a real hero skill', stray.length === 0, stray.join());
 const shared = skillIds.filter((id) => !cues.has(`skill_${id}`));
 if (shared.length) console.log('INFO skills still on the shared skillCast sound:', shared.join());
-const bs = fs.readFileSync(new URL('../../src/systems/BattleState.js', import.meta.url), 'utf8');
+const bs = fs.readFileSync(new URL('../../src/systems/battle/skills.js', import.meta.url), 'utf8');
 ok('the cast event names its skill (skillId) for the sound', /type: 'cast',[^}]*skillId: slot\.id/.test(bs));

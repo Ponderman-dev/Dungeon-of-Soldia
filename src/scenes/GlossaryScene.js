@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, drawCursor, drawButton, buttonTextColor, drawStrip, isGoldTheme, pageEnter, pageLeave, markBar } from '../entities/uiKit.js';
+import { drawWindow, uiText, drawCursor, drawButton, buttonTextColor, drawStrip, pageEnter, pageLeave, markBar } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
 import G from '../data/glossary.json';
@@ -25,9 +25,6 @@ const GOLD = Phaser.Display.Color.HexStringToColor(UI.gold).color;
 const DIM = Number(L.dim);
 const SHADOW = 0x1c1c26;
 const W = GAME_WIDTH - L.side * 2;
-// UI TRIALS (session 40, dev server only): ?bar=1 = the title in a full-width bar with the back button inside it,
-// ?list=1 = the chapters as ONE window with rows and a ▶ cursor (instead of a stack of big boxes).
-const TRIAL = (() => { try { if (!import.meta.env.DEV) return {}; const q = new URLSearchParams(location.search); return { bar: q.get('bar') === '1', list: q.get('list') === '1' }; } catch (e) { return {}; } })();
 const num = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 const isBoss = (id) => enemies[id] && enemies[id].boss;
 const ENEMY_IDS = Object.keys(enemies).filter((id) => !id.startsWith('_') && !isBoss(id) && !G.hiddenEnemies.includes(id));
@@ -82,26 +79,13 @@ export default class GlossaryScene extends Phaser.Scene {
 
   top(page, back, title, onBack) {
     const n0 = page.list.length; // the back button row = the page's top bar (uiKit markBar)
-    if (isGoldTheme()) { // gold theme trial: a solid gold back button; the chapters page puts its title in its panel's strip
-      const B = L.back;
-      page.add(drawButton(this.add.graphics(), B.x, B.y, B.w, B.h));
-      page.add(uiText(this, B.x + B.w / 2, B.y + B.h / 2, back, 'normal', buttonTextColor()).setOrigin(0.5));
-      page.add(this.add.zone(B.x, B.y, B.w, B.h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx.play('tap'); onBack(); }));
-      markBar(page.list.slice(n0));
-      if (title !== 'GLOSSARY') this.text(page, GAME_WIDTH / 2, L.titleY, title, 'big', UI.goldTheme.title).setOrigin(0.5, 0);
-      return;
-    }
-    if (TRIAL.bar) { // a title bar: one window across the top, the back button inside on the left, the title centred
-      page.add(drawWindow(this.add.graphics(), L.side, 14, W, 60));
-      this.button(page, L.side + 8, 22, 44, 44, '<', () => { sfx.play('tap'); onBack(); });
-      markBar(page.list.slice(n0));
-      this.text(page, GAME_WIDTH / 2 + 14, 44, title, 'big').setOrigin(0.5);
-      return;
-    }
+    // a solid back button; the chapters page puts its title in its panel's strip instead
     const B = L.back;
-    this.button(page, B.x, B.y, B.w, B.h, back, () => { sfx.play('tap'); onBack(); });
+    page.add(drawButton(this.add.graphics(), B.x, B.y, B.w, B.h));
+    page.add(uiText(this, B.x + B.w / 2, B.y + B.h / 2, back, 'normal', buttonTextColor()).setOrigin(0.5));
+    page.add(this.add.zone(B.x, B.y, B.w, B.h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx.play('tap'); onBack(); }));
     markBar(page.list.slice(n0));
-    this.text(page, GAME_WIDTH / 2, L.titleY, title, 'big').setOrigin(0.5, 0);
+    if (title !== 'GLOSSARY') this.text(page, GAME_WIDTH / 2, L.titleY, title, 'big', UI.goldTheme.title).setOrigin(0.5, 0);
   }
 
   // A sprite (enemy or hero def) standing at (x, feet), scaled to fit `maxH` px; `shadow` = dark shape.
@@ -137,38 +121,27 @@ export default class GlossaryScene extends Phaser.Scene {
   }
 
   showChapters() {
-    const page = this.newPage(), C = L.chapters, x = L.side, n = this.counts();
+    const page = this.newPage(), x = L.side, n = this.counts();
     this.top(page, this.from === 'Base' ? '< CAMP' : '< BACK', 'GLOSSARY', () => this.close());
     const open = { basics: () => this.showBasics(), statuses: () => this.showStatuses('bad'), enemies: () => this.showEnemies(0), bosses: () => this.showBosses(), items: () => this.showItems(0), heroes: () => this.openHeroes() };
-    if (TRIAL.list || isGoldTheme()) { // one window, a row per chapter, the ▶ cursor on the row under the finger (first row at start)
-      const gold = isGoldTheme(), ids = Object.keys(open), RH = 64, strip = gold ? 48 : 0, top = gold ? 76 : C.y;
-      page.add(drawWindow(this.add.graphics(), x, top, W, ids.length * RH + 24 + strip));
-      if (gold) { // the panel's title strip + a recessed slot per row
-        page.add(drawStrip(this.add.graphics(), x + 8, top + 8, W - 16, strip - 8));
-        this.text(page, GAME_WIDTH / 2, top + 8 + (strip - 8) / 2, 'GLOSSARY', 'big', UI.goldTheme.title).setOrigin(0.5);
-        const slots = this.add.graphics().fillStyle(UI.goldTheme.slot, 1);
-        ids.forEach((_, i) => slots.fillRect(x + 14, top + strip + 14 + i * RH, W - 28, RH - 8));
-        page.add(slots);
-      }
-      const cur = this.add.graphics(); page.add(cur);
-      const rowY = (i) => top + strip + 12 + i * RH;
-      const point = (i) => { cur.clear(); drawCursor(cur, x + 20, rowY(i) + RH / 2, gold ? UI.goldTheme.frame : UI.line); };
-      ids.forEach((id, i) => {
-        const y = rowY(i);
-        if (i > 0 && !gold) { const dots = this.add.graphics().fillStyle(0x55556a, 1); for (let d = x + 18; d < x + W - 18; d += 8) dots.fillRect(d, y, 4, 2); page.add(dots); }
-        this.text(page, x + 44, y + RH / 2, id.toUpperCase(), 'big').setOrigin(0, 0.5);
-        this.text(page, x + W - 20, y + RH / 2, `${n[id][0]}/${n[id][1]}`, 'small', UI.gold).setOrigin(1, 0.5);
-        page.add(this.add.zone(x, y, W, RH).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerover', () => point(i)).on('pointerdown', () => point(i)).on('pointerup', () => { sfx.play('tap'); open[id](); }));
-      });
-      point(0);
-      return;
-    }
-    Object.keys(open).forEach((id, i) => {
-      const y = C.y + i * (C.h + C.gap);
-      this.button(page, x, y, W, C.h, null, () => { sfx.play('tap'); open[id](); });
-      this.text(page, x + 20, y + C.h / 2, id.toUpperCase(), 'big').setOrigin(0, 0.5);
-      this.text(page, x + W - 20, y + C.h / 2, `${n[id][0]}/${n[id][1]}`, 'small', UI.gold).setOrigin(1, 0.5);
+    // one panel with a title strip, a recessed row per chapter, the ▶ cursor on the row under the finger (first row at start)
+    const ids = Object.keys(open), RH = 64, strip = 48, top = 76;
+    page.add(drawWindow(this.add.graphics(), x, top, W, ids.length * RH + 24 + strip));
+    page.add(drawStrip(this.add.graphics(), x + 8, top + 8, W - 16, strip - 8));
+    this.text(page, GAME_WIDTH / 2, top + 8 + (strip - 8) / 2, 'GLOSSARY', 'big', UI.goldTheme.title).setOrigin(0.5);
+    const slots = this.add.graphics().fillStyle(UI.goldTheme.slot, 1);
+    ids.forEach((_, i) => slots.fillRect(x + 14, top + strip + 14 + i * RH, W - 28, RH - 8));
+    page.add(slots);
+    const cur = this.add.graphics(); page.add(cur);
+    const rowY = (i) => top + strip + 12 + i * RH;
+    const point = (i) => { cur.clear(); drawCursor(cur, x + 20, rowY(i) + RH / 2, UI.goldTheme.frame); };
+    ids.forEach((id, i) => {
+      const y = rowY(i);
+      this.text(page, x + 44, y + RH / 2, id.toUpperCase(), 'big').setOrigin(0, 0.5);
+      this.text(page, x + W - 20, y + RH / 2, `${n[id][0]}/${n[id][1]}`, 'small', UI.gold).setOrigin(1, 0.5);
+      page.add(this.add.zone(x, y, W, RH).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerover', () => point(i)).on('pointerdown', () => point(i)).on('pointerup', () => { sfx.play('tap'); open[id](); }));
     });
+    point(0);
   }
 
   // BASICS: every help page as a card (title + text).

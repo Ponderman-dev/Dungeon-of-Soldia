@@ -42,27 +42,12 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   win heal). 'Floor N cleared!' sits higher (combat.json `transition.clearBannerY`, 422) so it misses the bubbles. Nothing waits for a bubble (user, session 21: the wait broke the pace): the clear pause is
   1.2s (`clearPauseMs`, user 2026-10-21: the bubble needs 1.2s before the reward screen); the bubble is removed `goneAfterRewardMs` (0.2s) after the reward screen pops up, never seen after it. SHORT lines (user 2026-10-22: 'too long': every line rewritten to 2-5 words, bubble `maxWidthPx` 140, `padPx` 6; 8px is the smallest crisp text). Lines + timings in `src/data/dialogue.json` (per hero; a missing kind uses `clear`); `systems/dialogue.js`
   picks a living hero (not the last speaker) and goes through all its lines before repeating. Test: `dialogue.test.mjs`.
-- **SESSION 40 TRIALS (user: 'give me variations', camp + menus, black and white):** dev url flags (dev server only):
-  `?frame=single|double|shadow|rivets` = window frame style for EVERY window (`UI.frame` in config.js, drawn by
-  uiKit `drawWindow`; 'single' = today), `?bar=1` / `?list=1` = Glossary title bar / cursor-list chapters (trial code
-  in GlossaryScene `TRIAL`). Review page (real screenshots, `docs/proposals/skill-fx/make-ui-review.py <shots dir>
-  <out>` + `ui-review.html`) published over the Skill Effects page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN;
-  picks in its db collection `ui` (docs `frame`, `layout`, `general`). After the pick: set UI.frame, roll the layout
-  out to every menu, remove the unused trial code.
-- **GOLD THEME TRIAL (session 40, user's reference pictures: 'way more clear navigation'):** dev flag `?theme=gold`
-  (`UI.theme`, colours in `UI.goldTheme`): uiKit `drawWindow` -> `goldWindow` (dark outline, gold frame, dark gold
-  inner edge, slate fill, pale corner studs; a gold line = chosen -> pale gold, dim -> grey), `drawButton` (SOLID gold
-  button, light top edge, darker bottom half, dark text via `buttonTextColor()`; uiButton uses it), `drawStrip` (a
-  title strip inside a panel), `isGoldTheme()`. Wired so far: Base camp TO EXPEDITION (solid button, dark arrows),
-  Glossary (gold back button; chapters = one panel with a GLOSSARY strip, recessed row slots, gold cursor). Every other
-  window gets the gold frame automatically; Squad screen buttons and the white profile disc are not converted yet.
-  On the review page as section 'NEW' (A = today, B = slate and gold).
-  PALETTES (session 40, user: 'more variations, other palettes'): dev flag `?pal=silver|copper|jade|crimson` (with
-  `?theme=gold`) swaps `UI.goldTheme` keys for `UI.palettes[pal]`; on the review page as theme options C-F.
-- **CHOSEN: F = CRIMSON AND GOLD (session 40).** `UI.theme` 'gold' (the framed theme) + `UI.palette` 'crimson'
-  (`UI.palettes.crimson` is merged into `UI.goldTheme` by uiKit `themeName()` at load). 'mono' + no palette = the old
-  black and white (still works; every new piece falls back to it). Dev trials still work: `?theme=mono|gold`,
-  `?pal=gold|silver|copper|jade|crimson`. ACTION BUTTONS are SOLID (`drawButton` + `buttonTextColor()`): every back
+- **THE THEME: CRIMSON AND GOLD (user's pick F, session 40; the only theme since the cleanup session).** Colours in
+  `UI.goldTheme` (config.js). uiKit: `drawWindow` -> `themedWindow` (dark outline, gold frame, dark inner edge, ember
+  brown fill, pale corner studs; a gold line = chosen -> pale gold, dim -> grey; `plain: true` skips the theme),
+  `drawButton` (SOLID button, light top edge, darker bottom half; text colour via `buttonTextColor()`), `drawStrip`
+  (a title strip inside a panel). The old black and white ('mono') theme, the other palettes and the dev trial flags
+  (`?theme=`, `?pal=`, `?frame=`, Glossary `?bar=` / `?list=`) were REMOVED. ACTION BUTTONS are SOLID (`drawButton` + `buttonTextColor()`): every back
   button ('< CAMP' / '< BACK': Glossary, Heroes, Shop, Profile, Leaders, Settings), TO EXPEDITION, TAP TO START, BEGIN
   DESCENT, CAMP / RANDOM, Send back, Profile EDIT / CHANGE / SET AS ..., Settings - / + and its row buttons, Shop gem
   price buttons, Glossary pager arrows, every uiButton (Puzzle, defeat BACK). Tabs, cards and info panels stay FRAMED

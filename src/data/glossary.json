@@ -51,7 +51,6 @@
     "pad": 16,
     "back": { "x": 24, "y": 16, "w": 96, "h": 44 },
     "titleY": 76,
-    "chapters": { "y": 124, "h": 92, "gap": 12 },
     "basics": { "y": 124, "gap": 10 },
     "tabs": { "y": 124, "h": 44, "gap": 10 },
     "statusRows": { "y": 180, "h": 56, "gap": 8, "chipW": 88 },

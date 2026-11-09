@@ -1,4 +1,4 @@
-// The shared interface look ("Classic RPG Window"): black windows with a white 2px line and stepped corners, a blinking
+// The shared interface look: dark panels with a gold frame and stepped corners (colours: config.js UI.goldTheme), a blinking
 // ▶ cursor and Ironslab text (the game's own pixel font; small text in Press Start 2P). Every screen draws its windows, buttons and text through these helpers.
 import Phaser from 'phaser';
 import fontUrl from '../assets/fonts/ironslab.ttf?inline';
@@ -124,24 +124,12 @@ export function drawWindow(g, x, y, w, h, { fill = UI.window, line = UI.line, al
     g.fillRect(X + 4, Y, W - 8, H).fillRect(X + 2, Y + 2, W - 4, H - 4).fillRect(X, Y + 4, W, H - 8);
   };
   if (plain) { block(0, line); block(2, fill); return g; }
-  if (themeName() === 'gold') return goldWindow(g, x, y, w, h, block, { fill, line, alpha });
-  const frame = frameStyle();
-  block(0, line);
-  if (frame === 'double' && w >= 30 && h >= 26) { block(2, fill); block(4, line); block(5, fill); } // classic RPG: thick + thin line
-  else if (frame === 'shadow') { block(2, UI.frameShadow); block(4, fill); } // white line, a grey line inside it
-  else block(2, fill);
-  if (frame === 'rivets' && w >= 30 && h >= 26) { // square corner plates with a black dot
-    for (const [cx, cy] of [[x, y], [x + w - 8, y], [x, y + h - 8], [x + w - 8, y + h - 8]]) {
-      g.fillStyle(line, alpha).fillRect(cx, cy, 8, 8);
-      g.fillStyle(fill, alpha).fillRect(cx + 3, cy + 3, 2, 2);
-    }
-  }
-  return g;
+  return themedWindow(g, x, y, w, h, block, { fill, line, alpha });
 }
 
-// GOLD THEME window: a dark outline, a gold frame with a darker inner edge, a slate fill, pale gold studs on the corners.
+// THE THEMED window: a dark outline, a gold frame with a darker inner edge, a slate fill, pale gold studs on the corners.
 // A window asked for with another line colour keeps that meaning: gold = chosen (pale gold frame), dim = grey frame.
-function goldWindow(g, x, y, w, h, block, { fill, line, alpha }) {
+function themedWindow(g, x, y, w, h, block, { fill, line, alpha }) {
   const T = UI.goldTheme;
   const frame = line === UI.line ? T.frame : line === 0x8a8a9a || line === 0x55556a ? T.dim : T.chosen;
   const body = fill === UI.window ? T.fill : fill === UI.pressed ? T.pressedFill : fill;
@@ -224,11 +212,9 @@ export function rarityShine(scene, parent, w, h, R) {
   return g;
 }
 
-// A solid BUTTON (framed theme: a raised body with a light top edge and a darker bottom half; mono theme: the plain
-// window). primary = THE main action of the screen (bright: BEGIN DESCENT); others are the calm secondary colour.
+// A solid BUTTON: a raised body with a light top edge and a darker bottom half. primary = THE main action of the screen (bright: BEGIN DESCENT); others are the calm secondary colour.
 // pressed = pushed down. Returns g. Use buttonTextColor(enabled, pressed, primary) for its label.
 export function drawButton(g, x, y, w, h, { pressed = false, enabled = true, primary = false } = {}) {
-  if (themeName() !== 'gold') return drawWindow(g, x, y, w, h, pressed ? { fill: UI.pressed } : {});
   const T = UI.goldTheme;
   x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
   const block = (i, c, top = 0, bottom = 0) => {
@@ -244,42 +230,14 @@ export function drawButton(g, x, y, w, h, { pressed = false, enabled = true, pri
   if (!pressed) { g.fillStyle(light, 1).fillRect(x + 6, y + 4, w - 12, 2); g.fillStyle(dark, 1).fillRect(x + 4, y + Math.round(h / 2) + 2, w - 8, Math.round(h / 2) - 6); }
   return g;
 }
-export const buttonTextColor = (enabled = true, pressed = false, primary = false) => (themeName() !== 'gold' ? (!enabled ? UI.dim : pressed ? '#000000' : UI.text) : !enabled ? '#9a96a6' : primary ? UI.goldTheme.buttonText : UI.goldTheme.secondText);
-// A title strip across the top of a panel (gold theme), h px tall, `i` px inside the panel's left/top edge.
+export const buttonTextColor = (enabled = true, pressed = false, primary = false) => (!enabled ? '#9a96a6' : primary ? UI.goldTheme.buttonText : UI.goldTheme.secondText);
+// A title strip across the top of a panel h px tall, `i` px inside the panel's left/top edge.
 export function drawStrip(g, x, y, w, h) {
   const T = UI.goldTheme;
   g.fillStyle(T.strip, 1).fillRect(x, y, w, h);
   g.fillStyle(T.stripLine, 1).fillRect(x, y + h, w, 2);
   return g;
 }
-export const isGoldTheme = () => themeName() === 'gold';
-
-// The theme: UI.theme, or the dev server's ?theme= url flag (trials).
-let themeCache = null;
-function themeName() {
-  if (themeCache) return themeCache;
-  let t = UI.theme, pal = UI.palette;
-  try {
-    if (import.meta.env.DEV) { // trials: ?theme=mono|gold, ?pal=gold|silver|copper|jade|crimson
-      const q = new URLSearchParams(location.search);
-      t = q.get('theme') || t;
-      pal = q.get('pal') || pal;
-    }
-  } catch (e) { /* no location (tests) */ }
-  if (UI.palettes[pal]) Object.assign(UI.goldTheme, UI.palettes[pal]); // 'gold' = goldTheme as it is
-  return (themeCache = t);
-}
-themeName(); // pick the palette at once, before any screen reads UI.goldTheme
-
-// The frame style: UI.frame, or the dev server's ?frame= url flag (trials).
-let frameCache = null;
-function frameStyle() {
-  if (frameCache) return frameCache;
-  let f = UI.frame;
-  try { if (import.meta.env.DEV) f = new URLSearchParams(location.search).get('frame') || f; } catch (e) { /* no location (tests) */ }
-  return (frameCache = f);
-}
-
 // A gear (white, 28px across) centred on (m, n), for a Settings button. Returns g.
 export function drawGear(g, m, n) {
   g.fillStyle(0xffffff, 1).fillRect(m - 9, n - 9, 18, 18).fillRect(m - 3, n - 14, 6, 28).fillRect(m - 14, n - 3, 28, 6);
@@ -318,7 +276,7 @@ export function uiButton(scene, x, y, w, h, label, { size = 'normal', selected =
     drawButton(g, 0, 0, w, h, { pressed, enabled });
     text.setColor(buttonTextColor(enabled, pressed));
     cur.clear();
-    if (selected) drawCursor(cur, Math.round(w / 2 - text.width / 2 - 16), Math.round(h / 2), isGoldTheme() || pressed ? 0x000000 : UI.line);
+    if (selected) drawCursor(cur, Math.round(w / 2 - text.width / 2 - 16), Math.round(h / 2), 0x000000);
   };
   draw();
   const blink = scene.time.addEvent({ delay: 500, loop: true, callback: () => cur.setVisible(!cur.visible) });

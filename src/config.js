@@ -39,22 +39,15 @@ export const UI = {
   red: '#ff7a5a', // attack skills, damage
   green: '#6ee07a', // support skills, heals
   pressed: 0xffffff, // a pressed button flips to white with black text
-  // Window frame style (uiKit drawWindow): 'single' = one 2px white line (today). Session 40 trials (dev url flag
-  // ?frame=double|shadow|rivets): 'double' = classic RPG double line, 'shadow' = white line + grey inner line,
-  // 'rivets' = white line + square corner plates.
-  frame: 'single',
-  frameShadow: 0x4a4a58, // the grey inner line of the 'shadow' frame
-  // THEME TRIAL (session 40, user's reference pictures: framed panels, solid buttons, clearer navigation): dev url flag
-  // ?theme=gold = dark slate panels with a gold frame + corner studs, solid gold buttons with dark text, title strips.
-  theme: 'gold', // the framed theme is ON (user picked F, session 40); 'mono' = the old black and white
-  palette: 'crimson', // user's pick F: gold frames, dark panels (session 41: ember brown), crimson buttons with cream text
+  // THE THEME (user's pick F, session 40; ember brown panels session 41): dark panels with a gold frame + corner
+  // studs, crimson primary buttons with cream text, calm dark secondary buttons, title strips. Drawn by uiKit.
   goldTheme: {
-    outline: 0x0d0b12, frame: 0xd8a640, frameDark: 0x7a5a22, stud: 0xffe39a, fill: 0x221f2b, strip: 0x34303f,
-    stripLine: 0x15131b, slot: 0x18161f, chosen: 0xfff0b0, dim: 0x5a5666, pressedFill: 0x3a3446,
-    button: 0xe8b444, buttonDark: 0xb98428, buttonLight: 0xffe08a, buttonText: '#2b1c0a', title: '#ffe7a8',
-    // SECONDARY buttons (user, session 40: only BEGIN DESCENT is the bright one; every other button calmer): a dark
-    // raised button with cream text.
-    second: 0x3e3a4a, secondDark: 0x2c2936, secondLight: 0x5a5568, secondText: '#ffe7a8',
+    outline: 0x0d0b12, frame: 0xd8a640, frameDark: 0x4a2e22, stud: 0xffe39a, fill: 0x1a1412, strip: 0x2a201c,
+    stripLine: 0x0c0908, slot: 0x14100e, chosen: 0xfff0b0, dim: 0x4e4640, pressedFill: 0x32261f,
+    // PRIMARY button (only THE main action of a screen, e.g. BEGIN DESCENT): crimson with cream text.
+    button: 0xc8423a, buttonDark: 0x8e2824, buttonLight: 0xff8a7a, buttonText: '#fff0d8', title: '#ffe7a8',
+    // SECONDARY buttons (every other button, calmer): a dark raised button with cream text.
+    second: 0x382a24, secondDark: 0x261c18, secondLight: 0x56443a, secondText: '#ffe7a8',
   },
   // How a menu page (Glossary, Heroes, Leaders, Shop, Settings, Profile) comes and goes (uiKit pageEnter / pageLeave):
   // it slides in over the screen behind and back out the same side, motion.normal both ways (user, session 41: 'slides
@@ -79,13 +72,5 @@ export const UI = {
     fast: 140, normal: 220, slow: 450, story: 1100,
     easeIn: 'Cubic.easeIn', easeOut: 'Cubic.easeOut', easeMove: 'Sine.easeInOut', easeDrop: 'Back.easeOut',
     popDropPx: 48, slidePx: 40,
-  },
-  // Other palettes for the same framed theme (dev flag ?pal=silver|copper|jade|crimson): they replace these keys of
-  // goldTheme (session 40 trial, user: 'more variations, other palettes').
-  palettes: {
-    silver: { frame: 0xc8ced8, frameDark: 0x5a6070, stud: 0xffffff, fill: 0x1b2130, strip: 0x2a3244, stripLine: 0x10141d, slot: 0x151a26, chosen: 0xffe08a, dim: 0x4e5466, pressedFill: 0x30384a, button: 0xc8ced8, buttonDark: 0x8e96a6, buttonLight: 0xffffff, buttonText: '#141a26', title: '#e8eef8' },
-    copper: { frame: 0xd2834a, frameDark: 0x6e3a1e, stud: 0xffc89a, fill: 0x2a1f1a, strip: 0x3c2c24, stripLine: 0x170f0c, slot: 0x201814, chosen: 0xffe2a0, dim: 0x5e5048, pressedFill: 0x45352c, button: 0xe08a4c, buttonDark: 0xa85a2c, buttonLight: 0xffc89a, buttonText: '#2a1408', title: '#ffd6b0' },
-    jade: { frame: 0x5fc4a0, frameDark: 0x245a4a, stud: 0xc8ffe8, fill: 0x142220, strip: 0x1f3430, stripLine: 0x0b1412, slot: 0x101b19, chosen: 0xffe08a, dim: 0x46585a, pressedFill: 0x2a403c, button: 0x6fd2ac, buttonDark: 0x3c9a7a, buttonLight: 0xc8ffe8, buttonText: '#0c231c', title: '#c8ffe8' },
-    crimson: { frame: 0xd8a640, frameDark: 0x4a2e22, stud: 0xffe39a, fill: 0x1a1412, strip: 0x2a201c, stripLine: 0x0c0908, slot: 0x14100e, chosen: 0xfff0b0, dim: 0x4e4640, pressedFill: 0x32261f, button: 0xc8423a, buttonDark: 0x8e2824, buttonLight: 0xff8a7a, buttonText: '#fff0d8', title: '#ffe7a8', second: 0x382a24, secondDark: 0x261c18, secondLight: 0x56443a, secondText: '#ffe7a8' }, // session 41: ember brown (user: the old wine red was too bright / saturated)
   },
 };

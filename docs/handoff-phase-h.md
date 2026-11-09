@@ -21,8 +21,7 @@
   under the floor light, muted + speckle + dark edge); tent removed (prop kept).
   Battle PAUSE + SPEED buttons top right (ui.md; `pause.json`, `PauseScene`: RESUME / SETTINGS / GIVE UP = defeat).
 - STILL OPEN (other topics, one per session): transitions phase 2 (menu tabs slideSwap + pop-ups popIn), phase 3-5
-  (opening, the run, sounds), FIGHT HUD redesign, PASSIVE icons gold frame, dev trial code clean-up (`?frame=`, `?pal=`,
-  `?theme=`, GlossaryScene TRIAL). KIV: hero art (knight sketches), Studio UI, session 33 item leftovers, music.
+  (opening, the run, sounds), FIGHT HUD redesign, PASSIVE icons gold frame. KIV: hero art (knight sketches), Studio UI, session 33 item leftovers, music.
 - PUBLISH (Artifact tool): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
   dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. The first publish of a session
   is refused 'not viewed', the second as 'unchanged': Read the LAST 3 lines of the saved live copy (offset), then the

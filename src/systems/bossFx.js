@@ -241,3 +241,43 @@ export function chargeTrailFx(q, lane, dashQ = 0.4) {
   }
   return g.out;
 }
+
+// SHADOW KUNAI warning (Vesh, user's pick: a red line per knife): every knife's path shows as a thin blinking red
+// line from its clone, drawn out from the clone as the warning starts; lines stop at the floor's bottom (`maxY`).
+// knives in char px [{ x1, y1, x2, y2 }]; q = 0..1 over the warning, t = clock.
+function segment(g, k, from, to, col, a, maxY = Infinity, thick = 1) { // a part (from..to, 0..1) of a knife's path
+  const dx = k.x2 - k.x1, dy = k.y2 - k.y1, L = Math.max(1, Math.hypot(dx, dy));
+  for (let s = from * L; s <= to * L; s++) {
+    const x = k.x1 + (dx / L) * s, y = k.y1 + (dy / L) * s;
+    if (y > maxY) break;
+    g.px(x, y, col, a);
+    if (thick > 1) g.px(x - dy / L, y + dx / L, col, a * 0.6);
+  }
+}
+export function knifeLinesFx(q, knives, t, maxY = Infinity) {
+  const g = pen();
+  const grow = Math.min(1, q * 4); // the lines shoot out from the clones
+  const fast = 0.5 + 0.5 * Math.sin(t / (30 + 120 * (1 - q)));
+  for (const k of knives) segment(g, k, 0, grow, RED, 0.3 + 0.5 * fast, maxY);
+  return g.out;
+}
+
+// SHADOW KUNAI throw: each knife flies along its path (a big white blade, steel guard, grip; a thick red trail), then
+// the trails fade. q = 0..1 over KUNAI_MS; the knives reach the end of their paths at `flyQ`.
+export const KUNAI_MS = 560;
+export function kunaiFanFx(q, knives, flyQ = 0.6, maxY = Infinity) {
+  const g = pen();
+  for (const k of knives) {
+    const p = clamp(q / flyQ), fade = 1 - clamp((q - flyQ) / (1 - flyQ));
+    const dx = k.x2 - k.x1, dy = k.y2 - k.y1, L = Math.max(1, Math.hypot(dx, dy)), ux = dx / L, uy = dy / L;
+    const hx = k.x1 + dx * p, hy = k.y1 + dy * p;
+    segment(g, k, Math.max(0, p - 22 / L), p, 0xff6a5a, 0.9 * fade, maxY, 2); // the red trail just behind the blade
+    segment(g, k, Math.max(0, p - 50 / L), Math.max(0, p - 22 / L), RED, 0.5 * fade, maxY);
+    if (p < 1 && hy <= maxY) {
+      for (let j = 0; j < 4; j++) { g.px(hx - ux * j, hy - uy * j, j === 0 ? 0xffffff : 0xd8dce6); g.px(hx - ux * j - uy, hy - uy * j + ux, j < 2 ? 0xffffff : 0xb7bcc8); } // 2 px wide blade
+      g.px(hx - ux * 4 - uy * 2, hy - uy * 4 + ux * 2, 0xb7bcc8); g.px(hx - ux * 4 + uy, hy - uy * 4 - ux, 0xb7bcc8); // guard
+      g.px(hx - ux * 5, hy - uy * 5, 0x3a2614); g.px(hx - ux * 6, hy - uy * 6, 0x3a2614); // grip
+    }
+  }
+  return g.out;
+}

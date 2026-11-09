@@ -25,9 +25,9 @@
 //         and OFF the bottom of the screen (exitY) in `ms`: every defender in that column is hit as he passes it
 //         (damageMultiplier + apply). Off screen he can't be hit (`chargeAway`) until he leaps back in to a random
 //         spot in returnBox (`returnMs` after the dash). Events 'castStart' (+ lane), 'charge' (+ spot).
-//       lane: { warnMs, heightPx, clones, damageMultiplier, stacks, apply }   Shadow Kunai (Vesh): a row across the WHOLE
-//         floor at a random hero's height is warned for warnMs (`clones` shadow copies throw from one side: looks), then
-//         every defender within heightPx/2 of it is hit and gets `apply` x `stacks`. Events 'laneWarn', 'laneLand'.
+//       fan: { clones, knives, spreadDeg, rangePx, widthPx, warnMs, flyMs, minGapPx, spawnBox: { x0, x1, y0, y1 },
+//         damageMultiplier, stacks, apply }   Shadow Kunai (Vesh): shadow clones at random spots each throw a fan of
+//         knives at a hero; each knife's path is warned first (startFan/tickFans). Events 'fanWarn', 'fanLand', 'kunaiHit'.
 //       summon.enragedCount: an enraged twin calls that many instead of `count` }
 //     slam: { liftPx, dropMs, shakeMs, shakeIntensity } = looks only: it rises during the wind-up and crashes down (Grukk's Quake Jump)
 //     minor: true = a normal enemy's small move (a popup, no red banner); needsHurt: waits until an enemy is hurt;
@@ -127,7 +127,7 @@ export const bossMethods = {
       }
       if (d.bomber) { this.tickBomber(u, events); continue; }
       if (u.spikes && u.spikes.length) this.tickSpikes(u, dt, events);
-      if (u.lanes && u.lanes.length) this.tickLanes(u, dt, events);
+      if (u.fans && u.fans.length) this.tickFans(u, dt, events);
       if (u.chargeHits && u.chargeHits.length) this.tickChargeHits(u, dt, events);
       if (u.chargeAway > 0) u.chargeAway -= dt; // Gang Charge: off the screen / leaping back in
       if (u.sweeps && u.sweeps.length) this.tickSweeps(u, dt, events);
@@ -324,7 +324,7 @@ export const bossMethods = {
   // A boss move goes off.
   releaseAbility(u, a, events, cast = null) {
     if (a.charge) return this.releaseCharge(u, a, cast && cast.lane, events);
-    if (a.lane) return this.startLane(u, a, events);
+    if (a.fan) return this.startFan(u, a, events);
     if (a.channel) {
       u.bossCast = { def: a, remaining: a.channel.ticks * a.channel.intervalMs, total: a.channel.ticks * a.channel.intervalMs, channel: { spec: a.channel, timer: 0, tick: 0 } };
       events.push({ type: 'bossAbility', unit: u, ability: a, targets: [] });
@@ -629,49 +629,87 @@ export const bossMethods = {
     events.push({ type: 'charge', unit: u, lane, ms, returnMs: c.returnMs || 0, spot, targets: hit });
     // Each one caught is hit when he gets to it on his dash (who is caught was decided now: the wind-up was the dodge).
     const f = lane.x1 === undefined ? null : laneProgress(lane);
-    u.chargeHits = hit.map((t) => ({ t, a, remaining: f ? ms * f(t) : 0 }));
+    const hitOne = (t, ev) => {
+      ev.push({ type: 'chargeHit', unit: t, from: u }); // the scene shakes the hero hard
+      if (a.damageMultiplier) this.strike(u, t, ev, { multiplier: a.damageMultiplier, damageType: a.damageType, ability: true });
+      if (t.alive) for (const spec of a.apply || []) this.applyStatus(t, spec, u, `boss_${a.id}`, ev);
+    };
+    u.chargeHits = [...(u.chargeHits || []), ...hit.map((t) => ({ t, remaining: f ? ms * f(t) : 0, fn: hitOne }))];
     this.tickChargeHits(u, 0, events);
   },
 
+  // Hits on their way (Gang Charge as he passes, Shadow Kunai as the blades fly): each lands after its own delay.
+  // `events` is the list of THIS update (the closures were made with an older one, so they get it passed in).
   tickChargeHits(u, dt, events) {
     for (const ch of [...u.chargeHits]) {
       ch.remaining -= dt;
       if (ch.remaining > 0) continue;
       u.chargeHits.splice(u.chargeHits.indexOf(ch), 1);
-      const { t, a } = ch;
-      if (!t.alive || !u.alive) continue;
-      events.push({ type: 'chargeHit', unit: t, from: u }); // the scene shakes the hero hard
-      if (a.damageMultiplier) this.strike(u, t, events, { multiplier: a.damageMultiplier, damageType: a.damageType, ability: true });
-      if (t.alive) for (const spec of a.apply || []) this.applyStatus(t, spec, u, `boss_${a.id}`, events);
+      if (!ch.t.alive || !u.alive) continue;
+      ch.fn(ch.t, events);
     }
   },
 
-  // ---- Vesh: Shadow Kunai (a warned row across the floor) -----------------------------------------
-  startLane(u, a, events) {
+  // ---- Vesh: Shadow Kunai (shadow clones throw fans of knives) ------------------------------------
+  // `clones` shadow copies appear at random spots on the floor (not too close to a hero); each aims a fan of `knives`
+  // knives (spread over `spreadDeg`, the middle one at a random hero, `rangePx` long). Every knife's path is warned
+  // for `warnMs` (a red line), then they fly (`flyMs` over the whole range): a defender within `widthPx`/2 of a
+  // knife's path is hit when it gets there (each knife hits it once; 2 knives = 2 hits).
+  startFan(u, a, events) {
     const heroes = this.heroes.filter((h) => h.alive);
     if (!heroes.length) return;
-    const aim = heroes[Math.floor(this.rng() * heroes.length)];
-    const lane = { a, aim, y: this.hasPositions(aim) ? aim.y : null, side: this.rng() < 0.5 ? -1 : 1, remaining: a.lane.warnMs, total: a.lane.warnMs };
-    u.lanes = u.lanes || [];
-    u.lanes.push(lane);
+    const f = a.fan, box = f.spawnBox, rad = (d) => (d * Math.PI) / 180;
+    const placed = heroes.every((h) => this.hasPositions(h));
+    const clones = [];
+    for (let i = 0; i < (f.clones || 1); i++) {
+      const aim = heroes[Math.floor(this.rng() * heroes.length)];
+      if (!placed) { clones.push({ aim, knives: [] }); continue; }
+      let x = 0, y = 0;
+      for (let tries = 0; tries < 12; tries++) { // a free spot: away from the heroes and the other clones
+        x = box.x0 + this.rng() * (box.x1 - box.x0); y = box.y0 + this.rng() * (box.y1 - box.y0);
+        const near = (p) => Math.hypot(p.x - x, p.y - y) < (f.minGapPx || 0);
+        if (!heroes.some(near) && !clones.some(near) && !this.enemies.some((e) => e.alive && this.hasPositions(e) && near(e))) break; // not on a hero, clone or boss
+      }
+      const mid = Math.atan2(aim.y - y, aim.x - x), n = f.knives || 1;
+      const knives = [];
+      for (let k = 0; k < n; k++) {
+        const ang = mid + (n === 1 ? 0 : rad(f.spreadDeg) * (k / (n - 1) - 0.5));
+        knives.push({ x1: x, y1: y, x2: x + Math.cos(ang) * f.rangePx, y2: y + Math.sin(ang) * f.rangePx });
+      }
+      clones.push({ x, y, aim, knives });
+    }
+    const fan = { a, clones, remaining: f.warnMs, total: f.warnMs };
+    u.fans = u.fans || [];
+    u.fans.push(fan);
     events.push({ type: 'bossAbility', unit: u, ability: a, targets: [] });
-    events.push({ type: 'laneWarn', unit: u, lane });
+    events.push({ type: 'fanWarn', unit: u, fan });
   },
 
-  tickLanes(u, dt, events) {
-    for (const ln of [...u.lanes]) {
-      ln.remaining -= dt;
-      if (ln.remaining > 0) continue;
-      u.lanes.splice(u.lanes.indexOf(ln), 1);
-      const s = ln.a.lane;
-      const hit = ln.y === null ? (ln.aim.alive ? [ln.aim] : [])
-        : this.defenders().filter((h) => h.alive && this.hasPositions(h) && Math.abs(h.y - ln.y) <= s.heightPx / 2);
-      events.push({ type: 'laneLand', unit: u, lane: ln, targets: hit });
-      for (const t of hit) {
-        if (!t.alive) continue;
-        if (s.damageMultiplier) this.strike(u, t, events, { multiplier: s.damageMultiplier, ability: true, projectile: 'knife' });
-        for (let i = 0; i < (s.stacks || 1) && t.alive; i++) for (const spec of s.apply || []) this.applyStatus(t, spec, u, `boss_${ln.a.id}`, events);
+  tickFans(u, dt, events) {
+    for (const fan of [...u.fans]) {
+      fan.remaining -= dt;
+      if (fan.remaining > 0) continue;
+      u.fans.splice(u.fans.indexOf(fan), 1);
+      const f = fan.a.fan;
+      const hitOne = (t, ev) => {
+        ev.push({ type: 'kunaiHit', unit: t, from: u });
+        if (f.damageMultiplier) this.strike(u, t, ev, { multiplier: f.damageMultiplier, ability: true });
+        for (let i = 0; i < (f.stacks || 1) && t.alive; i++) for (const spec of f.apply || []) this.applyStatus(t, spec, u, `boss_${fan.a.id}`, ev);
+      };
+      const hits = [];
+      for (const c of fan.clones) {
+        if (!c.knives.length) { if (c.aim.alive) hits.push({ t: c.aim, remaining: 0, fn: hitOne }); continue; } // no positions (tests)
+        for (const kn of c.knives) {
+          const along = laneProgress(kn);
+          for (const h of this.defenders()) {
+            if (!h.alive || !this.hasPositions(h) || this.segmentDistance(h, kn) > f.widthPx / 2) continue;
+            hits.push({ t: h, remaining: (f.flyMs || 0) * along(h), fn: hitOne });
+          }
+        }
       }
+      events.push({ type: 'fanLand', unit: u, fan, flyMs: f.flyMs || 0, targets: [...new Set(hits.map((x) => x.t))] });
+      u.chargeHits = [...(u.chargeHits || []), ...hits];
+      this.tickChargeHits(u, 0, events);
     }
   },
 

@@ -95,6 +95,7 @@ const SKILL_H = 44;
 // How big one character pixel is on screen (bosses use finer pixels: `drawScale` in enemies.json).
 const BANNER_Y = 520; // the big banner text (rooms); 'Floor N cleared!' goes higher (combat.json transition.clearBannerY)
 const charScale = (def) => def.drawScale ?? CHAR_SCALE;
+const KNIFE_MAX_Y = (SKILL_Y - 34) / CHAR_SCALE; // Shadow Kunai lines and knives stop above the skill bar (char px)
 
 const DEPTH = { floor: 0, slot: 1, marker: 2, hero: 5, heroBar: 6, doorFront: 7, popup: 10, hud: 20 };
 
@@ -812,6 +813,18 @@ export default class BattleScene extends Phaser.Scene {
       p.pixels.forEach((row) => row.forEach((c, x) => { if (c !== null) { sum += p.x - p.anchor[0] + x + 0.5; n++; } }));
     }
     return (v.bodyMid = n ? sum / n : 0);
+  }
+
+  // A dark see-through copy of a fighter standing at (x, y) facing `dir`, fading in after `delay` (Vesh's shadow clones).
+  shadowClone(v, x, y, dir, delay = 0) {
+    const ch = v.ch;
+    const c = this.add.container(x, y).setScale(Math.abs(ch.scaleX) * dir, ch.scaleY).setDepth(DEPTH.hero + y / 10000).setAlpha(0); // sorted like everyone
+    for (const img of ch.list) {
+      if (!img.visible || !img.texture) continue;
+      c.add(this.add.image(img.x, img.y, img.texture.key).setOrigin(img.originX, img.originY).setAngle(img.angle).setTint(0x6a4aa8)); // her own shading, gone dark and purple
+    }
+    this.tweens.add({ targets: c, alpha: 0.8, duration: 220, delay, onStart: () => this.puff(x, y, 0x2a1040, 5) });
+    return c;
   }
 
   // A copy of the fighter's body as it is right now, filled with one colour, that fades away (Gang Charge's afterimages).
@@ -2970,6 +2983,38 @@ export default class BattleScene extends Phaser.Scene {
               onUpdate: () => { at(sp.x, l.y2 + (sp.y - l.y2) * back.p); v.leapLift = Math.sin(back.p * Math.PI) * 90; },
               onComplete: () => { v.leapX = v.leapY = v.leapLift = 0; this.puff(v.ch.x, v.ch.y, 0x8a7a6a, 12); this.cameras.main.shake(120, 0.005); } });
           } });
+        return true;
+      }
+      case 'fanWarn': { // Shadow Kunai: shadow Vesh clones appear at random spots; a thin red line shows each knife's path
+        const S = CHAR_SCALE, fan = e.fan;
+        if (!v) return true;
+        fan.views = fan.clones.filter((c) => c.knives.length).map((c, i) => {
+          const delay = i * 90;
+          const sh = this.shadowClone(v, c.x, c.y, c.aim.x < c.x ? -1 : 1, delay);
+          const knives = c.knives.map((k) => ({ x1: k.x1 / S, y1: (k.y1 - 30) / S, x2: k.x2 / S, y2: (k.y2 - 30) / S })); // at body height
+          this.time.delayedCall(delay + 120, () => this.addFx(Math.max(1, fan.total - delay - 120), (q, now) => bossFx.knifeLinesFx(q, knives, now, KNIFE_MAX_Y), ['boss', 'knifeLines']));
+          return { sh, knives };
+        });
+        this.time.delayedCall(fan.total + (fan.a.fan.flyMs || 0) + 1500, () => { for (const c of fan.views) if (c.sh.active) c.sh.destroy(); }); // never left behind
+        return true;
+      }
+      case 'fanLand': { // ...each clone throws its fan of knives, then vanishes in smoke
+        const fan = e.fan;
+        const ms = Math.max(bossFx.KUNAI_MS, (e.flyMs || 0) / 0.6);
+        for (const c of fan.views || []) {
+          this.addFx(ms, (q) => bossFx.kunaiFanFx(q, c.knives, Math.min(0.8, (e.flyMs || 300) / ms), KNIFE_MAX_Y), ['boss', 'kunaiFan']);
+          if (!c.sh.active) continue;
+          const k = c.knives[(c.knives.length - 1) >> 1], dx = Math.sign(k.x2 - k.x1);
+          this.tweens.add({ targets: c.sh, x: c.sh.x + dx * 6, duration: 90, yoyo: true }); // a throwing jerk
+          this.time.delayedCall(e.flyMs || 300, () => { if (!c.sh.active) return; this.puff(c.sh.x, c.sh.y, 0x2a1040, 6); this.tweens.add({ targets: c.sh, alpha: 0, duration: 220, onComplete: () => c.sh.destroy() }); });
+        }
+        return true;
+      }
+      case 'kunaiHit': { // a hero caught by the kunai: a flash and a short shake
+        if (!v) return true;
+        v.ch.flash(0xff6a5a, 100);
+        const k = { p: 0 };
+        this.tweens.add({ targets: k, p: 1, duration: 200, onUpdate: () => { v.shakeX = (Math.random() * 2 - 1) * 3 * (1 - k.p); }, onComplete: () => { v.shakeX = 0; } });
         return true;
       }
       case 'chargeHit': { // Gang Charge hit: the hero shakes violently for a moment

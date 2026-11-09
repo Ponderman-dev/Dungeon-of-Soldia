@@ -210,16 +210,24 @@ ok('Spiderling: EVERY hit poisons (a weak poison)', enemies.spiderling.onHit.som
   s.startAbility(rask, a, []); s.applyStatus(rask, { status: 'stun', durationMs: 2000 }, h[0], 'test', []);
   const ev = run(s, a.castMs + 100);
   ok('...a stun during the wind-up interrupts it', !ev.some((e) => e.type === 'charge') && ev.some((e) => e.type === 'castCancel')); }
-// Shadow Kunai: a warned row across the floor; heroes in that row bleed (stacks), heroes elsewhere don't.
-{ const { s, es, h } = mk(['vesh'], 80); s.placeLines(); const [vesh] = es; const a = vesh.def.abilities.find((x) => x.lane);
-  for (const x of h) { x.y = 720; s.applyStatus(x, { status: 'stun', durationMs: 5000 }, x, 'hold', []); } h[2].y = 500; // stunned = they stay in their row
-  s.rng = () => 0.01; // aims at hero 0 (row y 720)
-  const ev0 = []; s.releaseAbility(vesh, a, ev0); s.rng = Math.random;
-  ok('Shadow Kunai: a row is WARNED first (nothing hit yet)', ev0.some((e) => e.type === 'laneWarn' && e.lane.y === 720) && h.every((x) => !x.statuses.some((st) => st.type === 'bleed')));
-  const ev = run(s, a.lane.warnMs + 100);
+// Shadow Kunai: shadow clones at random spots each throw a fan of knives at a hero; each path is warned first.
+{ const { s, es, h } = mk(['vesh'], 80); s.placeLines(); const [vesh] = es; const a = vesh.def.abilities.find((x) => x.fan), f = a.fan;
+  for (const x of h) s.applyStatus(x, { status: 'stun', durationMs: 5000 }, x, 'hold', []); // they stay where they are
+  const ev0 = []; s.releaseAbility(vesh, a, ev0);
+  const fan = vesh.fans[0], box = f.spawnBox;
+  ok('Shadow Kunai: clones appear at random spots in the floor box, each with a fan of knives', fan.clones.length === f.clones && fan.clones.every((c) => c.x >= box.x0 && c.x <= box.x1 && c.y >= box.y0 && c.y <= box.y1 && c.knives.length === f.knives));
+  const c0 = fan.clones[0], mid = c0.knives[(f.knives - 1) / 2];
+  ok('...the middle knife of each fan points at a hero', fan.clones.every((c) => { const m = c.knives[(f.knives - 1) / 2]; return s.segmentDistance(c.aim, m) < 2; }));
+  ok('...nothing is hit during the warning', ev0.some((e) => e.type === 'fanWarn') && h.every((x) => !x.statuses.some((st) => st.type === 'bleed')));
+  // a fixed fan: one knife straight across y 500; hero 0 on it, hero 1 between knives (safe)
+  fan.clones = [{ x: 30, y: 500, aim: h[0], knives: [{ x1: 30, y1: 500, x2: 400, y2: 500 }, { x1: 30, y1: 500, x2: 400, y2: 620 }] }];
+  h[0].x = 200; h[0].y = 500; h[1].x = 100; h[1].y = 580; h[2].x = 380; h[2].y = 300; // far apart (no pushing)
+  const hp0 = h[0].hp; const ev = run(s, f.warnMs + 50);
   const bleeds = (x) => x.statuses.filter((st) => st.type === 'bleed' && st.key.endsWith(`boss_${a.id}`)).length;
-  ok('...then everyone in that row gets the bleed stacks', ev.some((e) => e.type === 'laneLand') && bleeds(h[0]) === a.lane.stacks && bleeds(h[1]) === a.lane.stacks, `${bleeds(h[0])} ${bleeds(h[1])}`);
-  ok('...a hero in another row is safe', bleeds(h[2]) === 0); }
+  ok('...the knives fly: a hero far along the path is not hit yet', ev.some((e) => e.type === 'fanLand') && !h[0].statuses.some((st) => st.key.endsWith(`boss_${a.id}`)));
+  run(s, f.flyMs + 100);
+  ok('...then a hero ON a knife\'s path takes the hit + bleed stacks', h[0].hp < hp0 && bleeds(h[0]) === f.stacks, bleeds(h[0]));
+  ok('...a hero in the gap between knives is safe, so is one out of range', bleeds(h[1]) === 0 && bleeds(h[2]) === 0); }
 // Powder Bandit: runs at ONE hero, blows up (damage + stun), never swings; an enraged twin calls 2.
 { const { s, es, h } = mk(['rask', 'vesh'], 80); s.placeLines(); const [rask, vesh] = es;
   rask.hp = rask.maxHp = vesh.hp = vesh.maxHp = 1e7;

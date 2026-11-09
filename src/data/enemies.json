@@ -2204,10 +2204,21 @@
         "everyMs": 14000,
         "firstMs": 8000,
         "castMs": 0,
-        "lane": {
-          "warnMs": 1200,
-          "heightPx": 50,
+        "fan": {
           "clones": 3,
+          "knives": 5,
+          "spreadDeg": 50,
+          "rangePx": 380,
+          "widthPx": 22,
+          "warnMs": 1200,
+          "flyMs": 350,
+          "minGapPx": 90,
+          "spawnBox": {
+            "x0": 40,
+            "x1": 350,
+            "y0": 380,
+            "y1": 620
+          },
           "damageMultiplier": 0.6,
           "stacks": 3,
           "apply": [

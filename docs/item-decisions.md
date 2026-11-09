@@ -239,7 +239,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   The extra hits are fire/ice/electric/dark item hits: Magma Core / Ghastly Fire / Frozen Thunderbolt / Mage reactions see them.
 - itemruns (6/squad, copies 0/1/3) before: Kindling -2.1/-0.5, Storm +0.7/+0.3 (useless). After: Kindling +4.0/+8.0,
   Storm +3.6/+5.0, Frost +3.3/+6.5, Shadow +1.5/+3.7 (Whetstone +4.8/+6.6, Sharp Edge +2.8/+5.4 same runs).
-  Smart curve median 40 -> 43. Tests: `items-g1-g2.test.mjs` (charms).
+  Smart curve median 40 -> 43. Tests: `items-g.test.mjs` (charms).
 
 ## Session 17 (2): minions get their element, Phoenix / Frozen Thunderbolt rework (user's list)
 - Gargoyle defense 8 -> 14.
@@ -283,15 +283,15 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   THUNDERBOLT hits it for 700% electric. The bolt can't be dodged (`sure`) and is a real hit: lifesteal, thorns and the
   holder's on-hit items go off (not Thunderstruck itself). One circle per holder at a time; if the marked enemy dies first
   the bolt hits the next strongest. Look: itemFx `thunderMarkFx` (circle) + `thunderstruckFx` (bolt), new item icon.
-  Tests: `items-s18.test.mjs`.
+  Tests: `items-s.test.mjs`.
 - NEW EPIC Guardian's Banner (id guardians_banner, user: more defense items; 'epic, a bit higher stats'): squad item, every
   hero gets +15 defense and +15 resist while the holder lives (type/scope `squad`, so Bard's Hymn makes it stronger).
-  Tests: `items-s18.test.mjs`. Other defense ideas offered, not built: Stoneheart (a hit takes at most 20% max health),
+  Tests: `items-s.test.mjs`. Other defense ideas offered, not built: Stoneheart (a hit takes at most 20% max health),
   Aegis of Dawn (legendary, shield on the most hurt hero every 15s), Spellward Robe (+30 resist, first magic hit blocked).
 - NEW EPIC Assault Breastplate (id assault_breastplate, user's design): +35 defense per copy for the holder, and while the
   holder lives EVERY enemy has 8 less defense per copy (`assaultShred` special; an aura worked out at each hit in
   `BattleState.assaultShred()` -> computeDamage `opts.defenseShred`, physical hits only, can go below 0 like Armor Break;
-  no icon on the enemies). Tests: `items-s18.test.mjs`.
+  no icon on the enemies). Tests: `items-s.test.mjs`.
 - Sucker Punch Glove v2 (user: 'skills and other damage count; several gloves can one-shot with skills'): ANY hit from the
   holder (basic attack, skill, item hit) on an enemy above 90% health (`above` in the effect -> `suckerPunchAbove`) deals
   +50% per glove. Was: the first basic attack on each enemy (+50%). `firstHits` removed.
@@ -345,7 +345,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Harvest Scythe (rare, user's idea): crits heal 8% of the damage (+8 per copy), at most 10% of max health per crit
   (`critHeal`, `critHealCap`; user wants OP moments). Was 15% with no cap: curve mean 69.4. Now: median 43, mean 56.2, alive at 100: 5%.
 - Killing Mask (rare, user's idea, 8% lifesteal per copy): CUT by the user (too strong, lifesteal stacking ran away).
-- Icons drawn (first draft) in itemIcons.json. Tests: items-s24.test.mjs.
+- Icons drawn (first draft) in itemIcons.json. Tests: items-s.test.mjs.
 - Curve 3 smart with all 4: median 40 -> 52, mean 48.8 -> 88 (Scythe + Mask most picked). Mask cut (user).
   With Scythe, Riposte, Last Stand only: median 46, mean 69.4, alive at 100: 10% (was 4%). Scythe kept as is (user).
 
@@ -356,7 +356,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Better Odds (epic): +2.5% damage per enemy alive right now, +2.5% per copy (`betterOdds`).
 - Opening Horn (common): first 4s of every floor +30% attack speed, +12% per extra copy (`openingHorn`, `durationMs`).
 - Quick Fingers (common): every kill BY THE HOLDER: holder's skill cooldowns -0.5s, -0.3s per extra copy (`killCooldownMs`).
-- Icons drawn in `scripts/art/new-item-icons.mjs`. Tests: items-batch1.test.mjs. No balance run (user rule).
+- Icons drawn in `scripts/art/new-item-icons.mjs`. Tests: items-batch.test.mjs. No balance run (user rule).
 
 ## Session 27: new items batch 2 (5 more; 11 of 21 built)
 - Life Crystal (common): when ANY enemy dies, 15% chance (+5% per extra copy) for a green orb that heals every hero
@@ -369,7 +369,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - Frost Mantle (rare): a melee hit on the holder: 30% chance (+5% per extra copy) to chill the attacker (3s).
 - Reaper's Bell (epic): the holder's kills (attacks, skills, item hits) explode for 18% of the dead enemy's max health
   (+8% per extra copy) as dark damage within 100px; blast kills explode again (chains forever).
-- Icons in `scripts/art/new-item-icons.mjs`. Tests: items-batch2.test.mjs. No balance run (user rule).
+- Icons in `scripts/art/new-item-icons.mjs`. Tests: items-batch.test.mjs. No balance run (user rule).
 
 ## Session 27: new items batch 3, the bomb family (5 more; 16 of 21 built)
 - Ice Bomb / Electric Bomb / Dark Bomb / Poison Bombs (rare): exactly like Fire Bombs (8% chance per attack per copy,
@@ -379,7 +379,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   barrel) to throw 2-4 more bombs at random enemies, one every 0.15s, each a random pick of the holder's bomb items.
   Barrel bombs CAN set the Barrel off again, but it has a 0.3s cooldown (user: so it can't loop forever).
   Fire Bombs counts (proc `bomb: true`).
-- Tests: items-batch3.test.mjs. No balance run (user rule).
+- Tests: items-batch.test.mjs. No balance run (user rule).
 
 ## Session 27: new items batch 4 (3 more; 19 of 21 built)
 - Sweeping Strap (common, melee): basic melee attacks also hit every other enemy within 60px of the target for 15%
@@ -388,7 +388,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   +40% electric per charge (+20% per charge per extra copy), inside the hit (`kineticCoil`, a rider).
 - Sharpest Blade (legendary): a basic attack with NO element (no charm / Chill Band / Coil riders, not the Mage)
   has 6% (+3% per extra copy) to deal 4.5x damage (+0.5x per extra copy) and stun 2.5s (`heartStrike`).
-- Tests: items-batch4.test.mjs. No balance run (user rule).
+- Tests: items-batch.test.mjs. No balance run (user rule).
 
 ## Session 27: new items batch 5 (the last 2; all 21 built, 113 items)
 - Euclid of Elements (legendary): a hit (attack or skill, not item damage) carrying 2+ different elements (its own
@@ -399,7 +399,7 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   8x its attack Ice Spikes hit the strongest enemy (boss > elite > most health) for 700% (+150% per extra copy) ice
   + Freeze 5s. The holder's fire / electric / dark HITS do nothing (charm riders of those elements are dropped);
   damage over time it already put on (burn, poison) still ticks.
-- Tests: items-batch5.test.mjs. No balance run (user rule).
+- Tests: items-batch.test.mjs. No balance run (user rule).
 
 ## Session 29: simulations on the 21 new items (user asked)
 - itemruns.mjs (40 runs per number, front hero holds it, base 29.6; under ~2.5 floors = noise), 1 / 3 copies:

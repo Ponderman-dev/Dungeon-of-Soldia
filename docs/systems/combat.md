@@ -7,6 +7,11 @@ the class at the bottom of that file (same trick as `bosses.js` / `elites.js`), 
 `heroes.js` (kits, passives, counters), `statuses.js`, `skills.js`, `skillBooks.js`, `stats.js` (XP, levels, stat
 refresh, room effects). Every method is still called as `state.method()`; when docs say 'BattleState `foo()`', find
 it with `grep -rn "  foo(" src/systems`. A new method goes in the topic file (end it with a comma).
+`BattleScene` is split the same way: `src/scenes/BattleScene.js` = the core (`create()`, `buildFloor()`, `makeView()`,
+`update()`), the rest in `src/scenes/battle/`: `hud.js`, `orders.js` (drag / tap), `effects.js` (status, hit, item
+effects, pop-up words, deaths), `walk.js` (between floors), `events.js` (`showEvent()`), `motion.js` (attack and skill
+moves), `bossView.js`, `results.js` (win, reward, loss), `shared.js` (constants like `DEPTH`, `SLOT_Y`, `T`, `M`, `FX`:
+import the ones a file uses). `roomMethods.js` (special rooms) stays where it is.
 
 Damage maths, attack timing, perks, morale, levelling, tap focus and drag orders.
 Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system changes.

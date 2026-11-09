@@ -100,6 +100,8 @@ and suggest a fresh session per task.
 - `src/main.js`  Phaser game config
 - `src/config.js`  size/colour constants
 - `src/scenes/`  one file per scene (BattleScene, RewardScene, SquadScene, PuzzleScene, roomMethods.js...)
+- `src/scenes/battle/`  BattleScene's drawing by topic (hud, orders, effects, walk, events, motion, bossView, results;
+  `shared.js` = its constants); `BattleScene.js` itself = create / buildFloor / update
 - `src/entities/`  reusable game objects (Character built from parts, Door, textures)
 - `src/systems/`  logic with no Phaser (BattleState, combat, items, rewards, bosses, elites, fx recipes...)
 - `src/systems/battle/`  BattleState's rules by topic (movement, minions, itemAttacks, itemReactions, heroes, statuses,

@@ -1,6 +1,5 @@
 // Part of BattleState (mixed into its prototype at the bottom of ../BattleState.js; `this` is the BattleState).
 // Item effects that react to being hit, to damage, to kills and to heals: saves, shields, stored damage (docs/systems/items.md).
-import { elementMix } from '../items.js';
 
 export const itemReactionsMethods = {
   // Spiked Aegis (`shieldThorns`, 40% per copy): a MELEE hit on the holder while a shield is up (it soaked some of this

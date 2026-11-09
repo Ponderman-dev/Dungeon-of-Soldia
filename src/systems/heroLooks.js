@@ -170,7 +170,6 @@ function cutPx(g, e, p, a, big = 1) {
 
 // ---- Alchemist: real glass flasks (cork, glass, liquid), shattering glass, splashes, bubbling puddles ----
 const ALC = { glass: 0xd8f0f0, cork: 0x9a6b3a, poison: 0x6bd16a, poison2: 0x3f9a4a, poisonL: 0xb8ffb0, heal: 0x6dff8f, speed: 0xffe94d, shield: 0x6fd0ff };
-const BREW = { heal: ALC.heal, speed: ALC.speed, shield: ALC.shield };
 const FLASK = ['..k..', '..g..', '.ggg.', 'gLLLg', 'gLwLg', '.ggg.']; // k cork, g glass, L liquid, w shine
 // A flask at (x, y) (its middle), turned by `rot` quarter turns (it spins as it flies).
 function flaskPx(g, x, y, col, rot, a = 1, sc = 2) {

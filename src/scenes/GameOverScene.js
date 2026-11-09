@@ -17,7 +17,6 @@ import * as sfx from '../audio/sfx.js';
 // and that hero's card (fell on, damage, healing, kills, taken, items, who felled them). BOSSES / ITEMS open their
 // pages. CAMP = back to the camp, TRY AGAIN = the squad screen. Data: `summary` from systems/runStats.js finishRun.
 const GOLD = Phaser.Display.Color.HexStringToColor(UI.gold).color;
-const RED = Phaser.Display.Color.HexStringToColor(UI.red).color;
 const DIM = Number(G.dim);
 const W = GAME_WIDTH - G.side * 2;
 const heroDef = (id) => heroes.find((h) => h.id === id);

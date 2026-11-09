@@ -1,6 +1,5 @@
 // Part of BattleState (mixed into its prototype at the bottom of ../BattleState.js; `this` is the BattleState).
 // Hero kits: signature mechanics, passives, the Rogue's Opportunist and the 'every Nth attack' counters (docs/systems/heroes.md).
-import { computeHeroStats } from '../items.js';
 
 export const heroesMethods = {
   // ---- hero rework v2: signature mechanics (all numbers in the hero's passive in heroes.json) ----------

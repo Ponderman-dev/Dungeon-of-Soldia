@@ -15,7 +15,6 @@ import dungeons from '../data/dungeons.json';
 import combatRules from '../data/combat.json';
 import defaultSquad from '../data/squad.json';
 import { DEMO as DEMO_KIND, demoSquad } from './demoMode.js'; // a demo page's saved squad
-import camp from '../data/camp.json'; // slideMs: the slide back down to the camp
 const DEMO = !!DEMO_KIND;
 const TESTER = import.meta.env.VITE_TESTER === '1'; // the playtest build for itch.io: no test buttons
 import { perkMods } from '../systems/party.js';

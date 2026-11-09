@@ -20,7 +20,6 @@ import * as sfx from '../audio/sfx.js';
 // Tap a player = their run. LOOK ONLY: no server yet, the players are samples from leaders.json.
 const L = D.layout;
 const C = Object.fromEntries(Object.entries(L.colors).map(([k, v]) => [k, Number(v)]));
-const DIM = Number(L.dim);
 const W = GAME_WIDTH - L.side * 2;
 const heroDef = (id) => heroes.find((h) => h.id === id);
 const num = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');

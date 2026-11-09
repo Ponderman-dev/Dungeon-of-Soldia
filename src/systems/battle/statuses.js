@@ -1,7 +1,6 @@
 // Part of BattleState (mixed into its prototype at the bottom of ../BattleState.js; `this` is the BattleState).
 // Statuses: applying, stacking, ticking, damage over time (docs/systems/statuses.md).
 import { computeDotDamage } from '../combat.js';
-import { elementMix } from '../items.js';
 
 export const statusesMethods = {
   // Magma Core (ERUPTION, session 31): when the last Burn stack on an enemy ends (runs out, not death), every living hero

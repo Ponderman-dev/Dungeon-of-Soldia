@@ -1,6 +1,6 @@
 // Part of BattleState (mixed into its prototype at the bottom of ../BattleState.js; `this` is the BattleState).
 // Item effects on the attacking side: procs, bombs, chains, extra hits and the items that change a basic attack (docs/systems/items.md).
-import { computeDamage, computeDotDamage } from '../combat.js';
+import { computeDotDamage } from '../combat.js';
 
 export const itemAttacksMethods = {
   // Ghastly Fire: an enemy burning from a holder attacks `ghastlySlow`% slower per burn stack (5, +2 per extra copy), max 75%.

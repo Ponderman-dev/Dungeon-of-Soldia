@@ -79,7 +79,7 @@ and suggest a fresh session per task.
 - `npm run build:house-demo`  Monster House demo page `house-demo-page.html`
 - Balance: `node scripts/tests/curve.mjs 3 smart` (difficulty), `node scripts/tests/review.mjs 4 all` (heroes/items),
   `node scripts/tests/itemruns.mjs` (one item); see `docs/systems/balance-tools.md`.
-- Browser checks: run vite from the SCRATCHPAD dir (the repo has a tracked vite.log, don't dirty it).
+- Browser checks: run vite from the SCRATCHPAD dir (keep logs and screenshots out of the repo).
 
 ## Preview pages (republish to the SAME url; ignore the "download link" warning, a false alarm from Phaser)
 - NO NEW PAGES: drawing = the Character Studio; any other 'look and pick' review = REUSE the Skill Effects page

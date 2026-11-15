@@ -1,5 +1,34 @@
-# Handoff ARCHIVE (sessions 2-42, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-43, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## (session 43 start note, 2026-11-09; session 43 did the code cleanup (BattleState / BattleScene split), the tap fixes, art pilots (KIV) and UI concepts) START HERE (session 43): NEXT = BOSSES REWORK (user asked at the end of session 42)
+- BRANCH: `main` has EVERYTHING (session 42 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).
+- FIRST read `docs/systems/bosses.md` (one long line per boss), then ASK with the question tool: WHICH bosses (the old
+  plan was 'especially 60, 80, 100'; 60 Frost Warden was reworked in session 30, so 80 Rask & Vesh and 100 Morthul are
+  next, then 120 Ignatius / 140 Sela / 160 Vharox) and WHAT is wrong (too easy, boring, unfair, looks). The user often
+  wants to WRITE the design themselves ('let me write first' = stop and wait): offer mechanics + numbers, don't push.
+- COPY SESSION 30's FLOW (Frost Warden; archive: search 'session 31 start note'): rules + tests first, then each new
+  look ONE at a time IN THE GAME (clip + slow-motion x3 + frames, question tool), then numbers with the smart curve
+  (`node scripts/tests/curve.mjs 8 smart`, ~2 min, 3/squad is too few past floor 60) and `bosscheck.mjs`, then a full
+  recorded fight. Recording recipe + 'show a boss move' trick: archive, same note. Effects: `src/systems/bossFx.js`.
+- Last boss numbers (bosses.md, smart bot, squads that REACH the boss): Grukk ~87-93%, Brood Mother ~73-80%, Frost
+  Warden 39-55%, Rask & Vesh ~10% (fixed tool) / ~97% (session 30 curve: numbers disagree, re-run first), Morthul
+  ~67-100%, Ignatius ~32%, Sela ~85%, Vharox ~43%. Show NUMBERS in tables before changing any.
+- Dev url flags for a boss floor: `?floor=80` (also `?elite=1`, `?lineup=`); Brood Mother demo page exists (CLAUDE.md).
+- DONE session 42 (title-base.md '4b. HUB v2'), game page republished: camp = mobile-game hub (ONE gold header panel:
+  profile, best floor, gems, gear; gold-framed EXPEDITION with 'NEXT BOSS: FLOOR n' (`dungeon.js nextBossFloor`); tab bar
+  HEROES / GLOSSARY / LEADERS / SHOP); richer camp props (banner, stone brazier with glow, weapon rack + shield, cooking
+  pot, sleeping dog, rolled bedroll, supplies), loose clusters, NO outlines, drawn in the FLOOR's style (`propLook`:
+  under the floor light, muted + speckle + dark edge); tent removed (prop kept).
+  Battle PAUSE + SPEED buttons top right (ui.md; `pause.json`, `PauseScene`: RESUME / SETTINGS / GIVE UP = defeat).
+- STILL OPEN (other topics, one per session): transitions phase 2 (menu tabs slideSwap + pop-ups popIn), phase 3-5
+  (opening, the run, sounds), FIGHT HUD redesign, PASSIVE icons gold frame. KIV: hero art (knight sketches), Studio UI, session 33 item leftovers, music.
+- PUBLISH (Artifact tool): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
+  dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. The first publish of a session
+  is refused 'not viewed', the second as 'unchanged': Read the LAST 3 lines of the saved live copy (offset), then the
+  third identical publish goes through.
+- Browser checks: vite + Playwright FROM THE SCRATCHPAD dir (`<repo>/node_modules/.bin/vite <repo> --port 5190`, it dies
+  when the worker restarts: start it again). Fresh clone: `npm install` first. Camp: stop 'Title', start 'Base'.
 
 ## (session 42 start note, 2026-11-06; session 42 did the camp hub v2 (mobile-game menu, gold header, tab bar) + richer camp props in the floor style) START HERE (session 42): NEXT = THE USER PICKS ONE OPEN ITEM BELOW
 - BRANCH: `main` has EVERYTHING (session 41 merged in at the handoff). Git rule in CLAUDE.md (every handoff updates main).

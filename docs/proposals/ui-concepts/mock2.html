@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>UI mock-ups 2</title>
+<style>
+@font-face{font-family:Iron;src:url(../../../src/assets/fonts/ironslab.ttf)}
+@font-face{font-family:P2P;src:url(../../../src/assets/fonts/press-start-2p.woff2)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#111;width:390px;height:844px;overflow:hidden;position:relative}
+img{image-rendering:pixelated}
+.scr{position:absolute;inset:0;width:390px;height:844px;overflow:hidden;display:none}
+.field{position:absolute;left:0;background:url(field.png) center/cover;image-rendering:pixelated}
+
+/* ============ D: CLASSIC JRPG WINDOWS (blue windows, white frame, text menus) ============ */
+.D{background:#000;font-family:P2P;color:#fff;font-size:9px}
+.D .w{position:absolute;background:linear-gradient(#3a52c4,#16226e 70%,#0e1650);border:3px solid #f4f4ff;outline:2px solid #000;border-radius:7px;box-shadow:inset 0 0 0 2px #7f8fe0}
+.D .field{top:0;width:390px;height:532px}
+.D .fl{left:8px;top:8px;padding:9px 12px;font-size:10px}.D .fl small{color:#ffe36e;font-size:7px;margin-left:8px}
+.D .opt{right:8px;top:8px;padding:9px 12px;font-size:10px}
+.D .tgt{left:8px;top:478px;width:374px;height:44px;padding:9px 12px;line-height:11px}
+.D .tgt b{color:#ffe36e}.D .tgt u{position:absolute;right:12px;top:14px;width:130px;height:10px;background:#000;border:2px solid #fff;text-decoration:none}.D .tgt u:after{content:'';position:absolute;left:0;top:0;bottom:0;width:70%;background:#f25a4a}.D .tgt small{display:block;font-size:7px;color:#9fe8ff;margin-top:5px}
+.D .party{left:8px;top:532px;width:374px;height:304px;padding:8px}
+.D .row{height:92px;position:relative;border-bottom:2px solid rgba(255,255,255,.22)}.D .row:last-child{border:0}
+.D .row img.h{position:absolute;left:4px;top:12px;height:66px}
+.D .row .nm{position:absolute;left:52px;top:12px;font-size:10px}.D .row .lv{position:absolute;left:52px;top:30px;font-size:7px;color:#9fe8ff}
+.D .row .hp{position:absolute;left:52px;top:46px;font-size:8px}.D .row .hp b{color:#8dff8a}.D .row .hp.low b{color:#ffb14a}
+.D .row .bar{position:absolute;left:52px;top:62px;width:92px;height:8px;background:#000;border:2px solid #fff}.D .row .bar i{display:block;height:100%;background:#58e06a}.D .row .hp.low+.bar i{background:#ffb14a}
+.D .cmd{position:absolute;left:158px;width:206px;height:38px;border:2px solid #f4f4ff;border-radius:5px;background:rgba(0,0,0,.35);padding:0 8px 0 44px;line-height:34px;font-size:8px;white-space:nowrap}
+.D .cmd.a{top:6px}.D .cmd.b{top:48px}
+.D .cmd img{position:absolute;left:6px;top:2px;width:30px;height:30px}
+.D .cmd em{position:absolute;right:8px;top:0;font-style:normal;color:#8dff8a;font-size:7px}
+.D .cmd.cd{opacity:.5}.D .cmd.cd em{color:#fff}
+.D .cmd.sel{background:#fff;color:#16226e}.D .cmd.sel em{color:#16226e}.D .cmd.sel:before{content:'\25B6';position:absolute;left:-16px;color:#fff;font-size:10px}
+.D.camp .field{background:url(campfield.png) center/cover;top:8px;left:8px;width:374px;height:330px;border:3px solid #f4f4ff;outline:2px solid #000;border-radius:7px}
+.D.camp .menu{left:8px;top:352px;width:214px;height:322px;padding:18px 14px;font-size:13px;line-height:58px}
+.D.camp .menu div{padding-left:24px;position:relative}.D.camp .menu .on{color:#ffe36e}.D.camp .menu .on:before{content:'\25B6';position:absolute;left:0;color:#fff}
+.D.camp .info{left:230px;top:352px;width:152px;height:322px;padding:16px 12px;font-size:8px;line-height:16px}
+.D.camp .info b{display:block;color:#9fe8ff;margin-top:14px;font-size:7px}.D.camp .info b:first-child{margin-top:0}.D.camp .info span{font-size:12px}
+.D.camp .help{left:8px;top:688px;width:374px;height:148px;padding:16px 14px;font-size:9px;line-height:20px}.D.camp .help b{color:#ffe36e}
+
+/* ============ E: DUNGEON STONE (carved stone bar, iron frames, health vials) ============ */
+.E{background:#0c0a0e;font-family:Iron;color:#e8dcc0}
+.E .field{top:0;width:390px;height:612px}
+.E .stone{background-color:#4a4650;background-image:linear-gradient(#5d5864 0 2px,transparent 2px),linear-gradient(90deg,#2c2932 0 2px,transparent 2px),linear-gradient(#2c2932 0 2px,transparent 2px);background-size:100% 100%,62px 100%,100% 44px}
+.E .plaque{position:absolute;left:50%;top:10px;transform:translateX(-50%);width:176px;height:50px;border:4px solid #1a171e;box-shadow:inset 0 0 0 3px #6e6876,0 4px 0 rgba(0,0,0,.5);text-align:center;font-size:22px;line-height:30px;color:#f0d890;text-shadow:2px 2px 0 #1a171e}
+.E .plaque small{display:block;font-family:P2P;font-size:6px;color:#bdb4a0;line-height:8px;text-shadow:none}
+.E .plaque:before,.E .plaque:after{content:'';position:absolute;top:-14px;width:4px;height:14px;background:#1a171e}.E .plaque:before{left:20px}.E .plaque:after{right:20px}
+.E .ib{position:absolute;top:12px;width:44px;height:44px;border:4px solid #1a171e;box-shadow:inset 0 0 0 3px #6e6876;text-align:center;line-height:30px;font-size:18px;color:#f0d890}
+.E .bar{position:absolute;left:0;top:600px;width:390px;height:244px;border-top:6px solid #1a171e;box-shadow:inset 0 5px 0 #7a7482}
+.E .slot{position:absolute;top:26px;width:122px;text-align:center}
+.E .vial{width:64px;height:64px;margin:0 auto;background:#1a0c0e;border:4px solid #1a171e;box-shadow:0 0 0 3px #8a8494,0 0 0 6px #1a171e;position:relative;overflow:hidden;transform:rotate(45deg)}
+.E .vial i{position:absolute;left:-30%;right:-30%;bottom:-30%;background:#c8323a;box-shadow:inset 0 5px 0 #f06a5a;transform:rotate(-45deg);transform-origin:center}
+.E .who{position:absolute;left:50%;top:6px;height:54px;transform:translateX(-50%);filter:drop-shadow(2px 2px 0 #000)}
+.E .nm{font-size:15px;margin-top:20px;color:#f0d890;text-shadow:2px 2px 0 #1a171e}.E .nm small{font-family:P2P;font-size:7px;color:#e8dcc0;display:block;margin-top:3px;text-shadow:none}
+.E .sk{display:flex;gap:6px;justify-content:center;margin-top:10px}
+.E .sk div{width:54px;height:54px;background:#17141b;border:4px solid #1a171e;box-shadow:inset 0 0 0 3px #8a8494,inset 0 0 0 5px #2c2932;position:relative}
+.E .sk div:before,.E .sk div:after{content:'';position:absolute;width:4px;height:4px;background:#c8c0d0;top:-2px}.E .sk div:before{left:-2px}.E .sk div:after{right:-2px}
+.E .sk img{position:absolute;left:7px;top:7px;width:32px;height:32px}
+.E .sk div.rdy{box-shadow:inset 0 0 0 3px #f0d890,inset 0 0 0 5px #2c2932}
+.E .sk div.cd img{opacity:.25}.E .sk div.cd b{position:absolute;inset:0;line-height:44px;font-size:22px;color:#e8dcc0}
+.E.camp .field{background:url(campfield.png) center/cover;height:420px}
+.E.camp .bar{top:404px;height:440px}
+.E.camp .gate{position:absolute;left:24px;top:28px;width:342px;height:96px;background:#7a1f22;border:5px solid #1a171e;box-shadow:inset 0 0 0 4px #c8323a,inset 0 0 0 7px #7a1f22,0 6px 0 rgba(0,0,0,.45);text-align:center;font-size:34px;line-height:60px;color:#ffe9b0;text-shadow:3px 3px 0 #1a171e}
+.E.camp .gate small{display:block;font-family:P2P;font-size:7px;line-height:8px;text-shadow:none;color:#f0c8a0}
+.E.camp .tab{position:absolute;top:150px;width:160px;height:118px;background:#35323b;border:5px solid #1a171e;box-shadow:inset 0 0 0 3px #6e6876;text-align:center;font-size:22px;padding-top:26px;color:#f0d890;text-shadow:2px 2px 0 #1a171e}
+.E.camp .tab small{display:block;font-family:P2P;font-size:7px;color:#bdb4a0;margin-top:12px;text-shadow:none}
+.E.camp .foot{position:absolute;left:24px;top:412px;width:342px;font-family:P2P;font-size:8px;display:flex;justify-content:space-between;color:#bdb4a0}
+
+/* ============ F: 16-BIT TACTICS (bevelled colour panels, face portraits, enemy info on top) ============ */
+.F{background:#101418;font-family:P2P;color:#fff;font-size:8px}
+.F .bev{border:3px solid;border-color:#fff #1a2030 #1a2030 #fff;outline:2px solid #05070a}
+.F .field{top:74px;width:390px;height:524px}
+.F .tgt{position:absolute;left:6px;top:6px;width:378px;height:62px;background:#7a2a30;padding:8px 10px}
+.F .tgt .face{position:absolute;left:8px;top:8px;width:40px;height:40px;background:#2a0e12;border:2px solid #05070a;overflow:hidden}
+.F .tgt .nm{position:absolute;left:58px;top:9px;font-size:10px}.F .tgt .wk{position:absolute;left:58px;top:38px;font-size:7px;color:#ffd0a0}
+.F .tgt .hp{position:absolute;left:58px;top:24px;width:188px;height:9px;background:#05070a;border:1px solid #fff}.F .tgt .hp i{display:block;width:70%;height:100%;background:#ff5a4a}
+.F .tgt .fl{position:absolute;right:10px;top:9px;text-align:right;line-height:13px}.F .tgt .fl b{font-size:10px;color:#ffe36e}
+.F .tgt .bt{position:absolute;right:10px;top:36px}.F .tgt .bt b{display:inline-block;background:#05070a;padding:4px 6px;margin-left:4px}
+.F .party{position:absolute;left:6px;top:606px;width:378px;height:232px;display:flex;gap:6px}
+.F .p{flex:1;position:relative;padding:6px}
+.F .p.k{background:#2f5fb8}.F .p.r{background:#7a3fb0}.F .p.a{background:#2f8f4a}
+.F .face{height:78px;background:rgba(0,0,0,.4);border:2px solid #05070a;overflow:hidden;position:relative}
+.F .face img{position:absolute;left:50%;top:6px;height:180px;transform:translateX(-50%)}
+.F .face em{position:absolute;left:3px;bottom:3px;font-style:normal;font-size:7px;background:#05070a;padding:3px 4px;color:#ffe36e}
+.F .p .nm{margin-top:7px;font-size:9px;text-shadow:1px 1px 0 #05070a}
+.F .p .hpn{margin-top:5px;font-size:7px;text-shadow:1px 1px 0 #05070a}
+.F .p .hp{margin-top:4px;height:12px;background:#05070a;border:2px solid #05070a}.F .p .hp i{display:block;height:100%;background:#6cf06a;box-shadow:inset 0 3px 0 #c8ffc0}.F .p .hp i.low{background:#ffb14a;box-shadow:inset 0 3px 0 #ffe0a8}
+.F .sk{display:flex;gap:5px;margin-top:8px}
+.F .sk div{flex:1;height:60px;position:relative;border:3px solid;outline:2px solid #05070a}
+.F .sk div.atk{background:#d8483c;border-color:#ffb0a0 #7a1c18 #7a1c18 #ffb0a0}
+.F .sk div.sup{background:#3cae5c;border-color:#b0ffc0 #166030 #166030 #b0ffc0}
+.F .sk div.cd{background:#454c5a;border-color:#2a303c #6c7484 #6c7484 #2a303c}
+.F .sk img{position:absolute;left:50%;top:50%;width:40px;height:40px;transform:translate(-50%,-50%)}
+.F .sk div.cd img{opacity:.3}.F .sk div.cd b{position:absolute;inset:0;line-height:54px;text-align:center;font-size:14px}
+.F.camp .top{position:absolute;left:6px;top:6px;width:378px;height:46px;background:#2a3348;padding:10px;line-height:22px;font-size:9px}.F.camp .top span{float:right;color:#ffe36e}
+.F.camp .field{background:url(campfield.png) center/cover;top:60px;left:6px;width:378px;height:336px;outline:2px solid #05070a}
+.F.camp .go{position:absolute;left:6px;top:406px;width:378px;height:84px;background:#d8483c;border:4px solid;border-color:#ffb0a0 #7a1c18 #7a1c18 #ffb0a0;outline:2px solid #05070a;font-size:19px;text-align:center;line-height:48px;text-shadow:2px 2px 0 #7a1c18}
+.F.camp .go small{display:block;font-size:7px;line-height:8px;text-shadow:none;color:#ffe0c8}
+.F.camp .grid{position:absolute;left:6px;top:502px;width:378px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.F.camp .t{height:158px;position:relative;text-align:center;padding-top:112px;font-size:11px;text-shadow:2px 2px 0 #05070a}
+.F.camp .t i{position:absolute;left:50%;top:18px;width:80px;height:80px;margin-left:-40px;background:rgba(0,0,0,.35);border:2px solid #05070a;overflow:hidden}
+.F.camp .t i img{position:absolute;left:50%;top:8px;height:64px;transform:translateX(-50%)}
+.F.camp .t i b{position:absolute;inset:0;font-size:30px;line-height:76px;font-style:normal;color:#ffe36e}
+</style></head><body>
+
+<!-- D fight -->
+<div class="scr D" id="D-fight">
+  <div class="field"></div>
+  <div class="w fl">FLOOR 9<small>BOSS IN 11</small></div><div class="w opt">1X &nbsp;II</div>
+  <div class="w tgt">TARGET <b>SKELETON ARCHER</b><small>WEAK: HOLY &nbsp; RESISTS: DARK</small><u></u></div>
+  <div class="w party">
+    <div class="row"><img class="h" src="hero-knight.png"><div class="nm">KNIGHT</div><div class="lv">LV 1</div><div class="hp">HP <b>216</b>/300</div><div class="bar"><i style="width:72%"></i></div>
+      <div class="cmd a sel"><img src="sk-defense_bash.png">SHIELD BASH<em>READY</em></div><div class="cmd b cd"><img src="sk-challenge.png">CHALLENGE<em>4s</em></div></div>
+    <div class="row"><img class="h" src="hero-rogue.png"><div class="nm">ROGUE</div><div class="lv">LV 1</div><div class="hp low">HP <b>88</b>/220</div><div class="bar"><i style="width:40%"></i></div>
+      <div class="cmd a cd"><img src="sk-multistrike.png">MULTISTRIKE<em>2s</em></div><div class="cmd b"><img src="sk-smoke_bomb.png">SMOKE BOMB<em>READY</em></div></div>
+    <div class="row"><img class="h" src="hero-archer.png"><div class="nm">ARCHER</div><div class="lv">LV 1</div><div class="hp">HP <b>180</b>/180</div><div class="bar"><i style="width:100%"></i></div>
+      <div class="cmd a"><img src="sk-arrow_rain.png">ARROW RAIN<em>READY</em></div><div class="cmd b"><img src="sk-hunters_mark.png">HUNTER'S MARK<em>READY</em></div></div>
+  </div>
+</div>
+<!-- D camp -->
+<div class="scr D camp" id="D-camp">
+  <div class="field"></div>
+  <div class="w menu"><div class="on">EXPEDITION</div><div>HEROES</div><div>GLOSSARY</div><div>LEADERS</div><div>SHOP</div></div>
+  <div class="w info"><b>NAME</b>Adventurer<b>BEST FLOOR</b><span>0</span><b>NEXT BOSS</b><span>FL 20</span><b>GEMS</b><span>0</span><b>HEROES</b><span>3/10</span></div>
+  <div class="w help"><b>EXPEDITION</b><br>Pick three heroes and go down into the dungeon. A boss waits every 20 floors.</div>
+</div>
+
+<!-- E fight -->
+<div class="scr E" id="E-fight">
+  <div class="field"></div>
+  <div class="plaque stone">Floor IX<small>BOSS IN 11 FLOORS</small></div>
+  <div class="ib stone" style="left:10px">1x</div><div class="ib stone" style="right:10px">II</div>
+  <div class="bar stone">
+    <div class="slot" style="left:6px"><div class="vial"><i style="height:92%"></i></div><img class="who" src="hero-knight.png"><div class="nm">Knight<small>216 / 300</small></div><div class="sk"><div class="rdy"><img src="sk-defense_bash.png"></div><div class="cd"><img src="sk-challenge.png"><b>4</b></div></div></div>
+    <div class="slot" style="left:134px"><div class="vial"><i style="height:64%"></i></div><img class="who" src="hero-rogue.png"><div class="nm">Rogue<small>88 / 220</small></div><div class="sk"><div class="cd"><img src="sk-multistrike.png"><b>2</b></div><div class="rdy"><img src="sk-smoke_bomb.png"></div></div></div>
+    <div class="slot" style="left:262px"><div class="vial"><i style="height:130%"></i></div><img class="who" src="hero-archer.png"><div class="nm">Archer<small>180 / 180</small></div><div class="sk"><div class="rdy"><img src="sk-arrow_rain.png"></div><div class="rdy"><img src="sk-hunters_mark.png"></div></div></div>
+  </div>
+</div>
+<!-- E camp -->
+<div class="scr E camp" id="E-camp">
+  <div class="field"></div>
+  <div class="plaque stone">Base Camp<small>ADVENTURER</small></div>
+  <div class="bar stone">
+    <div class="gate">Expedition<small>NEXT BOSS: FLOOR 20</small></div>
+    <div class="tab" style="left:24px">Heroes<small>3 / 10</small></div><div class="tab" style="left:206px">Glossary<small>THE BOOK</small></div>
+    <div class="tab" style="left:24px;top:282px">Leaders<small>BEST RUNS</small></div><div class="tab" style="left:206px;top:282px">Shop<small>0 GEMS</small></div>
+  </div>
+</div>
+
+<!-- F fight -->
+<div class="scr F" id="F-fight">
+  <div class="tgt bev"><div class="face" style="background:url(field.png) -180px -112px / 780px auto;image-rendering:pixelated"></div><div class="nm">SKELETON ARCHER</div><div class="hp"><i></i></div><div class="wk">WEAK: HOLY</div><div class="fl"><b>FLOOR 9</b><br>BOSS IN 11</div><div class="bt"><b>1X</b><b>II</b></div></div>
+  <div class="field"></div>
+  <div class="party">
+    <div class="p k bev"><div class="face"><img src="hero-knight.png"><em>LV1</em></div><div class="nm">KNIGHT</div><div class="hpn">216/300</div><div class="hp"><i style="width:72%"></i></div><div class="sk"><div class="atk"><img src="sk-defense_bash.png"></div><div class="cd"><img src="sk-challenge.png"><b>4</b></div></div></div>
+    <div class="p r bev"><div class="face"><img src="hero-rogue.png"><em>LV1</em></div><div class="nm">ROGUE</div><div class="hpn">88/220</div><div class="hp"><i class="low" style="width:40%"></i></div><div class="sk"><div class="cd"><img src="sk-multistrike.png"><b>2</b></div><div class="sup"><img src="sk-smoke_bomb.png"></div></div></div>
+    <div class="p a bev"><div class="face"><img src="hero-archer.png"><em>LV1</em></div><div class="nm">ARCHER</div><div class="hpn">180/180</div><div class="hp"><i style="width:100%"></i></div><div class="sk"><div class="atk"><img src="sk-arrow_rain.png"></div><div class="sup"><img src="sk-hunters_mark.png"></div></div></div>
+  </div>
+</div>
+<!-- F camp -->
+<div class="scr F camp" id="F-camp">
+  <div class="top bev">ADVENTURER<span>BEST FL 0 &nbsp; &#9670; 0</span></div>
+  <div class="field"></div>
+  <div class="go">EXPEDITION<small>NEXT BOSS: FLOOR 20</small></div>
+  <div class="grid">
+    <div class="t bev" style="background:#2f5fb8"><i><img src="hero-knight.png"></i>HEROES</div>
+    <div class="t bev" style="background:#7a3fb0"><i><b>?</b></i>GLOSSARY</div>
+    <div class="t bev" style="background:#b8862c"><i><b>#1</b></i>LEADERS</div>
+    <div class="t bev" style="background:#2f8f4a"><i><b>&#9670;</b></i>SHOP</div>
+  </div>
+</div>
+<script>const q=new URLSearchParams(location.search);document.getElementById(q.get('v')).style.display='block';</script>
+</body></html>

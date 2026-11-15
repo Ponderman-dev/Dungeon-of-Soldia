@@ -501,7 +501,9 @@ export default class BattleState {
         continue;
       }
 
-      const target = this.pickTarget(unit);
+      let target = this.pickTarget(unit);
+      // A melee hero stuck behind other enemies hits the one in its way (movement.js blockedTarget).
+      if (target && unit.damageType === 'melee' && !this.inReach(unit, target)) target = this.blockedTarget(unit, target) || target;
       // Nothing to hit yet, or a melee fighter still walking over: stay ready, attack on arrival.
       if (!target || (unit.damageType === 'melee' && !this.inReach(unit, target))) {
         unit.timer = interval;

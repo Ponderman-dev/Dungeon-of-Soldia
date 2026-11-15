@@ -11,7 +11,7 @@ export const ordersMethods = {
   // anywhere else does nothing. Tap-to-focus on enemies is unchanged.
   startOrderDrag(view, pointer) {
     if (this.mode !== 'fighting' || !view.unit.alive) return;
-    this.orderDrag = { view, x: pointer.worldX, y: pointer.worldY };
+    this.orderDrag = { view, x: pointer.worldX, y: pointer.worldY, x0: pointer.worldX, y0: pointer.worldY };
     if (!this.orderInput) {
       this.orderInput = true;
       this.input.on('pointermove', (p) => { if (this.orderDrag) { this.orderDrag.x = p.worldX; this.orderDrag.y = p.worldY; } });
@@ -34,16 +34,31 @@ export const ordersMethods = {
     return best;
   },
 
+  // A TAP meant for an enemy: focus the enemy nearest to the finger within the generous tap circle
+  // (moveOrders.enemyTapRadiusPx), else `fallback` (the enemy whose body was pressed). Red ring + tap sound.
+  // Returns true when an enemy was focused.
+  tapEnemy(x, y, fallback = null) {
+    const near = this.enemyAt(x, y, combatRules.moveOrders.enemyTapRadiusPx) || fallback;
+    if (!near || !near.unit.alive || this.mode !== 'fighting') return false;
+    this.state.setFocus(near.unit.uid);
+    sfx.play('tap');
+    this.ring(near, 0xff4d4d);
+    return true;
+  },
+
   endOrderDrag(p) {
     const drag = this.orderDrag;
     this.orderDrag = null;
     if (!drag || this.mode !== 'fighting') return;
+    // A press on a hero that did not really move is a TAP, not a drag (bug: a hero's big touch box lies over the enemy
+    // it is fighting and swallowed 4 in 10 taps on that enemy): it focuses the enemy next to the finger, if any.
+    if (Math.hypot(p.worldX - drag.x0, p.worldY - drag.y0) < combatRules.moveOrders.dragMinPx) { this.tapEnemy(p.worldX, p.worldY); return; }
     // The enemy under the finger, or the one that was lit up a moment ago (small enemies walk; fingers are big).
     const lit = drag.over && drag.over.unit.alive && this.views.get(drag.over.unit.uid) === drag.over ? drag.over : null;
     const target = this.enemyAt(p.worldX, p.worldY) || lit;
     if (!target) { // let go over the floor = only that hero walks there (move order)
       const from = this.center(drag.view);
-      if (Math.hypot(p.worldX - from.x, p.worldY - from.y) >= 12 && this.onFloor(p.worldX, p.worldY)) this.orderMove([drag.view.unit], p.worldX, p.worldY);
+      if (this.onFloor(p.worldX, p.worldY)) this.orderMove([drag.view.unit], p.worldX, p.worldY);
       return;
     }
     if (!this.state.setOrder(drag.view.unit.uid, target.unit.uid)) return;
@@ -64,10 +79,11 @@ export const ordersMethods = {
     const press = this.floorPress;
     this.floorPress = null;
     if (!press || !press.free || this.mode !== 'fighting' || this.orderDrag) return;
-    if (Math.hypot(p.worldX - press.x, p.worldY - press.y) > 12 || !this.onFloor(p.worldX, p.worldY)) return;
-    // A generous circle round every enemy (moveOrders.enemyTapRadiusPx): a near miss still means 'attack that one'.
-    const near = this.enemyAt(p.worldX, p.worldY, combatRules.moveOrders.enemyTapRadiusPx);
-    if (near) { this.state.setFocus(near.unit.uid); sfx.play('tap'); this.ring(near, 0xff4d4d); return; }
+    if (Math.hypot(p.worldX - press.x, p.worldY - press.y) > 12) return;
+    // A generous circle round every enemy (moveOrders.enemyTapRadiusPx): a near miss still means 'attack that one',
+    // also above the top row (off the walkable floor).
+    if (this.tapEnemy(p.worldX, p.worldY)) return;
+    if (!this.onFloor(p.worldX, p.worldY)) return;
     this.orderMove(null, p.worldX, p.worldY);
   },
 
@@ -109,8 +125,8 @@ export const ordersMethods = {
     const over = this.enemyAt(d.x, d.y);
     d.over = over || (d.over && Math.hypot(this.center(d.over).x - d.x, this.center(d.over).y - d.y) < 70 ? d.over : null); // stays lit a little while the finger slips off
     const to = over ? this.center(over) : { x: d.x, y: d.y };
-    const ang = Math.atan2(to.y - from.y, to.x - from.x), len = Math.hypot(to.x - from.x, to.y - from.y);
-    if (len < 12) return; // a tap, not a drag yet
+    const ang = Math.atan2(to.y - from.y, to.x - from.x);
+    if (Math.hypot(d.x - d.x0, d.y - d.y0) < combatRules.moveOrders.dragMinPx) return; // a tap, not a drag yet
     if (!over && !d.over && !this.onFloor(d.x, d.y)) return; // off the floor: letting go here does nothing
     const col = over || d.over ? 0xff4d4d : 0xffffff; // red = attack that enemy, white = walk to this spot
     a.lineStyle(6, 0x1a1020, 0.8).lineBetween(from.x, from.y, to.x - Math.cos(ang) * 10, to.y - Math.sin(ang) * 10);

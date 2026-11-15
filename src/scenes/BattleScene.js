@@ -313,7 +313,7 @@ export default class BattleScene extends Phaser.Scene {
       const h = unit.def.height;
       const w = Math.max(32, bodyBox(unit.def.parts, h).hw * 2 + 6); // big bosses are wider
       ch.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h - 2, w, h + 4), Phaser.Geom.Rectangle.Contains);
-      ch.on('pointerdown', () => this.state.setFocus(unit.uid));
+      ch.on('pointerdown', (pointer) => this.tapEnemy(pointer.worldX, pointer.worldY, view)); // the NEAREST enemy to the finger, not the one drawn on top
     }
     if (unit.side === 'hero' && !unit.minion) {
       // Press a hero and drag to an enemy: only that hero attacks it (drag orders, see startOrderDrag).

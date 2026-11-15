@@ -14,3 +14,15 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   keep the old 40. (2) `setFocus()` on a living enemy clears EVERY hero's `walkTo`, `setOrder()` clears that hero's:
   an attack command always beats a walk. (3) no jostling for the spot: `arrivePx` 4 -> 10, and a hero that has not got
   `stuckPx` closer for `stuckMs` (0.4s) counts as arrived (`walkTo.best` / `.stall`); `maxMs` 4000 -> 3000.
+  STRESS RUN (real mouse taps with finger error, 20 floors) found the bigger cause: a hero's touch box (108 x ~96 px,
+  for dragging) lies over the enemy it fights and SWALLOWED 4 in 10 dead-centre taps on that enemy. Now a press on a
+  hero that travels less than `moveOrders.dragMinPx` (24) is a TAP: `tapEnemy(x, y)` focuses the nearest enemy in the
+  tap circle (orders.js `endOrderDrag`); a tap on an enemy's body also goes to the NEAREST enemy, not the one drawn on
+  top; near misses above the top row count too. Result (finger error ~12 / ~22 px): right enemy 80% -> 99% / 65% ->
+  95%, 'nothing happens' 17-21% -> 0%, squad walks by accident 5% -> 0.2%.
+- **BLOCKED MELEE HEROES (same complaint, second cause):** a melee hero sent at an enemy behind a crowd (tap focus, drag
+  order) pushed against the front line and did not attack for up to 10s. Now `move()` tracks `u.chase` (target, closest
+  distance, stall time); not `movement.blockedPx` closer for `movement.blockedMs` (0.6s) = blocked, and the attack loop
+  uses `blockedTarget()`: the nearest enemy IN REACH, swing by swing, until the way is free (the real target is kept;
+  taunt is never overruled; skills still aim at the focus). Worst case 10.1s -> 4.0s without an attack. Tests:
+  `move-orders.test.mjs`. Smart curve after the change: bosses 20 / 40 / 60 at 89% / 78% / 36% (the usual range).

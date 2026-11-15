@@ -94,3 +94,17 @@ const melee = (h) => h.find((x) => x.damageType === 'melee');
   for (; t < MO.maxMs && hero.walkTo; t += 50) { s.update(50); hero.x = hold.x; hero.y = hold.y; } // held in place
   ok('stuck (not getting closer) = gives up after stuckMs', !hero.walkTo && t <= MO.stuckMs + 100 && t < MO.maxMs, `${t}ms`);
 }
+{
+  // BLOCKED: three melee heroes told to attack an enemy BEHIND a crowd do not push for ever, they hit what is in the way.
+  const s = new BattleState({ heroDefs: noPerks(r('heroes.json')).filter((d) => ['knight', 'berserker', 'samurai'].includes(d.id)), enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs: {}, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng: () => 0.5 });
+  const es = s.spawnEnemies(Array(12).fill('risen_skeleton'), 5);
+  s.placeLines();
+  const last = {}; let gap = 0, onFocus = 0, far = null;
+  for (let t = 0; t < 15000; t += 50) {
+    for (const u of [...s.heroes, ...es]) { u.hp = u.maxHp = 1e7; }
+    if (t === 1000) { const h = s.heroes[0]; far = [...es].sort((a, b) => Math.hypot(b.x - h.x, b.y - h.y) - Math.hypot(a.x - h.x, a.y - h.y))[0]; s.setFocus(far.uid); }
+    for (const e of s.update(50)) if (e.type === 'attack' && e.attacker.side === 'hero') { if (last[e.attacker.uid] !== undefined && t > 1000) gap = Math.max(gap, t - last[e.attacker.uid]); last[e.attacker.uid] = t; if (far && e.target === far) onFocus++; }
+  }
+  ok('no melee hero goes long without attacking while blocked', gap <= rules.movement.blockedMs + 3000, `${gap}ms`);
+  ok('every hero attacked', s.heroes.every((h) => last[h.uid] !== undefined && 15000 - last[h.uid] < 4000));
+}

@@ -120,6 +120,18 @@ export const movementMethods = {
     }
   },
 
+  // BLOCKED (user: 'my hero is focusing on moving instead of attacking'): a melee hero that wants a far enemy (tap
+  // focus, drag order, its old foe) but has not got closer for movement.blockedMs hits the nearest enemy IN REACH
+  // instead, swing by swing, until the way is free again; its real target is not forgotten. Taunt is never overruled.
+  // Returns that enemy, or null (not blocked, or nothing in reach).
+  blockedTarget(unit, target) {
+    const M = this.rules.movement;
+    if (unit.side !== 'hero' || unit.minion || !unit.chase || unit.chase.uid !== target.uid || unit.chase.stall < M.blockedMs) return null;
+    if (this.tauntedBy(unit)) return null;
+    const close = this.targetableEnemies().filter((e) => this.inReach(unit, e));
+    return close.length ? this.nearest(unit, close) : null;
+  },
+
   setFoe(unit, foe) {
     unit.foe = foe ? foe.uid : null;
     return foe;
@@ -191,7 +203,13 @@ export const movementMethods = {
       else if (u.walkTo) goal = { x: u.walkTo.x, y: u.walkTo.y }; // a move order (setMove)
       else if (u.damageType === 'melee') {
         const target = this.pickTarget(u);
-        if (target && !this.inReach(u, target)) goal = { x: target.x, y: target.y };
+        if (target && !this.inReach(u, target)) {
+          goal = { x: target.x, y: target.y };
+          // Is it getting any closer? (blockedTarget: a hero stuck behind a wall of enemies hits what is in its way.)
+          const far = Math.hypot(target.x - u.x, target.y - u.y);
+          if (!u.chase || u.chase.uid !== target.uid) u.chase = { uid: target.uid, best: far, stall: 0 };
+          else if (far < u.chase.best - M.blockedPx) { u.chase.best = far; u.chase.stall = 0; } else u.chase.stall += dt;
+        } else u.chase = null;
       }
       if (!goal) continue;
       const dx = goal.x - u.x;

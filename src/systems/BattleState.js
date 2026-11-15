@@ -232,6 +232,9 @@ export default class BattleState {
   setFocus(uid) {
     const unit = this.enemies.find((e) => e.uid === uid);
     this.focusUid = unit && unit.alive ? uid : null;
+    // 'Attack THAT one' ends any walk in progress (user: after a mis-tap on the floor the squad kept walking however
+    // often the enemy was tapped): every hero goes straight back to fighting.
+    if (this.focusUid) for (const h of this.heroes) h.walkTo = null;
   }
 
   // DRAG ORDER (user's sketch): drag from a hero to an enemy = ONLY that hero attacks that enemy (basic attacks and its
@@ -242,6 +245,7 @@ export default class BattleState {
     const enemy = this.enemies.find((e) => e.uid === enemyUid);
     if (!hero || !hero.alive || !enemy || !enemy.alive || this.untargetable(enemy)) return false;
     hero.order = enemy.uid;
+    hero.walkTo = null; // an attack order ends that hero's move order
     if (hero.damageType === 'melee') hero.foe = enemy.uid;
     return true;
   }
@@ -261,6 +265,8 @@ export default class BattleState {
       x: Math.min(L.width - L.marginX, Math.max(L.marginX, x)),
       y: Math.min(L.heroY, Math.max(L.enemyY + L.topMarginY, y)),
       left: MO.maxMs,
+      best: Infinity, // the closest it got so far, and for how long it has not got closer (stuck in a crowd)
+      stall: 0,
     };
     hero.order = null;
     if (hero.pending) {

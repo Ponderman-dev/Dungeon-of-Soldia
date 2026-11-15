@@ -20,14 +20,14 @@ export const ordersMethods = {
     }
   },
 
-  // The enemy under a point (the nearest living, hittable one within its body), or null.
-  enemyAt(x, y) {
+  // The enemy under a point (the nearest living, hittable one within its body or `minReach` px of its middle), or null.
+  enemyAt(x, y, minReach = 40) {
     let best = null, bestD = Infinity;
     for (const v of this.views.values()) {
       const u = v.unit;
       if (u.side !== 'enemy' || !u.alive || this.state.untargetable(u)) continue;
       const c = this.center(v);
-      const reach = Math.max(40, (bodyBox(u.def.parts, u.def.height).hw + 6) * charScale(u.def));
+      const reach = Math.max(minReach, (bodyBox(u.def.parts, u.def.height).hw + 6) * charScale(u.def));
       const d = Math.hypot(c.x - x, c.y - y);
       if (d < reach && d < bestD) { best = v; bestD = d; }
     }
@@ -65,8 +65,9 @@ export const ordersMethods = {
     this.floorPress = null;
     if (!press || !press.free || this.mode !== 'fighting' || this.orderDrag) return;
     if (Math.hypot(p.worldX - press.x, p.worldY - press.y) > 12 || !this.onFloor(p.worldX, p.worldY)) return;
-    const near = this.enemyAt(p.worldX, p.worldY);
-    if (near) { this.state.setFocus(near.unit.uid); return; }
+    // A generous circle round every enemy (moveOrders.enemyTapRadiusPx): a near miss still means 'attack that one'.
+    const near = this.enemyAt(p.worldX, p.worldY, combatRules.moveOrders.enemyTapRadiusPx);
+    if (near) { this.state.setFocus(near.unit.uid); sfx.play('tap'); this.ring(near, 0xff4d4d); return; }
     this.orderMove(null, p.worldX, p.worldY);
   },
 

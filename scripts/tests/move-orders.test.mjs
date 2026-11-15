@@ -73,3 +73,24 @@ const melee = (h) => h.find((x) => x.damageType === 'melee');
   s.killUnit(h[2], []);
   ok('dead heroes cannot get orders', !s.setMove(h[2].uid, 100, 600) && s.moveSquad(150, 600).length === 2);
 }
+{
+  // Attack commands end a walk (user: after a mis-tap on the floor the heroes kept walking instead of attacking).
+  const { s, es, h } = mk();
+  s.moveSquad(60, L.heroY);
+  ok('the squad is walking', h.every((x) => x.walkTo));
+  s.setFocus(es[0].uid);
+  ok('tapping an enemy ends every move order', h.every((x) => !x.walkTo) && s.focusUnit === es[0]);
+  s.moveSquad(60, L.heroY);
+  s.setOrder(h[0].uid, es[1].uid);
+  ok('an attack order ends only that hero\'s move order', !h[0].walkTo && h[1].walkTo && h[2].walkTo);
+}
+{
+  // A hero that cannot get closer stops trying long before maxMs.
+  const { s, h } = mk();
+  const hero = h[0];
+  s.setMove(hero.uid, 60, L.heroY);
+  const hold = { x: hero.x, y: hero.y };
+  let t = 0;
+  for (; t < MO.maxMs && hero.walkTo; t += 50) { s.update(50); hero.x = hold.x; hero.y = hold.y; } // held in place
+  ok('stuck (not getting closer) = gives up after stuckMs', !hero.walkTo && t <= MO.stuckMs + 100 && t < MO.maxMs, `${t}ms`);
+}

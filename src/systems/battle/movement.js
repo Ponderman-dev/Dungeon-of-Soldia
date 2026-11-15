@@ -182,7 +182,10 @@ export const movementMethods = {
       if (u.walkTo && !this.has(u, 'fear')) {
         u.walkTo.left -= dt;
         const far = Math.hypot(u.walkTo.x - u.x, u.walkTo.y - u.y);
-        if (far <= this.rules.moveOrders.arrivePx || u.walkTo.left <= 0) u.walkTo = null; // arrived (or stuck): back to fighting
+        const MO = this.rules.moveOrders;
+        // Not getting closer (pushed around by the others)? That counts as 'there' after stuckMs: no jostling for the spot.
+        if (far < u.walkTo.best - MO.stuckPx) { u.walkTo.best = far; u.walkTo.stall = 0; } else u.walkTo.stall += dt;
+        if (far <= MO.arrivePx || u.walkTo.left <= 0 || u.walkTo.stall >= MO.stuckMs) u.walkTo = null; // arrived (or stuck): back to fighting
       }
       if (this.has(u, 'fear')) goal = { x: u.homeX, y: u.homeY, stop: 0 };
       else if (u.walkTo) goal = { x: u.walkTo.x, y: u.walkTo.y }; // a move order (setMove)

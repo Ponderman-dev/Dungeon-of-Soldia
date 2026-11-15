@@ -239,10 +239,13 @@
     }
   },
   "moveOrders": {
-    "_about": "MOVE ORDERS (BattleState.setMove / moveSquad): drag a hero onto the floor = it walks there, tap the floor = the whole squad walks there side by side gatherSpacingPx apart. No attacks while walking; arrived within arrivePx = back to fighting; gives up after maxMs (stuck in a crowd).",
+    "_about": "MOVE ORDERS (BattleState.setMove / moveSquad): drag a hero onto the floor = it walks there, tap the floor = the whole squad walks there side by side gatherSpacingPx apart. No attacks while walking; arrived within arrivePx = back to fighting; gives up after maxMs, or when it has not got stuckPx closer for stuckMs (pushed around in a crowd). Tapping an enemy or dragging a hero onto one ends the walk at once. enemyTapRadiusPx = a floor tap this close to an enemy's middle focuses that enemy (the nearest one) instead of moving the squad: fingers are big.",
     "gatherSpacingPx": 54,
-    "arrivePx": 4,
-    "maxMs": 4000
+    "arrivePx": 10,
+    "maxMs": 3000,
+    "stuckMs": 400,
+    "stuckPx": 2,
+    "enemyTapRadiusPx": 70
   },
   "attackMotion": {
     "hopHeight": 7,

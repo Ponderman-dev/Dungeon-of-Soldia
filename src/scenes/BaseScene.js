@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc, uiShift, drawButton, buttonTextColor } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc, uiShift, buttonTextColor } from '../entities/uiKit.js';
 import { nextBossFloor } from '../systems/dungeon.js';
 import camp from '../data/camp.json';
 import { openFloor, darkLayer, lightTint, fireLayers, propLayer, blendProp } from '../systems/campArt.js';
@@ -86,21 +86,32 @@ export default class BaseScene extends Phaser.Scene {
 
   // The hub (user, session 42: 'more like a mobile game menu', picked A1 + header H1): one gold header panel at the top
   // (profile, gems, settings), the big gold-framed EXPEDITION button, and a bar of 4 tabs at the bottom.
+  // A flat camp button (session 44, user: 'cleaner and sleeker'; camp.json ui.flat): a dark outline, a thin gold line,
+  // a plain body with a darker foot and a light top edge. Square corners, no studs. primary = the red main button;
+  // bands = a thick gold band along its top and bottom (the EXPEDITION button only: 'a tiny bit fancy').
+  flatButton(g, x, y, w, h, { primary = false, bands = false } = {}) {
+    const T = UI.goldTheme, F = U.flat, L = F.line;
+    const [body, dark, light] = primary ? [T.button, T.buttonDark, T.buttonLight] : [T.second, T.secondDark, T.secondLight];
+    g.fillStyle(T.outline, 1).fillRect(x - 2, y - 2, w + 4, h + 4).fillStyle(T.frame, 1).fillRect(x, y, w, h);
+    g.fillStyle(body, 1).fillRect(x + L, y + L, w - 2 * L, h - 2 * L).fillStyle(dark, 1).fillRect(x + L, y + h - L - F.foot, w - 2 * L, F.foot);
+    g.fillStyle(light, 1).fillRect(x + L, y + L, w - 2 * L, 2);
+    if (bands) for (const by of [y, y + h - F.band]) g.fillStyle(T.frame, 1).fillRect(x, by, w, F.band).fillStyle(T.stud, 1).fillRect(x + 2, by + 2, w - 4, 2).fillStyle(T.frameDark, 1).fillRect(x + 2, by + F.band - 2, w - 4, 2);
+    return g;
+  }
+
   drawUi() {
     const ui = [];
     const n0 = this.children.list.length; // what drawUi adds: the bottom part first, then the top (for uiShift)
     const W = GAME_WIDTH, S = U.side, T = UI.goldTheme, cx = W / 2;
     const progress = loadProgress();
 
-    // EXPEDITION: the camp's main action. A gold frame, the bright button inside, crossed swords, the next boss floor.
+    // EXPEDITION: the camp's main action. The red flat button with gold bands, big words, the next boss floor.
     const E = U.expedition, ew = W - 2 * S, ey = E.y + E.h / 2;
     const box = this.add.container(cx, ey).setDepth(DEPTH.ui);
-    box.add(drawWindow(this.add.graphics(), -ew / 2, -E.h / 2, ew, E.h));
-    box.add(drawButton(this.add.graphics(), -ew / 2 + E.frame, -E.h / 2 + E.frame, ew - 2 * E.frame, E.h - 2 * E.frame, { primary: true }));
-    box.add(this.add.image(-ew / 2 + E.swordsX, 0, layerTexture(this, 'camp-swords', propLayer(E.swords, false))).setScale(E.swordsPx));
+    box.add(this.flatButton(this.add.graphics(), -ew / 2, -E.h / 2, ew, E.h, { primary: true, bands: true }));
     const color = buttonTextColor(true, false, true), boss = nextBossFloor(dungeons.A, progress.stats.bestFloor);
-    box.add(uiText(this, E.textX, -12, E.text, E.size, color).setOrigin(0.5));
-    box.add(uiText(this, E.textX, 18, boss ? E.sub.replace('{n}', boss) : E.subDone, 'small', color).setOrigin(0.5));
+    box.add(uiText(this, 0, E.textY, E.text, E.size, color).setOrigin(0.5));
+    box.add(uiText(this, 0, E.subY, boss ? E.sub.replace('{n}', boss) : E.subDone, 'small', color).setOrigin(0.5));
     this.add.zone(cx, ey, ew, E.h).setInteractive().on('pointerup', () => this.toExpedition());
 
     // The tab bar: a gold line, a dark band, 4 buttons (icon + name) that open their screen over the camp.
@@ -108,7 +119,7 @@ export default class BaseScene extends Phaser.Scene {
     ui.push(this.add.graphics().fillStyle(T.frame, 1).fillRect(0, B.y, W, 2).fillStyle(T.outline, 0.9).fillRect(0, B.y + 2, W, GAME_HEIGHT - B.y));
     B.buttons.forEach((b, i) => {
       const x = S + i * (tw + B.gap);
-      ui.push(drawButton(this.add.graphics(), x, ty, tw, B.h));
+      ui.push(this.flatButton(this.add.graphics(), x, ty, tw, B.h));
       ui.push(this.add.image(x + tw / 2, ty + B.iconY, layerTexture(this, `camp-icon-${b.id}`, propLayer(b.icon, false))).setScale(B.iconPx));
       ui.push(uiText(this, x + tw / 2, ty + B.labelY, b.label, B.labelSize, buttonTextColor()).setOrigin(0.5));
       this.add.zone(x + tw / 2, ty + B.h / 2, tw, B.h).setInteractive().on('pointerup', () => (b.scene ? this.openOver(b.scene) : this.comingSoon(b.label, b.who)));

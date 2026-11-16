@@ -26,7 +26,7 @@ ok('3 hero spots round the fire, on screen', camp.hero.spots.length === 3 && cam
 const M = camp.ui.tabs;
 ok('tabs: 4 buttons, different names, inside the screen', M.buttons.length === 4 && new Set(M.buttons.map((b) => b.label)).size === 4 && M.y + M.pad + M.h <= 844);
 ok('hub: header above the heroes, EXPEDITION between the heroes and the tabs', camp.ui.header.y + camp.ui.header.h < Math.min(...camp.hero.spots.map(([, y]) => y)) - 40 && camp.ui.expedition.y + camp.ui.expedition.h <= M.y);
-const icons = { ...Object.fromEntries(M.buttons.map((b) => [b.id, b.icon])), gem: camp.ui.header.gem, swords: camp.ui.expedition.swords };
+const icons = { ...Object.fromEntries(M.buttons.map((b) => [b.id, b.icon])), gem: camp.ui.header.gem };
 for (const [id, icon] of Object.entries(icons)) {
   ok(`icon ${id}: rows all one width`, icon.rows.every((r) => r.length === icon.rows[0].length));
   ok(`icon ${id}: colours exist`, [...icon.rows.join('')].every((ch) => ch === '.' || icon.palette[Number(ch)]));

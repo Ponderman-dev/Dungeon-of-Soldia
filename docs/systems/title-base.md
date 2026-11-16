@@ -186,3 +186,10 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   FLOW (user, session 36): last hero falls -> today's defeat screen stays (dim, SQUAD DEFEATED, floor + flavour
   line from defeat.json) -> its BACK button becomes CONTINUE -> the game-over summary (B) -> TRY AGAIN = squad
   select screen (pick 3 for a new run), CAMP = back to the camp.
+
+## CAMP BUTTONS: flat look (session 44)
+- User picked 'R' from the minimal camp mock-ups for its LOOK ('cleaner and sleeker') but at TODAY'S SIZES ('too small').
+  `BaseScene.flatButton` (numbers: camp.json `ui.flat`): dark outline, thin gold line, plain body, darker foot, light
+  top edge, square corners. The 4 tabs are plain. EXPEDITION only is 'a tiny bit fancy': a thick gold band top and
+  bottom, bigger words (30px), no crossed swords. REJECTED: corner studs, swords both sides, inner gold line, diamonds
+  on the bands, side lines. The header panel is unchanged. Mock-ups: `docs/proposals/ui-concepts/mock5.html` (P-R).

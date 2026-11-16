@@ -385,13 +385,13 @@
       } } }
   ],
   "ui": {
-    "_about": "Base screen interface (screen px), a mobile-game hub (user, session 42: picked A1 + header H1). side = the gap to the screen sides. header = ONE gold panel at the top: round portrait + name + best floor (tap = Profile), then thin dividers, gems (progress.gems), and the settings gear (tap = Settings); gemsW / gearW = the widths of the two right cells. expedition = the big crimson button in a gold frame (frame px), crossed swords on the left, text + sub line ('{n}' = the first boss floor past the best floor; after the last boss: subDone). Tap = its buttons leave (UI.motion.fast), the screen slides up into the squad screen. tabs = the bar at the bottom (a gold line, a dark band) with 4 buttons: icon (pixel rows, iconPx per art px) + label; `scene` = the screen it opens. soon = the 'Coming soon' window.",
+    "_about": "Base screen interface (screen px), a mobile-game hub (user, session 42: picked A1 + header H1). side = the gap to the screen sides. header = ONE gold panel at the top: round portrait + name + best floor (tap = Profile), then thin dividers, gems (progress.gems), and the settings gear (tap = Settings); gemsW / gearW = the widths of the two right cells. flat = the flat camp buttons (session 44: gold line px, darker foot px, the EXPEDITION button's gold band px). expedition = the big crimson flat button with a gold band top and bottom, big text (size px, textY) + sub line (subY) ('{n}' = the first boss floor past the best floor; after the last boss: subDone). Tap = its buttons leave (UI.motion.fast), the screen slides up into the squad screen. tabs = the bar at the bottom (a gold line, a dark band) with 4 buttons: icon (pixel rows, iconPx per art px) + label; `scene` = the screen it opens. soon = the 'Coming soon' window.",
     "side": 24,
+    "flat": {"line": 2, "foot": 6, "band": 8},
     "soon": {"w": 280, "h": 160},
     "header": {"y": 12, "h": 60, "portraitR": 20, "textX": 64, "nameY": 20, "bestY": 38, "best": "BEST FLOOR {n}", "gemsW": 74, "gearW": 56, "divider": 12,
       "gem": {"palette": ["0x2a7ad8", "0x6ac8ff", "0xd8f4ff", "0x1a4a8a"], "rows": ["..1111..", ".122211.", "12221110", "01111103", ".011103.", "..0103..", "...03..."]}},
-    "expedition": {"y": 588, "h": 96, "frame": 6, "text": "EXPEDITION", "size": "normal", "sub": "NEXT BOSS: FLOOR {n}", "subDone": "HOW DEEP CAN YOU GO?", "textX": 26, "swordsX": 52, "swordsPx": 4,
-      "swords": {"palette": ["0xe8e8f0", "0x9a9aaa", "0x8a5a32", "0xffd84a"], "rows": ["0..........0", "10........01", ".10......01.", "..10....01..", "...10..01...", "....1001....", "....0110....", "...01..10...", "..33....33..", ".22......22.", "22........22", "2..........2"]}},
+    "expedition": {"y": 588, "h": 96, "text": "EXPEDITION", "size": 24, "textY": -13, "subY": 22, "sub": "NEXT BOSS: FLOOR {n}", "subDone": "HOW DEEP CAN YOU GO?"},
     "tabs": {
       "y": 708,
       "pad": 18,

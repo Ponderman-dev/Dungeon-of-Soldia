@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>UI mock-ups 5 (minimal camp)</title>
+<style>
+/* Round 5: MINIMAL camp screens drawn over the real camp without its buttons (camp-clean.png). ?v=P|Q|R */
+@font-face{font-family:Iron;src:url(../../../src/assets/fonts/ironslab.ttf)}
+@font-face{font-family:P2P;src:url(../../../src/assets/fonts/press-start-2p.woff2)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#111;width:390px;height:844px;overflow:hidden;position:relative}
+img{image-rendering:pixelated}
+.scr{position:absolute;inset:0;display:none;font-family:P2P;color:#ffe7a8;font-size:7px;background:url(camp-clean.png);image-rendering:pixelated}
+.top{position:absolute;left:0;top:0;width:390px;height:80px;background:url(camp-top.png)}
+.o{text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,0 2px 0 #000}
+.go{position:absolute;background:#c8423a;border:2px solid #d8a640;outline:2px solid #0d0b12;box-shadow:inset 0 -5px 0 #8e2824,inset 0 2px 0 #ff8a7a;color:#fff0d8;font-family:Iron;text-align:center;text-shadow:2px 2px 0 #8e2824}
+.go small{display:block;font-family:P2P;font-size:6px;text-shadow:none;color:#ffd9c0}
+.t{position:absolute;background:#382a24;border:2px solid #d8a640;outline:2px solid #0d0b12;box-shadow:inset 0 -3px 0 #261c18;text-align:center}
+.t img{display:block;margin:0 auto}
+/* P: everything in ONE bottom row */
+.P .go{left:8px;top:776px;width:150px;height:60px;font-size:18px;line-height:34px}.P .go small{line-height:8px}
+.P .t{top:776px;width:50px;height:60px;padding-top:7px;font-size:5px}.P .t img{height:32px;margin-bottom:5px}
+/* Q: tap the camp itself (small name tags at the things), slim button */
+.Q .tag{position:absolute;background:rgba(13,11,18,.85);border:2px solid #d8a640;padding:6px 7px;font-size:7px}
+.Q .tag:after{content:'';position:absolute;left:50%;bottom:-8px;margin-left:-5px;border:5px solid transparent;border-top-color:#d8a640;border-bottom:0}
+.Q .go{left:75px;top:770px;width:240px;height:58px;font-size:20px;line-height:34px}.Q .go small{line-height:8px}
+/* R: today's arrangement, slimmer */
+.R .go{left:26px;top:700px;width:338px;height:56px;font-size:20px;line-height:32px}.R .go small{line-height:8px}
+.R .line{position:absolute;left:0;top:768px;width:390px;height:76px;background:rgba(13,11,18,.8);border-top:2px solid #d8a640}
+.R .t{top:778px;width:78px;height:56px;padding-top:5px;font-size:6px}.R .t img{height:32px;margin-bottom:4px}
+</style></head><body>
+<div class="scr P" id="P"><div class="top"></div>
+  <div class="go">EXPEDITION<small>NEXT BOSS: FLOOR 20</small></div>
+  <div class="t" style="left:170px"><img src="camp-ic-heroes.png">HEROES</div><div class="t" style="left:226px"><img src="camp-ic-glossary.png">GLOSS.</div>
+  <div class="t" style="left:282px"><img src="camp-ic-leaders.png">LEADERS</div><div class="t" style="left:338px;width:44px"><img src="camp-ic-shop.png">SHOP</div>
+</div>
+<div class="scr Q" id="Q"><div class="top"></div>
+  <div class="tag" style="left:10px;top:150px">LEADERS</div>
+  <div class="tag" style="left:286px;top:192px">HEROES</div>
+  <div class="tag" style="left:262px;top:372px">GLOSSARY</div>
+  <div class="tag" style="left:100px;top:488px">SHOP</div>
+  <div class="go">EXPEDITION<small>NEXT BOSS: FLOOR 20</small></div>
+</div>
+<div class="scr R" id="R"><div class="top"></div>
+  <div class="go">EXPEDITION<small>NEXT BOSS: FLOOR 20</small></div>
+  <div class="line"></div>
+  <div class="t" style="left:26px"><img src="camp-ic-heroes.png">HEROES</div><div class="t" style="left:113px"><img src="camp-ic-glossary.png">GLOSSARY</div>
+  <div class="t" style="left:200px"><img src="camp-ic-leaders.png">LEADERS</div><div class="t" style="left:287px"><img src="camp-ic-shop.png">SHOP</div>
+</div>
+<script>const q=new URLSearchParams(location.search);document.getElementById(q.get('v')).style.display='block';</script>
+</body></html>

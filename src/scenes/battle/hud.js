@@ -17,7 +17,7 @@ import { loadProgress, saveProgress } from '../../systems/progress.js';
 import settingsDefs from '../../data/settings.json';
 import { readSettings, cardOf, changeSetting } from '../../systems/settings.js';
 import pauseData from '../../data/pause.json';
-import { SLOT_Y, BAR_WIDTH, itemDefs, skillDefs, SKILL_Y, SKILL_W, SKILL_H, DEPTH } from './shared.js';
+import { SLOT_Y, BAR_WIDTH, itemDefs, skillDefs, SKILL_Y, SKILL_W, SKILL_H, DEPTH, SLOT_HUD } from './shared.js';
 
 export const hudMethods = {
   // Status effects ON the fighters, every frame: each status plays its own loop (stars, ice, snow, sparks,
@@ -117,7 +117,7 @@ export const hudMethods = {
       const cx = this.slotWidth * i + this.slotWidth / 2;
       const view = this.makeView(unit, cx, SLOT_Y);
       // The hero's items: small item icons under the skill squares (drawDots).
-      view.dots = this.add.container(cx - 2, SKILL_Y + SKILL_H / 2 + 14).setDepth(DEPTH.slot); // under the passive + skill squares
+      view.dots = this.add.container(cx, SLOT_HUD.itemsY).setDepth(DEPTH.slot); // under the passive + skill squares
       view.slotX = cx;
       view.ch.setDepth(DEPTH.hero);
       for (const part of [view.bg, view.fill]) part.setDepth(DEPTH.heroBar);
@@ -126,7 +126,7 @@ export const hudMethods = {
       // The two skill squares under the hero: tap to cast. Left = attack skill (red), right = support skill (green).
       // Each shows the skill's pixel icon (skillIcons.json); a skill without one shows its 2 letters.
       view.skillButtons = unit.skills.map((slot, j) => {
-        const x = cx + (j === 0 ? -12 : 32); // a little right of centre: the passive icon sits on the left
+        const x = cx + (j === 0 ? -1 : 1) * (SKILL_W / 2 + 3); // side by side, centred in the hero's slot
         const textStyle = uiStyle('normal', UI.text);
         const iconKey = skillIconKey(this, slot.id);
         const button = {
@@ -146,11 +146,34 @@ export const hudMethods = {
       // The hero's passive: a small gold-framed icon left of the skill squares; tap it to read what it does.
       const pKey = skillIconKey(this, `passive_${unit.def.id}`, true);
       if (pKey) {
-        const px = cx - 12 - SKILL_W / 2 - 13;
-        view.passiveIcon = this.add.image(px, SKILL_Y, pKey).setDepth(4);
-        this.add.zone(px, SKILL_Y, 26, 30).setInteractive().setDepth(6).on('pointerdown', () => this.showPassive(view));
+        const px = cx - SLOT_HUD.barW / 2 + 10;
+        view.passiveIcon = this.add.image(px, SLOT_HUD.labelY, pKey).setDepth(4);
+        this.add.zone(px, SLOT_HUD.labelY, 30, 26).setInteractive().setDepth(6).on('pointerdown', () => this.showPassive(view));
       }
+      // Under the squares: a thin health line, then the hero's name and its health as a number (drawDock).
+      const label = { fontFamily: UI.font, fontSize: '8px', color: UI.text };
+      const lx = cx - SLOT_HUD.barW / 2;
+      view.dockName = this.add.text(lx + 24, SLOT_HUD.labelY - 4, '', label).setDepth(4);
+      view.dockNum = this.add.text(lx + SLOT_HUD.barW, SLOT_HUD.labelY - 4, '', label).setOrigin(1, 0).setDepth(4);
+      view.dockHp = this.add.graphics().setDepth(4);
+      view.dockX = lx;
+      view.dockParts = [view.dockName, view.dockNum, view.dockHp];
     });
+  },
+
+  // A hero's health under its skill squares: a thin line that goes orange, then red, as it drops; NAME + health number.
+  drawDock(view, hero) {
+    const hp = hero.alive ? Math.max(1, Math.ceil(hero.hp)) : 0;
+    const key = `${hp}/${hero.maxHp}`;
+    if (view.dockKey === key) return;
+    view.dockKey = key;
+    const name = hero.def.name.toUpperCase();
+    view.dockName.setText(name.length > SLOT_HUD.nameMax ? `${name.slice(0, SLOT_HUD.nameMax - 1)}.` : name);
+    view.dockNum.setText(String(hp));
+    const frac = Phaser.Math.Clamp(hp / hero.maxHp, 0, 1), y = SLOT_HUD.barY;
+    const color = frac > SLOT_HUD.lowAt ? SLOT_HUD.hpGood : frac > SLOT_HUD.dangerAt ? SLOT_HUD.hpLow : SLOT_HUD.hpDanger;
+    view.dockNum.setColor(frac > SLOT_HUD.lowAt ? UI.text : Phaser.Display.Color.IntegerToColor(color).rgba);
+    view.dockHp.clear().fillStyle(0x000000, 1).fillRect(view.dockX - 1, y - 1, SLOT_HUD.barW + 2, SLOT_HUD.barH + 2).fillStyle(color, 1).fillRect(view.dockX, y, Math.round(SLOT_HUD.barW * frac), SLOT_HUD.barH);
   },
 
   // A tap on a passive icon: its name and what it does, in a small black window over the squad for a few seconds.
@@ -189,6 +212,7 @@ export const hudMethods = {
     for (const hero of this.state.heroes) {
       const view = this.views.get(hero.uid);
       if (hero.alive) this.setBar(view); // health regeneration moves the bar
+      this.drawDock(view, hero);
       const heart = hero.alive && this.state.heartStrikeIn(hero) === 0; // Sharpest Blade: the next attack is a Heart Strike
       const coil = hero.alive && this.state.coilReady(hero); // Kinetic Coil: 3 charges, the next attack is lightning
       if (view.steadyShown !== hero.steady || view.heartShown !== heart || view.coilShown !== coil) {
@@ -354,18 +378,20 @@ export const hudMethods = {
   },
 
   // The hero's items under its skill squares: one small framed item icon per kind of item (the frame tells
-  // the rarity), with a number when it has several copies. 5 per row, 2 rows; more kinds show "+N".
+  // the rarity), with a number when it has several copies. ONE row: past 5 kinds the icons move closer
+  // together; more than 10 kinds show "+N".
   drawDots(view) {
     if (!view || !view.dots) return;
     view.dots.removeAll(true);
     const counts = new Map();
     for (const id of view.unit.items) counts.set(id, (counts.get(id) || 0) + 1);
     let kinds = [...counts.entries()];
-    const perRow = 5, gap = 22, rowH = 22, maxShown = perRow * 2;
+    const maxShown = 10, perRow = maxShown, rowH = 22;
     let more = 0;
     if (kinds.length > maxShown) { more = kinds.length - (maxShown - 1); kinds = kinds.slice(0, maxShown - 1); }
     const n = kinds.length + (more ? 1 : 0);
-    const at = (i) => { const row = Math.floor(i / perRow), inRow = Math.min(perRow, n - row * perRow); return [((i % perRow) - (inRow - 1) / 2) * gap, row * rowH]; };
+    const gap = Math.min(22, SLOT_HUD.itemsW / Math.max(1, n - 1));
+    const at = (i) => { const row = Math.floor(i / perRow), inRow = Math.min(perRow, n - row * perRow); return [Math.round(((i % perRow) - (inRow - 1) / 2) * gap), row * rowH]; };
     const style = { fontFamily: UI.font, fontSize: '8px', color: '#ffffff', stroke: '#000000', strokeThickness: 3 };
     kinds.forEach(([id, count], i) => {
       const def = itemDefs[id];

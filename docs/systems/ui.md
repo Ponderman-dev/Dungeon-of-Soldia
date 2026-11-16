@@ -97,3 +97,11 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   over the pause window, '< BACK' returns; DELETE SAVE there also stops the fight), GIVE UP (red; asks 'GIVE UP? The run
   ends here. Your best floor is kept.' FIGHT ON / GIVE UP) -> `BattleScene.giveUp()` = `onLoss()` (defeat screen, game
   over summary, run saved). A run can't be saved halfway yet. Back in the fight the settings are read again.
+
+## FIGHT HUD: hero slots (session 44, user picked 'L' from the minimal mock-ups)
+- Per hero, bottom of the screen (`drawHeroSlots`, `drawDock` in `scenes/battle/hud.js`; numbers in `shared.js`
+  `SKILL_Y/W/H` + `SLOT_HUD`): two skill squares 54x50 (finger size; were 40x44), under them a thin health line as wide
+  as both squares (green, orange under 50%, red under 25%), then a label row (passive icon, NAME cut to 7 letters,
+  health number), then ONE row of item icons (past 5 kinds they move closer together, over 10 kinds = '+N').
+- No band behind it, nothing new on the field. User REJECTED an info box at the tapped enemy ('clutter when lots of
+  enemies') and the dark bottom dock (M). Mock-ups: `docs/proposals/ui-concepts/mock4.html` (L-O), `mock3.html` (G-K).

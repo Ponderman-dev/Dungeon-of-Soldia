@@ -24,7 +24,7 @@ import { enemySpots } from '../systems/formation.js';
 import { pickSquad } from '../systems/party.js';
 import { newRunStats } from '../systems/runStats.js';
 import { newSeenBuffer } from '../systems/glossary.js';
-import { DUNGEON_ID, ENEMY_Y, BAR_WIDTH, WALL_H, DOOR_X, T, M, itemDefs, skillDefs, BANNER_Y, charScale, DEPTH } from './battle/shared.js';
+import { DUNGEON_ID, ENEMY_Y, BAR_WIDTH, WALL_H, DOOR_X, T, M, itemDefs, skillDefs, BANNER_Y, charScale, DEPTH, SLOT_HUD } from './battle/shared.js';
 import { roomMethods } from './roomMethods.js';
 import { hudMethods } from './battle/hud.js';
 import { ordersMethods } from './battle/orders.js';
@@ -152,6 +152,7 @@ export default class BattleScene extends Phaser.Scene {
       this.tweens.add({ targets: v.dots, alpha: show ? (h.alive ? 1 : 0.3) : 0, duration }); // the item icons under the skills
       const buttons = [...v.skillButtons.flatMap((b) => [b.g, b.code, b.cd]), ...(v.passiveIcon ? [v.passiveIcon] : [])];
       this.tweens.add({ targets: buttons, alpha: show && h.alive ? 1 : 0, duration });
+      this.tweens.add({ targets: v.dockParts, alpha: show ? (h.alive ? 1 : SLOT_HUD.fallenAlpha) : 0, duration }); // name + health under the squares
     }
   }
 

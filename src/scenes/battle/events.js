@@ -9,7 +9,7 @@ import * as itemFx from '../../systems/itemFx.js';
 import { ELEMENT_SLASH, MOMENT_MS } from '../../systems/hitFx.js';
 import { countEvents } from '../../systems/runStats.js';
 import { noteEvents } from '../../systems/glossary.js';
-import { SLOT_Y, FX, itemDefs, TUNE, DASH_BY_NAME, LOOK_BY_NAME, waveLook, charScale, DEPTH } from './shared.js';
+import { SLOT_Y, FX, itemDefs, TUNE, DASH_BY_NAME, LOOK_BY_NAME, waveLook, charScale, DEPTH, SLOT_HUD } from './shared.js';
 
 export const eventsMethods = {
   // A held event can still be drawn: its fighters still have their views.
@@ -420,6 +420,7 @@ export const eventsMethods = {
         this.heroFell(v);
         v.skillButtons.forEach((b) => [b.g, b.code, b.cd].forEach((o) => o.setAlpha(0)));
         if (v.passiveIcon) v.passiveIcon.setAlpha(0);
+        v.dockParts.forEach((o) => o.setAlpha(SLOT_HUD.fallenAlpha));
         v.bg.setAlpha(0.4);
         v.fill.setAlpha(0.4);
         if (v.lvl) v.lvl.setAlpha(0.4);

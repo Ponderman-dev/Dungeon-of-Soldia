@@ -39,9 +39,12 @@ for (const [id, sk] of Object.entries(rawSkills)) {
 export const skillDefs = rawSkills;
 // A skill's per-wave look (combat.json skillFx.wave), by the wave's skill (a copy of the skill def, so by name).
 export const waveLook = (skill) => WAVE_BY_NAME[skill.name];
-export const SKILL_Y = 772; // centre of the skill squares
-export const SKILL_W = 40;
-export const SKILL_H = 44;
+export const SKILL_Y = 757; // centre of the skill squares
+export const SKILL_W = 54; // finger size (session 44: the 40px squares were under the 44px rule)
+export const SKILL_H = 50;
+// Under the two skill squares of each hero (session 44, user picked 'L': today's layout, bigger squares, health under
+// them): a thin health line as wide as both squares, a label row (passive icon, name, health number), one row of items.
+export const SLOT_HUD = { barY: 788, barW: 114, barH: 5, labelY: 806, itemsY: 831, itemsW: 108, hpGood: 0x5fe36a, hpLow: 0xffb14a, hpDanger: 0xf25a4a, lowAt: 0.5, dangerAt: 0.25, fallenAlpha: 0.35, nameMax: 7 };
 
 // Depth order: floor < slots < hero < hero bars < popups < banner/HUD
 // How big one character pixel is on screen (bosses use finer pixels: `drawScale` in enemies.json).

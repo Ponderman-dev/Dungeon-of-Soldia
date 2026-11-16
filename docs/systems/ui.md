@@ -105,3 +105,14 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   health number), then ONE row of item icons (past 5 kinds they move closer together, over 10 kinds = '+N').
 - No band behind it, nothing new on the field. User REJECTED an info box at the tapped enemy ('clutter when lots of
   enemies') and the dark bottom dock (M). Mock-ups: `docs/proposals/ui-concepts/mock4.html` (L-O), `mock3.html` (G-K).
+- **PHONE SPEED (session 45, user on Android Chrome via itch.io: 'steady choppy' in the hero pick menu, on screen
+  changes, in fights with many enemies):** measured on a 4x slowed CPU the game's own work per frame is small (fight
+  4-5ms, title 1ms), so the suspects were in TEXT drawing. Two fixes: (1) `src/entities/fastCanvas.js` (first import
+  in main.js): Phaser makes every Text canvas with `willReadFrequently: false`, and our small-font sharpening
+  (`snapCanvas`) reads its pixels back on EVERY text change = a slow read-back from the graphics card on Android; small
+  2D canvases are now kept in normal memory (the game canvas is untouched). (2) uiKit `TextStyle.setColor` does nothing
+  when the colour is already set (SquadScene `placeBench()` set name colours every frame = 10 texts redrawn + uploaded
+  60 times a second: 20 uploads a frame -> 0, frame 7.7ms -> 2.7ms). NOT CONFIRMED on the user's phone yet.
+  SPEED READOUT: TEST tab > 'TEST: speed (fps)' (`toggleFps` in testPanel.js): fps (+ lowest), slowest gap between
+  frames, the game's own slowest frame, and the device line. Measuring scripts were scratch only (count gl draw /
+  texImage2D calls per frame; time `game.step` under CDP `Emulation.setCPUThrottlingRate`).

@@ -1,3 +1,4 @@
+import './entities/fastCanvas.js'; // first: before Phaser makes any canvas
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, BG_COLOR } from './config.js';
 import BootScene from './scenes/BootScene.js';

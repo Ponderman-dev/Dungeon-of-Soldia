@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, UI } from '../config.js';
 import { drawWindow } from '../entities/uiKit.js';
-import { toggleTestPanel } from './testPanel.js';
+import { toggleTestPanel, toggleFps } from './testPanel.js';
 
 // TEST ONLY: a small always-on-top button that gives up the run and goes back to the
 // squad select screen (nothing is saved), and a 'TEST: tools' button (testPanel.js). Remove this scene before release.
@@ -19,24 +19,27 @@ export default class DebugScene extends Phaser.Scene {
     this.add.text(tx + tw / 2, ty + th / 2, 'TEST', ink).setOrigin(0.5);
     const w = 168, h = 26, x = Math.round(GAME_WIDTH / 2 - w / 2), y = ty + th + 4;
     const menu = this.add.container(0, 0).setVisible(false);
+    const zones = [];
     const item = (yy, label, onTap) => {
       menu.add(drawWindow(this.add.graphics(), x, yy, w, h, { line: 0xffe08a }));
       menu.add(this.add.text(x + w / 2, yy + h / 2, label, ink).setOrigin(0.5));
-      const z = this.add.zone(x + w / 2, yy + h / 2, w, h).on('pointerdown', () => { menu.setVisible(false); z1.disableInteractive(); z2.disableInteractive(); onTap(); });
+      const z = this.add.zone(x + w / 2, yy + h / 2, w, h).on('pointerdown', () => { menu.setVisible(false); for (const o of zones) o.disableInteractive(); onTap(); });
       menu.add(z);
+      zones.push(z);
       return z;
     };
-    const z1 = item(y, 'TEST: restart run', () => {
+    item(y, 'TEST: restart run', () => {
       this.scene.stop('Reward');
       this.scene.stop('Puzzle');
       this.scene.stop('Battle');
       this.scene.run('Squad'); // run, not start: start would also stop this debug scene
     });
-    const z2 = item(y + h + 4, 'TEST: tools', () => toggleTestPanel(this.game)); // any floor, any item (testPanel.js)
+    item(y + h + 4, 'TEST: tools', () => toggleTestPanel(this.game)); // any floor, any item (testPanel.js)
+    item(y + (h + 4) * 2, 'TEST: speed (fps)', () => toggleFps(this.game)); // frames per second readout (testPanel.js)
     this.add.zone(tx + tw / 2, ty + th / 2, tw + 8, th + 6).setInteractive().on('pointerdown', () => {
       const open = !menu.visible;
       menu.setVisible(open);
-      for (const z of [z1, z2]) { if (open) z.setInteractive(); else z.disableInteractive(); }
+      for (const z of zones) { if (open) z.setInteractive(); else z.disableInteractive(); }
     });
   }
 }

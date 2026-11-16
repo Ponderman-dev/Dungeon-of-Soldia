@@ -50,6 +50,12 @@ function installFontGrid() {
     }
     return setStyle.call(this, style, updateText, setDefaults);
   };
+  // A colour that is already set is not set again: setColor redraws the whole text (a scene that calls it every
+  // frame, like the squad bench, was redrawing 10 texts 60 times a second).
+  const setColor = TS.setColor;
+  TS.setColor = function (color) {
+    return this.color === color ? this.parent : setColor.call(this, color);
+  };
   const setFontSize = TS.setFontSize;
   TS.setFontSize = function (size) {
     if (this.fontFamily !== UI.font && this.fontFamily !== SMALL.family) return setFontSize.call(this, size);

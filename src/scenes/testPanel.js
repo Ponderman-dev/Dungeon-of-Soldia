@@ -88,3 +88,33 @@ export function toggleTestPanel(game) {
     }
   });
 }
+
+// TEST ONLY: a small speed readout (top left), to see how smooth the game runs on a real phone. Per second:
+// fps = pictures drawn, slow = the longest wait between two pictures (ms; 17 = perfect at 60), game = how long the
+// game itself needed for its slowest picture (ms). Second line: the device (drawing mode, screen, cores).
+let fpsBox = null;
+export function toggleFps(game) {
+  if (fpsBox) { cancelAnimationFrame(fpsBox.raf); game.step = fpsBox.step; game.loop.callback = fpsBox.step; fpsBox.el.remove(); fpsBox = null; return; }
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;left:2px;top:2px;background:rgba(0,0,0,.75);color:#6ee07a;font:11px monospace;padding:3px 5px;z-index:11;pointer-events:none;white-space:pre';
+  document.body.appendChild(el);
+  const step = game.step;
+  let work = 0;
+  const timed = function (time, delta) { const a = performance.now(); step.call(game, time, delta); work = Math.max(work, performance.now() - a); };
+  game.step = timed; game.loop.callback = timed;
+  const device = `${game.renderer.gl ? 'webgl' : 'canvas'} ${screen.width}x${screen.height}@${window.devicePixelRatio} cores ${navigator.hardwareConcurrency || '?'}`;
+  let frames = 0, slow = 0, last = performance.now(), mark = last, worstFps = 999;
+  fpsBox = { el, step, raf: 0 };
+  const tick = (now) => {
+    frames++; slow = Math.max(slow, now - last); last = now;
+    if (now - mark >= 1000) {
+      const fps = Math.round((frames * 1000) / (now - mark));
+      worstFps = Math.min(worstFps, fps);
+      el.textContent = `fps ${fps} (lowest ${worstFps})  slow ${slow.toFixed(0)}ms  game ${work.toFixed(0)}ms\n${device}`;
+      el.style.color = fps >= 50 ? '#6ee07a' : fps >= 30 ? '#ffe08a' : '#ff7a5a';
+      frames = 0; slow = 0; work = 0; mark = now;
+    }
+    if (fpsBox) fpsBox.raf = requestAnimationFrame(tick);
+  };
+  fpsBox.raf = requestAnimationFrame(tick);
+}

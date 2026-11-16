@@ -26,3 +26,20 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   uses `blockedTarget()`: the nearest enemy IN REACH, swing by swing, until the way is free (the real target is kept;
   taunt is never overruled; skills still aim at the focus). Worst case 10.1s -> 4.0s without an attack. Tests:
   `move-orders.test.mjs`. Smart curve after the change: bosses 20 / 40 / 60 at 89% / 78% / 36% (the usual range).
+- **NO SHOVING (user, session 45: 'when units collide they get pushed more and more until they stand in a very bad
+  spot; the unit still tries to move past'):** cause: a walker kept walking straight at its target and leaned on
+  whoever stood in between (the stander took 23% of every push, for as long as the walker kept trying). Now
+  (`movement.walkersYield`, false = the old way): (1) a fighter that STANDS (swinging, waiting, stunned) is a wall for
+  one that WALKS: `share()` gives the stander 0, the walker is put back outside the body at once (never wades in).
+  (2) GO AROUND: the walking it lost becomes a sidestep along the body, towards the side its goal lies (head-on =
+  towards the middle of the floor); it keeps that side for `sidestepKeepMs` (`u.sidestep`) so it does not dither.
+  (3) WAIT: an enemy or minion that got no closer for `giveUpMs` (1.5s) stops and waits `waitMs` (1.2s, `u.wait`; it
+  stands like everyone else), then tries the other way round (an enemy also re-picks the nearest hero). Heroes do not
+  wait: they hit what is in reach (`blockedTarget`). Unchanged: two walkers push each other, two standers drift apart
+  gently, knockback, minions make way, bosses hold. A walker held up by a body has `speed` = what it really moved (no
+  hopping on the spot). A MOVE ORDER onto a spot inside a standing fighter's body now ends next to it.
+  MEASURED (`scripts/dev/push-drift.mjs <repo>`, 30s fights, nobody dies; px a fighter is moved while not walking):
+  vs 6 enemies 11-13 -> 0, vs 8 melee 51-56 -> 7-10, vs a crowd of 12: 222 -> 21-31. Side effect: in a crowd the back
+  row waits for room (swings per enemy in 30s: 8 melee 17.1 -> 15.2-16.0, crowd of 12 16.1-16.6 -> 13.2-14.8).
+  Smart curve 360 runs: median 40 -> 40, mean 44 -> 46, bosses 20 / 40 / 60 at 88% / 83% / 33% (was 89 / 78 / 36).
+  Tests: `movement.test.mjs` (last two blocks). NOT yet looked at by eye in a real fight on screen.

@@ -179,7 +179,9 @@ export const movementMethods = {
     const before = new Map(units.map((u) => [u, { x: u.x, y: u.y }]));
     const step = (M.walkSpeedPxPerSec * dt) / 1000;
     const walking = new Set();
+    const heading = new Map(); // walker -> { x, y } its walking direction, d = px walked this update, slide = px it may still sidestep
     for (const u of units) {
+      if (u.sidestep && (u.sidestep.left -= dt) <= 0) u.sidestep = null;
       if (u.knock) {
         const t = Math.min(dt, u.knock.remaining);
         u.x += u.knock.vx * t;
@@ -202,6 +204,8 @@ export const movementMethods = {
       if (this.has(u, 'fear')) goal = { x: u.homeX, y: u.homeY, stop: 0 };
       else if (u.walkTo) goal = { x: u.walkTo.x, y: u.walkTo.y }; // a move order (setMove)
       else if (u.damageType === 'melee') {
+        // WAITING for a gap (below): it stands where it is, like everyone else who stands (so nobody is shoved).
+        if (u.wait > 0) { u.wait -= dt; continue; }
         const target = this.pickTarget(u);
         if (target && !this.inReach(u, target)) {
           goal = { x: target.x, y: target.y };
@@ -209,6 +213,15 @@ export const movementMethods = {
           const far = Math.hypot(target.x - u.x, target.y - u.y);
           if (!u.chase || u.chase.uid !== target.uid) u.chase = { uid: target.uid, best: far, stall: 0 };
           else if (far < u.chase.best - M.blockedPx) { u.chase.best = far; u.chase.stall = 0; } else u.chase.stall += dt;
+          // No way through for a while (enemies, minions): stop leaning on the crowd. Wait a moment, then try round
+          // the OTHER side (an enemy also looks again for the nearest hero).
+          if (M.walkersYield && u.chase.stall >= M.giveUpMs && (u.side === 'enemy' || u.minion)) { // heroes: blockedTarget()
+            u.wait = M.waitMs;
+            u.chase = null;
+            if (u.sidestep) u.sidestep = { side: -u.sidestep.side, left: M.waitMs + M.giveUpMs };
+            if (u.side === 'enemy') u.foe = null;
+            continue;
+          }
         } else u.chase = null;
       }
       if (!goal) continue;
@@ -221,6 +234,7 @@ export const movementMethods = {
       u.y += (dy / len) * d;
       u.speed = dt > 0 ? (d * 1000) / dt : 0;
       walking.add(u);
+      heading.set(u, { x: dx / len, y: dy / len, d, slide: d });
     }
     // Push apart. Ranged fighters hold their ground (only the other one moves).
     const push = (M.separatePushPerSec * dt) / 1000;
@@ -230,8 +244,13 @@ export const movementMethods = {
       if (u.def.object) return 0; // objects (War Drum, eggs) never budge
       if (u.minion !== other.minion) return u.minion ? 1 : 0; // minions always make way (they never block a hero or shove an enemy)
       if ((u.size || 1) >= (other.size || 1) * M.bigHoldRatio) return 0; // a big body (boss) is not shoved around by small ones
+      if ((other.size || 1) >= (u.size || 1) * M.bigHoldRatio) return 1;
+      if (walking.has(u) || u.knock) return 1;
       if (u.damageType !== 'melee' && other.damageType === 'melee') return 0; // ranged hold their ground
-      return walking.has(u) || u.knock ? 1 : settled;
+      // NO SHOVING (user: 'a unit keeps trying to move past and pushes the others further and further'): a fighter
+      // that stands still is a wall for one that walks. The walker stops at it and goes around (below).
+      if (M.walkersYield && walking.has(other)) return 0;
+      return settled;
     };
     // How much of a sideways push towards the nearest side wall a fighter still takes (1 far away, 0 at the wall).
     const wallFactor = (u, dirX) => {
@@ -256,13 +275,38 @@ export const movementMethods = {
           ny = 0;
           len = 1;
         }
-        const amount = Math.min(push, (1 - d) * M.separateX * k);
         let wa = share(a, b);
         let wb = share(b, a);
         if (wa + wb === 0) {
           if (a.def.object !== b.def.object) continue; // a boss next to its own object (eggs): neither budges
           wa = wb = 1;
         }
+        // A walker against someone who does not give way: it is put back outside that body at once (it never
+        // wades in), and the walking it lost becomes a step SIDEWAYS along the body, so it goes around.
+        const walker = M.walkersYield ? (wb === 0 && walking.has(a) ? a : wa === 0 && walking.has(b) ? b : null) : null;
+        if (walker) {
+          const h = heading.get(walker);
+          const s = walker === a ? -1 : 1; // (nx, ny) * s points from the blocker to the walker
+          const ox = (nx / len) * s, oy = (ny / len) * s;
+          const out = Math.min(len * (1 / Math.max(d, 0.05) - 1), push + h.d);
+          walker.x += ox * out * wallFactor(walker, ox);
+          walker.y += oy * out;
+          if (ox * h.x + oy * h.y < 0 && h.slide > 0) { // the body is in its way
+            let tx = -oy, ty = ox;
+            const along = tx * h.x + ty * h.y;
+            // Which way round: the way its goal lies; head-on = towards the middle of the floor. It keeps that side
+            // for a moment (sidestep), so it does not dither left / right in front of a row of bodies.
+            let side = walker.sidestep ? walker.sidestep.side : Math.abs(along) > 0.2 ? Math.sign(along) : (tx > 0 === walker.x < L.width / 2 ? 1 : -1);
+            if (!walker.sidestep && tx === 0) side = walker.uid % 2 ? 1 : -1;
+            walker.sidestep = { side, left: M.sidestepKeepMs };
+            const go = Math.min(h.slide, out);
+            h.slide -= go;
+            walker.x += tx * side * go;
+            walker.y += ty * side * go;
+          }
+          continue;
+        }
+        const amount = Math.min(push, (1 - d) * M.separateX * k);
         // Two fighters both standing still only drift apart slowly (no jostling while they swing).
         const calm = wa < 1 && wb < 1 ? M.settledPairPush ?? 1 : 1;
         const fa = (amount * calm * wa) / (wa + wb);
@@ -280,6 +324,7 @@ export const movementMethods = {
       const moved = Math.hypot(u.x - b.x, u.y - b.y);
       u.moving = moved > 0.05;
       if (!walking.has(u)) u.speed = 0; // its OWN walking pace (px/s); being shoved is not a step, so the scene doesn't hop it
+      else if (dt > 0) u.speed = Math.min(u.speed, (moved * 1000) / dt); // held up by a body: no walking on the spot
       u.walked += moved;
     }
   },

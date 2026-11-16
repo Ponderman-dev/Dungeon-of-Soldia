@@ -144,3 +144,42 @@ for (const bossId of ['grukk', 'frost_warden', 'ignatius']) {
   run(s, 2000, pin);
   const shoved = Math.hypot(boss.x - b0.x, boss.y - b0.y);
   ok('small fighters never push the boss', shoved < 1, shoved.toFixed(1) + 'px'); }
+
+// NO SHOVING (movement.walkersYield): a fighter that stands still is a wall for one that walks. The walker stops at
+// it and goes around; before, it leaned on it and pushed it further and further across the floor.
+{ const shove = (yieldOn) => {
+    const s = new BattleState({ heroDefs: ['knight', 'berserker'].map((id) => all.find((h) => h.id === id)), enemyDefs: r('enemies.json'), itemDefs: {}, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules: { ...rules, movement: { ...M, walkersYield: yieldOn } }, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+    const [g] = s.spawnEnemies(['goblin'], 1);
+    const [knight, zerk] = s.heroes;
+    for (const u of [knight, zerk, g]) { u.hp = u.maxHp = 1e9; u.stats.evasion = 0; }
+    s.place(g, 195, 400); s.place(knight, 195, 400 + M.reachY - 6); s.place(zerk, 197, 700); // the knight fights; the Berserker comes up right behind him
+    const k0 = { x: knight.x, y: knight.y }, g0 = { x: g.x, y: g.y };
+    let overlap = 0;
+    const ev = run(s, 6000, () => { overlap = Math.max(overlap, 1 - Math.hypot((zerk.x - knight.x) / M.separateX, (zerk.y - knight.y) / M.separateY)); });
+    return { knight: Math.hypot(knight.x - k0.x, knight.y - k0.y), goblin: Math.hypot(g.x - g0.x, g.y - g0.y), hits: starts(ev, zerk).length, reach: s.inReach(zerk, g), overlap };
+  };
+  const now = shove(true), old = shove(false);
+  ok('a walking fighter does not shove one that stands and fights', now.knight < 3 && now.goblin < 3, `knight ${now.knight.toFixed(1)}px, goblin ${now.goblin.toFixed(1)}px (old way ${old.knight.toFixed(0)}px)`);
+  ok('...the old way did shove him (the rule is what stops it)', old.knight > now.knight + 5);
+  ok('...it goes AROUND him and fights too', now.reach && now.hits > 0, `${now.hits} swings`);
+  ok('...and never wades into his body', now.overlap < 0.25, now.overlap.toFixed(2)); }
+
+// A crowd with no room left: the ones at the back wait for a gap instead of leaning on the front row.
+{ const crowd = (yieldOn) => {
+    const s = new BattleState({ heroDefs: [all.find((h) => h.id === 'knight')], enemyDefs: r('enemies.json'), itemDefs: {}, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules: { ...rules, movement: { ...M, walkersYield: yieldOn } }, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+    const es = s.spawnEnemies(Array(10).fill('goblin'), 1);
+    for (const u of [...s.heroes, ...es]) { u.hp = u.maxHp = 1e9; u.stats.evasion = 0; }
+    s.placeLines();
+    run(s, 4000); // the first ones have arrived
+    let waited = false, shoved = 0;
+    const last = new Map();
+    run(s, 8000, () => { for (const u of [...s.heroes, ...es]) { // shoved = moved while not walking itself
+      if (u.wait > 0) waited = true;
+      const p = last.get(u);
+      if (p && !u.speed) shoved += Math.hypot(u.x - p.x, u.y - p.y);
+      last.set(u, { x: u.x, y: u.y }); } });
+    return { waited, shoved: shoved / (es.length + 1), inReach: es.filter((e) => s.inReach(e, s.heroes[0])).length, n: es.length };
+  };
+  const now = crowd(true), old = crowd(false);
+  ok('enemies with no way through stop and wait for a gap', now.waited && now.inReach < now.n, `${now.inReach} of ${now.n} in reach`);
+  ok('...so the crowd is hardly pushed around', now.shoved < M.separateX / 4 && now.shoved < old.shoved / 3, `${now.shoved.toFixed(1)}px each vs old ${old.shoved.toFixed(1)}px`); }

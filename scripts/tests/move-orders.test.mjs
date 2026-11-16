@@ -21,7 +21,7 @@ const melee = (h) => h.find((x) => x.damageType === 'melee');
 {
   const { s, h } = mk();
   const hero = ranged(h) || h[0];
-  const spot = { x: 80, y: 600 };
+  const spot = { x: 250, y: 690 }; // a free spot (a spot inside a standing fighter's body cannot be reached: nobody is shoved away)
   const from = { x: hero.x, y: hero.y };
   ok('a move order needs a living hero', s.setMove(hero.uid, spot.x, spot.y) && !s.setMove(9999, 1, 1));
   const ev = [];

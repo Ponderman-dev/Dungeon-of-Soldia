@@ -3,6 +3,7 @@
 // mock3.html = G Floating HUD, H Hotbar, I Arcade Bars, J Card Hand, K Side Rails. Optional 2nd argument = letters to render (e.g. GHIJK).
 // Each has ?v=<letter>-fight and ?v=<letter>-camp. field.png / campfield.png / hero-*.png / sk-*.png are crops of the real
 // game (shots.mjs takes the screenshots from a dev server on :5190; the crops were cut from them by hand in python).
+// mock4.html = round 4 MINIMAL huds (L bigger buttons, M bottom dock, N ghost icons, O corners) over fight-now.png, ?v=L|M|N|O|now (not in this script).
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 const { chromium } = createRequire(import.meta.url)('playwright');

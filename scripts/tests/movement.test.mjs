@@ -165,8 +165,11 @@ for (const bossId of ['grukk', 'frost_warden', 'ignatius']) {
   ok('...and never wades into his body', now.overlap < 0.25, now.overlap.toFixed(2)); }
 
 // A crowd with no room left: the ones at the back wait for a gap instead of leaning on the front row.
-{ const crowd = (yieldOn) => {
-    const s = new BattleState({ heroDefs: [all.find((h) => h.id === 'knight')], enemyDefs: r('enemies.json'), itemDefs: {}, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules: { ...rules, movement: { ...M, walkersYield: yieldOn } }, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+{ const crowd = (yieldOn, seed) => {
+    let x = seed >>> 0; // mulberry32: a fixed seed = the same fight every time, and different seeds really differ
+    const rng = () => { x = (x + 0x6d2b79f5) >>> 0; let t = x; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    Math.random = rng; // some rolls use Math.random directly: seed those too
+    const s = new BattleState({ heroDefs: [all.find((h) => h.id === 'knight')], enemyDefs: r('enemies.json'), itemDefs: {}, skillDefs: r('skills.json'), statusDefs: r('statuses.json'), rules: { ...rules, movement: { ...M, walkersYield: yieldOn } }, damageTypes: r('damageTypes.json'), leveling: r('leveling.json'), rng });
     const es = s.spawnEnemies(Array(10).fill('goblin'), 1);
     for (const u of [...s.heroes, ...es]) { u.hp = u.maxHp = 1e9; u.stats.evasion = 0; }
     s.placeLines();
@@ -180,6 +183,10 @@ for (const bossId of ['grukk', 'frost_warden', 'ignatius']) {
       last.set(u, { x: u.x, y: u.y }); } });
     return { waited, shoved: shoved / (es.length + 1), inReach: es.filter((e) => s.inReach(e, s.heroes[0])).length, n: es.length };
   };
-  const now = crowd(true), old = crowd(false);
+  const avg = (yieldOn) => { const runs = (process.env.SEEDS ? process.env.SEEDS.split(",").map(Number) : [1, 8, 12, 23, 31]) /* 8 and 23: two of the rarer, busier crowd fights (about 1 in 10) */.map((seed) => crowd(yieldOn, seed)); if (process.env.SPREAD) console.log(yieldOn, runs.map((c) => c.shoved.toFixed(1)).join(" ")); return { ...runs[0], waited: runs.some((c) => c.waited), shoved: runs.reduce((a, c) => a + c.shoved, 0) / runs.length, worst: Math.max(...runs.map((c) => c.shoved)) }; };
+  const realRandom = Math.random;
+  const now = avg(true), old = avg(false);
+  Math.random = realRandom;
   ok('enemies with no way through stop and wait for a gap', now.waited && now.inReach < now.n, `${now.inReach} of ${now.n} in reach`);
-  ok('...so the crowd is hardly pushed around', now.shoved < M.separateX / 4 && now.shoved < old.shoved / 3, `${now.shoved.toFixed(1)}px each vs old ${old.shoved.toFixed(1)}px`); }
+  ok('...so the crowd is hardly pushed around', now.shoved < M.separateX / 4 && now.shoved < old.shoved / 3, `${now.shoved.toFixed(1)}px each vs old ${old.shoved.toFixed(1)}px`);
+  ok('...even in the busiest of these fights', now.worst < M.separateX / 3 && now.worst < old.shoved / 4, `${now.worst.toFixed(1)}px each`); }

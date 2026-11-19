@@ -4,16 +4,49 @@
 // A page def with its id (what BattleState.addPage takes).
 export const pageOf = (data, id) => ({ id, ...data.pages[id] });
 
-// The 3 pages a book shows: `contents[book]` says how many stat and modifier pages (blue: 2 stat + 1 modifier,
-// golden: 3 modifiers). No page twice in one book.
-export function rollBookPages(data, book, rng = Math.random) {
+// The pages a book shows: `contents[book]` says how many stat and modifier pages (blue: 2 stat + 1 modifier,
+// golden: 3 modifiers, dealer: 2 + 3). No page twice in one book. Each modifier page rolls its TIER from
+// `tierOdds[book]`; then `specials[book]` may upgrade one modifier page to a legendary and (rolled separately) another
+// to a hero-only page. Hero pages only for `heroIds` (the living squad). An empty tier falls back to the next lower one.
+const TIER_ORDER = ['common', 'rare', 'legendary', 'hero'];
+export function rollBookPages(data, book, rng = Math.random, heroIds = null) {
   const want = data.contents[book];
   const out = [];
-  for (const kind of ['stat', 'modifier']) {
-    const pool = Object.keys(data.pages).filter((id) => data.pages[id].kind === kind);
-    for (let i = 0; i < (want[kind] || 0) && pool.length; i++) out.push(pageOf(data, pool.splice(Math.floor(rng() * pool.length), 1)[0]));
-  }
-  return out;
+  const taken = new Set();
+  const poolOf = (kind, tier) => Object.keys(data.pages).filter((id) => {
+    const p = data.pages[id];
+    if (p.kind !== kind || taken.has(id)) return false;
+    if (tier && (p.tier || 'common') !== tier) return false;
+    return !p.hero || !heroIds || heroIds.includes(p.hero);
+  });
+  const take = (kind, tier) => {
+    // the wanted tier, else the next lower one with pages left, else any page of that kind
+    let pool = [];
+    for (let t = tier ? TIER_ORDER.indexOf(tier) : -1; t >= 0 && !pool.length; t--) pool = poolOf(kind, TIER_ORDER[t]);
+    if (!pool.length) pool = poolOf(kind, null).filter((id) => !data.pages[id].hero || (heroIds && heroIds.includes(data.pages[id].hero)));
+    if (!pool.length) return null;
+    const id = pool[Math.floor(rng() * pool.length)];
+    taken.add(id);
+    return pageOf(data, id);
+  };
+  const odds = (data.tierOdds || {})[book];
+  const rollTier = () => {
+    if (!odds) return null;
+    const total = Object.values(odds).reduce((a, b) => a + b, 0);
+    let x = rng() * total;
+    for (const [tier, w] of Object.entries(odds)) if ((x -= w) < 0) return tier;
+    return null;
+  };
+  for (let i = 0; i < (want.stat || 0); i++) { const p = take('stat', null); if (p) out.push(p); }
+  const tiers = Array.from({ length: want.modifier || 0 }, rollTier);
+  const specials = (data.specials || {})[book] || {};
+  let slot = tiers.length - 1; // specials replace the LAST modifier pages (the order is shuffled below)
+  for (const tier of ['hero', 'legendary']) if (slot >= 0 && specials[tier] && rng() < specials[tier]) tiers[slot--] = tier;
+  // a hero page needs a hero in the squad who has one: else that page stays a normal roll
+  for (const tier of tiers) { const p = take('modifier', tier === 'hero' && !poolOf('modifier', 'hero').length ? 'rare' : tier); if (p) out.push(p); }
+  const mods = out.filter((p) => p.kind === 'modifier');
+  for (let i = mods.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [mods[i], mods[j]] = [mods[j], mods[i]]; }
+  return [...out.filter((p) => p.kind === 'stat'), ...mods];
 }
 
 // Can `page` go on skill `index` of `hero`? 'ok', 'replace' (a modifier on a full skill: the player picks which

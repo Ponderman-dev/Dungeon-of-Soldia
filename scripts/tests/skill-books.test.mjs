@@ -137,3 +137,32 @@ const withPage = (id, idx = 0, heroIds = ['knight', 'rogue', 'archer']) => { con
     try { for (let t = 0; t < 4000; t += 50) { m.s.update(50); m.s.castSkill(m.h[0].uid, idx); } } catch (err) { crash = `${hid} ${id} ${idx}: ${err.stack.split('\n').slice(0, 2).join(' ')}`; break; }
   }
   ok('every page on every hero skill runs a fight without errors', !crash, crash); }
+// PAGE TIERS (session 45): tier odds per book, golden-book specials (legendary / hero-only), hero pages only for the
+// squad, empty tiers fall back. A made-up page list; the odds are read from the real data.
+{ const real = r('skillBooks.json');
+  const pg = (tier, extra = {}) => ({ kind: 'modifier', tier, name: tier, ...extra });
+  const pages = { s1: { kind: 'stat' }, s2: { kind: 'stat' }, s3: { kind: 'stat' } };
+  for (let i = 0; i < 6; i++) { pages['c' + i] = pg('common'); pages['r' + i] = pg('rare'); pages['l' + i] = pg('legendary'); }
+  pages.hk = pg('hero', { hero: 'knight' }); pages.hm = pg('hero', { hero: 'mage' });
+  const data = { ...real, pages };
+  let x = 7; const rng = () => ((x = (x * 16807) % 2147483647) / 2147483647);
+  const N = 20000, count = (book, ids) => { const c = { books: { legendary: 0, hero: 0, both: 0 } }; for (let i = 0; i < N; i++) { const ps = rollBookPages(data, book, rng, ids); for (const p of ps) c[p.kind === 'stat' ? 'stat' : p.tier] = (c[p.kind === 'stat' ? 'stat' : p.tier] || 0) + 1; const L = ps.some((p) => p.tier === 'legendary'), H = ps.some((p) => p.tier === 'hero'); if (L) c.books.legendary++; if (H) c.books.hero++; if (L && H) c.books.both++; } return c; };
+  const near = (got, want, tol) => Math.abs(got - want) <= tol;
+  const blue = count('blue', ['knight']), bo = real.tierOdds.blue, bt = Object.values(bo).reduce((a, b) => a + b, 0);
+  ok('blue book: modifier tiers follow tierOdds', near(blue.common / N, bo.common / bt, 0.02) && near(blue.rare / N, bo.rare / bt, 0.02), `${(blue.common / N * 100).toFixed(1)}% common`);
+  ok('...and never a legendary or hero page', !blue.legendary && !blue.hero);
+  const gold = count('golden', ['knight']), sp = real.specials.golden;
+  ok('golden book: a legendary in about specials.legendary of the books', near(gold.books.legendary / N, sp.legendary, 0.015), (gold.books.legendary / N * 100).toFixed(1) + '%');
+  ok('...a hero page in about specials.hero of the books', near(gold.books.hero / N, sp.hero, 0.01), (gold.books.hero / N * 100).toFixed(1) + '%');
+  ok('...both in one book can happen', gold.books.both > 0, gold.books.both);
+  ok('...the other pages are rares, never commons', !gold.common && gold.rare > 0);
+  let wrongHero = 0; for (let i = 0; i < 5000; i++) if (rollBookPages(data, 'golden', rng, ['knight', 'rogue']).some((p) => p.hero && p.hero !== 'knight')) wrongHero++;
+  ok('hero pages only for heroes in the squad', wrongHero === 0);
+  const noHero = count('golden', ['rogue', 'archer']);
+  ok('...no hero page for this squad = a normal page instead (still 3 pages)', !noHero.hero && noHero.rare + noHero.legendary === 3 * N);
+  const thin = { ...real, pages: { s1: { kind: 'stat' }, s2: { kind: 'stat' }, c0: pg('common'), c1: pg('common'), c2: pg('common') } };
+  const ps = rollBookPages(thin, 'golden', rng, ['knight']);
+  ok('an empty tier falls back to a lower one (no rares: commons)', ps.length === 3 && ps.every((p) => p.tier === 'common'));
+  const realTiers = Object.values(real.pages).filter((p) => p.kind === 'modifier');
+  ok('every real modifier page has a tier', realTiers.every((p) => ['common', 'rare', 'legendary', 'hero'].includes(p.tier)));
+  ok('...and every hero page names a real hero', realTiers.filter((p) => p.tier === 'hero').every((p) => r('heroes.json').some((h) => h.id === p.hero))); }

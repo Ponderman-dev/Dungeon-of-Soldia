@@ -91,7 +91,8 @@ function usePages(s, pages) {
 export function takeReward(s, cards, opts, log) {
   if (!cards.length) return null;
   const rng = opts.rng;
-  const book = (b) => usePages(s, opts.random ? [pick(rollBookPages(DATA.bookData, b, rng), rng)] : rollBookPages(DATA.bookData, b, rng));
+  const ids = s.heroes.filter((h) => h.alive).map((h) => h.def.id);
+  const book = (b) => usePages(s, opts.random ? [pick(rollBookPages(DATA.bookData, b, rng, ids), rng)] : rollBookPages(DATA.bookData, b, rng, ids));
   if (opts.random) {
     const item = pick(cards, rng);
     if (item.kind === 'potion') return s.healHeroes(item.healPercent), 'potion';

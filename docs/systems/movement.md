@@ -42,4 +42,6 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   vs 6 enemies 11-13 -> 0, vs 8 melee 51-56 -> 7-10, vs a crowd of 12: 222 -> 21-31. Side effect: in a crowd the back
   row waits for room (swings per enemy in 30s: 8 melee 17.1 -> 15.2-16.0, crowd of 12 16.1-16.6 -> 13.2-14.8).
   Smart curve 360 runs: median 40 -> 40, mean 44 -> 46, bosses 20 / 40 / 60 at 88% / 83% / 33% (was 89 / 78 / 36).
-  Tests: `movement.test.mjs` (last two blocks). NOT yet looked at by eye in a real fight on screen.
+  About 1 crowd fight in 10 still ends with ~15px of push per fighter (old way ~88px). Tests: `movement.test.mjs` (last
+  two blocks; the crowd test uses fixed seeds 1, 8, 12, 23, 31, where 8 and 23 are such busier fights, and also
+  seeds Math.random). NOT yet looked at by eye in a real fight on screen.

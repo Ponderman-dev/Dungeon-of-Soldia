@@ -1,6 +1,21 @@
 {
   "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. More modifier fields: allyHeal {count, percentMaxHp} + selfCostPercent (Blood Price), tornado (Excalibur tornado spec, Cyclone), ricochet (share for a second target), aftershock {delayMs, power}, grow {scale, durationMs} (Titan look), purify (debuffs cleansed), roar {radius, taunt, self}, summon {minion, max}, onHitChance {chance, apply} (Concussive), desperate {belowPercent, power}.",
   "bookChancePerScreen": 0.0667,
+  "_tiers": "PAGE TIERS (user, session 45): every modifier page has a tier: common, rare, legendary or hero (a hero-only page, `hero` = that hero's id; only offered when that hero is alive in the squad). tierOdds[book] = weights for each modifier page's tier. specials[book] = chances that ONE modifier page of that book is upgraded to a legendary / a hero page (rolled separately, both can happen in one book). An empty tier falls back to the next lower one (hero > legendary > rare > common).",
+  "tierOdds": {
+    "blue": { "common": 80, "rare": 20 },
+    "dealer": { "common": 80, "rare": 20 },
+    "golden": { "rare": 100 }
+  },
+  "_heroFrame": "The card frame of a hero-only page on the reward screen (the other tiers use rarities.json; stat pages the common frame).",
+  "heroFrame": {
+    "label": "HERO",
+    "color": "0xe0405a",
+    "frame": { "edge": "0xe0405a", "fill": "0x3a1220", "hi": "0xff9aa8", "stud": "0xf2b632" }
+  },
+  "specials": {
+    "golden": { "legendary": 0.2, "hero": 0.05 }
+  },
   "pages": {
     "sharpen": {
       "kind": "stat",
@@ -28,6 +43,7 @@
     },
     "venomInk": {
       "kind": "modifier",
+      "tier": "common",
       "tag": "Debuff",
       "name": "Venom Ink",
       "text": "Every enemy the skill hits also gets 2 stacks of Poison.",
@@ -43,6 +59,7 @@
     },
     "razorInk": {
       "kind": "modifier",
+      "tier": "common",
       "tag": "Debuff",
       "name": "Razor Ink",
       "text": "Every enemy the skill hits also gets 2 stacks of Bleed.",
@@ -57,6 +74,7 @@
     },
     "emberInk": {
       "kind": "modifier",
+      "tier": "common",
       "tag": "Debuff",
       "name": "Ember Ink",
       "text": "Every enemy the skill hits also gets 2 stacks of Burn.",
@@ -72,6 +90,7 @@
     },
     "frostInk": {
       "kind": "modifier",
+      "tier": "common",
       "tag": "Debuff",
       "name": "Frost Ink",
       "text": "Every enemy the skill hits also gets 2 stacks of Chill.",
@@ -85,6 +104,7 @@
     },
     "siphon": {
       "kind": "modifier",
+      "tier": "common",
       "tag": "Heal",
       "name": "Siphon",
       "text": "15% of the damage it deals heals the caster (support skill: heals the caster 5% of max health).",
@@ -93,6 +113,7 @@
     },
     "bulwark": {
       "kind": "modifier",
+      "tier": "common",
       "tag": "Defense",
       "name": "Bulwark",
       "text": "Casting gives the caster a shield of 8% of its max health for 4s.",
@@ -106,6 +127,7 @@
     },
     "rally": {
       "kind": "modifier",
+      "tier": "common",
       "tag": "Team",
       "name": "Rally",
       "text": "Casting gives the whole squad +10% attack speed for 3s.",
@@ -124,6 +146,7 @@
     },
     "hasty": {
       "kind": "modifier",
+      "tier": "common",
       "tag": "Tempo",
       "name": "Hasty",
       "text": "Cooldown 25% shorter, but skill power 20% lower.",
@@ -132,6 +155,7 @@
     },
     "overcharge": {
       "kind": "modifier",
+      "tier": "rare",
       "tag": "Risk",
       "name": "Overcharge",
       "text": "+40% skill power, but the wind-up is twice as long.",
@@ -140,6 +164,7 @@
     },
     "huntersInk": {
       "kind": "modifier",
+      "tier": "rare",
       "tag": "Debuff",
       "name": "Hunter's Ink",
       "text": "Every enemy the skill hits is Marked for 4s (+15% damage taken from everyone).",
@@ -153,6 +178,7 @@
     },
     "bloodPrice": {
       "kind": "modifier",
+      "tier": "rare",
       "tag": "Heal",
       "name": "Blood Price",
       "text": "Also heals the 2 most hurt allies for 12% of their max health, but costs the caster 6% of its health.",
@@ -164,6 +190,7 @@
     },
     "cyclone": {
       "kind": "modifier",
+      "tier": "legendary",
       "tag": "Area",
       "name": "Cyclone",
       "text": "A small tornado spins up on the target for 4s and drifts between enemies. Cooldown 30% longer.",
@@ -178,6 +205,7 @@
     },
     "ricochet": {
       "kind": "modifier",
+      "tier": "rare",
       "tag": "Area",
       "name": "Ricochet",
       "text": "A one-target skill also hits 1 more enemy at 50% (a heal or buff on one ally also reaches a second ally at 50%).",
@@ -185,6 +213,7 @@
     },
     "aftershock": {
       "kind": "modifier",
+      "tier": "rare",
       "tag": "Area",
       "name": "Aftershock",
       "text": "1 second later a second pulse hits the same targets for 35% (a heal pulses again at 35%).",
@@ -195,6 +224,7 @@
     },
     "titan": {
       "kind": "modifier",
+      "tier": "legendary",
       "tag": "Self",
       "name": "Titan",
       "text": "The caster grows 30% bigger for 3s: +20% max health and attack, but 10 less evasion.",
@@ -225,6 +255,7 @@
     },
     "purify": {
       "kind": "modifier",
+      "tier": "common",
       "tag": "Defense",
       "name": "Purify",
       "text": "Casting removes 1 debuff from the caster (a support skill cleans every ally it touches instead).",
@@ -232,6 +263,7 @@
     },
     "roar": {
       "kind": "modifier",
+      "tier": "rare",
       "tag": "Defense",
       "name": "Roar",
       "text": "Enemies near the caster are Taunted for 2s and the caster gets +10 defense for 2s. The caster takes those hits.",
@@ -255,6 +287,7 @@
     },
     "gravecall": {
       "kind": "modifier",
+      "tier": "rare",
       "tag": "Summon",
       "name": "Gravecall",
       "text": "Raises 1 weak skeleton next to the caster that fights until the floor ends. At most 2 page skeletons per hero.",
@@ -265,6 +298,7 @@
     },
     "concussive": {
       "kind": "modifier",
+      "tier": "rare",
       "tag": "Control",
       "name": "Concussive",
       "text": "Each hit has a 20% chance to Stun for 0.6s (bosses: half as long). Cooldown 15% longer.",
@@ -281,6 +315,7 @@
     },
     "reckless": {
       "kind": "modifier",
+      "tier": "rare",
       "tag": "Risk",
       "name": "Reckless",
       "text": "+35% skill power, but for 4s after casting the caster takes 15% more damage.",
@@ -295,6 +330,7 @@
     },
     "desperate": {
       "kind": "modifier",
+      "tier": "rare",
       "tag": "Risk",
       "name": "Desperate",
       "text": "+50% skill power while the caster is under 40% health.",

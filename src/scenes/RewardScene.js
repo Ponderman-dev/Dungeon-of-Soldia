@@ -51,6 +51,11 @@ export default class RewardScene extends Phaser.Scene {
     this.payload = payload; // { state, choices, floor, onDone }
   }
 
+  // The living heroes' ids: hero-only skill book pages are only offered for them (books.js rollBookPages).
+  squadIds() {
+    return this.payload.state.heroes.filter((h) => h.alive).map((h) => h.def.id);
+  }
+
   create() {
     this.step = 'pick';
     this.bookPages = null;
@@ -83,7 +88,7 @@ export default class RewardScene extends Phaser.Scene {
     // A lone golden book (boss prize) opens straight on its pages.
     if (this.payload.choices.length === 1 && this.payload.choices[0].kind === 'book') {
       this.chosen = this.payload.choices[0];
-      this.bookPages = rollBookPages(bookData, this.chosen.book);
+      this.bookPages = rollBookPages(bookData, this.chosen.book, Math.random, this.squadIds());
       this.showPages();
     } else this.showPick(true);
   }
@@ -249,7 +254,7 @@ export default class RewardScene extends Phaser.Scene {
     this.chosen = item;
     if (item.kind === 'potion') return this.finish(item.id, null); // the potion heals the whole party: no hero to choose
     if (item.kind === 'book') {
-      this.bookPages = this.bookPages || rollBookPages(bookData, item.book); // the same 3 pages if you go back and forth
+      this.bookPages = this.bookPages || rollBookPages(bookData, item.book, Math.random, this.squadIds()); // the same 3 pages if you go back and forth
       return this.showPages();
     }
     this.showAssign();
@@ -287,20 +292,23 @@ export default class RewardScene extends Phaser.Scene {
   drawPageCard(page, x, y, h, lit = false) {
     const card = this.track(this.add.container(x, y));
     const golden = this.chosen && this.chosen.book === 'golden';
-    const rc = page.kind === 'stat' ? 0x7f9fe8 : 0xc8a0ff;
     const L = this.pageLook();
     const g = this.add.graphics();
-    const book = Object.values(bookData.cards).find((c) => c.book === (this.chosen && this.chosen.book));
-    const R = rarities[(book && book.rarity) || 'rare']; // a page card wears its BOOK's rarity frame
+    // A page card wears its own TIER's frame (session 45): stat pages common, hero-only pages the crimson hero frame.
+    const tier = page.kind === 'stat' ? 'common' : page.tier || 'common';
+    const R = tier === 'hero' ? bookData.heroFrame : rarities[tier];
+    const rc = Number(R.color);
+    const heroName = page.hero && (this.payload.state.heroes.find((h) => h.def.id === page.hero) || {}).def;
+    const label = page.kind === 'stat' ? 'STAT PAGE' : tier === 'hero' ? `HERO PAGE - ${((heroName && heroName.name) || page.hero).toUpperCase()} ONLY` : `${R.label} - ${(page.tag || '').toUpperCase()}`;
     const paint = (on) => {
       g.clear();
       drawRarityFrame(g, 0, 0, CARD_W, h, R, { lit: on });
     };
     paint(lit);
     card.add(g);
-    if (R === rarities.legendary) rarityShine(this, card, CARD_W, h, R);
+    if (tier === 'legendary' || tier === 'hero') rarityShine(this, card, CARD_W, h, R);
     card.add(this.add.image(L.iconX, h / 2 - (this.compactPages ? 0 : 8), bookPageIconKey(this, page, golden)).setScale(L.iconScale)); // the book's colour = the page type
-    card.add(this.add.text(L.textX, this.compactPages ? 9 : 14, page.kind === 'stat' ? 'STAT PAGE' : `MODIFIER - ${(page.tag || '').toUpperCase()}`, { fontFamily: FONT, fontSize: `${L.label}px`, color: hex(rc) }));
+    card.add(this.add.text(L.textX, this.compactPages ? 9 : 14, label, { fontFamily: FONT, fontSize: `${L.label}px`, color: hex(rc) }));
     card.add(this.add.text(L.textX, L.nameY, page.name, { fontFamily: FONT, fontSize: `${L.name}px`, color: INK }));
     card.add(this.add.text(L.textX, L.descY, page.text, { fontFamily: FONT, fontSize: `${L.desc}px`, color: MUTE, lineSpacing: 4, wordWrap: { width: CARD_W - L.textX - 16, useAdvancedWrap: true } }));
     card.paint = paint;

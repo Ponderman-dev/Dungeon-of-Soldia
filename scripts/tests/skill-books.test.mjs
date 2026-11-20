@@ -166,3 +166,14 @@ const withPage = (id, idx = 0, heroIds = ['knight', 'rogue', 'archer']) => { con
   const realTiers = Object.values(real.pages).filter((p) => p.kind === 'modifier');
   ok('every real modifier page has a tier', realTiers.every((p) => ['common', 'rare', 'legendary', 'hero'].includes(p.tier)));
   ok('...and every hero page names a real hero', realTiers.filter((p) => p.tier === 'hero').every((p) => r('heroes.json').some((h) => h.id === p.hero))); }
+// PAGE ICONS (session 45, user's pick 'F'): every page has its own spell tome icon (pageIcons.json, systems/pageIcon.js).
+import { pageIconArt } from '../../src/systems/pageIcon.js';
+{ const icons = r('pageIcons.json'), data = r('skillBooks.json'), frame = { edge: '0x123456', hi: '0x654321' };
+  const ids = Object.keys(data.pages);
+  ok('every page has its own icon entry', ids.every((id) => icons[id]), ids.filter((id) => !icons[id]).join(' '));
+  ok('...each symbol is 7x7', Object.entries(icons).filter(([k]) => k[0] !== '_' || k === '_default').every(([, v]) => v.symbol.length === 7 && v.symbol.every((row) => row.length === 7 && /^[.12]+$/.test(row))));
+  const arts = ids.map((id) => pageIconArt(icons, id, frame));
+  ok('...the art is 16x16 and uses only its palette', arts.every((a) => a.rows.length === 16 && a.rows.every((row) => row.length === 16 && [...row].every((c) => c === '.' || Number(c) < a.palette.length))));
+  ok('...no two pages look the same', new Set(arts.map((a) => a.rows.join('') + a.palette.join())).size === ids.length);
+  ok('...the clasp gem is the tier colour', arts.every((a) => a.palette[a.rows[7][12]] === frame.edge));
+  ok('a page without an entry gets the default tome', pageIconArt(icons, 'noSuchPage', frame).rows.length === 16); }

@@ -1,11 +1,11 @@
-// Makes (once) the textures of skill / passive icons (skillIcons.json, 16x16) and of the recoloured skill book
-// picture per page type (skillBooks.json pageColors), and returns their keys. Pixel art: whole-number scales.
+// Makes (once) the textures of skill / passive icons (skillIcons.json, 16x16) and of the skill book page icons
+// (pageIcons.json), and returns their keys. Pixel art: whole-number scales.
 import skillIcons from '../data/skillIcons.json';
-import itemIcons from '../data/itemIcons.json';
 import rarities from '../data/rarities.json';
-import bookData from '../data/skillBooks.json';
 import { framedIconPixels, FRAMED_SIZE, ICON_SIZE } from '../systems/itemIcons.js';
 import { artPixels } from '../systems/pixelArt.js';
+import pageIcons from '../data/pageIcons.json';
+import { pageIconArt } from '../systems/pageIcon.js';
 
 const PASSIVE_FRAME = rarities.legendary && rarities.legendary.frame; // gold, like the passive badge
 
@@ -29,20 +29,11 @@ export function skillIconKey(scene, id, framed = false) {
   return key;
 }
 
-// The skill book picture for a page (framed like the item icon): coloured by its kind / tag; the golden book stays gold.
-export function bookPageIconKey(scene, page, golden = false) {
-  if (golden) return framedKey(scene, 'golden_book', itemIcons.golden_book, 'legendary');
-  const tag = page.kind === 'stat' ? 'stat' : page.tag;
-  const cols = bookData.pageColors[tag] || bookData.pageColors.stat;
-  const base = itemIcons.skill_book;
-  const palette = base.palette.slice();
-  [palette[1], palette[2], palette[5]] = cols;
-  return framedKey(scene, `book-${tag}`, { ...base, palette }, 'rare');
-}
-
-function framedKey(scene, name, icon, rarity) {
-  const key = `bookIcon-${name}`;
-  if (!scene.textures.exists(key)) paint(scene, key, framedIconPixels(icon, rarities[rarity].frame));
+// A skill book page's icon: its own coloured spell tome (systems/pageIcon.js) in its tier's frame. `R` = the tier's
+// look ({ frame }: rarities.json, or skillBooks.json heroFrame for hero-only pages).
+export function bookPageIconKey(scene, page, R) {
+  const key = `pageIcon-${page.id}-${R.label || 'x'}`;
+  if (!scene.textures.exists(key)) paint(scene, key, framedIconPixels(pageIconArt(pageIcons, page.id, R.frame), R.frame));
   return key;
 }
 

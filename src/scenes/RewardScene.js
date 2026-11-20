@@ -291,7 +291,6 @@ export default class RewardScene extends Phaser.Scene {
   // One page card: the book icon, STAT PAGE / its tag (Debuff, Heal...), its name and what it does.
   drawPageCard(page, x, y, h, lit = false) {
     const card = this.track(this.add.container(x, y));
-    const golden = this.chosen && this.chosen.book === 'golden';
     const L = this.pageLook();
     const g = this.add.graphics();
     // A page card wears its own TIER's frame (session 45): stat pages common, hero-only pages the crimson hero frame.
@@ -307,7 +306,7 @@ export default class RewardScene extends Phaser.Scene {
     paint(lit);
     card.add(g);
     if (tier === 'legendary' || tier === 'hero') rarityShine(this, card, CARD_W, h, R);
-    card.add(this.add.image(L.iconX, h / 2 - (this.compactPages ? 0 : 8), bookPageIconKey(this, page, golden)).setScale(L.iconScale)); // the book's colour = the page type
+    card.add(this.add.image(L.iconX, h / 2 - (this.compactPages ? 0 : 8), bookPageIconKey(this, page, R)).setScale(L.iconScale)); // the page's own tome, its tier's frame
     card.add(this.add.text(L.textX, this.compactPages ? 9 : 14, label, { fontFamily: FONT, fontSize: `${L.label}px`, color: hex(rc) }));
     card.add(this.add.text(L.textX, L.nameY, page.name, { fontFamily: FONT, fontSize: `${L.name}px`, color: INK }));
     card.add(this.add.text(L.textX, L.descY, page.text, { fontFamily: FONT, fontSize: `${L.desc}px`, color: MUTE, lineSpacing: 4, wordWrap: { width: CARD_W - L.textX - 16, useAdvancedWrap: true } }));

@@ -15,6 +15,13 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   `squadIds()`, page cards wear their tier's frame (`rarities.json`; hero = `heroFrame` crimson + shine; stat pages
   common), label 'RARE - DEBUFF' / 'HERO PAGE - KNIGHT ONLY'. Smart curve: median 40 (unchanged). Tests:
   `skill-books.test.mjs` (last block, made-up pages, odds read from the data).
+- **PAGE ICONS (BUILT, session 45; user picked 'F' out of 6 mock-ups: A book + cover symbol, B loose page, C open book,
+  D rune seal, E scroll, F coloured spell tome):** every page is its own 16x16 SPELL TOME: book and spine in the
+  page's own colour (cover = darker shade), a 7x7 symbol on the cover, a clasp gem in the TIER colour, inside the
+  tier's frame. Data `src/data/pageIcons.json` (`color`, `light`, `symbol`; `_default` for a page without one), builder
+  `src/systems/pageIcon.js pageIconArt()`, texture `skillIconTexture.js bookPageIconKey(scene, page, R)`. Replaces the
+  old recoloured book (`pageColors`, removed). A NEW PAGE NEEDS AN ENTRY in pageIcons.json (test: every page has one,
+  no two look the same). First-draft symbols, not yet tuned by the user (Razor Ink's slashes read weakest).
 - **NEXT: 31 NEW PAGES (user picked, session 45; build in batches, numbers in JSON, a test per mechanic):**
   COMMON (8): Keen +10% crit chance; Heavy +12% power, +6% cooldown; Quick Draw starts each fight half charged;
   Piercing ignores 15% defense / resist; Second Wind heals the caster 4%; Momentum next 3 basic attacks +20%;

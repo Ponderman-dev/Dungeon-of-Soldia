@@ -175,7 +175,7 @@ import { pageIconArt } from '../../src/systems/pageIcon.js';
   const arts = ids.map((id) => pageIconArt(icons, id, frame));
   ok('...the art is 16x16 and uses only its palette', arts.every((a) => a.rows.length === 16 && a.rows.every((row) => row.length === 16 && [...row].every((c) => c === '.' || Number(c) < a.palette.length))));
   ok('...no two pages look the same', new Set(arts.map((a) => a.rows.join('') + a.palette.join())).size === ids.length);
-  ok('...the clasp gem is the tier colour', arts.every((a) => a.palette[a.rows[7][12]] === frame.edge));
+  ok('...no clasp on the book (user: the lock felt weird): its right side is a plain outline', arts.every((a) => a.rows.every((row, y) => y < 1 || y > 14 || row[13] === '0')));
   ok('a page without an entry gets the default tome', pageIconArt(icons, 'noSuchPage', frame).rows.length === 16); }
 // NEW PAGES batch 1 (session 46, the 8 commons): numbers read from the data.
 { const a = mk(['knight'], 0), b = withPage('keen', 0, ['knight']); a.s.rng = b.s.rng = () => 0.05; // crit roll 5: only Keen's bonus crits

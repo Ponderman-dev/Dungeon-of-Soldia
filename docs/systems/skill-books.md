@@ -17,7 +17,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   `skill-books.test.mjs` (last block, made-up pages, odds read from the data).
 - **PAGE ICONS (BUILT, session 45; user picked 'F' out of 6 mock-ups: A book + cover symbol, B loose page, C open book,
   D rune seal, E scroll, F coloured spell tome):** every page is its own 16x16 SPELL TOME: book and spine in the
-  page's own colour (cover = darker shade), a 7x7 symbol on the cover, a clasp gem in the TIER colour, inside the
+  page's own colour (cover = darker shade), a 7x7 symbol on the cover (NO clasp gem: removed session 46, user 'the lock feels weird'), inside the
   tier's frame. Data `src/data/pageIcons.json` (`color`, `light`, `symbol`; `_default` for a page without one), builder
   `src/systems/pageIcon.js pageIconArt()`, texture `skillIconTexture.js bookPageIconKey(scene, page, R)`. Replaces the
   old recoloured book (`pageColors`, removed). A NEW PAGE NEEDS AN ENTRY in pageIcons.json (test: every page has one,

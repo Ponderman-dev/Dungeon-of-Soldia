@@ -1,6 +1,44 @@
 # Handoff ARCHIVE (sessions 2-43, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
 
+## (session 45 start note, 2026-11-16; session 45 did no-shoving, phone speed, page tiers + page icons)
+START HERE (session 45): TWO TASKS FROM THE USER (one per session; ask which first)
+- BRANCH: `main` has EVERYTHING (session 44 merged in at the handoff). Start the next branch from `main`.
+- TASK 1: **PUSHING between units is 'still kind of horrendous'** (user, end of session 44; no details given). Read
+  `docs/systems/movement.md` first (pushing, 'TAP FIX', 'BLOCKED MELEE HEROES'). ASK what looks wrong (question tool
+  with typical cases: units sliding / jittering, heroes shoved out of place, units stacking, enemies pushed through
+  each other), then measure it like session 43 did (they like a stress test with a before / after table:
+  `scripts/dev/tap-stress.mjs`, `idle-time.mjs`, real fights in the browser), fix, show clips.
+- TASK 2: **20 to 25 MORE skill-book MODIFIER pages** (user: 'add more skills modifier skill books to the mix').
+  Read `docs/systems/skill-books.md`; today `src/data/skillBooks.json` has 21 modifiers. Flow that worked for items
+  (session 31 / 33): a list of ONE simple line per idea in chat (more ideas than needed, they answer 'more' / 'other'),
+  the user picks, then rules + tests, numbers in JSON. Ask before designing: per hero / per skill or general ones.
+- DONE in session 44 (all on main, game page republished):
+  - FIGHT HUD = layout 'L' (ui.md 'FIGHT HUD: hero slots'): skill squares 54x50, under them a health line + passive
+    icon + NAME + health number, items in ONE row. REJECTED: concepts A-K (big panels: 'something more minimalist like
+    right now that doesn't cover a lot of screen during runs'), the dark bottom dock (M), ANY enemy info box ('will
+    only clutter when lots of enemies'). Only seen in a normal floor-7 fight: boss fights / rooms NOT checked by eye.
+  - CAMP buttons flat (title-base.md 'CAMP BUTTONS: flat look'): tabs plain, EXPEDITION = gold bands + bigger words.
+    The header panel (name, gems, gear) still has the old ornate frame: offered to flatten it, no answer.
+  - Tap fixes from session 43: user says 'Good now'.
+  - USER HAS NOT REPORTED BACK from the phone on the new fight HUD and camp: ask for small fixes.
+- UI mock-ups: `docs/proposals/ui-concepts/` (`mock.html` A-C ... `mock5.html` P-R; `render.mjs <dir> [letters]` for
+  A-K; mock4 / mock5 are drawn over real screenshots, `?v=<letter>`). Rounds that worked: fake HTML over a REAL
+  screenshot, then the pick built in a scratch copy (real screenshots), then applied.
+- ART REDO = KIV, OPTIMIZATION IDEAS not picked, older open items (BOSSES REWORK, transitions phase 2-5, PASSIVE icons
+  gold frame, Studio UI, session 33 item leftovers, music): details in the archive, search 'session 44 start note'.
+- DEV TOOLS (`scripts/dev/`, dev server on :5190 from the scratchpad): `smoke.mjs` (headless run, page errors),
+  `tap-stress.mjs`, `idle-time.mjs <repo>`.
+- PUBLISH (Artifact tool): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
+  dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. The first publish of a session
+  is refused 'not viewed', the second as 'unchanged': Read the LAST 3 lines of the saved live copy (offset), then the
+  third identical publish goes through.
+- Browser checks: vite + Playwright FROM THE SCRATCHPAD dir (`<repo>/node_modules/.bin/vite <repo> --port 5190`, it dies
+  when the worker restarts: start it again). Fresh clone: `npm install` first. Playwright in an .mjs file:
+  `createRequire(import.meta.url)('playwright')`. Dev: `window.__game`; start a fight: stop 'Title', start 'Battle'
+  (`?floor=7` is a plain fight; floor 9 rolled a room).
+
+
 ## (session 44 start note, 2026-11-16; session 44 did the new fight HUD (layout L) and the flat camp buttons) START HERE (session 44): NEXT = THE USER PICKS A NEW UI (pixel-RPG concepts D / E / F, or C)
 - BRANCH: see the last line of this section (written at the handoff). Git rule in CLAUDE.md (every handoff updates main).
 - WAITING FOR THE USER: **new UI** ('new style and new arrangements'). Round 1 A Party Cards (paper) + B Clean Glass

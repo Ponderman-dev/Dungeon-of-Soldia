@@ -1,42 +1,48 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 45): TWO TASKS FROM THE USER (one per session; ask which first)
-- BRANCH: `main` has EVERYTHING (session 44 merged in at the handoff). Start the next branch from `main`.
-- TASK 1: **PUSHING between units is 'still kind of horrendous'** (user, end of session 44; no details given). Read
-  `docs/systems/movement.md` first (pushing, 'TAP FIX', 'BLOCKED MELEE HEROES'). ASK what looks wrong (question tool
-  with typical cases: units sliding / jittering, heroes shoved out of place, units stacking, enemies pushed through
-  each other), then measure it like session 43 did (they like a stress test with a before / after table:
-  `scripts/dev/tap-stress.mjs`, `idle-time.mjs`, real fights in the browser), fix, show clips.
-- TASK 2: **20 to 25 MORE skill-book MODIFIER pages** (user: 'add more skills modifier skill books to the mix').
-  Read `docs/systems/skill-books.md`; today `src/data/skillBooks.json` has 21 modifiers. Flow that worked for items
-  (session 31 / 33): a list of ONE simple line per idea in chat (more ideas than needed, they answer 'more' / 'other'),
-  the user picks, then rules + tests, numbers in JSON. Ask before designing: per hero / per skill or general ones.
-- DONE in session 44 (all on main, game page republished):
-  - FIGHT HUD = layout 'L' (ui.md 'FIGHT HUD: hero slots'): skill squares 54x50, under them a health line + passive
-    icon + NAME + health number, items in ONE row. REJECTED: concepts A-K (big panels: 'something more minimalist like
-    right now that doesn't cover a lot of screen during runs'), the dark bottom dock (M), ANY enemy info box ('will
-    only clutter when lots of enemies'). Only seen in a normal floor-7 fight: boss fights / rooms NOT checked by eye.
-  - CAMP buttons flat (title-base.md 'CAMP BUTTONS: flat look'): tabs plain, EXPEDITION = gold bands + bigger words.
-    The header panel (name, gems, gear) still has the old ornate frame: offered to flatten it, no answer.
-  - Tap fixes from session 43: user says 'Good now'.
-  - USER HAS NOT REPORTED BACK from the phone on the new fight HUD and camp: ask for small fixes.
-- UI mock-ups: `docs/proposals/ui-concepts/` (`mock.html` A-C ... `mock5.html` P-R; `render.mjs <dir> [letters]` for
-  A-K; mock4 / mock5 are drawn over real screenshots, `?v=<letter>`). Rounds that worked: fake HTML over a REAL
-  screenshot, then the pick built in a scratch copy (real screenshots), then applied.
-- ART REDO = KIV, OPTIMIZATION IDEAS not picked, older open items (BOSSES REWORK, transitions phase 2-5, PASSIVE icons
-  gold frame, Studio UI, session 33 item leftovers, music): details in the archive, search 'session 44 start note'.
-- DEV TOOLS (`scripts/dev/`, dev server on :5190 from the scratchpad): `smoke.mjs` (headless run, page errors),
-  `tap-stress.mjs`, `idle-time.mjs <repo>`.
+## START HERE (session 46): BUILD THE 31 NEW SKILL-BOOK PAGES (user: 'handoff first before executing')
+- BRANCH: `main` has EVERYTHING (session 45 merged in at the handoff). Start the next branch from `main`.
+- TASK: build the 31 new pages the user picked. The full list (name + one line each, tiers) is in
+  `docs/systems/skill-books.md` 'NEXT: 31 NEW PAGES'; read that file first. Build in BATCHES of about 8 (commons first),
+  numbers in skillBooks.json, one test per mechanic in `skill-books.test.mjs`, a `tier` on every page, and an ICON
+  entry in `src/data/pageIcons.json` for every new page (a test fails without it; hero pages = crimson `heroFrame`).
+  Hero pages need `hero: '<heroId>'` and only fit that hero's named skill (pageFit must refuse other skills: not built
+  yet). After each batch: full `npm test`, then show the user the new icons (all-icons sheet, see below).
+- DONE in session 45 (all on main):
+  - NO SHOVING (movement.md 'NO SHOVING'): a walker stops at a standing fighter, steps around it, or waits for a gap.
+    Push per fighter in a 12-enemy crowd 222px -> 21-31px. Not yet seen by eye on screen; ask how fights feel now.
+  - PHONE SPEED (ui.md 'PHONE SPEED'): text canvases kept in memory, no redraw for an unchanged colour, 'TEST: speed
+    (fps)' readout in the TEST menu. User still said 'Lagging' (that was likely the OLD zip on itch.io): ASK for the two
+    readout lines (fps / slow / game + device) before more speed work.
+  - PAGE TIERS + PAGE ICONS (skill-books.md): common / rare / legendary / hero; golden book 20% legendary, 5% hero
+    page (both can happen); every page a coloured spell tome (user picked 'F' out of 6 kinds). First-draft symbols:
+    offer tweaks (Razor Ink reads weakest, Titan dull, Desperate small).
+- ITCH.IO: `npm run build:itch`, copy `itch-page.html` as `index.html` into an empty folder, zip it (ONLY index.html),
+  SendUserFile. The user uploads it, ticks 'played in the browser'. Their page still had the OLD Oct 20 html upload and
+  a 405 x 720 viewport (told them: delete the old file, set 390 x 844); ask if done.
+- Icon sheet (all page icons with real frames, no browser game needed): a node script calling `pageIconArt` +
+  `framedIconPixels` that writes HTML, then a Playwright screenshot (session 45 scratch `icons/all.mjs`, rewrite it).
+- OPEN from earlier: art redo KIV, optimization ideas, bosses rework, transitions phase 2-5, camp header frame
+  (offered to flatten, no answer), fight HUD not checked in boss fights / rooms: details in the archive.
+- DEV TOOLS (`scripts/dev/`, dev server on :5190 from the scratchpad): `smoke.mjs`, `tap-stress.mjs`,
+  `idle-time.mjs <repo>`, `push-drift.mjs <repo>` (NEW: px shoved per fighter, drift, swings; before/after tables).
 - PUBLISH (Artifact tool): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
   dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. The first publish of a session
   is refused 'not viewed', the second as 'unchanged': Read the LAST 3 lines of the saved live copy (offset), then the
-  third identical publish goes through.
+  third identical publish goes through. (Last published: session 45, with the no-shoving fix only.)
 - Browser checks: vite + Playwright FROM THE SCRATCHPAD dir (`<repo>/node_modules/.bin/vite <repo> --port 5190`, it dies
   when the worker restarts: start it again). Fresh clone: `npm install` first. Playwright in an .mjs file:
-  `createRequire(import.meta.url)('playwright')`. Dev: `window.__game`; start a fight: stop 'Title', start 'Battle'
-  (`?floor=7` is a plain fight; floor 9 rolled a room).
+  `createRequire(import.meta.url)('playwright')`. Dev: `window.__game`; start a fight: stop 'Title', start 'Battle'.
+  Open the reward screen by hand: `battleScene.scene.launch('Reward', { state, choices: [card], floor, onDone(){} })`,
+  then set `bookPages` and call `showPages()` (`g.scene.launch` does not exist on the game's scene manager).
+- TESTS: seed BOTH the state rng and Math.random for crowd tests, and use a mixing rng (mulberry32): the simple
+  16807 one gives the same fight for small seeds (session 45 hid a 1-in-10 case that way).
 
 ## How we work with this user
+- RARITY (session 45): the user worries about SNOWBALLING ('OP pages after every boss = too easy'): strong things
+  must be RARE (legendary 20% per boss, hero pages 5%). Ask for odds with 'about 1 run in N' meanings.
+- PICKING ART (session 45): first round of 3 kinds rejected ('let's try something else'), second round of 3 other KINDS
+  got a pick. Mock 8 real items per kind in one PNG (frame = tier), then the question tool.
 - MINIMAL UI (session 44): they want the dungeon visible; small upgrades to today's layout beat new concepts. 'A tiny
   bit fancy' = ONE small ornament on the main button only; show 3-5 real variants, they trim ('without the diamond').
 - 'DIFFERENT APPROACH, not a different style' (session 43, art + UI): variants that share a layout or proportions read

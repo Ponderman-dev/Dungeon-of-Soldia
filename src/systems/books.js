@@ -49,10 +49,15 @@ export function rollBookPages(data, book, rng = Math.random, heroIds = null) {
   return [...out.filter((p) => p.kind === 'stat'), ...mods];
 }
 
+// A hero-only page (`hero`, `skill`) fits only that hero's named skill.
+export const heroPageFits = (hero, index, page) => !page.hero || (hero.def && hero.def.id === page.hero && (!page.skill || (hero.skills[index] && hero.skills[index].id === page.skill)));
+
 // Can `page` go on skill `index` of `hero`? 'ok', 'replace' (a modifier on a full skill: the player picks which
-// one it replaces), 'full' (no more stat pages), 'duplicate' (the skill has this modifier) or 'dead'.
+// one it replaces), 'full' (no more stat pages), 'duplicate' (the skill has this modifier), 'wrongSkill' (a hero page
+// on another hero or skill) or 'dead'.
 export function pageFit(hero, index, page, limits = {}) {
   if (!hero.alive) return 'dead';
+  if (!heroPageFits(hero, index, page)) return 'wrongSkill';
   const pages = (hero.skills[index] && hero.skills[index].pages) || [];
   if (page.kind === 'stat') return pages.filter((p) => p.kind === 'stat').length >= (limits.maxStatPages ?? Infinity) ? 'full' : 'ok';
   const mods = pages.filter((p) => p.kind === 'modifier');

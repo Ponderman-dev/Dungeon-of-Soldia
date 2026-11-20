@@ -1,5 +1,5 @@
 {
-  "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. More modifier fields: allyHeal {count, percentMaxHp} + selfCostPercent (Blood Price), tornado (Excalibur tornado spec, Cyclone), ricochet (share for a second target), aftershock {delayMs, power}, grow {scale, durationMs} (Titan look), purify (debuffs cleansed), roar {radius, taunt, self}, summon {minion, max}, onHitChance {chance, apply} (Concussive), desperate {belowPercent, power}, critBonus (Keen), fightStartCharge (% of the cooldown done when a fight starts, Quick Draw), armorPierce (% defense/resist ignored), selfHealPercent (Second Wind), momentum {attacks, damagePercent}, vsLow {belowPercent, power} (Finisher), vsBig {power} (Giant Slayer: elites and bosses), detonate {statuses, perStack (x attack per stack), maxStacks}, chainSpark {jumps, power, damageType}, allyShield (a shield spec on the most hurt hero, Guardian), otherCooldownMs (Tempo), untilFightEnd on a selfApply spec (gone when the next floor starts, Glass Cannon), echo {power} (always echoes), resetOther (Time Warp), executioner {belowPercent, cooldownBackPercent}, phoenix {hpPercent} (once per floor), elementalStorm {elements}.",
+  "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. More modifier fields: allyHeal {count, percentMaxHp} + selfCostPercent (Blood Price), tornado (Excalibur tornado spec, Cyclone), ricochet (share for a second target), aftershock {delayMs, power}, grow {scale, durationMs} (Titan look), purify (debuffs cleansed), roar {radius, taunt, self}, summon {minion, max}, onHitChance {chance, apply} (Concussive), desperate {belowPercent, power}, critBonus (Keen), fightStartCharge (% of the cooldown done when a fight starts, Quick Draw), armorPierce (% defense/resist ignored), selfHealPercent (Second Wind), momentum {attacks, damagePercent}, vsLow {belowPercent, power} (Finisher), vsBig {power} (Giant Slayer: elites and bosses), detonate {statuses, perStack (x attack per stack), maxStacks}, chainSpark {jumps, power, damageType}, allyShield (a shield spec on the most hurt hero, Guardian), otherCooldownMs (Tempo), untilFightEnd on a selfApply spec (gone when the next floor starts, Glass Cannon), echo {power} (always echoes), resetOther (Time Warp), executioner {belowPercent, cooldownBackPercent}, phoenix {hpPercent} (once per floor), elementalStorm {elements}. HERO pages: `hero` + `skill` (fits only that hero's named skill) and `patch` (changes the skill when it goes off; fields in BattleState heroPagePatch).",
   "bookChancePerScreen": 0.0667,
   "_tiers": "PAGE TIERS (user, session 45): every modifier page has a tier: common, rare, legendary or hero (a hero-only page, `hero` = that hero's id; only offered when that hero is alive in the squad). tierOdds[book] = weights for each modifier page's tier. specials[book] = chances that ONE modifier page of that book is upgraded to a legendary / a hero page (rolled separately, both can happen in one book). An empty tier falls back to the next lower one (hero > legendary > rare > common).",
   "tierOdds": {
@@ -494,6 +494,135 @@
       "grow": {
         "scale": 1.3,
         "durationMs": 3000
+      }
+    },
+    "shockwave": {
+      "kind": "modifier",
+      "tier": "hero",
+      "hero": "knight",
+      "skill": "defense_bash",
+      "tag": "Control",
+      "name": "Shockwave",
+      "text": "Defense Bash's stun also hits the enemies next to its target.",
+      "patch": {
+        "neighbourApply": true
+      }
+    },
+    "earthshaker": {
+      "kind": "modifier",
+      "tier": "hero",
+      "hero": "berserker",
+      "skill": "brawl_leap",
+      "tag": "Control",
+      "name": "Earthshaker",
+      "text": "Savage Leap stuns its target and every enemy hit by the landing for 0.8s.",
+      "patch": {
+        "landApply": [
+          {
+            "status": "stun",
+            "durationMs": 800
+          }
+        ]
+      }
+    },
+    "flurry": {
+      "kind": "modifier",
+      "tier": "hero",
+      "hero": "rogue",
+      "skill": "multistrike",
+      "tag": "Damage",
+      "name": "Flurry",
+      "text": "Multistrike strikes 2 more times.",
+      "patch": {
+        "addWaves": 2
+      }
+    },
+    "downpour": {
+      "kind": "modifier",
+      "tier": "hero",
+      "hero": "archer",
+      "skill": "arrow_rain",
+      "tag": "Area",
+      "name": "Downpour",
+      "text": "Arrow Rain falls for 2 more waves.",
+      "patch": {
+        "addWaves": 2
+      }
+    },
+    "twinCrescent": {
+      "kind": "modifier",
+      "tier": "hero",
+      "hero": "samurai",
+      "skill": "wind_cutter3",
+      "tag": "Area",
+      "name": "Twin Crescent",
+      "text": "Wind Cutter also slashes the row of enemies behind.",
+      "patch": {
+        "secondBand": {
+          "offset": 2
+        }
+      }
+    },
+    "convergence": {
+      "kind": "modifier",
+      "tier": "hero",
+      "hero": "mage",
+      "skill": "mage_rotation",
+      "tag": "Power",
+      "name": "Convergence",
+      "text": "Every 3rd Elemental Rotation cast also fires the other two spells.",
+      "patch": {
+        "convergeEvery": 3
+      }
+    },
+    "radiance": {
+      "kind": "modifier",
+      "tier": "hero",
+      "hero": "cleric",
+      "skill": "holy_nova",
+      "tag": "Heal",
+      "name": "Radiance",
+      "text": "Holy Nova heals the 2 most hurt allies instead of one.",
+      "patch": {
+        "extraHeals": 1
+      }
+    },
+    "boneHarvest": {
+      "kind": "modifier",
+      "tier": "hero",
+      "hero": "necromancer",
+      "skill": "death_coil3",
+      "tag": "Summon",
+      "name": "Bone Harvest",
+      "text": "A Death Coil kill raises 2 skeletons instead of one.",
+      "patch": {
+        "raiseCount": 2
+      }
+    },
+    "massCharm": {
+      "kind": "modifier",
+      "tier": "hero",
+      "hero": "bard",
+      "skill": "discord",
+      "tag": "Control",
+      "name": "Mass Charm",
+      "text": "Discord charms 1s longer.",
+      "patch": {
+        "applyDurationAdd": {
+          "charm": 1000
+        }
+      }
+    },
+    "bigBatch": {
+      "kind": "modifier",
+      "tier": "hero",
+      "hero": "alchemist",
+      "skill": "alch_barrage",
+      "tag": "Area",
+      "name": "Big Batch",
+      "text": "Flask Barrage throws 7 flasks instead of 5.",
+      "patch": {
+        "randomCount": 7
       }
     },
     "purify": {

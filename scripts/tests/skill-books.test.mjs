@@ -262,3 +262,45 @@ import { pageIconArt } from '../../src/systems/pageIcon.js';
   for (const m of [a, b]) for (const e of m.es) e.weak = ['ice'];
   a.s.castSkill(a.h[0].uid, 0); const ev = b.s.castSkill(b.h[0].uid, 0);
   ok('Elemental Storm: the hit becomes the element the enemy is weak to', ev.some((e) => e.type === 'attack' && e.skill && e.damageType === 'ice')); }
+// NEW PAGES batch 4 (session 46, the 10 HERO pages): only their hero's named skill, then one test per patch.
+{ const data = r('skillBooks.json'); const { s, h } = mk(['knight', 'rogue', 'archer']);
+  ok('a hero page fits its own hero\'s named skill', pageFit(h[0], 0, pageOf(data, 'shockwave')) === 'ok' && s.addPage(h[0].uid, 0, page('shockwave')).ok);
+  ok('...not the same hero\'s other skill', pageFit(h[0], 1, pageOf(data, 'shockwave')) === 'wrongSkill' && s.addPage(h[0].uid, 1, page('shockwave')).reason === 'wrongSkill');
+  ok('...and not another hero', pageFit(h[1], 0, pageOf(data, 'shockwave')) === 'wrongSkill' && s.addPage(h[1].uid, 0, page('shockwave')).reason === 'wrongSkill');
+  const heroPages = Object.entries(books).filter(([, p]) => p.tier === 'hero');
+  ok('every hero page names a hero and that hero\'s real skill', heroPages.length === 10 && heroPages.every(([, p]) => Object.values(heroes.find((x) => x.id === p.hero).skills).includes(p.skill)));
+  ok('...one page per hero', new Set(heroPages.map(([, p]) => p.hero)).size === heroes.length); }
+const heroWith = (id) => withPage(id, 0, [books[id].hero]);
+{ const { s, es, h } = heroWith('shockwave'); s.placeLines(); s.castSkill(h[0].uid, 0);
+  ok('Shockwave: Defense Bash stuns the target and its neighbours', es.filter((e) => s.has(e, 'stun')).length >= 2, es.filter((e) => s.has(e, 'stun')).length); }
+{ const { s, es, h } = heroWith('earthshaker'); s.placeLines(); for (const e of es) { e.x = es[0].x + 10; e.y = es[0].y; } s.castSkill(h[0].uid, 0);
+  ok('Earthshaker: Savage Leap stuns everyone it hits', es.every((e) => e.statuses.some((x) => x.type === 'stun' && x.total === books.earthshaker.patch.landApply[0].durationMs))); }
+{ const a = mk(['rogue'], 0), b = heroWith('flurry'); let na = 0, nb = 0;
+  a.s.castSkill(a.h[0].uid, 0); b.s.castSkill(b.h[0].uid, 0);
+  for (let t = 0; t < 2000; t += 20) { na += a.s.update(20).filter((e) => e.type === 'wave').length; nb += b.s.update(20).filter((e) => e.type === 'wave').length; }
+  ok('Flurry: Multistrike strikes 2 more times', nb === na + books.flurry.patch.addWaves, `${na} -> ${nb}`); }
+{ const a = mk(['archer'], 0), b = heroWith('downpour'); let na = 0, nb = 0;
+  a.s.castSkill(a.h[0].uid, 0); b.s.castSkill(b.h[0].uid, 0);
+  for (let t = 0; t < 4000; t += 20) { na += a.s.update(20).filter((e) => e.type === 'wave').length; nb += b.s.update(20).filter((e) => e.type === 'wave').length; }
+  ok('Downpour: Arrow Rain falls 2 more waves', nb === na + books.downpour.patch.addWaves, `${na} -> ${nb}`); }
+{ const { s, es, h } = heroWith('twinCrescent'); s.placeLines(); const hh = s.skillDefs.wind_cutter3.area.halfHeight;
+  s.focusUid = es[0].uid; es[1].x = es[0].x; es[1].y = es[0].y - hh * 2; es[2].y = es[0].y - hh * 6; // es[1] one row behind, es[2] far away
+  const before = es.map((e) => e.hp); s.castSkill(h[0].uid, 0);
+  ok('Twin Crescent: Wind Cutter also slashes the row behind (not further)', es[0].hp < before[0] && es[1].hp < before[1] && es[2].hp === before[2]); }
+{ const { s, h } = heroWith('convergence'); let ev = [];
+  for (let i = 0; i < 3; i++) { h[0].skills[0].cooldownLeft = 0; ev = s.castSkill(h[0].uid, 0); for (let t = 0; t < 1000; t += 20) ev = ev.concat(s.update(20)); }
+  const casts = ev.filter((e) => e.type === 'cast').map((e) => e.skill.name);
+  ok('Convergence: the 3rd cast fires all three spells', ev.some((e) => e.type === 'proc' && e.label === 'Convergence!') && new Set(casts).size === 3, casts.join(', ')); }
+{ const m = mk(['cleric', 'knight', 'rogue'], 0); m.s.refreshStats(); m.s.addPage(m.h[0].uid, 0, page('radiance'));
+  const n = mk(['cleric', 'knight', 'rogue'], 0); n.s.refreshStats();
+  for (const x of [m, n]) { x.h[1].hp = Math.round(x.h[1].maxHp * 0.2); x.h[2].hp = Math.round(x.h[2].maxHp * 0.3); }
+  const b1 = m.h[1].hp, b2 = m.h[2].hp; m.s.castSkill(m.h[0].uid, 0); n.s.castSkill(n.h[0].uid, 0);
+  ok('Radiance: Holy Nova heals the 2 most hurt allies (without it: only 1)', m.h[1].hp > b1 && m.h[2].hp > b2 && n.h[2].hp === b2, `${b1}->${m.h[1].hp} ${b2}->${m.h[2].hp}`); }
+{ const { s, es, h } = heroWith('boneHarvest'); for (const e of es) e.hp = 1; s.castSkill(h[0].uid, 0);
+  ok('Bone Harvest: a Death Coil kill raises 2 skeletons', s.minions.filter((x) => x.holderUid === h[0].uid).length === books.boneHarvest.patch.raiseCount); }
+{ const a = mk(['bard'], 0), b = heroWith('massCharm'); a.s.castSkill(a.h[0].uid, 0); b.s.castSkill(b.h[0].uid, 0);
+  const ca = a.es.flatMap((e) => e.statuses).find((x) => x.type === 'charm'), cb = b.es.flatMap((e) => e.statuses).find((x) => x.type === 'charm');
+  ok('Mass Charm: Discord charms 1s longer', ca && cb && Math.abs(cb.total - ca.total - books.massCharm.patch.applyDurationAdd.charm) < 1, `${ca && ca.total} -> ${cb && cb.total}`); }
+{ const { s, h } = heroWith('bigBatch'); let n = 0; n += s.castSkill(h[0].uid, 0).filter((e) => e.type === 'flask').length;
+  for (let t = 0; t < 4000; t += 20) n += s.update(20).filter((e) => e.type === 'flask').length;
+  ok('Big Batch: Flask Barrage throws 7 flasks', n === books.bigBatch.patch.randomCount, n); }

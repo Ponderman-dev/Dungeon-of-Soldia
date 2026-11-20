@@ -1,4 +1,5 @@
 import { weakResistMultiplier } from '../combat.js';
+import { heroPageFits } from '../books.js';
 // Part of BattleState (mixed into its prototype at the bottom of ../BattleState.js; `this` is the BattleState).
 // Skill book pages (docs/systems/skill-books.md).
 
@@ -12,6 +13,7 @@ export const skillBooksMethods = {
     const hero = this.heroes.find((h) => h.uid === heroUid);
     const slot = hero && hero.skills[index];
     if (!slot || !hero.alive) return { ok: false, reason: 'noHero' };
+    if (!heroPageFits(hero, index, page)) return { ok: false, reason: 'wrongSkill' }; // a hero page: only its hero's named skill
     const lim = this.rules.books || {};
     const pages = (slot.pages = slot.pages || []);
     if (page.kind === 'stat') {
@@ -102,6 +104,41 @@ export const skillBooksMethods = {
       }
       if (m.supportHealPercent) this.healUnit(hero, Math.round((hero.maxHp * m.supportHealPercent) / 100), events);
     }
+  },
+
+  // HERO PAGES (`patch` on a hero-only page): the skill is changed when it goes off. addWaves (channel: more waves like
+  // the last one), randomCount (flasks thrown), applyDurationAdd {status: ms} (longer statuses), landApply (statuses the
+  // leap's landing shockwave AND its target get), neighbourApply (the skill's statuses also go on the target's
+  // neighbours), raiseCount (skeletons a kill raises), extraHeals (Holy Nova heals that many more hurt allies),
+  // secondBand {offset} (a band skill slashes the band behind too), convergeEvery (every Nth rotation cast fires all spells).
+  heroPagePatch(skill, mods) {
+    let out = skill;
+    for (const m of mods) {
+      const P = m.patch;
+      if (!P) continue;
+      out = { ...out };
+      if (P.addWaves && out.channel) { const w = out.channel.waves; out.channel = { ...out.channel, waves: [...w, ...Array(P.addWaves).fill(w[w.length - 1])] }; }
+      if (P.randomCount && out.random) out.random = { ...out.random, count: P.randomCount };
+      if (P.applyDurationAdd && out.apply) out.apply = out.apply.map((a) => (P.applyDurationAdd[a.status] ? { ...a, durationMs: (a.durationMs || 0) + P.applyDurationAdd[a.status] } : a));
+      if (P.landApply && out.landSplash) { out.landSplash = { ...out.landSplash, apply: P.landApply }; out.apply = [...(out.apply || []), ...P.landApply]; }
+      if (P.neighbourApply) out.neighbourApply = true;
+      if (P.raiseCount && out.onKill) out.onKill = { ...out.onKill, count: P.raiseCount };
+      if (P.extraHeals && out.holyNova) out.holyNova = { ...out.holyNova, extraHeals: P.extraHeals };
+      if (P.secondBand) out.secondBand = P.secondBand;
+      if (P.convergeEvery) out.convergeEvery = P.convergeEvery;
+    }
+    return out;
+  },
+
+  // Twin Crescent: a band skill also slashes the band right behind the first one (further from the squad), hitting
+  // the enemies there that the first slash missed. Returns the extra enemies hit.
+  secondBandHit(hero, skill, slotId, zone, targets, events) {
+    if (!zone || zone.shape !== 'band') return [];
+    const z2 = { ...zone, y: zone.y - zone.halfHeight * (skill.secondBand.offset || 2) };
+    const extra = this.targetableEnemies().filter((e) => !targets.includes(e) && this.inZone(e, z2));
+    events.push({ type: 'wave', unit: hero, skill, wave: 1, waves: 2, targets: extra, zone: z2 });
+    for (const e of extra) this.skillHit(hero, skill, slotId, e, events);
+    return extra;
   },
 
   // Per-hit bonuses of this cast's pages (only while the hero's own cast is going off, see castPages): critBonus (Keen),

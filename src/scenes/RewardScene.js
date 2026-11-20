@@ -386,7 +386,7 @@ export default class RewardScene extends Phaser.Scene {
         btn.paint(false);
         const IN = 12; // the text's gap from the box's frame (user: neater)
         this.fitText(bx + IN, by + IN - 2, skillDefs[slot.id].name, 13, usable ? INK : MUTE, bw - 2 * IN, 34, true);
-        const note = fit === 'dead' ? 'Fallen' : fit === 'full' ? 'Stat pages full' : fit === 'duplicate' ? 'Already has it' : fit === 'replace' ? 'Full: replaces one' : `${stats}${limits.maxStatPages != null ? '/' + limits.maxStatPages : ''} stats\n${mods}${limits.modifierSlots != null ? '/' + limits.modifierSlots : ''} mods`;
+        const note = fit === 'dead' ? 'Fallen' : fit === 'full' ? 'Stat pages full' : fit === 'duplicate' ? 'Already has it' : fit === 'wrongSkill' ? 'Not this skill' : fit === 'replace' ? 'Full: replaces one' : `${stats}${limits.maxStatPages != null ? '/' + limits.maxStatPages : ''} stats\n${mods}${limits.modifierSlots != null ? '/' + limits.modifierSlots : ''} mods`;
         this.fitText(bx + IN, by + bh - 30 - IN + 6, note, 11, fit === 'replace' ? '#ffd9a0' : MUTE, bw - 2 * IN, 26); // shrinks to stay inside the box
         if (usable) this.track(this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive()).on('pointerdown', () => this.selectSkill(btn));
         this.skillButtons.push(btn);

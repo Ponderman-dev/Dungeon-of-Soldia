@@ -142,6 +142,8 @@ export const heroesMethods = {
     if (!ally) return;
     const raw = this.healAmount(hero, ally, N.heal) * this.regenAura().factor;
     this.clericHeal(hero, ally, raw, events);
+    // Radiance page (`extraHeals`): the next most hurt allies are healed the same way.
+    for (const other of this.heroes.filter((h) => h.alive && h !== ally).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp).slice(0, N.extraHeals || 0)) this.clericHeal(hero, other, this.healAmount(hero, other, N.heal) * this.regenAura().factor, events);
     const zone = { shape: 'circle', x: ally.x, y: ally.y, radius: N.radius, ySquash: 0.7 };
     const foes = this.enemies.filter((e) => e.alive && (!this.hasPositions(e) || !this.hasPositions(ally) || this.inZone(e, zone)));
     events.push({ type: 'wave', unit: hero, skill, wave: 0, waves: 1, targets: foes, zone: this.hasPositions(ally) ? zone : null });

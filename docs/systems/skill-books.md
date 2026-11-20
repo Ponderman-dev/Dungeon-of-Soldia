@@ -45,10 +45,13 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   via `hero.floor.phoenixPage`, health to 20%, the skill is released for free, castPages saved around it; the game's own
   deathSave comes first), Elemental Storm (`elementalStorm {elements}`: bookHitMods returns a damageType picker, combat.js
   exports `weakResistMultiplier`; own type kept on a tie). Smart curve median 40 (unchanged).
-- **NEXT: the 10 HERO PAGES (user picked, session 45; build in batches, numbers in JSON, a test per mechanic):**
-  HERO (10, one per hero): Shockwave (Knight: Defense Bash stun also hits enemies next to the target), Earthshaker
-  (Berserker: Savage Leap stuns everyone around 0.8s), Flurry (Rogue: Multistrike +2 hits), Downpour (Archer: Arrow Rain
-  +2 waves), Twin Crescent (Samurai: Wind Cutter also slashes the row behind), Convergence (Mage: every 3rd Elemental
-  Rotation casts all three spells), Radiance (Cleric: Holy Nova heals the 2 most hurt), Bone Harvest (Necromancer: a
-  Death Coil kill raises 2 skeletons), Mass Charm (Bard: Discord charms 1s longer), Big Batch (Alchemist: Flask
-  Barrage throws 7 flasks).
+- **NEW PAGES BATCH 4, the 10 HERO PAGES (BUILT, session 46):** each has `hero` + `skill` (that hero's named skill)
+  and a `patch`. `books.js heroPageFits()`: pageFit returns 'wrongSkill' / addPage refuses (reason 'wrongSkill') on any
+  other hero or skill; the reward screen says 'Not this skill'. `heroPagePatch(skill, mods)` (skillBooks.js) changes the
+  skill in releaseSkill (before power scaling): Shockwave (Knight, `neighbourApply`: Defense Bash's stun on the
+  target's neighbours), Earthshaker (Berserker, `landApply`: stun 0.8s on the leap target + landSplash), Flurry (Rogue,
+  `addWaves` 2), Downpour (Archer, `addWaves` 2), Twin Crescent (Samurai, `secondBand {offset}`: `secondBandHit` slashes
+  the band 2 half-heights behind, a 'wave' event flashes it), Convergence (Mage, `convergeEvery` 3: `slot.converge`
+  counter, the other rotation spells fire as echoes at full power), Radiance (Cleric, `extraHeals` 1 in holyNova),
+  Bone Harvest (Necromancer, `raiseCount` 2 = onKill.count), Mass Charm (Bard, `applyDurationAdd {charm: 1000}`),
+  Big Batch (Alchemist, `randomCount` 7). Smart curve median 40. ALL 31 PAGES FROM SESSION 45's LIST ARE BUILT.

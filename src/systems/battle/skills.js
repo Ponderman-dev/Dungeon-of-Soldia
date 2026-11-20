@@ -122,6 +122,7 @@ export const skillsMethods = {
     if (skill.kind === 'support' && hero.specials.baton) skill = this.scaleSupport(skill, 1 + hero.specials.baton / 100);
     // Skill book pages on this skill: power and duration (an echo is already scaled), modifiers (see bookCast / skillHit).
     const book = this.pageTotals(slot);
+    if (!echo) skill = this.heroPagePatch(skill, book.mods); // hero pages change the skill itself (more waves, flasks...)
     const desp = book.mods.find((m) => m.desperate); // Desperate: more power while the caster is low
     const power = book.power + (desp && (hero.hp / hero.maxHp) * 100 < desp.desperate.belowPercent ? desp.desperate.power : 0);
     if (!echo && (power || book.duration)) skill = this.scaleSkill(skill, Math.max(0.1, 1 + power / 100), 1 + book.duration / 100);
@@ -232,16 +233,19 @@ export const skillsMethods = {
       if (skill.landSplash && first) {
         const near = this.enemies.filter((e) => e.alive && e !== target && (this.hasPositions(e) && this.hasPositions(target) ? this.distance(e, target) <= skill.landSplash.radius : this.neighbours(target).includes(e)));
         for (const e of near) {
-          const r = this.skillHit(hero, { ...skill, apply: null, doubleIf: null, landSplash: null }, slot.id, e, events, { multiplier: skill.landSplash.damageMultiplier, riders: !!skill.procBoost });
+          const r = this.skillHit(hero, { ...skill, apply: skill.landSplash.apply || null, doubleIf: null, landSplash: null }, slot.id, e, events, { multiplier: skill.landSplash.damageMultiplier, riders: !!skill.procBoost }); // landSplash.apply: Earthshaker page
           if (skill.procBoost && r && e.alive) this.rollProcs(hero, 'onAttack', events, { target: e, hit: !r.dodged, chanceMult: skill.procBoost, folded: true });
         }
       }
+      // Shockwave page (`neighbourApply`): the skill's statuses (Defense Bash's stun) also go on the target's neighbours.
+      if (skill.neighbourApply && first && res && !res.dodged) for (const n of this.neighbours(target)) for (const spec of skill.apply || []) this.applyStatus(n, spec, hero, `${slot.id}_wave`, events);
       first = false;
       // Fireball: the neighbours of its target are hit too, for a share of the damage, with the same debuffs.
       if (skill.splash && target === targets[0] && skill.target === 'enemy') {
         for (const n of this.neighbours(target)) this.skillHit(hero, skill, slot.id, n, events, { multiplier: skill.splash.damageMultiplier, scale: echo ? echo.power : 1 });
       }
     }
+    if (skill.secondBand) targets = [...targets, ...this.secondBandHit(hero, skill, slot.id, zone, targets, events)]; // Twin Crescent page
     // Wind Cutter v3 (`killCooldownCutPercent`): if the cast killed an enemy, its cooldown is cut.
     if (skill.killCooldownCutPercent && !echo && targets.some((t) => !t.alive)) {
       slot.cooldownLeft *= 1 - skill.killCooldownCutPercent / 100;
@@ -251,6 +255,19 @@ export const skillsMethods = {
     this.castPages = null;
     // Echo Rune: a skill sometimes casts a second time (the echo cannot echo, the Mage's rotation does not move again).
     // Channels (Rain of Arrows, Crescendo) and flasks thrown one by one do not echo.
+    // Convergence page (`convergeEvery`): every Nth cast of a rotation skill also fires its other spells.
+    if (!echo && skill.convergeEvery && this.skillDefs[slot.id].rotation) {
+      slot.converge = (slot.converge || 0) + 1;
+      if (slot.converge % skill.convergeEvery === 0) {
+        events.push({ type: 'proc', unit: hero, label: 'Convergence!' });
+        const base = this.skillDefs[slot.id];
+        for (const r of base.rotation.filter((x) => x.name !== skill.name)) {
+          let spell = this.charmed(hero, { ...base, ...r });
+          if (power || book.duration) spell = this.scaleSkill(spell, Math.max(0.1, 1 + power / 100), 1 + book.duration / 100);
+          if (this.targetableEnemies().length) this.releaseSkill(hero, index, events, { spell, power: 1 });
+        }
+      }
+    }
     // Echo page (skill book): this skill always fires a second time at a share (same rules as Echo Rune).
     const pageEcho = !echo && !skill.channel && !(skill.random && skill.random.intervalMs) && book.mods.find((m) => m.echo);
     if (pageEcho) {
@@ -363,7 +380,7 @@ export const skillsMethods = {
         if (ally && amount > 0) this.healUnit(ally, amount, events, { by: hero });
       }
       // Death Coil: a kill raises a skeleton.
-      if (!target.alive && skill.onKill && skill.onKill.raise) {
+      if (!target.alive && skill.onKill && skill.onKill.raise) for (let i = 0; i < (skill.onKill.count || 1); i++) { // count: Bone Harvest page
         this.spawnMinion(hero, { kind: 'weak', key: 'hero', spec: { minion: skill.onKill.raise, cap: (hero.def.spawner && hero.def.spawner.cap) || 4 } }, events);
       }
       this.bookOnHit(hero, target, result, events); // Inks, Siphon

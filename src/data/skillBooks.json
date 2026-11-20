@@ -1,5 +1,5 @@
 {
-  "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. More modifier fields: allyHeal {count, percentMaxHp} + selfCostPercent (Blood Price), tornado (Excalibur tornado spec, Cyclone), ricochet (share for a second target), aftershock {delayMs, power}, grow {scale, durationMs} (Titan look), purify (debuffs cleansed), roar {radius, taunt, self}, summon {minion, max}, onHitChance {chance, apply} (Concussive), desperate {belowPercent, power}, critBonus (Keen), fightStartCharge (% of the cooldown done when a fight starts, Quick Draw), armorPierce (% defense/resist ignored), selfHealPercent (Second Wind), momentum {attacks, damagePercent}, vsLow {belowPercent, power} (Finisher), vsBig {power} (Giant Slayer: elites and bosses), detonate {statuses, perStack (x attack per stack), maxStacks}, chainSpark {jumps, power, damageType}, allyShield (a shield spec on the most hurt hero, Guardian), otherCooldownMs (Tempo), untilFightEnd on a selfApply spec (gone when the next floor starts, Glass Cannon), echo {power} (always echoes), resetOther (Time Warp), executioner {belowPercent, cooldownBackPercent}, phoenix {hpPercent} (once per floor), elementalStorm {elements, weakBonus (% more when it finds a weakness)}. HERO pages: `hero` + `skill` (fits only that hero's named skill) and `patch` (changes the skill when it goes off; fields in BattleState heroPagePatch).",
+  "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. More modifier fields: allyHeal {count, percentMaxHp} + selfCostPercent (Blood Price), tornado (Excalibur tornado spec, Cyclone), ricochet (share for a second target), aftershock {delayMs, power}, grow {scale, durationMs} (Titan look), purify (debuffs cleansed), roar {radius, taunt, self}, summon {minion, max}, onHitChance {chance, apply} (Concussive), desperate {belowPercent, power}, critBonus (Keen), fightStartCharge (% of the cooldown done when a fight starts, Quick Draw), armorPierce (% defense/resist ignored), selfHealPercent (Second Wind), momentum {attacks, damagePercent}, vsLow {belowPercent, power} (Finisher), vsBig {power} (Giant Slayer: elites and bosses), detonate {statuses, perStack (x attack per stack), maxStacks}, chainSpark {jumps, power, damageType}, allyShield (a shield spec on the most hurt hero, Guardian), otherCooldownMs (Tempo), untilFightEnd on a selfApply spec (gone when the next floor starts, Glass Cannon), echo {power} (always echoes), resetOther (Time Warp), executioner {belowPercent, cooldownBackPercent, healPercent (caster, per execute)}, phoenix {hpPercent} (once per floor), elementalStorm {elements, weakBonus (% more when it finds a weakness), weakApply (statuses on an enemy hit with its weakness)}. HERO pages: `hero` + `skill` (fits only that hero's named skill) and `patch` (changes the skill when it goes off; fields in BattleState heroPagePatch).",
   "bookChancePerScreen": 0.0667,
   "_tiers": "PAGE TIERS (user, session 45): every modifier page has a tier: common, rare, legendary or hero (a hero-only page, `hero` = that hero's id; only offered when that hero is alive in the squad). tierOdds[book] = weights for each modifier page's tier. specials[book] = chances that ONE modifier page of that book is upgraded to a legendary / a hero page (rolled separately, both can happen in one book). An empty tier falls back to the next lower one (hero > legendary > rare > common).",
   "tierOdds": {
@@ -434,10 +434,11 @@
       "tier": "legendary",
       "tag": "Damage",
       "name": "Executioner",
-      "text": "A normal enemy (not elite or boss) the skill leaves under 25% health dies. A kill gives back 50% of the cooldown.",
+      "text": "A normal enemy (not elite or boss) the skill leaves under 25% health dies, and the caster heals 5% of max health. A kill gives back 50% of the cooldown.",
       "executioner": {
         "belowPercent": 25,
-        "cooldownBackPercent": 50
+        "cooldownBackPercent": 50,
+        "healPercent": 5
       }
     },
     "phoenixPage": {
@@ -455,7 +456,7 @@
       "tier": "legendary",
       "tag": "Damage",
       "name": "Elemental Storm",
-      "text": "Each hit turns into the element the enemy is weakest to (fire, ice, electric or dark) and deals 30% more when it finds a weakness.",
+      "text": "Each hit turns into the element the enemy is weakest to (fire, ice, electric or dark). When it finds a weakness: 30% more damage, and the enemy deals 15% less damage for 3s.",
       "elementalStorm": {
         "elements": [
           "fire",
@@ -463,7 +464,14 @@
           "electric",
           "dark"
         ],
-        "weakBonus": 30
+        "weakBonus": 30,
+        "weakApply": [
+          {
+            "status": "weaken",
+            "durationMs": 3000,
+            "attackPercent": -15
+          }
+        ]
       }
     },
     "titan": {

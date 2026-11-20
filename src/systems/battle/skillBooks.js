@@ -224,12 +224,17 @@ export const skillBooksMethods = {
           events.push({ type: 'proc', unit: hero, label: 'Executed!', target });
           const shields = target.statuses.filter((st) => st.type === 'shield').reduce((a, st) => a + Math.ceil(st.amount), 0);
           this.strike(hero, target, events, { fixedAmount: target.hp + shields });
+          if (ex.healPercent) this.healUnit(hero, Math.round((hero.maxHp * ex.healPercent) / 100), events); // a survival side (user, tuning round 1)
         }
         if (!target.alive && !cp.refunded) {
           cp.refunded = true;
           const slot = hero.skills.find((sl) => (sl.pages || []).includes(m));
           if (slot) slot.cooldownLeft *= 1 - ex.cooldownBackPercent / 100;
         }
+      }
+      // Elemental Storm: an enemy hit with its weakness also gets `weakApply` (Weaken: it deals less damage).
+      if (m.elementalStorm && m.elementalStorm.weakApply && target.alive && m.elementalStorm.elements.some((t) => this.damageTypes[t] && weakResistMultiplier(target, t, this.rules, this.damageTypes) > 1)) {
+        for (const spec of m.elementalStorm.weakApply) this.applyStatus(target, spec, hero, `book_${m.id}`, events);
       }
       if (m.onHitChance && target.alive && this.rng() * 100 < m.onHitChance.chance) for (const spec of m.onHitChance.apply) this.applyStatus(target, spec, hero, `book_${m.id}`, events);
     }

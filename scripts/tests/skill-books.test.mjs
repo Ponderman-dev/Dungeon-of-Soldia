@@ -307,3 +307,11 @@ const heroWith = (id) => withPage(id, 0, [books[id].hero]);
 { const a = withPage('elementalStorm', 0, ['samurai']), b = withPage('elementalStorm', 0, ['samurai']); for (const e of b.es) e.weak = ['ice'];
   const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0)), rules0 = r('combat.json');
   ok('Elemental Storm: a found weakness hits harder (weak multiplier x weakBonus)', Math.abs(d1 / d0 - rules0.weakMultiplier * (1 + books.elementalStorm.elementalStorm.weakBonus / 100)) < 0.08, `${d0}->${d1}`); }
+{ const { s, es, h } = withPage('executioner', 0, ['knight']); s.placeLines(); s.refreshStats(); const hp0 = (h[0].hp = Math.round(h[0].maxHp / 2));
+  for (const e of es) { e.hp = Math.floor(e.maxHp * books.executioner.executioner.belowPercent / 100) + 5; e.stats.defense = 0; }
+  const ev = s.castSkill(h[0].uid, 0);
+  ok('Executioner: an execute heals the caster', ev.some((e) => e.type === 'proc' && e.label === 'Executed!') && h[0].hp >= hp0 + Math.floor(h[0].maxHp * books.executioner.executioner.healPercent / 100) - 1, `${hp0} -> ${h[0].hp}`); }
+const s0has = (e) => e.statuses.some((x) => x.type === 'weaken');
+{ const a = withPage('elementalStorm', 0, ['samurai']), b = withPage('elementalStorm', 0, ['samurai']); for (const e of b.es) e.weak = ['ice'];
+  a.s.castSkill(a.h[0].uid, 0); b.s.castSkill(b.h[0].uid, 0);
+  ok('Elemental Storm: an enemy hit with its weakness is Weakened (and only then)', b.es.some((e) => e.statuses.some((x) => x.type === 'weaken' && x.attackPercent === books.elementalStorm.elementalStorm.weakApply[0].attackPercent)) && !a.es.some((e) => s0has(e))); }

@@ -63,3 +63,8 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   15 -> 30, Finisher 20 -> 40, Giant Slayer 15 -> 30, Detonate 0.15 -> 0.3 per stack, Glass Cannon 45 -> 60,
   Overcharge 40 -> 60, Reckless 35 -> 45, Desperate 50 -> 75; Flurry +4 hits, Big Batch 9 flasks, Bone Harvest 3
   skeletons, Earthshaker stun 1.5s. Smart curve median 40 (unchanged).
+  Round 1b (user: 'do point 2'): Executioner also heals the caster 5% max health per execute (`healPercent`);
+  Elemental Storm Weakens an enemy hit with its weakness (`weakApply`: weaken -15% attack 3s). pageruns 24: Executioner
+  +1.1, Elemental Storm -0.3 (still ~0: Executioner skips bosses, where runs end; Storm needs a weakness).
+  After round 1 (pageruns 24): Cyclone +4.8, Blood Price +3.2, Siphon +2.3, Big Batch +1.7; damage pages still ~0:
+  skills deal only 15-40% of a hero's damage on floors 11-45 (`dmgshare.mjs`), so +20% skill power = +3-8% total.

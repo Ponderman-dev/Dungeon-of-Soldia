@@ -177,3 +177,33 @@ import { pageIconArt } from '../../src/systems/pageIcon.js';
   ok('...no two pages look the same', new Set(arts.map((a) => a.rows.join('') + a.palette.join())).size === ids.length);
   ok('...the clasp gem is the tier colour', arts.every((a) => a.palette[a.rows[7][12]] === frame.edge));
   ok('a page without an entry gets the default tome', pageIconArt(icons, 'noSuchPage', frame).rows.length === 16); }
+// NEW PAGES batch 1 (session 46, the 8 commons): numbers read from the data.
+{ const a = mk(['knight'], 0), b = withPage('keen', 0, ['knight']); a.s.rng = b.s.rng = () => 0.05; // crit roll 5: only Keen's bonus crits
+  const ca = a.s.castSkill(a.h[0].uid, 0).some((e) => e.type === 'attack' && e.skill && e.result.crit), cb = b.s.castSkill(b.h[0].uid, 0).some((e) => e.type === 'attack' && e.skill && e.result.crit);
+  ok(`Keen: +${books.keen.critBonus}% crit chance on skill hits`, !ca && cb); }
+{ const a = mk(['knight'], 0), b = withPage('heavy', 0, ['knight']);
+  const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
+  ok('Heavy: more power and a longer cooldown', Math.abs(d1 / d0 - (1 + books.heavy.power / 100)) < 0.03 && Math.abs(b.h[0].skills[0].cooldownLeft / a.h[0].skills[0].cooldownLeft - (1 - books.heavy.cooldown / 100)) < 0.001, `${d0}->${d1}`); }
+{ const { s, h } = withPage('quickDraw', 0, ['knight']); const full = s.skillDefs[h[0].skills[0].id].cooldownMs;
+  h[0].skills[0].cooldownLeft = full; h[0].skills[1].cooldownLeft = full; s.startFloor();
+  ok('Quick Draw: a new fight starts with the skill half charged (only that skill)', Math.abs(h[0].skills[0].cooldownLeft - full * (1 - books.quickDraw.fightStartCharge / 100)) < 1 && h[0].skills[1].cooldownLeft === full); }
+{ const a = mk(['knight'], 0), b = withPage('piercing', 0, ['knight']); for (const m of [a, b]) for (const e of m.es) e.stats.defense = e.stats.resist = 60;
+  const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
+  const c = mk(['knight'], 0); for (const e of c.es) e.stats.defense = e.stats.resist = 60 * (1 - books.piercing.armorPierce / 100); const d2 = dmgOf(c.s.castSkill(c.h[0].uid, 0));
+  ok('Piercing: hits as if the enemy had 15% less defense', d1 > d0 && Math.abs(d1 - d2) <= 2, `${d0} -> ${d1} (want ${d2})`); }
+{ const { s, h } = withPage('secondWind', 0, ['knight']); h[0].hp = 50000; s.castSkill(h[0].uid, 0);
+  ok('Second Wind: casting heals the caster 4% of max health', Math.abs(h[0].hp - 50000 - h[0].maxHp * books.secondWind.selfHealPercent / 100) <= 1, h[0].hp); }
+{ const { s, h } = withPage('momentum', 0, ['knight']); s.castSkill(h[0].uid, 0);
+  const got = []; for (let i = 0; i < books.momentum.momentum.attacks + 1; i++) got.push(s.spendMomentum(h[0]));
+  ok('Momentum: the next 3 basic attacks get +20%, then none', got.slice(0, -1).every((x) => x === books.momentum.momentum.damagePercent) && got[got.length - 1] === 0, got.join(' '));
+  const t = withPage('momentum', 0, ['knight']); t.s.placeLines(); t.s.castSkill(t.h[0].uid, 0);
+  let crash = null; try { for (let i = 0; i < 200; i++) t.s.update(50); } catch (err) { crash = err.message; }
+  ok('...a fight with Momentum uses the charges up', !crash && t.h[0].momentum.left < books.momentum.momentum.attacks, crash || t.h[0].momentum.left); }
+{ const a = withPage('finisher', 0, ['knight']), b = withPage('finisher', 0, ['knight']);
+  for (const e of b.es) e.hp = e.maxHp * (books.finisher.vsLow.belowPercent - 5) / 100;
+  const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
+  ok('Finisher: +20% power only vs enemies under 30% health', Math.abs(d1 / d0 - (1 + books.finisher.vsLow.power / 100)) < 0.03, `${d0}->${d1}`); }
+{ const a = withPage('giantSlayer', 0, ['knight']), b = withPage('giantSlayer', 0, ['knight']);
+  for (const e of b.es) e.elite = { traits: [] };
+  const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
+  ok('Giant Slayer: +15% power only vs elites / bosses', Math.abs(d1 / d0 - (1 + books.giantSlayer.vsBig.power / 100)) < 0.03, `${d0}->${d1}`); }

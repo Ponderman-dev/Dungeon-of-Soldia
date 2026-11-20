@@ -22,10 +22,14 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   `src/systems/pageIcon.js pageIconArt()`, texture `skillIconTexture.js bookPageIconKey(scene, page, R)`. Replaces the
   old recoloured book (`pageColors`, removed). A NEW PAGE NEEDS AN ENTRY in pageIcons.json (test: every page has one,
   no two look the same). First-draft symbols, not yet tuned by the user (Razor Ink's slashes read weakest).
-- **NEXT: 31 NEW PAGES (user picked, session 45; build in batches, numbers in JSON, a test per mechanic):**
-  COMMON (8): Keen +10% crit chance; Heavy +12% power, +6% cooldown; Quick Draw starts each fight half charged;
-  Piercing ignores 15% defense / resist; Second Wind heals the caster 4%; Momentum next 3 basic attacks +20%;
-  Finisher +20% power vs enemies under 30%; Giant Slayer +15% power vs elites / bosses.
+- **NEW PAGES BATCH 1, the 8 COMMONS (BUILT, session 46):** Keen (`critBonus`), Heavy (power +12, cooldown -6: no new
+  code), Quick Draw (`fightStartCharge` 50: at `startFloor` the cooldown left drops by half the full cooldown;
+  `bookFightStart`), Piercing (`armorPierce` 15: combat.js `armourCut` ignores that % of defense / resist above 0),
+  Second Wind (`selfHealPercent`, in `bookCast`), Momentum (`momentum {attacks, damagePercent}`: `hero.momentum`, spent
+  in `landAttack` via `spendMomentum`; 'Momentum!' proc), Finisher (`vsLow`), Giant Slayer (`vsBig`: elite or boss).
+  Per-hit bonuses: `bookHitMods(hero, target)` in skillHit (only during the hero's own cast, `castPages`). Icons in
+  pageIcons.json (first drafts). Smart curve median 40 (unchanged).
+- **NEXT: the other 23 NEW PAGES (user picked, session 45; build in batches, numbers in JSON, a test per mechanic):**
   RARE (8): Shock Ink (Shock on every hit); Sunder (-20% defense 5s); Detonate (bonus per poison / bleed / burn
   stack, uses them up); Chain Spark (jumps to 2 enemies at 30%); Guardian (most hurt ally shield 10%); War Cry (squad
   +12% damage 4s); Tempo (other skill's cooldown -1.5s); Glass Cannon (+45% power, -15% max health this fight).

@@ -51,6 +51,10 @@ export const skillBooksMethods = {
     for (const m of mods) {
       for (const spec of m.selfApply || []) this.applyStatus(hero, spec, hero, `book_${m.id}`, events);
       for (const spec of m.squadApply || []) for (const u of this.squadUnits()) this.applyStatus(u, spec, hero, `book_${m.id}`, events);
+      // Second Wind: the caster heals a % of its max health.
+      if (m.selfHealPercent) this.healUnit(hero, Math.round((hero.maxHp * m.selfHealPercent) / 100), events);
+      // Momentum: the caster's next basic attacks hit harder (landAttack spends them).
+      if (m.momentum) { hero.momentum = { left: m.momentum.attacks, percent: m.momentum.damagePercent }; events.push({ type: 'proc', unit: hero, label: 'Momentum!' }); }
       if (m.grow) events.push({ type: 'grow', unit: hero, scale: m.grow.scale, durationMs: m.grow.durationMs }); // Titan (the scene makes the hero bigger)
       // Blood Price: the most hurt allies heal, the caster pays (never below 1 health).
       if (m.allyHeal) {
@@ -88,6 +92,39 @@ export const skillBooksMethods = {
       }
       if (m.supportHealPercent) this.healUnit(hero, Math.round((hero.maxHp * m.supportHealPercent) / 100), events);
     }
+  },
+
+  // Per-hit bonuses of this cast's pages (only while the hero's own cast is going off, see castPages): critBonus (Keen),
+  // armorPierce (Piercing: % of defense / resist ignored), vsLow (Finisher: more power vs a hurt enemy), vsBig (Giant
+  // Slayer: more power vs elites and bosses). Returns { mult, critBonus, armorPierce }.
+  bookHitMods(hero, target) {
+    const out = { mult: 1, critBonus: 0, armorPierce: 0 };
+    const cp = this.castPages;
+    if (!cp || cp.hero !== hero || target.side !== 'enemy') return out;
+    for (const m of cp.mods) {
+      out.critBonus += m.critBonus || 0;
+      out.armorPierce += m.armorPierce || 0;
+      if (m.vsLow && (target.hp / target.maxHp) * 100 < m.vsLow.belowPercent) out.mult *= 1 + m.vsLow.power / 100;
+      if (m.vsBig && (target.elite || (target.def && target.def.boss))) out.mult *= 1 + m.vsBig.power / 100;
+    }
+    return out;
+  },
+
+  // Quick Draw (`fightStartCharge`: % of the full cooldown): when a fight starts, the skill's cooldown left drops by
+  // that much (a skill still cooling from the last fight is half way ready). Called from startFloor.
+  bookFightStart(hero) {
+    for (const slot of hero.skills) {
+      const charge = ((slot.pages || []).find((p) => p.fightStartCharge) || {}).fightStartCharge;
+      if (charge && slot.cooldownLeft > 0) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - (this.skillDefs[slot.id].cooldownMs * charge) / 100);
+    }
+  },
+
+  // Momentum: a basic attack of the hero uses up one charge; returns the extra damage % for it (0 = none left).
+  spendMomentum(hero) {
+    const m = hero.momentum;
+    if (!m || m.left <= 0) return 0;
+    m.left--;
+    return m.percent;
   },
 
   // Modifiers on every enemy a skill hit lands on: Inks (statuses), Siphon (heals the caster).

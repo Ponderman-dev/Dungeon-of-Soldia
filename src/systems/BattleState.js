@@ -565,7 +565,7 @@ export default class BattleState {
     const coil = this.spendCoil(unit, events, target); // Kinetic Coil: 3 stored dodge charges = a lightning strike
     const pure = this.pureSteel(unit, coil); // Sharpest Blade: an attack with no element at all
     const heart = pure ? this.heartStrike(unit) : 0; // ...every 5th one strikes at the heart
-    const plus = (metro || 0) + (pure ? unit.specials.pureSteel || 0 : 0); // Metronome beat + Pure Steel
+    const plus = (metro || 0) + (pure ? unit.specials.pureSteel || 0 : 0) + (unit.side === 'hero' ? this.spendMomentum(unit) : 0); // Metronome beat + Pure Steel + Momentum page
     const hit = this.strike(unit, target, events, { basic: true, riders: true, ...(coil.length ? { extraRiders: coil } : {}), ...(heart ? { multiplier: heart } : {}), ...(plus ? { damagePercent: plus } : {}), ...(unit.hitType ? { damageType: unit.hitType } : {}) }); // an elite hits with its element; riders = element charms in the same hit
     if (heart && !hit.dodged) {
       events.push({ type: 'proc', unit, label: 'Heart strike!', itemId: 'sharpest_blade', target });

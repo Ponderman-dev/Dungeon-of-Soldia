@@ -337,11 +337,14 @@ export const skillsMethods = {
       if (skill.debuffedMultiplier && this.isDebuffed(target)) mult *= skill.debuffedMultiplier;
       for (const b of skill.bonusVs || []) if (target.statuses.some((st) => st.type === b.status)) mult *= b.multiplier;
       if (skill.doubleIf && skill.doubleIf.some((c) => (c === 'bleed' ? this.has(target, 'bleed') : c === 'below50' ? target.hp < target.maxHp / 2 : false))) mult *= 2;
+      const bk = this.bookHitMods(hero, target); // skill book pages: Keen (crit), Piercing, Finisher, Giant Slayer
+      mult *= bk.mult;
       result = this.strike(hero, target, events, {
         multiplier: mult,
         damageType: skill.damageType,
-        critBonus: (opts.critBonus || 0) + (skill.sureCrit ? 100 : 0), // Wind Cutter v3: always crits
+        critBonus: (opts.critBonus || 0) + (skill.sureCrit ? 100 : 0) + bk.critBonus, // Wind Cutter v3: always crits
         ignoreArmor: !!skill.ignoresArmor,
+        ...(bk.armorPierce ? { armorPierce: bk.armorPierce } : {}),
         skill,
         projectile: skill.chain ? 'lightning' : skill.projectile,
         from: opts.jumpFrom || undefined,

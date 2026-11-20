@@ -75,6 +75,7 @@ export const minionsMethods = {
       if (!hero.alive) continue;
       if (bless) this.applyStatus(hero, { status: 'regenBoost', durationMs: 1e9, percentMaxHpPerSec: bless.regenPercentPerSec }, hero, 'fountain', events);
       hero.sinceHit = 0; // Steady Aim starts counting again with every fight
+      this.bookFightStart(hero); // Quick Draw page
       hero.wardTimer = 0;
       this.wardShield(hero, events); // Warding Charm
       // Fire Heart: a fire shield at the start of every floor (20% max health per copy) that slowly regenerates and burns attackers.

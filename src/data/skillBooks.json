@@ -1,5 +1,5 @@
 {
-  "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. More modifier fields: allyHeal {count, percentMaxHp} + selfCostPercent (Blood Price), tornado (Excalibur tornado spec, Cyclone), ricochet (share for a second target), aftershock {delayMs, power}, grow {scale, durationMs} (Titan look), purify (debuffs cleansed), roar {radius, taunt, self}, summon {minion, max}, onHitChance {chance, apply} (Concussive), desperate {belowPercent, power}.",
+  "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. More modifier fields: allyHeal {count, percentMaxHp} + selfCostPercent (Blood Price), tornado (Excalibur tornado spec, Cyclone), ricochet (share for a second target), aftershock {delayMs, power}, grow {scale, durationMs} (Titan look), purify (debuffs cleansed), roar {radius, taunt, self}, summon {minion, max}, onHitChance {chance, apply} (Concussive), desperate {belowPercent, power}, critBonus (Keen), fightStartCharge (% of the cooldown done when a fight starts, Quick Draw), armorPierce (% defense/resist ignored), selfHealPercent (Second Wind), momentum {attacks, damagePercent}, vsLow {belowPercent, power} (Finisher), vsBig {power} (Giant Slayer: elites and bosses).",
   "bookChancePerScreen": 0.0667,
   "_tiers": "PAGE TIERS (user, session 45): every modifier page has a tier: common, rare, legendary or hero (a hero-only page, `hero` = that hero's id; only offered when that hero is alive in the squad). tierOdds[book] = weights for each modifier page's tier. specials[book] = chances that ONE modifier page of that book is upgraded to a legendary / a hero page (rolled separately, both can happen in one book). An empty tier falls back to the next lower one (hero > legendary > rare > common).",
   "tierOdds": {
@@ -152,6 +152,79 @@
       "text": "Cooldown 25% shorter, but skill power 20% lower.",
       "cooldown": 25,
       "power": -20
+    },
+    "keen": {
+      "kind": "modifier",
+      "tier": "common",
+      "tag": "Damage",
+      "name": "Keen",
+      "text": "+10% crit chance on the skill's hits.",
+      "critBonus": 10
+    },
+    "heavy": {
+      "kind": "modifier",
+      "tier": "common",
+      "tag": "Damage",
+      "name": "Heavy",
+      "text": "+12% skill power, but the cooldown is 6% longer.",
+      "power": 12,
+      "cooldown": -6
+    },
+    "quickDraw": {
+      "kind": "modifier",
+      "tier": "common",
+      "tag": "Tempo",
+      "name": "Quick Draw",
+      "text": "Every fight starts with the skill half charged (half its cooldown already done).",
+      "fightStartCharge": 50
+    },
+    "piercing": {
+      "kind": "modifier",
+      "tier": "common",
+      "tag": "Damage",
+      "name": "Piercing",
+      "text": "The skill's hits ignore 15% of the enemy's defense and resist.",
+      "armorPierce": 15
+    },
+    "secondWind": {
+      "kind": "modifier",
+      "tier": "common",
+      "tag": "Heal",
+      "name": "Second Wind",
+      "text": "Casting heals the caster 4% of its max health.",
+      "selfHealPercent": 4
+    },
+    "momentum": {
+      "kind": "modifier",
+      "tier": "common",
+      "tag": "Self",
+      "name": "Momentum",
+      "text": "After casting, the caster's next 3 basic attacks deal +20% damage.",
+      "momentum": {
+        "attacks": 3,
+        "damagePercent": 20
+      }
+    },
+    "finisher": {
+      "kind": "modifier",
+      "tier": "common",
+      "tag": "Damage",
+      "name": "Finisher",
+      "text": "+20% skill power against enemies under 30% health.",
+      "vsLow": {
+        "belowPercent": 30,
+        "power": 20
+      }
+    },
+    "giantSlayer": {
+      "kind": "modifier",
+      "tier": "common",
+      "tag": "Damage",
+      "name": "Giant Slayer",
+      "text": "+15% skill power against elites and bosses.",
+      "vsBig": {
+        "power": 15
+      }
     },
     "overcharge": {
       "kind": "modifier",

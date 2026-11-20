@@ -210,6 +210,7 @@ export default class BattleState {
     this.bombs = []; // Kobold Sapper bombs on the floor
     this.thunders = []; // Thunderstruck circles growing under enemies
     this.spirits = []; // Reaper's Bell haunting spirits
+    let fightOnly = false;
     for (const h of this.heroes) {
       h.floor = {}; // per-floor flags (Tough Skin used, Second Wind used...)
       h.sigilHits = new Set(); // enemies this hero has already marked (Hunter's Sigil)
@@ -219,7 +220,9 @@ export default class BattleState {
       h.order = null; // drag orders end with the floor
       h.walkTo = null; // ...and so do move orders
       h.casting = null;
+      if (h.statuses.some((st) => st.fightOnly)) { h.statuses = h.statuses.filter((st) => !st.fightOnly); fightOnly = true; } // 'this fight' statuses end (Glass Cannon)
     }
+    if (fightOnly) this.refreshStats();
     this.floorNo = floor;
     this.hasStarted = false;
     this.enemies = ids.map((id) => this.makeUnit(this.enemyDefs[id], 'enemy', floor));

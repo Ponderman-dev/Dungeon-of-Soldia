@@ -55,6 +55,13 @@ export const skillBooksMethods = {
       if (m.selfHealPercent) this.healUnit(hero, Math.round((hero.maxHp * m.selfHealPercent) / 100), events);
       // Momentum: the caster's next basic attacks hit harder (landAttack spends them).
       if (m.momentum) { hero.momentum = { left: m.momentum.attacks, percent: m.momentum.damagePercent }; events.push({ type: 'proc', unit: hero, label: 'Momentum!' }); }
+      // Guardian: the most hurt hero (the caster too) gets a shield.
+      if (m.allyShield) {
+        const ally = this.heroes.filter((h) => h.alive).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+        if (ally) this.applyStatus(ally, m.allyShield, hero, `book_${m.id}`, events);
+      }
+      // Tempo: the caster's OTHER skills come back sooner.
+      if (m.otherCooldownMs) for (const other of hero.skills) if (other !== hero.skills.find((sl) => (sl.pages || []).includes(m))) other.cooldownLeft = Math.max(0, other.cooldownLeft - m.otherCooldownMs);
       if (m.grow) events.push({ type: 'grow', unit: hero, scale: m.grow.scale, durationMs: m.grow.durationMs }); // Titan (the scene makes the hero bigger)
       // Blood Price: the most hurt allies heal, the caster pays (never below 1 health).
       if (m.allyHeal) {
@@ -135,6 +142,16 @@ export const skillBooksMethods = {
       const dealt = (result.amount || 0) - (result.absorbed || 0);
       if (m.siphonPercent && dealt > 0) this.healUnit(hero, Math.max(1, Math.round((dealt * m.siphonPercent) / 100)), events);
       if (m.ink && target.alive) for (const spec of m.ink) this.applyStatus(target, spec, hero, `book_${m.id}`, events);
+      // Detonate: the target's poison / bleed / burn stacks go off at once (a bonus hit per stack) and are used up.
+      if (m.detonate && target.alive) {
+        const gone = target.statuses.filter((st) => m.detonate.statuses.includes(st.type));
+        if (gone.length) {
+          target.statuses = target.statuses.filter((st) => !gone.includes(st));
+          for (const st of gone) events.push({ type: 'status', unit: target, change: 'expire', status: st });
+          events.push({ type: 'proc', unit: hero, label: `Detonate x${gone.length}!`, target });
+          this.strike(hero, target, events, { multiplier: m.detonate.perStack * Math.min(gone.length, m.detonate.maxStacks || Infinity), ...(m.detonate.damageType ? { damageType: m.detonate.damageType } : {}) });
+        }
+      }
       if (m.onHitChance && target.alive && this.rng() * 100 < m.onHitChance.chance) for (const spec of m.onHitChance.apply) this.applyStatus(target, spec, hero, `book_${m.id}`, events);
     }
   },
@@ -156,6 +173,18 @@ export const skillBooksMethods = {
             events.push({ type: 'ricochet', unit: hero, from: first, to: other });
             this.skillHit(hero, this.scaleSkill(skill, m.ricochet, 1), `${slotId}_ricochet`, other, events);
           }
+        }
+      }
+      // Chain Spark: from the first enemy hit, a spark jumps to the nearest `jumps` other enemies for a share of the skill.
+      if (m.chainSpark && skill.damageMultiplier && targets.some((t) => t.side === 'enemy')) {
+        let from = targets.find((t) => t.side === 'enemy');
+        const hit = new Set(targets);
+        for (let j = 0; j < m.chainSpark.jumps; j++) {
+          const next = this.nearest(from, this.targetableEnemies().filter((e) => !hit.has(e)));
+          if (!next) break;
+          hit.add(next);
+          this.skillHit(hero, { damageMultiplier: skill.damageMultiplier * m.chainSpark.power, damageType: m.chainSpark.damageType || skill.damageType, chain: true }, `${slotId}_spark`, next, events, { jumpFrom: from });
+          from = next;
         }
       }
       if (m.aftershock && (skill.damageMultiplier || skill.heal)) {

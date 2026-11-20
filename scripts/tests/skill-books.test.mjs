@@ -207,3 +207,31 @@ import { pageIconArt } from '../../src/systems/pageIcon.js';
   for (const e of b.es) e.elite = { traits: [] };
   const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
   ok('Giant Slayer: +15% power only vs elites / bosses', Math.abs(d1 / d0 - (1 + books.giantSlayer.vsBig.power / 100)) < 0.03, `${d0}->${d1}`); }
+// NEW PAGES batch 2 (session 46, the 8 rares): numbers read from the data.
+{ const { s, es, h } = withPage('shockInk', 0, ['knight']); s.castSkill(h[0].uid, 0);
+  ok('Shock Ink: the enemy hit is Shocked', es.some((e) => s.has(e, 'shock'))); }
+{ const { s, es, h } = withPage('sunder', 0, ['knight']); s.castSkill(h[0].uid, 0);
+  const st = es.flatMap((e) => e.statuses).find((x) => x.type === 'armorBreak' && x.key.includes('book_sunder'));
+  ok('Sunder: the enemy hit loses 20% defense', st && st.defensePercent === books.sunder.ink[0].defensePercent && st.defenseFlat === 0); }
+{ const a = mk(['knight'], 0), b = withPage('detonate', 0, ['knight']);
+  for (const m of [a, b]) for (const e of m.es) m.s.applyStatus(e, { status: 'poison', stacks: 4, durationMs: 9000, damageMultiplier: 0.01 }, m.h[0], 'x', []);
+  const ev = b.s.castSkill(b.h[0].uid, 0); a.s.castSkill(a.h[0].uid, 0);
+  const hitEnemy = b.es.find((e, i) => e.hp < a.es[i].hp);
+  ok('Detonate: the stacks go off for bonus damage and are used up', hitEnemy && b.s.stacks(hitEnemy, 'poison') === 0 && ev.some((e) => e.type === 'proc' && /Detonate x4/.test(e.label))); }
+{ const { s, es, h } = withPage('chainSpark', 0, ['knight']); s.placeLines(); const before = es.map((e) => e.hp); s.castSkill(h[0].uid, 0);
+  ok('Chain Spark: 2 more enemies are hit', es.filter((e, i) => e.hp < before[i]).length === 1 + books.chainSpark.chainSpark.jumps); }
+{ const { s, h } = withPage('guardian', 0); h[2].hp = 10000; s.castSkill(h[0].uid, 0);
+  const sh = h[2].statuses.find((x) => x.type === 'shield');
+  ok('Guardian: the most hurt ally gets a 10% shield', sh && Math.abs(sh.amount - h[2].maxHp * books.guardian.allyShield.percentMaxHp / 100) <= 1 && !h[1].statuses.some((x) => x.type === 'shield')); }
+{ const { s, h } = withPage('warCry', 0); s.castSkill(h[0].uid, 0);
+  ok('War Cry: the whole squad gets the attack buff', h.every((u) => u.statuses.some((x) => x.type === 'buff' && x.key.includes('book_warCry')))); }
+{ const { s, h } = withPage('tempo', 0, ['knight']); h[0].skills[1].cooldownLeft = 5000; s.castSkill(h[0].uid, 0);
+  ok('Tempo: the other skill comes back 1.5s sooner', h[0].skills[1].cooldownLeft === 5000 - books.tempo.otherCooldownMs); }
+{ const a = mk(['samurai'], 0), b = withPage('glassCannon', 0, ['samurai']); a.s.refreshStats(); b.s.refreshStats(); const mh = b.h[0].maxHp;
+  const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
+  ok('Glass Cannon: +45% power', Math.abs(d1 / d0 - (1 + books.glassCannon.power / 100)) < 0.04, `${d0}->${d1}`);
+  ok('...and 15% less max health', Math.abs(b.h[0].maxHp / mh - 0.85) < 0.01, `${mh}->${b.h[0].maxHp}`);
+  for (let i = 0; i < 100; i++) b.s.update(50);
+  ok('...still after 5s (lasts the whole fight)', b.h[0].maxHp < mh);
+  b.s.spawnEnemies(['goblin'], 2);
+  ok('...back to full max health on the next floor', Math.abs(b.h[0].maxHp - mh) <= 1, b.h[0].maxHp); }

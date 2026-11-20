@@ -1,5 +1,5 @@
 {
-  "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. More modifier fields: allyHeal {count, percentMaxHp} + selfCostPercent (Blood Price), tornado (Excalibur tornado spec, Cyclone), ricochet (share for a second target), aftershock {delayMs, power}, grow {scale, durationMs} (Titan look), purify (debuffs cleansed), roar {radius, taunt, self}, summon {minion, max}, onHitChance {chance, apply} (Concussive), desperate {belowPercent, power}, critBonus (Keen), fightStartCharge (% of the cooldown done when a fight starts, Quick Draw), armorPierce (% defense/resist ignored), selfHealPercent (Second Wind), momentum {attacks, damagePercent}, vsLow {belowPercent, power} (Finisher), vsBig {power} (Giant Slayer: elites and bosses).",
+  "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. More modifier fields: allyHeal {count, percentMaxHp} + selfCostPercent (Blood Price), tornado (Excalibur tornado spec, Cyclone), ricochet (share for a second target), aftershock {delayMs, power}, grow {scale, durationMs} (Titan look), purify (debuffs cleansed), roar {radius, taunt, self}, summon {minion, max}, onHitChance {chance, apply} (Concussive), desperate {belowPercent, power}, critBonus (Keen), fightStartCharge (% of the cooldown done when a fight starts, Quick Draw), armorPierce (% defense/resist ignored), selfHealPercent (Second Wind), momentum {attacks, damagePercent}, vsLow {belowPercent, power} (Finisher), vsBig {power} (Giant Slayer: elites and bosses), detonate {statuses, perStack (x attack per stack), maxStacks}, chainSpark {jumps, power, damageType}, allyShield (a shield spec on the most hurt hero, Guardian), otherCooldownMs (Tempo), untilFightEnd on a selfApply spec (gone when the next floor starts, Glass Cannon).",
   "bookChancePerScreen": 0.0667,
   "_tiers": "PAGE TIERS (user, session 45): every modifier page has a tier: common, rare, legendary or hero (a hero-only page, `hero` = that hero's id; only offered when that hero is alive in the squad). tierOdds[book] = weights for each modifier page's tier. specials[book] = chances that ONE modifier page of that book is upgraded to a legendary / a hero page (rolled separately, both can happen in one book). An empty tier falls back to the next lower one (hero > legendary > rare > common).",
   "tierOdds": {
@@ -260,6 +260,122 @@
         "percentMaxHp": 12
       },
       "selfCostPercent": 6
+    },
+    "shockInk": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Debuff",
+      "name": "Shock Ink",
+      "text": "Every enemy the skill hits is Shocked for 3s (slower attacks, may fumble).",
+      "ink": [
+        {
+          "status": "shock",
+          "durationMs": 3000
+        }
+      ]
+    },
+    "sunder": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Debuff",
+      "name": "Sunder",
+      "text": "Every enemy the skill hits loses 20% of its defense for 5s.",
+      "ink": [
+        {
+          "status": "armorBreak",
+          "durationMs": 5000,
+          "defenseFlat": 0,
+          "defensePercent": -20
+        }
+      ]
+    },
+    "detonate": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Damage",
+      "name": "Detonate",
+      "text": "Poison, Bleed and Burn stacks on an enemy the skill hits go off at once: a bonus hit per stack, and the stacks are used up.",
+      "detonate": {
+        "statuses": [
+          "poison",
+          "bleed",
+          "burn"
+        ],
+        "perStack": 0.15,
+        "maxStacks": 20
+      }
+    },
+    "chainSpark": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Area",
+      "name": "Chain Spark",
+      "text": "A spark jumps from the enemy hit to 2 more enemies for 30% (electric).",
+      "chainSpark": {
+        "jumps": 2,
+        "power": 0.3,
+        "damageType": "electric"
+      }
+    },
+    "guardian": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Defense",
+      "name": "Guardian",
+      "text": "Casting shields the most hurt ally for 10% of its max health for 4s.",
+      "allyShield": {
+        "status": "shield",
+        "percentMaxHp": 10,
+        "durationMs": 4000
+      }
+    },
+    "warCry": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Team",
+      "name": "War Cry",
+      "text": "Casting gives the whole squad +12% attack for 4s.",
+      "squadApply": [
+        {
+          "status": "buff",
+          "durationMs": 4000,
+          "mods": [
+            {
+              "stat": "attack",
+              "percent": 12
+            }
+          ]
+        }
+      ]
+    },
+    "tempo": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Tempo",
+      "name": "Tempo",
+      "text": "Casting takes 1.5s off the caster's other skill's cooldown.",
+      "otherCooldownMs": 1500
+    },
+    "glassCannon": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Risk",
+      "name": "Glass Cannon",
+      "text": "+45% skill power, but after casting the caster has 15% less max health until the fight ends.",
+      "power": 45,
+      "selfApply": [
+        {
+          "status": "buff",
+          "durationMs": 600000,
+          "untilFightEnd": true,
+          "mods": [
+            {
+              "stat": "health",
+              "percent": -15
+            }
+          ]
+        }
+      ]
     },
     "cyclone": {
       "kind": "modifier",

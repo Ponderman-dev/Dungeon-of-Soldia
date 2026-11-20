@@ -104,6 +104,7 @@ export const statusesMethods = {
       status.remaining = duration;
       status.total = duration;
       if (spec.status === 'buff') status.mods = spec.mods;
+      if (spec.untilFightEnd) status.fightOnly = true; // gone when the next floor's enemies come (Glass Cannon page)
       if (spec.status === 'taunt' || spec.status === 'guarded') status.sourceUid = source.uid; // who taunted / who guards
       if (spec.status === 'shield') {
         // Size: a flat `amount`, plus `percentMaxHp` of the holder's health, plus `attackMultiplier` x the

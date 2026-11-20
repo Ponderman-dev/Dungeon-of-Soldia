@@ -29,10 +29,15 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   in `landAttack` via `spendMomentum`; 'Momentum!' proc), Finisher (`vsLow`), Giant Slayer (`vsBig`: elite or boss).
   Per-hit bonuses: `bookHitMods(hero, target)` in skillHit (only during the hero's own cast, `castPages`). Icons in
   pageIcons.json (first drafts). Smart curve median 40 (unchanged).
-- **NEXT: the other 23 NEW PAGES (user picked, session 45; build in batches, numbers in JSON, a test per mechanic):**
-  RARE (8): Shock Ink (Shock on every hit); Sunder (-20% defense 5s); Detonate (bonus per poison / bleed / burn
-  stack, uses them up); Chain Spark (jumps to 2 enemies at 30%); Guardian (most hurt ally shield 10%); War Cry (squad
-  +12% damage 4s); Tempo (other skill's cooldown -1.5s); Glass Cannon (+45% power, -15% max health this fight).
+- **NEW PAGES BATCH 2, the 8 RARES (BUILT, session 46):** Shock Ink and Sunder (plain `ink` specs; Sunder = armorBreak
+  `defensePercent` -20), Detonate (`detonate`: in `bookOnHit` the target's poison / bleed / burn stacks are removed and
+  one `strike` of perStack x attack per stack hits, proc 'Detonate xN!'), Chain Spark (`chainSpark`: in `bookAfterCast`
+  jumps to the nearest unhit enemies, electric, lightning look via `chain: true`), Guardian (`allyShield` on the most hurt
+  living hero, caster included), War Cry (squadApply attack +12%), Tempo (`otherCooldownMs` off the caster's other
+  skills), Glass Cannon (power +45, selfApply health -15% with `untilFightEnd`: statuses.js marks it `fightOnly`,
+  `spawnEnemies` drops those and refreshes stats). NOTE: power pages do not grow Defense Bash's defense part (old
+  behaviour). Smart curve median 40 (unchanged).
+- **NEXT: the other 15 NEW PAGES (user picked, session 45; build in batches, numbers in JSON, a test per mechanic):**
   LEGENDARY (5): Echo (fires again at 60%); Time Warp (resets the other skill); Executioner (kills normal enemies under
   15%, kill = 30% cooldown back); Phoenix Page (once per floor a deadly hit fires this skill for free, caster left at
   20%); Elemental Storm (damage = the element the target is weakest to).

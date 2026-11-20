@@ -155,10 +155,11 @@ export const skillBooksMethods = {
       if (m.vsLow && (target.hp / target.maxHp) * 100 < m.vsLow.belowPercent) out.mult *= 1 + m.vsLow.power / 100;
       if (m.vsBig && (target.elite || (target.def && target.def.boss))) out.mult *= 1 + m.vsBig.power / 100;
       // Elemental Storm: the hit turns into the element the target is weakest to (its own type stays on a tie).
-      if (m.elementalStorm) out.damageType = (own) => {
+      if (m.elementalStorm) {
         const score = (t) => (this.damageTypes[t] ? weakResistMultiplier(target, t, this.rules, this.damageTypes) : 0);
-        return m.elementalStorm.elements.reduce((best, t) => (score(t) > score(best) ? t : best), own);
-      };
+        out.damageType = (own) => m.elementalStorm.elements.reduce((best, t) => (score(t) > score(best) ? t : best), own);
+        if (m.elementalStorm.weakBonus && m.elementalStorm.elements.some((t) => score(t) > 1)) out.mult *= 1 + m.elementalStorm.weakBonus / 100; // it found a weakness
+      }
     }
     return out;
   },

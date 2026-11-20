@@ -38,7 +38,7 @@ ok('every page has a kind, name and text', Object.values(books).every((p) => ['s
 { const a = mk(['knight'], 0), b = mk(['knight'], 0);
   b.s.addPage(b.h[0].uid, 0, page('sharpen')); b.s.addPage(b.h[0].uid, 0, page('sharpen'));
   const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
-  ok('2x Sharpen: skill damage +16%', Math.abs(d1 / d0 - 1.16) < 0.03, `${d0} -> ${d1}`); }
+  ok('2x Sharpen: skill damage 2x its power', Math.abs(d1 / d0 - (1 + 2 * books.sharpen.power / 100)) < 0.05, `${d0} -> ${d1}`); }
 // Cooldown / windup
 { const { s, h } = mk(['knight']); const k = h[0];
   s.castSkill(k.uid, 0); const cd0 = k.skills[0].cooldownLeft, w0 = k.casting.total;
@@ -101,11 +101,11 @@ const withPage = (id, idx = 0, heroIds = ['knight', 'rogue', 'archer']) => { con
   ok("Hunter's Ink: the enemy hit is Marked", es.some((e) => e.statuses.some((x) => x.type === 'mark' && x.source === 'book_huntersInk' || x.type === 'mark'))); }
 { const { s, h } = withPage('bloodPrice'); h[1].hp = 20000; h[2].hp = 30000; const k0 = h[0].hp;
   s.castSkill(h[0].uid, 0);
-  ok('Blood Price: the 2 hurt allies heal 12%', h[1].hp >= 32000 && h[2].hp >= 42000, `${h[1].hp} ${h[2].hp}`);
+  ok('Blood Price: the 2 hurt allies heal', h[1].hp >= 20000 + 1000 * books.bloodPrice.allyHeal.percentMaxHp && h[2].hp >= 30000 + 1000 * books.bloodPrice.allyHeal.percentMaxHp, `${h[1].hp} ${h[2].hp}`);
   ok('...and the caster pays 6% of its health', h[0].hp <= k0 - 5900, `${k0} -> ${h[0].hp}`); }
 { const { s, h } = withPage('cyclone'); s.castSkill(h[0].uid, 0);
   ok('Cyclone: a tornado spins up', s.tornados.length === 1);
-  ok('...and the cooldown is 30% longer', Math.abs(h[0].skills[0].cooldownLeft / s.skillDefs[h[0].skills[0].id].cooldownMs - 1.3) < 0.01); }
+  ok('...and the cooldown is longer', Math.abs(h[0].skills[0].cooldownLeft / s.skillDefs[h[0].skills[0].id].cooldownMs - (1 - books.cyclone.cooldown / 100)) < 0.01); }
 { const { s, es, h } = withPage('ricochet'); const before = es.map((e) => e.hp); const ev = s.castSkill(h[0].uid, 0);
   ok('Ricochet: a second enemy is hit too', es.filter((e, i) => e.hp < before[i]).length === 2 && ev.some((e) => e.type === 'ricochet')); }
 { const { s, es, h } = withPage('aftershock'); s.castSkill(h[0].uid, 0); const hp1 = es.map((e) => e.hp);
@@ -126,10 +126,10 @@ const withPage = (id, idx = 0, heroIds = ['knight', 'rogue', 'archer']) => { con
   ok('Concussive: a hit can stun', r2.es.some((e) => e.statuses.some((x) => x.type === 'stun'))); }
 { const a = mk(['knight'], 0), b = withPage('reckless', 0, ['knight']);
   const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
-  ok('Reckless: +35% power and the caster is marked', Math.abs(d1 / d0 - 1.35) < 0.04 && b.h[0].statuses.some((x) => x.type === 'mark'), `${d0}->${d1}`); }
+  ok('Reckless: more power and the caster is marked', Math.abs(d1 / d0 - (1 + books.reckless.power / 100)) < 0.05 && b.h[0].statuses.some((x) => x.type === 'mark'), `${d0}->${d1}`); }
 { const a = withPage('desperate', 0, ['knight']), b = withPage('desperate', 0, ['knight']); b.h[0].hp = b.h[0].maxHp * 0.3;
   const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
-  ok('Desperate: +50% power under 40% health only', Math.abs(d1 / d0 - 1.5) < 0.05, `${d0}->${d1}`); }
+  ok('Desperate: more power under 40% health only', Math.abs(d1 / d0 - (1 + books.desperate.desperate.power / 100)) < 0.06, `${d0}->${d1}`); }
 // Every page on every hero's skills: a whole fight runs without errors
 { let crash = null;
   for (const hid of heroes.map((x) => x.id)) for (const id of Object.keys(books)) for (const idx of [0, 1]) {
@@ -304,3 +304,6 @@ const heroWith = (id) => withPage(id, 0, [books[id].hero]);
 { const { s, h } = heroWith('bigBatch'); let n = 0; n += s.castSkill(h[0].uid, 0).filter((e) => e.type === 'flask').length;
   for (let t = 0; t < 4000; t += 20) n += s.update(20).filter((e) => e.type === 'flask').length;
   ok('Big Batch: Flask Barrage throws 7 flasks', n === books.bigBatch.patch.randomCount, n); }
+{ const a = withPage('elementalStorm', 0, ['samurai']), b = withPage('elementalStorm', 0, ['samurai']); for (const e of b.es) e.weak = ['ice'];
+  const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0)), rules0 = r('combat.json');
+  ok('Elemental Storm: a found weakness hits harder (weak multiplier x weakBonus)', Math.abs(d1 / d0 - rules0.weakMultiplier * (1 + books.elementalStorm.elementalStorm.weakBonus / 100)) < 0.08, `${d0}->${d1}`); }

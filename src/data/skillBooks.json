@@ -1,5 +1,5 @@
 {
-  "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. More modifier fields: allyHeal {count, percentMaxHp} + selfCostPercent (Blood Price), tornado (Excalibur tornado spec, Cyclone), ricochet (share for a second target), aftershock {delayMs, power}, grow {scale, durationMs} (Titan look), purify (debuffs cleansed), roar {radius, taunt, self}, summon {minion, max}, onHitChance {chance, apply} (Concussive), desperate {belowPercent, power}, critBonus (Keen), fightStartCharge (% of the cooldown done when a fight starts, Quick Draw), armorPierce (% defense/resist ignored), selfHealPercent (Second Wind), momentum {attacks, damagePercent}, vsLow {belowPercent, power} (Finisher), vsBig {power} (Giant Slayer: elites and bosses), detonate {statuses, perStack (x attack per stack), maxStacks}, chainSpark {jumps, power, damageType}, allyShield (a shield spec on the most hurt hero, Guardian), otherCooldownMs (Tempo), untilFightEnd on a selfApply spec (gone when the next floor starts, Glass Cannon), echo {power} (always echoes), resetOther (Time Warp), executioner {belowPercent, cooldownBackPercent}, phoenix {hpPercent} (once per floor), elementalStorm {elements}. HERO pages: `hero` + `skill` (fits only that hero's named skill) and `patch` (changes the skill when it goes off; fields in BattleState heroPagePatch).",
+  "_about": "Skill books (user's decisions, see CLAUDE.md SKILL BOOKS). A book holds PAGES; a page goes on ONE skill of one hero for the rest of the run. kind 'stat' = small numbers (max combat.json books.maxStatPages per skill, may repeat): power (% skill damage, heals, shields, buff size), cooldown (% shorter), windup (% shorter), duration (% longer statuses/buffs/shields the skill gives). kind 'modifier' = changes what the skill does (max books.modifierSlots per skill, no duplicates on one skill): ink (statuses put on every enemy the skill hits; a support skill puts them on the enemy nearest the caster), siphon (% of skill damage heals the caster; supportHealPercent of max health for a support skill), selfApply / squadApply (statuses on the caster / whole squad when the skill goes off), plus the same number fields as stat pages (negative = worse) and windupMultiplier. More modifier fields: allyHeal {count, percentMaxHp} + selfCostPercent (Blood Price), tornado (Excalibur tornado spec, Cyclone), ricochet (share for a second target), aftershock {delayMs, power}, grow {scale, durationMs} (Titan look), purify (debuffs cleansed), roar {radius, taunt, self}, summon {minion, max}, onHitChance {chance, apply} (Concussive), desperate {belowPercent, power}, critBonus (Keen), fightStartCharge (% of the cooldown done when a fight starts, Quick Draw), armorPierce (% defense/resist ignored), selfHealPercent (Second Wind), momentum {attacks, damagePercent}, vsLow {belowPercent, power} (Finisher), vsBig {power} (Giant Slayer: elites and bosses), detonate {statuses, perStack (x attack per stack), maxStacks}, chainSpark {jumps, power, damageType}, allyShield (a shield spec on the most hurt hero, Guardian), otherCooldownMs (Tempo), untilFightEnd on a selfApply spec (gone when the next floor starts, Glass Cannon), echo {power} (always echoes), resetOther (Time Warp), executioner {belowPercent, cooldownBackPercent}, phoenix {hpPercent} (once per floor), elementalStorm {elements, weakBonus (% more when it finds a weakness)}. HERO pages: `hero` + `skill` (fits only that hero's named skill) and `patch` (changes the skill when it goes off; fields in BattleState heroPagePatch).",
   "bookChancePerScreen": 0.0667,
   "_tiers": "PAGE TIERS (user, session 45): every modifier page has a tier: common, rare, legendary or hero (a hero-only page, `hero` = that hero's id; only offered when that hero is alive in the squad). tierOdds[book] = weights for each modifier page's tier. specials[book] = chances that ONE modifier page of that book is upgraded to a legendary / a hero page (rolled separately, both can happen in one book). An empty tier falls back to the next lower one (hero > legendary > rare > common).",
   "tierOdds": {
@@ -20,8 +20,8 @@
     "sharpen": {
       "kind": "stat",
       "name": "Sharpen",
-      "text": "+8% skill power (damage, healing, shield or buff size).",
-      "power": 8
+      "text": "+12% skill power (damage, healing, shield or buff size).",
+      "power": 12
     },
     "swift": {
       "kind": "stat",
@@ -107,9 +107,9 @@
       "tier": "common",
       "tag": "Heal",
       "name": "Siphon",
-      "text": "15% of the damage it deals heals the caster (support skill: heals the caster 5% of max health).",
-      "siphonPercent": 15,
-      "supportHealPercent": 5
+      "text": "8% of the damage it deals heals the caster (support skill: heals the caster 3% of max health).",
+      "siphonPercent": 8,
+      "supportHealPercent": 3
     },
     "bulwark": {
       "kind": "modifier",
@@ -158,17 +158,17 @@
       "tier": "common",
       "tag": "Damage",
       "name": "Keen",
-      "text": "+10% crit chance on the skill's hits.",
-      "critBonus": 10
+      "text": "+20% crit chance on the skill's hits.",
+      "critBonus": 20
     },
     "heavy": {
       "kind": "modifier",
       "tier": "common",
       "tag": "Damage",
       "name": "Heavy",
-      "text": "+12% skill power, but the cooldown is 6% longer.",
-      "power": 12,
-      "cooldown": -6
+      "text": "+20% skill power, but the cooldown is 8% longer.",
+      "power": 20,
+      "cooldown": -8
     },
     "quickDraw": {
       "kind": "modifier",
@@ -183,8 +183,8 @@
       "tier": "common",
       "tag": "Damage",
       "name": "Piercing",
-      "text": "The skill's hits ignore 15% of the enemy's defense and resist.",
-      "armorPierce": 15
+      "text": "The skill's hits ignore 30% of the enemy's defense and resist.",
+      "armorPierce": 30
     },
     "secondWind": {
       "kind": "modifier",
@@ -210,10 +210,10 @@
       "tier": "common",
       "tag": "Damage",
       "name": "Finisher",
-      "text": "+20% skill power against enemies under 30% health.",
+      "text": "+40% skill power against enemies under 30% health.",
       "vsLow": {
         "belowPercent": 30,
-        "power": 20
+        "power": 40
       }
     },
     "giantSlayer": {
@@ -221,9 +221,9 @@
       "tier": "common",
       "tag": "Damage",
       "name": "Giant Slayer",
-      "text": "+15% skill power against elites and bosses.",
+      "text": "+30% skill power against elites and bosses.",
       "vsBig": {
-        "power": 15
+        "power": 30
       }
     },
     "overcharge": {
@@ -231,8 +231,8 @@
       "tier": "rare",
       "tag": "Risk",
       "name": "Overcharge",
-      "text": "+40% skill power, but the wind-up is twice as long.",
-      "power": 40,
+      "text": "+60% skill power, but the wind-up is twice as long.",
+      "power": 60,
       "windupMultiplier": 2
     },
     "huntersInk": {
@@ -254,10 +254,10 @@
       "tier": "rare",
       "tag": "Heal",
       "name": "Blood Price",
-      "text": "Also heals the 2 most hurt allies for 12% of their max health, but costs the caster 6% of its health.",
+      "text": "Also heals the 2 most hurt allies for 8% of their max health, but costs the caster 6% of its health.",
       "allyHeal": {
         "count": 2,
-        "percentMaxHp": 12
+        "percentMaxHp": 8
       },
       "selfCostPercent": 6
     },
@@ -301,7 +301,7 @@
           "bleed",
           "burn"
         ],
-        "perStack": 0.15,
+        "perStack": 0.3,
         "maxStacks": 20
       }
     },
@@ -361,8 +361,8 @@
       "tier": "rare",
       "tag": "Risk",
       "name": "Glass Cannon",
-      "text": "+45% skill power, but after casting the caster has 15% less max health until the fight ends.",
-      "power": 45,
+      "text": "+60% skill power, but after casting the caster has 15% less max health until the fight ends.",
+      "power": 60,
       "selfApply": [
         {
           "status": "buff",
@@ -382,15 +382,15 @@
       "tier": "legendary",
       "tag": "Area",
       "name": "Cyclone",
-      "text": "A small tornado spins up on the target for 4s and drifts between enemies. Cooldown 30% longer.",
+      "text": "A tornado spins up on the target for 6s and drifts between enemies. Cooldown 15% longer.",
       "tornado": {
-        "durationMs": 4000,
+        "durationMs": 6000,
         "tickMs": 500,
-        "damageMultiplier": 0.4,
+        "damageMultiplier": 1.0,
         "max": 3,
         "hopEvery": 2
       },
-      "cooldown": -30
+      "cooldown": -15
     },
     "ricochet": {
       "kind": "modifier",
@@ -434,10 +434,10 @@
       "tier": "legendary",
       "tag": "Damage",
       "name": "Executioner",
-      "text": "A normal enemy (not elite or boss) the skill leaves under 15% health dies. A kill gives back 30% of the cooldown.",
+      "text": "A normal enemy (not elite or boss) the skill leaves under 25% health dies. A kill gives back 50% of the cooldown.",
       "executioner": {
-        "belowPercent": 15,
-        "cooldownBackPercent": 30
+        "belowPercent": 25,
+        "cooldownBackPercent": 50
       }
     },
     "phoenixPage": {
@@ -455,14 +455,15 @@
       "tier": "legendary",
       "tag": "Damage",
       "name": "Elemental Storm",
-      "text": "Each hit turns into the element the enemy is weakest to (fire, ice, electric or dark).",
+      "text": "Each hit turns into the element the enemy is weakest to (fire, ice, electric or dark) and deals 30% more when it finds a weakness.",
       "elementalStorm": {
         "elements": [
           "fire",
           "ice",
           "electric",
           "dark"
-        ]
+        ],
+        "weakBonus": 30
       }
     },
     "titan": {
@@ -515,12 +516,12 @@
       "skill": "brawl_leap",
       "tag": "Control",
       "name": "Earthshaker",
-      "text": "Savage Leap stuns its target and every enemy hit by the landing for 0.8s.",
+      "text": "Savage Leap stuns its target and every enemy hit by the landing for 1.5s.",
       "patch": {
         "landApply": [
           {
             "status": "stun",
-            "durationMs": 800
+            "durationMs": 1500
           }
         ]
       }
@@ -532,9 +533,9 @@
       "skill": "multistrike",
       "tag": "Damage",
       "name": "Flurry",
-      "text": "Multistrike strikes 2 more times.",
+      "text": "Multistrike strikes 4 more times.",
       "patch": {
-        "addWaves": 2
+        "addWaves": 4
       }
     },
     "downpour": {
@@ -594,9 +595,9 @@
       "skill": "death_coil3",
       "tag": "Summon",
       "name": "Bone Harvest",
-      "text": "A Death Coil kill raises 2 skeletons instead of one.",
+      "text": "A Death Coil kill raises 3 skeletons instead of one.",
       "patch": {
-        "raiseCount": 2
+        "raiseCount": 3
       }
     },
     "massCharm": {
@@ -620,9 +621,9 @@
       "skill": "alch_barrage",
       "tag": "Area",
       "name": "Big Batch",
-      "text": "Flask Barrage throws 7 flasks instead of 5.",
+      "text": "Flask Barrage throws 9 flasks instead of 5.",
       "patch": {
-        "randomCount": 7
+        "randomCount": 9
       }
     },
     "purify": {
@@ -690,8 +691,8 @@
       "tier": "rare",
       "tag": "Risk",
       "name": "Reckless",
-      "text": "+35% skill power, but for 4s after casting the caster takes 15% more damage.",
-      "power": 35,
+      "text": "+45% skill power, but for 4s after casting the caster takes 15% more damage.",
+      "power": 45,
       "selfApply": [
         {
           "status": "mark",
@@ -705,10 +706,10 @@
       "tier": "rare",
       "tag": "Risk",
       "name": "Desperate",
-      "text": "+50% skill power while the caster is under 40% health.",
+      "text": "+75% skill power while the caster is under 40% health.",
       "desperate": {
         "belowPercent": 40,
-        "power": 50
+        "power": 75
       }
     }
   },

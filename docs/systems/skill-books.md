@@ -55,3 +55,11 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   counter, the other rotation spells fire as echoes at full power), Radiance (Cleric, `extraHeals` 1 in holyNova),
   Bone Harvest (Necromancer, `raiseCount` 2 = onKill.count), Mass Charm (Bard, `applyDurationAdd {charm: 1000}`),
   Big Batch (Alchemist, `randomCount` 7). Smart curve median 40. ALL 31 PAGES FROM SESSION 45's LIST ARE BUILT.
+- **PAGE TUNING ROUND 1 (session 46, `pageruns.mjs 16`, user: 'go with your suggestions'):** the first ranking showed
+  survival pages winning (Titan +10.8, Blood Price +7.0, Siphon +6.4 floors) and almost every damage page at ~0
+  (skills are a small share of squad damage). Changes: Siphon 15% -> 8% (support 5 -> 3), Blood Price ally heal 12 -> 8;
+  Cyclone 4s / 0.4 -> 6s / 1.0, cooldown +30% -> +15%; Executioner under 15% -> 25%, cooldown back 30 -> 50; Elemental
+  Storm +30% when it finds a weakness (`weakBonus`); Sharpen 8 -> 12, Heavy 12/-6 -> 20/-8, Keen 10 -> 20, Piercing
+  15 -> 30, Finisher 20 -> 40, Giant Slayer 15 -> 30, Detonate 0.15 -> 0.3 per stack, Glass Cannon 45 -> 60,
+  Overcharge 40 -> 60, Reckless 35 -> 45, Desperate 50 -> 75; Flurry +4 hits, Big Batch 9 flasks, Bone Harvest 3
+  skeletons, Earthshaker stun 1.5s. Smart curve median 40 (unchanged).

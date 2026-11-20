@@ -12,8 +12,8 @@
   - NO SHOVING (movement.md 'NO SHOVING'): a walker stops at a standing fighter, steps around it, or waits for a gap.
     Push per fighter in a 12-enemy crowd 222px -> 21-31px. Not yet seen by eye on screen; ask how fights feel now.
   - PHONE SPEED (ui.md 'PHONE SPEED'): text canvases kept in memory, no redraw for an unchanged colour, 'TEST: speed
-    (fps)' readout in the TEST menu. User still said 'Lagging' (that was likely the OLD zip on itch.io): ASK for the two
-    readout lines (fps / slow / game + device) before more speed work.
+    (fps)' readout in the TEST menu. SOLVED: the user confirmed on their Android phone (itch.io in Chrome) that the
+    lag is gone with that zip.
   - PAGE TIERS + PAGE ICONS (skill-books.md): common / rare / legendary / hero; golden book 20% legendary, 5% hero
     page (both can happen); every page a coloured spell tome (user picked 'F' out of 6 kinds). First-draft symbols:
     offer tweaks (Razor Ink reads weakest, Titan dull, Desperate small).

@@ -112,7 +112,8 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   (`snapCanvas`) reads its pixels back on EVERY text change = a slow read-back from the graphics card on Android; small
   2D canvases are now kept in normal memory (the game canvas is untouched). (2) uiKit `TextStyle.setColor` does nothing
   when the colour is already set (SquadScene `placeBench()` set name colours every frame = 10 texts redrawn + uploaded
-  60 times a second: 20 uploads a frame -> 0, frame 7.7ms -> 2.7ms). NOT CONFIRMED on the user's phone yet.
+  60 times a second: 20 uploads a frame -> 0, frame 7.7ms -> 2.7ms). CONFIRMED by the user: the lag on their Android
+  phone is gone.
   SPEED READOUT: TEST tab > 'TEST: speed (fps)' (`toggleFps` in testPanel.js): fps (+ lowest), slowest gap between
   frames, the game's own slowest frame, and the device line. Measuring scripts were scratch only (count gl draw /
   texImage2D calls per frame; time `game.step` under CDP `Emulation.setCPUThrottlingRate`).

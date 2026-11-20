@@ -251,6 +251,12 @@ export const skillsMethods = {
     this.castPages = null;
     // Echo Rune: a skill sometimes casts a second time (the echo cannot echo, the Mage's rotation does not move again).
     // Channels (Rain of Arrows, Crescendo) and flasks thrown one by one do not echo.
+    // Echo page (skill book): this skill always fires a second time at a share (same rules as Echo Rune).
+    const pageEcho = !echo && !skill.channel && !(skill.random && skill.random.intervalMs) && book.mods.find((m) => m.echo);
+    if (pageEcho) {
+      events.push({ type: 'proc', unit: hero, label: 'Echo!' });
+      this.releaseSkill(hero, index, events, { spell: skill, power: pageEcho.echo.power });
+    }
     const chance = hero.specials.echo || 0;
     if (!echo && chance > 0 && !skill.channel && !(skill.random && skill.random.intervalMs) && this.rng() * 100 < chance) {
       events.push({ type: 'proc', unit: hero, label: 'Echo!', itemId: 'echo_rune' });
@@ -337,11 +343,11 @@ export const skillsMethods = {
       if (skill.debuffedMultiplier && this.isDebuffed(target)) mult *= skill.debuffedMultiplier;
       for (const b of skill.bonusVs || []) if (target.statuses.some((st) => st.type === b.status)) mult *= b.multiplier;
       if (skill.doubleIf && skill.doubleIf.some((c) => (c === 'bleed' ? this.has(target, 'bleed') : c === 'below50' ? target.hp < target.maxHp / 2 : false))) mult *= 2;
-      const bk = this.bookHitMods(hero, target); // skill book pages: Keen (crit), Piercing, Finisher, Giant Slayer
+      const bk = this.bookHitMods(hero, target); // skill book pages: Keen (crit), Piercing, Finisher, Giant Slayer, Elemental Storm
       mult *= bk.mult;
       result = this.strike(hero, target, events, {
         multiplier: mult,
-        damageType: skill.damageType,
+        damageType: bk.damageType ? bk.damageType(skill.damageType || hero.damageType) : skill.damageType,
         critBonus: (opts.critBonus || 0) + (skill.sureCrit ? 100 : 0) + bk.critBonus, // Wind Cutter v3: always crits
         ignoreArmor: !!skill.ignoresArmor,
         ...(bk.armorPierce ? { armorPierce: bk.armorPierce } : {}),

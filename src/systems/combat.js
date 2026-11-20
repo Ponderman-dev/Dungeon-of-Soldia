@@ -13,7 +13,7 @@ function markMultiplier(defender) {
 
 // An enemy's `weak` / `resists` lists can name a damage type ("fire") or a whole category
 // ("magical", "physical").
-function weakResistMultiplier(defender, type, rules, damageTypes) {
+export function weakResistMultiplier(defender, type, rules, damageTypes) {
   const category = damageTypes[type].category;
   const has = (list) => list.includes(type) || list.includes(category);
   // A def can set its own multipliers (Frost Warden: ice does only 20%).

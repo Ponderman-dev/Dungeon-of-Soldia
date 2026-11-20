@@ -1,3 +1,4 @@
+import { weakResistMultiplier } from '../combat.js';
 // Part of BattleState (mixed into its prototype at the bottom of ../BattleState.js; `this` is the BattleState).
 // Skill book pages (docs/systems/skill-books.md).
 
@@ -60,6 +61,8 @@ export const skillBooksMethods = {
         const ally = this.heroes.filter((h) => h.alive).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
         if (ally) this.applyStatus(ally, m.allyShield, hero, `book_${m.id}`, events);
       }
+      // Time Warp: the caster's OTHER skills are ready again at once.
+      if (m.resetOther) for (const other of hero.skills) if (!(other.pages || []).includes(m) && other.cooldownLeft > 0) { other.cooldownLeft = 0; events.push({ type: 'proc', unit: hero, label: 'Time Warp!' }); }
       // Tempo: the caster's OTHER skills come back sooner.
       if (m.otherCooldownMs) for (const other of hero.skills) if (other !== hero.skills.find((sl) => (sl.pages || []).includes(m))) other.cooldownLeft = Math.max(0, other.cooldownLeft - m.otherCooldownMs);
       if (m.grow) events.push({ type: 'grow', unit: hero, scale: m.grow.scale, durationMs: m.grow.durationMs }); // Titan (the scene makes the hero bigger)
@@ -103,7 +106,8 @@ export const skillBooksMethods = {
 
   // Per-hit bonuses of this cast's pages (only while the hero's own cast is going off, see castPages): critBonus (Keen),
   // armorPierce (Piercing: % of defense / resist ignored), vsLow (Finisher: more power vs a hurt enemy), vsBig (Giant
-  // Slayer: more power vs elites and bosses). Returns { mult, critBonus, armorPierce }.
+  // Slayer: more power vs elites and bosses), elementalStorm (damageType: own type -> the element the target is weakest to).
+  // Returns { mult, critBonus, armorPierce, damageType? }.
   bookHitMods(hero, target) {
     const out = { mult: 1, critBonus: 0, armorPierce: 0 };
     const cp = this.castPages;
@@ -113,6 +117,11 @@ export const skillBooksMethods = {
       out.armorPierce += m.armorPierce || 0;
       if (m.vsLow && (target.hp / target.maxHp) * 100 < m.vsLow.belowPercent) out.mult *= 1 + m.vsLow.power / 100;
       if (m.vsBig && (target.elite || (target.def && target.def.boss))) out.mult *= 1 + m.vsBig.power / 100;
+      // Elemental Storm: the hit turns into the element the target is weakest to (its own type stays on a tie).
+      if (m.elementalStorm) out.damageType = (own) => {
+        const score = (t) => (this.damageTypes[t] ? weakResistMultiplier(target, t, this.rules, this.damageTypes) : 0);
+        return m.elementalStorm.elements.reduce((best, t) => (score(t) > score(best) ? t : best), own);
+      };
     }
     return out;
   },
@@ -124,6 +133,23 @@ export const skillBooksMethods = {
       const charge = ((slot.pages || []).find((p) => p.fightStartCharge) || {}).fightStartCharge;
       if (charge && slot.cooldownLeft > 0) slot.cooldownLeft = Math.max(0, slot.cooldownLeft - (this.skillDefs[slot.id].cooldownMs * charge) / 100);
     }
+  },
+
+  // Phoenix Page (`phoenix`): once per floor, a hit that would kill the hero leaves it at `hpPercent` health and fires
+  // the page's skill for free (no cooldown used). Called from dealDamage when health reaches 0.
+  phoenixPage(hero, events) {
+    if (hero.side !== 'hero' || hero.minion || !hero.alive || hero.hp > 0 || (hero.floor && hero.floor.phoenixPage)) return;
+    const index = hero.skills.findIndex((sl) => (sl.pages || []).some((p) => p.phoenix));
+    if (index < 0) return;
+    const page = hero.skills[index].pages.find((p) => p.phoenix);
+    hero.floor = hero.floor || {};
+    hero.floor.phoenixPage = true;
+    hero.hp = Math.max(1, Math.round((hero.maxHp * page.phoenix.hpPercent) / 100));
+    events.push({ type: 'proc', unit: hero, label: 'Phoenix Page!' });
+    hero.casting = null; // a wind-up in progress is dropped: the free cast goes off now
+    const saved = this.castPages;
+    this.releaseSkill(hero, index, events);
+    this.castPages = saved;
   },
 
   // Momentum: a basic attack of the hero uses up one charge; returns the extra damage % for it (0 = none left).
@@ -150,6 +176,21 @@ export const skillBooksMethods = {
           for (const st of gone) events.push({ type: 'status', unit: target, change: 'expire', status: st });
           events.push({ type: 'proc', unit: hero, label: `Detonate x${gone.length}!`, target });
           this.strike(hero, target, events, { multiplier: m.detonate.perStack * Math.min(gone.length, m.detonate.maxStacks || Infinity), ...(m.detonate.damageType ? { damageType: m.detonate.damageType } : {}) });
+        }
+      }
+      // Executioner: a normal enemy (not elite, not boss) left under `belowPercent` health dies; the cast's first kill
+      // gives back `cooldownBackPercent` of the skill's cooldown.
+      if (m.executioner) {
+        const ex = m.executioner;
+        if (target.alive && !target.elite && !(target.def && target.def.boss) && (target.hp / target.maxHp) * 100 < ex.belowPercent) {
+          events.push({ type: 'proc', unit: hero, label: 'Executed!', target });
+          const shields = target.statuses.filter((st) => st.type === 'shield').reduce((a, st) => a + Math.ceil(st.amount), 0);
+          this.strike(hero, target, events, { fixedAmount: target.hp + shields });
+        }
+        if (!target.alive && !cp.refunded) {
+          cp.refunded = true;
+          const slot = hero.skills.find((sl) => (sl.pages || []).includes(m));
+          if (slot) slot.cooldownLeft *= 1 - ex.cooldownBackPercent / 100;
         }
       }
       if (m.onHitChance && target.alive && this.rng() * 100 < m.onHitChance.chance) for (const spec of m.onHitChance.apply) this.applyStatus(target, spec, hero, `book_${m.id}`, events);

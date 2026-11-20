@@ -235,3 +235,30 @@ import { pageIconArt } from '../../src/systems/pageIcon.js';
   ok('...still after 5s (lasts the whole fight)', b.h[0].maxHp < mh);
   b.s.spawnEnemies(['goblin'], 2);
   ok('...back to full max health on the next floor', Math.abs(b.h[0].maxHp - mh) <= 1, b.h[0].maxHp); }
+// NEW PAGES batch 3 (session 46, the 5 legendaries): numbers read from the data.
+{ const a = mk(['samurai'], 0), b = withPage('echo', 0, ['samurai']);
+  const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), ev = b.s.castSkill(b.h[0].uid, 0), d1 = dmgOf(ev);
+  ok('Echo: the skill fires again at 60%', ev.some((e) => e.type === 'proc' && e.label === 'Echo!') && Math.abs(d1 / d0 - (1 + books.echo.echo.power)) < 0.06, `${d0}->${d1}`); }
+{ const { s, h } = withPage('timeWarp', 0, ['knight']); h[0].skills[1].cooldownLeft = 9000; s.castSkill(h[0].uid, 0);
+  ok('Time Warp: the other skill is ready at once', h[0].skills[1].cooldownLeft === 0 && h[0].skills[0].cooldownLeft > 0); }
+{ const { s, es, h } = withPage('executioner', 0, ['knight']); s.placeLines();
+  for (const e of es) e.hp = Math.floor(e.maxHp * books.executioner.executioner.belowPercent / 100) + 5; // the hit takes it under 15%
+  const t = s.pickTarget(h[0]); const ev = s.castSkill(h[0].uid, 0); const full = s.skillDefs[h[0].skills[0].id].cooldownMs;
+  ok('Executioner: a normal enemy left under 15% dies', !t.alive && ev.some((e) => e.type === 'proc' && e.label === 'Executed!'));
+  ok('...and the kill gives 30% of the cooldown back', Math.abs(h[0].skills[0].cooldownLeft - full * (1 - books.executioner.executioner.cooldownBackPercent / 100)) < 1); }
+{ const { s, es, h } = withPage('executioner', 0, ['knight']); s.placeLines();
+  for (const e of es) { e.hp = Math.floor(e.maxHp * books.executioner.executioner.belowPercent / 100) + 5; e.elite = { traits: [] }; }
+  const t = s.pickTarget(h[0]); s.castSkill(h[0].uid, 0);
+  ok('...but never an elite or boss', t.alive); }
+{ const { s, es, h } = withPage('phoenixPage', 0, ['knight']); s.placeLines(); const k = h[0]; k.deathSaveUsed = true; // the game's own one-time death save would soften the hit first
+  let ev = []; s.dealDamage(k, k.hp + 10, ev);
+  ok('Phoenix Page: a deadly hit leaves the caster at 20% health', k.alive && Math.abs(k.hp - k.maxHp * books.phoenixPage.phoenix.hpPercent / 100) <= 1, k.hp);
+  ok('...and fires the skill for free', ev.some((e) => e.type === 'cast' && e.unit === k) && k.skills[0].cooldownLeft === 0);
+  ev = []; s.dealDamage(k, k.hp + 10, ev);
+  ok('...only once per floor', !k.alive || k.hp <= 0); }
+{ const { s, h } = withPage('phoenixPage', 0, ['knight']); h[0].deathSaveUsed = true; s.dealDamage(h[0], h[0].hp + 10, []); s.spawnEnemies(['goblin'], 2); s.dealDamage(h[0], h[0].hp + 10, []);
+  ok('...and works again on the next floor', h[0].hp > 0); }
+{ const a = mk(['samurai'], 0), b = withPage('elementalStorm', 0, ['samurai']);
+  for (const m of [a, b]) for (const e of m.es) e.weak = ['ice'];
+  a.s.castSkill(a.h[0].uid, 0); const ev = b.s.castSkill(b.h[0].uid, 0);
+  ok('Elemental Storm: the hit becomes the element the enemy is weak to', ev.some((e) => e.type === 'attack' && e.skill && e.damageType === 'ice')); }

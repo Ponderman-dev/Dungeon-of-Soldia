@@ -831,6 +831,7 @@ export default class BattleState {
     if (left >= target.hp && left > 0) left = this.deathSave(target, left, events || []);
     target.hp = Math.max(0, target.hp - left);
     if (target.hp <= 0) this.phoenixSave(target, events || []); // Phoenix Feather: one feather is used up instead of dying
+    if (target.hp <= 0) this.phoenixPage(target, events || []); // Phoenix Page (skill book): once per floor
     if (left > 0 && target.def.passive && target.def.passive.rage) this.gainRage(target, target.def.passive.rage.perHitTaken, events); // Berserker: hits taken fill Rage
     if (left > 0 || absorbed > 0) {
       target.sinceHit = 0; // being hit resets Steady Aim

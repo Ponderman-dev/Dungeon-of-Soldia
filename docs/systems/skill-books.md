@@ -37,10 +37,15 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   skills), Glass Cannon (power +45, selfApply health -15% with `untilFightEnd`: statuses.js marks it `fightOnly`,
   `spawnEnemies` drops those and refreshes stats). NOTE: power pages do not grow Defense Bash's defense part (old
   behaviour). Smart curve median 40 (unchanged).
-- **NEXT: the other 15 NEW PAGES (user picked, session 45; build in batches, numbers in JSON, a test per mechanic):**
-  LEGENDARY (5): Echo (fires again at 60%); Time Warp (resets the other skill); Executioner (kills normal enemies under
-  15%, kill = 30% cooldown back); Phoenix Page (once per floor a deadly hit fires this skill for free, caster left at
-  20%); Elemental Storm (damage = the element the target is weakest to).
+- **NEW PAGES BATCH 3, the 5 LEGENDARIES (BUILT, session 46):** Echo (`echo {power}`: releaseSkill always echoes once,
+  like Echo Rune; not channels / one-by-one flasks), Time Warp (`resetOther`: the other skills' cooldowns to 0, in
+  bookCast), Executioner (`executioner`: in bookOnHit a non-elite non-boss under belowPercent takes a `fixedAmount`
+  strike of its health + shields; the cast's first kill gives back cooldownBackPercent; channels refund per wave),
+  Phoenix Page (`phoenix {hpPercent}`: `phoenixPage()` called from dealDamage after the Phoenix Feather; once per floor
+  via `hero.floor.phoenixPage`, health to 20%, the skill is released for free, castPages saved around it; the game's own
+  deathSave comes first), Elemental Storm (`elementalStorm {elements}`: bookHitMods returns a damageType picker, combat.js
+  exports `weakResistMultiplier`; own type kept on a tie). Smart curve median 40 (unchanged).
+- **NEXT: the 10 HERO PAGES (user picked, session 45; build in batches, numbers in JSON, a test per mechanic):**
   HERO (10, one per hero): Shockwave (Knight: Defense Bash stun also hits enemies next to the target), Earthshaker
   (Berserker: Savage Leap stuns everyone around 0.8s), Flurry (Rogue: Multistrike +2 hits), Downpour (Archer: Arrow Rain
   +2 waves), Twin Crescent (Samurai: Wind Cutter also slashes the row behind), Convergence (Mage: every 3rd Elemental

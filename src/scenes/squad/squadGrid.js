@@ -30,6 +30,9 @@ export const SQUAD_VIEW = {
   slots: [{ x: 90, y: 350 }, { x: GAME_WIDTH / 2, y: 336 }, { x: GAME_WIDTH - 90, y: 350 }], // outer ones nearer the middle (user)
   heroScale: 4, sideOffPx: 48, lockedWash: 0x4a4458, edge: 8,
   lockedCard: { h: 350, goalY: 250, barY: 296, barH: 8 }, // a locked hero's small card (SquadScene.lockedCardBody)
+  // The hero card (SquadScene.openPanel): bright body text, the gap between its lines, the skill boxes' fill / edge /
+  // inner padding / gap between boxes, the tip's colour.
+  card: { body: '#ece4d4', lineGap: 6, fill: 0x16110f, edge: 0x3a2a22, pad: 10, gap: 8, tip: '#ffd88a' },
   grid: { bottom: 606, w: 84, h: 124, foot: 112, tileScale: 4, gap: 12, side: 8, shadowW: 52, dragPx: 8,
     bar: { w: 120, h: 4, gap: 12 }, // bar = the scroll bar under the row (gap = from the row)
     // SCROLL HINTS (user: 'not clear how people will know to scroll'): arrow tabs on the row's ends (only where more is

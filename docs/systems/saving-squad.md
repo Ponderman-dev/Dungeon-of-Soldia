@@ -85,3 +85,8 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   smaller'):** a locked hero's card is a small centred card (`SQUAD_VIEW.lockedCard`, `SquadScene.lockedCardBody`):
   its grey shape, '? ? ?', LOCKED HERO, the goal ('Reach floor 5'), a gold progress bar + '0 / 5 best floor'; no
   name, kit, perk or tips; a tap anywhere closes it. Arrow tabs 16 x 36 with a smaller pixel < / >.
+- **READABLE HERO CARD (session 47, user: 'this info is hard to read'):** `openPanel`: a shorter portrait (120, hero
+  x4), name, role, the summary in bright text (`SQUAD_VIEW.card.body`, lines 6px apart), 'TEAM BONUS: ...' on its own
+  gold line; then each skill in its OWN BOX (quiet tile colours): icon + name + a coloured TAG (PASSIVE gold / ATTACK -
+  10s red / SUPPORT - 12s green: the cooldown lives in the tag), the description under them; the tip in its own box
+  when it fits above the button. 'X leaves the squad.' (was 'goes back to the bench').

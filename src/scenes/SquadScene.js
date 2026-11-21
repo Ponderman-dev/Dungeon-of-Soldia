@@ -373,50 +373,52 @@ export default class SquadScene extends Phaser.Scene {
     const g = put(this.add.graphics());
     drawWindow(g, X, Y, W, H);
     // Portrait: the hero big in an inner window on the dungeon floor colour.
-    drawWindow(g, X + 12, Y + 12, W - 24, 150, { fill: 0x14101f });
-    g.fillStyle(0x000000, 0.35).fillEllipse(GAME_WIDTH / 2, Y + 142, 120, 22);
-    const big = put(new Character(this, GAME_WIDTH / 2, Y + 142, def).setScale(5));
+    drawWindow(g, X + 12, Y + 12, W - 24, open ? 120 : 150, { fill: 0x14101f }); // shorter for an open hero: room for the text
+    const feet = open ? Y + 114 : Y + 142;
+    g.fillStyle(0x000000, 0.35).fillEllipse(GAME_WIDTH / 2, feet, open ? 96 : 120, open ? 18 : 22);
+    const big = put(new Character(this, GAME_WIDTH / 2, feet, def).setScale(open ? 4 : 5));
     if (!open) big.setWash(this.L.lockedWash, 1);
     // Every size lands on the font's 8px grid: big titles 24, names 16, the rest 8.
     const text = (x, y, str, size, color, bold = false, wrap = 0) => put(this.add.text(x, y, str, { fontFamily: FONT, fontSize: `${size >= 24 ? 24 : size >= 14 ? 16 : 8}px`, color, wordWrap: wrap ? { width: wrap, useAdvancedWrap: true } : undefined, lineSpacing: size >= 14 ? 6 : 4 }));
     const element = ['fire', 'holy', 'dark', 'ice', 'electric'].includes(def.damageType) ? ` - ${def.damageType}` : '';
     if (!open) return this.lockedCardBody(id, { objs, put, text, g, X, Y, W, H, card });
-    text(GAME_WIDTH / 2, Y + 178, def.name, 24, INK, true).setOrigin(0.5, 0);
-    text(GAME_WIDTH / 2, Y + 210, `${def.role || ''} - ${def.damageType === 'melee' ? 'melee' : 'ranged'}${element}`.toUpperCase(), 11, UI.gold, true).setOrigin(0.5, 0);
-    const perk = this.perkLine(def);
-    text(GAME_WIDTH / 2, Y + 230, `${def.summary || ''}  Team: ${perk}`, 12, MUTE, false, W - 48).setOrigin(0.5, 0).setAlign('center');
-
-    // Passive, attack skill, support skill: its pixel icon (skillIcons.json; passive in a gold frame, skills in a
-    // red / green window like the fight buttons) + name + what it does. No icon: the old coloured letter badge.
-    let y = Y + 280;
-    const row = (iconId, badge, color, name, extra, body) => {
-      const key = skillIconKey(this, iconId, badge === 'P');
-      if (key && badge === 'P') put(this.add.image(X + 16, y, key).setOrigin(0).setScale(2));
-      else if (key) {
-        drawWindow(g, X + 16, y, 40, 40, { line: color });
-        put(this.add.image(X + 36, y + 20, key).setScale(2));
-      } else {
-        g.fillStyle(color, 1).fillRect(X + 16, y, 22, 22); // a square coloured badge: P passive, A attack, S support
-        text(X + 27, y + 12, badge, 8, '#000000', true).setOrigin(0.5);
-      }
-      const tx = key ? X + 66 : X + 48;
-      const n = text(tx, y + 3, name, 14, INK, true, W - (tx - X) - 16);
-      const b = text(tx, n.y + n.height + 8, extra ? `${extra}. ${body}` : body, 12, '#d0d0dc', false, W - (tx - X) - 16);
-      y = Math.max(b.y + b.height, key ? y + 40 : 0) + 16;
+    // READABLE CARD (user, session 47: 'this info is hard to read'): name, role, the summary in bright text with air
+    // between the lines, the team bonus on its own gold line; then each skill in its OWN BOX: icon + name + a coloured
+    // tag (PASSIVE / ATTACK - 10s / SUPPORT - 12s: the cooldown lives in the tag, not the text), the description under
+    // them; the tip in a box of its own when it fits. Sizes and colours: SQUAD_VIEW.card.
+    const C = this.L.card;
+    const small = (x, y, str, color, wrap) => put(this.add.text(x, y, str, { fontFamily: FONT, fontSize: '8px', color, wordWrap: wrap ? { width: wrap, useAdvancedWrap: true } : undefined, lineSpacing: C.lineGap }));
+    text(GAME_WIDTH / 2, Y + 144, def.name, 24, INK, true).setOrigin(0.5, 0);
+    small(GAME_WIDTH / 2, Y + 184, `${def.role || ''} - ${def.damageType === 'melee' ? 'melee' : 'ranged'}${element}`.toUpperCase(), UI.gold).setOrigin(0.5, 0);
+    const sum = small(GAME_WIDTH / 2, Y + 202, def.summary || '', C.body, W - 48).setOrigin(0.5, 0).setAlign('center');
+    const team = small(GAME_WIDTH / 2, sum.y + sum.height + 8, `TEAM BONUS: ${this.perkLine(def)}`, UI.gold).setOrigin(0.5, 0);
+    let y = team.y + team.height + 12;
+    const bx = X + 12, bw = W - 24;
+    const box = (top, h) => g.fillStyle(0x000000, 1).fillRect(bx - 2, top - 2, bw + 4, h + 4).fillStyle(C.edge, 1).fillRect(bx, top, bw, h).fillStyle(C.fill, 1).fillRect(bx + 2, top + 2, bw - 4, h - 4);
+    const section = (iconId, tag, tagColor, name, body) => {
+      const top = y, P = C.pad;
+      const key = skillIconKey(this, iconId);
+      const nm = text(bx + P + 44, top + P - 1, name, 16, INK, true, bw - 2 * P - 44);
+      const tg = small(bx + P + 44, nm.y + nm.height + 4, tag, tagColor);
+      const ds = small(bx + P, Math.max(tg.y + tg.height, top + P + 36) + 8, body, C.body, bw - 2 * P);
+      const h = ds.y + ds.height + P - top;
+      box(top, h); // drawn once its height is known (the card graphics sits under every text, so it stays behind)
+      drawWindow(g, bx + P, top + P, 36, 36, { line: tagColor === UI.gold ? 0xffd84a : UI.line });
+      if (key) put(this.add.image(bx + P + 18, top + P + 18, key).setScale(2));
+      y = top + h + C.gap;
     };
     const atk = skillDefs[def.skills.attack];
     const sup = skillDefs[def.skills.support];
-    row(`passive_${def.id}`, 'P', 0xffd84a, def.passive.name, '', def.passive.description);
-    row(def.skills.attack, 'A', SKILL_COLORS.attack.ready, atk.name, `Cooldown ${atk.cooldownMs / 1000}s`, atk.description);
-    row(def.skills.support, 'S', SKILL_COLORS.support.ready, sup.name, `Cooldown ${sup.cooldownMs / 1000}s`, sup.description);
-    // One tip is enough here.
-    // The button at the bottom.
+    section(`passive_${def.id}`, 'PASSIVE', UI.gold, def.passive.name, def.passive.description);
+    section(def.skills.attack, `ATTACK - ${atk.cooldownMs / 1000}s`, UI.red, atk.name, atk.description);
+    section(def.skills.support, `SUPPORT - ${sup.cooldownMs / 1000}s`, UI.green, sup.name, sup.description);
+    // The button at the bottom; the tip (one) in its own box above it, only when it fits.
     const by = Y + H - 64;
     if (def.tips && def.tips.length) {
-      const tip = text(X + 16, y + 6, `Tip: ${def.tips[0]}`, 12, UI.gold, false, W - 32);
-      // Only when it fits above the button (and the unlock line of a locked hero); a long card skips it.
-      if (tip.y + tip.height > by - (open ? 10 : 34)) tip.destroy();
-      else g.fillStyle(0xffffff, 1).fillRect(X + 16, y - 6, W - 32, 2); // a white pixel rule
+      const P = C.pad, tip = small(bx + P, y + P, `TIP: ${def.tips[0]}`, C.tip, bw - 2 * P);
+      const h = tip.height + 2 * P;
+      if (y + h > by - 30) tip.destroy();
+      else box(y, h);
     }
     let label;
     let action = null;
@@ -428,10 +430,10 @@ export default class SquadScene extends Phaser.Scene {
       label = 'SEND BACK';
       action = () => this.sendBack(id);
     } else if (full) {
-      // Squad full: choosing still works, the hero in the last slot walks back to the bench (user's choice).
+      // Squad full: choosing still works, the hero in the last slot walks off (user's choice).
       const out = this.slots[this.slots.length - 1];
       label = 'CHOOSE';
-      text(GAME_WIDTH / 2, by - 22, `${heroDefs.find((h) => h.id === out).name} goes back to the bench.`, 12, MUTE, true).setOrigin(0.5);
+      text(GAME_WIDTH / 2, by - 22, `${heroDefs.find((h) => h.id === out).name} leaves the squad.`, 12, MUTE, true).setOrigin(0.5);
       action = () => { this.sendBack(out); this.choose(id); };
     } else {
       label = 'CHOOSE';

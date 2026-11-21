@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { CHAR_SCALE, SHOOT_MOTION, BLESS_MOTION } from '../config.js';
 import { partArt, artSize, partAnchor, artPixels, mixColor, artKey } from '../systems/pixelArt.js';
 import { samplePose } from '../systems/animClips.js';
-import { iceColor } from '../systems/statusFx.js';
+import { iceColor, snapIce } from '../systems/statusFx.js';
 
 // A character built from separate parts (body, head, weapon...), described by JSON data.
 // Each part is a small pixel picture (`art`, drawn in the Character Studio) or, until it is drawn,
@@ -305,6 +305,7 @@ export default class Character extends Phaser.GameObjects.Container {
   setStatusLook(tint, ice = 0) {
     // Tint strength in 10% steps: every step is its own cached texture per part, finer steps only made more of them.
     if (tint) { const amount = Math.round(tint[1] * 10) / 10; tint = amount > 0 ? [tint[0], amount] : null; }
+    ice = snapIce(ice, this.def.height || 24); // snapped to the pixel rows it covers (fewer cached pictures, same look)
     const look = tint || ice > 0 ? { tint, ice } : null;
     const sig = look ? `${tint ? tint.join('-') : ''}-${ice}` : '';
     if (sig === this.lookSig) return;

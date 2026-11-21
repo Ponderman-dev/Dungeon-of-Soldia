@@ -249,6 +249,15 @@ export function iceBreak(u, p) {
 
 // Turns one pixel colour to ice (Freeze): light parts become pale ice, darker parts deeper blue,
 // the dark outline becomes a bright rim.
+// Freeze ice climbs up from the feet; the part pictures are cached per ice amount (Character.texture). Ice is snapped
+// to the half-pixel rows it can actually cover (part rows sit on whole or half pixels), so the look is pixel-identical
+// but a freeze makes ~2 cached pictures per pixel of height instead of one per 1% (session 51: textures piled up).
+export function snapIce(ice, height = 24) {
+  if (!(ice > 0)) return 0;
+  const span = height + 2, cut = Math.floor(2 * -Math.min(1, ice) * span) / 2;
+  return Math.max(0, -cut / span - 1e-9); // (a hair under the row, so float rounding never covers one row more)
+}
+
 export function iceColor(c) {
   if (c === C.outline) return 0xe8fbff;
   const r = (c >> 16) & 255, gr = (c >> 8) & 255, b = c & 255;

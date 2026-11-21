@@ -213,7 +213,7 @@ Greater spawners: Gargoyle Idol (rare, slow tanky, draws attacks), Spirit Knight
 ## BUILD ORDER (approved plan, one step at a time)
 Rules for every step: keep the game working, run `npm test`, commit with a clear message, push.
 Republish the preview page after EVERY change (the user asked for this, for now).
-Update CLAUDE.md / HANDOFF.md when a rule in them changes. Data stays in JSON. Placeholder art only.
+Update CLAUDE.md / the docs/systems files when a rule in them changes. Data stays in JSON. Placeholder art only.
 
 ### Phase A: Foundations (rules and data, little to see)
 - A1. DONE. Remove mana: mana bar, regen, win top-up and skill mana costs go; skills run on cooldown only.

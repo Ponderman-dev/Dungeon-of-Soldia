@@ -6,7 +6,7 @@ by the game.
 
 REMOVED in the cleanup session (already in the game, nothing used them; still in git history and on their published
 urls): the sprite proposal page, the old 72-icon item page, the enemy proposal page, SCREEN REVIEW, UI STYLE, skill
-icons, the 'New item effects' page.
+icons, the 'New item effects' page. Session 51: the UI CONCEPTS mock-ups (session 43, all rejected: Party Cards, Clean Glass, Retro Handheld, JRPG Windows, Dungeon Stone, 16-bit Tactics).
 
 | Page | Published at | Source |
 |---|---|---|
@@ -15,7 +15,6 @@ icons, the 'New item effects' page.
 | PUZZLE ROOMS (6 playable puzzle ideas, user: 'fck that number puzzle') | https://claude.ai/artifact/HdFydkPMrAzb2W2um8mWrn | `puzzles/`: `node docs/proposals/puzzles/make.mjs <out.html>` (template.html + sprites.js from game data). Declares `db`: collection `picks`, doc per puzzle id (mimic, runes, braziers, beam, ice, picture) `{keep}`, doc `note` {text}. Republish to the same url, omit `capabilities`. |
 | SKILL EFFECTS DEMO (Knight: today vs new CALM 3-beat look, v3 no abstract shapes, CHARGE/RELEASE/IMPACT; user picked name style B floating name) | https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN | `skill-fx/`: `node docs/proposals/skill-fx/make.mjs <out.html>` (demo.js = the scene + recipes in character pixels, reads game data/effect code; bundled by vite.config.js; Press Start 2P inlined). Declares `db`: collection `notes`, docs `name` {pick 'A'/'B', text}, `look:defense_bash` / `look:challenge` {verdict 'ok'/'change', text}, `general` {text}; Rogue added (`look:multistrike`, `look:smoke_bomb`, plays the game's own rogue recipes). Republish to the same url, omit `capabilities`. |
 | STUDIO UI mock-ups (session 34: simpler Draw screen + new 6-canvas SHEET tab; not published, PNGs only) | - | `studio-ui/`: `mock.html?view=draw` / `?view=sheet` (fake page, loads `data.js` = game sprites as pixels), `mock-draw.png`, `mock-sheet.png` |
-| UI CONCEPTS (session 43: A Party Cards, B Clean Glass (both rejected), C Retro Handheld, D JRPG Windows, E Dungeon Stone, F 16-bit Tactics; fight + camp each; not published, PNGs only) | - | `ui-concepts/`: `mock.html` (A-C), `mock2.html` (D-F), `node docs/proposals/ui-concepts/render.mjs <out dir>` |
 | ART PILOTS (session 43, KIV: round 1 = 3 styles 'too similar', round 2 = big detailed vs mascots, never sent) | - | `hero-art/pilot-round1.py`, `pilot-round2.py` (`python3 <file> <out.png>`) |
 | HERO ART directions (session 34, KIV: 20+ looks for Knight/Mage/Archer; not published, PNGs only) | - | `hero-art/`: `styles.html?only=<keys>` (all drawings as letter grids + outline/shading renderer; keys in its STYLES list, e.g. `cur,ks,ksn`), `data.js`, one PNG per round (`styles-ksn.png` = the user's own 3 knight sketches) |
 | Hit effects (animated) | https://claude.ai/artifact/6N97in7zepDMZcMgbJJrYF | `hit-effects.html`, rebuilt by `node docs/proposals/build-effects.mjs` |

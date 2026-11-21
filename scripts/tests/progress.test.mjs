@@ -1,6 +1,6 @@
 // Phase F: saved progress and hero unlocks (src/systems/progress.js, src/data/unlocks.json).
 import fs from 'fs';
-import { emptyProgress, loadProgress, saveProgress, recordRun, requirementProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad, SAVE_KEY } from '../../src/systems/progress.js';
+import { emptyProgress, loadProgress, saveProgress, recordRun, requirementProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad, shortGoal, nextUnlock, SAVE_KEY } from '../../src/systems/progress.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const unlocks = r('unlocks.json'), heroDefs = r('heroes.json');
@@ -56,3 +56,13 @@ ok('the heroes do NOT all use the same requirement type', new Set(Object.values(
   for (let i = 0; i < 200; i++) { const sq = randomSquad(ids); seen.add(sq.join()); if (sq.length !== 3 || new Set(sq).size !== 3 || !sq.every((x) => ids.includes(x))) allOk = false; }
   ok('RANDOM picks 3 different heroes from the unlocked ones', allOk && seen.size > 10); }
 ok('with only 2 unlocked, random gives 2 (no crash)', randomSquad(['a', 'b']).length === 2);
+// ---- squad screen: a locked tile's short goal, the next hero to unlock
+{ const req = unlocks.requirements.berserker, g = shortGoal(req, unlocks);
+  ok('short goal: two lines, holds the number', g.length === 2 && g.join(' ').includes(String(req.value)));
+  ok('every requirement type has a short goal', Object.values(unlocks.requirements).every((q) => shortGoal(q, unlocks).every((t) => t.length > 0 && t.length <= 8)));
+  const fresh = emptyProgress(), first = nextUnlock(heroDefs, fresh, unlocks);
+  ok('next unlock on a fresh save is a locked hero', first && !isUnlocked(first, fresh, unlocks));
+  const mid = emptyProgress(); mid.stats.runs = unlocks.requirements.bard.value - 1; // bard nearly done
+  ok('next unlock = the one closest to its goal', nextUnlock(heroDefs, mid, unlocks) === 'bard');
+  const all = emptyProgress(); all.unlockAll = true;
+  ok('nothing locked: no next unlock', nextUnlock(heroDefs, all, unlocks) === null); }

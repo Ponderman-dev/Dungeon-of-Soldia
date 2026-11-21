@@ -16,6 +16,7 @@
     "totalFloors": "Clear {value} floors in total",
     "runs": "Play {value} runs"
   },
+  "short": {"_about": "A locked tile's goal in two tiny lines (squad screen, session 47).", "bestFloor": ["FLOOR", "{value}"], "totalKills": ["{value}", "KILLS"], "totalFloors": ["{value}", "FLOORS"], "runs": ["{value}", "RUNS"]},
   "statNames": {
     "bestFloor": "best floor",
     "totalKills": "enemies",

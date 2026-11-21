@@ -30,3 +30,15 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   dim 'PICK n MORE' until the squad is full). CAMP / RANDOM sit in a DOCK (gold line + dark band, like the camp's tab
   bar) with the LAYOUT button + test toggle at its foot. Top left: a title window like the fight's floor counter
   ('Squad n/3', 'Last run: floor N' under it); the sound button sits where the fight's pause button is (pause.json).
+- **LAYOUT C PICKED + NEATER (session 47, user: 'C is the best but make it neater; the walk to the boxes is weird; a
+  new player has lots of empty boxes'):** A and B are GONE (`squad/squadLayouts.js` -> `squad/squadGrid.js`,
+  `SQUAD_VIEW` = every spot and size). A picked hero WALKS IN FROM THE SIDE of the screen to its slot (left slot from
+  the left, right slot from the right, middle from the left); Send back = walks off the side (middle: to the right).
+  Under the squad: NAME PLATES (framed, all 96 wide) and Send back buttons in two even rows. TILES: no slot numbers; a
+  picked tile = gold frame + a gold CHECK MARK; locked heroes = GREY shapes (`lockedWash`). LOCKED TILES ON TRIAL
+  (user: 'show all types in the demo'), registry `lockedStyle`, the 'TILES: ...' button in the dock (dev + squad demo):
+  `goals` = all 10, a locked one shows a padlock + its goal in two lines (unlocks.json `short`, `shortGoal()`);
+  `teaser` = only open heroes + ONE '?' tile = `nextUnlock()` (the locked hero closest to its goal) + 'n more heroes
+  to find'; `folded` = open heroes big, locked ones in a small row 'LOCKED: n'. The squad demo page now starts like a
+  NEW PLAYER (3 heroes) with the 'unlock every hero' test switch. Tests: `progress.test.mjs` (shortGoal, nextUnlock).
+  When the user picks a style: delete the other two + the TILES button.

@@ -144,6 +144,22 @@ export function describeProgress(req, progress, unlocks) {
   return `${Math.min(p.have, p.need)} / ${p.need} ${unlocks.statNames[req.type]}`;
 }
 
+// A locked hero's goal in two short lines (unlocks.json short): ['FLOOR', '5'], ['100', 'KILLS'].
+export function shortGoal(req, unlocks) {
+  return unlocks.short[req.type].map((t) => t.replace('{value}', req.value));
+}
+// The locked hero closest to unlocking (the biggest share of its goal done; ties: the earlier hero). null = none locked.
+export function nextUnlock(heroDefs, progress, unlocks) {
+  let best = null, bestShare = -1;
+  for (const h of heroDefs) {
+    const req = unlocks.requirements[h.id];
+    if (!req || isUnlocked(h.id, progress, unlocks)) continue;
+    const p = requirementProgress(req, progress), share = p.have / p.need;
+    if (share > bestShare) { best = h.id; bestShare = share; }
+  }
+  return best;
+}
+
 // Three different random heroes from the given ids (the RANDOM button).
 export function randomSquad(ids, count = 3, rng = Math.random) {
   const pool = [...ids];

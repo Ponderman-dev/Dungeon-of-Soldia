@@ -316,7 +316,7 @@ export function pressable(scene, hit, { redraw, sink = [], onTap, enabled = () =
 }
 // ANY BUTTON FEELS PUSHED (session 49, user: 'make sure every button is responsive on the clicks'): zone.onPress(fn)
 // instead of zone.on('pointerup', fn). Finger down = a dark cover (UI.press.shade) over the zone and the texts / icons
-// inside it drop UI.press.sinkPx; finger slides off = cancelled; finger up = pops back, then fn runs (after the push
+// inside it drop UI.press.sinkPx + the 'tap' click plays; finger slides off = cancelled; finger up = pops back, then fn runs (after the push
 // showed for UI.press.holdMs). { instant: true } = fn runs on finger down (fight taps), the push still shows briefly.
 // Buttons with their own pressed drawing keep pressable(). Works for zones in a container (a page) or in the scene.
 function pressParts(zone, b) {
@@ -340,13 +340,14 @@ Phaser.GameObjects.Zone.prototype.onPress = function (fn, { instant = false } = 
   this.on('pointerdown', (...args) => {
     if (release) return;
     release = pushLook(this); at = scene.time.now;
+    if (!instant) sfx.play('tap'); // the click comes WITH the push (user: sounds were late), not on release
     if (instant) { const r = release; release = null; scene.time.delayedCall(UI.press.holdMs, r); fn(...args); }
   });
   this.on('pointerout', () => { if (release) { release(); release = null; } });
   this.on('pointerup', (...args) => {
     if (!release) return;
     const r = release; release = null;
-    const finish = () => { r(); fn(...args); };
+    const finish = () => { r(); sfx.hushDuring('tap', () => fn(...args)); }; // its own 'tap' already played
     const wait = UI.press.holdMs - (scene.time.now - at);
     if (wait > 0) scene.time.delayedCall(wait, finish); else finish();
   });

@@ -64,12 +64,12 @@ export default class TitleScene extends Phaser.Scene {
     const L = title.logo, cx = GAME_WIDTH / 2, outline = { stroke: '#000000', strokeThickness: 6 };
     // Stand-in logo (the user will draw the real one): two lines of the pixel font, the name twice as big.
     const ui = [
-      uiText(this, cx, L.smallY, L.small, 'big', UI.text, outline).setOrigin(0.5),
+      uiText(this, cx, L.smallY, L.small, 'big', '#ffffff', outline).setOrigin(0.5),
       uiText(this, cx, L.bigY, L.big, 'big', UI.gold, { stroke: '#000000', strokeThickness: 4 }).setOrigin(0.5).setScale(L.bigScale),
     ];
     // TAP TO START (user, session 40): no button box (a tap ANYWHERE starts), just the words, smaller, blinking softly.
     const S = title.start;
-    const tap = uiText(this, cx, S.y, S.text, S.size, UI.text, outline).setOrigin(0.5);
+    const tap = uiText(this, cx, S.y, S.text, S.size, '#ffffff', outline) // white: the title keeps its own colours (user: salmon looked weird).setOrigin(0.5);
     this.tweens.add({ targets: tap, alpha: S.blinkAlpha, duration: S.blinkMs, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }); // a soft blink
     ui.push(tap);
     // Best floor (user: unreadable small): the big pixel font in gold on a dark strip.

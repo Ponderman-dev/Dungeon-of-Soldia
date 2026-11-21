@@ -37,7 +37,7 @@ export const UI = {
   // docs/references/ui-vibe-pick-a-class.png). Was crimson + gold (session 40, `git show 4fc5724:src/config.js`).
   text: '#dcd8ec', // pale lavender-grey
   dim: '#8480a0', // disabled / hints
-  gold: '#f4a890', // rarity, stacks, important numbers (a soft salmon now; the name stays)
+  gold: '#ffd84a', // rarity, stacks, important numbers, the title (yellow: user kept it outside fights)
   fightGold: '#f6b49a', // fight pop-ups: crits, Lv labels, LEVEL UP, passive words (soft peach)
   red: '#ff7a5a', // attack skills, damage
   green: '#6ee07a', // support skills, heals

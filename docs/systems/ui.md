@@ -151,7 +151,10 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   pressed = 45% darker + label drops. Titles salmon; picked hero tiles + chosen outlines light salmon.
 - HEADERS: `drawWindow(..., { quiet: true })` = drawn like the squad name plates (black outline, tileEdge, tileFill):
   squad SQUAD n/3 + sound box, camp profile bar, fight Floor box + 1X + pause.
-- `UI.fightGold` = crits, Lv labels, LEVEL UP, passive words (soft peach; was yellow). `UI.gold` = soft salmon.
+- `UI.fightGold` = crits, Lv labels, LEVEL UP, passive words (soft peach; was yellow). `UI.gold` stays YELLOW (user: keep
+  yellow for the other text); the TITLE page keeps yellow SOLDIA + white texts (user: salmon looked weird there).
+- PRESS SOUND: `onPress` plays 'tap' on finger DOWN with the push; the action (on release) runs inside
+  `sfx.hushDuring('tap', ...)` so its own 'tap' is not a second, late click (user: sounds late / early to the animation).
 - Menu pages: `pageBackdrop(scene, bg)` = UI.pageBg + a 4px dithered checker.
 - PRESS ON EVERY BUTTON (user: 'every button responsive on the clicks'): `zone.onPress(fn, { instant })` (uiKit, on every
   Phaser Zone): finger down = a dark cover (`UI.press.shade` / `shadeAlpha`) over the zone + its texts / icons drop

@@ -50,10 +50,18 @@ async function bufferFor(name) {
   return buffers[name];
 }
 
+// HUSH (session 49): run() with one cue silenced (uiKit onPress already played its 'tap' on finger down, so the
+// button's own sfx.play('tap') inside its action, on finger up, would be a second, late click).
+let hushed = null;
+export function hushDuring(cue, run) {
+  hushed = cue;
+  try { return run(); } finally { hushed = null; }
+}
+
 // Plays a cue from sounds.json (e.g. 'tap', 'levelUp'). Never throws: a sound can never break the game.
 export async function play(cue) {
   try {
-    if (muted || !effects) return;
+    if (muted || !effects || cue === hushed) return;
     const c = soundData.cues[cue];
     if (!c) return;
     const now = typeof performance !== 'undefined' ? performance.now() : 0;

@@ -1,6 +1,44 @@
 # Handoff ARCHIVE (sessions 2-43, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
 
+## (session 48 start note, 2026-11-21; session 48 did texts, small font, squad tidy-up; the new look moved to 49) TRY A NEW UI LOOK (user: 'I kinda want this vibe'), reference picture below
+- BRANCH: `main` has EVERYTHING (session 47 merged in at the handoff). Start the next branch from `main`.
+- TASK: a new interface look inspired by `docs/references/ui-vibe-pick-a-class.png` (a screenshot of ANOTHER game's
+  'Pick a class' window: make OUR OWN take, never copy it). What gives it its vibe:
+  - cool, muted palette: deep navy / slate panels, a dark DITHERED (checker) background, thin 2px pale steel-blue
+    lines, flat colours (no gradients, no studs, no gold);
+  - the window is split into CELLS by thin divider lines (a grid of sections: icons on top, info left, skill right);
+  - a THIN, light pixel font in pale lavender-grey (not bold); the title in salmon / orange CAPITALS in a title bar
+    with small '?' and 'X' icons at its right;
+  - small square coloured stat icons with numbers; locked choices dim with a small red X; the chosen one has a
+    teal / green outline;
+  - two big flat buttons side by side along the bottom: green 'Choose' and maroon 'Cancel'.
+  Today's look is crimson + gold (`UI.goldTheme`, docs/systems/ui.md; session 38 reverted a stone look: 'check a new
+  look IN THE REAL GAME before choosing'). Ask first with the question tool what to try it on (one screen like the
+  squad screen or hero card, or the whole interface) and whether the font changes too; then build 2-3 takes as a
+  TRIAL (registry / url flag + a switch button), screenshots side by side, let them pick.
+- DONE in session 47 (all on main; details at the bottom of `docs/systems/saving-squad.md`, ui.md 'PUSHABLE BUTTONS'):
+  - Buttons PUSH IN when held (`pressable()` / `pressDown()` in uiKit, `UI.press`), act on release; the camp's flat
+    button is shared (`drawFlatButton` in uiKit, `UI.flat`).
+  - SQUAD SCREEN REDONE through many user rounds: squad of 3 in front of the gate (heroes walk in from the side),
+    big names on a slope with an X button each (= send back), ONE swipeable row of quiet hero tiles (open heroes +
+    one '?' tile for the next unlock; arrow tabs, dark edges, a nudge on open), BEGIN DESCENT = crimson with a gold
+    band all round, sinks as one piece. Dock like the camp. Locked hero card shows only shape + goal + progress bar.
+    Readable hero card (each skill in a box with a coloured tag, airy cream text).
+  - Necromancer is shown as NECROMAGE (id stays `necromancer`).
+  - Squad screen demo page: `npm run build:squad-demo` (starts like a new player), https://claude.ai/artifact/91YYyyPt6hFqW5TwJewZQ2
+  - Game page republished with all of it (session 47).
+- OTHER CANDIDATES (older): skills are a small share of damage (design talk); page leftovers (Twin Crescent animation,
+  Executioner on Arrow Rain, Defense Bash power pages, icon look-alikes); bosses rework; transitions phase 2-5.
+- PUBLISH (Artifact tool): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
+  dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. The first publish of a session
+  is refused 'not viewed', the second as 'unchanged': Read the LAST 3 lines of the saved live copy (offset), then the
+  third identical publish goes through.
+- Browser checks: vite + Playwright FROM THE SCRATCHPAD dir (`<repo>/node_modules/.bin/vite <repo> --port 5190`, run it
+  in the background with a long timeout). Fresh clone: `npm install` first. Playwright in an .mjs file:
+  `createRequire(import.meta.url)('playwright')`. Dev: `window.__game`; start a screen: stop the others, start 'Squad'.
+- TESTS: seed BOTH the state rng and Math.random for crowd tests, with a mixing rng (mulberry32).
+
 ## (session 47 start note, 2026-11-21; session 47 redid the squad screen, pushable buttons, Necromage, readable card)
 - BRANCH: `main` has EVERYTHING (session 46 merged in at the handoff). Start the next branch from `main`.
 - DONE in session 46 (all on main; details in `docs/systems/skill-books.md`, newest blocks at the bottom):

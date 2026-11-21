@@ -138,7 +138,7 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   a description. Don't repeat in a skill what the hero's passive says (Grudge, Bloodthirst).
 - Session 48 rewrote the 20 kit skills, 10 passives and the 20 longest items to this style.
 
-## THE DUSK LOOK (session 49, CURRENT THEME; replaces crimson + gold below)
+## THE DUSK LOOK (session 49, CURRENT THEME; replaces crimson + gold above)
 - User's pick 'Dusk + Soldia font + Salmon' from a live trial of 4 looks x 3 fonts x 6 main colours, inspired by
   docs/references/ui-vibe-pick-a-class.png ('the borders are sharp, no corner borders; buttons only one colour, no bevels,
   bands or gold'). Colours in `UI.goldTheme` (name kept) + `UI.text/dim/gold/fightGold/pageBg/dither` (config.js). The

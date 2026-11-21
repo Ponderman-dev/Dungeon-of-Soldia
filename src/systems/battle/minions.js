@@ -112,7 +112,7 @@ export const minionsMethods = {
     this.thunders = []; // a Thunderstruck circle still growing when the floor is won just goes away
     this.spirits = [];
     for (const m of [...this.minions]) {
-      if (!m.greater) this.vanishMinion(m, 'floorEnd', events);
+      if (!m.greater || m.def.object) this.vanishMinion(m, 'floorEnd', events); // the Shield Totem too (user, session 50: it must not follow the squad; it stands up again at the next fight)
       else { m.floors++; m.floorRevived = false; } // a greater minion that survived the floor (Spirit Knight grows; Phoenix can revive again)
     }
     for (const hero of this.heroes) {
@@ -184,9 +184,10 @@ export const minionsMethods = {
     m.floors = 0;
     m.timer = 0;
     if (this.hasPositions(holder) && def.object) {
-      // Shield Totem: stands still in the FRONT line, just in front of the heroes, in the centre.
+      // Shield Totem: stands still a little in front of the heroes, in the GAP between the left and middle hero
+      // (combat.json totemSidePx; user, session 50: in the centre it stood on the middle hero).
       const L = this.rules.movement.layout;
-      this.place(m, L.width / 2, L.heroY - (this.rules.minions.totemAheadPx || 50));
+      this.place(m, L.width / 2 + (this.rules.minions.totemSidePx || 0), L.heroY - (this.rules.minions.totemAheadPx || 50));
     } else if (this.hasPositions(holder)) {
       const M = this.rules.movement;
       this.place(m, holder.x + (this.rng() - 0.5) * 80, holder.y - 36 - this.rng() * 20);

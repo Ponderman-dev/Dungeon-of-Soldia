@@ -317,11 +317,11 @@ ok('Fire Imp Brazier is rare now', itemDefs.fire_imp_brazier.rarity === 'rare');
 // Minion upkeep: per summon item, no defense part; the Shield Totem is free.
 { const { s, k } = mk(); const d0 = k.stats.defense, a0 = k.stats.attackEfficiency; give(s, k, 'gargoyle_idol'); s.spawnMinion(k, k.minionSources.find((x) => x.key === 'gargoyle_idol'), []);
   ok('Upkeep: attack speed only (no defense part)', k.stats.defense === d0 && k.stats.attackEfficiency < a0, `${d0}->${k.stats.defense} ${a0}->${k.stats.attackEfficiency}`); }
-// Shield Totem: a greater minion that never attacks, front centre; every hero blocks while it stands; no upkeep.
+// Shield Totem: a greater minion that never attacks, in front of the heroes (in the gap left of the middle hero, session 50); every hero blocks while it stands; no upkeep.
 { const tb = eff('shield_totem', 'totemBlock'); const { s, es, k, h } = mk(); const a0 = k.stats.attackEfficiency; give(s, k, 'shield_totem', 2);
   const t = s.spawnMinion(k, k.minionSources.find((x) => x.key === 'shield_totem'), []);
   const L = r('combat.json').movement.layout;
-  ok('Shield Totem: a totem stands in the front centre', t && t.def.object && Math.abs(t.x - L.width / 2) < 1 && t.y < L.heroY);
+  ok('Shield Totem: a totem stands in front of the heroes, beside the centre', t && t.def.object && Math.abs(t.x - (L.width / 2 + r('combat.json').minions.totemSidePx)) < 1 && t.y < L.heroY);
   ok('...EVERY hero blocks ' + 2 * tb.percent + '% (2 copies)', h.every((x) => x.specials.block === 2 * tb.percent), h.map((x) => x.specials.block).join());
   ok('...no upkeep', k.stats.attackEfficiency === a0);
   const ev = []; for (let i = 0; i < 40; i++) ev.push(...s.update(50)); ok('...it never attacks', !ev.some((x) => x.type === 'attackStart' && x.attacker === t));

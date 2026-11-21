@@ -95,3 +95,16 @@ const greaters = (s) => s.minions.filter((m) => m.greater);
 
 { const { s, h, k } = mk(); s.giveItem(h[1].uid, 'idol'); s.startFloor();
   ok('items give minions only to their holder (the upkeep is the holder\'s)', greaters(s)[0].holderUid === h[1].uid && k.stats.attackEfficiency === s.heroes[0].stats.attackEfficiency && h[1].stats.attackEfficiency < h[1].baseStats.attackEfficiency + 1); }
+
+// The Shield Totem (an OBJECT greater minion, session 50): it vanishes when the floor is won (it must not follow the
+// squad) and stands up again at the next fight; it stands in the gap left of the middle hero (combat.json totem*Px).
+{ const defs = loadItems({ totem: { name: 'Totem', rarity: 'rare', type: 'special', scope: 'self', effects: [{ greaterMinion: 'shield_totem', upkeep: false }] } });
+  const s = new BattleState({ heroDefs: noPerks(r('heroes.json')).slice(0, 3), enemyDefs: r('enemies.json'), minionDefs: r('minions.json'), itemDefs: defs, statusDefs: r('statuses.json'), skillDefs: r('skills.json'), rules, damageTypes: r('damageTypes.json'), leveling: r('leveling.json') });
+  s.spawnEnemies(['goblin'], 1); s.placeLines();
+  s.giveItem(s.heroes[0].uid, 'totem'); s.startFloor();
+  const t = greaters(s)[0], L = rules.movement.layout, M = rules.minions;
+  ok('the totem stands in front of the heroes, off the centre', t && t.x === L.width / 2 + M.totemSidePx && t.y === L.heroY - M.totemAheadPx, t && `${t.x},${t.y}`);
+  const ev = s.endFloor();
+  ok('...it vanishes when the floor is won', greaters(s).length === 0 && ev.some((e) => e.type === 'minionVanish' && e.unit === t && e.reason === 'floorEnd'));
+  s.startFloor();
+  ok('...and stands up again at the next fight', greaters(s).length === 1 && greaters(s)[0].def.object); }

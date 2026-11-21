@@ -78,7 +78,11 @@ Engine: Phaser 3 + Vite + plain JS, to be wrapped for Android with Capacitor lat
   `build:release` = the store / Android build (no TEST buttons, no dev url flags).
 
 ## Still open
-- What happens after floor 160 (no boss past Vharox yet) and what counts as "clearing" Dungeon A.
+- BOSS PLAN (user, session 51, KIV = keep in view, not started): Dungeon A goes to floor 200 (boss floors 20, 40 ...
+  200 = 10 boss floors; today there are 8, up to 160). Every boss floor should have 1-2 random boss choices (e.g.
+  floor 20 = Grukk OR another boss), so runs differ. Every 40 floors the dungeon looks a bit different (new floor
+  look / theme). Still to decide: the floor 180 and 200 bosses, the extra bosses per floor, the 5 looks, and what
+  happens after floor 200 (win screen? endless?).
 - More dungeons after Dungeon A.
 - Android wrap (Capacitor) and the Solana / dApp Store side (wallet, gem payments, server checks).
 - Sound (on hold), skins, hero lore, online leaderboard (today a sample board).

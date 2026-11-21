@@ -170,3 +170,7 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   its buttons in 60ms later (after the teardown). Worst frame gap while anything moves: 260ms -> ~35ms (4x slowed).
 - `uiShift` FADE-only parts (kind 'fade', no offset) now only change alpha, never y: uiHome was taken before the squad
   names were placed, so the fade-in moved them to y 0 ('above their heads') for a split second, then refresh() snapped them.
+- Session 50 (user: rarities hard to tell apart, skill squares still rounded): fight skill squares are SQUARE
+  (hud.js drawSkillFrame). Reward item cards: a SOLID rarity TAG (colour block + dark 'RARE ITEM' text) instead of
+  thin coloured words; rarities.json `frame.line` = border px (common/rare 2, epic/legendary 4) and clearer fills
+  (common neutral grey-black, rare blue, epic purple, legendary brown-gold). Legendary keeps its shine.

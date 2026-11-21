@@ -255,7 +255,7 @@ export const hudMethods = {
   // Returns the inset (where the cooldown shade starts).
   drawSkillFrame(g, b, line, ready, alive) {
     const alpha = alive ? 1 : 0.5, x = b.x, y = b.y, w = SKILL_W, h = SKILL_H;
-    const tile = (i, c) => { g.fillStyle(c, alpha).fillRect(x + i + 2, y + i, w - 2 * i - 4, h - 2 * i).fillRect(x + i, y + i + 2, w - 2 * i, h - 2 * i - 4); };
+    const tile = (i, c) => { g.fillStyle(c, alpha).fillRect(x + i, y + i, w - 2 * i, h - 2 * i); }; // square corners (the Dusk look)
     tile(0, line);
     tile(2, UI.goldTheme.slot);
     return 2;

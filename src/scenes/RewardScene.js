@@ -175,7 +175,7 @@ export default class RewardScene extends Phaser.Scene {
     h += name.height;
     name.destroy();
     if (item.perStack) h += this.perStackHeight(item) + 8;
-    return Math.max(136, 32 + h + 10 + 18);
+    return Math.max(136, 34 + h + 10 + 18);
   }
 
   // The small "Per stack: ..." line under an item's text (items.json `perStack`: what one more copy adds).
@@ -206,11 +206,15 @@ export default class RewardScene extends Phaser.Scene {
     if (item.rarity === 'legendary') rarityShine(this, card, CARD_W, h, R);
     card.add(this.add.image(ICON_X, h / 2 - 9, itemIconKey(this, item.id, item.rarity)).setScale(4));
     card.add(this.add.text(ICON_X, h / 2 + 42, itemTypes[item.type].label.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5));
-    card.add(this.add.text(TEXT_X, 16, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : item.kind === 'book' ? 'BOOK' : 'ITEM'}`.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: hex(rc) }));
+    // The rarity TAG: a solid block in the rarity colour with dark text (user, session 50: the thin coloured words
+    // alone made common / rare / epic / legendary hard to tell apart).
+    const tagText = this.add.text(TEXT_X + 4, 13, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : item.kind === 'book' ? 'BOOK' : 'ITEM'}`.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: '#14121c' });
+    card.add(this.add.rectangle(TEXT_X, 10, Math.ceil(tagText.width) + 8, Math.ceil(tagText.height) + 6, rc).setOrigin(0));
+    card.add(tagText);
     // The name: 16px, or two 16px lines when it is long (never an in-between size: they blur).
-    const name = this.add.text(TEXT_X, 32, item.name, { fontFamily: FONT, fontSize: '16px', color: UI.text, lineSpacing: 6, wordWrap: { width: CARD_W - TEXT_X - 12, useAdvancedWrap: true } });
+    const name = this.add.text(TEXT_X, 34, item.name, { fontFamily: FONT, fontSize: '16px', color: UI.text, lineSpacing: 6, wordWrap: { width: CARD_W - TEXT_X - 12, useAdvancedWrap: true } });
     card.add(name);
-    const desc = this.add.text(TEXT_X, 32 + name.height + 10, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, color: MUTE, lineSpacing: 4, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
+    const desc = this.add.text(TEXT_X, 34 + name.height + 10, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, color: MUTE, lineSpacing: 4, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
     card.add(desc);
     if (item.perStack) card.add(this.add.text(TEXT_X, desc.y + desc.height + 8, `Per stack: ${item.perStack}`, this.perStackStyle()));
     card.paint = paint;

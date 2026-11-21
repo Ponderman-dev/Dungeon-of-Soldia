@@ -185,8 +185,9 @@ export function squareButton(g, x, y, w, h, { pressed = false, enabled = true, p
 export function drawRarityFrame(g, x, y, w, h, R, { lit = false } = {}) {
   x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
   const F = R.frame, num = (c) => Number(c);
-  if (UI.goldTheme.square) { // the Dusk look: square, a 2px line in the rarity colour, flat body, no studs
-    g.fillStyle(num(lit ? F.hi : F.edge), 1).fillRect(x, y, w, h).fillStyle(num(F.fill), 1).fillRect(x + 2, y + 2, w - 4, h - 4);
+  if (UI.goldTheme.square) { // the Dusk look: square, a line in the rarity colour (rarities.json frame.line px: epic + legendary thicker), flat body, no studs
+    const L = F.line || 2;
+    g.fillStyle(num(lit ? F.hi : F.edge), 1).fillRect(x, y, w, h).fillStyle(num(F.fill), 1).fillRect(x + L, y + L, w - 2 * L, h - 2 * L);
     return g;
   }
   const block = (i, c, t = 0) => {

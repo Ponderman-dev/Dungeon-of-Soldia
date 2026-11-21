@@ -415,7 +415,9 @@ export const hudMethods = {
     this.refreshSpeed();
     this.add.zone(P.x, B.y, P.w, B.h).setOrigin(0).setInteractive().setDepth(DEPTH.hud).onPress(() => this.openPause());
     this.add.zone(Sp.x, B.y, Sp.w, B.h).setOrigin(0).setInteractive().setDepth(DEPTH.hud).onPress(() => this.cycleSpeed());
-    this.events.on(Phaser.Scenes.Events.RESUME, () => { this.applySettings(); this.refreshSpeed(); });
+    const onResume = () => { this.applySettings(); this.refreshSpeed(); }; // back from Pause / Settings
+    this.events.on(Phaser.Scenes.Events.RESUME, onResume);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.events.off(Phaser.Scenes.Events.RESUME, onResume)); // scene events outlive a restart: no pile-up
   },
 
   refreshSpeed() {

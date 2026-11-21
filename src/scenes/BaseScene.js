@@ -132,7 +132,9 @@ export default class BaseScene extends Phaser.Scene {
     drawGear(g, (gearL + W - S) / 2 + 1, mid);
     const playerName = () => (loadProgress().profile.name || profileData.defaults.name);
     const nameText = uiText(this, S + H.textX, hy + H.nameY, playerName(), 'small');
-    this.events.on(Phaser.Scenes.Events.RESUME, () => nameText.setText(playerName())); // renamed on the Profile
+    const onResume = () => nameText.setText(playerName()); // renamed on the Profile
+    this.events.on(Phaser.Scenes.Events.RESUME, onResume);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.events.off(Phaser.Scenes.Events.RESUME, onResume)); // scene events outlive a restart: no pile-up
     const best = uiText(this, S + H.textX, hy + H.bestY, H.best.replace('{n}', progress.stats.bestFloor), 'small', UI.gold);
     const gem = this.add.image(gemsL + 20, mid, layerTexture(this, 'camp-gem', propLayer(H.gem, false))).setScale(3);
     const gems = uiText(this, gemsL + 36, mid + 1, String(progress.gems || 0), 'small').setOrigin(0, 0.5);

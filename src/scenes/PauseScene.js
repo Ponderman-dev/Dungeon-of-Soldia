@@ -19,7 +19,9 @@ export default class PauseScene extends Phaser.Scene {
     this.scene.bringToTop();
     this.busy = false;
     this.shade = this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, W.shade).setOrigin(0).setInteractive(); // blocks taps on the fight
-    this.events.on(Phaser.Scenes.Events.RESUME, () => { this.busy = false; }); // back from Settings
+    const onResume = () => { this.busy = false; }; // back from Settings
+    this.events.on(Phaser.Scenes.Events.RESUME, onResume);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.events.off(Phaser.Scenes.Events.RESUME, onResume)); // scene events outlive a restart: no pile-up
     this.showMain();
   }
 

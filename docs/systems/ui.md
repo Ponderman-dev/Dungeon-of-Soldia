@@ -182,3 +182,4 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   twice, so the slide never jumps after the build frame. Found: only 4 WebGL shaders, all built at fight start (not a cause).
 - Door sound (user: plays early): Door.open() plays 'doorOpen' itself, `floorArt.json door.anim.soundDelayMs` (480)
   after the door starts, on the scene clock, so the sound's loud hit (~200ms into the file) lands on the slam.
+- SCENE EVENTS (session 51): a scene's own `this.events` listeners survive scene.stop / restart in Phaser. Any `this.events.on(Phaser.Scenes.Events.X, fn)` added in create() must be removed on SHUTDOWN (`this.events.once(SHUTDOWN, () => this.events.off(X, fn))`), or it piles up per visit (Base, Pause, fight HUD RESUME did). Test `scene-listeners.test.mjs`.

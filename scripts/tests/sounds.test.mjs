@@ -22,3 +22,12 @@ const shared = skillIds.filter((id) => !cues.has(`skill_${id}`));
 if (shared.length) console.log('INFO skills still on the shared skillCast sound:', shared.join());
 const bs = fs.readFileSync(new URL('../../src/systems/battle/skills.js', import.meta.url), 'utf8');
 ok('the cast event names its skill (skillId) for the sound', /type: 'cast',[^}]*skillId: slot\.id/.test(bs));
+// Session 51: every packed sound file is used by a cue (unused files only made the page bigger).
+{ const fs2 = await import('node:fs'), path = await import('node:path');
+  const sd = JSON.parse(fs2.readFileSync(new URL('../../src/data/sounds.json', import.meta.url)));
+  const used = new Set(); for (const c of Object.values(sd.cues)) for (const n of [...(c.files || []), ...(c.file ? [c.file] : [])]) used.add(n.includes('/') ? n : `${sd.pack}/${n}`);
+  const root = new URL('../../src/assets/sounds/', import.meta.url).pathname, all = [];
+  const walk = (d) => { for (const f of fs2.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, f.name); if (f.isDirectory()) walk(p); else if (p.endsWith('.mp3')) all.push(p.slice(root.length).replace(/\.mp3$/, '')); } };
+  walk(root);
+  const unused = all.filter((a) => !used.has(a));
+  console.log(unused.length ? 'FAIL' : 'PASS', 'every sound file in src/assets/sounds is used by a cue (no dead weight in the page)', unused.slice(0, 5).join(', ')); }

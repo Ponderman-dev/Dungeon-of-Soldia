@@ -45,3 +45,4 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   replaces session 39's thump + sparkle); NEW cue `grace` = Yours: Fast magic game spell (volume 0.3, minGapMs 120),
   played by BattleScene when Grace heals (with `ch.bless()`). Holy Nova / Sanctuary not re-picked (unchanged).
   Page-2 `assign` fountain = potion drink = already the game's sound.
+- UNUSED FILES REMOVED (session 51): 31 sound files no cue used (146 KB) were deleted (git history has them); `sounds.test.mjs` now fails if a packed file is not used by a cue. To try an old sound again, restore it from git (`git log --diff-filter=D --name-only -- src/assets/sounds`).

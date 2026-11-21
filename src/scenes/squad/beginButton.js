@@ -5,6 +5,7 @@
 // bands 'not a part of the button'): it normally stands sinkPx above a dark ledge; held, everything (bands included)
 // drops onto the ledge and goes a shade darker, the words sink with it.
 import { UI } from '../../config.js';
+import { squareButton } from '../../entities/uiKit.js';
 
 const T0 = UI.goldTheme;
 const ROLL = { gold: T0.band, light: T0.bandLight, dark: T0.bandDark }; // the gold bands
@@ -18,6 +19,7 @@ export function beginTextColor(enabled) {
 // Draws the button into g (top left x, y; w x h, the ledge included).
 export function drawBeginButton(g, x, y, w, h, { pressed = false, enabled = true } = {}) {
   const T = UI.goldTheme, B = UI.flat.band, s = UI.press.sinkPx;
+  if (T.square) return squareButton(g, x, y, w, h, { pressed, enabled, primary: true }); // LOOK TRIAL: one flat colour
   const [body, dark, light] = !enabled ? [T.dim, T.dim, T.dim] : pressed ? [T.buttonDark, T.buttonDark, T.button] : [T.button, T.buttonDark, T.buttonLight];
   const R = !enabled ? { gold: T.frameDark, light: T.dim, dark: T.outline } : pressed ? ROLL_PRESSED : ROLL;
   g.fillStyle(T.outline, 1).fillRect(x - 2, y - 2, w + 4, h + 4); // the outline + the dark ledge under the button

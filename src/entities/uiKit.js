@@ -134,6 +134,7 @@ export function drawWindow(g, x, y, w, h, { fill = UI.window, line = UI.line, al
     g.fillRect(X + 4, Y, W - 8, H).fillRect(X + 2, Y + 2, W - 4, H - 4).fillRect(X, Y + 4, W, H - 8);
   };
   if (plain) { block(0, line); block(2, fill); return g; }
+  if (UI.goldTheme.square) return squareWindow(g, x, y, w, h, { fill, line, alpha });
   return themedWindow(g, x, y, w, h, block, { fill, line, alpha });
 }
 
@@ -152,6 +153,25 @@ function themedWindow(g, x, y, w, h, block, { fill, line, alpha }) {
   return g;
 }
 
+// LOOK TRIAL 'square' looks (session 49, user: 'the borders are sharp, no corner borders'): square corners, a thin
+// pale line straight on a flat fill, nothing else (the line keeps its meaning: chosen / dim like themedWindow).
+function squareWindow(g, x, y, w, h, { fill, line, alpha }) {
+  const T = UI.goldTheme;
+  const frame = line === UI.line ? T.frame : line === 0x8a8a9a || line === 0x55556a ? T.dim : T.chosen;
+  const body = fill === UI.window ? T.fill : fill === UI.pressed ? T.pressedFill : fill;
+  g.fillStyle(frame, alpha).fillRect(x, y, w, h);
+  g.fillStyle(body, alpha).fillRect(x + 2, y + 2, w - 4, h - 4);
+  return g;
+}
+// LOOK TRIAL 'square' buttons (user: 'buttons are only one colour, no bevels and bands and gold'): one flat block of
+// colour, square corners; pressed = the darker shade (the label still drops); disabled = the dim colour.
+export function squareButton(g, x, y, w, h, { pressed = false, enabled = true, primary = false } = {}) {
+  const T = UI.goldTheme;
+  const c = !enabled ? T.dim : primary ? (pressed ? T.buttonDark : T.button) : (pressed ? T.secondDark : T.second);
+  g.fillStyle(c, 1).fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+  return g;
+}
+
 // RARITY CARD FRAME (user, session 41: 'item boxes in their own rarity colour, a better border, legendary a bit
 // shiny'): a dark outline, a 2px frame in the rarity's edge colour, a 1px light inner line (hi), a dark rarity-tinted
 // body (rarities.json `frame`), and 4px corner studs (`stud` for epic / legendary, else hi). lit = the tapped card:
@@ -159,6 +179,10 @@ function themedWindow(g, x, y, w, h, block, { fill, line, alpha }) {
 export function drawRarityFrame(g, x, y, w, h, R, { lit = false } = {}) {
   x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
   const F = R.frame, num = (c) => Number(c);
+  if (UI.goldTheme.square) { // LOOK TRIAL: square, a 2px line in the rarity colour, flat body, no studs
+    g.fillStyle(num(lit ? F.hi : F.edge), 1).fillRect(x, y, w, h).fillStyle(num(F.fill), 1).fillRect(x + 2, y + 2, w - 4, h - 4);
+    return g;
+  }
   const block = (i, c, t = 0) => {
     const X = x + i, Y = y + i, W = w - 2 * i, H = h - 2 * i;
     if (W < 10 || H < 10) return;
@@ -227,6 +251,7 @@ export function rarityShine(scene, parent, w, h, R) {
 // pressed = pushed down. Returns g. Use buttonTextColor(enabled, pressed, primary) for its label.
 export function drawButton(g, x, y, w, h, { pressed = false, enabled = true, primary = false } = {}) {
   const T = UI.goldTheme;
+  if (T.square) return squareButton(g, x, y, w, h, { pressed, enabled, primary });
   x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
   const block = (i, c, top = 0, bottom = 0) => {
     const X = x + i, Y = y + i + top, W = w - 2 * i, H = h - 2 * i - top - bottom;
@@ -290,6 +315,7 @@ export function pressable(scene, hit, { redraw, sink = [], onTap, enabled = () =
 // foot (its label drops UI.press.sinkPx: pressable / pressDown). Returns g.
 export function drawFlatButton(g, x, y, w, h, { primary = false, bands = false, pressed = false, enabled = true } = {}) {
   const T = UI.goldTheme, F = UI.flat, L = F.line;
+  if (T.square) return squareButton(g, x, y, w, h, { pressed, enabled, primary });
   const [body, dark, light] = !enabled ? [T.dim, T.dim, T.dim] : primary ? [T.button, T.buttonDark, T.buttonLight] : [T.second, T.secondDark, T.secondLight];
   g.fillStyle(T.outline, 1).fillRect(x - 2, y - 2, w + 4, h + 4).fillStyle(enabled ? T.frame : T.frameDark, 1).fillRect(x, y, w, h);
   if (pressed) {

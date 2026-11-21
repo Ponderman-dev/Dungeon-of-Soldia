@@ -11,3 +11,16 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
 - Session 37: the save also keeps `settings` (Settings screen, systems/settings.js), `profile` (name, hero, banner),
   `achievements` (ids) and more lifetime stats (playMs, bossesBeaten, bossIds, itemsFound, heroRuns, deaths; recordRun).
   `deleteProgress()` wipes it (Settings DELETE SAVE).
+- **SQUAD SCREEN REDO, 3 LAYOUTS ON TRIAL (session 47, user: 'full new layout', then 'do all three'):** the scrolling
+  bench is GONE. `SquadScene` keeps the rules (slots, walk, choose / sendBack, details card, descend, camp slide);
+  `src/scenes/squad/squadLayouts.js` (mixed into the prototype) draws the middle per layout, `LAYOUTS` = slot spots,
+  hero scale, where a hero comes from / goes back to. A small 'LAYOUT A/B/C' button bottom left (not in the itch /
+  demo builds) flips them (registry `squadLayout`, scene restart). A ROSTER: squad in front of the gate, an INFO PANEL
+  for the tapped hero (name, role, team perk or unlock line, passive / attack / support rows with icons, ADD / REMOVE
+  + DETAILS = the old card), all heroes as a 5x2 TILE GRID (gold frame = shown, gold number = its slot, faint =
+  standing in the squad, grey frame + dark = locked, green NEW tag). B SHOWCASE: one hero BIG in front of the gate
+  (swipe or < > arrows, 'n / 10'), the same info panel under it (ADD / REMOVE + DETAILS at its bottom), YOUR SQUAD = 3
+  boxes the picked heroes stand in (a pick walks from the stage into its box; going back fades out). C SCENE + GRID:
+  the squad bigger (x4) with names + Send back buttons, the tile grid under them, a tap opens the details card. A
+  picked hero walks out of its tile growing to full size (and back in shrinking), drawn over the panels while it
+  walks. When the user picks one: delete the other two and the LAYOUT button.

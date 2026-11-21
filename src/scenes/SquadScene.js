@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, SKILL_COLORS, UI } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, SKILL_COLORS, UI } from '../config.js';
 import { drawWindow, drawCursor, uiShift, drawButton, buttonTextColor, pressable, pressDown } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
@@ -17,10 +17,10 @@ import defaultSquad from '../data/squad.json';
 import { DEMO as DEMO_KIND, demoSquad } from './demoMode.js'; // a demo page's saved squad
 const DEMO = !!DEMO_KIND;
 const TESTER = import.meta.env.VITE_TESTER === '1'; // the playtest build for itch.io: no test buttons
-import { perkMods } from '../systems/party.js';
 import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
 import { slotsFrom, addToSlots, removeFromSlots, isFull, squadOrder } from '../systems/squadSlots.js';
+import { squadLayouts, LAYOUTS, LAYOUT_KEYS, SQUAD_DEPTH } from './squad/squadLayouts.js';
 
 // The interface look (config.js UI, entities/uiKit.js): black windows, white lines, Ironslab text (sizes 8 / 16 / 24 = 10 / 20 / 30px, see config.js fontGrid).
 const INK = UI.text;
@@ -29,21 +29,14 @@ const FONT = UI.font;
 const WALL_H = 200; // the back wall with the door, as on the battle floors
 const DOOR_X = GAME_WIDTH / 2;
 const BEGIN_Y = 700; // the 'Begin descent' button, at the bottom over RANDOM (screen review: thumb reach, the gate stays clear)
-// Where the 3 picked heroes stand (their feet): the orange slots. Slot order = battle order.
-const SLOTS = [{ x: 92, y: 392 }, { x: GAME_WIDTH / 2, y: 342 }, { x: GAME_WIDTH - 92, y: 392 }]; // the squad stands before the gate (screen review)
-// The bench: every hero stands on a purple strip at the bottom that scrolls left and right.
-const BENCH = { top: 476, bottom: 670, feetY: 620, firstX: 62, gap: 96, fadeFrom: 4, fadePx: 46 }; // fade: heroes fade out over fadePx before the screen edge
+// Where the squad stands, how big, and the rest of the middle of the screen: the layout (squad/squadLayouts.js).
 const WALK = combatRules.movement.walkSpeedPxPerSec * 1.6; // a bit quicker than in fights
 const T = combatRules.transition;
-const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
-const DEPTH = { floor: 0, slot: 1, bench: 2, hero: 5, doorFront: 8, ui: 20, panel: 40 };
+const DEPTH = SQUAD_DEPTH;
 
-// The squad select screen, drawn as the room at the dungeon's entrance (user's sketch):
-// all heroes stand on a purple bench at the bottom (drag it left/right). Tap one to see the big
-// details card (kit, perk, tips) with a "Choose" button; a chosen hero walks up to the next empty
-// orange slot. Tap a hero in a slot to send it back. With all 3 slots filled a "Begin descent"
-// button appears at the bottom; the squad walks into the door and the run starts.
-// Locked heroes are dark on the bench; their card shows how to unlock them.
+// The squad select screen, drawn as the room at the dungeon's entrance: the squad of 3 stands in front of the gate
+// (slot order = battle order). How the heroes are shown and picked = the layout (squad/squadLayouts.js, A / B / C,
+// a trial until the user picks one). With all 3 slots filled 'Begin descent' shows; the squad walks into the gate.
 export default class SquadScene extends Phaser.Scene {
   constructor() {
     super('Squad');
@@ -59,44 +52,47 @@ export default class SquadScene extends Phaser.Scene {
     this.newIds = newHeroes(heroDefs, this.progress, unlocks);
     const last = DEMO ? demoSquad.heroes.map((h) => h.id) : this.registry.get('squadIds') || this.progress.lastSquad || defaultSquad; // the demo page: its saved squad
     this.slots = slotsFrom(last, this.openIds());
-    this.scroll = 0;
     this.panel = null;
-    this.leaving = false;
+    this.leaving = this.descending = false;
     this.walkers = new Map(); // hero id -> tween of a hero that is walking
+    this.layoutKey = DEMO ? 'A' : this.registry.get('squadLayout') || 'A';
+    this.L = LAYOUTS[this.layoutKey];
+    this.tiles = null; this.stageHero = null; this.counter = null; this.infoParts = []; this.infoKey = null;
 
     this.drawRoom();
     this.drawSlots();
-    this.drawBench();
+    this.layoutParts = this[`build${this.layoutKey}`]();
     this.drawUi();
     this.shifting = false; // the menu is fading in or out (taps blocked by `leaving`, buttons still drawn)
     if (this.fromCamp) { // hidden until the slide up has ended; no taps before that
       this.leaving = this.shifting = true;
       uiShift(this, this.uiParts, false, { instant: true });
-      this.time.delayedCall(UI.motion.slow, () => uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = this.shifting = false; } }));
+      this.time.delayedCall(UI.motion.slow, () => uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = this.shifting = false; this.refresh(); } }));
     }
 
-    // Every hero figure: on the bench, or standing in its slot.
+    // The squad's figures: each picked hero stands in its slot (the others wait hidden at their tile / the stage).
     this.figures = new Map();
-    heroDefs.forEach((def, i) => {
-      const ch = new Character(this, 0, 0, def).setDepth(DEPTH.hero);
-      const name = this.add.text(0, 0, def.name, { fontFamily: FONT, fontSize: '8px', color: INK, stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5, 0).setDepth(DEPTH.hero);
-      const tag = this.add.text(0, 0, 'NEW', { fontFamily: FONT, fontSize: '8px', color: '#000000', backgroundColor: '#6ee07a', padding: { x: 3, y: 2 } }).setOrigin(0.5, 1).setDepth(DEPTH.hero + 1);
-      this.figures.set(def.id, { def, ch, name, tag, benchIndex: i });
+    heroDefs.forEach((def) => {
+      const ch = new Character(this, 0, 0, def).setDepth(DEPTH.hero).setVisible(false);
+      const name = this.add.text(0, 0, def.name, { fontFamily: FONT, fontSize: '8px', color: INK, stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5, 0).setDepth(DEPTH.hero).setVisible(false);
+      this.figures.set(def.id, { def, ch, name });
     });
     for (const f of this.figures.values()) {
       const s = this.slots.indexOf(f.def.id);
-      if (s >= 0) f.ch.setPosition(SLOTS[s].x, SLOTS[s].y);
+      if (s >= 0) this.size(f.ch.setPosition(this.L.slots[s].x, this.L.slots[s].y).setDepth(DEPTH.hero + this.L.slots[s].y / 10000), this.L.heroScale);
     }
     this.refresh();
     this.setupInput();
-    this.events.on('update', this.placeBench, this);
+    this.events.on('update', this.follow, this);
     this.events.once('shutdown', () => {
-      this.events.off('update', this.placeBench, this);
+      this.events.off('update', this.follow, this);
       this.input.off('pointerdown');
       this.input.off('pointermove');
       this.input.off('pointerup');
     });
   }
+
+  size(ch, s) { return ch.setScale(Math.sign(ch.scaleX || 1) * s, s); } // keeps the facing
 
   // ---- drawing -------------------------------------------------------------------------------
 
@@ -120,13 +116,19 @@ export default class SquadScene extends Phaser.Scene {
   }
 
   drawSlots() {
-    // Each slot: a soft shadow on the floor; an empty one also has a faint pale ring and a small "+".
-    this.slotMarks = SLOTS.map((s, i) => {
-      const shadow = this.add.ellipse(s.x, s.y, 64, 16, 0x000000, 0.28).setDepth(DEPTH.slot);
-      const ring = this.add.ellipse(s.x, s.y, 58, 14).setStrokeStyle(1, 0xd8c8ff, 0.35).setDepth(DEPTH.slot);
+    // Each slot: a soft shadow on the floor; an empty one also has a faint pale ring and a small "+". Tapping a hero
+    // standing in it: the layout's tapSlot. Layout C: a small "Send back" button under it.
+    this.slotMarks = this.L.slots.map((s, i) => {
+      const k = this.L.heroScale / 3;
+      const shadow = this.add.ellipse(s.x, s.y, 64 * k, 16 * k, 0x000000, 0.28).setDepth(DEPTH.slot);
+      const ring = this.add.ellipse(s.x, s.y, 58 * k, 14 * k).setStrokeStyle(1, 0xd8c8ff, 0.35).setDepth(DEPTH.slot);
       const num = this.add.text(s.x, s.y - 30, '+', { fontFamily: FONT, fontSize: '16px', color: '#ffffff' }).setOrigin(0.5).setDepth(DEPTH.slot).setAlpha(0.35);
       this.tweens.add({ targets: [ring, num], alpha: '-=0.15', duration: 1100 + i * 120, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-      // A small "Send back" button under a filled slot (the hero walks back to the bench).
+      this.add.zone(s.x, s.y - 34 * k, 70 * k, 90 * k).setInteractive().setDepth(DEPTH.hero + 1).on('pointerdown', () => {
+        const id = this.slots[i];
+        if (id && !this.walkers.has(id) && !this.panel && !this.leaving) this.tapSlot(id);
+      });
+      if (!this.L.sendBack) return { shadow, ring, num, back: null };
       const back = this.add.container(s.x, s.y + 42).setDepth(DEPTH.ui);
       const bg = this.add.graphics();
       const redraw = (pressed) => drawButton(bg.clear(), -52, -15, 104, 30, { pressed }); // roomy (user: more space between box and text); a solid button
@@ -134,18 +136,6 @@ export default class SquadScene extends Phaser.Scene {
       const label = this.add.text(0, 0, 'Send back', { fontFamily: FONT, fontSize: '8px', color: buttonTextColor() }).setOrigin(0.5);
       back.add([bg, label]);
       return { shadow, ring, num, back, backLook: { redraw, sink: [label] } };
-    });
-  }
-
-  drawBench() {
-    // The heroes simply stand in a row on the floor (no box around them).
-    this.pager = this.add.graphics().setDepth(DEPTH.ui);
-    this.benchSpots = this.add.graphics().setDepth(DEPTH.bench);
-    // Arrows at both ends (also tappable).
-    this.arrows = [-1, 1].map((dir) => {
-      const x = dir < 0 ? 22 : GAME_WIDTH - 22;
-      const t = this.add.text(x, BENCH.feetY - 34, dir < 0 ? '<' : '>', { fontFamily: FONT, fontSize: '24px', color: '#ffffff' }).setOrigin(0.5).setDepth(DEPTH.ui);
-      return { dir, t };
     });
   }
 
@@ -205,11 +195,18 @@ export default class SquadScene extends Phaser.Scene {
       pressable(this, this.add.zone(x + 75, 767, 150, 46).setInteractive().setDepth(DEPTH.ui), { redraw, sink: [t], onTap, enabled: () => !this.leaving && !this.panel });
     });
     const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));
-    this.uiParts = { up: shown(this.children.list.slice(n0, n1)), fade: this.slotMarks.map((m) => m.back) };
+    this.uiParts = { up: shown(this.children.list.slice(n0, n1)), fade: [...this.slotMarks.map((m) => m.back).filter(Boolean), ...shown(this.layoutParts)] };
     this.uiParts.down = shown(this.children.list.slice(n1)); // (the test toggle below joins it)
-    if (TESTER) return; // the playtest build (npm run build:itch) has no test toggle
-    this.toggleText = this.add.text(GAME_WIDTH / 2, 818, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
-    this.add.zone(GAME_WIDTH / 2, 818, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
+    if (TESTER || DEMO) return; // the playtest build (npm run build:itch) has no test toggle
+    // LAYOUT TRIAL (session 47): a small button bottom left flips A -> B -> C (the screen starts again in it).
+    const lay = this.smallButton(8, 806, 96, 26, `LAYOUT ${this.layoutKey}`, () => {
+      const next = LAYOUT_KEYS[(LAYOUT_KEYS.indexOf(this.layoutKey) + 1) % LAYOUT_KEYS.length];
+      this.registry.set('squadLayout', next);
+      this.scene.restart({ lastRun: this.lastRun });
+    });
+    this.uiParts.down.push(...lay.filter((o) => !(o instanceof Phaser.GameObjects.Zone)));
+    this.toggleText = this.add.text(236, 818, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
+    this.add.zone(236, 818, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
     this.uiParts.down.push(this.toggleText);
   }
 
@@ -232,125 +229,73 @@ export default class SquadScene extends Phaser.Scene {
     return squadOrder(this.slots).length === this.need();
   }
 
-  maxScroll() {
-    return Math.max(0, BENCH.firstX * 2 + (heroDefs.length - 1) * BENCH.gap - GAME_WIDTH);
+  isNew(id) {
+    return this.lastRun ? (this.lastRun.newly || []).includes(id) : this.newIds.includes(id);
   }
 
-  benchX(f) {
-    return BENCH.firstX + f.benchIndex * BENCH.gap - this.scroll;
-  }
-
-  // Every frame: bench heroes follow the scroll; names and tags follow their hero.
-  placeBench() {
-    this.benchSpots.clear();
+  // Every frame: names (layout C) follow their hero.
+  follow() {
+    if (!this.L.names) return;
     for (const f of this.figures.values()) {
-      const x = this.benchX(f);
-      const onBench = !this.slots.includes(f.def.id) && !this.walkers.has(f.def.id);
-      const inSlot = this.slots.includes(f.def.id) && !this.walkers.has(f.def.id);
-      // Near the bench's ends a hero fades out (it slides off smoothly instead of popping away).
-      const fade = Phaser.Math.Clamp((Math.min(x, GAME_WIDTH - x) - BENCH.fadeFrom) / BENCH.fadePx, 0, 1);
-      // An empty spot shows where a picked hero will come back to.
-      if (fade > 0) this.benchSpots.fillStyle(0x000000, (onBench ? 0.28 : 0.14) * fade).fillEllipse(x, BENCH.feetY, 50, 13); // a soft shadow (faint = its hero is in a slot)
-      if (this.leaving && this.slots.includes(f.def.id)) continue; // walking into the door: descend() darkens, fades and hides it
-      if (onBench) f.ch.setPosition(x, BENCH.feetY);
-      f.name.setPosition(f.ch.x, f.ch.y + (inSlot ? 13 : 9)).setVisible(!this.walkers.has(f.def.id) && !(this.leaving && this.slots.includes(f.def.id)));
-      f.name.setColor(inSlot ? INK : this.unlocked(f.def.id) ? '#d0d0dc' : '#6a6a7a');
-      f.tag.setPosition(f.ch.x, f.ch.y - f.def.height * CHAR_SCALE - 4);
-      const a = onBench ? fade : 1;
-      f.ch.setVisible(a > 0).setAlpha(a);
-      f.name.setVisible(f.name.visible && a > 0).setAlpha(a);
-      f.tag.setAlpha(a);
+      const show = f.ch.visible && this.slots.includes(f.def.id) && !this.walkers.has(f.def.id) && !this.leaving;
+      f.name.setVisible(show);
+      if (show) f.name.setPosition(f.ch.x, f.ch.y + 13);
     }
-    // Pager dots under the rug: where the bench is scrolled to.
-    const pages = Math.ceil(heroDefs.length / 3);
-    const at = this.maxScroll() ? Math.round((this.scroll / this.maxScroll()) * (pages - 1)) : 0;
-    this.pager.clear();
-    for (let i = 0; i < pages; i++) this.pager.fillStyle(i === at ? 0xffffff : 0x4a4a5a, 1).fillRect(GAME_WIDTH / 2 + (i - (pages - 1) / 2) * 12 - 3, BENCH.bottom - 15, 6, 6); // square pixel dots
-    for (const a of this.arrows) a.t.setAlpha((a.dir < 0 ? this.scroll > 1 : this.scroll < this.maxScroll() - 1) ? 1 : 0.2);
   }
 
   refresh() {
     for (const f of this.figures.values()) {
-      const open = this.unlocked(f.def.id);
-      f.ch.setWash(0x05030a, open ? 0 : 0.92); // locked = a dark shape
-      const isNew = open && (this.lastRun ? (this.lastRun.newly || []).includes(f.def.id) : this.newIds.includes(f.def.id));
-      f.tag.setVisible(isNew && !this.slots.includes(f.def.id));
-      f.name.setText(open ? f.def.name : '? ? ?');
+      if (this.descending && this.slots.includes(f.def.id)) continue; // walking into the gate
+      f.ch.setVisible(this.slots.includes(f.def.id) || this.walkers.has(f.def.id));
     }
     this.slots.forEach((id, i) => {
       const m = this.slotMarks[i];
       m.ring.setVisible(!id);
       m.num.setVisible(!id);
-      m.back.setVisible(!!id && !this.walkers.has(id) && (!this.leaving || this.shifting)); // shifting: they fade with the menu
+      if (m.back) m.back.setVisible(!!id && !this.walkers.has(id) && (!this.leaving || this.shifting)); // shifting: they fade with the menu
     });
     const ready = this.ready() && (!this.leaving || this.shifting);
     this.begin.setVisible(ready);
+    this.refreshLayout();
     if (this.toggleText) this.toggleText.setText(`${this.progress.unlockAll ? '[X]' : '[ ]'} test: unlock every hero`).setColor(this.progress.unlockAll ? UI.green : MUTE);
   }
 
   // ---- input ---------------------------------------------------------------------------------
 
+  // Scene-wide taps: layout C's 'Send back' buttons (pushed on finger down, sent back on release), layout B's swipe
+  // on the stage. Everything else has its own tap zone.
   setupInput() {
-    let drag = null;
+    let swipe = null;
     this.input.on('pointerdown', (p) => {
       if (this.panel || this.leaving) return;
-      if (p.y >= BENCH.top && p.y <= BENCH.bottom) drag = { x: p.x, y: p.y, scroll: this.scroll, moved: 0 };
-      else {
-        // The small "Send back" button under a slot.
-        const back = SLOTS.findIndex((s, i) => this.slots[i] && Math.abs(p.x - s.x) < 52 && Math.abs(p.y - (s.y + 42)) < 16);
-        if (back >= 0 && !this.walkers.has(this.slots[back])) { // pushed now, sent back on release (UI.press)
-          this.pushing = { release: pressDown(this.slotMarks[back].backLook), id: this.slots[back], slot: back, at: this.time.now };
-          return;
-        }
-        // A hero standing in a slot: tap to see its card.
-        const hit = SLOTS.findIndex((s) => Math.abs(p.x - s.x) < 44 && p.y > s.y - 86 && p.y < s.y + 30);
-        if (hit >= 0 && this.slots[hit] && !this.walkers.has(this.slots[hit])) this.openPanel(this.slots[hit]);
-      }
-    });
-    this.input.on('pointermove', (p) => {
-      if (!drag || !p.isDown) return;
-      drag.moved = Math.max(drag.moved, Math.abs(p.x - drag.x));
-      this.scroll = Phaser.Math.Clamp(drag.scroll - (p.x - drag.x), 0, this.maxScroll());
+      if (this.layoutKey === 'B' && p.y > 150 && p.y < 300 && p.x > 50 && p.x < GAME_WIDTH - 50) swipe = { x: p.x };
+      if (!this.L.sendBack) return;
+      const S = this.L.slots;
+      const back = S.findIndex((s, i) => this.slots[i] && Math.abs(p.x - s.x) < 52 && Math.abs(p.y - (s.y + 42)) < 16);
+      if (back >= 0 && !this.walkers.has(this.slots[back])) this.pushing = { release: pressDown(this.slotMarks[back].backLook), id: this.slots[back], slot: back, at: this.time.now };
     });
     this.input.on('pointerup', (p) => {
-      if (this.pushing) { // a 'Send back' let go: still on it = send the hero back (after the push has shown)
-        const { release, id, slot, at } = this.pushing, s = SLOTS[slot];
-        this.pushing = null;
-        const on = Math.abs(p.x - s.x) < 52 && Math.abs(p.y - (s.y + 42)) < 16;
-        const finish = () => { release(); if (on && this.slots[slot] === id && !this.walkers.has(id)) this.sendBack(id); };
-        const wait = UI.press.holdMs - (this.time.now - at);
-        if (wait > 0) this.time.delayedCall(wait, finish); else finish();
-        return;
+      if (swipe) {
+        const dx = p.x - swipe.x;
+        swipe = null;
+        if (Math.abs(dx) > 30 && !this.panel && !this.leaving) this.flip(dx < 0 ? 1 : -1);
       }
-      if (!drag) return;
-      const d = drag;
-      drag = null;
-      if (d.moved > 10) return; // it was a drag
-      const arrow = this.arrows.find((a) => Math.abs(p.x - a.t.x) < 22 && Math.abs(p.y - a.t.y) < 30);
-      if (arrow) return this.scrollBy(arrow.dir * BENCH.gap * 3);
-      // The bench hero nearest to the tap.
-      let best = null;
-      let bestD = BENCH.gap / 2;
-      for (const f of this.figures.values()) {
-        if (this.slots.includes(f.def.id) || this.walkers.has(f.def.id)) continue;
-        const dx = Math.abs(this.benchX(f) - p.x);
-        if (dx < bestD) { best = f; bestD = dx; }
-      }
-      if (best) this.openPanel(best.def.id);
+      if (!this.pushing) return;
+      const { release, id, slot, at } = this.pushing, s = this.L.slots[slot];
+      this.pushing = null;
+      const on = Math.abs(p.x - s.x) < 52 && Math.abs(p.y - (s.y + 42)) < 16;
+      const finish = () => { release(); if (on && this.slots[slot] === id && !this.walkers.has(id)) this.sendBack(id); };
+      const wait = UI.press.holdMs - (this.time.now - at);
+      if (wait > 0) this.time.delayedCall(wait, finish); else finish();
     });
-  }
-
-  scrollBy(dx) {
-    sfx.play('scroll');
-    const to = Phaser.Math.Clamp(this.scroll + dx, 0, this.maxScroll());
-    this.tweens.add({ targets: this, scroll: to, duration: 260, ease: 'Quad.easeOut' });
   }
 
   // ---- walking -------------------------------------------------------------------------------
 
   // A hero walks to (x, y) at a steady pace with a little hop each step, then calls done.
-  walk(f, x, y, done) {
+  walk(f, x, y, done, toScale = null) {
     const ch = f.ch;
+    const s0 = Math.abs(ch.scaleY);
     if (this.walkers.has(f.def.id)) this.walkers.get(f.def.id).stop();
     const from = { x: ch.x, y: ch.y };
     const dist = Math.hypot(x - from.x, y - from.y);
@@ -364,10 +309,12 @@ export default class SquadScene extends Phaser.Scene {
         const t = tw.getValue();
         const hop = Math.abs(Math.sin(((t * dist) / T.stepLenPx) * Math.PI)) * T.stepHeight;
         ch.setPosition(from.x + (x - from.x) * t, from.y + (y - from.y) * t - hop);
-        ch.setDepth(DEPTH.hero + ch.y / 10000);
+        if (toScale) this.size(ch, s0 + (toScale - s0) * t);
+        ch.setDepth(DEPTH.ui + 1 + ch.y / 10000); // over the panels and tiles while it walks (seen the whole way)
       },
       onComplete: () => {
         ch.setPosition(x, y).setDepth(DEPTH.hero + y / 10000);
+        if (toScale) this.size(ch, toScale);
         ch.setWalking(false);
         ch.face(1);
         this.walkers.delete(f.def.id);
@@ -377,24 +324,30 @@ export default class SquadScene extends Phaser.Scene {
     this.walkers.set(f.def.id, tween);
   }
 
+  // A picked hero comes out of its tile (or B's stage spot), growing to full size, and walks to its slot.
   choose(id) {
     sfx.play('heroPick');
     const s = addToSlots(this.slots, id);
     if (s < 0) return;
-    const f = this.figures.get(id);
-    f.ch.setPosition(this.benchX(f), BENCH.feetY);
-    this.walk(f, SLOTS[s].x, SLOTS[s].y, () => this.refresh());
+    const f = this.figures.get(id), home = this.homeOf(id), to = this.L.slots[s];
+    f.ch.setPosition(home.x, home.y).setAlpha(1).setVisible(true);
+    this.size(f.ch, home.scale);
+    this.walk(f, to.x, to.y, () => this.refresh(), this.L.heroScale);
     this.refresh();
   }
 
+  // A hero leaves the squad: walks back into its tile, shrinking (layout B: fades out where it stands).
   sendBack(id) {
     sfx.play('heroBack');
     if (removeFromSlots(this.slots, id) < 0) return;
     const f = this.figures.get(id);
-    // Scroll so its bench spot is on screen, then it walks there.
-    const spot = BENCH.firstX + f.benchIndex * BENCH.gap;
-    if (spot - this.scroll < 40 || spot - this.scroll > GAME_WIDTH - 40) this.scroll = Phaser.Math.Clamp(spot - GAME_WIDTH / 2, 0, this.maxScroll());
-    this.walk(f, this.benchX(f), BENCH.feetY, () => this.refresh());
+    if (this.L.backFade) {
+      const ch = f.ch;
+      this.walkers.set(id, this.tweens.add({ targets: ch, alpha: 0, duration: UI.motion.fast, onComplete: () => { this.walkers.delete(id); ch.setAlpha(1); this.refresh(); } }));
+    } else {
+      const home = this.homeOf(id);
+      this.walk(f, home.x, home.y, () => this.refresh(), home.scale);
+    }
     this.refresh();
   }
 
@@ -445,7 +398,7 @@ export default class SquadScene extends Phaser.Scene {
     const element = ['fire', 'holy', 'dark', 'ice', 'electric'].includes(def.damageType) ? ` - ${def.damageType}` : '';
     text(GAME_WIDTH / 2, Y + 178, def.name, 24, INK, true).setOrigin(0.5, 0);
     text(GAME_WIDTH / 2, Y + 210, `${def.role || ''} - ${def.damageType === 'melee' ? 'melee' : 'ranged'}${element}`.toUpperCase(), 11, UI.gold, true).setOrigin(0.5, 0);
-    const perk = perkMods({ def, level: 1 }).map((m) => `${m.percent !== undefined ? `+${m.percent}%` : `+${m.flat}`} ${STAT_SHORT[m.stat] || ({ skillDamage: 'skill dmg', regen: 'HP/s', dotDamage: 'DoT dmg' })[m.special] || m.special}`).join(', ');
+    const perk = this.perkLine(def);
     text(GAME_WIDTH / 2, Y + 230, `${def.summary || ''}  Team: ${perk}`, 12, MUTE, false, W - 48).setOrigin(0.5, 0).setAlign('center');
 
     // Passive, attack skill, support skill: its pixel icon (skillIcons.json; passive in a gold frame, skills in a
@@ -558,7 +511,7 @@ export default class SquadScene extends Phaser.Scene {
   descend() {
     if (!this.ready() || this.panel || this.leaving || this.walkers.size) return;
     sfx.play('descend');
-    this.leaving = this.shifting = true;
+    this.leaving = this.shifting = this.descending = true;
     uiShift(this, this.uiParts, false); // every button leaves (user: not only BEGIN DESCENT)
     const ids = squadOrder(this.slots);
     this.progress.lastSquad = [...ids];
@@ -568,7 +521,9 @@ export default class SquadScene extends Phaser.Scene {
     this.refresh();
     this.door.open();
     const doorY = WALL_H - 10;
-    const gather = { x: DOOR_X, y: 300 };
+    const gather = { x: DOOR_X, y: Math.max(doorY + 40, Math.min(...this.L.slots.map((s) => s.y)) - 24) };
+    this.infoParts.forEach((o) => this.tweens.add({ targets: o, alpha: 0, duration: UI.motion.fast })); // the info panel goes with the menu
+    if (this.stageHero) this.tweens.add({ targets: [this.stageHero, this.stageShadow], alpha: 0, duration: UI.motion.fast });
     const A = floorArt.door.anim;
     const doorOpenMs = A.rattleMs + A.swingMs + A.bounceMs; // until the gate has slammed open
     let left = ids.length;
@@ -594,7 +549,7 @@ export default class SquadScene extends Phaser.Scene {
           const y = pts[k].y + (pts[k + 1].y - pts[k].y) * t;
           const hop = Math.abs(Math.sin(((tw.getValue() * total) / T.stepLenPx) * Math.PI)) * T.stepHeight;
           f.ch.setPosition(x, y - hop).setDepth(DEPTH.hero + y / 10000);
-          f.ch.setScale(CHAR_SCALE * Phaser.Math.Clamp(0.55 + 0.45 * ((y - doorY) / (SLOTS[0].y - doorY)), 0.55, 1));
+          this.size(f.ch, this.L.heroScale * Phaser.Math.Clamp(0.55 + 0.45 * ((y - doorY) / (this.L.slots[0].y - doorY)), 0.55, 1));
           const left = Phaser.Math.Clamp(((1 - tw.getValue()) * total) / T.doorFadePx, 0, 1); // 1 -> 0 over the last doorFadePx
           f.ch.setWash(0x000000, Math.round((1 - left) * T.doorDarken * 10) / 10); // goes dark in the doorway's shadow
           f.ch.setAlpha(Phaser.Math.Clamp(left * T.doorFadeLate, 0, 1)); // then fades out
@@ -610,3 +565,5 @@ export default class SquadScene extends Phaser.Scene {
     });
   }
 }
+
+Object.assign(SquadScene.prototype, squadLayouts);

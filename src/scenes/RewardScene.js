@@ -208,7 +208,7 @@ export default class RewardScene extends Phaser.Scene {
     card.add(this.add.text(ICON_X, h / 2 + 42, itemTypes[item.type].label.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5));
     // The rarity TAG: a solid block in the rarity colour with dark text (user, session 50: the thin coloured words
     // alone made common / rare / epic / legendary hard to tell apart).
-    const tagText = this.add.text(TEXT_X + 4, 13, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : item.kind === 'book' ? 'BOOK' : 'ITEM'}`.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: '#14121c' });
+    const tagText = this.add.text(TEXT_X + 4, 13, rarities[item.rarity].label.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: '#14121c' });
     card.add(this.add.rectangle(TEXT_X, 10, Math.ceil(tagText.width) + 8, Math.ceil(tagText.height) + 6, rc).setOrigin(0));
     card.add(tagText);
     // The name: 16px, or two 16px lines when it is long (never an in-between size: they blur).

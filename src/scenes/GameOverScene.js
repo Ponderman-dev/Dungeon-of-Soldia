@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, sceneFade, sceneFadeIn } from '../entities/uiKit.js';
+import { drawWindow, uiText, sceneFade, sceneFadeIn, pageBackdrop } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
@@ -37,7 +37,7 @@ export default class GameOverScene extends Phaser.Scene {
   }
 
   create() {
-    this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, Number(G.bg)).setOrigin(0);
+    pageBackdrop(this, Number(G.bg));
     this.page = null;
     this.showSummary();
     sceneFadeIn(this);

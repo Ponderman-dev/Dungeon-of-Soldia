@@ -34,7 +34,7 @@ export const SQUAD_VIEW = {
   // inner padding / gap between boxes, the tip's colour.
   // Body text = the user's pick A (session 47: 'more space between text, not bold'): 1px between letters, more between
   // lines, a softer cream.
-  card: { body: '#cfc6b4', lineGap: 8, letterGap: 1, fill: 0x16110f, edge: 0x3a2a22, pad: 8, gap: 6, tip: '#ffd88a',
+  card: { body: UI.goldTheme.body, lineGap: 8, letterGap: 1, fill: UI.goldTheme.tileFill, edge: UI.goldTheme.tileEdge, pad: 8, gap: 6, tip: '#ffd88a',
     portraitH: 100, heroScale: 3 }, // the portrait (an open hero) and the hero's size in it
   // TIDIER ROW (session 48, user: 'keep scrolling, just tidier, bring it down a bit' x2): exactly 4 whole tiles in the
     // view (side margins hold the arrow tabs, off the tiles), the row snaps to a whole tile when a swipe ends.
@@ -45,7 +45,7 @@ export const SQUAD_VIEW = {
     // left and back after nudgeDelayMs).
     hint: { tabW: 18, tabH: 40, tabGap: 4, shade: [], shadeW: 6, nudgePx: 44, nudgeDelayMs: 700, nudgeMs: 380, stepMs: 220 } },
   // The quiet tile's colours: fill, edge, a picked tile's edge, the '?' tile's edge, a pushed tile's fill.
-  tile: { fill: 0x16110f, edge: 0x3a2a22, picked: 0xd8a640, locked: 0x2e2a30, pressed: 0x2a201c, shadow: 0.35 },
+  tile: { fill: UI.goldTheme.tileFill, edge: UI.goldTheme.tileEdge, picked: UI.goldTheme.picked, locked: UI.goldTheme.tileLocked, pressed: UI.goldTheme.strip, shadow: 0.35 },
 };
 // THE NAMES UNDER THE SQUAD ('slope', the user's pick of 3, session 47): big names, the middle one a row higher
 // (following the V of the heroes), the outer ones kept on the screen, a small X button beside each = send back.

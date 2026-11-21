@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, drawCursor, drawButton, buttonTextColor, drawStrip, pageEnter, pageLeave, markBar } from '../entities/uiKit.js';
+import { drawWindow, uiText, drawCursor, drawButton, buttonTextColor, drawStrip, pageEnter, pageLeave, markBar, pageBackdrop } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
 import G from '../data/glossary.json';
@@ -50,7 +50,7 @@ export default class GlossaryScene extends Phaser.Scene {
     this.scene.bringToTop();
     this.progress = loadProgress();
     this.seen = { ...emptySeen(), ...(this.progress.seen || {}) };
-    this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, Number(L.bg)).setOrigin(0).setInteractive();
+    pageBackdrop(this, Number(L.bg)).setInteractive();
     this.page = null;
     this.showChapters();
     pageEnter(this); // the page slides in from the side (uiKit)

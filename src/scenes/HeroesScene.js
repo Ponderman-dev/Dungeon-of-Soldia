@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, SKILL_COLORS, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave, markBar } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave, markBar, pageBackdrop } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import D from '../data/heroPage.json';
@@ -38,7 +38,7 @@ export default class HeroesScene extends Phaser.Scene {
   create() {
     this.scene.bringToTop();
     this.progress = loadProgress();
-    this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, Number(L.bg)).setOrigin(0).setInteractive();
+    pageBackdrop(this, Number(L.bg)).setInteractive();
     this.page = null;
     this.showList();
     pageEnter(this); // the page slides in from the side (uiKit)

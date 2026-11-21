@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, drawButton, buttonTextColor, pageEnter, pageLeave, markBar } from '../entities/uiKit.js';
+import { drawWindow, uiText, drawButton, buttonTextColor, pageEnter, pageLeave, markBar, pageBackdrop } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
@@ -49,7 +49,7 @@ export default class LeadersScene extends Phaser.Scene {
     const p = loadProgress();
     const ids = (Array.isArray(p.lastSquad) && p.lastSquad.length ? p.lastSquad : squad.heroes || squad).filter((id) => heroDef(id));
     this.you = { name: (p.profile && p.profile.name) || profileData.defaults.name, floor: p.stats.bestFloor || 0, heroes: ids.slice(0, 3) };
-    this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, Number(L.bg)).setOrigin(0).setInteractive();
+    pageBackdrop(this, Number(L.bg)).setInteractive();
     this.page = null;
     this.clock = null;
     this.showBoard(lastTab);

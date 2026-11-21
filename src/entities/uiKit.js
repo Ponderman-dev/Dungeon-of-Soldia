@@ -139,8 +139,9 @@ function themedWindow(g, x, y, w, h, block, { fill, line, alpha }) {
   const T = UI.goldTheme;
   const frame = line === UI.line ? T.frame : line === 0x8a8a9a || line === 0x55556a ? T.dim : T.chosen;
   const body = fill === UI.window ? T.fill : fill === UI.pressed ? T.pressedFill : fill;
-  block(0, T.outline); block(2, frame); block(4, T.frameDark); block(6, body);
-  if (w >= 30 && h >= 26) {
+  block(0, T.outline); block(2, frame);
+  if (T.flatEdge) block(4, body); else { block(4, T.frameDark); block(6, body); }
+  if (T.studs !== false && w >= 30 && h >= 26) {
     g.fillStyle(T.stud, alpha);
     for (const [cx, cy] of [[x + 4, y + 4], [x + w - 8, y + 4], [x + 4, y + h - 8], [x + w - 8, y + h - 8]]) g.fillRect(cx, cy, 4, 4);
   }
@@ -298,6 +299,23 @@ export function drawFlatButton(g, x, y, w, h, { primary = false, bands = false, 
   return g;
 }
 export const buttonTextColor = (enabled = true, pressed = false, primary = false) => (!enabled ? '#9a96a6' : primary ? UI.goldTheme.buttonText : UI.goldTheme.secondText);
+// A MENU PAGE's background (Glossary, Heroes, Leaders, Settings, Shop, Profile, Game Over): a full-screen rectangle in
+// `bg` (the look trial's UI.pageBg instead when set) + the trial's dithered checker (UI.dither = [a, b, cellPx]).
+// Returns the rectangle (pages make it block taps).
+export function pageBackdrop(scene, bg) {
+  const rect = scene.add.rectangle(0, 0, scene.scale.width, scene.scale.height, UI.pageBg ?? bg).setOrigin(0);
+  if (UI.dither) {
+    const [, b, c] = UI.dither, key = `dither-${b}-${c}`;
+    if (!scene.textures.exists(key)) {
+      const t = scene.textures.createCanvas(key, c * 2, c * 2), ctx = t.getContext();
+      ctx.fillStyle = '#' + b.toString(16).padStart(6, '0');
+      ctx.fillRect(c, 0, c, c); ctx.fillRect(0, c, c, c);
+      t.refresh();
+    }
+    scene.add.tileSprite(0, 0, scene.scale.width, scene.scale.height, key).setOrigin(0);
+  }
+  return rect;
+}
 // A title strip across the top of a panel h px tall, `i` px inside the panel's left/top edge.
 export function drawStrip(g, x, y, w, h) {
   const T = UI.goldTheme;

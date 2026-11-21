@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave, markBar } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave, markBar, pageBackdrop } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
@@ -45,7 +45,7 @@ export default class ProfileScene extends Phaser.Scene {
     this.progress = loadProgress();
     this.profile = { ...D.defaults, ...this.progress.profile };
     if (!this.isOpen(this.profile.hero)) this.profile.hero = D.defaults.hero;
-    this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, Number(L.bg)).setOrigin(0).setInteractive();
+    pageBackdrop(this, Number(L.bg)).setInteractive();
     this.page = null;
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.closeInput());
     this.showMain();

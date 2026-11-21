@@ -477,8 +477,8 @@ export default class SquadScene extends Phaser.Scene {
     if (req) {
       text(GAME_WIDTH / 2, Y + LC.goalY, describeRequirement(req, unlocks), 16, INK, true, W - 32).setOrigin(0.5, 0).setAlign('center');
       const p = requirementProgress(req, this.progress), bw = W - 64, bx = X + 32, by = Y + LC.barY;
-      g.fillStyle(0x000000, 1).fillRect(bx - 2, by - 2, bw + 4, LC.barH + 4).fillStyle(0x3a2a22, 1).fillRect(bx, by, bw, LC.barH);
-      g.fillStyle(0xd8a640, 1).fillRect(bx, by, Math.round(bw * Math.min(1, p.have / p.need)), LC.barH);
+      g.fillStyle(0x000000, 1).fillRect(bx - 2, by - 2, bw + 4, LC.barH + 4).fillStyle(UI.goldTheme.tileEdge, 1).fillRect(bx, by, bw, LC.barH);
+      g.fillStyle(UI.goldTheme.picked, 1).fillRect(bx, by, Math.round(bw * Math.min(1, p.have / p.need)), LC.barH);
       text(GAME_WIDTH / 2, by + LC.barH + 10, describeProgress(req, this.progress, unlocks), 8, MUTE, true).setOrigin(0.5, 0);
     }
     put(this.add.zone(X + W / 2, Y + H / 2, W, H).setInteractive()).on('pointerdown', () => { sfx.play('cardClose'); this.closePanel(); });

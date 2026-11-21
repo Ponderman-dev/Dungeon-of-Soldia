@@ -17,6 +17,7 @@ import HeroesScene from './scenes/HeroesScene.js';
 import GlossaryScene from './scenes/GlossaryScene.js';
 import LeadersScene from './scenes/LeadersScene.js';
 import ShopScene from './scenes/ShopScene.js';
+import { mountLookTrial } from './lookTrial.js';
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -32,6 +33,8 @@ const game = new Phaser.Game({
   },
   scene: [BootScene, TitleScene, BaseScene, SquadScene, BattleScene, RewardScene, PuzzleScene, PauseScene, SettingsScene, GameOverScene, ProfileScene, HeroesScene, GlossaryScene, LeadersScene, ShopScene, DebugScene],
 });
+
+mountLookTrial(); // the look trial build only (session 49, temporary)
 
 // Dev server only (never in the built page): browser checks drive the game through this.
 if (import.meta.env.DEV) window.__game = game;

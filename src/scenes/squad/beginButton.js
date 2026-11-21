@@ -6,8 +6,9 @@
 // drops onto the ledge and goes a shade darker, the words sink with it.
 import { UI } from '../../config.js';
 
-const ROLL = { gold: 0xd8a640, light: 0xffe39a, dark: 0x8a6420 }; // the gold bands
-const ROLL_PRESSED = { gold: 0xb08530, light: 0xd8a640, dark: 0x6a4818 }; // the gold bands, held down
+const T0 = UI.goldTheme;
+const ROLL = { gold: T0.band, light: T0.bandLight, dark: T0.bandDark }; // the gold bands
+const ROLL_PRESSED = { gold: T0.bandP, light: T0.bandLightP, dark: T0.bandDarkP }; // the gold bands, held down
 
 // The words' colour.
 export function beginTextColor(enabled) {

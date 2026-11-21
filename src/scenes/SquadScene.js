@@ -25,6 +25,7 @@ import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describ
 import * as sfx from '../audio/sfx.js';
 import { slotsFrom, addToSlots, removeFromSlots, isFull, squadOrder } from '../systems/squadSlots.js';
 import { squadGrid, SQUAD_VIEW, SQUAD_DEPTH } from './squad/squadGrid.js';
+import { BEGIN_LOOKS, drawBeginButton, beginTextStyle, drawChevrons } from './squad/beginButton.js';
 
 // The interface look (config.js UI, entities/uiKit.js): black windows, white lines, Ironslab text (sizes 8 / 16 / 24 = 10 / 20 / 30px, see config.js fontGrid).
 const INK = UI.text;
@@ -36,7 +37,7 @@ const DOOR_X = GAME_WIDTH / 2;
 // banded like EXPEDITION, CAMP / RANDOM in a dock (gold line + dark band, like the camp's tab bar), a title window top
 // left like the fight's floor counter, the sound button where the fight's pause button is (pause.json buttons).
 const SIDE = 24; // the gap to the screen sides (camp.json ui.side)
-const BEGIN = { y: 672, h: 60 }; // the 'Begin descent' button, over the dock (screen review: thumb reach, the gate stays clear)
+const BEGIN = { y: 618, h: 76, side: 14, stroke: 3 }; // 'Begin descent': right under the hero row, bigger (user, session 47); chevrons beside the words
 const DOCK = { y: 742, btnY: 754, btnH: 44, gap: 8, toolY: 808 }; // the dock: its gold line, CAMP / RANDOM, the test row
 // Where the squad stands, how big, the names and the hero grid: squad/squadGrid.js (SQUAD_VIEW).
 const WALK = combatRules.movement.walkSpeedPxPerSec * 1.6; // a bit quicker than in fights
@@ -177,12 +178,23 @@ export default class SquadScene extends Phaser.Scene {
     const n1 = this.children.list.length;
     // BEGIN DESCENT: the screen's main action, banded like the camp's EXPEDITION. Until the squad is full it is dim
     // and says how many heroes are still missing.
-    const bw = GAME_WIDTH - 2 * SIDE, by = BEGIN.y + BEGIN.h / 2;
+    // Its look is ON TRIAL (squad/beginButton.js, registry 'beginLook').
+    this.beginLook = this.registry.get('beginLook') || BEGIN_LOOKS[0];
+    const bw = GAME_WIDTH - 2 * BEGIN.side, by = BEGIN.y + BEGIN.h / 2;
     this.begin = this.add.container(GAME_WIDTH / 2, by).setDepth(DEPTH.ui);
-    const bg = this.add.graphics();
-    const drawBegin = (pressed) => drawFlatButton(bg.clear(), -bw / 2, -BEGIN.h / 2, bw, BEGIN.h, { primary: true, bands: true, pressed, enabled: this.ready() });
-    this.beginText = uiText(this, 0, 1, 'BEGIN DESCENT', 'big', buttonTextColor(true, false, true)).setOrigin(0.5);
-    this.begin.add([bg, this.beginText]);
+    const bg = this.add.graphics(), chev = this.add.graphics();
+    this.beginText = uiText(this, 0, 1, 'BEGIN DESCENT', 'big', '#ffffff').setOrigin(0.5);
+    const drawBegin = (pressed) => {
+      const ready = this.ready(), st = beginTextStyle(this.beginLook, ready), sink = pressed ? UI.press.sinkPx : 0;
+      drawBeginButton(bg.clear(), -bw / 2, -BEGIN.h / 2, bw, BEGIN.h, { look: this.beginLook, pressed, enabled: ready });
+      this.beginText.setColor(st.color).setStroke(st.stroke, BEGIN.stroke);
+      chev.clear();
+      if (!ready) return;
+      const dx = Math.round((this.beginText.width / 2 + bw / 2) / 2), color /* centred in the space beside the words */ = Number('0x' + st.color.slice(1));
+      drawChevrons(chev, -dx, sink, color); drawChevrons(chev, dx, sink, color);
+    };
+    this.tweens.add({ targets: chev, alpha: 0.35, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }); // the chevrons pulse: go down
+    this.begin.add([bg, chev, this.beginText]);
     this.drawBegin = drawBegin;
     pressable(this, this.add.zone(GAME_WIDTH / 2, by, bw, BEGIN.h).setInteractive().setDepth(DEPTH.ui), {
       redraw: drawBegin, sink: [this.beginText], onTap: () => this.descend(), enabled: () => this.ready() && this.begin.visible && !this.leaving && !this.panel,
@@ -204,8 +216,18 @@ export default class SquadScene extends Phaser.Scene {
     this.uiParts = { up: shown(this.children.list.slice(n0, n1)), fade: [...this.labelParts, ...shown(this.gridParts)] };
     this.uiParts.down = shown(this.children.list.slice(n1)); // (the test toggle below joins it)
     if (TESTER || DEMO) return; // the playtest build (npm run build:itch) and the fight demos have no test row
-    this.toggleText = this.add.text(GAME_WIDTH / 2, DOCK.toolY + 12, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
-    this.add.zone(GAME_WIDTH / 2, DOCK.toolY + 12, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
+    // BUTTON LOOK TRIAL (session 47): a small button bottom left flips the BEGIN DESCENT looks (squad/beginButton.js).
+    const lx = SIDE, lw = 110, ly = DOCK.toolY, lh = 24, lg = this.add.graphics().setDepth(DEPTH.ui);
+    const lt = this.add.text(lx + lw / 2, ly + lh / 2 + 1, `BUTTON: ${this.beginLook.toUpperCase()}`, { fontFamily: FONT, fontSize: '8px', color: buttonTextColor() }).setOrigin(0.5).setDepth(DEPTH.ui);
+    const drawL = (pressed) => drawFlatButton(lg.clear(), lx, ly, lw, lh, { pressed });
+    drawL(false);
+    pressable(this, this.add.zone(lx + lw / 2, ly + lh / 2, lw, lh).setInteractive().setDepth(DEPTH.ui), { redraw: drawL, sink: [lt], enabled: () => !this.panel && !this.leaving, onTap: () => {
+      this.registry.set('beginLook', BEGIN_LOOKS[(BEGIN_LOOKS.indexOf(this.beginLook) + 1) % BEGIN_LOOKS.length]);
+      this.scene.restart({ lastRun: this.lastRun });
+    } });
+    this.uiParts.down.push(lg, lt);
+    this.toggleText = this.add.text(260, DOCK.toolY + 12, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
+    this.add.zone(260, DOCK.toolY + 12, 220, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
     this.uiParts.down.push(this.toggleText);
   }
 
@@ -243,9 +265,9 @@ export default class SquadScene extends Phaser.Scene {
       m.num.setVisible(!id);
     });
     this.begin.setVisible(!this.leaving || this.shifting);
-    this.drawBegin(false);
     const ready = this.ready(), missing = this.need() - squadOrder(this.slots).length;
-    this.beginText.setText(ready ? 'BEGIN DESCENT' : `PICK ${missing} MORE`).setColor(buttonTextColor(ready, false, true));
+    this.beginText.setText(ready ? 'BEGIN DESCENT' : `PICK ${missing} MORE`);
+    this.drawBegin(false);
     this.titleText.setText(`Squad ${squadOrder(this.slots).length}/${this.need()}`);
     if (this.tiles) for (const t of this.tiles.values()) t.draw();
     this.drawNames();

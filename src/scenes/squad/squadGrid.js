@@ -29,7 +29,7 @@ const D = SQUAD_DEPTH;
 export const SQUAD_VIEW = {
   slots: [{ x: 90, y: 350 }, { x: GAME_WIDTH / 2, y: 336 }, { x: GAME_WIDTH - 90, y: 350 }], // outer ones nearer the middle (user)
   heroScale: 4, sideOffPx: 48, lockedWash: 0x4a4458, edge: 8,
-  grid: { bottom: 662, w: 84, h: 124, foot: 112, tileScale: 4, gap: 12, side: 8, shadowW: 52, dragPx: 8,
+  grid: { bottom: 606, w: 84, h: 124, foot: 112, tileScale: 4, gap: 12, side: 8, shadowW: 52, dragPx: 8,
     bar: { w: 120, h: 4, gap: 12 } }, // bar = the scroll bar under the row (gap = from the row)
   // The quiet tile's colours: fill, edge, a picked tile's edge, the '?' tile's edge, a pushed tile's fill.
   tile: { fill: 0x16110f, edge: 0x3a2a22, picked: 0xd8a640, locked: 0x2e2a30, pressed: 0x2a201c, shadow: 0.35 },

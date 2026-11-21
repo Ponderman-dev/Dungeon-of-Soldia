@@ -65,3 +65,9 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   is centred and still, else SWIPE it sideways (`gridDown/Move/Up`, called from SquadScene.setupInput; a drag past
   `dragPx` cancels the tile press under the finger: uiKit `zone.cancelPress()`), a small gold scroll bar under it.
   'n more heroes to find' under the bar. Sizes in `SQUAD_VIEW.grid`.
+- **BEGIN DESCENT HIGHER + BIGGER, LOOK ON TRIAL (session 47, user: 'higher, a tad bigger, tweak how it looks'):**
+  right under the hero row (y 618, 76 tall, 14 from the sides; the row is centred above it, `grid.bottom` 606).
+  `squad/beginButton.js`: pulsing DOWN-CHEVRONS beside the words (centred in the space left); 3 looks, registry
+  `beginLook`, the 'BUTTON: ...' button in the dock: `crimson` (camp banded red), `iron` (iron frame + rivets like the
+  gate, crimson body, gold words), `gold` (gold body, crimson bands, dark words). Dim 'PICK n MORE' until full.
+  When the user picks: delete the other looks + the BUTTON button.

@@ -69,7 +69,7 @@ export default class TitleScene extends Phaser.Scene {
     ];
     // TAP TO START (user, session 40): no button box (a tap ANYWHERE starts), just the words, smaller, blinking softly.
     const S = title.start;
-    const tap = uiText(this, cx, S.y, S.text, S.size, '#ffffff', outline) // white: the title keeps its own colours (user: salmon looked weird).setOrigin(0.5);
+    const tap = uiText(this, cx, S.y, S.text, S.size, '#ffffff', outline).setOrigin(0.5); // white: the title keeps its own colours (user: salmon looked weird)
     this.tweens.add({ targets: tap, alpha: S.blinkAlpha, duration: S.blinkMs, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }); // a soft blink
     ui.push(tap);
     // Best floor (user: unreadable small): the big pixel font in gold on a dark strip.

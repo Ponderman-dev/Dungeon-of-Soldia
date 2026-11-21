@@ -489,12 +489,15 @@ export function uiShift(scene, parts, show, { ms = UI.motion.fast, dy = 28, inst
   const all = [];
   for (const [kind, list] of Object.entries(parts)) for (const o of list) if (o && o.active) all.push([o, kind === 'up' ? -dy : kind === 'down' ? dy : 0]);
   for (const [o] of all) if (!o.uiHome) o.uiHome = { y: o.y, alpha: o.alpha };
-  if (instant) { for (const [o, off] of all) o.setAlpha(0).setY(o.uiHome.y + off); if (onDone) onDone(); return; }
+  if (instant) { for (const [o, off] of all) { o.setAlpha(0); if (off) o.setY(o.uiHome.y + off); } if (onDone) onDone(); return; }
   if (!all.length) { if (onDone) onDone(); return; }
   let left = all.length;
   const done = () => { if (--left === 0 && onDone) onDone(); };
   for (const [o, off] of all) {
-    scene.tweens.add({ targets: o, y: o.uiHome.y + (show ? 0 : off), alpha: show ? o.uiHome.alpha : 0, duration: ms,
+    // FADE-only parts (off 0) keep their place: the screen may have moved them since uiHome was taken (session 49,
+    // user: the squad names showed 'above their heads' for a split second while fading in)
+    const to = off ? { y: o.uiHome.y + (show ? 0 : off) } : {};
+    scene.tweens.add({ targets: o, ...to, alpha: show ? o.uiHome.alpha : 0, duration: ms,
       ease: show ? UI.motion.easeOut : UI.motion.easeIn, onComplete: done });
   }
 }

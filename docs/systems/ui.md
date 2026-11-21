@@ -168,3 +168,5 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   `onDown`; `dropScreen` on slide-off), `whenScreenReady` waits for its first draw before the buttons leave,
   `slideToScreen` slides (motion.slow, easeMove as before), stops the old screen, then the new one's `arrive()` brings
   its buttons in 60ms later (after the teardown). Worst frame gap while anything moves: 260ms -> ~35ms (4x slowed).
+- `uiShift` FADE-only parts (kind 'fade', no offset) now only change alpha, never y: uiHome was taken before the squad
+  names were placed, so the fade-in moved them to y 0 ('above their heads') for a split second, then refresh() snapped them.

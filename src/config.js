@@ -141,11 +141,18 @@ export const LOOK_PICK = LOOK_TRIAL ? readPick('soldia.lookTrial.look', LOOK_NAM
 // = Soldia Thin at 2x), big titles stay Ironslab.
 export const FONT_NAMES = ['soldia', 'thin', 'thin+'];
 export const FONT_PICK = LOOK_TRIAL ? readPick('soldia.lookTrial.font', FONT_NAMES) : 'soldia';
-{
-  const L = LOOKS[LOOK_PICK];
-  if (L.theme) Object.assign(UI.goldTheme, L.theme);
-  for (const k of ['text', 'dim', 'gold']) if (L[k]) UI[k] = L[k];
+// The gold look's own values, so a live switch back to gold (lookTrial.js) restores them.
+const BASE = { theme: { ...UI.goldTheme }, text: UI.text, dim: UI.dim, gold: UI.gold, small: { ...UI.smallFont } };
+export const LOOK_NOW = { look: LOOK_PICK, font: FONT_PICK }; // what is applied right now
+export function applyLook(look, font) {
+  const L = LOOKS[look];
+  for (const k of Object.keys(UI.goldTheme)) if (!(k in BASE.theme)) delete UI.goldTheme[k]; // flags like square
+  Object.assign(UI.goldTheme, BASE.theme, L.theme || {});
+  for (const k of ['text', 'dim', 'gold']) UI[k] = L[k] || BASE[k];
   UI.pageBg = L.pageBg ?? null; // null = each page's own bg
   UI.dither = L.dither ?? null;
-  if (FONT_PICK === 'thin+') Object.assign(UI.smallFont, { maxPx: 16, px2From: 12 });
+  for (const k of Object.keys(UI.smallFont)) if (!(k in BASE.small)) delete UI.smallFont[k];
+  Object.assign(UI.smallFont, BASE.small, font === 'thin+' ? { maxPx: 16, px2From: 12 } : {});
+  LOOK_NOW.look = look; LOOK_NOW.font = font;
 }
+applyLook(LOOK_PICK, FONT_PICK);

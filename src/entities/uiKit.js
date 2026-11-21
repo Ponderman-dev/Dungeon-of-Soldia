@@ -10,22 +10,28 @@ import { popPlan, slidePlan, fadePlan, pagePlan, pageSide } from '../systems/mot
 
 // Loads the packed font before the first screen draws. The font comes from its data: URL with atob, never fetch():
 // the claude.ai preview frame blocks fetch (the same trick as the sounds). If it fails the game uses monospace.
+const loadFace = (name, url) => {
+  try {
+    const bin = atob(url.split(',')[1]);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const face = new FontFace(name, bytes.buffer);
+    document.fonts.add(face);
+    return face.load().catch(() => null);
+  } catch {
+    return Promise.resolve(null);
+  }
+};
+let smallFace = null; // the loaded small font face (the look trial swaps it)
 export function loadUiFont() {
   installFontGrid();
-  const load = (name, url) => {
-    try {
-      const bin = atob(url.split(',')[1]);
-      const bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      const face = new FontFace(name, bytes.buffer);
-      document.fonts.add(face);
-      return face.load().catch(() => null);
-    } catch {
-      return Promise.resolve(null);
-    }
-  };
   // LOOK TRIAL (session 49): the THIN fonts load the thin face under the small font's name (nothing else changes).
-  return Promise.all([load('Ironslab', fontUrl), load('SoldiaSmall', FONT_PICK === 'soldia' ? smallFontUrl : thinFontUrl)]);
+  return Promise.all([loadFace('Ironslab', fontUrl), swapSmallFont(FONT_PICK)]);
+}
+// LOOK TRIAL: puts the small font's face for `font` ('soldia' | 'thin' | 'thin+') in place of the loaded one.
+export function swapSmallFont(font) {
+  if (smallFace) document.fonts.delete(smallFace);
+  return loadFace('SoldiaSmall', font === 'soldia' ? smallFontUrl : thinFontUrl).then((f) => { smallFace = f; return f; });
 }
 
 // Ironslab is drawn on a 10px grid (capitals 8px tall), so it is only crisp at 10 / 20 / 30px. The scenes keep asking

@@ -18,7 +18,7 @@ const BLOCK_TOP = 104; // the title; the puzzle starts at STAGE_TOP (the whole b
 const STAGE_TOP = 214;
 const BUTTON_Y = GAME_HEIGHT - 92;
 const hex = (c) => Number(c.replace('#', '0x'));
-const GOLD = hex(UI.gold);
+const gold = () => hex(UI.gold); // read live (look trial switches it)
 
 // The Puzzle Room sheet: one of the 5 puzzles the user kept (rooms.json `puzzles`), picked at random, harder deeper
 // down (`tiers`). The rules are in systems/puzzles.js; this scene only draws and takes taps. Reports through
@@ -102,7 +102,7 @@ export default class PuzzleScene extends Phaser.Scene {
     // The coin: a little gold disc drawn in pixels.
     const coin = this.add.graphics();
     coin.fillStyle(0x8a5a14, 1).fillRect(-10, -8, 20, 16).fillRect(-8, -10, 16, 20);
-    coin.fillStyle(GOLD, 1).fillRect(-8, -6, 16, 12).fillRect(-6, -8, 12, 16);
+    coin.fillStyle(gold(), 1).fillRect(-8, -6, 16, 12).fillRect(-6, -8, 12, 16);
     coin.fillStyle(0xfff3a0, 1).fillRect(-4, -4, 4, 4);
     coin.setVisible(false);
     this.block.add(coin);
@@ -168,8 +168,8 @@ export default class PuzzleScene extends Phaser.Scene {
       this.block.add(g);
       const paint = (lit) => {
         g.clear();
-        drawWindow(g, x, y, size, size, { line: lit ? GOLD : UI.line });
-        g.fillStyle(lit ? GOLD : 0x6a6a80, 1);
+        drawWindow(g, x, y, size, size, { line: lit ? gold() : UI.line });
+        g.fillStyle(lit ? gold() : 0x6a6a80, 1);
         R.runeGlyphs[glyph].forEach((row, ry) => [...row].forEach((c, rx) => { if (c === '1') g.fillRect(x + 16 + rx * 8, y + 16 + ry * 8, 8, 8); }));
       };
       paint(false);
@@ -240,7 +240,7 @@ export default class PuzzleScene extends Phaser.Scene {
       g.clear();
       g.fillStyle(0x221c33, 1);
       for (let i = 1; i < level.n; i++) g.fillRect(left + i * cs, top, 1, W).fillRect(left, top + i * cs, W, 1);
-      g.fillStyle(GOLD, 1).fillRect(left - 6, top + level.srow * cs + cs / 2 - 5, 8, 10); // the crack the light comes from
+      g.fillStyle(gold(), 1).fillRect(left - 6, top + level.srow * cs + cs / 2 - 5, 8, 10); // the crack the light comes from
       for (const k of level.pillars) {
         const [x, y] = k.split(',').map(Number);
         g.fillStyle(0x5a5466, 1).fillRect(left + x * cs + 4, top + y * cs + 4, cs - 8, cs - 8);
@@ -250,7 +250,7 @@ export default class PuzzleScene extends Phaser.Scene {
       // The beam: a gold line from cell centre to cell centre.
       let x0 = left;
       let y0 = top + level.srow * cs + cs / 2;
-      g.fillStyle(GOLD, 1);
+      g.fillStyle(gold(), 1);
       for (const [x, y] of r.path) {
         const x1 = left + x * cs + cs / 2;
         const y1 = top + y * cs + cs / 2;
@@ -262,7 +262,7 @@ export default class PuzzleScene extends Phaser.Scene {
       const gx = left + cx * cs + cs / 2;
       const gy = top + cy * cs + cs / 2;
       const u = Math.max(2, Math.floor(cs / 12));
-      g.fillStyle(r.hit ? GOLD : 0x2a1450, 1).fillRect(gx - 3 * u, gy - 4 * u, 6 * u, 8 * u).fillRect(gx - 4 * u, gy - 2 * u, 8 * u, 4 * u);
+      g.fillStyle(r.hit ? gold() : 0x2a1450, 1).fillRect(gx - 3 * u, gy - 4 * u, 6 * u, 8 * u).fillRect(gx - 4 * u, gy - 2 * u, 8 * u, 4 * u);
       g.fillStyle(0x9a5cff, 1).fillRect(gx - 2 * u, gy - 3 * u, 4 * u, 6 * u).fillRect(gx - 3 * u, gy - u, 6 * u, 2 * u);
       g.fillStyle(0xe0c8ff, 1).fillRect(gx - u, gy - 2 * u, u, u);
       // Mirrors: a white stepped diagonal.
@@ -327,7 +327,7 @@ export default class PuzzleScene extends Phaser.Scene {
       const s = Math.max(2, Math.floor(cs / 14));
       const kx = left + key.x + cs / 2;
       const ky = top + key.y;
-      g.fillStyle(GOLD, 1);
+      g.fillStyle(gold(), 1);
       g.fillRect(kx - 3 * s, ky + 3 * s, 6 * s, 2 * s).fillRect(kx - 3 * s, ky + 3 * s, 2 * s, 5 * s).fillRect(kx + s, ky + 3 * s, 2 * s, 5 * s).fillRect(kx - 3 * s, ky + 7 * s, 6 * s, 2 * s);
       g.fillRect(kx - s, ky + 9 * s, 2 * s, 4 * s).fillRect(kx + s, ky + 10 * s, 2 * s, s);
     };
@@ -416,7 +416,7 @@ export default class PuzzleScene extends Phaser.Scene {
     const top = STAGE_TOP + 30;
     const frame = this.add.graphics();
     this.block.add(frame);
-    const paintFrame = (gold) => { frame.clear(); drawWindow(frame, left - 8, top - 8, W + 16, W + 16, { line: gold ? GOLD : UI.line }); };
+    const paintFrame = (gold) => { frame.clear(); drawWindow(frame, left - 8, top - 8, W + 16, W + 16, { line: gold ? gold() : UI.line }); };
     paintFrame(false);
     let order = shufflePieces(N * N);
     let sel = -1;
@@ -432,7 +432,7 @@ export default class PuzzleScene extends Phaser.Scene {
     const draw = () => {
       spots.forEach((img, i) => img.setFrame(`p${order[i]}`));
       mark.clear();
-      if (sel >= 0) mark.lineStyle(3, GOLD, 1).strokeRect(spots[sel].x + 1, spots[sel].y + 1, piece - 2, piece - 2);
+      if (sel >= 0) mark.lineStyle(3, gold(), 1).strokeRect(spots[sel].x + 1, spots[sel].y + 1, piece - 2, piece - 2);
     };
     const tap = (i) => {
       if (this.done) return;

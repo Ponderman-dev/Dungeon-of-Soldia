@@ -11,7 +11,7 @@ import * as sfx from '../audio/sfx.js';
 // card (gold name, small hint, big buttons under it; the chosen one FILLED gold). Opened over the camp or the title
 // (that scene is paused, `from`); '< CAMP' resumes it. Data: settings.json, logic: systems/settings.js.
 const L = defs.layout;
-const GOLD = Phaser.Display.Color.HexStringToColor(UI.gold).color;
+const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read live (look trial switches it)
 const RED = Phaser.Display.Color.HexStringToColor(UI.red).color;
 const DIM = Number(L.dim);
 const DIM_TEXT = '#' + DIM.toString(16).padStart(6, '0');
@@ -45,7 +45,7 @@ export default class SettingsScene extends Phaser.Scene {
   // A window button: `look` = 'plain' (white), 'gold' (gold line), 'filled' (gold, black text), 'dim', 'red'.
   // Added to `into` (a container) when given. Returns the tap zone.
   button(x, y, w, h, label, { look = 'plain', size = 'normal', onTap = null, into = null } = {}) {
-    const line = { plain: UI.line, gold: GOLD, filled: GOLD, dim: DIM, red: RED, solid: UI.line }[look];
+    const line = { plain: UI.line, gold: gold(), filled: gold(), dim: DIM, red: RED, solid: UI.line }[look];
     const solid = look === 'filled' || look === 'solid'; // a solid button (the framed theme's gold / crimson button)
     const ink = solid ? buttonTextColor() : { plain: UI.text, gold: UI.gold, dim: DIM_TEXT, red: UI.red }[look];
     const g = solid ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line });
@@ -100,7 +100,7 @@ export default class SettingsScene extends Phaser.Scene {
       const left = x + P + h + 8 + L.rowGap, room = inner - (h + 8 + L.rowGap) * 2;
       const cw = Math.floor((room - L.barGap * (c.max - 1)) / c.max), x0 = left + Math.floor((room - (cw * c.max + L.barGap * (c.max - 1))) / 2);
       const g = this.add.graphics();
-      for (let i = 0; i < c.max; i++) g.fillStyle(i < v ? GOLD : 0x26262f, 1).fillRect(x0 + i * (cw + L.barGap), ry + (h - L.barCellH) / 2, cw, L.barCellH);
+      for (let i = 0; i < c.max; i++) g.fillStyle(i < v ? gold() : 0x26262f, 1).fillRect(x0 + i * (cw + L.barGap), ry + (h - L.barCellH) / 2, cw, L.barCellH);
       page.add(g);
     } else if (c.type === 'choice') {
       const n = c.options.length, w = (inner - L.rowGap * (n - 1)) / n;

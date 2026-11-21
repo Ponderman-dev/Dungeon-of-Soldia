@@ -21,7 +21,7 @@ import * as sfx from '../audio/sfx.js';
 // Entries fill in as they are met (progress.seen, systems/glossary.js); the rest stay dark '???'. Opened over the
 // camp (the camp waits, paused). Data: glossary.json.
 const L = G.layout;
-const GOLD = Phaser.Display.Color.HexStringToColor(UI.gold).color;
+const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read live (look trial switches it)
 const DIM = Number(L.dim);
 const SHADOW = 0x1c1c26;
 const W = GAME_WIDTH - L.side * 2;
@@ -65,7 +65,7 @@ export default class GlossaryScene extends Phaser.Scene {
   }
 
   button(page, x, y, w, h, label, onTap, look = 'plain', size = 'normal') {
-    const line = { plain: UI.line, gold: GOLD, dim: DIM, solid: UI.line }[look];
+    const line = { plain: UI.line, gold: gold(), dim: DIM, solid: UI.line }[look];
     page.add(look === 'solid' ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line }));
     if (label) page.add(uiText(this, x + w / 2, y + h / 2, label, size, { plain: UI.text, gold: UI.gold, dim: UI.dim, solid: buttonTextColor() }[look]).setOrigin(0.5));
     if (onTap) page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', onTap));
@@ -196,7 +196,7 @@ export default class GlossaryScene extends Phaser.Scene {
     pick = pick || list.find((id) => met.includes(id)) || null;
     list.forEach((id, i) => {
       const cx = x + (i % E.cols) * (cw + E.gap), cy = E.y + Math.floor(i / E.cols) * (E.h + E.gap), on = met.includes(id);
-      page.add(drawWindow(this.add.graphics(), cx, cy, cw, E.h, { line: id === pick ? GOLD : UI.line }));
+      page.add(drawWindow(this.add.graphics(), cx, cy, cw, E.h, { line: id === pick ? gold() : UI.line }));
       this.sprite(page, { id, ...enemies[id] }, cx + cw / 2, cy + E.h - 22, E.h - 30, !on);
       this.text(page, cx + cw / 2, cy + E.h - 11, on ? tileName(id) : '???', 'small', on ? UI.text : UI.dim).setOrigin(0.5);
       if (on) page.add(this.add.zone(cx, cy, cw, E.h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (id !== pick) { sfx.play('tap'); this.showEnemies(at, id); } }));
@@ -208,7 +208,7 @@ export default class GlossaryScene extends Phaser.Scene {
   // An enemy's card: sprite, name, base stats, how it hits, weak / resists, times beaten.
   enemyCard(page, id, y, h) {
     const x = L.side, P = L.pad;
-    page.add(drawWindow(this.add.graphics(), x, y, W, h, { line: id ? GOLD : DIM }));
+    page.add(drawWindow(this.add.graphics(), x, y, W, h, { line: id ? gold() : DIM }));
     if (!id) { this.text(page, GAME_WIDTH / 2, y + h / 2, 'Meet enemies in the dungeon to fill this book.', 'small', UI.dim, { align: 'center', wordWrap: { width: W - P * 2 } }).setOrigin(0.5); return; }
     const def = { id, ...enemies[id] }, st = def.stats || {};
     this.sprite(page, def, x + 56, y + 92, 76);
@@ -257,7 +257,7 @@ export default class GlossaryScene extends Phaser.Scene {
     pick = pick || list.find((id) => found.includes(id)) || null;
     list.forEach((id, i) => {
       const cx = x + (i % I.cols) * (I.cell + gap), cy = I.y + Math.floor(i / I.cols) * (I.cell + gap), on = found.includes(id);
-      page.add(drawWindow(this.add.graphics(), cx, cy, I.cell, I.cell, { line: id === pick ? GOLD : on ? UI.line : DIM }));
+      page.add(drawWindow(this.add.graphics(), cx, cy, I.cell, I.cell, { line: id === pick ? gold() : on ? UI.line : DIM }));
       const icon = this.add.image(cx + I.cell / 2, cy + I.cell / 2, bareIconKey(this, id)).setScale(2);
       if (!on) icon.setTint(SHADOW).setTintMode(Phaser.TintModes.FILL);
       page.add(icon);
@@ -265,7 +265,7 @@ export default class GlossaryScene extends Phaser.Scene {
     });
     this.pager(page, I.pagerY, at, Math.ceil(ITEM_IDS.length / per), (i) => this.showItems(i));
     const y = I.cardY, P = L.pad;
-    page.add(drawWindow(this.add.graphics(), x, y, W, I.cardH, { line: pick ? GOLD : DIM }));
+    page.add(drawWindow(this.add.graphics(), x, y, W, I.cardH, { line: pick ? gold() : DIM }));
     if (!pick) { this.text(page, GAME_WIDTH / 2, y + I.cardH / 2, 'Find items in the dungeon to fill this page.', 'small', UI.dim, { align: 'center', wordWrap: { width: W - P * 2 } }).setOrigin(0.5); return; }
     const def = items[pick], rar = rarities[def.rarity] || {};
     this.text(page, x + P, y + 14, def.name.toUpperCase(), 'normal', UI.gold, { wordWrap: { width: W - P * 2 } });

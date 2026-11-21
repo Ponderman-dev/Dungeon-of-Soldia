@@ -17,7 +17,7 @@ import * as sfx from '../audio/sfx.js';
 // look) / GEMS (packs: Coming soon, payments later). Tap a look = try-on page with BUY. The gem balance + '+' sit top
 // right on every page. Looks are stand-in recolours for now (systems/looks.js). Data: shop.json.
 const L = S.layout;
-const GOLD = Phaser.Display.Color.HexStringToColor(UI.gold).color;
+const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read live (look trial switches it)
 const GEM = Number(L.gem), GEM_DARK = Number(L.gemDark), RED = Number(L.red), DIM = Number(L.dim);
 const GEM_CSS = '#' + GEM.toString(16).padStart(6, '0');
 const W = GAME_WIDTH - L.side * 2;
@@ -126,7 +126,7 @@ export default class ShopScene extends Phaser.Scene {
     this.header(page, this.from === 'Base' ? '< CAMP' : '< BACK', () => this.close());
     ['deals', 'looks', 'gems'].forEach((id, i) => {
       const on = id === tab;
-      this.button(page, x + i * (tw + T.gap), T.y, tw, T.h, id.toUpperCase(), () => { if (!on) { sfx.play('tap'); this.showTab(id); } }, on ? GOLD : UI.line, on ? UI.gold : UI.text);
+      this.button(page, x + i * (tw + T.gap), T.y, tw, T.h, id.toUpperCase(), () => { if (!on) { sfx.play('tap'); this.showTab(id); } }, on ? gold() : UI.line, on ? UI.gold : UI.text);
     });
     if (tab === 'deals') this.drawDeals(page);
     else if (tab === 'looks') this.drawLooks(page);
@@ -136,7 +136,7 @@ export default class ShopScene extends Phaser.Scene {
   // DEALS: the merchant with a speech bubble, the daily timer, 3 deal rows.
   drawDeals(page) {
     const x = L.side, M = L.merchant, Ti = L.timer, R = L.dealRows;
-    page.add(drawWindow(this.add.graphics(), x, M.y, W, M.h, { line: GOLD }));
+    page.add(drawWindow(this.add.graphics(), x, M.y, W, M.h, { line: gold() }));
     page.add(floorCrop(this, dungeons.A.tileColors[0], 200, x + 2, M.y + 2, W - 4, M.h - 4));
     const merchant = camp.npcs.find((n) => n.id === 'shop');
     if (merchant) page.add(new Character(this, x + 80, M.y + M.h - 24, merchant.def).setScale(4));
@@ -146,7 +146,7 @@ export default class ShopScene extends Phaser.Scene {
     line.setPosition(bx + 12, by + 10);
     page.add(line);
     // Timer bar: new deals at midnight.
-    page.add(drawWindow(this.add.graphics(), x, Ti.y, W, Ti.h, { line: GOLD }));
+    page.add(drawWindow(this.add.graphics(), x, Ti.y, W, Ti.h, { line: gold() }));
     const icon = this.add.image(0, Ti.y + Ti.h / 2, bareIconKey(this, 'hourglass')).setScale(2);
     page.add(icon);
     const label = this.text(page, 0, Ti.y + Ti.h / 2, 'NEW DEALS IN', 'normal').setOrigin(0, 0.5);
@@ -167,7 +167,7 @@ export default class ShopScene extends Phaser.Scene {
       page.addAt(this.add.graphics().fillStyle(RED, 1).fillRect(tag.x - tag.width - 6, y + 14, tag.width + 12, tag.height + 8), page.list.indexOf(tag));
       const pw = W - R.tileW - 34, py = y + R.h - 58;
       const owned = this.owned(lk.id);
-      this.button(page, tx, py, pw, 44, owned ? 'OWNED' : null, () => { sfx.play('tap'); this.showTryOn(lk, d.price); }, owned ? DIM : GOLD, UI.dim);
+      this.button(page, tx, py, pw, 44, owned ? 'OWNED' : null, () => { sfx.play('tap'); this.showTryOn(lk, d.price); }, owned ? DIM : gold(), UI.dim);
       if (!owned) this.price(page, tx + pw / 2, py + 22, d.price, lk.price);
     });
   }
@@ -177,7 +177,7 @@ export default class ShopScene extends Phaser.Scene {
     const x = L.side, G2 = L.grid, cw = (W - G2.gap * (G2.cols - 1)) / G2.cols;
     S.looks.forEach((lk, i) => {
       const cx = x + (i % G2.cols) * (cw + G2.gap), cy = G2.y + Math.floor(i / G2.cols) * (G2.h + G2.gap), owned = this.owned(lk.id);
-      page.add(drawWindow(this.add.graphics(), cx, cy, cw, G2.h, { line: owned ? GOLD : UI.line }));
+      page.add(drawWindow(this.add.graphics(), cx, cy, cw, G2.h, { line: owned ? gold() : UI.line }));
       this.lookTile(page, lk, cx + 2, cy + 2, cw - 4, G2.tileH, 3);
       page.add(this.add.graphics().fillStyle(UI.line, 1).fillRect(cx + 2, cy + G2.tileH + 2, cw - 4, 2));
       this.text(page, cx + cw / 2, cy + G2.tileH + 24, lk.name.toUpperCase(), 'normal').setOrigin(0.5);
@@ -193,7 +193,7 @@ export default class ShopScene extends Phaser.Scene {
     const x = L.side, P = L.packs;
     S.packs.forEach((pk, i) => {
       const y = P.y + i * (P.h + P.gap);
-      this.button(page, x, y, W, P.h, null, () => this.soon(`${num(pk.gems)} ${S.currency}`, 'Payments come later (card or SOL).'), pk.tag ? GOLD : UI.line);
+      this.button(page, x, y, W, P.h, null, () => this.soon(`${num(pk.gems)} ${S.currency}`, 'Payments come later (card or SOL).'), pk.tag ? gold() : UI.line);
       this.gem(page, x + 40, y + P.h / 2, 5);
       if (pk.tag) this.text(page, x + 76, y + 18, pk.tag, 'small', UI.gold);
       this.text(page, x + 76, y + P.h / 2 + 4, num(pk.gems), 'big', GEM_CSS).setOrigin(0, 0.5);
@@ -210,7 +210,7 @@ export default class ShopScene extends Phaser.Scene {
   showTryOn(look, price) {
     const page = this.newPage(), x = L.side, T = L.tryOn, i = S.looks.indexOf(look), cx = GAME_WIDTH / 2;
     this.header(page, '< BACK', () => { sfx.play('tap'); this.showTab(lastTab); });
-    page.add(drawWindow(this.add.graphics(), x, T.y, W, T.h, { line: GOLD }));
+    page.add(drawWindow(this.add.graphics(), x, T.y, W, T.h, { line: gold() }));
     page.add(floorCrop(this, dungeons.A.tileColors[0], 200, x + 2, T.y + 2, W - 4, T.h - 4));
     const name = this.text(page, cx, T.y + 46, look.name.toUpperCase(), 'big').setOrigin(0.5);
     page.addAt(drawWindow(this.add.graphics(), cx - name.width / 2 - 20, T.y + 22, name.width + 40, 48), page.list.indexOf(name));
@@ -233,7 +233,7 @@ export default class ShopScene extends Phaser.Scene {
     if (owned) {
       this.button(page, x, by, W, 72, 'OWNED', null, DIM, UI.dim);
     } else {
-      this.button(page, x, by, W, 72, null, () => this.buy(look, price), GOLD);
+      this.button(page, x, by, W, 72, null, () => this.buy(look, price), gold());
       const buy = this.text(page, 0, by + 36, 'BUY', 'big', UI.gold).setOrigin(0, 0.5);
       const p = this.text(page, 0, by + 36, num(price), 'normal', GEM_CSS).setOrigin(0, 0.5);
       const w = buy.width + 24 + 14 + p.width, x0 = cx - w / 2;

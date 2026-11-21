@@ -16,7 +16,7 @@ import * as sfx from '../audio/sfx.js';
 // Page 1: the run (floor, time, kills, NEW BEST!), the 3 heroes on the dungeon floor (tap one = gold outline + bigger)
 // and that hero's card (fell on, damage, healing, kills, taken, items, who felled them). BOSSES / ITEMS open their
 // pages. CAMP = back to the camp, TRY AGAIN = the squad screen. Data: `summary` from systems/runStats.js finishRun.
-const GOLD = Phaser.Display.Color.HexStringToColor(UI.gold).color;
+const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read live (look trial switches it)
 const DIM = Number(G.dim);
 const W = GAME_WIDTH - G.side * 2;
 const heroDef = (id) => heroes.find((h) => h.id === id);
@@ -52,7 +52,7 @@ export default class GameOverScene extends Phaser.Scene {
 
   // A window button. look: 'plain', 'filled' (gold, black text), 'dim'. Returns the tap zone.
   button(page, x, y, w, h, label, onTap, look = 'plain') {
-    page.add(drawWindow(this.add.graphics(), x, y, w, h, { line: look === 'dim' ? DIM : look === 'filled' ? GOLD : UI.line, fill: look === 'filled' ? GOLD : UI.window }));
+    page.add(drawWindow(this.add.graphics(), x, y, w, h, { line: look === 'dim' ? DIM : look === 'filled' ? gold() : UI.line, fill: look === 'filled' ? gold() : UI.window }));
     page.add(uiText(this, x + w / 2, y + h / 2, label, 'normal', look === 'filled' ? '#000000' : look === 'dim' ? UI.dim : UI.text).setOrigin(0.5));
     const z = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.leaving) onTap(); });
     page.add(z);
@@ -82,7 +82,7 @@ export default class GameOverScene extends Phaser.Scene {
       const tag = this.text(page, 0, R.y + R.bestY, 'NEW BEST!', 'small', '#000000').setOrigin(0, 0);
       const tw = tag.width + 12, tx = x + G.pad;
       tag.setX(tx + 6);
-      const g = this.add.graphics().fillStyle(GOLD, 1).fillRect(tx, R.y + R.bestY - 4, tw, tag.height + 8);
+      const g = this.add.graphics().fillStyle(gold(), 1).fillRect(tx, R.y + R.bestY - 4, tw, tag.height + 8);
       page.addAt(g, page.list.indexOf(tag));
       if (S.oldBest > 0) this.text(page, tx + tw + 12, R.y + R.bestY, `Old best: ${S.oldBest}`, 'small', UI.dim);
     } else {
@@ -214,7 +214,7 @@ export default class GameOverScene extends Phaser.Scene {
     this.text(page, x + W, I.y - 22, 'Tap one to read it.', 'small', UI.dim).setOrigin(1, 0);
     list.forEach((it, i) => {
       const cx = x + (i % cols) * (cell + gap), cy = I.y + Math.floor(i / cols) * (cell + gap);
-      page.add(drawWindow(this.add.graphics(), cx, cy, cell, cell, { line: it.id === pick ? GOLD : UI.line }));
+      page.add(drawWindow(this.add.graphics(), cx, cy, cell, cell, { line: it.id === pick ? gold() : UI.line }));
       if (items[it.id]) page.add(this.add.image(cx + cell / 2, cy + cell / 2, itemIconKey(this, it.id, items[it.id].rarity)).setScale(sc));
       page.add(this.add.zone(cx, cy, cell, cell).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => {
         if (it.id !== pick) { sfx.play('tap'); this.showItems(it.id); }

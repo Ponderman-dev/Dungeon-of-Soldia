@@ -28,7 +28,6 @@ import { squadGrid, squadLabel, SQUAD_VIEW, SQUAD_DEPTH } from './squad/squadGri
 import { drawBeginButton, beginTextColor } from './squad/beginButton.js';
 
 // The interface look (config.js UI, entities/uiKit.js): black windows, white lines, Ironslab text (sizes 8 / 16 / 24 = 10 / 20 / 30px, see config.js fontGrid).
-const INK = UI.text;
 const MUTE = '#a8a8b8';
 const FONT = UI.font;
 const WALL_H = 200; // the back wall with the door, as on the battle floors
@@ -151,7 +150,7 @@ export default class SquadScene extends Phaser.Scene {
     const px = (g, x, y, w = 1, h = 1) => g.fillRect(sx + x * P, sy + y * P, w * P, h * P); // on a 2px grid around the centre
     const drawSound = () => {
       const g = this.soundIcon.clear(), off = sfx.isMuted();
-      g.fillStyle(Phaser.Display.Color.HexStringToColor(off ? UI.dim : INK).color, 1);
+      g.fillStyle(Phaser.Display.Color.HexStringToColor(off ? UI.dim : UI.text).color, 1);
       px(g, -6, -2, 3, 4); // the box
       px(g, -3, -3, 1, 6); px(g, -2, -4, 1, 8); px(g, -1, -5, 1, 10); // the cone
       if (off) { for (let i = 0; i < 5; i++) { px(g, 2 + i, -2 + i); px(g, 6 - i, -2 + i); } } // a cross
@@ -389,7 +388,7 @@ export default class SquadScene extends Phaser.Scene {
     const C = this.L.card;
     const small = (x, y, str, color, wrap) => put(this.add.text(x, y, str, { fontFamily: FONT, fontSize: '8px', color, wordWrap: wrap ? { width: wrap, useAdvancedWrap: true } : undefined, lineSpacing: C.lineGap }));
     const prose = (x, y, str, color, wrap) => small(x, y, str, color, wrap).setLetterSpacing(C.letterGap); // longer text: airier
-    text(GAME_WIDTH / 2, Y + 122, def.name, 24, INK, true).setOrigin(0.5, 0);
+    text(GAME_WIDTH / 2, Y + 122, def.name, 24, UI.text, true).setOrigin(0.5, 0);
     small(GAME_WIDTH / 2, Y + 160, `${def.role || ''} - ${def.damageType === 'melee' ? 'melee' : 'ranged'}${element}`.toUpperCase(), UI.gold).setOrigin(0.5, 0);
     const sum = prose(GAME_WIDTH / 2, Y + 176, def.summary || '', C.body, W - 48).setOrigin(0.5, 0).setAlign('center');
     const team = small(GAME_WIDTH / 2, sum.y + sum.height + 8, `TEAM BONUS: ${this.perkLine(def)}`, UI.gold).setOrigin(0.5, 0);
@@ -399,7 +398,7 @@ export default class SquadScene extends Phaser.Scene {
     const section = (iconId, tag, tagColor, name, body) => {
       const top = y, P = C.pad;
       const key = skillIconKey(this, iconId);
-      const nm = text(bx + P + 44, top + P - 1, name, 16, INK, true, bw - 2 * P - 44);
+      const nm = text(bx + P + 44, top + P - 1, name, 16, UI.text, true, bw - 2 * P - 44);
       const tg = small(bx + P + 44, nm.y + nm.height + 4, tag, tagColor);
       const ds = prose(bx + P, Math.max(tg.y + tg.height, top + P + 36) + 8, body, C.body, bw - 2 * P);
       const h = ds.y + ds.height + P - top;
@@ -442,7 +441,7 @@ export default class SquadScene extends Phaser.Scene {
     }
     // The two card buttons push in when held (pressed fill + the label drops), and act on release (UI.press).
     const bg = put(this.add.graphics());
-    const lt = text(GAME_WIDTH / 2, by + 25, label, 17, action ? INK : UI.dim, true).setOrigin(0.5);
+    const lt = text(GAME_WIDTH / 2, by + 25, label, 17, action ? UI.text : UI.dim, true).setOrigin(0.5);
     const cur = put(this.add.graphics());
     if (action) drawCursor(cur, Math.round(GAME_WIDTH / 2 - lt.width / 2 - 20), by + 24);
     const drawMain = (pressed) => drawWindow(bg.clear(), X + 16, by, W - 32, 48, { line: action ? UI.line : 0x4a4a5a, ...(pressed ? { fill: UI.pressed } : {}) });
@@ -454,7 +453,7 @@ export default class SquadScene extends Phaser.Scene {
     const xb = put(this.add.graphics());
     const drawX = (pressed) => drawWindow(xb.clear(), X + W - 42, Y + 10, 32, 32, pressed ? { fill: UI.pressed } : {});
     drawX(false);
-    const xt = text(X + W - 26, Y + 27, 'X', 16, INK, true).setOrigin(0.5);
+    const xt = text(X + W - 26, Y + 27, 'X', 16, UI.text, true).setOrigin(0.5);
     pressable(this, add(this.add.zone(X + W - 26, Y + 26, 48, 48).setInteractive()), {
       redraw: drawX, sink: [xt], enabled: () => this.panel === objs, onTap: () => { sfx.play('cardClose'); this.closePanel(); },
     });
@@ -472,10 +471,10 @@ export default class SquadScene extends Phaser.Scene {
   // (a tap anywhere on the card or outside closes it).
   lockedCardBody(id, { objs, put, text, g, X, Y, W, H, card }) {
     const req = unlocks.requirements[id], LC = this.L.lockedCard;
-    text(GAME_WIDTH / 2, Y + 178, '? ? ?', 24, INK, true).setOrigin(0.5, 0);
+    text(GAME_WIDTH / 2, Y + 178, '? ? ?', 24, UI.text, true).setOrigin(0.5, 0);
     text(GAME_WIDTH / 2, Y + 216, 'LOCKED HERO', 11, UI.gold, true).setOrigin(0.5, 0);
     if (req) {
-      text(GAME_WIDTH / 2, Y + LC.goalY, describeRequirement(req, unlocks), 16, INK, true, W - 32).setOrigin(0.5, 0).setAlign('center');
+      text(GAME_WIDTH / 2, Y + LC.goalY, describeRequirement(req, unlocks), 16, UI.text, true, W - 32).setOrigin(0.5, 0).setAlign('center');
       const p = requirementProgress(req, this.progress), bw = W - 64, bx = X + 32, by = Y + LC.barY;
       g.fillStyle(0x000000, 1).fillRect(bx - 2, by - 2, bw + 4, LC.barH + 4).fillStyle(UI.goldTheme.tileEdge, 1).fillRect(bx, by, bw, LC.barH);
       g.fillStyle(UI.goldTheme.picked, 1).fillRect(bx, by, Math.round(bw * Math.min(1, p.have / p.need)), LC.barH);
@@ -483,7 +482,7 @@ export default class SquadScene extends Phaser.Scene {
     }
     put(this.add.zone(X + W / 2, Y + H / 2, W, H).setInteractive()).on('pointerdown', () => { sfx.play('cardClose'); this.closePanel(); });
     drawWindow(g, X + W - 42, Y + 10, 32, 32);
-    text(X + W - 26, Y + 27, 'X', 16, INK, true).setOrigin(0.5);
+    text(X + W - 26, Y + 27, 'X', 16, UI.text, true).setOrigin(0.5);
     add_shade_close(objs[0], this);
     this.panel = objs;
     sfx.play('cardOpen');

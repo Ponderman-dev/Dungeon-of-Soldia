@@ -21,7 +21,7 @@ import * as sfx from '../audio/sfx.js';
 // page, CHANGE = profile hero page). Tabs STATS (lifetime numbers) / ACHIEVE. (medals, profile.json achievements).
 // Data: profile.json; saved in progress.profile / progress.achievements / progress.stats.
 const L = D.layout;
-const GOLD = Phaser.Display.Color.HexStringToColor(UI.gold).color;
+const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read live (look trial switches it)
 const DIM = Number(L.dim);
 const SHADOW = 0x1c1c26; // locked heroes / medals: a dark shadow
 const W = GAME_WIDTH - L.side * 2;
@@ -71,7 +71,7 @@ export default class ProfileScene extends Phaser.Scene {
 
   // A window button. look: 'plain', 'gold' (gold line + text), 'filled' (gold, black text), 'dim'. Returns the zone.
   button(page, x, y, w, h, label, onTap, look = 'plain', size = 'normal') {
-    const line = { plain: UI.line, gold: GOLD, filled: GOLD, dim: DIM }[look];
+    const line = { plain: UI.line, gold: gold(), filled: gold(), dim: DIM }[look];
     const solid = look === 'filled' || look === 'solid'; // a solid button (the framed theme's gold / crimson button)
     page.add(solid ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line }));
     page.add(uiText(this, x + w / 2, y + h / 2, label, size, solid ? buttonTextColor() : { plain: UI.text, gold: UI.gold, dim: UI.dim }[look]).setOrigin(0.5));
@@ -159,11 +159,11 @@ export default class ProfileScene extends Phaser.Scene {
     const n = list.filter((a) => got.includes(a.id)).length;
     const label = this.text(page, x, M.y, `${n} / ${list.length} EARNED`, 'small');
     const bx = x + label.width + 12, bw = W - label.width - 12;
-    page.add(this.add.graphics().fillStyle(0x26262f, 1).fillRect(bx, M.y - 1, bw, M.barH).fillStyle(GOLD, 1).fillRect(bx, M.y - 1, Math.round((bw * n) / list.length), M.barH));
+    page.add(this.add.graphics().fillStyle(0x26262f, 1).fillRect(bx, M.y - 1, bw, M.barH).fillStyle(gold(), 1).fillRect(bx, M.y - 1, Math.round((bw * n) / list.length), M.barH));
     const gap = (W - M.cols * M.cell) / (M.cols - 1);
     list.forEach((a, i) => {
       const cx = x + (i % M.cols) * (M.cell + gap), cy = M.gridY + Math.floor(i / M.cols) * (M.h + M.gap), on = got.includes(a.id);
-      page.add(drawWindow(this.add.graphics(), cx, cy, M.cell, M.h, { line: on ? GOLD : UI.line }));
+      page.add(drawWindow(this.add.graphics(), cx, cy, M.cell, M.h, { line: on ? gold() : UI.line }));
       if (items[a.icon]) {
         const icon = this.add.image(cx + M.cell / 2, cy + M.iconY, bareIconKey(this, a.icon)).setScale(M.iconScale);
         if (!on) icon.setTint(SHADOW).setTintMode(Phaser.TintModes.FILL);
@@ -193,7 +193,7 @@ export default class ProfileScene extends Phaser.Scene {
     box.add(this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.7).setOrigin(0).setInteractive());
     box.add(drawWindow(this.add.graphics(), x, y, w, h));
     box.add(uiText(this, GAME_WIDTH / 2, y + 16, 'YOUR NAME', 'normal', UI.gold).setOrigin(0.5, 0));
-    box.add(drawWindow(this.add.graphics(), x + L.pad, y + 48, w - L.pad * 2, 44, { line: GOLD }));
+    box.add(drawWindow(this.add.graphics(), x + L.pad, y + 48, w - L.pad * 2, 44, { line: gold() }));
     const shown = uiText(this, GAME_WIDTH / 2, y + 70, '', 'normal').setOrigin(0.5);
     box.add(shown);
     let value = this.profile.name;
@@ -212,7 +212,7 @@ export default class ProfileScene extends Phaser.Scene {
     const bw = (w - L.pad * 2 - 12) / 2, by = y + h - L.pad - 44;
     [[0, 'CANCEL', false], [1, 'OK', true]].forEach(([i, label, keep]) => {
       const bx = x + L.pad + i * (bw + 12);
-      box.add(drawWindow(this.add.graphics(), bx, by, bw, 44, keep ? { line: GOLD, fill: GOLD } : {}));
+      box.add(drawWindow(this.add.graphics(), bx, by, bw, 44, keep ? { line: gold(), fill: gold() } : {}));
       box.add(uiText(this, bx + bw / 2, by + 22, label, 'normal', keep ? '#000000' : UI.text).setOrigin(0.5));
       box.add(this.add.zone(bx, by, bw, 44).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => done(keep)));
     });
@@ -241,14 +241,14 @@ export default class ProfileScene extends Phaser.Scene {
   showHeroPicker(chosen = this.profile.hero) {
     const page = this.newPage(), x = L.side, P = L.pick;
     this.top(page, '< BACK', 'PROFILE HERO', () => this.showMain());
-    page.add(drawWindow(this.add.graphics(), x, P.y, W, P.h, { line: GOLD }));
+    page.add(drawWindow(this.add.graphics(), x, P.y, W, P.h, { line: gold() }));
     page.add(floorCrop(this, dungeons.A.tileColors[0], 200, x + 2, P.y + 2, W - 4, P.h - 4));
     this.text(page, GAME_WIDTH / 2, P.y + 12, heroDef(chosen).name.toUpperCase(), 'normal').setOrigin(0.5, 0);
     this.hero(page, chosen, GAME_WIDTH / 2, P.y + P.h - 16, P.scale);
     const gap = (W - P.cols * P.cell) / (P.cols - 1), ch = P.cell + 12;
     heroes.forEach((h, i) => {
       const cx = x + (i % P.cols) * (P.cell + gap), cy = P.gridY + Math.floor(i / P.cols) * (ch + P.gap), open = this.isOpen(h.id);
-      page.add(drawWindow(this.add.graphics(), cx, cy, P.cell, ch, { line: h.id === chosen ? GOLD : open ? UI.line : DIM }));
+      page.add(drawWindow(this.add.graphics(), cx, cy, P.cell, ch, { line: h.id === chosen ? gold() : open ? UI.line : DIM }));
       this.hero(page, h.id, cx + P.cell / 2, cy + ch - 24, 2, !open);
       this.text(page, cx + P.cell / 2, cy + ch - 12, open ? D.shortNames[h.id] || h.name.toUpperCase() : '???', 'small', h.id === chosen ? UI.gold : open ? UI.text : UI.dim).setOrigin(0.5);
       if (open) page.add(this.add.zone(cx, cy, P.cell, ch).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (h.id !== chosen) { sfx.play('tap'); this.showHeroPicker(h.id); } }));
@@ -263,7 +263,7 @@ export default class ProfileScene extends Phaser.Scene {
   showBanners(chosen = this.profile.banner) {
     const page = this.newPage(), x = L.side, B = L.banner, C = L.card, open = openBanners(this.progress, D.banners);
     this.top(page, '< BACK', 'BANNER', () => this.showMain());
-    page.add(drawWindow(this.add.graphics(), x, B.y, W, C.bannerH + 4, { line: GOLD }));
+    page.add(drawWindow(this.add.graphics(), x, B.y, W, C.bannerH + 4, { line: gold() }));
     this.banner(page, chosen, x + 2, B.y + 2, W - 4, C.bannerH);
     const tileGap = (W - 3 * B.tileW) / 2;
     let y = B.y + C.bannerH + 20;
@@ -278,7 +278,7 @@ export default class ProfileScene extends Phaser.Scene {
     y += 44;
     D.banners.forEach((b, i) => {
       const tx = x + (i % 3) * (B.tileW + tileGap), ty = y + Math.floor(i / 3) * (B.tileH + 12), on = open.includes(b.id);
-      page.add(drawWindow(this.add.graphics(), tx, ty, B.tileW, B.tileH, { line: b.id === chosen ? GOLD : on ? UI.line : DIM }));
+      page.add(drawWindow(this.add.graphics(), tx, ty, B.tileW, B.tileH, { line: b.id === chosen ? gold() : on ? UI.line : DIM }));
       if (on) this.banner(page, b.id, tx + 2, ty + 2, B.tileW - 4, B.tileH - 4);
       else this.text(page, tx + B.tileW / 2, ty + B.tileH / 2, 'LOCKED', 'small', UI.dim).setOrigin(0.5);
       page.add(this.add.zone(tx, ty, B.tileW, B.tileH).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => {

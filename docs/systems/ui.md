@@ -140,7 +140,7 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
 
 ## LOOK TRIAL: NAVY (session 49, TEMPORARY, user: 'I kinda want this vibe', docs/references/ui-vibe-pick-a-class.png)
 - Whole interface, on trial. Build `npm run build:look-trial` (VITE_LOOK_TRIAL=1: the normal game + a LOOK / FONT switch row
-  at the bottom, `src/lookTrial.js`, localStorage + page reload), published to the squad demo url. The real game is unchanged.
+  at the bottom, `src/lookTrial.js`, saved in localStorage; switches LIVE: `applyLook()` + `swapSmallFont()`, open screens restart in place, a fight shows it from the next floor), published to the squad demo url. The real game is unchanged.
 - LOOKS (config.js `LOOKS`, applied to UI.goldTheme + UI.text/dim/gold before any scene loads): gold (today), steel (flat navy,
   steel-blue line, slate secondary), dusk (purple slate, lavender line, maroon secondary), deep (near-black navy, pale double
   line, maroon secondary). All: green main button, salmon titles, teal 'chosen', no studs; menu pages get a dithered checker

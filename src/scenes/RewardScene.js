@@ -15,7 +15,6 @@ import { SKILL_COLORS } from '../config.js';
 
 // The interface look (config.js UI, entities/uiKit.js): black windows, white lines, gold = chosen, pixel font.
 const COLORS = { gold: 0xffd84a, dim: 0x4a4a5a };
-const INK = UI.text;
 const MUTE = '#c8c8d4'; // descriptions: a light grey so the white names stand out
 const FONT = UI.font;
 // Text sizes stay on the 8 / 16 grid (config.js fontGrid turns them into crisp Ironslab sizes): every old size becomes 8 (small text) or 16 (titles, names, buttons).
@@ -209,7 +208,7 @@ export default class RewardScene extends Phaser.Scene {
     card.add(this.add.text(ICON_X, h / 2 + 42, itemTypes[item.type].label.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5));
     card.add(this.add.text(TEXT_X, 16, `${rarities[item.rarity].label} ${item.kind === 'potion' ? 'POTION' : item.kind === 'book' ? 'BOOK' : 'ITEM'}`.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: hex(rc) }));
     // The name: 16px, or two 16px lines when it is long (never an in-between size: they blur).
-    const name = this.add.text(TEXT_X, 32, item.name, { fontFamily: FONT, fontSize: '16px', color: INK, lineSpacing: 6, wordWrap: { width: CARD_W - TEXT_X - 12, useAdvancedWrap: true } });
+    const name = this.add.text(TEXT_X, 32, item.name, { fontFamily: FONT, fontSize: '16px', color: UI.text, lineSpacing: 6, wordWrap: { width: CARD_W - TEXT_X - 12, useAdvancedWrap: true } });
     card.add(name);
     const desc = this.add.text(TEXT_X, 32 + name.height + 10, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, color: MUTE, lineSpacing: 4, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
     card.add(desc);
@@ -227,7 +226,7 @@ export default class RewardScene extends Phaser.Scene {
     const heights = this.payload.choices.map((item) => this.cardHeight(item));
     const total = TITLE_H + heights.reduce((a, b) => a + b, 0) + 14 * (heights.length - 1);
     const top = this.fitSheet(total + 16) + HEAD - 8;
-    this.text(GAME_WIDTH / 2, top, 'Choose a reward', 28, INK, true).setOrigin(0.5, 0);
+    this.text(GAME_WIDTH / 2, top, 'Choose a reward', 28, UI.text, true).setOrigin(0.5, 0);
 
     let y = top + TITLE_H;
     this.payload.choices.forEach((item, i) => {
@@ -269,7 +268,7 @@ export default class RewardScene extends Phaser.Scene {
     const bb = this.track(this.add.graphics());
     const by = this.top + 10; // in the top row, beside FLOOR N CLEARED
     drawWindow(bb, bx, by, bw, 28);
-    this.text(bx + bw / 2, by + 14, 'Back', 8, INK).setOrigin(0.5);
+    this.text(bx + bw / 2, by + 14, 'Back', 8, UI.text).setOrigin(0.5);
     this.track(this.add.zone(bx + bw / 2, by + 14, bw + 10, 40).setInteractive()).on('pointerdown', () => { sfx.play('tap'); onTap(); });
   }
 
@@ -308,7 +307,7 @@ export default class RewardScene extends Phaser.Scene {
     if (tier === 'legendary' || tier === 'hero') rarityShine(this, card, CARD_W, h, R);
     card.add(this.add.image(L.iconX, h / 2 - (this.compactPages ? 0 : 8), bookPageIconKey(this, page, R)).setScale(L.iconScale)); // the page's own tome, its tier's frame
     card.add(this.add.text(L.textX, this.compactPages ? 9 : 14, label, { fontFamily: FONT, fontSize: `${L.label}px`, color: hex(rc) }));
-    card.add(this.add.text(L.textX, L.nameY, page.name, { fontFamily: FONT, fontSize: `${L.name}px`, color: INK }));
+    card.add(this.add.text(L.textX, L.nameY, page.name, { fontFamily: FONT, fontSize: `${L.name}px`, color: UI.text }));
     card.add(this.add.text(L.textX, L.descY, page.text, { fontFamily: FONT, fontSize: `${L.desc}px`, color: MUTE, lineSpacing: 4, wordWrap: { width: CARD_W - L.textX - 16, useAdvancedWrap: true } }));
     card.paint = paint;
     return card;
@@ -324,7 +323,7 @@ export default class RewardScene extends Phaser.Scene {
     const total = TITLE_H + 26 + heights.reduce((a, b) => a + b, 0) + gap * (heights.length - 1);
     const top = this.fitSheet(total + 16) + HEAD - 8;
     if (this.payload.choices.length > 1) this.backButton(() => this.showPick());
-    this.text(GAME_WIDTH / 2, top, 'Choose a page', 28, INK, true).setOrigin(0.5, 0);
+    this.text(GAME_WIDTH / 2, top, 'Choose a page', 28, UI.text, true).setOrigin(0.5, 0);
     this.text(GAME_WIDTH / 2, top + 36, 'It stays on one skill for the rest of the run.', 13, MUTE).setOrigin(0.5, 0);
     let y = top + TITLE_H + 26;
     pages.forEach((page, i) => {
@@ -351,7 +350,7 @@ export default class RewardScene extends Phaser.Scene {
     const rowH = 132; // one hero row (its two skill buttons)
     const T = this.fitSheet(42 + this.measure(sumText, 13, CARD_W) + 12 + rowH * heroes.length + 4 + BTN_H + 14) + HEAD - 6;
     this.backButton(() => this.showPages());
-    this.text(PAD, T, 'Which skill?', 26, INK, true);
+    this.text(PAD, T, 'Which skill?', 26, UI.text, true);
     const sum = this.text(PAD, T + 32, sumText, 13, MUTE, false, CARD_W);
     const limits = this.payload.state.rules.books || {};
     const skillDefs = this.payload.state.skillDefs;
@@ -365,7 +364,7 @@ export default class RewardScene extends Phaser.Scene {
       const ch = new Character(this, PAD + 36, y + rowH - 26, hero.def);
       ch.setScale(2.5).setAlpha(hero.alive ? 1 : 0.35);
       this.track(ch);
-      this.text(PAD + 76, y + 10, hero.name, 17, INK, true).setAlpha(hero.alive ? 1 : 0.5);
+      this.text(PAD + 76, y + 10, hero.name, 17, UI.text, true).setAlpha(hero.alive ? 1 : 0.5);
       const bw = (CARD_W - 76 - 16) / 2;
       hero.skills.forEach((slot, idx) => {
         const bx = PAD + 76 + idx * (bw + 6);
@@ -385,7 +384,7 @@ export default class RewardScene extends Phaser.Scene {
         };
         btn.paint(false);
         const IN = 12; // the text's gap from the box's frame (user: neater)
-        this.fitText(bx + IN, by + IN - 2, skillDefs[slot.id].name, 13, usable ? INK : MUTE, bw - 2 * IN, 34, true);
+        this.fitText(bx + IN, by + IN - 2, skillDefs[slot.id].name, 13, usable ? UI.text : MUTE, bw - 2 * IN, 34, true);
         const note = fit === 'dead' ? 'Fallen' : fit === 'full' ? 'Stat pages full' : fit === 'duplicate' ? 'Already has it' : fit === 'wrongSkill' ? 'Not this skill' : fit === 'replace' ? 'Full: replaces one' : `${stats}${limits.maxStatPages != null ? '/' + limits.maxStatPages : ''} stats\n${mods}${limits.modifierSlots != null ? '/' + limits.modifierSlots : ''} mods`;
         this.fitText(bx + IN, by + bh - 30 - IN + 6, note, 11, fit === 'replace' ? '#ffd9a0' : MUTE, bw - 2 * IN, 26); // shrinks to stay inside the box
         if (usable) this.track(this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive()).on('pointerdown', () => this.selectSkill(btn));
@@ -435,7 +434,7 @@ export default class RewardScene extends Phaser.Scene {
     const cardsH = mods.reduce((a, p) => a + this.pageHeight(p) + 14, 0);
     const T = this.fitSheet(42 + this.measure(subText, 13, CARD_W) + 12 + cardsH + 2) + HEAD - 6;
     this.backButton(() => this.showSkillPick(this.pickedPage));
-    this.text(PAD, T, 'Replace which page?', 26, INK, true);
+    this.text(PAD, T, 'Replace which page?', 26, UI.text, true);
     const sub = this.text(PAD, T + 32, subText, 13, MUTE, false, CARD_W);
     let y = T + 44 + sub.height;
     mods.forEach((p, i) => {
@@ -477,7 +476,7 @@ export default class RewardScene extends Phaser.Scene {
     const lines = Math.max(1, ...heroes.map((h) => Math.min(ROW_ITEM_LINES, Math.ceil(new Set(h.items).size / perLine))));
     const rowH = Math.max(96, 58 + lines * (FRAMED_SIZE + 3));
     const T = this.fitSheet(44 + itemH + 14 + (rowH + rowGap) * heroes.length + 4 + BTN_H + 14) + HEAD - 6;
-    this.text(PAD, T, 'Who gets it?', 26, INK, true);
+    this.text(PAD, T, 'Who gets it?', 26, UI.text, true);
     this.backButton(() => this.showPick()); // back to the 3 rewards (changed your mind)
     this.drawCard(item, PAD, T + 44, itemH, true);
 
@@ -500,7 +499,7 @@ export default class RewardScene extends Phaser.Scene {
       const iconsH = Math.min(ROW_ITEM_LINES, Math.max(1, Math.ceil(new Set(hero.items).size / perLine))) * (FRAMED_SIZE + 3) - 3;
       const blockH = ROW_NAME_H + (line ? ROW_GAP + 8 : 0) + ROW_GAP + iconsH;
       let ty = Math.round(y + Math.max(10, (rowH - blockH) / 2));
-      const name = this.text(PAD + 74, ty - 3, hero.name, 17, INK, true).setAlpha(alpha);
+      const name = this.text(PAD + 74, ty - 3, hero.name, 17, UI.text, true).setAlpha(alpha);
       this.text(PAD + 74 + name.width + 8, ty + ROW_NAME_H - 8, `Lv ${hero.level}`, 8, MUTE).setAlpha(alpha);
       ty += ROW_NAME_H;
       if (line) {

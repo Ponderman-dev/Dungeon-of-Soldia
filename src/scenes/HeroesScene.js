@@ -17,7 +17,7 @@ import * as sfx from '../audio/sfx.js';
 // user's own art on top, the hero big on the dungeon floor with name + role and the look's name (one look each for
 // now), an HP / ATK / DEF / RES strip, LORE and STATS (RECORDS / KIT). Data: heroPage.json.
 const L = D.layout;
-const GOLD = Phaser.Display.Color.HexStringToColor(UI.gold).color;
+const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read live (look trial switches it)
 const DIM = Number(L.dim);
 const SHADOW = 0x1c1c26;
 const W = GAME_WIDTH - L.side * 2;
@@ -53,7 +53,7 @@ export default class HeroesScene extends Phaser.Scene {
   }
 
   button(page, x, y, w, h, label, onTap, look = 'plain', size = 'normal') {
-    const line = { plain: UI.line, gold: GOLD, dim: DIM, solid: UI.line }[look];
+    const line = { plain: UI.line, gold: gold(), dim: DIM, solid: UI.line }[look];
     page.add(look === 'solid' ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line }));
     page.add(uiText(this, x + w / 2, y + h / 2, label, size, { plain: UI.text, gold: UI.gold, dim: UI.dim, solid: buttonTextColor() }[look]).setOrigin(0.5));
     page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.modal) onTap(); }));
@@ -101,7 +101,7 @@ export default class HeroesScene extends Phaser.Scene {
         this.hero(page, def, cx + 34, cy + Li.h - 14, 2, true);
         const gx = cx + 66, gw = w - 66 - L.pad;
         this.text(page, gx, cy + 44, D.shortGoals[req.type].replace('{value}', req.value), 'small', UI.text, { wordWrap: { width: gw } });
-        page.add(this.add.graphics().fillStyle(0x26262f, 1).fillRect(gx, cy + 70, gw, Li.barH).fillStyle(GOLD, 1).fillRect(gx, cy + 70, Math.round((gw * Math.min(p.have, p.need)) / p.need), Li.barH));
+        page.add(this.add.graphics().fillStyle(0x26262f, 1).fillRect(gx, cy + 70, gw, Li.barH).fillStyle(gold(), 1).fillRect(gx, cy + 70, Math.round((gw * Math.min(p.have, p.need)) / p.need), Li.barH));
         this.text(page, gx, cy + 84, `${Math.min(p.have, p.need)}/${p.need}`, 'small', UI.gold);
       }
       page.add(this.add.zone(cx, cy, w, Li.h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => {
@@ -120,11 +120,11 @@ export default class HeroesScene extends Phaser.Scene {
     const page = this.newPage(), C = L.card, x = L.side, y = C.y, h = C.artH + C.floorH, cx = GAME_WIDTH / 2;
     this.top(page, '< BACK', null, () => this.showList());
     // One gold card: the art box on top (the user's own pixel art comes later), the dungeon floor under it.
-    page.add(drawWindow(this.add.graphics(), x, y, W, h, { line: GOLD, fill: 0x14141c }));
+    page.add(drawWindow(this.add.graphics(), x, y, W, h, { line: gold(), fill: 0x14141c }));
     this.text(page, cx, y + C.artH / 2, 'YOUR PIXEL ART', 'normal', UI.dim).setOrigin(0.5);
     const fy = y + C.artH;
     page.add(floorCrop(this, dungeons.A.tileColors[0], 200, x + 2, fy, W - 4, C.floorH - 2));
-    page.add(this.add.graphics().fillStyle(GOLD, 1).fillRect(x + 2, fy, W - 4, 2));
+    page.add(this.add.graphics().fillStyle(gold(), 1).fillRect(x + 2, fy, W - 4, 2));
     // Name in a window, role in gold under it.
     const name = this.text(page, cx, fy + C.nameY + 22, def.name.toUpperCase(), 'big').setOrigin(0.5);
     const nw = name.width + 40;
@@ -136,7 +136,7 @@ export default class HeroesScene extends Phaser.Scene {
     const look = this.text(page, cx, fy + C.lookY + 18, D.lookName, 'normal').setOrigin(0.5);
     const lw = look.width + 32;
     page.addAt(drawWindow(this.add.graphics(), cx - lw / 2, fy + C.lookY, lw, 36), page.list.indexOf(look));
-    page.add(this.add.graphics().fillStyle(GOLD, 1).fillRect(cx - 3, fy + C.lookY + 44, 6, 6));
+    page.add(this.add.graphics().fillStyle(gold(), 1).fillRect(cx - 3, fy + C.lookY + 44, 6, 6));
     // HP / ATK / DEF / RES strip.
     const S = L.strip, st = def.stats;
     page.add(drawWindow(this.add.graphics(), x, S.y, W, S.h));

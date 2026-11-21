@@ -17,7 +17,7 @@ import unlocks from '../../data/unlocks.json';
 import { perkMods } from '../../systems/party.js';
 import { shortGoal, nextUnlock } from '../../systems/progress.js';
 
-const FONT = UI.font, INK = UI.text, MUTE = '#a8a8b8';
+const FONT = UI.font, MUTE = '#a8a8b8';
 const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
 export const SQUAD_DEPTH = { floor: 0, slot: 1, bench: 2, hero: 5, doorFront: 8, ui: 20, panel: 40 };
 const D = SQUAD_DEPTH;
@@ -34,7 +34,7 @@ export const SQUAD_VIEW = {
   // inner padding / gap between boxes, the tip's colour.
   // Body text = the user's pick A (session 47: 'more space between text, not bold'): 1px between letters, more between
   // lines, a softer cream.
-  card: { body: UI.goldTheme.body, lineGap: 8, letterGap: 1, fill: UI.goldTheme.tileFill, edge: UI.goldTheme.tileEdge, pad: 8, gap: 6, tip: '#ffd88a',
+  card: { get body() { return UI.goldTheme.body; }, lineGap: 8, letterGap: 1, get fill() { return UI.goldTheme.tileFill; }, get edge() { return UI.goldTheme.tileEdge; }, pad: 8, gap: 6, tip: '#ffd88a',
     portraitH: 100, heroScale: 3 }, // the portrait (an open hero) and the hero's size in it
   // TIDIER ROW (session 48, user: 'keep scrolling, just tidier, bring it down a bit' x2): exactly 4 whole tiles in the
     // view (side margins hold the arrow tabs, off the tiles), the row snaps to a whole tile when a swipe ends.
@@ -45,7 +45,8 @@ export const SQUAD_VIEW = {
     // left and back after nudgeDelayMs).
     hint: { tabW: 18, tabH: 40, tabGap: 4, shade: [], shadeW: 6, nudgePx: 44, nudgeDelayMs: 700, nudgeMs: 380, stepMs: 220 } },
   // The quiet tile's colours: fill, edge, a picked tile's edge, the '?' tile's edge, a pushed tile's fill.
-  tile: { fill: UI.goldTheme.tileFill, edge: UI.goldTheme.tileEdge, picked: UI.goldTheme.picked, locked: UI.goldTheme.tileLocked, pressed: UI.goldTheme.strip, shadow: 0.35 },
+  tile: { get fill() { return UI.goldTheme.tileFill; }, get edge() { return UI.goldTheme.tileEdge; }, get picked() { return UI.goldTheme.picked; },
+    get locked() { return UI.goldTheme.tileLocked; }, get pressed() { return UI.goldTheme.strip; }, shadow: 0.35 }, // getters: the look trial switches live
 };
 // THE NAMES UNDER THE SQUAD ('slope', the user's pick of 3, session 47): big names, the middle one a row higher
 // (following the V of the heroes), the outer ones kept on the screen, a small X button beside each = send back.
@@ -59,7 +60,7 @@ export const squadLabel = (scene, x, y, str, color, extra = {}) =>
   scene.add.text(x, y, str.toUpperCase(), { fontFamily: UI.smallFont.family, fontSize: '16px', color, lineSpacing: 8, ...extra });
 const G = SQUAD_VIEW.grid;
 
-const text = (scene, x, y, str, color = INK) => scene.add.text(x, y, str, { fontFamily: FONT, fontSize: '8px', color });
+const text = (scene, x, y, str, color = UI.text) => scene.add.text(x, y, str, { fontFamily: FONT, fontSize: '8px', color });
 
 export const squadGrid = {
   // The team perk as a short line ('+10% ATK').

@@ -34,7 +34,7 @@ const game = new Phaser.Game({
   scene: [BootScene, TitleScene, BaseScene, SquadScene, BattleScene, RewardScene, PuzzleScene, PauseScene, SettingsScene, GameOverScene, ProfileScene, HeroesScene, GlossaryScene, LeadersScene, ShopScene, DebugScene],
 });
 
-mountLookTrial(); // the look trial build only (session 49, temporary)
+mountLookTrial(game); // the look trial build only (session 49, temporary)
 
 // Dev server only (never in the built page): browser checks drive the game through this.
 if (import.meta.env.DEV) window.__game = game;

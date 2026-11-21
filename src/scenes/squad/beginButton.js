@@ -7,9 +7,6 @@
 import { UI } from '../../config.js';
 import { squareButton } from '../../entities/uiKit.js';
 
-const T0 = UI.goldTheme;
-const ROLL = { gold: T0.band, light: T0.bandLight, dark: T0.bandDark }; // the gold bands
-const ROLL_PRESSED = { gold: T0.bandP, light: T0.bandLightP, dark: T0.bandDarkP }; // the gold bands, held down
 
 // The words' colour.
 export function beginTextColor(enabled) {
@@ -21,7 +18,8 @@ export function drawBeginButton(g, x, y, w, h, { pressed = false, enabled = true
   const T = UI.goldTheme, B = UI.flat.band, s = UI.press.sinkPx;
   if (T.square) return squareButton(g, x, y, w, h, { pressed, enabled, primary: true }); // LOOK TRIAL: one flat colour
   const [body, dark, light] = !enabled ? [T.dim, T.dim, T.dim] : pressed ? [T.buttonDark, T.buttonDark, T.button] : [T.button, T.buttonDark, T.buttonLight];
-  const R = !enabled ? { gold: T.frameDark, light: T.dim, dark: T.outline } : pressed ? ROLL_PRESSED : ROLL;
+  const R = !enabled ? { gold: T.frameDark, light: T.dim, dark: T.outline } // the gold bands (held down: a shade darker)
+    : pressed ? { gold: T.bandP, light: T.bandLightP, dark: T.bandDarkP } : { gold: T.band, light: T.bandLight, dark: T.bandDark };
   g.fillStyle(T.outline, 1).fillRect(x - 2, y - 2, w + 4, h + 4); // the outline + the dark ledge under the button
   const top = y + (pressed ? s : 0), bh = h - s; // the button itself: up on the ledge, or pushed down onto it
   g.fillStyle(body, 1).fillRect(x, top, w, bh);

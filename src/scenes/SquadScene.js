@@ -17,6 +17,9 @@ import combatRules from '../data/combat.json';
 import defaultSquad from '../data/squad.json';
 import { DEMO as DEMO_KIND, demoSquad } from './demoMode.js'; // a demo page's saved squad
 const DEMO = !!DEMO_KIND;
+// The SQUAD SCREEN DEMO page (npm run build:squad-demo, session 47 layout trial): opens here, every hero open, the
+// LAYOUT button on, no test toggle; BEGIN DESCENT walks into the gate and comes back here (no fight).
+const SQUAD_DEMO = import.meta.env.VITE_SQUAD_DEMO === '1';
 const TESTER = import.meta.env.VITE_TESTER === '1'; // the playtest build for itch.io: no test buttons
 import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
@@ -209,7 +212,7 @@ export default class SquadScene extends Phaser.Scene {
     const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));
     this.uiParts = { up: shown(this.children.list.slice(n0, n1)), fade: [...this.slotMarks.map((m) => m.back).filter(Boolean), ...shown(this.layoutParts)] };
     this.uiParts.down = shown(this.children.list.slice(n1)); // (the test toggle below joins it)
-    if (TESTER || DEMO) return; // the playtest build (npm run build:itch) has no test toggle
+    if (TESTER || DEMO) return; // (the squad demo keeps the LAYOUT button, see below) the playtest build (npm run build:itch) has no test toggle
     // LAYOUT TRIAL (session 47): a small button bottom left flips A -> B -> C (the screen starts again in it).
     const lay = this.smallButton(SIDE, DOCK.toolY, 96, 24, `LAYOUT ${this.layoutKey}`, () => {
       const next = LAYOUT_KEYS[(LAYOUT_KEYS.indexOf(this.layoutKey) + 1) % LAYOUT_KEYS.length];
@@ -217,6 +220,7 @@ export default class SquadScene extends Phaser.Scene {
       this.scene.restart({ lastRun: this.lastRun });
     });
     this.uiParts.down.push(...lay.filter((o) => !(o instanceof Phaser.GameObjects.Zone)));
+    if (SQUAD_DEMO) return; // the demo page: every hero is open already
     this.toggleText = this.add.text(246, DOCK.toolY + 12, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
     this.add.zone(246, DOCK.toolY + 12, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
     this.uiParts.down.push(this.toggleText);
@@ -225,12 +229,12 @@ export default class SquadScene extends Phaser.Scene {
   // ---- state ---------------------------------------------------------------------------------
 
   openIds() {
-    if (DEMO) return heroDefs.map((h) => h.id); // the demo page: every hero open (its saved squad may hold locked ones)
+    if (DEMO || SQUAD_DEMO) return heroDefs.map((h) => h.id); // the demo pages: every hero open (its saved squad may hold locked ones)
     return unlockedIds(heroDefs, this.progress, unlocks);
   }
 
   unlocked(id) {
-    return DEMO || isUnlocked(id, this.progress, unlocks);
+    return DEMO || SQUAD_DEMO || isUnlocked(id, this.progress, unlocks);
   }
 
   need() {
@@ -573,7 +577,7 @@ export default class SquadScene extends Phaser.Scene {
           f.ch.setVisible(false);
           if (--left === 0) {
             this.cameras.main.fadeOut(T.squadEnter.fadeMs, 0, 0, 0);
-            this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Battle'));
+            this.cameras.main.once('camerafadeoutcomplete', () => (SQUAD_DEMO ? this.scene.restart() : this.scene.start('Battle')));
           }
         },
       });

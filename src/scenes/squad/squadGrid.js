@@ -4,9 +4,10 @@
 // goal in two tiny lines. QUIET TILES (user: the grid 'looks busy and crowded'): a plain dark tile with a thin dark
 // edge and a soft shadow under the hero (no gold frame, no studs); only a picked hero's tile gets the gold edge + a
 // check mark. NEW = a green tag. A tap opens the details card.
-// The grid ADAPTS to how many tiles there are (user: 'adaptable for every hero we unlocked'): up to 4 in one row,
-// more in two balanced rows (5 = 3 + 2 ... 10 = 5 + 5), tiles as wide as fits (max grid.maxW), the whole block
-// centred in the space between the Send back row and BEGIN DESCENT.
+// ONE ROW THAT SCROLLS (user: 'just make the hero grid scrollable', after two rows of 10 felt crowded): big tiles
+// in a single row; when they fit (a new player: 3 + '?') the row is centred and still; when they do not, swipe it
+// left / right (a swipe never taps a tile: cancelPress), a small gold scroll bar under it shows where you are. The
+// row is centred in the space between the names and BEGIN DESCENT.
 // Mixed into SquadScene.prototype (like roomMethods.js into BattleScene).
 import { GAME_WIDTH, UI } from '../../config.js';
 import { drawFlatButton, buttonTextColor, uiText, pressable } from '../../entities/uiKit.js';
@@ -28,7 +29,8 @@ const D = SQUAD_DEPTH;
 export const SQUAD_VIEW = {
   slots: [{ x: 90, y: 350 }, { x: GAME_WIDTH / 2, y: 336 }, { x: GAME_WIDTH - 90, y: 350 }], // outer ones nearer the middle (user)
   heroScale: 4, sideOffPx: 48, lockedWash: 0x4a4458, edge: 8,
-  grid: { bottom: 662, maxW: 80, h: 100, foot: 88, tileScale: 3, gap: 12, maxCols: 5, side: 14 },
+  grid: { bottom: 662, w: 84, h: 124, foot: 112, tileScale: 4, gap: 12, side: 8, shadowW: 52, dragPx: 8,
+    bar: { w: 120, h: 4, gap: 12 } }, // bar = the scroll bar under the row (gap = from the row)
   // The quiet tile's colours: fill, edge, a picked tile's edge, the '?' tile's edge, a pushed tile's fill.
   tile: { fill: 0x16110f, edge: 0x3a2a22, picked: 0xd8a640, locked: 0x2e2a30, pressed: 0x2a201c, shadow: 0.35 },
 };
@@ -36,13 +38,6 @@ export const SQUAD_VIEW = {
 // (following the V of the heroes), the outer ones kept on the screen, a small X button beside each = send back.
 export const NAMES = { middleY: 354, outerY: 382, xSize: 22, xGap: 6, gridTop: 404 };
 const G = SQUAD_VIEW.grid;
-
-// How the grid lays out n tiles: columns (up to 4 = one row; more = two balanced rows) and the tile width.
-export function gridShape(n) {
-  const cols = Math.max(1, n <= 4 ? n : Math.min(G.maxCols, Math.ceil(n / 2)));
-  const w = Math.min(G.maxW, Math.floor((GAME_WIDTH - 2 * G.side - (cols - 1) * G.gap) / cols));
-  return { cols, rows: Math.ceil(n / cols), w };
-}
 
 const text = (scene, x, y, str, color = INK) => scene.add.text(x, y, str, { fontFamily: FONT, fontSize: '8px', color });
 
@@ -60,33 +55,64 @@ export const squadGrid = {
     return { ids: next ? [...open, next] : open, hidden: locked - (next ? 1 : 0) };
   },
 
-  // (Re)builds the grid (gridShape): rows centred across, the block centred in grid.top..bottom; with one row there is
-  // room for an 'n more heroes to find' line under it. Returns its parts (also kept in this.gridParts).
+  // (Re)builds the row: every tile in a container (masked to the screen between the side gaps) that scrolls sideways;
+  // the scroll bar and the 'n more heroes to find' line under it. Returns its parts (also kept in this.gridParts).
   buildGrid() {
     (this.gridParts || []).forEach((o) => o.destroy());
     const parts = (this.gridParts = []);
     this.tiles = new Map();
     const { ids, hidden } = this.tileList();
-    const { cols, rows, w } = gridShape(ids.length);
-    const line = hidden > 0 && rows === 1;
-    const blockH = rows * G.h + (rows - 1) * G.gap + (line ? 22 : 0);
-    const gTop = NAMES.gridTop;
-    const top = gTop + Math.max(0, Math.round((G.bottom - gTop - blockH) / 2));
-    ids.forEach((id, i) => {
-      const row = Math.floor(i / cols), inRow = Math.min(cols, ids.length - row * cols);
-      const x0 = Math.round((GAME_WIDTH - (inRow * w + (inRow - 1) * G.gap)) / 2);
-      parts.push(...this.makeTile(id, x0 + (i % cols) * (w + G.gap), top + row * (G.h + G.gap), w, G.h));
-    });
-    if (line) parts.push(text(this, GAME_WIDTH / 2, top + G.h + 12, `${hidden} more heroes to find`, MUTE).setOrigin(0.5, 0).setDepth(D.ui));
+    const B = G.bar, viewW = GAME_WIDTH - 2 * G.side;
+    const rowW = ids.length * G.w + (ids.length - 1) * G.gap;
+    this.gridMax = Math.max(0, rowW - viewW); // how far the row can scroll
+    const blockH = G.h + B.gap + B.h + (hidden > 0 ? 20 : 0);
+    const top = NAMES.gridTop + Math.max(0, Math.round((G.bottom - NAMES.gridTop - blockH) / 2));
+    this.gridTopY = top;
+    const x0 = this.gridMax ? G.side : Math.round((GAME_WIDTH - rowW) / 2);
+    const box = (this.gridBox = this.add.container(0, 0).setDepth(D.ui));
+    ids.forEach((id, i) => box.add(this.makeTile(id, x0 + i * (G.w + G.gap), top, G.w, G.h)));
+    const maskG = this.make.graphics({ add: false }).fillStyle(0xffffff, 1).fillRect(G.side - 2, top - 4, viewW + 4, G.h + 8);
+    box.setMask(maskG.createGeometryMask());
+    this.gridScroll = 0;
+    this.gridBar = this.add.graphics().setDepth(D.ui);
+    parts.push(box, this.gridBar);
+    if (hidden > 0) parts.push(text(this, GAME_WIDTH / 2, top + G.h + B.gap + B.h + 8, `${hidden} more heroes to find`, MUTE).setOrigin(0.5, 0).setDepth(D.ui));
+    this.scrollGrid(0);
     return parts;
   },
+
+  // Scrolls the row to x (clamped, whole pixels) and redraws the scroll bar (hidden when nothing scrolls).
+  scrollGrid(x) {
+    this.gridScroll = clamp(Math.round(x), 0, this.gridMax);
+    this.gridBox.x = -this.gridScroll;
+    const B = G.bar, g = this.gridBar.clear();
+    if (!this.gridMax) return;
+    const viewW = GAME_WIDTH - 2 * G.side, rowW = this.gridMax + viewW;
+    const bx = Math.round((GAME_WIDTH - B.w) / 2), by = this.gridTopY + G.h + B.gap;
+    const tw = Math.max(16, Math.round((B.w * viewW) / rowW)), tx = bx + Math.round(((B.w - tw) * this.gridScroll) / this.gridMax);
+    g.fillStyle(0x000000, 0.6).fillRect(bx - 1, by - 1, B.w + 2, B.h + 2).fillStyle(SQUAD_VIEW.tile.edge, 1).fillRect(bx, by, B.w, B.h);
+    g.fillStyle(SQUAD_VIEW.tile.picked, 1).fillRect(tx, by, tw, B.h);
+  },
+
+  // Swiping the row (SquadScene.setupInput calls these): a drag past dragPx cancels the tile press under the finger.
+  gridDown(p) {
+    if (!this.gridMax || this.panel || this.leaving || p.y < this.gridTopY || p.y > this.gridTopY + G.h) return;
+    this.gridDrag = { x: p.x, from: this.gridScroll, moved: false };
+  },
+  gridMove(p) {
+    const d = this.gridDrag;
+    if (!d || !p.isDown) return;
+    if (!d.moved && Math.abs(p.x - d.x) > G.dragPx) { d.moved = true; for (const t of this.tiles.values()) t.hit.cancelPress(); }
+    if (d.moved) this.scrollGrid(d.from - (p.x - d.x));
+  },
+  gridUp() { this.gridDrag = null; },
 
   // One tile. Returns its parts; the tile goes in this.tiles.
   makeTile(id, x, y, w, h) {
     const def = heroDefs.find((d) => d.id === id);
     const open = this.unlocked(id);
     const g = this.add.graphics().setDepth(D.ui);
-    const shadow = this.add.ellipse(x + w / 2, y + G.foot, 40, 8, 0x000000, SQUAD_VIEW.tile.shadow).setDepth(D.ui);
+    const shadow = this.add.ellipse(x + w / 2, y + G.foot, G.shadowW, 10, 0x000000, SQUAD_VIEW.tile.shadow).setDepth(D.ui);
     const ch = new Character(this, x + w / 2, y + G.foot, def).setDepth(D.ui);
     ch.setScale(G.tileScale);
     ch.setWash(SQUAD_VIEW.lockedWash, open ? 0 : 1);
@@ -101,7 +127,7 @@ export const squadGrid = {
     const tag = this.add.container(x + w / 2, y + 4).setDepth(D.ui + 1);
     tag.add([this.add.graphics().fillStyle(0x6ee07a, 1).fillRect(-16, 0, 32, 14), text(this, 1, 8, 'NEW', '#000000').setOrigin(0.5)]);
     out.push(tag);
-    const tile = { id, g, ch, mark, tag, x, y, w, h, pressed: false };
+    const tile = { id, g, ch, mark, tag, x, y, w, h, pressed: false, hit: null };
     tile.draw = () => {
       const picked = this.slots.includes(id);
       const C = SQUAD_VIEW.tile, T = UI.goldTheme;
@@ -118,6 +144,7 @@ export const squadGrid = {
     };
     const hit = this.add.zone(x + w / 2, y + h / 2, w, h).setInteractive().setDepth(D.ui);
     pressable(this, hit, { redraw: (p) => { tile.pressed = p; tile.draw(); }, sink: [ch], onTap: () => this.openPanel(id), enabled: () => !this.panel && !this.leaving });
+    tile.hit = hit;
     this.tiles.set(id, tile);
     tile.draw();
     return [...out, hit];

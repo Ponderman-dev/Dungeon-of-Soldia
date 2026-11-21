@@ -254,8 +254,12 @@ export default class SquadScene extends Phaser.Scene {
 
   // ---- input ---------------------------------------------------------------------------------
 
-  // Every tap has its own tap zone (tiles, slots, the labels' send-back buttons, the dock); nothing scene-wide.
-  setupInput() {}
+  // Every tap has its own tap zone (tiles, slots, the X buttons, the dock); scene-wide only the hero row's swipe.
+  setupInput() {
+    this.input.on('pointerdown', (p) => this.gridDown(p)); // swiping the hero row (squadGrid.js)
+    this.input.on('pointermove', (p) => this.gridMove(p));
+    this.input.on('pointerup', () => this.gridUp());
+  }
 
   // ---- walking -------------------------------------------------------------------------------
 

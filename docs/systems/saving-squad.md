@@ -60,3 +60,8 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   (x 90 / 300). QUIET TILES (user: the grid 'looks busy and crowded'): plain dark tile, thin dark edge, a soft shadow
   under the hero, no gold frame / studs; only a picked tile gets the gold edge + check (`SQUAD_VIEW.tile` colours),
   gaps 12. The Necromancer is shown as NECROMAGE (heroes.json name; the id stays `necromancer`).
+- **ONE SCROLLING ROW (session 47, user: 'just make the hero grid scrollable'):** the two-row grid is gone. Big tiles
+  (84 x 124, heroes x4) in ONE row inside a masked container (`gridBox`); if they fit (a new player: 3 + '?') the row
+  is centred and still, else SWIPE it sideways (`gridDown/Move/Up`, called from SquadScene.setupInput; a drag past
+  `dragPx` cancels the tile press under the finger: uiKit `zone.cancelPress()`), a small gold scroll bar under it.
+  'n more heroes to find' under the bar. Sizes in `SQUAD_VIEW.grid`.

@@ -255,7 +255,8 @@ export function pressDown({ redraw, sink = [] }) {
 
 // Makes a tap zone a PUSHABLE button: finger down = pressed look (pressDown), finger slides off = cancelled,
 // finger up on it = pops back up and onTap runs (after the push has shown for at least UI.press.holdMs).
-// enabled(): optional check (a disabled button does not push). Returns the zone.
+// enabled(): optional check (a disabled button does not push). Returns the zone; zone.cancelPress() drops a press
+// without tapping (a swipe that started on it).
 export function pressable(scene, hit, { redraw, sink = [], onTap, enabled = () => true, sound = null }) {
   let release = null, at = 0;
   hit.on('pointerdown', () => {
@@ -274,6 +275,7 @@ export function pressable(scene, hit, { redraw, sink = [], onTap, enabled = () =
     if (wait > 0) scene.time.delayedCall(wait, finish); else finish();
   });
   hit.once('destroy', () => { release = null; });
+  hit.cancelPress = () => { if (release) { release(); release = null; } }; // e.g. the finger started a swipe instead
   return hit;
 }
 // A FLAT BUTTON (the camp's look, session 44; shared with the squad screen, session 47): a dark outline, a thin gold

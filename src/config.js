@@ -36,6 +36,7 @@ export const UI = {
   text: '#ffffff',
   dim: '#8a8a9a', // disabled / hints
   gold: '#ffd84a', // rarity, stacks, important numbers
+  fightGold: '#ffd24d', // fight pop-ups: crits, Lv labels, LEVEL UP, passive words (look trial: per look)
   red: '#ff7a5a', // attack skills, damage
   green: '#6ee07a', // support skills, heals
   pressed: 0xffffff, // a pressed button flips to white with black text
@@ -106,7 +107,7 @@ export const LOOKS = {
       button: 0x58772f, buttonDark: 0x3f5822, buttonLight: 0x7c9c4a, buttonText: '#eef4dc', title: '#f2916c',
       second: 0x2b3a5c, secondDark: 0x1d2843, secondLight: 0x435680, secondText: '#d4daee',
     },
-    text: '#dfe3f4', dim: '#7c86a0', gold: '#f4ac6e', pageBg: 0x0a0f1c, dither: [0x0a0f1c, 0x0f1628, 4],
+    text: '#dfe3f4', dim: '#7c86a0', gold: '#f4ac6e', fightGold: '#f4ac6e', pageBg: 0x0a0f1c, dither: [0x0a0f1c, 0x0f1628, 4],
   },
   // B DUSK: a purple-slate cousin: lavender lines, MAROON secondary buttons (the reference's 'Cancel'), green main.
   dusk: {
@@ -118,7 +119,7 @@ export const LOOKS = {
       button: 0x55752e, buttonDark: 0x3c5520, buttonLight: 0x7a9a48, buttonText: '#eef4dc', title: '#f08a6a',
       second: 0x6a2236, secondDark: 0x4a1626, secondLight: 0x8e3a52, secondText: '#f2dce2',
     },
-    text: '#dcd8ec', dim: '#8480a0', gold: '#f2b86c', pageBg: 0x0e0c18, dither: [0x0e0c18, 0x15132a, 4],
+    text: '#dcd8ec', dim: '#8480a0', gold: '#f4a890', fightGold: '#f6b49a', pageBg: 0x0e0c18, dither: [0x0e0c18, 0x15132a, 4],
   },
   // C DEEP: near-black navy, a crisp pale double line (light line + dark gap), maroon secondary, brighter green main.
   deep: {
@@ -130,7 +131,7 @@ export const LOOKS = {
       button: 0x4f8a3a, buttonDark: 0x366427, buttonLight: 0x74b05a, buttonText: '#f0f8e4', title: '#ff9a72',
       second: 0x5e1e30, secondDark: 0x401420, secondLight: 0x84344a, secondText: '#f4dee4',
     },
-    text: '#e2e6f6', dim: '#76809a', gold: '#ffb070', pageBg: 0x060a14, dither: [0x060a14, 0x0c1424, 4],
+    text: '#e2e6f6', dim: '#76809a', gold: '#ffb070', fightGold: '#ffb070', pageBg: 0x060a14, dither: [0x060a14, 0x0c1424, 4],
   },
 };
 export const LOOK_NAMES = Object.keys(LOOKS);
@@ -143,7 +144,7 @@ export const LOOK_PICK = LOOK_TRIAL ? readPick('soldia.lookTrial.look', LOOK_NAM
 export const FONT_NAMES = ['soldia', 'thin', 'thin+'];
 export const FONT_PICK = LOOK_TRIAL ? readPick('soldia.lookTrial.font', FONT_NAMES) : 'soldia';
 // The gold look's own values, so a live switch back to gold (lookTrial.js) restores them.
-const BASE = { theme: { ...UI.goldTheme }, text: UI.text, dim: UI.dim, gold: UI.gold, small: { ...UI.smallFont } };
+const BASE = { theme: { ...UI.goldTheme }, text: UI.text, dim: UI.dim, gold: UI.gold, fightGold: UI.fightGold, small: { ...UI.smallFont } };
 // MAIN = the main button's colour on the navy looks (user: 'Dusk looks good, but change the green button'): green =
 // the look's own (green). body / pressed shade / light (only the gold look's bevel uses light) / text.
 export const MAINS = {
@@ -163,7 +164,7 @@ export function applyLook(look, font, main = LOOK_NOW.main) {
   const M = look !== 'gold' && MAINS[main];
   // the picked hero tile + chosen outlines follow the main button's colour (user: no green outline on the hero row)
   Object.assign(UI.goldTheme, BASE.theme, L.theme || {}, M ? { ...M, picked: M.buttonLight, chosen: M.buttonLight } : {});
-  for (const k of ['text', 'dim', 'gold']) UI[k] = L[k] || BASE[k];
+  for (const k of ['text', 'dim', 'gold', 'fightGold']) UI[k] = L[k] || BASE[k];
   UI.pageBg = L.pageBg ?? null; // null = each page's own bg
   UI.dither = L.dither ?? null;
   for (const k of Object.keys(UI.smallFont)) if (!(k in BASE.small)) delete UI.smallFont[k];

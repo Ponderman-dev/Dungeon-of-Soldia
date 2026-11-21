@@ -89,9 +89,9 @@ export const bossViewMethods = {
       case 'revive':
         this.removeView(e.unit.uid); // its old figure may still be fading
         this.showEnemySpawn(e.unit, 0xffd24d);
-        this.popText(this.views.get(e.unit.uid), 'Revived!', '#ffd24d', true);
+        this.popText(this.views.get(e.unit.uid), 'Revived!', UI.fightGold, true);
         return true;
-      case 'minionRevive': if (v) { this.puff(v.ch.x, v.ch.y, 0xffd24d, 8); this.popText(v, 'Reborn!', '#ffd24d', true); } return true; // Phoenix rises again
+      case 'minionRevive': if (v) { this.puff(v.ch.x, v.ch.y, 0xffd24d, 8); this.popText(v, 'Reborn!', UI.fightGold, true); } return true; // Phoenix rises again
       case 'hatch': if (v) { this.puff(v.ch.x, v.ch.y, 0xd8d0a0, 6); this.popText(v, 'Hatched!', '#e8e0b0'); } return true;
       case 'dust':
         if (!v) return true;
@@ -217,7 +217,7 @@ export const bossViewMethods = {
       case 'grounded':
         if (!v) return true;
         this.tweens.add({ targets: v, leapLift: 0, duration: 220, ease: 'Quad.easeIn', onComplete: () => this.puff(v.ch.x, v.ch.y, 0x8a7a6a, 8) });
-        this.popText(v, 'Grounded!', '#ffd24d', true);
+        this.popText(v, 'Grounded!', UI.fightGold, true);
         this.cameras.main.shake(200, 0.006);
         return true;
       case 'reflect': if (v) this.popText(v, 'Reflected!', '#bfe0ff', true); return true;
@@ -253,7 +253,7 @@ export const bossViewMethods = {
     this.cameras.main.shake(320, 0.008);
     const y = 300;
     const style = { fontFamily: UI.font, stroke: '#000000', strokeThickness: 7, align: 'center' };
-    const top = this.add.text(GAME_WIDTH / 2, y - 30, "IT'S A", { ...style, fontSize: '24px', color: '#ffd24d' }).setOrigin(0.5).setDepth(DEPTH.popup + 2);
+    const top = this.add.text(GAME_WIDTH / 2, y - 30, "IT'S A", { ...style, fontSize: '24px', color: UI.fightGold }).setOrigin(0.5).setDepth(DEPTH.popup + 2);
     const big = this.add.text(GAME_WIDTH / 2, y + 8, 'MONSTER HOUSE!', { ...style, fontSize: '24px', color: '#ff4a3a' }).setOrigin(0.5).setDepth(DEPTH.popup + 2);
     if (big.width > GAME_WIDTH - 12) big.setFontSize(Math.floor((34 * (GAME_WIDTH - 12)) / big.width));
     for (const [t, d] of [[top, 0], [big, 90]]) {

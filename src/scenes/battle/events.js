@@ -1,7 +1,7 @@
 // Part of BattleScene (mixed into its prototype at the bottom of ../BattleScene.js; `this` is the scene).
 // Turning BattleState events into pictures and sounds: showEvents() / showEvent() and skill book events.
 import Phaser from 'phaser';
-import { GAME_WIDTH, CHAR_SCALE } from '../../config.js';
+import { GAME_WIDTH, CHAR_SCALE, UI } from '../../config.js';
 import damageTypes from '../../data/damageTypes.json';
 import statusInfo from '../../data/statuses.json';
 import * as sfx from '../../audio/sfx.js';
@@ -135,13 +135,13 @@ export const eventsMethods = {
         // A skill hit: flashes in the skill colour and shows a big coloured number that pops.
         t.ch.flash(Phaser.Display.Color.HexStringToColor(FX.attackColor).color, FX.flashMs);
         t.ch.hurt();
-        this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : FX.attackColor, true, FX.numberSizePx);
+        this.popText(t, `${amount}${mark}`, crit ? UI.fightGold : FX.attackColor, true, FX.numberSizePx);
         return;
       }
       t.ch.flash();
       t.ch.hurt();
       const color = e.attacker.side === 'hero' ? damageTypes[e.damageType || e.attacker.damageType].color : '#ff6b6b';
-      this.popText(t, `${amount}${mark}`, crit ? '#ffd24d' : color, crit);
+      this.popText(t, `${amount}${mark}`, crit ? UI.fightGold : color, crit);
     } else if (e.type === 'projectile') {
       if (e.kind === 'crescent' && e.from.side === 'hero') this.playCounterLook(this.views.get(e.from.uid), this.views.get(e.to.uid)); // Counter Stance
       else this.showProjectile(this.views.get(e.from.uid), this.views.get(e.to.uid), e.kind, e.ms);
@@ -324,7 +324,7 @@ export const eventsMethods = {
     } else if (e.type === 'proc') {
       const v = this.views.get(e.unit.uid);
       if (e.itemId && itemDefs[e.itemId]) this.itemProc(e, v); // an item: its icon pops + its own effect
-      else this.popText(v, e.label, '#ffd24d', true); // passives and other moments keep their text
+      else this.popText(v, e.label, UI.fightGold, true); // passives and other moments keep their text
     } else if (e.type === 'lifesteal') {
       const v = this.views.get(e.unit.uid), fv = this.views.get(e.from.uid);
       if (v && fv) { const a = this.fxPoint(fv); this.addFx(itemFx.ITEM_MS.lifesteal, (q) => itemFx.lifestealFx(q, a, v.ch.active ? this.fxPoint(v) : a), ['item', 'lifesteal']); }
@@ -351,7 +351,7 @@ export const eventsMethods = {
       if (e.absorbed > 0) this.popText(v, `Shield -${e.absorbed}`, '#6fd0ff');
       if (e.amount > 0) {
         v.ch.flash();
-        this.popText(v, e.crit ? `${e.amount}!` : String(e.amount), e.crit ? '#ffd24d' : damageTypes[e.damageType].color, e.crit); // Catalyst Vial: a crit tick is big and gold
+        this.popText(v, e.crit ? `${e.amount}!` : String(e.amount), e.crit ? UI.fightGold : damageTypes[e.damageType].color, e.crit); // Catalyst Vial: a crit tick is big and gold
       }
     } else if (e.type === 'morale') {
       this.drawMoraleWash();
@@ -392,7 +392,7 @@ export const eventsMethods = {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
       if (v.lvl) v.lvl.setText(`Lv${e.unit.level}`);
-      this.popText(v, `LEVEL UP\nLv${e.unit.level}`, '#ffd24d', true, 8); // two short lines: three heroes levelling at once don't print over each other
+      this.popText(v, `LEVEL UP\nLv${e.unit.level}`, UI.fightGold, true, 8); // two short lines: three heroes levelling at once don't print over each other
     } else if (e.type === 'death') {
       const v = this.views.get(e.unit.uid);
       this.setBar(v);
@@ -450,7 +450,7 @@ export const eventsMethods = {
         const g = { k: 1 };
         this.tweens.add({ targets: g, k: e.scale, duration: 200, ease: 'Back.easeOut', onUpdate: () => set(g.k) });
         this.tweens.add({ targets: g, k: 1, delay: e.durationMs, duration: 250, onUpdate: () => set(g.k) });
-        this.popText(v, 'Titan!', '#ffd24d', true);
+        this.popText(v, 'Titan!', UI.fightGold, true);
         return true;
       }
       case 'roar':

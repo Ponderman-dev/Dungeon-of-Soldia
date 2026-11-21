@@ -118,7 +118,7 @@ export default class BaseScene extends Phaser.Scene {
     const n1 = this.children.list.length;
     // The header: ONE gold panel. Portrait + name + best floor (tap = Profile) | gems | settings gear.
     const H = U.header, hy = H.y, mid = hy + H.h / 2, g = this.add.graphics();
-    drawWindow(g, S, hy, W - 2 * S, H.h);
+    drawWindow(g, S, hy, W - 2 * S, H.h, { quiet: true });
     const r = H.portraitR, px = S + 14 + r;
     pixelDisc(g, px, mid, r + 2, T.outline); pixelDisc(g, px, mid, r, T.frame); pixelDisc(g, px, mid, r - 4, T.fill);
     g.fillStyle(T.stud, 1).fillRect(px - 4, mid - 11, 8, 8).fillRect(px - 9, mid, 18, 4).fillRect(px - 11, mid + 4, 22, 5); // a little person (for now)

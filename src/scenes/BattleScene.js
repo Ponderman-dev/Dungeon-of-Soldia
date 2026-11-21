@@ -116,7 +116,7 @@ export default class BattleScene extends Phaser.Scene {
 
     this.drawHeroSlots();
     // The floor counter: a small black window in the top-left corner (the interface look, entities/uiKit.js).
-    this.floorBox = drawWindow(this.add.graphics().setDepth(DEPTH.hud), 8, 8, 160, 32);
+    this.floorBox = drawWindow(this.add.graphics().setDepth(DEPTH.hud), 8, 8, 160, 32, { quiet: true });
     this.floorText = uiText(this, 20, 25, '', 'normal')
       .setOrigin(0, 0.5)
       .setDepth(DEPTH.hud);
@@ -303,7 +303,7 @@ export default class BattleScene extends Phaser.Scene {
     // A hero's level, just left of its health bar ("Lv3").
     if (unit.side === 'hero' && !unit.minion) {
       view.lvl = this.add
-        .text(x - BAR_WIDTH / 2 - 3, barY, `Lv${unit.level}`, { fontFamily: UI.font, fontSize: '8px', color: '#ffd24d', stroke: '#000000', strokeThickness: 3 })
+        .text(x - BAR_WIDTH / 2 - 3, barY, `Lv${unit.level}`, { fontFamily: UI.font, fontSize: '8px', color: UI.fightGold, stroke: '#000000', strokeThickness: 3 })
         .setOrigin(1, 0.5)
         .setDepth(DEPTH.heroBar);
     }

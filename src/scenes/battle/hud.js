@@ -407,10 +407,10 @@ export const hudMethods = {
   // Settings page). Back from the pause window: the settings are read again (speed may have changed there).
   drawControls() {
     const B = pauseData.buttons, P = B.pause, Sp = B.speed, g = this.add.graphics().setDepth(DEPTH.hud);
-    drawWindow(g, P.x, B.y, P.w, B.h);
+    drawWindow(g, P.x, B.y, P.w, B.h, { quiet: true });
     const mx = P.x + P.w / 2, my = B.y + B.h / 2;
     g.fillStyle(0xffffff, 1).fillRect(mx - B.barGap / 2 - B.barW, my - B.barH / 2, B.barW, B.barH).fillRect(mx + B.barGap / 2, my - B.barH / 2, B.barW, B.barH);
-    drawWindow(g, Sp.x, B.y, Sp.w, B.h);
+    drawWindow(g, Sp.x, B.y, Sp.w, B.h, { quiet: true });
     this.speedText = uiText(this, Sp.x + Sp.w / 2, my + 1, '', 'normal').setOrigin(0.5).setDepth(DEPTH.hud);
     this.refreshSpeed();
     this.add.zone(P.x, B.y, P.w, B.h).setOrigin(0).setInteractive().setDepth(DEPTH.hud).onPress(() => this.openPause());

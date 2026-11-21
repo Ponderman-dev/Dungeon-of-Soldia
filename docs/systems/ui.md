@@ -156,3 +156,6 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   every menu page, pause, game over, reward buttons, fight HUD (skills `instant`), squad test toggle. NOT the title gear
   (its tap must stop 'tap anywhere' at once) or reward cards (they light up themselves). Square buttons press 45% darker.
 - User's current favourite (session 49): DUSK + SOLDIA font + SALMON main; picked hero tiles / chosen outlines follow the MAIN colour.
+- HEADERS (session 49): `drawWindow(..., { quiet: true })` = on the square looks a header box is drawn like the squad name
+  plates (black outline, tileEdge, tileFill): squad SQUAD n/3 + sound box, camp profile bar, fight Floor box + 1X + pause.
+  `UI.fightGold` (was a fixed '#ffd24d') = crits, Lv labels, LEVEL UP, passive words; per look (Dusk: soft peach).

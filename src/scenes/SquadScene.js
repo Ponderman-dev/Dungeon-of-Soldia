@@ -144,7 +144,7 @@ export default class SquadScene extends Phaser.Scene {
     // Sound on/off: a small pixel speaker icon top right (waves = on, a cross = off); saved in the progress.
     const PB = pauseData.buttons, sx = PB.pause.x + PB.pause.w / 2, sy = PB.y + PB.h / 2, P = 2; // centre: the fight's pause button spot; pixel size
     const soundBox = this.add.graphics().setDepth(DEPTH.ui);
-    const drawBox = (pressed) => drawWindow(soundBox.clear(), PB.pause.x, PB.y, PB.pause.w, PB.h, pressed ? { fill: UI.pressed } : {});
+    const drawBox = (pressed) => drawWindow(soundBox.clear(), PB.pause.x, PB.y, PB.pause.w, PB.h, pressed ? { fill: UI.pressed, quiet: true } : { quiet: true });
     drawBox(false);
     this.soundIcon = this.add.graphics().setDepth(DEPTH.ui);
     const px = (g, x, y, w = 1, h = 1) => g.fillRect(sx + x * P, sy + y * P, w * P, h * P); // on a 2px grid around the centre
@@ -167,10 +167,10 @@ export default class SquadScene extends Phaser.Scene {
     if (this.lastRun && (this.lastRun.newly || []).length) this.time.delayedCall(400, () => sfx.play('unlock'));
     // The title window top left (like the fight's floor counter): 'SQUAD n/3'; after a run a small line under it says
     // how deep that run got.
-    drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 8, 160, 32);
+    drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 8, 160, 32, { quiet: true });
     this.titleText = squadLabel(this, 20, 24, '', UI.text).setOrigin(0, 0.5).setDepth(DEPTH.ui);
     if (this.lastRun) {
-      drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 44, 160, 24);
+      drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 44, 160, 24, { quiet: true });
       uiText(this, 20, 57, `Last run: floor ${this.lastRun.floor}`, 'small', UI.gold).setOrigin(0, 0.5).setDepth(DEPTH.ui);
     }
 

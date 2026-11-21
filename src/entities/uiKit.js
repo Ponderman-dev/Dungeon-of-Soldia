@@ -130,7 +130,9 @@ export function uiText(scene, x, y, str, size = 'normal', color = UI.text, extra
 
 // A window: the stepped outline in `line`, filled with `fill`. Drawn into Graphics `g` (call g.clear() yourself).
 // plain = ignore the theme (exactly `fill` + `line`; the speech bubble).
-export function drawWindow(g, x, y, w, h, { fill = UI.window, line = UI.line, alpha = 1, plain = false } = {}) {
+// quiet = a HEADER box (session 49, user: 'the top header doesn't follow the theme'): on the square looks it is drawn
+// like the squad name plates (black outline, dark tile edge, dark tile fill); the gold look ignores it.
+export function drawWindow(g, x, y, w, h, { fill = UI.window, line = UI.line, alpha = 1, plain = false, quiet = false } = {}) {
   x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
   // A stepped (pixel-cornered) block `i` px inside the window, in colour c.
   const block = (i, c) => {
@@ -140,7 +142,7 @@ export function drawWindow(g, x, y, w, h, { fill = UI.window, line = UI.line, al
     g.fillRect(X + 4, Y, W - 8, H).fillRect(X + 2, Y + 2, W - 4, H - 4).fillRect(X, Y + 4, W, H - 8);
   };
   if (plain) { block(0, line); block(2, fill); return g; }
-  if (UI.goldTheme.square) return squareWindow(g, x, y, w, h, { fill, line, alpha });
+  if (UI.goldTheme.square) return squareWindow(g, x, y, w, h, { fill, line, alpha, quiet });
   return themedWindow(g, x, y, w, h, block, { fill, line, alpha });
 }
 
@@ -161,8 +163,14 @@ function themedWindow(g, x, y, w, h, block, { fill, line, alpha }) {
 
 // LOOK TRIAL 'square' looks (session 49, user: 'the borders are sharp, no corner borders'): square corners, a thin
 // pale line straight on a flat fill, nothing else (the line keeps its meaning: chosen / dim like themedWindow).
-function squareWindow(g, x, y, w, h, { fill, line, alpha }) {
+function squareWindow(g, x, y, w, h, { fill, line, alpha, quiet }) {
   const T = UI.goldTheme;
+  if (quiet && line === UI.line) {
+    const body = fill === UI.window ? T.tileFill : fill === UI.pressed ? T.pressedFill : fill;
+    g.fillStyle(0x000000, alpha).fillRect(x - 2, y - 2, w + 4, h + 4).fillStyle(T.tileEdge, alpha).fillRect(x, y, w, h);
+    g.fillStyle(body, alpha).fillRect(x + 2, y + 2, w - 4, h - 4);
+    return g;
+  }
   const frame = line === UI.line ? T.frame : line === 0x8a8a9a || line === 0x55556a ? T.dim : T.chosen;
   const body = fill === UI.window ? T.fill : fill === UI.pressed ? T.pressedFill : fill;
   g.fillStyle(frame, alpha).fillRect(x, y, w, h);

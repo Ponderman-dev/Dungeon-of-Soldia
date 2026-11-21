@@ -137,3 +137,15 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   (statuses chapter, or a BASICS page: ON-HIT ITEMS, CHANNEL, REACTIONS, MIXING ELEMENTS). Rule reminders never go in
   a description. Don't repeat in a skill what the hero's passive says (Grudge, Bloodthirst).
 - Session 48 rewrote the 20 kit skills, 10 passives and the 20 longest items to this style.
+
+## LOOK TRIAL: NAVY (session 49, TEMPORARY, user: 'I kinda want this vibe', docs/references/ui-vibe-pick-a-class.png)
+- Whole interface, on trial. Build `npm run build:look-trial` (VITE_LOOK_TRIAL=1: the normal game + a LOOK / FONT switch row
+  at the bottom, `src/lookTrial.js`, localStorage + page reload), published to the squad demo url. The real game is unchanged.
+- LOOKS (config.js `LOOKS`, applied to UI.goldTheme + UI.text/dim/gold before any scene loads): gold (today), steel (flat navy,
+  steel-blue line, slate secondary), dusk (purple slate, lavender line, maroon secondary), deep (near-black navy, pale double
+  line, maroon secondary). All: green main button, salmon titles, teal 'chosen', no studs; menu pages get a dithered checker
+  (`pageBackdrop()` in uiKit, used by every page). New goldTheme keys (tiles, card body, BEGIN DESCENT bands) keep gold as is.
+- FONTS: soldia (today), thin (small text in SOLDIA THIN: `soldia-thin.woff2`, `scripts/art/make-thin-font.py`: 1px strokes,
+  hand-drawn slanted letters, one middle column dropped), thin+ (normal-size text too, at 2x; titles stay Ironslab).
+- After the pick: make the winner the only theme (fold its values into goldTheme / UI), delete LOOKS, the switch, the build
+  script and the losing font, update this section.

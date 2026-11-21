@@ -1,52 +1,44 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 49): TRY A NEW UI LOOK (user: 'I kinda want this vibe'), reference picture below
-- BRANCH: `main` has EVERYTHING (session 48 merged in at the handoff). Start the next branch from `main`.
-- TASK (moved from session 48, which tidied first): a new interface look inspired by
-  `docs/references/ui-vibe-pick-a-class.png` (a screenshot of ANOTHER game's 'Pick a class' window: make OUR OWN take,
-  never copy it). What gives it its vibe:
-  - cool, muted palette: deep navy / slate panels, a dark DITHERED (checker) background, thin 2px pale steel-blue
-    lines, flat colours (no gradients, no studs, no gold);
-  - the window is split into CELLS by thin divider lines (icons on top, info left, skill right);
-  - a THIN, light pixel font in pale lavender-grey (not bold); the title in salmon / orange CAPITALS in a title bar
-    with small '?' and 'X' icons at its right;
-  - small square coloured stat icons with numbers; locked choices dim with a small red X; the chosen one has a
-    teal / green outline;
-  - two big flat buttons side by side along the bottom: green 'Choose' and maroon 'Cancel'.
-  Today's look is crimson + gold (`UI.goldTheme`, docs/systems/ui.md; session 38 reverted a stone look: 'check a new
-  look IN THE REAL GAME before choosing'). Ask first with the question tool what to try it on (one screen like the
-  squad screen or hero card, or the whole interface); then build 2-3 takes as a TRIAL: options in the game behind
-  switch buttons on the squad demo page (session 48's way, below), screenshots side by side, let them pick.
-- FONT is settled for now (session 48): small text = SOLDIA SMALL (Press Start 2P's pixels made proportional,
-  `scripts/art/make-small-font.py`; ui.md). The squad screen's labels use it at 2x in CAPITALS (`squadLabel()`); big
-  titles / BEGIN DESCENT = Ironslab. The vibe's 'thin font' could be a 1px-stroke take of Soldia Small (session 48's
-  demo 'D THIN' of 4: thinning PS2P's 2px strokes; m / w need hand fixes) - offer it, don't assume.
-- DONE in session 48 (all on main):
-  - Shorter texts: 20 kit skills, 10 passives, 20 longest items rewritten to 1-3 lines with CAPITAL keywords; glossary
-    BASICS pages ON-HIT ITEMS / CHANNEL / REACTIONS / MIXING ELEMENTS (style rule: ui.md 'TEXT STYLE'). The other ~98
-    items are still the old style (mostly short; a full pass was offered).
-  - Soldia Small font (picked 'B narrow' on a mini demo of 4 takes).
-  - Squad screen tidy-up (picked from a NAMES 4 / BARS 4 / FONT 3 switch trial): names in caps on plates with the X
-    inside, labels small font 2x, hero row of 4 whole tiles with arrows off the tiles, snaps, a bit lower
-    (saving-squad.md 'Session 48'). PHASER 4 MASKS: `setMask` does nothing; use
-    `obj.enableFilters().filters.external.addMask(graphics)` (no other screen used masks).
-  - The Skill Effects review page (https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN) now holds the font demo
-    (source: a scratch page, not in the repo); its old content rebuilds with `docs/proposals/skill-fx/make.mjs`.
-- OTHER CANDIDATES (older): full item text pass; skills are a small share of damage (design talk); page leftovers
-  (Twin Crescent animation, Executioner on Arrow Rain, Defense Bash power pages, icon look-alikes); bosses rework;
-  transitions phase 2-5.
-- PUBLISH (Artifact tool): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
-  dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. The first publish of a session
-  is refused 'not viewed', the second as 'unchanged': Read the LAST 3 lines of the saved live copy (offset), then
-  publish again IN A NEW TURN (the same turn is refused). Squad demo: `npm run build:squad-demo`, same steps, its url.
-- Browser checks: vite + Playwright FROM THE SCRATCHPAD dir (`<repo>/node_modules/.bin/vite <repo> --port 5190`, in
-  the background; `VITE_SQUAD_DEMO=1` in front for the squad demo). Fresh clone: `npm install` first. Playwright:
-  `NODE_PATH=$(npm root -g) node x.cjs`. Dev: `window.__game`; start a screen: stop the others, start 'Squad'.
-  ALWAYS load the screen in a browser after a scene edit: `npm test` does not run scenes (a duplicate `const` broke
-  the squad screen with tests green).
-- TESTS: seed BOTH the state rng and Math.random for crowd tests, with a mixing rng (mulberry32).
+## START HERE (session 50): MORE UI TWEAKS on the new DUSK look (user's phone screenshots + short fixes)
+- BRANCH: `main` has EVERYTHING (session 49 merged in). Start the next branch from `main`.
+- TASK: the user plays the game page on the phone and sends screenshots with small UI fixes. Fix all in one round,
+  check each screen in a browser (vite + Playwright from the scratchpad), commit, bring main up, republish the GAME page.
+  Ask with the question tool when a complaint is vague ('doesn't follow the theme' = ask which parts: lines / text /
+  fill / colours; their pick was lines + fill + yellow in fights).
+- THE LOOK NOW (session 49; full notes docs/systems/ui.md 'THE DUSK LOOK', end of file): square windows, one thin lavender
+  line, flat fills, no studs; flat one-colour buttons: SALMON main (EXPEDITION, BEGIN DESCENT), MAROON others; salmon
+  titles + picked / chosen outlines; header boxes = `drawWindow(.., { quiet: true })` (like the squad name plates);
+  Soldia Small font; `UI.gold` YELLOW for normal text (user wanted it back), `UI.fightGold` soft PEACH in fights; the
+  TITLE page keeps yellow SOLDIA + white text. Colours: config.js `UI.goldTheme` (old name kept) + UI.text/dim/pageBg/
+  dither. Crimson + gold: `git show 4fc5724:src/config.js`. Reference picture: docs/references/ui-vibe-pick-a-class.png.
+- PRESS: every button has `zone.onPress(fn)` (dark cover + label drops, click sound on finger DOWN, action on release;
+  `{ instant }` for fight skills). New buttons: use onPress or pressable, never a bare 'pointerup'.
+- CAMP <-> SQUAD SLIDE: the next screen is built while the finger holds the button (uiKit prepareScreen / whenScreenReady
+  / slideToScreen, screens have arrive()); old timing (motion.slow, easeMove) kept: the user REJECTED a faster slide.
+- LEFT YELLOW ON PURPOSE (offer if asked): item icons + tier frames (art), the check marks on picked tiles, rage bars.
+  Not themed yet / candidates: the reward sheet + hero card layouts (reference's title bar with ? / X, cells split by
+  lines), menu pages' other transitions (same stutter check), the squad demo page still holds the old look trial.
+- OTHER CANDIDATES (older): full item text pass (~98 items still old style); skills small share of damage; page
+  leftovers; bosses rework; transitions phase 2-5.
+- PUBLISH: `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/dungeon-of-soldia.html`,
+  publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. First publish of a session is refused 'not viewed', the
+  second 'unchanged': Read the LAST 3 lines of the saved live copy (offset), then publish again (third try goes through).
+- Browser checks: `<repo>/node_modules/.bin/vite <repo> --port 5190` from the scratchpad, in the background with a long
+  timeout (it gets killed at the default limit). Playwright: `NODE_PATH=$(npm root -g) node x.cjs`; `window.__game`.
+  ALWAYS load the screen after a scene edit (`npm test` does not run scenes).
 
 ## How we work with this user
+- FEEL WORDS (session 49): 'slow' / 'looks stuck, like low FPS' = STUTTER, not length: record every frame's camera /
+  positions under a 4x slowed CPU (CDP setCPUThrottlingRate) and find the frame gaps before changing timings. A faster
+  slide was 'way weird and bad' (reverted). 'Not that, X' = undo my change first, then fix X.
+- LIVE SWITCH TRIALS (session 49): options in the game behind HTML switch buttons that apply LIVE (no reload: user 'can u
+  make it not always restart'); they flip on the phone and answer with a screenshot + fixes ('Dusk looks good, change
+  the green button' -> a MAIN colour switch). After the pick: make it the real look, delete the trial, push main.
+- They want the REFERENCE'S SHAPES, not only its colours ('sharp borders, no corner borders, one-colour buttons, no
+  bevels / bands / gold'): copy the kind of drawing, not just the palette.
+- Careful with sed/python one-line edits: a '// comment' put BEFORE a chained call (.setOrigin) disabled it (TAP TO
+  START went off centre). Look at the screen after every edit.
 - SWITCH TRIALS (session 48, worked very well): for 'not neat' / 'show me options': ask WHICH parts with the question
   tool (multi-select), then put every option IN THE GAME on the squad demo page behind a row of cycling switch buttons
   (NAMES 1/4, BARS 1/4 ...; localStorage), plus PNG sheets side by side. They answer with a phone screenshot of the

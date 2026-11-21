@@ -94,3 +94,13 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   descriptions, tip: `prose()` in openPanel) has 1px between letters, 8px between lines and a softer cream
   (`SQUAD_VIEW.card`); short labels (role, tags, team bonus) unchanged. To fit, the open hero's portrait is 100 tall
   (hero x3) and the boxes a little tighter; all 10 cards fit above the button (checked in a browser).
+
+## Session 48: squad screen tidy-up (user: 'not neat yet'; picked from a 4/4/3 option trial on the squad demo)
+- NAMES: the slope kept, each name in CAPITALS on a dark plate (like the tiles) with the X button inside the plate
+  (`NAMES` in squad/squadGrid.js: middleY / outerY / h / pad, `drawPlate`).
+- LABELS (title 'SQUAD n/3', names, CAMP / RANDOM) = `squadLabel()`: the small font (Soldia Small) at 2x, CAPITALS.
+  BEGIN DESCENT stays Ironslab. Top boxes and dock kept as they were (user picked 'today' for the bars).
+- HERO ROW: 4 whole tiles (w 78, gap 10) between side margins of 24 that hold the arrow tabs (off the tiles); a swipe
+  or an arrow tap ends on a whole tile; the row and BEGIN DESCENT sit a bit lower (grid bottom 638, BEGIN y 644).
+  The row's clip now works: Phaser 4 masks are filters (`enableFilters().filters.external.addMask`), `setMask` did
+  nothing (the screen edge used to hide the overflow).

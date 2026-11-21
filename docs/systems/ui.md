@@ -26,6 +26,10 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   Text.updateText for the small font: letters drawn one by one (letterSpacing 0.01) on whole pixels (measureText
   widths rounded up, fillText x/y rounded), then every pixel snapped to full/empty and to its fill or stroke colour
   (`snapCanvas`). Bigger sizes stay Ironslab.
+- SMALL FONT = SOLDIA SMALL (session 48, user pick 'B narrow' after a demo of 4 takes): Press Start 2P's own pixels made
+  PROPORTIONAL (each glyph trimmed to its ink + 1px gap, space 4px; ~30% more text per line). Renamed because the OFL
+  reserves the name 'Press Start 2P'. File `src/assets/fonts/soldia-small.woff2`, made by `scripts/art/make-small-font.py`
+  (fonttools; hinting removed) from `press-start-2p.woff2` (kept). Family 'SoldiaSmall' (`UI.smallFont`); same 8px grid.
 - Code: `src/config.js` `UI` (font, sizes, colours); `src/entities/uiKit.js`: `drawWindow(g, x, y, w, h, {fill, line,
   alpha})`, `drawCursor(g, x, y)`, `uiText()`, `uiStyle()`, `uiButton()` (window + label + cursor + pressed = white).
 - Screens done: fight HUD (floor window, skill buttons = windows with red/green letters, cooldown = grey fill draining

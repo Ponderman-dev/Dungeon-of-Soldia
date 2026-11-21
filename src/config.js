@@ -29,7 +29,7 @@ export const UI = {
   // Small text (asked for at maxPx or less) uses Press Start 2P instead (user, session 21: Ironslab is hard to read
   // small; Pixelify Sans and Tiny5 were tried). Press Start 2P is drawn on an 8px grid: crisp at 8 / 16 / 24px. Letters
   // are drawn one by one on whole pixels and every edge pixel is snapped (alpha >= snap), so nothing blurs.
-  smallFont: { family: "'PressStart2P', monospace", maxPx: 8, px: 8, snap: 110, letterSpacing: 0.01 },
+  smallFont: { family: "'SoldiaSmall', monospace", maxPx: 8, px: 8, snap: 110, letterSpacing: 0.01 },
   size: { small: 8, normal: 16, big: 24, huge: 32 },
   window: 0x000000, // window fill
   line: 0xffffff, // window line

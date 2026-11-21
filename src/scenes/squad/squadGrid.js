@@ -10,7 +10,7 @@
 // row is centred in the space between the names and BEGIN DESCENT.
 // Mixed into SquadScene.prototype (like roomMethods.js into BattleScene).
 import { GAME_WIDTH, UI } from '../../config.js';
-import { drawFlatButton, buttonTextColor, uiText, pressable } from '../../entities/uiKit.js';
+import { drawFlatButton, buttonTextColor, pressable } from '../../entities/uiKit.js';
 import Character from '../../entities/Character.js';
 import heroDefs from '../../data/heroes.json';
 import unlocks from '../../data/unlocks.json';
@@ -36,18 +36,27 @@ export const SQUAD_VIEW = {
   // lines, a softer cream.
   card: { body: '#cfc6b4', lineGap: 8, letterGap: 1, fill: 0x16110f, edge: 0x3a2a22, pad: 8, gap: 6, tip: '#ffd88a',
     portraitH: 100, heroScale: 3 }, // the portrait (an open hero) and the hero's size in it
-  grid: { bottom: 606, w: 84, h: 124, foot: 112, tileScale: 4, gap: 12, side: 8, shadowW: 52, dragPx: 8,
+  // TIDIER ROW (session 48, user: 'keep scrolling, just tidier, bring it down a bit' x2): exactly 4 whole tiles in the
+    // view (side margins hold the arrow tabs, off the tiles), the row snaps to a whole tile when a swipe ends.
+    grid: { bottom: 638, w: 78, h: 124, foot: 112, tileScale: 4, gap: 10, side: 24, shadowW: 52, dragPx: 8,
     bar: { w: 120, h: 4, gap: 12 }, // bar = the scroll bar under the row (gap = from the row)
     // SCROLL HINTS (user: 'not clear how people will know to scroll'): arrow tabs on the row's ends (only where more is
     // hidden; tap = one tile along), darker edges there, and a nudge when the screen opens (the row slides nudgePx
     // left and back after nudgeDelayMs).
-    hint: { tabW: 16, tabH: 36, shade: [0.55, 0.35, 0.18], shadeW: 6, nudgePx: 44, nudgeDelayMs: 700, nudgeMs: 380, stepMs: 220 } },
+    hint: { tabW: 18, tabH: 40, tabGap: 4, shade: [], shadeW: 6, nudgePx: 44, nudgeDelayMs: 700, nudgeMs: 380, stepMs: 220 } },
   // The quiet tile's colours: fill, edge, a picked tile's edge, the '?' tile's edge, a pushed tile's fill.
   tile: { fill: 0x16110f, edge: 0x3a2a22, picked: 0xd8a640, locked: 0x2e2a30, pressed: 0x2a201c, shadow: 0.35 },
 };
 // THE NAMES UNDER THE SQUAD ('slope', the user's pick of 3, session 47): big names, the middle one a row higher
 // (following the V of the heroes), the outer ones kept on the screen, a small X button beside each = send back.
-export const NAMES = { middleY: 354, outerY: 382, xSize: 22, xGap: 6, gridTop: 404 };
+// Session 48 (user's pick of 4, 'not neat yet'): each name in CAPITALS (squadLabel: the small font at 2x) on a dark plate
+// like the tiles, with the X inside the plate.
+export const NAMES = { middleY: 352, outerY: 388, h: 30, pad: 8, xSize: 22, xGap: 6, gridTop: 420 };
+
+// The squad screen's labels (names, title, dock buttons; session 48, user's pick): CAPITALS in the small font at 2x
+// (crisp: its 8px grid doubled), so they match the small text. BEGIN DESCENT stays Ironslab.
+export const squadLabel = (scene, x, y, str, color, extra = {}) =>
+  scene.add.text(x, y, str.toUpperCase(), { fontFamily: UI.smallFont.family, fontSize: '16px', color, lineSpacing: 8, ...extra });
 const G = SQUAD_VIEW.grid;
 
 const text = (scene, x, y, str, color = INK) => scene.add.text(x, y, str, { fontFamily: FONT, fontSize: '8px', color });
@@ -86,13 +95,13 @@ export const squadGrid = {
     const box = (this.gridBox = this.add.container(0, 0).setDepth(D.ui));
     ids.forEach((id, i) => box.add(this.makeTile(id, x0 + i * (G.w + G.gap), top, G.w, G.h)));
     const maskG = this.make.graphics({ add: false }).fillStyle(0xffffff, 1).fillRect(G.side - 2, top - 4, viewW + 4, G.h + 8);
-    box.setMask(maskG.createGeometryMask());
+    box.enableFilters().filters.external.addMask(maskG); // Phaser 4: masks are filters (setMask did nothing)
     this.gridScroll = 0;
     this.gridBar = this.add.graphics().setDepth(D.ui);
     this.gridShade = this.add.graphics().setDepth(D.ui + 1); // the darker edges where more is hidden
     parts.push(box, this.gridBar, this.gridShade);
     this.gridTabs = [-1, 1].map((dir) => { // the arrow tabs: push in, scroll one tile along
-      const H = G.hint, tx = dir < 0 ? G.side - 2 : GAME_WIDTH - G.side + 2 - H.tabW, ty = top + Math.round((G.h - H.tabH) / 2);
+      const H = G.hint, tx = dir < 0 ? G.side - H.tabGap - H.tabW : GAME_WIDTH - G.side + H.tabGap, ty = top + Math.round((G.h - H.tabH) / 2);
       const tg = this.add.graphics().setDepth(D.ui + 2);
       const tab = { dir, g: tg, x: tx, y: ty, pressed: false };
       tab.draw = () => {
@@ -107,7 +116,7 @@ export const squadGrid = {
       };
       tab.hit = this.add.zone(tx + H.tabW / 2, ty + H.tabH / 2, H.tabW + 12, H.tabH).setInteractive().setDepth(D.ui + 2);
       pressable(this, tab.hit, { redraw: (p) => { tab.pressed = p; tab.draw(); }, enabled: () => tab.hit.visible && !this.panel && !this.leaving,
-        onTap: () => this.glideGrid(this.gridScroll + dir * (G.w + G.gap), G.hint.stepMs) });
+        onTap: () => { const step = G.w + G.gap; this.glideGrid((Math.round(this.gridScroll / step) + dir) * step, G.hint.stepMs); } });
       parts.push(tg, tab.hit);
       return tab;
     });
@@ -164,7 +173,11 @@ export const squadGrid = {
     if (!d.moved && Math.abs(p.x - d.x) > G.dragPx) { d.moved = true; for (const t of this.tiles.values()) t.hit.cancelPress(); }
     if (d.moved) this.scrollGrid(d.from - (p.x - d.x));
   },
-  gridUp() { this.gridDrag = null; },
+  gridUp() { // a swipe ends on a whole tile
+    const d = this.gridDrag;
+    this.gridDrag = null;
+    if (d && d.moved) { const step = G.w + G.gap; this.glideGrid(Math.round(this.gridScroll / step) * step, G.hint.stepMs); }
+  },
 
   // One tile. Returns its parts; the tile goes in this.tiles.
   makeTile(id, x, y, w, h) {
@@ -214,7 +227,7 @@ export const squadGrid = {
   buildLabels() {
     const out = [];
     this.labels = SQUAD_VIEW.slots.map((s, i) => {
-      const big = uiText(this, 0, 0, '', 'normal', UI.goldTheme.title, { stroke: '#120c0a', strokeThickness: 5 }).setOrigin(0.5).setDepth(D.ui + 1);
+      const big = squadLabel(this, 0, 0, '', UI.goldTheme.title).setOrigin(0.5).setDepth(D.ui + 1);
       const g = this.add.graphics().setDepth(D.ui);
       const hit = this.add.zone(0, 0, 10, 10).setInteractive().setDepth(D.ui + 1);
       const L = { big, g, hit, pressed: false };
@@ -235,7 +248,7 @@ export const squadGrid = {
     for (let k = -2; k <= 2; k++) g.fillRect(cx + 2 * k - 1, cy + 2 * k - 1, 2, 2).fillRect(cx + 2 * k - 1, cy - 2 * k - 1, 2, 2);
   },
 
-  // One slot's label (hidden while its hero walks, or with nobody there).
+  // One slot's label (hidden while its hero walks, or with nobody there): the name on a dark plate with the X inside.
   drawLabel(i) {
     const L = this.labels[i], s = SQUAD_VIEW.slots[i], id = this.slots[i], N = NAMES;
     const show = !!id && !this.walkers.has(id) && !this.descending;
@@ -243,19 +256,27 @@ export const squadGrid = {
     L.big.setVisible(show);
     if (!show) { L.hit.setPosition(-50, -50); return; }
     const ink = Number('0x' + buttonTextColor().slice(1)), sink = L.pressed ? UI.press.sinkPx : 0, edge = SQUAD_VIEW.edge;
-    const y = i === 1 ? N.middleY : N.outerY;
-    L.big.setText(heroDefs.find((h) => h.id === id).name);
-    const total = Math.ceil(L.big.width) + N.xGap + N.xSize;
-    const left = clamp(s.x - total / 2, edge, GAME_WIDTH - edge - total);
-    L.big.setPosition(Math.round(left + L.big.width / 2), y);
-    const bx = Math.round(left + total - N.xSize), by = Math.round(y - N.xSize / 2);
-    drawFlatButton(L.g, bx, by, N.xSize, N.xSize, { pressed: L.pressed });
-    this.drawX(L.g, bx + N.xSize / 2, by + N.xSize / 2 + sink, ink);
-    L.hit.setPosition(bx + N.xSize / 2, by + N.xSize / 2).setSize(N.xSize + 12, N.xSize + 12);
+    L.big.setText(heroDefs.find((h) => h.id === id).name.toUpperCase());
+    const y = i === 1 ? N.middleY : N.outerY, xs = N.xSize;
+    const w = Math.ceil(L.big.width) + N.xGap + xs + N.pad * 2 - 2;
+    const left = clamp(s.x - w / 2, edge, GAME_WIDTH - edge - w), top = y - N.h / 2;
+    this.drawPlate(L.g, left, top, w, N.h);
+    L.big.setPosition(Math.round(left + N.pad + L.big.width / 2), y);
+    const bx = Math.round(left + w - N.pad - xs + 4), by = Math.round(y - xs / 2);
+    drawFlatButton(L.g, bx, by, xs, xs, { pressed: L.pressed });
+    this.drawX(L.g, bx + xs / 2, by + xs / 2 + sink, ink);
+    L.hit.setPosition(bx + xs / 2, by + xs / 2).setSize(xs + 12, xs + 12);
   },
 
   drawNames() {
     this.slots.forEach((id, i) => this.drawLabel(i));
+  },
+
+  // A dark plate like the quiet tiles (outline, edge, fill).
+  drawPlate(g, x, y, w, h) {
+    const C = SQUAD_VIEW.tile;
+    g.fillStyle(UI.goldTheme.outline, 1).fillRect(x - 2, y - 2, w + 4, h + 4);
+    g.fillStyle(C.edge, 1).fillRect(x, y, w, h).fillStyle(C.fill, 1).fillRect(x + 2, y + 2, w - 4, h - 4);
   },
 };
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));

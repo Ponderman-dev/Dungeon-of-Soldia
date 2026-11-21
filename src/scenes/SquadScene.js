@@ -24,7 +24,7 @@ const TESTER = import.meta.env.VITE_TESTER === '1'; // the playtest build for it
 import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad, requirementProgress } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
 import { slotsFrom, addToSlots, removeFromSlots, isFull, squadOrder } from '../systems/squadSlots.js';
-import { squadGrid, SQUAD_VIEW, SQUAD_DEPTH } from './squad/squadGrid.js';
+import { squadGrid, squadLabel, SQUAD_VIEW, SQUAD_DEPTH } from './squad/squadGrid.js';
 import { drawBeginButton, beginTextColor } from './squad/beginButton.js';
 
 // The interface look (config.js UI, entities/uiKit.js): black windows, white lines, Ironslab text (sizes 8 / 16 / 24 = 10 / 20 / 30px, see config.js fontGrid).
@@ -37,7 +37,7 @@ const DOOR_X = GAME_WIDTH / 2;
 // banded like EXPEDITION, CAMP / RANDOM in a dock (gold line + dark band, like the camp's tab bar), a title window top
 // left like the fight's floor counter, the sound button where the fight's pause button is (pause.json buttons).
 const SIDE = 24; // the gap to the screen sides (camp.json ui.side)
-const BEGIN = { y: 618, h: 76, side: 14 }; // 'Begin descent': right under the hero row, bigger (user, session 47)
+const BEGIN = { y: 644, h: 76, side: 14 }; // 'Begin descent': right under the hero row, bigger (user, session 47); lower with the row (session 48)
 const DOCK = { y: 742, btnY: 754, btnH: 44, gap: 8, toolY: 808 }; // the dock: its gold line, CAMP / RANDOM, the test row
 // Where the squad stands, how big, the names and the hero grid: squad/squadGrid.js (SQUAD_VIEW).
 const WALK = combatRules.movement.walkSpeedPxPerSec * 1.6; // a bit quicker than in fights
@@ -166,10 +166,10 @@ export default class SquadScene extends Phaser.Scene {
       sfx.play('tap');
     } });
     if (this.lastRun && (this.lastRun.newly || []).length) this.time.delayedCall(400, () => sfx.play('unlock'));
-    // The title window top left (like the fight's floor counter): 'Squad n/3'; after a run a small line under it says
+    // The title window top left (like the fight's floor counter): 'SQUAD n/3'; after a run a small line under it says
     // how deep that run got.
     drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 8, 160, 32);
-    this.titleText = uiText(this, 20, 25, '', 'normal').setOrigin(0, 0.5).setDepth(DEPTH.ui);
+    this.titleText = squadLabel(this, 20, 24, '', UI.text).setOrigin(0, 0.5).setDepth(DEPTH.ui);
     if (this.lastRun) {
       drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 44, 160, 24);
       uiText(this, 20, 57, `Last run: floor ${this.lastRun.floor}`, 'small', UI.gold).setOrigin(0, 0.5).setDepth(DEPTH.ui);
@@ -203,7 +203,7 @@ export default class SquadScene extends Phaser.Scene {
       const rb = this.add.graphics().setDepth(DEPTH.ui);
       const redraw = (pressed) => drawFlatButton(rb.clear(), x, DOCK.btnY, dw, DOCK.btnH, { pressed });
       redraw(false);
-      const t = uiText(this, x + dw / 2, DOCK.btnY + DOCK.btnH / 2 - 1, label, 'normal', buttonTextColor()).setOrigin(0.5).setDepth(DEPTH.ui);
+      const t = squadLabel(this, x + dw / 2, DOCK.btnY + DOCK.btnH / 2, label, buttonTextColor()).setOrigin(0.5).setDepth(DEPTH.ui);
       pressable(this, this.add.zone(x + dw / 2, DOCK.btnY + DOCK.btnH / 2, dw, DOCK.btnH).setInteractive().setDepth(DEPTH.ui), { redraw, sink: [t], onTap, enabled: () => !this.leaving && !this.panel });
     });
     const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));
@@ -252,7 +252,7 @@ export default class SquadScene extends Phaser.Scene {
     const ready = this.ready(), missing = this.need() - squadOrder(this.slots).length;
     this.beginText.setText(ready ? 'BEGIN DESCENT' : `PICK ${missing} MORE`);
     this.drawBegin(false);
-    this.titleText.setText(`Squad ${squadOrder(this.slots).length}/${this.need()}`);
+    this.titleText.setText(`SQUAD ${squadOrder(this.slots).length}/${this.need()}`);
     if (this.tiles) for (const t of this.tiles.values()) t.draw();
     this.drawNames();
     if (this.toggleText) this.toggleText.setText(`${this.progress.unlockAll ? '[X]' : '[ ]'} test: unlock every hero`).setColor(this.progress.unlockAll ? UI.green : MUTE);

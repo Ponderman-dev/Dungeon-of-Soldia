@@ -2,7 +2,7 @@
 // ▶ cursor and Ironslab text (the game's own pixel font; small text in Press Start 2P). Every screen draws its windows, buttons and text through these helpers.
 import Phaser from 'phaser';
 import fontUrl from '../assets/fonts/ironslab.ttf?inline';
-import smallFontUrl from '../assets/fonts/press-start-2p.woff2?inline';
+import smallFontUrl from '../assets/fonts/soldia-small.woff2?inline'; // Press Start 2P made proportional (scripts/art/make-small-font.py)
 import { UI } from '../config.js';
 import * as sfx from '../audio/sfx.js';
 import { popPlan, slidePlan, fadePlan, pagePlan, pageSide } from '../systems/motion.js';
@@ -23,7 +23,7 @@ export function loadUiFont() {
       return Promise.resolve(null);
     }
   };
-  return Promise.all([load('Ironslab', fontUrl), load('PressStart2P', smallFontUrl)]);
+  return Promise.all([load('Ironslab', fontUrl), load('SoldiaSmall', smallFontUrl)]);
 }
 
 // Ironslab is drawn on a 10px grid (capitals 8px tall), so it is only crisp at 10 / 20 / 30px. The scenes keep asking

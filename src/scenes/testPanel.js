@@ -1,4 +1,4 @@
-// TEST ONLY (remove before release, with DebugScene): an HTML panel over the game to jump to any floor (the squad
+// TEST ONLY (left out of the store build: npm run build:release never starts DebugScene): an HTML panel over the game to jump to any floor (the squad
 // keeps its levels, items and skill pages; dead heroes come back), pick what that floor is (a fight or a room),
 // give any item to a hero, level everyone up and heal. Opened by the 'TEST: tools' button (DebugScene).
 import rawItems from '../data/items.json';

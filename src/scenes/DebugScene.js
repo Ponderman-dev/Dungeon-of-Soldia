@@ -4,7 +4,7 @@ import { drawWindow } from '../entities/uiKit.js';
 import { toggleTestPanel, toggleFps } from './testPanel.js';
 
 // TEST ONLY: a small always-on-top button that gives up the run and goes back to the
-// squad select screen (nothing is saved), and a 'TEST: tools' button (testPanel.js). Remove this scene before release.
+// squad select screen (nothing is saved), and a 'TEST: tools' button (testPanel.js). Never shown in the store build (npm run build:release, VITE_TESTER=1).
 export default class DebugScene extends Phaser.Scene {
   constructor() {
     super('Debug');

@@ -36,8 +36,6 @@ export function gridPx(size) {
 // Small sizes (UI.smallFont.maxPx or less) switch to the small font (Press Start 2P) at its own size.
 const SMALL = UI.smallFont;
 const isSmall = (size) => parseFloat(size) <= SMALL.maxPx;
-// The small font's size: its own px (px2From, when set, draws bigger asks at 2x: unused since the session 49 trial).
-const smallPx = (size) => (parseFloat(size) > (SMALL.px2From ?? Infinity) ? SMALL.px * 2 : SMALL.px);
 let gridInstalled = false;
 const charWidths = new Map(); // ctx.font -> (letter -> whole-pixel width)
 function installFontGrid() {
@@ -48,7 +46,7 @@ function installFontGrid() {
   TS.setStyle = function (style, updateText, setDefaults) {
     if (style && style.fontFamily === UI.font && style.fontSize != null) {
       style = isSmall(style.fontSize)
-        ? { ...style, fontFamily: SMALL.family, fontSize: `${smallPx(style.fontSize)}px` }
+        ? { ...style, fontFamily: SMALL.family, fontSize: `${SMALL.px}px` }
         : { ...style, fontSize: `${gridPx(style.fontSize)}px` };
     }
     return setStyle.call(this, style, updateText, setDefaults);
@@ -63,7 +61,7 @@ function installFontGrid() {
   TS.setFontSize = function (size) {
     if (this.fontFamily !== UI.font && this.fontFamily !== SMALL.family) return setFontSize.call(this, size);
     this.fontFamily = isSmall(size) ? SMALL.family : UI.font;
-    return setFontSize.call(this, isSmall(size) ? smallPx(size) : gridPx(size));
+    return setFontSize.call(this, isSmall(size) ? SMALL.px : gridPx(size));
   };
   // After a small text is drawn, every pixel is snapped to full or empty (and to its fill or stroke colour), so a
   // letter that lands between pixels stays as sharp as the pixel art.

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, SKILL_COLORS, UI } from '../config.js';
-import { drawWindow, drawCursor, uiShift, uiText, drawFlatButton, buttonTextColor, pressable, pressDown } from '../entities/uiKit.js';
+import { drawWindow, drawCursor, uiShift, uiText, drawFlatButton, buttonTextColor, pressable } from '../entities/uiKit.js';
 import pauseData from '../data/pause.json';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
@@ -24,7 +24,7 @@ const TESTER = import.meta.env.VITE_TESTER === '1'; // the playtest build for it
 import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
 import { slotsFrom, addToSlots, removeFromSlots, isFull, squadOrder } from '../systems/squadSlots.js';
-import { squadGrid, SQUAD_VIEW, SQUAD_DEPTH } from './squad/squadGrid.js';
+import { squadGrid, SQUAD_VIEW, SQUAD_DEPTH, NAME_STYLES } from './squad/squadGrid.js';
 
 // The interface look (config.js UI, entities/uiKit.js): black windows, white lines, Ironslab text (sizes 8 / 16 / 24 = 10 / 20 / 30px, see config.js fontGrid).
 const INK = UI.text;
@@ -66,10 +66,12 @@ export default class SquadScene extends Phaser.Scene {
     this.leaving = this.descending = false;
     this.walkers = new Map(); // hero id -> tween of a hero that is walking
     this.L = SQUAD_VIEW;
+    this.nameStyle = this.registry.get('nameStyle') || 'slope'; // TRIAL (squadGrid.js NAME_STYLES)
     this.tiles = null; this.gridParts = [];
 
     this.drawRoom();
     this.drawSlots();
+    this.labelParts = this.buildLabels();
     this.buildGrid();
     this.drawUi();
     this.shifting = false; // the menu is fading in or out (taps blocked by `leaving`, buttons still drawn)
@@ -123,7 +125,7 @@ export default class SquadScene extends Phaser.Scene {
 
   drawSlots() {
     // Each slot: a soft shadow on the floor; an empty one also has a faint pale ring and a small "+". A hero standing in
-    // it has its name (squadGrid drawNames) and a small "Send back" button under it; tapping the hero opens its card.
+    // it has its name and a way to send it back under it (squadGrid buildLabels); tapping the hero opens its card.
     this.slotMarks = this.L.slots.map((s, i) => {
       const k = this.L.heroScale / 3;
       const shadow = this.add.ellipse(s.x, s.y, 64 * k, 16 * k, 0x000000, 0.28).setDepth(DEPTH.slot);
@@ -134,14 +136,7 @@ export default class SquadScene extends Phaser.Scene {
         const id = this.slots[i];
         if (id && !this.walkers.has(id) && !this.panel && !this.leaving) this.openPanel(id);
       });
-      (this.names = this.names || [])[i] = uiText(this, s.x, this.L.nameY, '', 'normal', UI.goldTheme.title, { stroke: '#120c0a', strokeThickness: 5 }).setOrigin(0.5).setDepth(DEPTH.ui);
-      const V = this.L, back = this.add.container(s.x, V.backY + V.backH / 2).setDepth(DEPTH.ui);
-      const bg = this.add.graphics();
-      const redraw = (pressed) => drawFlatButton(bg.clear(), -V.backW / 2, -V.backH / 2, V.backW, V.backH, { pressed }); // a flat button, one even row
-      redraw(false);
-      const label = this.add.text(0, 0, 'Send back', { fontFamily: FONT, fontSize: '8px', color: buttonTextColor() }).setOrigin(0.5);
-      back.add([bg, label]);
-      return { shadow, ring, num, back, backLook: { redraw, sink: [label] } };
+      return { shadow, ring, num };
     });
   }
 
@@ -207,11 +202,22 @@ export default class SquadScene extends Phaser.Scene {
       pressable(this, this.add.zone(x + dw / 2, DOCK.btnY + DOCK.btnH / 2, dw, DOCK.btnH).setInteractive().setDepth(DEPTH.ui), { redraw, sink: [t], onTap, enabled: () => !this.leaving && !this.panel });
     });
     const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));
-    this.uiParts = { up: shown(this.children.list.slice(n0, n1)), fade: [...this.slotMarks.map((m) => m.back), ...this.names, ...shown(this.gridParts)] };
+    this.uiParts = { up: shown(this.children.list.slice(n0, n1)), fade: [...this.labelParts, ...shown(this.gridParts)] };
     this.uiParts.down = shown(this.children.list.slice(n1)); // (the test toggle below joins it)
     if (TESTER || DEMO) return; // the playtest build (npm run build:itch) and the fight demos have no test row
-    this.toggleText = this.add.text(GAME_WIDTH / 2, DOCK.toolY + 12, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
-    this.add.zone(GAME_WIDTH / 2, DOCK.toolY + 12, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
+    // NAMES TRIAL (session 47): a small button bottom left flips slope -> small -> button (squadGrid.js NAME_STYLES).
+    const keys = Object.keys(NAME_STYLES), nx = SIDE, nw = 110, ny = DOCK.toolY, nh = 24;
+    const ng = this.add.graphics().setDepth(DEPTH.ui);
+    const nt = this.add.text(nx + nw / 2, ny + nh / 2 + 1, `NAMES: ${this.nameStyle.toUpperCase()}`, { fontFamily: FONT, fontSize: '8px', color: buttonTextColor() }).setOrigin(0.5).setDepth(DEPTH.ui);
+    const drawN = (pressed) => drawFlatButton(ng.clear(), nx, ny, nw, nh, { pressed });
+    drawN(false);
+    pressable(this, this.add.zone(nx + nw / 2, ny + nh / 2, nw, nh).setInteractive().setDepth(DEPTH.ui), { redraw: drawN, sink: [nt], enabled: () => !this.panel && !this.leaving, onTap: () => {
+      this.registry.set('nameStyle', keys[(keys.indexOf(this.nameStyle) + 1) % keys.length]);
+      this.scene.restart({ lastRun: this.lastRun });
+    } });
+    this.uiParts.down.push(ng, nt);
+    this.toggleText = this.add.text(260, DOCK.toolY + 12, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
+    this.add.zone(260, DOCK.toolY + 12, 220, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
     this.uiParts.down.push(this.toggleText);
   }
 
@@ -247,7 +253,6 @@ export default class SquadScene extends Phaser.Scene {
       const m = this.slotMarks[i];
       m.ring.setVisible(!id);
       m.num.setVisible(!id);
-      m.back.setVisible(!!id && !this.walkers.has(id) && (!this.leaving || this.shifting)); // shifting: they fade with the menu
     });
     this.begin.setVisible(!this.leaving || this.shifting);
     this.drawBegin(false);
@@ -261,25 +266,8 @@ export default class SquadScene extends Phaser.Scene {
 
   // ---- input ---------------------------------------------------------------------------------
 
-  // Scene-wide taps: the 'Send back' buttons (pushed on finger down, sent back on release). Everything else has its own
-  // tap zone.
-  setupInput() {
-    const V = this.L, onBack = (p, s) => Math.abs(p.x - s.x) < V.backW / 2 && Math.abs(p.y - (V.backY + V.backH / 2)) < V.backH / 2 + 2;
-    this.input.on('pointerdown', (p) => {
-      if (this.panel || this.leaving) return;
-      const back = this.L.slots.findIndex((s, i) => this.slots[i] && onBack(p, s));
-      if (back >= 0 && !this.walkers.has(this.slots[back])) this.pushing = { release: pressDown(this.slotMarks[back].backLook), id: this.slots[back], slot: back, at: this.time.now };
-    });
-    this.input.on('pointerup', (p) => {
-      if (!this.pushing) return;
-      const { release, id, slot, at } = this.pushing;
-      this.pushing = null;
-      const on = onBack(p, this.L.slots[slot]);
-      const finish = () => { release(); if (on && this.slots[slot] === id && !this.walkers.has(id)) this.sendBack(id); };
-      const wait = UI.press.holdMs - (this.time.now - at);
-      if (wait > 0) this.time.delayedCall(wait, finish); else finish();
-    });
-  }
+  // Every tap has its own tap zone (tiles, slots, the labels' send-back buttons, the dock); nothing scene-wide.
+  setupInput() {}
 
   // ---- walking -------------------------------------------------------------------------------
 

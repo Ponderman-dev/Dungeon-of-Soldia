@@ -48,3 +48,10 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   tiles as wide as fits (max 80, h 100, heroes x3), the block centred between the Send back row and BEGIN DESCENT;
   'n more heroes to find' only when there is one row. Squad NAMES have no box: big cream text (`goldTheme.title`,
   normal size) with a dark outline, one row (`SQUAD_VIEW.nameY`), Send back buttons in the row under them.
+- **NAMES TRIAL (session 47, user: long names overlapped + crowded, 'I need to see it'):** outer slots moved to
+  x 68 / 322. The labels under the squad (`buildLabels` / `drawLabel` in squadGrid.js, `NAME_STYLES`, registry
+  `nameStyle`, the 'NAMES: ...' button in the dock): `slope` (default) = big names, the middle one a row higher, outer
+  ones kept on the screen, a small X button beside each (= send back), no Send back row; `small` = big names that fit,
+  long ones in the small font, Send back row under them; `button` = one flat button per hero with its name (small
+  font) + an X (tap = send back). The grid's top follows the style (`gridTop`). Send back taps are now per-label
+  pressable zones (the scene-wide tap code is gone). When the user picks: delete the others + the NAMES button.

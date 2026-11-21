@@ -92,5 +92,9 @@ export const UI = {
     fast: 140, normal: 220, slow: 450, story: 1100,
     easeIn: 'Cubic.easeIn', easeOut: 'Cubic.easeOut', easeMove: 'Sine.easeInOut', easeDrop: 'Back.easeOut',
     popDropPx: 48, slidePx: 40,
+    // CAMP <-> SQUAD SCREEN slide (session 49, user: 'kind of slow, the ease is awkward'): screenMs long, starts fast
+    // and settles (easeScreen); the leaving buttons go WHILE it slides, the new ones land as it ends. Was slow 450 +
+    // Sine.easeInOut, after the buttons had left (~0.8s in all).
+    screenMs: 300, easeScreen: 'Cubic.easeOut',
   },
 };

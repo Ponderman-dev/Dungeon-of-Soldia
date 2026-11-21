@@ -74,10 +74,10 @@ export default class SquadScene extends Phaser.Scene {
     this.buildGrid();
     this.drawUi();
     this.shifting = false; // the menu is fading in or out (taps blocked by `leaving`, buttons still drawn)
-    if (this.fromCamp) { // hidden until the slide up has ended; no taps before that
+    if (this.fromCamp) { // hidden until the slide up ends (they land with it); no taps before that
       this.leaving = this.shifting = true;
       uiShift(this, this.uiParts, false, { instant: true });
-      this.time.delayedCall(UI.motion.slow, () => uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = this.shifting = false; this.refresh(); } }));
+      this.time.delayedCall(Math.max(0, UI.motion.screenMs - UI.motion.fast), () => uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = this.shifting = false; this.refresh(); } }));
     }
 
     // The squad's figures: each picked hero stands in its slot (the others wait hidden off screen).
@@ -506,16 +506,17 @@ export default class SquadScene extends Phaser.Scene {
     if (this.panel || this.leaving) return;
     this.leaving = this.shifting = true;
     sfx.play('tap');
-    uiShift(this, this.uiParts, false, { onDone: () => this.slideToCamp() }); // the buttons leave first
+    uiShift(this, this.uiParts, false); // the buttons leave while the screen slides (no wait)
+    this.slideToCamp();
   }
 
   slideToCamp() {
     const base = this.scene.get('Base');
     base.events.once(Phaser.Scenes.Events.CREATE, () => {
-      const cam = base.cameras.main, mine = this.cameras.main, ms = UI.motion.slow;
+      const cam = base.cameras.main, mine = this.cameras.main, ms = UI.motion.screenMs, ease = UI.motion.easeScreen;
       cam.scrollY = -GAME_HEIGHT; // the camp starts just below this screen
-      this.tweens.add({ targets: cam, scrollY: 0, duration: ms, ease: UI.motion.easeMove });
-      this.tweens.add({ targets: mine, scrollY: GAME_HEIGHT, duration: ms, ease: UI.motion.easeMove, onComplete: () => this.scene.stop() });
+      this.tweens.add({ targets: cam, scrollY: 0, duration: ms, ease });
+      this.tweens.add({ targets: mine, scrollY: GAME_HEIGHT, duration: ms, ease, onComplete: () => this.scene.stop() });
     });
     this.scene.launch('Base', { fromSquad: true });
   }

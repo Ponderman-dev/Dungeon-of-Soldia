@@ -29,24 +29,53 @@ function defaultStorage() {
 }
 
 export function loadProgress(storage = defaultStorage()) {
-  const fresh = emptyProgress();
   try {
     const raw = storage && storage.getItem(SAVE_KEY);
-    if (!raw) return fresh;
-    const data = JSON.parse(raw);
-    return {
-      ...fresh,
-      ...data,
-      stats: { ...fresh.stats, ...(data && data.stats) },
-      seenUnlocked: Array.isArray(data && data.seenUnlocked) ? data.seenUnlocked : [],
-      profile: { ...((data && data.profile) || {}) },
-      achievements: Array.isArray(data && data.achievements) ? data.achievements : [],
-      seen: { ...fresh.seen, ...((data && data.seen) || {}) },
-      settings: { ...fresh.settings, ...(data && data.settings) },
-    };
+    return raw ? cleanProgress(JSON.parse(raw)) : emptyProgress();
   } catch {
-    return fresh; // damaged save: start over instead of crashing
+    return emptyProgress(); // damaged save: start over instead of crashing
   }
+}
+
+// A save read back from storage can be old, damaged or edited by hand: keep every field the right type and in range
+// (wrong ones fall back to the new-player value), so no screen can crash on it. NOTE for a future server / wallet:
+// anyone can still edit their own numbers (gems, best floor, unlocks), so a server must re-check those itself.
+const MAX_COUNT = 1e12; // no saved counter goes above this
+const count = (v) => (Number.isFinite(v) && v > 0 ? Math.min(Math.floor(v), MAX_COUNT) : 0);
+const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+const strings = (v) => (Array.isArray(v) ? [...new Set(v.filter((x) => typeof x === 'string'))] : []);
+const counts = (v) => Object.fromEntries(Object.entries(isObj(v) ? v : {}).map(([k, n]) => [k, count(n)]));
+
+export function cleanProgress(data) {
+  const fresh = emptyProgress();
+  if (!isObj(data)) return fresh;
+  const st = isObj(data.stats) ? data.stats : {};
+  const stats = { ...fresh.stats };
+  for (const k of Object.keys(fresh.stats)) if (typeof fresh.stats[k] === 'number') stats[k] = count(st[k]);
+  stats.bossIds = strings(st.bossIds);
+  stats.heroRuns = counts(st.heroRuns);
+  stats.heroRecords = {};
+  for (const [id, r] of Object.entries(isObj(st.heroRecords) ? st.heroRecords : {})) if (isObj(r)) stats.heroRecords[id] = counts(r);
+  const seen = isObj(data.seen) ? data.seen : {};
+  const profile = {};
+  for (const [k, v] of Object.entries(isObj(data.profile) ? data.profile : {})) if (typeof v === 'string') profile[k] = v.slice(0, 40);
+  const settings = { ...fresh.settings };
+  for (const [k, v] of Object.entries(isObj(data.settings) ? data.settings : {})) if (['number', 'boolean', 'string'].includes(typeof v)) settings[k] = v;
+  if (typeof settings.muted !== 'boolean') settings.muted = false;
+  const squad = strings(data.lastSquad);
+  return {
+    ...fresh,
+    stats,
+    profile,
+    achievements: strings(data.achievements),
+    seen: { met: strings(seen.met), beaten: counts(seen.beaten), statuses: strings(seen.statuses), items: strings(seen.items) },
+    gems: count(data.gems),
+    looks: strings(data.looks),
+    seenUnlocked: strings(data.seenUnlocked),
+    unlockAll: data.unlockAll === true,
+    lastSquad: squad.length ? squad.slice(0, 3) : null,
+    settings,
+  };
 }
 
 export function saveProgress(progress, storage = defaultStorage()) {

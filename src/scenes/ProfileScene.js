@@ -44,7 +44,7 @@ export default class ProfileScene extends Phaser.Scene {
     this.scene.bringToTop();
     this.progress = loadProgress();
     this.profile = { ...D.defaults, ...this.progress.profile };
-    if (!this.isOpen(this.profile.hero)) this.profile.hero = D.defaults.hero;
+    if (!heroDef(this.profile.hero) || !this.isOpen(this.profile.hero)) this.profile.hero = D.defaults.hero;
     pageBackdrop(this, Number(L.bg)).setInteractive();
     this.page = null;
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.closeInput());
@@ -143,7 +143,7 @@ export default class ProfileScene extends Phaser.Scene {
       ['RUNS', num(s.runs)], ['BEST FLOOR', num(s.bestFloor)],
       ['BOSSES', num(s.bossesBeaten || 0)], ['KILLS', num(s.totalKills)],
       ['PLAY TIME', hours(s.playMs || 0)], ['ITEMS FOUND', num(s.itemsFound || 0)],
-      ['TOP HERO', top ? heroDef(top).name.toUpperCase() : '-'], ['DEATHS', num(s.deaths || 0)],
+      ['TOP HERO', heroDef(top) ? heroDef(top).name.toUpperCase() : '-'], ['DEATHS', num(s.deaths || 0)],
     ];
     boxes.forEach(([label, v], i) => {
       const bx = x + (i % 2) * (w + S.gap), by = S.y + Math.floor(i / 2) * (S.h + S.gap);

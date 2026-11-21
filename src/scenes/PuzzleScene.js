@@ -18,7 +18,7 @@ const BLOCK_TOP = 104; // the title; the puzzle starts at STAGE_TOP (the whole b
 const STAGE_TOP = 214;
 const BUTTON_Y = GAME_HEIGHT - 92;
 const hex = (c) => Number(c.replace('#', '0x'));
-const gold = () => hex(UI.gold); // read live (look trial switches it)
+const gold = () => hex(UI.gold); // read when drawn
 
 // The Puzzle Room sheet: one of the 5 puzzles the user kept (rooms.json `puzzles`), picked at random, harder deeper
 // down (`tiers`). The rules are in systems/puzzles.js; this scene only draws and takes taps. Reports through

@@ -16,7 +16,7 @@ export function beginTextColor(enabled) {
 // Draws the button into g (top left x, y; w x h, the ledge included).
 export function drawBeginButton(g, x, y, w, h, { pressed = false, enabled = true } = {}) {
   const T = UI.goldTheme, B = UI.flat.band, s = UI.press.sinkPx;
-  if (T.square) return squareButton(g, x, y, w, h, { pressed, enabled, primary: true }); // LOOK TRIAL: one flat colour
+  if (T.square) return squareButton(g, x, y, w, h, { pressed, enabled, primary: true }); // the Dusk look: one flat colour
   const [body, dark, light] = !enabled ? [T.dim, T.dim, T.dim] : pressed ? [T.buttonDark, T.buttonDark, T.button] : [T.button, T.buttonDark, T.buttonLight];
   const R = !enabled ? { gold: T.frameDark, light: T.dim, dark: T.outline } // the gold bands (held down: a shade darker)
     : pressed ? { gold: T.bandP, light: T.bandLightP, dark: T.bandDarkP } : { gold: T.band, light: T.bandLight, dark: T.bandDark };

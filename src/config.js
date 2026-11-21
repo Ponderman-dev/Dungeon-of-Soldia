@@ -33,26 +33,33 @@ export const UI = {
   size: { small: 8, normal: 16, big: 24, huge: 32 },
   window: 0x000000, // window fill
   line: 0xffffff, // window line
-  text: '#ffffff',
-  dim: '#8a8a9a', // disabled / hints
-  gold: '#ffd84a', // rarity, stacks, important numbers
-  fightGold: '#ffd24d', // fight pop-ups: crits, Lv labels, LEVEL UP, passive words (look trial: per look)
+  // THE DUSK LOOK (session 49, user's pick 'Dusk + Soldia font + Salmon' from a live trial of 4 looks inspired by
+  // docs/references/ui-vibe-pick-a-class.png). Was crimson + gold (session 40, `git show 4fc5724:src/config.js`).
+  text: '#dcd8ec', // pale lavender-grey
+  dim: '#8480a0', // disabled / hints
+  gold: '#f4a890', // rarity, stacks, important numbers (a soft salmon now; the name stays)
+  fightGold: '#f6b49a', // fight pop-ups: crits, Lv labels, LEVEL UP, passive words (soft peach)
   red: '#ff7a5a', // attack skills, damage
   green: '#6ee07a', // support skills, heals
   pressed: 0xffffff, // a pressed button flips to white with black text
-  // THE THEME (user's pick F, session 40; ember brown panels session 41): dark panels with a gold frame + corner
-  // studs, crimson primary buttons with cream text, calm dark secondary buttons, title strips. Drawn by uiKit.
+  pageBg: 0x0e0c18, // every menu page's background (uiKit pageBackdrop) ...
+  dither: [0x0e0c18, 0x15132a, 4], // ... with a 2-colour checker: [base, checker colour, cell px]
+  // THE THEME (keeps its old name goldTheme): SQUARE windows with one thin lavender line on a flat dark purple-navy fill
+  // (square: true, studs: false, flatEdge: true; the old framed drawing stays in uiKit for square: false), FLAT
+  // one-colour buttons: SALMON main button, MAROON other buttons, salmon titles; picked / chosen outlines in light salmon.
+  // Header boxes (quiet windows) and the squad name plates / hero tiles use the tile colours. Drawn by uiKit.
   goldTheme: {
-    outline: 0x0d0b12, frame: 0xd8a640, frameDark: 0x4a2e22, stud: 0xffe39a, fill: 0x1a1412, strip: 0x2a201c,
-    stripLine: 0x0c0908, slot: 0x14100e, chosen: 0xfff0b0, dim: 0x4e4640, pressedFill: 0x32261f,
-    // PRIMARY button (only THE main action of a screen, e.g. BEGIN DESCENT): crimson with cream text.
-    button: 0xc8423a, buttonDark: 0x8e2824, buttonLight: 0xff8a7a, buttonText: '#fff0d8', title: '#ffe7a8',
-    // SECONDARY buttons (every other button, calmer): a dark raised button with cream text.
-    second: 0x382a24, secondDark: 0x261c18, secondLight: 0x56443a, secondText: '#ffe7a8',
-    // Quiet tiles + boxes (squad screen hero tiles and hero card boxes): fill, edge, locked edge, a picked tile's edge,
-    // the card's body text. BAND = the gold band round BEGIN DESCENT (light outer line, dark inner line; *P = held).
-    tileFill: 0x16110f, tileEdge: 0x3a2a22, tileLocked: 0x2e2a30, picked: 0xd8a640, body: '#cfc6b4',
-    band: 0xd8a640, bandLight: 0xffe39a, bandDark: 0x8a6420, bandP: 0xb08530, bandLightP: 0xd8a640, bandDarkP: 0x6a4818,
+    outline: 0x0a0812, frame: 0x8c88b6, frameDark: 0x1a1930, stud: 0xbab6dc, fill: 0x1a1930, strip: 0x24223e,
+    stripLine: 0x8c88b6, slot: 0x13121f, chosen: 0xe08a72, dim: 0x3e3a50, pressedFill: 0x2a2846,
+    studs: false, square: true, flatEdge: true,
+    // PRIMARY button (only THE main action of a screen: EXPEDITION, BEGIN DESCENT): salmon with near-white text.
+    button: 0xb85c48, buttonDark: 0x8a4234, buttonLight: 0xe08a72, buttonText: '#fff0e8', title: '#f08a6a',
+    // SECONDARY buttons (every other button): maroon with pale pink text.
+    second: 0x6a2236, secondDark: 0x4a1626, secondLight: 0x8e3a52, secondText: '#f2dce2',
+    // Quiet tiles + boxes (squad hero tiles, hero card boxes, name plates, header boxes): fill, edge, locked edge, a
+    // picked tile's edge, the card's body text. BAND = the band round BEGIN DESCENT (only drawn when square is false).
+    tileFill: 0x14132a, tileEdge: 0x34324e, tileLocked: 0x262434, picked: 0xe08a72, body: '#cac6dc',
+    band: 0x8c88b6, bandLight: 0xbab6dc, bandDark: 0x4a4670, bandP: 0x747098, bandLightP: 0x8c88b6, bandDarkP: 0x36345a,
   },
   // How a menu page (Glossary, Heroes, Leaders, Shop, Settings, Profile) comes and goes (uiKit pageEnter / pageLeave):
   // it slides in over the screen behind and back out the same side, motion.normal both ways (user, session 41: 'slides
@@ -87,88 +94,3 @@ export const UI = {
     popDropPx: 48, slidePx: 40,
   },
 };
-
-// LOOK TRIAL (session 49, TEMPORARY; user: 'I kinda want this vibe', docs/references/ui-vibe-pick-a-class.png): cool
-// navy takes on the whole interface. Only the trial build (VITE_LOOK_TRIAL=1, the squad demo page) reads them: a switch
-// row above the game (src/lookTrial.js) saves the pick in localStorage and reloads. Each look overwrites the keys it
-// names (goldTheme keys + the UI text colours) before any scene loads, so module-level copies (const GOLD = UI.gold)
-// see them too. studs false = no corner studs; flatEdge = no dark inner edge (frame line straight onto the fill);
-// pageBg + dither = the menu pages' background (a 2-colour checker, cell px). Delete the losers after the pick.
-export const LOOK_TRIAL = (import.meta.env && import.meta.env.VITE_LOOK_TRIAL) === '1';
-export const LOOKS = {
-  gold: {},
-  // A STEEL: closest to the reference: flat navy panels, a pale steel-blue line, salmon titles, green main button.
-  steel: {
-    theme: {
-      stud: 0xa8bad8, tileFill: 0x0f1626, tileEdge: 0x2c3a58, tileLocked: 0x222838, picked: 0x5fd4a4, body: '#c8cee4',
-      band: 0x6f86ad, bandLight: 0xa8bad8, bandDark: 0x3a4a6c, bandP: 0x5a6e92, bandLightP: 0x6f86ad, bandDarkP: 0x2c3a58,
-      outline: 0x070b14, frame: 0x6f86ad, frameDark: 0x121a2c, fill: 0x121a2c, strip: 0x1a2540, stripLine: 0x6f86ad,
-      slot: 0x0d1424, chosen: 0x5fd4a4, dim: 0x363e52, pressedFill: 0x1f2b46, studs: false, square: true, flatEdge: true,
-      button: 0x58772f, buttonDark: 0x3f5822, buttonLight: 0x7c9c4a, buttonText: '#eef4dc', title: '#f2916c',
-      second: 0x2b3a5c, secondDark: 0x1d2843, secondLight: 0x435680, secondText: '#d4daee',
-    },
-    text: '#dfe3f4', dim: '#7c86a0', gold: '#f4ac6e', fightGold: '#f4ac6e', pageBg: 0x0a0f1c, dither: [0x0a0f1c, 0x0f1628, 4],
-  },
-  // B DUSK: a purple-slate cousin: lavender lines, MAROON secondary buttons (the reference's 'Cancel'), green main.
-  dusk: {
-    theme: {
-      stud: 0xbab6dc, tileFill: 0x14132a, tileEdge: 0x34324e, tileLocked: 0x262434, picked: 0x6edc9c, body: '#cac6dc',
-      band: 0x8c88b6, bandLight: 0xbab6dc, bandDark: 0x4a4670, bandP: 0x747098, bandLightP: 0x8c88b6, bandDarkP: 0x36345a,
-      outline: 0x0a0812, frame: 0x8c88b6, frameDark: 0x1a1930, fill: 0x1a1930, strip: 0x24223e, stripLine: 0x8c88b6,
-      slot: 0x13121f, chosen: 0x6edc9c, dim: 0x3e3a50, pressedFill: 0x2a2846, studs: false, square: true, flatEdge: true,
-      button: 0x55752e, buttonDark: 0x3c5520, buttonLight: 0x7a9a48, buttonText: '#eef4dc', title: '#f08a6a',
-      second: 0x6a2236, secondDark: 0x4a1626, secondLight: 0x8e3a52, secondText: '#f2dce2',
-    },
-    text: '#dcd8ec', dim: '#8480a0', gold: '#f4a890', fightGold: '#f6b49a', pageBg: 0x0e0c18, dither: [0x0e0c18, 0x15132a, 4],
-  },
-  // C DEEP: near-black navy, a crisp pale double line (light line + dark gap), maroon secondary, brighter green main.
-  deep: {
-    theme: {
-      stud: 0xd8e2f4, tileFill: 0x0b111f, tileEdge: 0x26324c, tileLocked: 0x1c2232, picked: 0x58e0b0, body: '#ccd2e6',
-      band: 0xa6b6d6, bandLight: 0xd8e2f4, bandDark: 0x4a5a7c, bandP: 0x8696b6, bandLightP: 0xa6b6d6, bandDarkP: 0x3a4a6c,
-      outline: 0x04070e, frame: 0xa6b6d6, frameDark: 0x1a2640, fill: 0x0b111f, strip: 0x131c30, stripLine: 0x5a6c90,
-      slot: 0x080d18, chosen: 0x58e0b0, dim: 0x2e3546, pressedFill: 0x18223a, studs: false, square: true, flatEdge: false,
-      button: 0x4f8a3a, buttonDark: 0x366427, buttonLight: 0x74b05a, buttonText: '#f0f8e4', title: '#ff9a72',
-      second: 0x5e1e30, secondDark: 0x401420, secondLight: 0x84344a, secondText: '#f4dee4',
-    },
-    text: '#e2e6f6', dim: '#76809a', gold: '#ffb070', fightGold: '#ffb070', pageBg: 0x060a14, dither: [0x060a14, 0x0c1424, 4],
-  },
-};
-export const LOOK_NAMES = Object.keys(LOOKS);
-const readPick = (key, list) => {
-  try { const v = localStorage.getItem(key); return list.includes(v) ? v : list[0]; } catch { return list[0]; }
-};
-export const LOOK_PICK = LOOK_TRIAL ? readPick('soldia.lookTrial.look', LOOK_NAMES) : 'gold';
-// FONT: soldia = today; thin = small text in Soldia Thin; thin+ = also the normal-size text (asked up to 16px; over 12
-// = Soldia Thin at 2x), big titles stay Ironslab.
-export const FONT_NAMES = ['soldia', 'thin', 'thin+'];
-export const FONT_PICK = LOOK_TRIAL ? readPick('soldia.lookTrial.font', FONT_NAMES) : 'soldia';
-// The gold look's own values, so a live switch back to gold (lookTrial.js) restores them.
-const BASE = { theme: { ...UI.goldTheme }, text: UI.text, dim: UI.dim, gold: UI.gold, fightGold: UI.fightGold, small: { ...UI.smallFont } };
-// MAIN = the main button's colour on the navy looks (user: 'Dusk looks good, but change the green button'): green =
-// the look's own (green). body / pressed shade / light (only the gold look's bevel uses light) / text.
-export const MAINS = {
-  green: null,
-  teal: { button: 0x2c7472, buttonDark: 0x1f5654, buttonLight: 0x46a09c, buttonText: '#e4f6f4' },
-  salmon: { button: 0xb85c48, buttonDark: 0x8a4234, buttonLight: 0xe08a72, buttonText: '#fff0e8' },
-  violet: { button: 0x5e4aa0, buttonDark: 0x45367a, buttonLight: 0x8a74cc, buttonText: '#efeaff' },
-  amber: { button: 0xa8762c, buttonDark: 0x7c561e, buttonLight: 0xd4a04a, buttonText: '#fff4e0' },
-  steel: { button: 0x4a6694, buttonDark: 0x364c70, buttonLight: 0x7088b8, buttonText: '#eaf0fc' },
-};
-export const MAIN_NAMES = Object.keys(MAINS);
-export const MAIN_PICK = LOOK_TRIAL ? readPick('soldia.lookTrial.main', MAIN_NAMES) : 'green';
-export const LOOK_NOW = { look: LOOK_PICK, font: FONT_PICK, main: MAIN_PICK }; // what is applied right now
-export function applyLook(look, font, main = LOOK_NOW.main) {
-  const L = LOOKS[look];
-  for (const k of Object.keys(UI.goldTheme)) if (!(k in BASE.theme)) delete UI.goldTheme[k]; // flags like square
-  const M = look !== 'gold' && MAINS[main];
-  // the picked hero tile + chosen outlines follow the main button's colour (user: no green outline on the hero row)
-  Object.assign(UI.goldTheme, BASE.theme, L.theme || {}, M ? { ...M, picked: M.buttonLight, chosen: M.buttonLight } : {});
-  for (const k of ['text', 'dim', 'gold', 'fightGold']) UI[k] = L[k] || BASE[k];
-  UI.pageBg = L.pageBg ?? null; // null = each page's own bg
-  UI.dither = L.dither ?? null;
-  for (const k of Object.keys(UI.smallFont)) if (!(k in BASE.small)) delete UI.smallFont[k];
-  Object.assign(UI.smallFont, BASE.small, font === 'thin+' ? { maxPx: 16, px2From: 12 } : {});
-  LOOK_NOW.look = look; LOOK_NOW.font = font; LOOK_NOW.main = main;
-}
-applyLook(LOOK_PICK, FONT_PICK, MAIN_PICK);

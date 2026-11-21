@@ -17,7 +17,7 @@ import * as sfx from '../audio/sfx.js';
 // user's own art on top, the hero big on the dungeon floor with name + role and the look's name (one look each for
 // now), an HP / ATK / DEF / RES strip, LORE and STATS (RECORDS / KIT). Data: heroPage.json.
 const L = D.layout;
-const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read live (look trial switches it)
+const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read when drawn
 const DIM = Number(L.dim);
 const SHADOW = 0x1c1c26;
 const W = GAME_WIDTH - L.side * 2;

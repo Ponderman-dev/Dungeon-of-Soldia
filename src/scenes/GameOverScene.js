@@ -16,7 +16,7 @@ import * as sfx from '../audio/sfx.js';
 // Page 1: the run (floor, time, kills, NEW BEST!), the 3 heroes on the dungeon floor (tap one = gold outline + bigger)
 // and that hero's card (fell on, damage, healing, kills, taken, items, who felled them). BOSSES / ITEMS open their
 // pages. CAMP = back to the camp, TRY AGAIN = the squad screen. Data: `summary` from systems/runStats.js finishRun.
-const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read live (look trial switches it)
+const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read when drawn
 const DIM = Number(G.dim);
 const W = GAME_WIDTH - G.side * 2;
 const heroDef = (id) => heroes.find((h) => h.id === id);

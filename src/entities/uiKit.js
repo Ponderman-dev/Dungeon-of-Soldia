@@ -3,8 +3,7 @@
 import Phaser from 'phaser';
 import fontUrl from '../assets/fonts/ironslab.ttf?inline';
 import smallFontUrl from '../assets/fonts/soldia-small.woff2?inline'; // Press Start 2P made proportional (scripts/art/make-small-font.py)
-import thinFontUrl from '../assets/fonts/soldia-thin.woff2?inline'; // LOOK TRIAL: 1px strokes (scripts/art/make-thin-font.py)
-import { UI, FONT_PICK } from '../config.js';
+import { UI } from '../config.js';
 import * as sfx from '../audio/sfx.js';
 import { popPlan, slidePlan, fadePlan, pagePlan, pageSide } from '../systems/motion.js';
 
@@ -22,16 +21,9 @@ const loadFace = (name, url) => {
     return Promise.resolve(null);
   }
 };
-let smallFace = null; // the loaded small font face (the look trial swaps it)
 export function loadUiFont() {
   installFontGrid();
-  // LOOK TRIAL (session 49): the THIN fonts load the thin face under the small font's name (nothing else changes).
-  return Promise.all([loadFace('Ironslab', fontUrl), swapSmallFont(FONT_PICK)]);
-}
-// LOOK TRIAL: puts the small font's face for `font` ('soldia' | 'thin' | 'thin+') in place of the loaded one.
-export function swapSmallFont(font) {
-  if (smallFace) document.fonts.delete(smallFace);
-  return loadFace('SoldiaSmall', font === 'soldia' ? smallFontUrl : thinFontUrl).then((f) => { smallFace = f; return f; });
+  return Promise.all([loadFace('Ironslab', fontUrl), loadFace('SoldiaSmall', smallFontUrl)]);
 }
 
 // Ironslab is drawn on a 10px grid (capitals 8px tall), so it is only crisp at 10 / 20 / 30px. The scenes keep asking
@@ -44,7 +36,7 @@ export function gridPx(size) {
 // Small sizes (UI.smallFont.maxPx or less) switch to the small font (Press Start 2P) at its own size.
 const SMALL = UI.smallFont;
 const isSmall = (size) => parseFloat(size) <= SMALL.maxPx;
-// The small font's size: its own px; LOOK TRIAL 'thin+' (maxPx 16) draws bigger asks (over px2From) at 2x.
+// The small font's size: its own px (px2From, when set, draws bigger asks at 2x: unused since the session 49 trial).
 const smallPx = (size) => (parseFloat(size) > (SMALL.px2From ?? Infinity) ? SMALL.px * 2 : SMALL.px);
 let gridInstalled = false;
 function installFontGrid() {
@@ -161,7 +153,7 @@ function themedWindow(g, x, y, w, h, block, { fill, line, alpha }) {
   return g;
 }
 
-// LOOK TRIAL 'square' looks (session 49, user: 'the borders are sharp, no corner borders'): square corners, a thin
+// SQUARE windows (the Dusk look, session 49, user: 'the borders are sharp, no corner borders'): square corners, a thin
 // pale line straight on a flat fill, nothing else (the line keeps its meaning: chosen / dim like themedWindow).
 function squareWindow(g, x, y, w, h, { fill, line, alpha, quiet }) {
   const T = UI.goldTheme;
@@ -177,7 +169,7 @@ function squareWindow(g, x, y, w, h, { fill, line, alpha, quiet }) {
   g.fillStyle(body, alpha).fillRect(x + 2, y + 2, w - 4, h - 4);
   return g;
 }
-// LOOK TRIAL 'square' buttons (user: 'buttons are only one colour, no bevels and bands and gold'): one flat block of
+// SQUARE buttons (the Dusk look, user: 'buttons are only one colour, no bevels and bands and gold'): one flat block of
 // colour, square corners; pressed = 45% darker, clearly visible (the label still drops); disabled = the dim colour.
 export function squareButton(g, x, y, w, h, { pressed = false, enabled = true, primary = false } = {}) {
   const T = UI.goldTheme;
@@ -193,7 +185,7 @@ export function squareButton(g, x, y, w, h, { pressed = false, enabled = true, p
 export function drawRarityFrame(g, x, y, w, h, R, { lit = false } = {}) {
   x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
   const F = R.frame, num = (c) => Number(c);
-  if (UI.goldTheme.square) { // LOOK TRIAL: square, a 2px line in the rarity colour, flat body, no studs
+  if (UI.goldTheme.square) { // the Dusk look: square, a 2px line in the rarity colour, flat body, no studs
     g.fillStyle(num(lit ? F.hi : F.edge), 1).fillRect(x, y, w, h).fillStyle(num(F.fill), 1).fillRect(x + 2, y + 2, w - 4, h - 4);
     return g;
   }
@@ -384,7 +376,7 @@ export function drawFlatButton(g, x, y, w, h, { primary = false, bands = false, 
 }
 export const buttonTextColor = (enabled = true, pressed = false, primary = false) => (!enabled ? '#9a96a6' : primary ? UI.goldTheme.buttonText : UI.goldTheme.secondText);
 // A MENU PAGE's background (Glossary, Heroes, Leaders, Settings, Shop, Profile, Game Over): a full-screen rectangle in
-// `bg` (the look trial's UI.pageBg instead when set) + the trial's dithered checker (UI.dither = [a, b, cellPx]).
+// `bg` (UI.pageBg instead when set) + a dithered checker (UI.dither = [a, b, cellPx]).
 // Returns the rectangle (pages make it block taps).
 export function pageBackdrop(scene, bg) {
   const rect = scene.add.rectangle(0, 0, scene.scale.width, scene.scale.height, UI.pageBg ?? bg).setOrigin(0);

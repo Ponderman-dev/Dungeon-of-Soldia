@@ -21,7 +21,7 @@ import * as sfx from '../audio/sfx.js';
 // page, CHANGE = profile hero page). Tabs STATS (lifetime numbers) / ACHIEVE. (medals, profile.json achievements).
 // Data: profile.json; saved in progress.profile / progress.achievements / progress.stats.
 const L = D.layout;
-const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read live (look trial switches it)
+const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read when drawn
 const DIM = Number(L.dim);
 const SHADOW = 0x1c1c26; // locked heroes / medals: a dark shadow
 const W = GAME_WIDTH - L.side * 2;

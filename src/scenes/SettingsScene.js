@@ -11,7 +11,7 @@ import * as sfx from '../audio/sfx.js';
 // card (gold name, small hint, big buttons under it; the chosen one FILLED gold). Opened over the camp or the title
 // (that scene is paused, `from`); '< CAMP' resumes it. Data: settings.json, logic: systems/settings.js.
 const L = defs.layout;
-const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read live (look trial switches it)
+const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read when drawn
 const RED = Phaser.Display.Color.HexStringToColor(UI.red).color;
 const DIM = Number(L.dim);
 const DIM_TEXT = '#' + DIM.toString(16).padStart(6, '0');

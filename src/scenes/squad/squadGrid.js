@@ -46,7 +46,7 @@ export const SQUAD_VIEW = {
     hint: { tabW: 18, tabH: 40, tabGap: 4, shade: [], shadeW: 6, nudgePx: 44, nudgeDelayMs: 700, nudgeMs: 380, stepMs: 220 } },
   // The quiet tile's colours: fill, edge, a picked tile's edge, the '?' tile's edge, a pushed tile's fill.
   tile: { get fill() { return UI.goldTheme.tileFill; }, get edge() { return UI.goldTheme.tileEdge; }, get picked() { return UI.goldTheme.picked; },
-    get locked() { return UI.goldTheme.tileLocked; }, get pressed() { return UI.goldTheme.strip; }, shadow: 0.35 }, // getters: the look trial switches live
+    get locked() { return UI.goldTheme.tileLocked; }, get pressed() { return UI.goldTheme.strip; }, shadow: 0.35 }, // getters: read when drawn
 };
 // THE NAMES UNDER THE SQUAD ('slope', the user's pick of 3, session 47): big names, the middle one a row higher
 // (following the V of the heroes), the outer ones kept on the screen, a small X button beside each = send back.

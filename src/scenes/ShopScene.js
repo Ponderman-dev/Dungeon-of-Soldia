@@ -17,7 +17,7 @@ import * as sfx from '../audio/sfx.js';
 // look) / GEMS (packs: Coming soon, payments later). Tap a look = try-on page with BUY. The gem balance + '+' sit top
 // right on every page. Looks are stand-in recolours for now (systems/looks.js). Data: shop.json.
 const L = S.layout;
-const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read live (look trial switches it)
+const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read when drawn
 const GEM = Number(L.gem), GEM_DARK = Number(L.gemDark), RED = Number(L.red), DIM = Number(L.dim);
 const GEM_CSS = '#' + GEM.toString(16).padStart(6, '0');
 const W = GAME_WIDTH - L.side * 2;

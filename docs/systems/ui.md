@@ -46,7 +46,7 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   win heal). 'Floor N cleared!' sits higher (combat.json `transition.clearBannerY`, 422) so it misses the bubbles. Nothing waits for a bubble (user, session 21: the wait broke the pace): the clear pause is
   1.2s (`clearPauseMs`, user 2026-10-21: the bubble needs 1.2s before the reward screen); the bubble is removed `goneAfterRewardMs` (0.2s) after the reward screen pops up, never seen after it. SHORT lines (user 2026-10-22: 'too long': every line rewritten to 2-5 words, bubble `maxWidthPx` 140, `padPx` 6; 8px is the smallest crisp text). Lines + timings in `src/data/dialogue.json` (per hero; a missing kind uses `clear`); `systems/dialogue.js`
   picks a living hero (not the last speaker) and goes through all its lines before repeating. Test: `dialogue.test.mjs`.
-- **THE THEME: CRIMSON AND GOLD (user's pick F, session 40; the only theme since the cleanup session).** Colours in
+- **THE THEME: CRIMSON AND GOLD (user's pick F, session 40; REPLACED by THE DUSK LOOK, session 49, see the end).** Colours in
   `UI.goldTheme` (config.js). uiKit: `drawWindow` -> `themedWindow` (dark outline, gold frame, dark inner edge, ember
   brown fill, pale corner studs; a gold line = chosen -> pale gold, dim -> grey; `plain: true` skips the theme),
   `drawButton` (SOLID button, light top edge, darker bottom half; text colour via `buttonTextColor()`), `drawStrip`
@@ -138,24 +138,24 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   a description. Don't repeat in a skill what the hero's passive says (Grudge, Bloodthirst).
 - Session 48 rewrote the 20 kit skills, 10 passives and the 20 longest items to this style.
 
-## LOOK TRIAL: NAVY (session 49, TEMPORARY, user: 'I kinda want this vibe', docs/references/ui-vibe-pick-a-class.png)
-- Whole interface, on trial. Build `npm run build:look-trial` (VITE_LOOK_TRIAL=1: the normal game + a LOOK / FONT switch row
-  at the bottom, `src/lookTrial.js`, saved in localStorage; switches LIVE: `applyLook()` + `swapSmallFont()`, open screens restart in place, a fight shows it from the next floor), published to the squad demo url. The real game is unchanged.
-- LOOKS (config.js `LOOKS`, applied to UI.goldTheme + UI.text/dim/gold before any scene loads): gold (today), steel (flat navy,
-  steel-blue line, slate secondary), dusk (purple slate, lavender line, maroon secondary), deep (near-black navy, pale double
-  line, maroon secondary). All: green main button, salmon titles, teal 'chosen', no studs; menu pages get a dithered checker
-  (`pageBackdrop()` in uiKit, used by every page). New goldTheme keys (tiles, card body, BEGIN DESCENT bands) keep gold as is.
-- MAIN switch (user: "Dusk looks good, but change the green button"): the main button colour on the navy looks: green (the look's own), teal, salmon, violet, amber, steel (config.js `MAINS`).
-- FONTS: soldia (today), thin (small text in SOLDIA THIN: `soldia-thin.woff2`, `scripts/art/make-thin-font.py`: 1px strokes,
-  hand-drawn slanted letters, one middle column dropped), thin+ (normal-size text too, at 2x; titles stay Ironslab).
-- After the pick: make the winner the only theme (fold its values into goldTheme / UI), delete LOOKS, the switch, the build
-  script and the losing font, update this section.
-- PRESS ON EVERY BUTTON (session 49, user: 'every button responsive on the clicks, only BEGIN DESCENT is animated'):
-  `zone.onPress(fn, { instant })` (uiKit, on every Phaser Zone): finger down = a dark cover (`UI.press.shade` / `shadeAlpha`)
-  over the zone + its texts / icons drop `sinkPx`; slide off = cancel; release = action after `holdMs`. Used by the camp,
-  every menu page, pause, game over, reward buttons, fight HUD (skills `instant`), squad test toggle. NOT the title gear
-  (its tap must stop 'tap anywhere' at once) or reward cards (they light up themselves). Square buttons press 45% darker.
-- User's current favourite (session 49): DUSK + SOLDIA font + SALMON main; picked hero tiles / chosen outlines follow the MAIN colour.
-- HEADERS (session 49): `drawWindow(..., { quiet: true })` = on the square looks a header box is drawn like the squad name
-  plates (black outline, tileEdge, tileFill): squad SQUAD n/3 + sound box, camp profile bar, fight Floor box + 1X + pause.
-  `UI.fightGold` (was a fixed '#ffd24d') = crits, Lv labels, LEVEL UP, passive words; per look (Dusk: soft peach).
+## THE DUSK LOOK (session 49, CURRENT THEME; replaces crimson + gold below)
+- User's pick 'Dusk + Soldia font + Salmon' from a live trial of 4 looks x 3 fonts x 6 main colours, inspired by
+  docs/references/ui-vibe-pick-a-class.png ('the borders are sharp, no corner borders; buttons only one colour, no bevels,
+  bands or gold'). Colours in `UI.goldTheme` (name kept) + `UI.text/dim/gold/fightGold/pageBg/dither` (config.js). The
+  crimson + gold values: `git show 4fc5724:src/config.js`. Trial code (other looks, thin font `make-thin-font.py`, live
+  switch) was deleted; it is in the session 49 commits.
+- SQUARE windows (`square: true`): one 2px lavender line on a flat dark fill, no studs, no stepped corners
+  (`squareWindow`). The old framed drawing (`themedWindow`, bevelled `drawButton`, banded `drawFlatButton` /
+  BEGIN DESCENT) stays in uiKit for `square: false`.
+- FLAT BUTTONS (`squareButton`): one colour. Main action (EXPEDITION, BEGIN DESCENT) = SALMON, every other = MAROON;
+  pressed = 45% darker + label drops. Titles salmon; picked hero tiles + chosen outlines light salmon.
+- HEADERS: `drawWindow(..., { quiet: true })` = drawn like the squad name plates (black outline, tileEdge, tileFill):
+  squad SQUAD n/3 + sound box, camp profile bar, fight Floor box + 1X + pause.
+- `UI.fightGold` = crits, Lv labels, LEVEL UP, passive words (soft peach; was yellow). `UI.gold` = soft salmon.
+- Menu pages: `pageBackdrop(scene, bg)` = UI.pageBg + a 4px dithered checker.
+- PRESS ON EVERY BUTTON (user: 'every button responsive on the clicks'): `zone.onPress(fn, { instant })` (uiKit, on every
+  Phaser Zone): finger down = a dark cover (`UI.press.shade` / `shadeAlpha`) over the zone + its texts / icons drop
+  `sinkPx`; slide off = cancel; release = action after `holdMs`. Used by the camp, every menu page, pause, game over,
+  reward buttons, fight HUD (skills `instant`), squad test toggle. NOT the title gear (its tap must stop 'tap anywhere'
+  at once) or reward cards (they light up themselves).
+- Still yellow (left on purpose): item icons + tier frames (art), the check marks on picked tiles, rage/grudge bars.

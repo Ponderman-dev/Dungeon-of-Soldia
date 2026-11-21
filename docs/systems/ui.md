@@ -145,6 +145,7 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   steel-blue line, slate secondary), dusk (purple slate, lavender line, maroon secondary), deep (near-black navy, pale double
   line, maroon secondary). All: green main button, salmon titles, teal 'chosen', no studs; menu pages get a dithered checker
   (`pageBackdrop()` in uiKit, used by every page). New goldTheme keys (tiles, card body, BEGIN DESCENT bands) keep gold as is.
+- MAIN switch (user: "Dusk looks good, but change the green button"): the main button colour on the navy looks: green (the look's own), teal, salmon, violet, amber, steel (config.js `MAINS`).
 - FONTS: soldia (today), thin (small text in SOLDIA THIN: `soldia-thin.woff2`, `scripts/art/make-thin-font.py`: 1px strokes,
   hand-drawn slanted letters, one middle column dropped), thin+ (normal-size text too, at 2x; titles stay Ironslab).
 - After the pick: make the winner the only theme (fold its values into goldTheme / UI), delete LOOKS, the switch, the build

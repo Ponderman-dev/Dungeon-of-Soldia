@@ -143,16 +143,28 @@ export const FONT_NAMES = ['soldia', 'thin', 'thin+'];
 export const FONT_PICK = LOOK_TRIAL ? readPick('soldia.lookTrial.font', FONT_NAMES) : 'soldia';
 // The gold look's own values, so a live switch back to gold (lookTrial.js) restores them.
 const BASE = { theme: { ...UI.goldTheme }, text: UI.text, dim: UI.dim, gold: UI.gold, small: { ...UI.smallFont } };
-export const LOOK_NOW = { look: LOOK_PICK, font: FONT_PICK }; // what is applied right now
-export function applyLook(look, font) {
+// MAIN = the main button's colour on the navy looks (user: 'Dusk looks good, but change the green button'): green =
+// the look's own (green). body / pressed shade / light (only the gold look's bevel uses light) / text.
+export const MAINS = {
+  green: null,
+  teal: { button: 0x2c7472, buttonDark: 0x1f5654, buttonLight: 0x46a09c, buttonText: '#e4f6f4' },
+  salmon: { button: 0xb85c48, buttonDark: 0x8a4234, buttonLight: 0xe08a72, buttonText: '#fff0e8' },
+  violet: { button: 0x5e4aa0, buttonDark: 0x45367a, buttonLight: 0x8a74cc, buttonText: '#efeaff' },
+  amber: { button: 0xa8762c, buttonDark: 0x7c561e, buttonLight: 0xd4a04a, buttonText: '#fff4e0' },
+  steel: { button: 0x4a6694, buttonDark: 0x364c70, buttonLight: 0x7088b8, buttonText: '#eaf0fc' },
+};
+export const MAIN_NAMES = Object.keys(MAINS);
+export const MAIN_PICK = LOOK_TRIAL ? readPick('soldia.lookTrial.main', MAIN_NAMES) : 'green';
+export const LOOK_NOW = { look: LOOK_PICK, font: FONT_PICK, main: MAIN_PICK }; // what is applied right now
+export function applyLook(look, font, main = LOOK_NOW.main) {
   const L = LOOKS[look];
   for (const k of Object.keys(UI.goldTheme)) if (!(k in BASE.theme)) delete UI.goldTheme[k]; // flags like square
-  Object.assign(UI.goldTheme, BASE.theme, L.theme || {});
+  Object.assign(UI.goldTheme, BASE.theme, L.theme || {}, (look !== 'gold' && MAINS[main]) || {});
   for (const k of ['text', 'dim', 'gold']) UI[k] = L[k] || BASE[k];
   UI.pageBg = L.pageBg ?? null; // null = each page's own bg
   UI.dither = L.dither ?? null;
   for (const k of Object.keys(UI.smallFont)) if (!(k in BASE.small)) delete UI.smallFont[k];
   Object.assign(UI.smallFont, BASE.small, font === 'thin+' ? { maxPx: 16, px2From: 12 } : {});
-  LOOK_NOW.look = look; LOOK_NOW.font = font;
+  LOOK_NOW.look = look; LOOK_NOW.font = font; LOOK_NOW.main = main;
 }
-applyLook(LOOK_PICK, FONT_PICK);
+applyLook(LOOK_PICK, FONT_PICK, MAIN_PICK);

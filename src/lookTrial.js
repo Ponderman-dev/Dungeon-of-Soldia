@@ -3,7 +3,7 @@
 // config.js applyLook() swaps the colours, uiKit swapSmallFont() the font, then every open screen is drawn again where
 // it is. A FIGHT (and its reward pop-up) is not redrawn (that would start a new run): the new look shows from the next
 // floor. Plain HTML, outside the game canvas. Delete with the losing looks after the pick.
-import { LOOK_TRIAL, LOOK_NAMES, FONT_NAMES, LOOK_NOW, applyLook } from './config.js';
+import { LOOK_TRIAL, LOOK_NAMES, FONT_NAMES, MAIN_NAMES, LOOK_NOW, applyLook } from './config.js';
 import { swapSmallFont } from './entities/uiKit.js';
 
 const KEEP = ['Battle', 'Reward', 'Debug']; // never redrawn by the switch
@@ -21,26 +21,26 @@ function redraw(game) {
 export function mountLookTrial(game) {
   if (!LOOK_TRIAL) return;
   const bar = document.createElement('div');
-  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:10;display:flex;justify-content:center;gap:6px;'
+  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:10;display:flex;justify-content:center;gap:4px;'
     + 'padding:3px;pointer-events:none;font:bold 11px monospace;';
   const make = (label, key, list, field) => {
     const b = document.createElement('button');
     const show = () => { b.textContent = `${label} ${list.indexOf(LOOK_NOW[field]) + 1}/${list.length} ${LOOK_NOW[field].toUpperCase()}`; };
-    b.style.cssText = 'pointer-events:auto;background:#000;color:#fff;border:2px solid #fff;padding:4px 8px;'
+    b.style.cssText = 'pointer-events:auto;background:#000;color:#fff;border:2px solid #fff;padding:4px 6px;'
       + 'font:inherit;opacity:0.85;';
     b.onclick = () => {
       const next = list[(list.indexOf(LOOK_NOW[field]) + 1) % list.length];
       try { localStorage.setItem(key, next); } catch { /* no storage: still switches for now */ }
-      const look = field === 'look' ? next : LOOK_NOW.look, font = field === 'font' ? next : LOOK_NOW.font;
-      const fontChanged = font !== LOOK_NOW.font;
-      applyLook(look, font);
+      const pick = { ...LOOK_NOW, [field]: next }, fontChanged = pick.font !== LOOK_NOW.font;
+      applyLook(pick.look, pick.font, pick.main);
       show();
-      (fontChanged ? swapSmallFont(font) : Promise.resolve()).then(() => redraw(game));
+      (fontChanged ? swapSmallFont(pick.font) : Promise.resolve()).then(() => redraw(game));
     };
     show();
     bar.appendChild(b);
   };
   make('LOOK', 'soldia.lookTrial.look', LOOK_NAMES, 'look');
   make('FONT', 'soldia.lookTrial.font', FONT_NAMES, 'font');
+  make('MAIN', 'soldia.lookTrial.main', MAIN_NAMES, 'main'); // the main button's colour (navy looks)
   document.body.appendChild(bar);
 }

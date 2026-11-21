@@ -68,6 +68,10 @@ export const UI = {
   // (a glint glintPx long runs round the frame in loopMs, then waits pauseMs; corner sparkles twinkle).
   cardOutline: 0x0e0a0c,
   cardShine: { glintPx: 28, loopMs: 1600, pauseMs: 900, twinkleMs: 700, twinkleGapMs: 1300 },
+  // BUTTON PRESS (uiKit pressable / drawButton pressed, user session 47: 'look like it's being pushed'): while held,
+  // the button face sinks in (dark inset band on top, no shine) and the label drops sinkPx; the action runs on
+  // RELEASE, after the press has shown for at least holdMs (a very quick tap still shows the push).
+  press: { sinkPx: 2, holdMs: 90 },
   motion: {
     fast: 140, normal: 220, slow: 450, story: 1100,
     easeIn: 'Cubic.easeIn', easeOut: 'Cubic.easeOut', easeMove: 'Sine.easeInOut', easeDrop: 'Back.easeOut',

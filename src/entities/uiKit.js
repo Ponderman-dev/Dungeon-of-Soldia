@@ -232,9 +232,49 @@ export function drawButton(g, x, y, w, h, { pressed = false, enabled = true, pri
   block(0, T.outline);
   if (!enabled) { block(2, T.dim); return g; }
   const [body, dark, light] = primary ? [T.button, T.buttonDark, T.buttonLight] : [T.second, T.secondDark, T.secondLight];
-  block(2, pressed ? dark : body);
-  if (!pressed) { g.fillStyle(light, 1).fillRect(x + 6, y + 4, w - 12, 2); g.fillStyle(dark, 1).fillRect(x + 4, y + Math.round(h / 2) + 2, w - 8, Math.round(h / 2) - 6); }
+  if (pressed) { // PUSHED IN: the rim stays, the face sits lower: a dark inset band on top (its shadow), no shine
+    const s = UI.press.sinkPx;
+    block(2, T.outline); // the shadow the rim throws on the sunk face (top band)
+    block(2, dark, s + 2); // the face, darker: it is in the shade now
+    return g;
+  }
+  block(2, body);
+  g.fillStyle(light, 1).fillRect(x + 6, y + 4, w - 12, 2); g.fillStyle(dark, 1).fillRect(x + 4, y + Math.round(h / 2) + 2, w - 8, Math.round(h / 2) - 6);
   return g;
+}
+
+// PRESS LOOK on any button: redraw(true) + the `sink` parts (label, cursor, icon) drop UI.press.sinkPx. Returns
+// release(): puts it back. For buttons whose taps a scene finds itself (no zone); otherwise use pressable().
+export function pressDown({ redraw, sink = [] }) {
+  const s = UI.press.sinkPx;
+  if (redraw) redraw(true);
+  sink.forEach((o) => { o.y += s; });
+  let done = false;
+  return () => { if (done) return; done = true; sink.forEach((o) => { o.y -= s; }); if (redraw) redraw(false); };
+}
+
+// Makes a tap zone a PUSHABLE button: finger down = pressed look (pressDown), finger slides off = cancelled,
+// finger up on it = pops back up and onTap runs (after the push has shown for at least UI.press.holdMs).
+// enabled(): optional check (a disabled button does not push). Returns the zone.
+export function pressable(scene, hit, { redraw, sink = [], onTap, enabled = () => true, sound = null }) {
+  let release = null, at = 0;
+  hit.on('pointerdown', () => {
+    if (release || !enabled()) return;
+    release = pressDown({ redraw, sink });
+    at = scene.time.now;
+    if (sound) sfx.play(sound);
+  });
+  hit.on('pointerout', () => { if (release) { release(); release = null; } });
+  hit.on('pointerup', () => {
+    if (!release) return;
+    const r = release;
+    release = null;
+    const finish = () => { r(); if (onTap) onTap(); };
+    const wait = UI.press.holdMs - (scene.time.now - at);
+    if (wait > 0) scene.time.delayedCall(wait, finish); else finish();
+  });
+  hit.once('destroy', () => { release = null; });
+  return hit;
 }
 export const buttonTextColor = (enabled = true, pressed = false, primary = false) => (!enabled ? '#9a96a6' : primary ? UI.goldTheme.buttonText : UI.goldTheme.secondText);
 // A title strip across the top of a panel h px tall, `i` px inside the panel's left/top edge.
@@ -289,9 +329,7 @@ export function uiButton(scene, x, y, w, h, label, { size = 'normal', selected =
   container.once('destroy', () => blink.remove());
   const hit = scene.add.zone(0, 0, w, h).setOrigin(0).setInteractive({ useHandCursor: true }); // the tap area
   container.add(hit);
-  hit.on('pointerdown', () => { if (!enabled) return; pressed = true; draw(); });
-  hit.on('pointerout', () => { if (pressed) { pressed = false; draw(); } });
-  hit.on('pointerup', () => { if (!pressed) return; pressed = false; draw(); if (onTap) onTap(); });
+  pressable(scene, hit, { redraw: (p) => { pressed = p; draw(); }, sink: [text, cur], onTap: () => { if (onTap) onTap(); }, enabled: () => enabled });
   return {
     container,
     hit,

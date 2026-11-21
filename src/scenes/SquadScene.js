@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, SKILL_COLORS, UI } from '../config.js';
-import { drawWindow, drawCursor, uiShift, drawButton, buttonTextColor } from '../entities/uiKit.js';
+import { drawWindow, drawCursor, uiShift, drawButton, buttonTextColor, pressable, pressDown } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
 import { skillIconKey } from '../entities/skillIconTexture.js';
@@ -129,9 +129,11 @@ export default class SquadScene extends Phaser.Scene {
       // A small "Send back" button under a filled slot (the hero walks back to the bench).
       const back = this.add.container(s.x, s.y + 42).setDepth(DEPTH.ui);
       const bg = this.add.graphics();
-      drawButton(bg, -52, -15, 104, 30); // roomy (user: more space between box and text); a solid button (framed theme)
-      back.add([bg, this.add.text(0, 0, 'Send back', { fontFamily: FONT, fontSize: '8px', color: buttonTextColor() }).setOrigin(0.5)]);
-      return { shadow, ring, num, back };
+      const redraw = (pressed) => drawButton(bg.clear(), -52, -15, 104, 30, { pressed }); // roomy (user: more space between box and text); a solid button
+      redraw(false);
+      const label = this.add.text(0, 0, 'Send back', { fontFamily: FONT, fontSize: '8px', color: buttonTextColor() }).setOrigin(0.5);
+      back.add([bg, label]);
+      return { shadow, ring, num, back, backLook: { redraw, sink: [label] } };
     });
   }
 
@@ -151,7 +153,9 @@ export default class SquadScene extends Phaser.Scene {
     const n0 = this.children.list.length; // what drawUi adds: the top part, then the bottom part (for uiShift)
     // Sound on/off: a small pixel speaker icon top right (waves = on, a cross = off); saved in the progress.
     const sx = GAME_WIDTH - 30, sy = TESTER ? 30 : 92, P = 2; // centre (under the TEST buttons when they are there), pixel size
-    drawWindow(this.add.graphics().setDepth(DEPTH.ui), sx - 18, sy - 18, 36, 36);
+    const soundBox = this.add.graphics().setDepth(DEPTH.ui);
+    const drawBox = (pressed) => drawWindow(soundBox.clear(), sx - 18, sy - 18, 36, 36, pressed ? { fill: UI.pressed } : {});
+    drawBox(false);
     this.soundIcon = this.add.graphics().setDepth(DEPTH.ui);
     const px = (g, x, y, w = 1, h = 1) => g.fillRect(sx + x * P, sy + y * P, w * P, h * P); // on a 2px grid around the centre
     const drawSound = () => {
@@ -164,12 +168,12 @@ export default class SquadScene extends Phaser.Scene {
     };
     drawSound();
     this.soundBtn = this.add.zone(sx, sy, 44, 44).setInteractive().setDepth(DEPTH.ui);
-    this.soundBtn.on('pointerdown', () => {
+    pressable(this, this.soundBtn, { redraw: drawBox, sink: [this.soundIcon], onTap: () => {
       sfx.setMuted(!sfx.isMuted());
       this.progress.settings = { ...(this.progress.settings || {}), muted: sfx.isMuted() }; // keep the scene's copy of the save in step
       drawSound();
       sfx.play('tap');
-    });
+    } });
     if (this.lastRun && (this.lastRun.newly || []).length) this.time.delayedCall(400, () => sfx.play('unlock'));
     // One short line at the top after a run: how deep it got (no 'Choose 3 heroes' hint any more, user 2026-10-20).
     if (this.lastRun) {
@@ -181,19 +185,24 @@ export default class SquadScene extends Phaser.Scene {
     // "Begin descent": only when all 3 slots are filled, at the bottom over RANDOM.
     this.begin = this.add.container(DOOR_X, BEGIN_Y).setDepth(DEPTH.ui);
     const bg = this.add.graphics();
-    drawButton(bg, -150, -28, 300, 56, { primary: true }); // THE bright button (user: only this one is red)
+    const drawBegin = (pressed) => drawButton(bg.clear(), -150, -28, 300, 56, { primary: true, pressed }); // THE bright button (user: only this one is red)
+    drawBegin(false);
     const cur = drawCursor(this.add.graphics(), -128, 0, Number('0x' + buttonTextColor(true, false, true).slice(1))); // the blinking ▶ cursor: everything is ready
     this.time.addEvent({ delay: 500, loop: true, callback: () => cur.setVisible(!cur.visible) });
-    this.begin.add([bg, cur, this.add.text(8, 1, 'BEGIN DESCENT', { fontFamily: FONT, fontSize: '16px', color: buttonTextColor(true, false, true) }).setOrigin(0.5)]);
-    this.add.zone(DOOR_X, BEGIN_Y, 300, 56).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.descend());
+    const beginText = this.add.text(8, 1, 'BEGIN DESCENT', { fontFamily: FONT, fontSize: '16px', color: buttonTextColor(true, false, true) }).setOrigin(0.5);
+    this.begin.add([bg, cur, beginText]);
+    pressable(this, this.add.zone(DOOR_X, BEGIN_Y, 300, 56).setInteractive().setDepth(DEPTH.ui), {
+      redraw: drawBegin, sink: [cur, beginText], onTap: () => this.descend(), enabled: () => this.begin.visible && !this.leaving,
+    });
 
     // The bottom row: '< CAMP' (back to the camp hub, user: at the bottom for the flow) and RANDOM; then the small test
     // toggle at the very bottom.
-    const rb = this.add.graphics().setDepth(DEPTH.ui);
     [['< CAMP', 30, () => this.toCamp()], ['RANDOM', GAME_WIDTH - 180, () => this.pickRandom()]].forEach(([label, x, onTap]) => {
-      drawButton(rb, x, 744, 150, 46);
-      this.add.text(x + 75, 767, label, { fontFamily: FONT, fontSize: '16px', color: buttonTextColor() }).setOrigin(0.5).setDepth(DEPTH.ui);
-      this.add.zone(x + 75, 767, 150, 46).setInteractive().setDepth(DEPTH.ui).on('pointerdown', onTap);
+      const rb = this.add.graphics().setDepth(DEPTH.ui);
+      const redraw = (pressed) => drawButton(rb.clear(), x, 744, 150, 46, { pressed });
+      redraw(false);
+      const t = this.add.text(x + 75, 767, label, { fontFamily: FONT, fontSize: '16px', color: buttonTextColor() }).setOrigin(0.5).setDepth(DEPTH.ui);
+      pressable(this, this.add.zone(x + 75, 767, 150, 46).setInteractive().setDepth(DEPTH.ui), { redraw, sink: [t], onTap, enabled: () => !this.leaving && !this.panel });
     });
     const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));
     this.uiParts = { up: shown(this.children.list.slice(n0, n1)), fade: this.slotMarks.map((m) => m.back) };
@@ -289,7 +298,10 @@ export default class SquadScene extends Phaser.Scene {
       else {
         // The small "Send back" button under a slot.
         const back = SLOTS.findIndex((s, i) => this.slots[i] && Math.abs(p.x - s.x) < 52 && Math.abs(p.y - (s.y + 42)) < 16);
-        if (back >= 0 && !this.walkers.has(this.slots[back])) return this.sendBack(this.slots[back]);
+        if (back >= 0 && !this.walkers.has(this.slots[back])) { // pushed now, sent back on release (UI.press)
+          this.pushing = { release: pressDown(this.slotMarks[back].backLook), id: this.slots[back], slot: back, at: this.time.now };
+          return;
+        }
         // A hero standing in a slot: tap to see its card.
         const hit = SLOTS.findIndex((s) => Math.abs(p.x - s.x) < 44 && p.y > s.y - 86 && p.y < s.y + 30);
         if (hit >= 0 && this.slots[hit] && !this.walkers.has(this.slots[hit])) this.openPanel(this.slots[hit]);
@@ -301,6 +313,15 @@ export default class SquadScene extends Phaser.Scene {
       this.scroll = Phaser.Math.Clamp(drag.scroll - (p.x - drag.x), 0, this.maxScroll());
     });
     this.input.on('pointerup', (p) => {
+      if (this.pushing) { // a 'Send back' let go: still on it = send the hero back (after the push has shown)
+        const { release, id, slot, at } = this.pushing, s = SLOTS[slot];
+        this.pushing = null;
+        const on = Math.abs(p.x - s.x) < 52 && Math.abs(p.y - (s.y + 42)) < 16;
+        const finish = () => { release(); if (on && this.slots[slot] === id && !this.walkers.has(id)) this.sendBack(id); };
+        const wait = UI.press.holdMs - (this.time.now - at);
+        if (wait > 0) this.time.delayedCall(wait, finish); else finish();
+        return;
+      }
       if (!drag) return;
       const d = drag;
       drag = null;
@@ -478,17 +499,24 @@ export default class SquadScene extends Phaser.Scene {
       label = 'CHOOSE';
       action = () => this.choose(id);
     }
-    drawWindow(g, X + 16, by, W - 32, 48, { line: action ? UI.line : 0x4a4a5a });
+    // The two card buttons push in when held (pressed fill + the label drops), and act on release (UI.press).
+    const bg = put(this.add.graphics());
     const lt = text(GAME_WIDTH / 2, by + 25, label, 17, action ? INK : UI.dim, true).setOrigin(0.5);
-    if (action) drawCursor(g, Math.round(GAME_WIDTH / 2 - lt.width / 2 - 20), by + 24);
-    add(this.add.zone(GAME_WIDTH / 2, by + 24, W - 32, 48).setInteractive()).on('pointerdown', () => {
-      this.closePanel();
-      if (action) action();
-    });
+    const cur = put(this.add.graphics());
+    if (action) drawCursor(cur, Math.round(GAME_WIDTH / 2 - lt.width / 2 - 20), by + 24);
+    const drawMain = (pressed) => drawWindow(bg.clear(), X + 16, by, W - 32, 48, { line: action ? UI.line : 0x4a4a5a, ...(pressed ? { fill: UI.pressed } : {}) });
+    drawMain(false);
+    const mainHit = add(this.add.zone(GAME_WIDTH / 2, by + 24, W - 32, 48).setInteractive());
+    if (action) pressable(this, mainHit, { redraw: drawMain, sink: [lt, cur], enabled: () => this.panel === objs, onTap: () => { this.closePanel(); action(); } });
+    else mainHit.on('pointerdown', () => this.closePanel()); // LOCKED: no push, a tap just closes the card
     // Close (X) in the corner, and a tap outside the card closes it too.
-    drawWindow(g, X + W - 42, Y + 10, 32, 32);
-    text(X + W - 26, Y + 27, 'X', 16, INK, true).setOrigin(0.5);
-    add(this.add.zone(X + W - 26, Y + 26, 48, 48).setInteractive()).on('pointerdown', () => { sfx.play('cardClose'); this.closePanel(); });
+    const xb = put(this.add.graphics());
+    const drawX = (pressed) => drawWindow(xb.clear(), X + W - 42, Y + 10, 32, 32, pressed ? { fill: UI.pressed } : {});
+    drawX(false);
+    const xt = text(X + W - 26, Y + 27, 'X', 16, INK, true).setOrigin(0.5);
+    pressable(this, add(this.add.zone(X + W - 26, Y + 26, 48, 48).setInteractive()), {
+      redraw: drawX, sink: [xt], enabled: () => this.panel === objs, onTap: () => { sfx.play('cardClose'); this.closePanel(); },
+    });
 
     this.panel = objs;
     sfx.play('cardOpen');

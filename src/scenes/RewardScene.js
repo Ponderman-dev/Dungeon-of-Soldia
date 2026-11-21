@@ -269,7 +269,7 @@ export default class RewardScene extends Phaser.Scene {
     const by = this.top + 10; // in the top row, beside FLOOR N CLEARED
     drawWindow(bb, bx, by, bw, 28);
     this.text(bx + bw / 2, by + 14, 'Back', 8, UI.text).setOrigin(0.5);
-    this.track(this.add.zone(bx + bw / 2, by + 14, bw + 10, 40).setInteractive()).on('pointerdown', () => { sfx.play('tap'); onTap(); });
+    this.track(this.add.zone(bx + bw / 2, by + 14, bw + 10, 40).setInteractive()).onPress(() => { sfx.play('tap'); onTap(); });
   }
 
   // Page card sizes: normal, or COMPACT when a book shows more than 3 pages (the Skill Dealer's 5) so all fit.
@@ -387,7 +387,7 @@ export default class RewardScene extends Phaser.Scene {
         this.fitText(bx + IN, by + IN - 2, skillDefs[slot.id].name, 13, usable ? UI.text : MUTE, bw - 2 * IN, 34, true);
         const note = fit === 'dead' ? 'Fallen' : fit === 'full' ? 'Stat pages full' : fit === 'duplicate' ? 'Already has it' : fit === 'wrongSkill' ? 'Not this skill' : fit === 'replace' ? 'Full: replaces one' : `${stats}${limits.maxStatPages != null ? '/' + limits.maxStatPages : ''} stats\n${mods}${limits.modifierSlots != null ? '/' + limits.modifierSlots : ''} mods`;
         this.fitText(bx + IN, by + bh - 30 - IN + 6, note, 11, fit === 'replace' ? '#ffd9a0' : MUTE, bw - 2 * IN, 26); // shrinks to stay inside the box
-        if (usable) this.track(this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive()).on('pointerdown', () => this.selectSkill(btn));
+        if (usable) this.track(this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive()).onPress(() => this.selectSkill(btn));
         this.skillButtons.push(btn);
       });
       y += rowH;
@@ -395,7 +395,7 @@ export default class RewardScene extends Phaser.Scene {
     this.buttonGraphics = this.track(this.add.graphics());
     this.buttonText = this.text(GAME_WIDTH / 2, this.btnY + BTN_H / 2, 'Pick a skill', 18, '#ffffff', true).setOrigin(0.5);
     this.drawBookButton();
-    this.track(this.add.zone(GAME_WIDTH / 2, this.btnY + BTN_H / 2, CARD_W, BTN_H).setInteractive()).on('pointerdown', () => this.confirmPage());
+    this.track(this.add.zone(GAME_WIDTH / 2, this.btnY + BTN_H / 2, CARD_W, BTN_H).setInteractive()).onPress(() => this.confirmPage());
   }
 
   selectSkill(btn) {
@@ -511,7 +511,7 @@ export default class RewardScene extends Phaser.Scene {
       const top = ty + ROW_GAP;
       this.drawIconGrid(hero, PAD + 74, top, CARD_W - 74 - 10, y + rowH - 8 - top, alpha);
 
-      if (ok) this.track(this.add.zone(PAD + CARD_W / 2, y + rowH / 2, CARD_W, rowH).setInteractive()).on('pointerdown', () => this.selectHero(i));
+      if (ok) this.track(this.add.zone(PAD + CARD_W / 2, y + rowH / 2, CARD_W, rowH).setInteractive()).onPress(() => this.selectHero(i));
       y += rowH + rowGap;
     }
 
@@ -519,7 +519,7 @@ export default class RewardScene extends Phaser.Scene {
     this.buttonGraphics = this.track(this.add.graphics());
     this.buttonText = this.text(GAME_WIDTH / 2, this.btnY + BTN_H / 2, 'Pick a hero', 18, '#ffffff', true).setOrigin(0.5);
     this.drawButton();
-    this.track(this.add.zone(GAME_WIDTH / 2, this.btnY + BTN_H / 2, CARD_W, BTN_H).setInteractive()).on('pointerdown', () => this.confirm());
+    this.track(this.add.zone(GAME_WIDTH / 2, this.btnY + BTN_H / 2, CARD_W, BTN_H).setInteractive()).onPress(() => this.confirm());
   }
 
   // All the hero's items (framed icons, a white number = copies) in a box from (x, top), w wide and h tall: up to

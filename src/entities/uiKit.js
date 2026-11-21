@@ -170,10 +170,10 @@ function squareWindow(g, x, y, w, h, { fill, line, alpha }) {
   return g;
 }
 // LOOK TRIAL 'square' buttons (user: 'buttons are only one colour, no bevels and bands and gold'): one flat block of
-// colour, square corners; pressed = the darker shade (the label still drops); disabled = the dim colour.
+// colour, square corners; pressed = 45% darker, clearly visible (the label still drops); disabled = the dim colour.
 export function squareButton(g, x, y, w, h, { pressed = false, enabled = true, primary = false } = {}) {
   const T = UI.goldTheme;
-  const c = !enabled ? T.dim : primary ? (pressed ? T.buttonDark : T.button) : (pressed ? T.secondDark : T.second);
+  const c = !enabled ? T.dim : pressed ? mixColor(primary ? T.button : T.second, 0x000000, 0.45) : primary ? T.button : T.second;
   g.fillStyle(c, 1).fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
   return g;
 }
@@ -314,6 +314,46 @@ export function pressable(scene, hit, { redraw, sink = [], onTap, enabled = () =
   hit.cancelPress = () => { if (release) { release(); release = null; } }; // e.g. the finger started a swipe instead
   return hit;
 }
+// ANY BUTTON FEELS PUSHED (session 49, user: 'make sure every button is responsive on the clicks'): zone.onPress(fn)
+// instead of zone.on('pointerup', fn). Finger down = a dark cover (UI.press.shade) over the zone and the texts / icons
+// inside it drop UI.press.sinkPx; finger slides off = cancelled; finger up = pops back, then fn runs (after the push
+// showed for UI.press.holdMs). { instant: true } = fn runs on finger down (fight taps), the push still shows briefly.
+// Buttons with their own pressed drawing keep pressable(). Works for zones in a container (a page) or in the scene.
+function pressParts(zone, b) {
+  const list = zone.parentContainer ? zone.parentContainer.list : zone.scene.children.list;
+  return list.filter((o) => o !== zone && o.visible && (o.type === 'Text' || o.type === 'Image' || o.type === 'Sprite') && (() => {
+    const r = o.getBounds();
+    return r.width <= b.width + 4 && r.height <= b.height + 4 && b.contains(r.centerX, r.centerY);
+  })());
+}
+function pushLook(zone) {
+  const P = UI.press, b = zone.getBounds(), scene = zone.scene;
+  const cover = scene.add.rectangle(b.x, b.y, b.width, b.height, P.shade, P.shadeAlpha).setOrigin(0).setDepth(100000);
+  const parts = pressParts(zone, b);
+  parts.forEach((o) => { o.y += P.sinkPx; });
+  let done = false;
+  return () => { if (done) return; done = true; cover.destroy(); parts.forEach((o) => { if (o.scene) o.y -= P.sinkPx; }); };
+}
+Phaser.GameObjects.Zone.prototype.onPress = function (fn, { instant = false } = {}) {
+  let release = null, at = 0;
+  const scene = this.scene;
+  this.on('pointerdown', (...args) => {
+    if (release) return;
+    release = pushLook(this); at = scene.time.now;
+    if (instant) { const r = release; release = null; scene.time.delayedCall(UI.press.holdMs, r); fn(...args); }
+  });
+  this.on('pointerout', () => { if (release) { release(); release = null; } });
+  this.on('pointerup', (...args) => {
+    if (!release) return;
+    const r = release; release = null;
+    const finish = () => { r(); fn(...args); };
+    const wait = UI.press.holdMs - (scene.time.now - at);
+    if (wait > 0) scene.time.delayedCall(wait, finish); else finish();
+  });
+  this.once('destroy', () => { if (release) release(); release = null; });
+  return this;
+};
+
 // A FLAT BUTTON (the camp's look, session 44; shared with the squad screen, session 47): a dark outline, a thin gold
 // line, a plain body with a darker foot and a light top edge. Square corners, no studs. primary = the red main button;
 // bands = a thick gold band along its top and bottom (the screen's ONE main action: EXPEDITION, BEGIN DESCENT);

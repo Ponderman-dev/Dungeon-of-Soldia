@@ -75,7 +75,7 @@ export default class ProfileScene extends Phaser.Scene {
     const solid = look === 'filled' || look === 'solid'; // a solid button (the framed theme's gold / crimson button)
     page.add(solid ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line }));
     page.add(uiText(this, x + w / 2, y + h / 2, label, size, solid ? buttonTextColor() : { plain: UI.text, gold: UI.gold, dim: UI.dim }[look]).setOrigin(0.5));
-    const z = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.modal) onTap(); });
+    const z = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => { if (!this.modal) onTap(); });
     page.add(z);
     return z;
   }
@@ -126,7 +126,7 @@ export default class ProfileScene extends Phaser.Scene {
     const name = this.text(page, x + C.nameX, y + C.bannerH + 14, this.profile.name.toUpperCase(), 'normal');
     this.text(page, x + C.nameX, y + C.bannerH + 38, `${hero.name} main`, 'small', UI.gold);
     page.add(this.add.zone(x + C.nameX - 6, y + C.bannerH + 4, W - C.nameX, C.h - C.bannerH - 8).setOrigin(0)
-      .setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.modal) this.rename(name); }));
+      .setInteractive({ useHandCursor: true }).onPress(() => { if (!this.modal) this.rename(name); }));
     // Tabs.
     const T = L.tabs, tw = (W - T.gap) / 2;
     [['stats', 'STATS'], ['achieve', 'ACHIEVE.']].forEach(([id, label], i) => {
@@ -170,7 +170,7 @@ export default class ProfileScene extends Phaser.Scene {
         page.add(icon);
       }
       this.text(page, cx + M.cell / 2, cy + M.h - 12, on ? a.label : '???', 'small', on ? UI.text : UI.dim).setOrigin(0.5);
-      page.add(this.add.zone(cx, cy, M.cell, M.h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => this.medalInfo(a, on)));
+      page.add(this.add.zone(cx, cy, M.cell, M.h).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => this.medalInfo(a, on)));
     });
   }
 
@@ -214,7 +214,7 @@ export default class ProfileScene extends Phaser.Scene {
       const bx = x + L.pad + i * (bw + 12);
       box.add(drawWindow(this.add.graphics(), bx, by, bw, 44, keep ? { line: gold(), fill: gold() } : {}));
       box.add(uiText(this, bx + bw / 2, by + 22, label, 'normal', keep ? '#000000' : UI.text).setOrigin(0.5));
-      box.add(this.add.zone(bx, by, bw, 44).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => done(keep)));
+      box.add(this.add.zone(bx, by, bw, 44).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => done(keep)));
     });
     // The real text box (see-through), laid over the name field on the page so a tap on it opens the keyboard.
     const canvas = this.game.canvas, r = canvas.getBoundingClientRect(), k = r.width / GAME_WIDTH;
@@ -251,7 +251,7 @@ export default class ProfileScene extends Phaser.Scene {
       page.add(drawWindow(this.add.graphics(), cx, cy, P.cell, ch, { line: h.id === chosen ? gold() : open ? UI.line : DIM }));
       this.hero(page, h.id, cx + P.cell / 2, cy + ch - 24, 2, !open);
       this.text(page, cx + P.cell / 2, cy + ch - 12, open ? D.shortNames[h.id] || h.name.toUpperCase() : '???', 'small', h.id === chosen ? UI.gold : open ? UI.text : UI.dim).setOrigin(0.5);
-      if (open) page.add(this.add.zone(cx, cy, P.cell, ch).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (h.id !== chosen) { sfx.play('tap'); this.showHeroPicker(h.id); } }));
+      if (open) page.add(this.add.zone(cx, cy, P.cell, ch).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => { if (h.id !== chosen) { sfx.play('tap'); this.showHeroPicker(h.id); } }));
     });
     const rows = Math.ceil(heroes.length / P.cols), hy = P.gridY + rows * (ch + P.gap);
     this.text(page, GAME_WIDTH / 2, hy + 4, 'Only heroes you have unlocked.', 'small', UI.dim).setOrigin(0.5, 0);
@@ -281,7 +281,7 @@ export default class ProfileScene extends Phaser.Scene {
       page.add(drawWindow(this.add.graphics(), tx, ty, B.tileW, B.tileH, { line: b.id === chosen ? gold() : on ? UI.line : DIM }));
       if (on) this.banner(page, b.id, tx + 2, ty + 2, B.tileW - 4, B.tileH - 4);
       else this.text(page, tx + B.tileW / 2, ty + B.tileH / 2, 'LOCKED', 'small', UI.dim).setOrigin(0.5);
-      page.add(this.add.zone(tx, ty, B.tileW, B.tileH).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => {
+      page.add(this.add.zone(tx, ty, B.tileW, B.tileH).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => {
         if (this.modal) return;
         if (!on) { const a = D.achievements.find((v) => v.id === b.unlock); this.soon(b.name, `Unlock: ${a ? a.text : '???'}`, 'LOCKED'); return; }
         if (b.id !== chosen) { sfx.play('tap'); this.showBanners(b.id); }

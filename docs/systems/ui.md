@@ -150,3 +150,9 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   hand-drawn slanted letters, one middle column dropped), thin+ (normal-size text too, at 2x; titles stay Ironslab).
 - After the pick: make the winner the only theme (fold its values into goldTheme / UI), delete LOOKS, the switch, the build
   script and the losing font, update this section.
+- PRESS ON EVERY BUTTON (session 49, user: 'every button responsive on the clicks, only BEGIN DESCENT is animated'):
+  `zone.onPress(fn, { instant })` (uiKit, on every Phaser Zone): finger down = a dark cover (`UI.press.shade` / `shadeAlpha`)
+  over the zone + its texts / icons drop `sinkPx`; slide off = cancel; release = action after `holdMs`. Used by the camp,
+  every menu page, pause, game over, reward buttons, fight HUD (skills `instant`), squad test toggle. NOT the title gear
+  (its tap must stop 'tap anywhere' at once) or reward cards (they light up themselves). Square buttons press 45% darker.
+- User's current favourite (session 49): DUSK + SOLDIA font + SALMON main; picked hero tiles / chosen outlines follow the MAIN colour.

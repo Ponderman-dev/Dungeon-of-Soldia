@@ -102,7 +102,7 @@ export default class BaseScene extends Phaser.Scene {
     const color = buttonTextColor(true, false, true), boss = nextBossFloor(dungeons.A, progress.stats.bestFloor);
     box.add(uiText(this, 0, E.textY, E.text, E.size, color).setOrigin(0.5));
     box.add(uiText(this, 0, E.subY, boss ? E.sub.replace('{n}', boss) : E.subDone, 'small', color).setOrigin(0.5));
-    this.add.zone(cx, ey, ew, E.h).setInteractive().on('pointerup', () => this.toExpedition());
+    this.add.zone(cx, ey, ew, E.h).setInteractive().onPress(() => this.toExpedition());
 
     // The tab bar: a gold line, a dark band, 4 buttons (icon + name) that open their screen over the camp.
     const B = U.tabs, n = B.buttons.length, tw = (W - 2 * S - B.gap * (n - 1)) / n, ty = B.y + B.pad;
@@ -112,7 +112,7 @@ export default class BaseScene extends Phaser.Scene {
       ui.push(this.flatButton(this.add.graphics(), x, ty, tw, B.h));
       ui.push(this.add.image(x + tw / 2, ty + B.iconY, layerTexture(this, `camp-icon-${b.id}`, propLayer(b.icon, false))).setScale(B.iconPx));
       ui.push(uiText(this, x + tw / 2, ty + B.labelY, b.label, B.labelSize, buttonTextColor()).setOrigin(0.5));
-      this.add.zone(x + tw / 2, ty + B.h / 2, tw, B.h).setInteractive().on('pointerup', () => (b.scene ? this.openOver(b.scene) : this.comingSoon(b.label, b.who)));
+      this.add.zone(x + tw / 2, ty + B.h / 2, tw, B.h).setInteractive().onPress(() => (b.scene ? this.openOver(b.scene) : this.comingSoon(b.label, b.who)));
     });
 
     const n1 = this.children.list.length;
@@ -132,8 +132,8 @@ export default class BaseScene extends Phaser.Scene {
     const gem = this.add.image(gemsL + 20, mid, layerTexture(this, 'camp-gem', propLayer(H.gem, false))).setScale(3);
     const gems = uiText(this, gemsL + 36, mid + 1, String(progress.gems || 0), 'small').setOrigin(0, 0.5);
     ui.push(g, nameText, best, gem, gems);
-    this.add.zone((S + gemsL) / 2, mid, gemsL - S, H.h).setInteractive().on('pointerup', () => this.openOver('Profile'));
-    this.add.zone((gearL + W - S) / 2, mid, W - S - gearL, H.h).setInteractive().on('pointerup', () => this.openOver('Settings'));
+    this.add.zone((S + gemsL) / 2, mid, gemsL - S, H.h).setInteractive().onPress(() => this.openOver('Profile'));
+    this.add.zone((gearL + W - S) / 2, mid, W - S - gearL, H.h).setInteractive().onPress(() => this.openOver('Settings'));
 
     for (const o of ui) o.setDepth(DEPTH.ui);
     const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));

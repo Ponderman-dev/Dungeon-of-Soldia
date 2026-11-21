@@ -38,7 +38,7 @@ export default class PauseScene extends Phaser.Scene {
       box.add(main ? drawButton(this.add.graphics(), bx, by, bw, W.btnH, { primary: true }) : drawWindow(this.add.graphics(), bx, by, bw, W.btnH, { line: look === 'red' ? RED : UI.line }));
       box.add(uiText(this, cx, by + W.btnH / 2, label, 'normal', main ? buttonTextColor(true, false, true) : look === 'red' ? UI.red : UI.text).setOrigin(0.5));
       const zone = this.add.zone(bx, by, bw, W.btnH).setOrigin(0).setInteractive({ useHandCursor: true });
-      zone.on('pointerup', () => { if (!this.busy) onTap(); });
+      zone.onPress(() => { if (!this.busy) onTap(); });
       box.add(zone);
     });
     return box;

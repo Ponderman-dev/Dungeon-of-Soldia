@@ -56,7 +56,7 @@ export default class HeroesScene extends Phaser.Scene {
     const line = { plain: UI.line, gold: gold(), dim: DIM, solid: UI.line }[look];
     page.add(look === 'solid' ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line }));
     page.add(uiText(this, x + w / 2, y + h / 2, label, size, { plain: UI.text, gold: UI.gold, dim: UI.dim, solid: buttonTextColor() }[look]).setOrigin(0.5));
-    page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.modal) onTap(); }));
+    page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => { if (!this.modal) onTap(); }));
   }
 
   text(page, x, y, str, size = 'normal', color = UI.text, extra = {}) {
@@ -104,7 +104,7 @@ export default class HeroesScene extends Phaser.Scene {
         page.add(this.add.graphics().fillStyle(0x26262f, 1).fillRect(gx, cy + 70, gw, Li.barH).fillStyle(gold(), 1).fillRect(gx, cy + 70, Math.round((gw * Math.min(p.have, p.need)) / p.need), Li.barH));
         this.text(page, gx, cy + 84, `${Math.min(p.have, p.need)}/${p.need}`, 'small', UI.gold);
       }
-      page.add(this.add.zone(cx, cy, w, Li.h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => {
+      page.add(this.add.zone(cx, cy, w, Li.h).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => {
         if (this.modal) return;
         if (open) { sfx.play('tap'); this.showHero(def); return; }
         this.modal = comingSoonWindow(this, def.name, describeRequirement(unlocks.requirements[def.id], unlocks), { onClose: () => this.time.delayedCall(0, () => { this.modal = null; }) });

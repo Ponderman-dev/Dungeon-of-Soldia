@@ -74,7 +74,7 @@ export default class LeadersScene extends Phaser.Scene {
   button(page, x, y, w, h, label, onTap, gold = false, solid = false) {
     page.add(solid ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line: gold ? C.gold : UI.line }));
     if (label) page.add(uiText(this, x + w / 2, y + h / 2, label, 'normal', solid ? buttonTextColor() : gold ? UI.gold : UI.text).setOrigin(0.5));
-    if (onTap) page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', onTap));
+    if (onTap) page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(onTap));
   }
 
   hero(page, id, x, feet, scale) {
@@ -160,7 +160,7 @@ export default class LeadersScene extends Phaser.Scene {
       const ch = this.hero(page, pl.heroes[0], hx, by, P.heroScale);
       const headY = by - ((ch && ch.def.height) || 24) * P.heroScale - 8;
       this.tag(page, hx, headY - 20, pl.name, rank === 0);
-      page.add(this.add.zone(bx, headY - 20, P.blockW, base - headY + 20).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => this.showRun(pl, rank + 1, lastTab)));
+      page.add(this.add.zone(bx, headY - 20, P.blockW, base - headY + 20).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => this.showRun(pl, rank + 1, lastTab)));
     });
   }
 

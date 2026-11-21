@@ -54,7 +54,7 @@ export default class GameOverScene extends Phaser.Scene {
   button(page, x, y, w, h, label, onTap, look = 'plain') {
     page.add(drawWindow(this.add.graphics(), x, y, w, h, { line: look === 'dim' ? DIM : look === 'filled' ? gold() : UI.line, fill: look === 'filled' ? gold() : UI.window }));
     page.add(uiText(this, x + w / 2, y + h / 2, label, 'normal', look === 'filled' ? '#000000' : look === 'dim' ? UI.dim : UI.text).setOrigin(0.5));
-    const z = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.leaving) onTap(); });
+    const z = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => { if (!this.leaving) onTap(); });
     page.add(z);
     return z;
   }
@@ -120,7 +120,7 @@ export default class GameOverScene extends Phaser.Scene {
       }
       made.push(new Character(this, hx, feet, def).setScale(scale));
       page.add(made);
-      const hit = this.add.zone(hx, T.y + T.h / 2, W / n, T.h).setInteractive({ useHandCursor: true }).on('pointerup', () => this.pick(i));
+      const hit = this.add.zone(hx, T.y + T.h / 2, W / n, T.h).setInteractive({ useHandCursor: true }).onPress(() => this.pick(i));
       page.add(hit);
       return made;
     });
@@ -216,7 +216,7 @@ export default class GameOverScene extends Phaser.Scene {
       const cx = x + (i % cols) * (cell + gap), cy = I.y + Math.floor(i / cols) * (cell + gap);
       page.add(drawWindow(this.add.graphics(), cx, cy, cell, cell, { line: it.id === pick ? gold() : UI.line }));
       if (items[it.id]) page.add(this.add.image(cx + cell / 2, cy + cell / 2, itemIconKey(this, it.id, items[it.id].rarity)).setScale(sc));
-      page.add(this.add.zone(cx, cy, cell, cell).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => {
+      page.add(this.add.zone(cx, cy, cell, cell).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => {
         if (it.id !== pick) { sfx.play('tap'); this.showItems(it.id); }
       }));
     });

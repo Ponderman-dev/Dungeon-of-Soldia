@@ -74,7 +74,7 @@ export default class ShopScene extends Phaser.Scene {
   button(page, x, y, w, h, label, onTap, line = UI.line, color = UI.text, solid = false) {
     page.add(solid ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line }));
     if (label) page.add(uiText(this, x + w / 2, y + h / 2, label, 'normal', solid ? buttonTextColor() : color).setOrigin(0.5));
-    if (onTap) page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.modal) onTap(); }));
+    if (onTap) page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => { if (!this.modal) onTap(); }));
   }
 
   // A pixel gem (k = size of one pixel), centred on (x, y).
@@ -93,7 +93,7 @@ export default class ShopScene extends Phaser.Scene {
     this.gem(page, x + 22, B.y + Bl.h / 2, 2);
     this.text(page, x + 40, B.y + Bl.h / 2, num(this.gems()), 'normal', GEM_CSS).setOrigin(0, 0.5);
     this.text(page, x + Bl.w - 16, B.y + Bl.h / 2, '+', 'normal', UI.gold).setOrigin(0.5);
-    page.add(this.add.zone(x, B.y, Bl.w, Bl.h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.modal) { sfx.play('tap'); this.showTab('gems'); } }));
+    page.add(this.add.zone(x, B.y, Bl.w, Bl.h).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => { if (!this.modal) { sfx.play('tap'); this.showTab('gems'); } }));
     markBar(page.list.slice(n0)); // the whole header = the page's top bar (uiKit)
   }
 
@@ -184,7 +184,7 @@ export default class ShopScene extends Phaser.Scene {
       this.text(page, cx + cw / 2, cy + G2.tileH + 46, heroDef(lk.hero).name.toUpperCase().slice(0, 11), 'small', UI.dim).setOrigin(0.5);
       if (owned) this.text(page, cx + cw / 2, cy + G2.h - 20, 'OWNED', 'small', UI.gold).setOrigin(0.5);
       else this.price(page, cx + cw / 2, cy + G2.h - 20, lk.price);
-      page.add(this.add.zone(cx, cy, cw, G2.h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.modal) { sfx.play('tap'); this.showTryOn(lk, lk.price); } }));
+      page.add(this.add.zone(cx, cy, cw, G2.h).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => { if (!this.modal) { sfx.play('tap'); this.showTryOn(lk, lk.price); } }));
     });
   }
 
@@ -225,7 +225,7 @@ export default class ShopScene extends Phaser.Scene {
       for (let k = 0; k < 5; k++) g.fillRect(dir > 0 ? tip - (k + 1) * 3 : tip + k * 3, cy - k * 3 - 1, 3, k * 6 + 2);
       g.fillRect(dir > 0 ? ax - 12 : ax + 3, cy - 2, 12, 4);
       page.add(g);
-      page.add(this.add.zone(ax, T.y + T.h / 2, 56, 80).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (!this.modal) { sfx.play('tap'); this.showTryOn(next, next.price); } }));
+      page.add(this.add.zone(ax, T.y + T.h / 2, 56, 80).setInteractive({ useHandCursor: true }).onPress(() => { if (!this.modal) { sfx.play('tap'); this.showTryOn(next, next.price); } }));
     }
     const note = this.text(page, cx, T.y + T.h - 30, 'Looks only. No stat change.', 'small').setOrigin(0.5);
     page.addAt(this.add.graphics().fillStyle(0x000000, 1).fillRect(x + 24, T.y + T.h - 46, W - 48, 32), page.list.indexOf(note));

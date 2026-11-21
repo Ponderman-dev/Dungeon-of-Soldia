@@ -140,7 +140,7 @@ export const hudMethods = {
           .zone(x, SKILL_Y, SKILL_W + 6, SKILL_H + 6)
           .setInteractive()
           .setDepth(6)
-          .on('pointerdown', () => this.castFromUI(unit.uid, j));
+          .onPress(() => this.castFromUI(unit.uid, j), { instant: true }); // instant: a fight tap never waits
         return button;
       });
       // The hero's passive: a small gold-framed icon left of the skill squares; tap it to read what it does.
@@ -148,7 +148,7 @@ export const hudMethods = {
       if (pKey) {
         const px = cx - SLOT_HUD.barW / 2 + 10;
         view.passiveIcon = this.add.image(px, SLOT_HUD.labelY, pKey).setDepth(4);
-        this.add.zone(px, SLOT_HUD.labelY, 30, 26).setInteractive().setDepth(6).on('pointerdown', () => this.showPassive(view));
+        this.add.zone(px, SLOT_HUD.labelY, 30, 26).setInteractive().setDepth(6).onPress(() => this.showPassive(view), { instant: true });
       }
       // Under the squares: a thin health line, then the hero's name and its health as a number (drawDock).
       const label = { fontFamily: UI.font, fontSize: '8px', color: UI.text };
@@ -413,8 +413,8 @@ export const hudMethods = {
     drawWindow(g, Sp.x, B.y, Sp.w, B.h);
     this.speedText = uiText(this, Sp.x + Sp.w / 2, my + 1, '', 'normal').setOrigin(0.5).setDepth(DEPTH.hud);
     this.refreshSpeed();
-    this.add.zone(P.x, B.y, P.w, B.h).setOrigin(0).setInteractive().setDepth(DEPTH.hud).on('pointerup', () => this.openPause());
-    this.add.zone(Sp.x, B.y, Sp.w, B.h).setOrigin(0).setInteractive().setDepth(DEPTH.hud).on('pointerup', () => this.cycleSpeed());
+    this.add.zone(P.x, B.y, P.w, B.h).setOrigin(0).setInteractive().setDepth(DEPTH.hud).onPress(() => this.openPause());
+    this.add.zone(Sp.x, B.y, Sp.w, B.h).setOrigin(0).setInteractive().setDepth(DEPTH.hud).onPress(() => this.cycleSpeed());
     this.events.on(Phaser.Scenes.Events.RESUME, () => { this.applySettings(); this.refreshSpeed(); });
   },
 

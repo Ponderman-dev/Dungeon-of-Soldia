@@ -210,7 +210,7 @@ export default class SquadScene extends Phaser.Scene {
     this.uiParts.down = shown(this.children.list.slice(n1)); // (the test toggle below joins it)
     if (TESTER || DEMO) return; // the playtest build (npm run build:itch) and the fight demos have no test row
     this.toggleText = this.add.text(GAME_WIDTH / 2, DOCK.toolY + 12, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
-    this.add.zone(GAME_WIDTH / 2, DOCK.toolY + 12, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
+    this.add.zone(GAME_WIDTH / 2, DOCK.toolY + 12, 260, 28).setInteractive().setDepth(DEPTH.ui).onPress(() => this.toggleUnlockAll());
     this.uiParts.down.push(this.toggleText);
   }
 

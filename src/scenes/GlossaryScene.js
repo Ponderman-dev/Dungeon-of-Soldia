@@ -68,7 +68,7 @@ export default class GlossaryScene extends Phaser.Scene {
     const line = { plain: UI.line, gold: gold(), dim: DIM, solid: UI.line }[look];
     page.add(look === 'solid' ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line }));
     if (label) page.add(uiText(this, x + w / 2, y + h / 2, label, size, { plain: UI.text, gold: UI.gold, dim: UI.dim, solid: buttonTextColor() }[look]).setOrigin(0.5));
-    if (onTap) page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', onTap));
+    if (onTap) page.add(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(onTap));
   }
 
   text(page, x, y, str, size = 'normal', color = UI.text, extra = {}) {
@@ -83,7 +83,7 @@ export default class GlossaryScene extends Phaser.Scene {
     const B = L.back;
     page.add(drawButton(this.add.graphics(), B.x, B.y, B.w, B.h));
     page.add(uiText(this, B.x + B.w / 2, B.y + B.h / 2, back, 'normal', buttonTextColor()).setOrigin(0.5));
-    page.add(this.add.zone(B.x, B.y, B.w, B.h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx.play('tap'); onBack(); }));
+    page.add(this.add.zone(B.x, B.y, B.w, B.h).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => { sfx.play('tap'); onBack(); }));
     markBar(page.list.slice(n0));
     if (title !== 'GLOSSARY') this.text(page, GAME_WIDTH / 2, L.titleY, title, 'big', UI.goldTheme.title).setOrigin(0.5, 0);
   }
@@ -139,7 +139,7 @@ export default class GlossaryScene extends Phaser.Scene {
       const y = rowY(i);
       this.text(page, x + 44, y + RH / 2, id.toUpperCase(), 'big').setOrigin(0, 0.5);
       this.text(page, x + W - 20, y + RH / 2, `${n[id][0]}/${n[id][1]}`, 'small', UI.gold).setOrigin(1, 0.5);
-      page.add(this.add.zone(x, y, W, RH).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerover', () => point(i)).on('pointerdown', () => point(i)).on('pointerup', () => { sfx.play('tap'); open[id](); }));
+      page.add(this.add.zone(x, y, W, RH).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerover', () => point(i)).on('pointerdown', () => point(i)).onPress(() => { sfx.play('tap'); open[id](); }));
     });
     point(0);
   }
@@ -199,7 +199,7 @@ export default class GlossaryScene extends Phaser.Scene {
       page.add(drawWindow(this.add.graphics(), cx, cy, cw, E.h, { line: id === pick ? gold() : UI.line }));
       this.sprite(page, { id, ...enemies[id] }, cx + cw / 2, cy + E.h - 22, E.h - 30, !on);
       this.text(page, cx + cw / 2, cy + E.h - 11, on ? tileName(id) : '???', 'small', on ? UI.text : UI.dim).setOrigin(0.5);
-      if (on) page.add(this.add.zone(cx, cy, cw, E.h).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (id !== pick) { sfx.play('tap'); this.showEnemies(at, id); } }));
+      if (on) page.add(this.add.zone(cx, cy, cw, E.h).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => { if (id !== pick) { sfx.play('tap'); this.showEnemies(at, id); } }));
     });
     this.pager(page, E.pagerY, at, Math.ceil(ENEMY_IDS.length / per), (i) => this.showEnemies(i));
     this.enemyCard(page, pick, E.cardY, E.cardH);
@@ -261,7 +261,7 @@ export default class GlossaryScene extends Phaser.Scene {
       const icon = this.add.image(cx + I.cell / 2, cy + I.cell / 2, bareIconKey(this, id)).setScale(2);
       if (!on) icon.setTint(SHADOW).setTintMode(Phaser.TintModes.FILL);
       page.add(icon);
-      if (on) page.add(this.add.zone(cx, cy, I.cell, I.cell).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { if (id !== pick) { sfx.play('tap'); this.showItems(at, id); } }));
+      if (on) page.add(this.add.zone(cx, cy, I.cell, I.cell).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => { if (id !== pick) { sfx.play('tap'); this.showItems(at, id); } }));
     });
     this.pager(page, I.pagerY, at, Math.ceil(ITEM_IDS.length / per), (i) => this.showItems(i));
     const y = I.cardY, P = L.pad;

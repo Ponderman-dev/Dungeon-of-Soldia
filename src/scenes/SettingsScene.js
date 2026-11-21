@@ -51,7 +51,7 @@ export default class SettingsScene extends Phaser.Scene {
     const g = solid ? drawButton(this.add.graphics(), x, y, w, h) : drawWindow(this.add.graphics(), x, y, w, h, { line });
     const t = uiText(this, x + w / 2, y + h / 2, label, size, ink).setOrigin(0.5);
     const zone = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true });
-    if (onTap) zone.on('pointerup', () => { if (!this.modal) onTap(); });
+    if (onTap) zone.onPress(() => { if (!this.modal) onTap(); });
     if (into) into.add([g, t, zone]);
     return zone;
   }
@@ -150,7 +150,7 @@ export default class SettingsScene extends Phaser.Scene {
       const bx = x + L.pad + i * (bw + L.rowGap);
       box.add(drawWindow(this.add.graphics(), bx, by, bw, L.plainH, { line: look === 'red' ? RED : UI.line }));
       box.add(uiText(this, bx + bw / 2, by + L.plainH / 2, label, 'normal', look === 'red' ? UI.red : UI.text).setOrigin(0.5));
-      box.add(this.add.zone(bx, by, bw, L.plainH).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', fn));
+      box.add(this.add.zone(bx, by, bw, L.plainH).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(fn));
     }
   }
 

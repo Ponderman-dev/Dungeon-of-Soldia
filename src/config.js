@@ -75,7 +75,8 @@ export const UI = {
   // BUTTON PRESS (uiKit pressable / drawButton pressed, user session 47: 'look like it's being pushed'): while held,
   // the button face sinks in (dark inset band on top, no shine) and the label drops sinkPx; the action runs on
   // RELEASE, after the press has shown for at least holdMs (a very quick tap still shows the push).
-  press: { sinkPx: 2, holdMs: 90 },
+  press: { sinkPx: 2, holdMs: 90, shade: 0x000000, shadeAlpha: 0.35 },
+  // (shade = the dark cover any onPress() button gets while held, session 49: 'every button responsive on the clicks')
   // FLAT BUTTON (uiKit drawFlatButton; the camp's look, session 44 'cleaner and sleeker', shared with the squad screen
   // session 47): gold line px, darker foot px, the gold band px of a banded main button (EXPEDITION, BEGIN DESCENT).
   flat: { line: 2, foot: 6, band: 8 },
@@ -159,7 +160,9 @@ export const LOOK_NOW = { look: LOOK_PICK, font: FONT_PICK, main: MAIN_PICK }; /
 export function applyLook(look, font, main = LOOK_NOW.main) {
   const L = LOOKS[look];
   for (const k of Object.keys(UI.goldTheme)) if (!(k in BASE.theme)) delete UI.goldTheme[k]; // flags like square
-  Object.assign(UI.goldTheme, BASE.theme, L.theme || {}, (look !== 'gold' && MAINS[main]) || {});
+  const M = look !== 'gold' && MAINS[main];
+  // the picked hero tile + chosen outlines follow the main button's colour (user: no green outline on the hero row)
+  Object.assign(UI.goldTheme, BASE.theme, L.theme || {}, M ? { ...M, picked: M.buttonLight, chosen: M.buttonLight } : {});
   for (const k of ['text', 'dim', 'gold']) UI[k] = L[k] || BASE[k];
   UI.pageBg = L.pageBg ?? null; // null = each page's own bg
   UI.dither = L.dither ?? null;

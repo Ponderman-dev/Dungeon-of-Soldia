@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --host",
     "build:page": "vite build && node scripts/make-page.mjs dist-page.html",
+    "build:release": "VITE_TESTER=1 vite build --outDir dist-release",
     "test": "node scripts/tests/run-all.mjs",
     "sim": "node scripts/tests/sim.mjs skills rewards",
     "build:studio": "vite build --config vite.studio.config.js && node scripts/make-page.mjs studio-page.html dist-studio/studio.html",

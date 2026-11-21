@@ -74,7 +74,8 @@ and suggest a fresh session per task.
 - `npm test`  run all tests (`scripts/tests/run-all.mjs`)
 - `npm run dev`  start dev server (http://localhost:5173); dev-only url flags `?floor=N`, `?room=<kind>`, `?elite=1`, `?house=1`, `?lineup=risen_skeleton*12`
 - `npm run build`  production build into `dist/`
-- `npm run build:page`  build + pack into ONE file `dist-page.html` (for the claude.ai preview page)
+- `npm run build:page`  build + pack into ONE file `dist-page.html` (for the claude.ai preview page; HAS the TEST buttons)
+- `npm run build:release`  the build for the store / Android (`dist-release/`): no TEST buttons, no dev url flags
 - `npm run build:studio`  build the Character Studio into ONE file `studio-page.html`
 - `npm run build:house-demo`  Monster House demo page `house-demo-page.html`
 - Balance: `node scripts/tests/curve.mjs 3 smart` (difficulty), `node scripts/tests/review.mjs 4 all` (heroes/items),

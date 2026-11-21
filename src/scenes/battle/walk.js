@@ -5,6 +5,7 @@ import { GAME_HEIGHT, CHAR_SCALE } from '../../config.js';
 import { DEMO } from '../demoMode.js';
 import * as sfx from '../../audio/sfx.js';
 import { SLOT_Y, WALL_H, DOOR_X, T, DEPTH } from './shared.js';
+import { pruneTextures } from '../../entities/textureCache.js';
 
 export const walkMethods = {
   // Who walks through the door with the squad: the living heroes, then any greater minions.
@@ -142,6 +143,7 @@ export const walkMethods = {
       onComplete: () => {
         old.container.destroy();
         old.front.destroy();
+        if (this.dungeon.bosses && this.dungeon.bosses[this.floor - 1]) pruneTextures(this.game); // past a boss: unused part pictures go (textureCache.js)
         this.layer = next;
         this.floorText.setText(`Floor ${this.floor}`);
         done();

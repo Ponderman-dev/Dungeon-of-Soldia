@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc, uiShift, buttonTextColor, drawFlatButton } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc, uiShift, buttonTextColor, drawFlatButton, prepareScreen, dropScreen, slideToScreen, whenScreenReady } from '../entities/uiKit.js';
 import { nextBossFloor } from '../systems/dungeon.js';
 import camp from '../data/camp.json';
 import { openFloor, darkLayer, lightTint, fireLayers, propLayer, blendProp } from '../systems/campArt.js';
@@ -44,10 +44,13 @@ export default class BaseScene extends Phaser.Scene {
     this.drawHeroes();
     this.drawUi();
     if (this.fromTitle) this.cameras.main.fadeIn(UI.motion.slow, 0, 0, 0);
-    if (this.fromSquad) { // the buttons come in once the slide down has ended; no taps before that
-      this.leaving = true;
-      this.time.delayedCall(UI.motion.slow, () => uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = false; } }));
-    }
+    this.nextScreen = null; // the squad screen built early (uiKit prepareScreen)
+    if (this.fromSquad) this.leaving = true; // the buttons come in when the slide down has ended (arrive); no taps before that
+  }
+
+  // The slide from the squad screen has ended (uiKit slideToScreen): the buttons come in.
+  arrive() {
+    uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = false; } });
   }
 
   // Up to 3 random unlocked heroes round the fire, each idly wandering near its spot (camp.json hero).
@@ -102,7 +105,9 @@ export default class BaseScene extends Phaser.Scene {
     const color = buttonTextColor(true, false, true), boss = nextBossFloor(dungeons.A, progress.stats.bestFloor);
     box.add(uiText(this, 0, E.textY, E.text, E.size, color).setOrigin(0.5));
     box.add(uiText(this, 0, E.subY, boss ? E.sub.replace('{n}', boss) : E.subDone, 'small', color).setOrigin(0.5));
-    this.add.zone(cx, ey, ew, E.h).setInteractive().onPress(() => this.toExpedition());
+    this.add.zone(cx, ey, ew, E.h).setInteractive().onPress(() => this.toExpedition(), { // the squad screen is built while the finger holds (no hitch in the slide)
+      onDown: () => { if (!this.leaving && !this.modal) prepareScreen(this, 'Squad', { fromCamp: true }, GAME_HEIGHT); },
+      onCancel: () => dropScreen(this) });
 
     // The tab bar: a gold line, a dark band, 4 buttons (icon + name) that open their screen over the camp.
     const B = U.tabs, n = B.buttons.length, tw = (W - 2 * S - B.gap * (n - 1)) / n, ty = B.y + B.pad;
@@ -164,18 +169,12 @@ export default class BaseScene extends Phaser.Scene {
     if (this.leaving || this.modal) return;
     this.leaving = true;
     sfx.play('tap');
-    uiShift(this, this.uiParts, false, { onDone: () => this.slideToSquad() }); // the buttons leave first
+    whenScreenReady(this, 'Squad', { fromCamp: true }, GAME_HEIGHT, () => // the squad screen is built, then the buttons leave
+      uiShift(this, this.uiParts, false, { onDone: () => this.slideToSquad() }));
   }
 
-  slideToSquad() {
-    const squad = this.scene.get('Squad');
-    squad.events.once(Phaser.Scenes.Events.CREATE, () => {
-      const cam = squad.cameras.main, mine = this.cameras.main;
-      cam.scrollY = GAME_HEIGHT; // the squad screen starts just above this one
-      this.tweens.add({ targets: cam, scrollY: 0, duration: UI.motion.slow, ease: UI.motion.easeMove });
-      this.tweens.add({ targets: mine, scrollY: -GAME_HEIGHT, duration: UI.motion.slow, ease: UI.motion.easeMove, onComplete: () => this.scene.stop() });
-    });
-    this.scene.launch('Squad', { fromCamp: true });
+  slideToSquad() { // the squad screen comes down from above (built early: uiKit slideToScreen)
+    slideToScreen(this, 'Squad', { fromCamp: true }, GAME_HEIGHT);
   }
 
   // A pixel layer as an image at screen (x, y), placed by its anchor.

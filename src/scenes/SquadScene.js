@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, SKILL_COLORS, UI } from '../config.js';
-import { drawWindow, drawCursor, uiShift, uiText, drawFlatButton, buttonTextColor, pressable } from '../entities/uiKit.js';
+import { drawWindow, drawCursor, uiShift, uiText, drawFlatButton, buttonTextColor, pressable, prepareScreen, dropScreen, slideToScreen, whenScreenReady } from '../entities/uiKit.js';
 import pauseData from '../data/pause.json';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
@@ -74,10 +74,10 @@ export default class SquadScene extends Phaser.Scene {
     this.buildGrid();
     this.drawUi();
     this.shifting = false; // the menu is fading in or out (taps blocked by `leaving`, buttons still drawn)
-    if (this.fromCamp) { // hidden until the slide up has ended; no taps before that
+    this.nextScreen = null; // the camp built early (uiKit prepareScreen)
+    if (this.fromCamp) { // hidden until the slide has ended (arrive); no taps before that
       this.leaving = this.shifting = true;
       uiShift(this, this.uiParts, false, { instant: true });
-      this.time.delayedCall(UI.motion.slow, () => uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = this.shifting = false; this.refresh(); } }));
     }
 
     // The squad's figures: each picked hero stands in its slot (the others wait hidden off screen).
@@ -203,7 +203,9 @@ export default class SquadScene extends Phaser.Scene {
       const redraw = (pressed) => drawFlatButton(rb.clear(), x, DOCK.btnY, dw, DOCK.btnH, { pressed });
       redraw(false);
       const t = squadLabel(this, x + dw / 2, DOCK.btnY + DOCK.btnH / 2, label, buttonTextColor()).setOrigin(0.5).setDepth(DEPTH.ui);
-      pressable(this, this.add.zone(x + dw / 2, DOCK.btnY + DOCK.btnH / 2, dw, DOCK.btnH).setInteractive().setDepth(DEPTH.ui), { redraw, sink: [t], onTap, enabled: () => !this.leaving && !this.panel });
+      pressable(this, this.add.zone(x + dw / 2, DOCK.btnY + DOCK.btnH / 2, dw, DOCK.btnH).setInteractive().setDepth(DEPTH.ui), { redraw, sink: [t], onTap, enabled: () => !this.leaving && !this.panel,
+        // '< CAMP': the camp is built while the finger holds (no hitch in the slide)
+        ...(label === '< CAMP' ? { onDown: () => prepareScreen(this, 'Base', { fromSquad: true }, -GAME_HEIGHT), onCancel: () => dropScreen(this) } : {}) });
     });
     const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));
     this.uiParts = { up: shown(this.children.list.slice(n0, n1)), fade: [...this.labelParts, ...shown(this.gridParts)] };
@@ -501,23 +503,22 @@ export default class SquadScene extends Phaser.Scene {
   // ---- start the run -------------------------------------------------------------------------
 
   // The squad walks into the door one after another (smaller as they go deeper), then the run starts.
+  // The slide from the camp has ended (uiKit slideToScreen): the buttons come in.
+  arrive() {
+    uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = this.shifting = false; this.refresh(); } });
+  }
+
   // '< CAMP': the screen slides down back into the camp hub (the reverse of BaseScene.toExpedition).
   toCamp() {
     if (this.panel || this.leaving) return;
     this.leaving = this.shifting = true;
     sfx.play('tap');
-    uiShift(this, this.uiParts, false, { onDone: () => this.slideToCamp() }); // the buttons leave first
+    whenScreenReady(this, 'Base', { fromSquad: true }, -GAME_HEIGHT, () => // the camp is built, then the buttons leave
+      uiShift(this, this.uiParts, false, { onDone: () => this.slideToCamp() }));
   }
 
-  slideToCamp() {
-    const base = this.scene.get('Base');
-    base.events.once(Phaser.Scenes.Events.CREATE, () => {
-      const cam = base.cameras.main, mine = this.cameras.main, ms = UI.motion.slow;
-      cam.scrollY = -GAME_HEIGHT; // the camp starts just below this screen
-      this.tweens.add({ targets: cam, scrollY: 0, duration: ms, ease: UI.motion.easeMove });
-      this.tweens.add({ targets: mine, scrollY: GAME_HEIGHT, duration: ms, ease: UI.motion.easeMove, onComplete: () => this.scene.stop() });
-    });
-    this.scene.launch('Base', { fromSquad: true });
+  slideToCamp() { // the camp comes up from below (built early: uiKit slideToScreen)
+    slideToScreen(this, 'Base', { fromSquad: true }, -GAME_HEIGHT);
   }
 
   descend() {

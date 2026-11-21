@@ -162,3 +162,9 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   reward buttons, fight HUD (skills `instant`), squad test toggle. NOT the title gear (its tap must stop 'tap anywhere'
   at once) or reward cards (they light up themselves).
 - Still yellow (left on purpose): item icons + tier frames (art), the check marks on picked tiles, rage/grudge bars.
+- CAMP <-> SQUAD SLIDE STUTTER (session 49, user: 'looks stuck, like low FPS'; a faster 300ms slide was tried and
+  REVERTED: 'way weird and bad'): building the next screen froze the game ~0.26s (4x slowed CPU) at the start of the
+  slide, then the slide jumped. uiKit `prepareScreen` builds it while the finger holds the button (onPress / pressable
+  `onDown`; `dropScreen` on slide-off), `whenScreenReady` waits for its first draw before the buttons leave,
+  `slideToScreen` slides (motion.slow, easeMove as before), stops the old screen, then the new one's `arrive()` brings
+  its buttons in 60ms later (after the teardown). Worst frame gap while anything moves: 260ms -> ~35ms (4x slowed).

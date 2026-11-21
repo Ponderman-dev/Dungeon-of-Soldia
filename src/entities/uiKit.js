@@ -293,15 +293,16 @@ export function pressDown({ redraw, sink = [] }) {
 // finger up on it = pops back up and onTap runs (after the push has shown for at least UI.press.holdMs).
 // enabled(): optional check (a disabled button does not push). Returns the zone; zone.cancelPress() drops a press
 // without tapping (a swipe that started on it).
-export function pressable(scene, hit, { redraw, sink = [], onTap, enabled = () => true, sound = null }) {
+export function pressable(scene, hit, { redraw, sink = [], onTap, enabled = () => true, sound = null, onDown = null, onCancel = null }) {
   let release = null, at = 0;
   hit.on('pointerdown', () => {
     if (release || !enabled()) return;
     release = pressDown({ redraw, sink });
     at = scene.time.now;
     if (sound) sfx.play(sound);
+    if (onDown) onDown();
   });
-  hit.on('pointerout', () => { if (release) { release(); release = null; } });
+  hit.on('pointerout', () => { if (release) { release(); release = null; if (onCancel) onCancel(); } });
   hit.on('pointerup', () => {
     if (!release) return;
     const r = release;
@@ -334,16 +335,18 @@ function pushLook(zone) {
   let done = false;
   return () => { if (done) return; done = true; cover.destroy(); parts.forEach((o) => { if (o.scene) o.y -= P.sinkPx; }); };
 }
-Phaser.GameObjects.Zone.prototype.onPress = function (fn, { instant = false } = {}) {
+// onDown / onCancel: extra hooks (finger down; finger slid off), e.g. build the next screen while the finger holds.
+Phaser.GameObjects.Zone.prototype.onPress = function (fn, { instant = false, onDown = null, onCancel = null } = {}) {
   let release = null, at = 0;
   const scene = this.scene;
   this.on('pointerdown', (...args) => {
     if (release) return;
     release = pushLook(this); at = scene.time.now;
     if (!instant) sfx.play('tap'); // the click comes WITH the push (user: sounds were late), not on release
+    if (onDown) onDown();
     if (instant) { const r = release; release = null; scene.time.delayedCall(UI.press.holdMs, r); fn(...args); }
   });
-  this.on('pointerout', () => { if (release) { release(); release = null; } });
+  this.on('pointerout', () => { if (release) { release(); release = null; if (onCancel) onCancel(); } });
   this.on('pointerup', (...args) => {
     if (!release) return;
     const r = release; release = null;
@@ -494,6 +497,53 @@ export function uiShift(scene, parts, show, { ms = UI.motion.fast, dy = 28, inst
     scene.tweens.add({ targets: o, y: o.uiHome.y + (show ? 0 : off), alpha: show ? o.uiHome.alpha : 0, duration: ms,
       ease: show ? UI.motion.easeOut : UI.motion.easeIn, onComplete: done });
   }
+}
+
+// SCREEN SLIDE, NEXT SCREEN BUILT EARLY (session 49, user: the camp <-> squad slide 'looks stuck, like low FPS'):
+// building the next screen froze the game ~0.26s on a phone-speed CPU at the START of the slide, then the slide jumped
+// to catch up. Now the next screen is built while the finger still holds the button (prepareScreen on finger down,
+// dropScreen if the finger slides off), hidden off screen (camera at startY) with its taps off; slideToScreen waits
+// until it has drawn once (its first draw uploads its textures), then slides both cameras (motion.slow, easeMove).
+// At the end this one stops, then (60ms later, after the teardown) the next screen's arrive() runs (its buttons come in). Each screen sets
+// this.nextScreen = null in create() (Phaser reuses scene objects).
+export function prepareScreen(scene, key, data, startY) {
+  if (scene.nextScreen) return;
+  const next = scene.scene.get(key), state = { key, ready: false };
+  scene.nextScreen = state;
+  next.events.once(Phaser.Scenes.Events.CREATE, () => {
+    next.cameras.main.scrollY = startY;
+    next.input.enabled = false;
+    next.events.once(Phaser.Scenes.Events.RENDER, () => { state.ready = true; });
+  });
+  scene.scene.launch(key, data);
+}
+export function dropScreen(scene) {
+  if (!scene.nextScreen || scene.leaving) return;
+  scene.scene.stop(scene.nextScreen.key);
+  scene.nextScreen = null;
+}
+// whenScreenReady: run fn once the early-built screen has drawn (prepares it if needed): a quick tap's build freeze
+// then happens BEFORE the buttons start leaving, not in the middle of their animation.
+export function whenScreenReady(scene, key, data, startY, fn) {
+  prepareScreen(scene, key, data, startY);
+  const state = scene.nextScreen;
+  const wait = () => (state.ready ? fn() : scene.time.delayedCall(16, wait));
+  wait();
+}
+export function slideToScreen(scene, key, data, startY) {
+  prepareScreen(scene, key, data, startY);
+  const next = scene.scene.get(key), state = scene.nextScreen, M = UI.motion;
+  scene.input.enabled = false;
+  const go = () => {
+    scene.tweens.add({ targets: next.cameras.main, scrollY: 0, duration: M.slow, ease: M.easeMove });
+    scene.tweens.add({ targets: scene.cameras.main, scrollY: -startY, duration: M.slow, ease: M.easeMove, onComplete: () => {
+      next.input.enabled = true;
+      scene.scene.stop(); // tearing this screen down takes a moment: the new buttons start after it, not during it
+      if (next.arrive) next.time.delayedCall(60, () => next.arrive());
+    } });
+  };
+  const wait = () => (state.ready ? go() : scene.time.delayedCall(16, wait));
+  wait();
 }
 
 // MENU PAGE TRANSITIONS (user, session 41: like camp -> squad, in three beats). Opening: the camp's buttons leave

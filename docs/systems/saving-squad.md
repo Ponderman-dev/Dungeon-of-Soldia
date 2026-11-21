@@ -55,3 +55,8 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   long ones in the small font, Send back row under them; `button` = one flat button per hero with its name (small
   font) + an X (tap = send back). The grid's top follows the style (`gridTop`). Send back taps are now per-label
   pressable zones (the scene-wide tap code is gone). When the user picks: delete the others + the NAMES button.
+- **SLOPE PICKED + CALMER (session 47, user):** small / button name styles and the NAMES button are GONE (`NAMES` in
+  squadGrid.js: big names, middle one higher, X button beside each = send back). Outer heroes nearer the middle
+  (x 90 / 300). QUIET TILES (user: the grid 'looks busy and crowded'): plain dark tile, thin dark edge, a soft shadow
+  under the hero, no gold frame / studs; only a picked tile gets the gold edge + check (`SQUAD_VIEW.tile` colours),
+  gaps 12. The Necromancer is shown as NECROMAGE (heroes.json name; the id stays `necromancer`).

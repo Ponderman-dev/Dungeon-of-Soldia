@@ -24,7 +24,7 @@ const TESTER = import.meta.env.VITE_TESTER === '1'; // the playtest build for it
 import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
 import { slotsFrom, addToSlots, removeFromSlots, isFull, squadOrder } from '../systems/squadSlots.js';
-import { squadGrid, SQUAD_VIEW, SQUAD_DEPTH, NAME_STYLES } from './squad/squadGrid.js';
+import { squadGrid, SQUAD_VIEW, SQUAD_DEPTH } from './squad/squadGrid.js';
 
 // The interface look (config.js UI, entities/uiKit.js): black windows, white lines, Ironslab text (sizes 8 / 16 / 24 = 10 / 20 / 30px, see config.js fontGrid).
 const INK = UI.text;
@@ -66,7 +66,6 @@ export default class SquadScene extends Phaser.Scene {
     this.leaving = this.descending = false;
     this.walkers = new Map(); // hero id -> tween of a hero that is walking
     this.L = SQUAD_VIEW;
-    this.nameStyle = this.registry.get('nameStyle') || 'slope'; // TRIAL (squadGrid.js NAME_STYLES)
     this.tiles = null; this.gridParts = [];
 
     this.drawRoom();
@@ -205,19 +204,8 @@ export default class SquadScene extends Phaser.Scene {
     this.uiParts = { up: shown(this.children.list.slice(n0, n1)), fade: [...this.labelParts, ...shown(this.gridParts)] };
     this.uiParts.down = shown(this.children.list.slice(n1)); // (the test toggle below joins it)
     if (TESTER || DEMO) return; // the playtest build (npm run build:itch) and the fight demos have no test row
-    // NAMES TRIAL (session 47): a small button bottom left flips slope -> small -> button (squadGrid.js NAME_STYLES).
-    const keys = Object.keys(NAME_STYLES), nx = SIDE, nw = 110, ny = DOCK.toolY, nh = 24;
-    const ng = this.add.graphics().setDepth(DEPTH.ui);
-    const nt = this.add.text(nx + nw / 2, ny + nh / 2 + 1, `NAMES: ${this.nameStyle.toUpperCase()}`, { fontFamily: FONT, fontSize: '8px', color: buttonTextColor() }).setOrigin(0.5).setDepth(DEPTH.ui);
-    const drawN = (pressed) => drawFlatButton(ng.clear(), nx, ny, nw, nh, { pressed });
-    drawN(false);
-    pressable(this, this.add.zone(nx + nw / 2, ny + nh / 2, nw, nh).setInteractive().setDepth(DEPTH.ui), { redraw: drawN, sink: [nt], enabled: () => !this.panel && !this.leaving, onTap: () => {
-      this.registry.set('nameStyle', keys[(keys.indexOf(this.nameStyle) + 1) % keys.length]);
-      this.scene.restart({ lastRun: this.lastRun });
-    } });
-    this.uiParts.down.push(ng, nt);
-    this.toggleText = this.add.text(260, DOCK.toolY + 12, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
-    this.add.zone(260, DOCK.toolY + 12, 220, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
+    this.toggleText = this.add.text(GAME_WIDTH / 2, DOCK.toolY + 12, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
+    this.add.zone(GAME_WIDTH / 2, DOCK.toolY + 12, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
     this.uiParts.down.push(this.toggleText);
   }
 

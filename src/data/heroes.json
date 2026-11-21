@@ -1240,12 +1240,12 @@
   },
   {
     "id": "necromancer",
-    "name": "Necromancer",
+    "name": "Necromage",
     "role": "Summoner",
     "color": "0x3ab8a0",
     "summary": "Commands an army of the dead: more minions, more power.",
     "tips": [
-      "Legion: skeletons rise all fight and grow 3% stronger per Necromancer level; minion items count double for him.",
+      "Legion: skeletons rise all fight and grow 3% stronger per Necromage level; minion items count double for him.",
       "Every minion that dies gives a Soul; Death Coil spends them all (+20% each). A Death Coil kill raises a skeleton.",
       "Bone Sacrifice turns his skeletons into squad shields (bigger per skeleton); with Grave Dust they explode on the way."
     ],
@@ -1283,7 +1283,7 @@
     },
     "passive": {
       "name": "Legion",
-      "description": "Raises a skeleton every 5-6s (up to 5; two at the start of every floor). His skeletons get +3% health and attack per Necromancer level, and minion items count double for him. Every minion that dies gives him a Soul (up to 10) for Death Coil.",
+      "description": "Raises a skeleton every 5-6s (up to 5; two at the start of every floor). His skeletons get +3% health and attack per Necromage level, and minion items count double for him. Every minion that dies gives him a Soul (up to 10) for Death Coil.",
       "spawner": {
         "minion": "skeleton",
         "minMs": 5000,

@@ -94,7 +94,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       34.3; no bonus + Grace 8s 30.9; that + Holy Nova 8% 30.3. Her healing carries squads; Sanctuary/self buff barely matter.
       Then user: make her FRAGILE: health 100 -> 80 (growth 4 -> 3%), attack 14 -> 11, defense 5 -> 2: avg floor -> 27.9 / 26.6
       (mid-pack; squads with her die earlier, so every hero's average dropped ~1).
-    - **Necromancer** LEGION MASTER (built session 6): LEGION (`passive.legion` + the old `spawner`): his skeletons get
+    - **Necromancer** (shown name NECROMAGE since session 47; id stays `necromancer`) LEGION MASTER (built session 6): LEGION (`passive.legion` + the old `spawner`): his skeletons get
       +`perLevelPercent` 3% health/attack per Necromancer level (`refreshMinionStats`); squad minion boosters he holds
       (Bone Charm, Whistle, Grave Dust, Necro Crown cap) count x`minionItemMultiplier` 2 (`minionBoost`); every minion that
       dies gives each living Necromancer a Soul up to `maxSouls` 10 (`gainSoul()` in `minionDied`; purple bar under his

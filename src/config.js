@@ -137,7 +137,9 @@ const readPick = (key, list) => {
   try { const v = localStorage.getItem(key); return list.includes(v) ? v : list[0]; } catch { return list[0]; }
 };
 export const LOOK_PICK = LOOK_TRIAL ? readPick('soldia.lookTrial.look', LOOK_NAMES) : 'gold';
-export const FONT_NAMES = ['soldia', 'thin'];
+// FONT: soldia = today; thin = small text in Soldia Thin; thin+ = also the normal-size text (asked up to 16px; over 12
+// = Soldia Thin at 2x), big titles stay Ironslab.
+export const FONT_NAMES = ['soldia', 'thin', 'thin+'];
 export const FONT_PICK = LOOK_TRIAL ? readPick('soldia.lookTrial.font', FONT_NAMES) : 'soldia';
 {
   const L = LOOKS[LOOK_PICK];
@@ -145,4 +147,5 @@ export const FONT_PICK = LOOK_TRIAL ? readPick('soldia.lookTrial.font', FONT_NAM
   for (const k of ['text', 'dim', 'gold']) if (L[k]) UI[k] = L[k];
   UI.pageBg = L.pageBg ?? null; // null = each page's own bg
   UI.dither = L.dither ?? null;
+  if (FONT_PICK === 'thin+') Object.assign(UI.smallFont, { maxPx: 16, px2From: 12 });
 }

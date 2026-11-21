@@ -3,7 +3,8 @@
 import Phaser from 'phaser';
 import fontUrl from '../assets/fonts/ironslab.ttf?inline';
 import smallFontUrl from '../assets/fonts/soldia-small.woff2?inline'; // Press Start 2P made proportional (scripts/art/make-small-font.py)
-import { UI } from '../config.js';
+import thinFontUrl from '../assets/fonts/soldia-thin.woff2?inline'; // LOOK TRIAL: 1px strokes (scripts/art/make-thin-font.py)
+import { UI, FONT_PICK } from '../config.js';
 import * as sfx from '../audio/sfx.js';
 import { popPlan, slidePlan, fadePlan, pagePlan, pageSide } from '../systems/motion.js';
 
@@ -23,7 +24,8 @@ export function loadUiFont() {
       return Promise.resolve(null);
     }
   };
-  return Promise.all([load('Ironslab', fontUrl), load('SoldiaSmall', smallFontUrl)]);
+  // LOOK TRIAL (session 49): the THIN fonts load the thin face under the small font's name (nothing else changes).
+  return Promise.all([load('Ironslab', fontUrl), load('SoldiaSmall', FONT_PICK === 'soldia' ? smallFontUrl : thinFontUrl)]);
 }
 
 // Ironslab is drawn on a 10px grid (capitals 8px tall), so it is only crisp at 10 / 20 / 30px. The scenes keep asking
@@ -36,6 +38,8 @@ export function gridPx(size) {
 // Small sizes (UI.smallFont.maxPx or less) switch to the small font (Press Start 2P) at its own size.
 const SMALL = UI.smallFont;
 const isSmall = (size) => parseFloat(size) <= SMALL.maxPx;
+// The small font's size: its own px; LOOK TRIAL 'thin+' (maxPx 16) draws bigger asks (over px2From) at 2x.
+const smallPx = (size) => (parseFloat(size) > (SMALL.px2From ?? Infinity) ? SMALL.px * 2 : SMALL.px);
 let gridInstalled = false;
 function installFontGrid() {
   if (gridInstalled) return;
@@ -45,7 +49,7 @@ function installFontGrid() {
   TS.setStyle = function (style, updateText, setDefaults) {
     if (style && style.fontFamily === UI.font && style.fontSize != null) {
       style = isSmall(style.fontSize)
-        ? { ...style, fontFamily: SMALL.family, fontSize: `${SMALL.px}px` }
+        ? { ...style, fontFamily: SMALL.family, fontSize: `${smallPx(style.fontSize)}px` }
         : { ...style, fontSize: `${gridPx(style.fontSize)}px` };
     }
     return setStyle.call(this, style, updateText, setDefaults);
@@ -60,7 +64,7 @@ function installFontGrid() {
   TS.setFontSize = function (size) {
     if (this.fontFamily !== UI.font && this.fontFamily !== SMALL.family) return setFontSize.call(this, size);
     this.fontFamily = isSmall(size) ? SMALL.family : UI.font;
-    return setFontSize.call(this, isSmall(size) ? SMALL.px : gridPx(size));
+    return setFontSize.call(this, isSmall(size) ? smallPx(size) : gridPx(size));
   };
   // After a small text is drawn, every pixel is snapped to full or empty (and to its fill or stroke colour), so a
   // letter that lands between pixels stays as sharp as the pixel art.

@@ -67,7 +67,7 @@ export default class SquadScene extends Phaser.Scene {
     this.leaving = this.descending = false;
     this.walkers = new Map(); // hero id -> tween of a hero that is walking
     this.L = SQUAD_VIEW;
-    this.tiles = null; this.gridParts = [];
+    this.tiles = null; this.gridParts = []; this.gridTabs = null; this.gridGlide = null; this.gridNudged = false; // (Phaser reuses the scene object)
 
     this.drawRoom();
     this.drawSlots();

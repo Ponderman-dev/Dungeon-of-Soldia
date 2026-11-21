@@ -76,3 +76,8 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   words. The crimson / iron looks, the chevrons and the BUTTON switch are GONE. Pressed = the WHOLE button (gold
   bands too) drops sinkPx onto a dark ledge and goes a shade darker (user: the bands must move with it). Then the gold
   band runs ALL ROUND (left + right too, user).
+- **SCROLL HINTS + ORDER (session 47, user: 'not clear how people will know to scroll'; 'Berserker next to Archer'):**
+  arrow TABS (flat buttons with a pixel < / >) on the row's ends, only where more is hidden (tap = one tile along,
+  `glideGrid`); darker stepped EDGES there; a NUDGE once per visit (the row slides 44px left and back ~0.7s after the
+  screen opens). Numbers in `SQUAD_VIEW.grid.hint`. Tile order: the starting heroes first (unlocks.json `start`:
+  Knight, Rogue, Archer), then heroes.json order (heroes.json itself is unchanged).

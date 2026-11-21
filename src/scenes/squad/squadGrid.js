@@ -30,7 +30,11 @@ export const SQUAD_VIEW = {
   slots: [{ x: 90, y: 350 }, { x: GAME_WIDTH / 2, y: 336 }, { x: GAME_WIDTH - 90, y: 350 }], // outer ones nearer the middle (user)
   heroScale: 4, sideOffPx: 48, lockedWash: 0x4a4458, edge: 8,
   grid: { bottom: 606, w: 84, h: 124, foot: 112, tileScale: 4, gap: 12, side: 8, shadowW: 52, dragPx: 8,
-    bar: { w: 120, h: 4, gap: 12 } }, // bar = the scroll bar under the row (gap = from the row)
+    bar: { w: 120, h: 4, gap: 12 }, // bar = the scroll bar under the row (gap = from the row)
+    // SCROLL HINTS (user: 'not clear how people will know to scroll'): arrow tabs on the row's ends (only where more is
+    // hidden; tap = one tile along), darker edges there, and a nudge when the screen opens (the row slides nudgePx
+    // left and back after nudgeDelayMs).
+    hint: { tabW: 24, tabH: 56, shade: [0.55, 0.35, 0.18], shadeW: 6, nudgePx: 44, nudgeDelayMs: 700, nudgeMs: 380, stepMs: 220 } },
   // The quiet tile's colours: fill, edge, a picked tile's edge, the '?' tile's edge, a pushed tile's fill.
   tile: { fill: 0x16110f, edge: 0x3a2a22, picked: 0xd8a640, locked: 0x2e2a30, pressed: 0x2a201c, shadow: 0.35 },
 };
@@ -49,7 +53,10 @@ export const squadGrid = {
 
   // The tiles: every open hero, then the '?' (the locked hero closest to unlocking). hidden = locked heroes not shown.
   tileList() {
-    const open = heroDefs.filter((h) => this.unlocked(h.id)).map((h) => h.id);
+    // The starting heroes first (Knight, Rogue, Archer: unlocks.json start), then the others in heroes.json order
+    // (user: Berserker next to Archer, not next to Knight).
+    const order = [...unlocks.start, ...heroDefs.map((h) => h.id).filter((id) => !unlocks.start.includes(id))];
+    const open = order.filter((id) => this.unlocked(id));
     const locked = heroDefs.length - open.length;
     const next = nextUnlock(heroDefs, this.progress, unlocks);
     return { ids: next ? [...open, next] : open, hidden: locked - (next ? 1 : 0) };
@@ -75,18 +82,61 @@ export const squadGrid = {
     box.setMask(maskG.createGeometryMask());
     this.gridScroll = 0;
     this.gridBar = this.add.graphics().setDepth(D.ui);
-    parts.push(box, this.gridBar);
+    this.gridShade = this.add.graphics().setDepth(D.ui + 1); // the darker edges where more is hidden
+    parts.push(box, this.gridBar, this.gridShade);
+    this.gridTabs = [-1, 1].map((dir) => { // the arrow tabs: push in, scroll one tile along
+      const H = G.hint, tx = dir < 0 ? G.side - 2 : GAME_WIDTH - G.side + 2 - H.tabW, ty = top + Math.round((G.h - H.tabH) / 2);
+      const tg = this.add.graphics().setDepth(D.ui + 2);
+      const tab = { dir, g: tg, x: tx, y: ty, pressed: false };
+      tab.draw = () => {
+        tg.clear();
+        const more = dir < 0 ? this.gridScroll > 0 : this.gridScroll < this.gridMax;
+        tab.hit.setVisible(more);
+        if (!more) return;
+        drawFlatButton(tg, tx, ty, H.tabW, H.tabH, { pressed: tab.pressed });
+        const cx = tx + H.tabW / 2, cy = ty + H.tabH / 2 + (tab.pressed ? UI.press.sinkPx : 0); // a pixel arrow < or >
+        tg.fillStyle(Number('0x' + buttonTextColor().slice(1)), 1);
+        for (let i = 0; i < 4; i++) tg.fillRect(cx - dir * (3 - i) * 2 - 1, cy - 7 + i * 2, 2, 2).fillRect(cx - dir * (3 - i) * 2 - 1, cy + 5 - i * 2, 2, 2);
+      };
+      tab.hit = this.add.zone(tx + H.tabW / 2, ty + H.tabH / 2, H.tabW + 12, H.tabH).setInteractive().setDepth(D.ui + 2);
+      pressable(this, tab.hit, { redraw: (p) => { tab.pressed = p; tab.draw(); }, enabled: () => tab.hit.visible && !this.panel && !this.leaving,
+        onTap: () => this.glideGrid(this.gridScroll + dir * (G.w + G.gap), G.hint.stepMs) });
+      parts.push(tg, tab.hit);
+      return tab;
+    });
     if (hidden > 0) parts.push(text(this, GAME_WIDTH / 2, top + G.h + B.gap + B.h + 8, `${hidden} more heroes to find`, MUTE).setOrigin(0.5, 0).setDepth(D.ui));
     this.scrollGrid(0);
+    if (this.gridMax && !this.gridNudged) { // once per visit: the row slides a little left and back (it can move)
+      this.gridNudged = true;
+      this.time.delayedCall(G.hint.nudgeDelayMs, () => {
+        if (this.gridDrag || this.gridScroll) return;
+        this.glideGrid(G.hint.nudgePx, G.hint.nudgeMs / 2, () => this.glideGrid(0, G.hint.nudgeMs / 2));
+      });
+    }
     return parts;
+  },
+
+  // Slides the row to x over ms (eased), then calls done.
+  glideGrid(x, ms, done = null) {
+    if (this.gridGlide) this.gridGlide.stop();
+    const from = this.gridScroll, to = clamp(x, 0, this.gridMax);
+    this.gridGlide = this.tweens.addCounter({ from: 0, to: 1, duration: ms, ease: 'Sine.easeInOut',
+      onUpdate: (tw) => this.scrollGrid(from + (to - from) * tw.getValue()),
+      onComplete: () => { this.gridGlide = null; if (done) done(); } });
   },
 
   // Scrolls the row to x (clamped, whole pixels) and redraws the scroll bar (hidden when nothing scrolls).
   scrollGrid(x) {
     this.gridScroll = clamp(Math.round(x), 0, this.gridMax);
     this.gridBox.x = -this.gridScroll;
-    const B = G.bar, g = this.gridBar.clear();
+    const B = G.bar, g = this.gridBar.clear(), sh = this.gridShade.clear(), H = G.hint;
+    if (this.gridTabs) this.gridTabs.forEach((t) => t.draw());
     if (!this.gridMax) return;
+    const y0 = this.gridTopY - 2, hh = G.h + 4; // darker steps at an edge with more hidden behind it
+    H.shade.forEach((a, k) => {
+      if (this.gridScroll > 0) sh.fillStyle(0x000000, a).fillRect(G.side - 2 + k * H.shadeW, y0, H.shadeW, hh);
+      if (this.gridScroll < this.gridMax) sh.fillStyle(0x000000, a).fillRect(GAME_WIDTH - G.side + 2 - (k + 1) * H.shadeW, y0, H.shadeW, hh);
+    });
     const viewW = GAME_WIDTH - 2 * G.side, rowW = this.gridMax + viewW;
     const bx = Math.round((GAME_WIDTH - B.w) / 2), by = this.gridTopY + G.h + B.gap;
     const tw = Math.max(16, Math.round((B.w * viewW) / rowW)), tx = bx + Math.round(((B.w - tw) * this.gridScroll) / this.gridMax);
@@ -96,6 +146,8 @@ export const squadGrid = {
 
   // Swiping the row (SquadScene.setupInput calls these): a drag past dragPx cancels the tile press under the finger.
   gridDown(p) {
+    if (this.gridTabs && this.gridTabs.some((t) => t.hit.visible && Math.abs(p.x - t.hit.x) <= t.hit.width / 2)) return; // on an arrow tab
+    if (this.gridGlide) { this.gridGlide.stop(); this.gridGlide = null; }
     if (!this.gridMax || this.panel || this.leaving || p.y < this.gridTopY || p.y > this.gridTopY + G.h) return;
     this.gridDrag = { x: p.x, from: this.gridScroll, moved: false };
   },

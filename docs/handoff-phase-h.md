@@ -1,45 +1,50 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 47): NO TASK PICKED YET: ask the user (candidates below)
-- BRANCH: `main` has EVERYTHING (session 46 merged in at the handoff). Start the next branch from `main`.
-- DONE in session 46 (all on main; details in `docs/systems/skill-books.md`, newest blocks at the bottom):
-  - ALL 31 NEW SKILL-BOOK PAGES built in 4 batches (8 common, 8 rare, 5 legendary, 10 hero pages), a test per mechanic,
-    an icon each. Hero pages: `hero` + `skill` + `patch`; they only fit that hero's named skill ('wrongSkill',
-    reward screen 'Not this skill'). Page icons lost the clasp gem (user: 'the lock feels weird').
-  - NEW TOOL `scripts/tests/pageruns.mjs [runsPerSquad] [ids]` ranks every page in full runs (same dice with/without,
-    all cores, ~6 min for all at 16). Result: survival pages win, damage pages ~0 (skills = 15-40% of a hero's damage,
-    `dmgshare.mjs`). Tuning round 1 + 1b applied (Siphon / Blood Price nerfed, Cyclone fixed at +4.8, damage pages and
-    4 hero pages buffed, Executioner heals, Elemental Storm weakens). Executioner / Elemental Storm still ~+1 / ~0: user
-    chose to keep them as 'small fry' legendaries and move on.
-  - DEALER shows 3 pages (was 5). BOSS PRIZE GROWS: `specialsByBoss.golden` (1st boss rares only, 2nd legendary for
-    sure + 5% hero, 3rd +15% hero, 4th+ 25% hero), golden card carries `bossNo`. Smart curve median 39-40.
-  - Game page republished with all of it (session 46). The user has NOT played the new pages yet: ask how they feel.
-- CANDIDATES for the next session (ask the user which; one per session):
-  1. SKILLS ARE A SMALL SHARE OF DAMAGE (15-40%), so every skill-damage page is weak: a design talk about making skills
-     matter more (bigger skill damage, shorter cooldowns...). Big topic: discuss first.
-  2. Small page leftovers: Twin Crescent has no second crescent animation (only a zone flash); Executioner on a
-     channel (Arrow Rain) refunds cooldown per wave; power pages don't grow Defense Bash's defense part; icon symbols
-     are first drafts (Finisher vs Reckless look alike).
-  3. Older OPEN items: art redo KIV, bosses rework, transitions phase 2-5, camp header frame, fight HUD in boss fights /
-     rooms (details in the archive), itch.io upload (did the user delete the old Oct 20 upload, viewport 390 x 844?).
-- ITCH.IO: `npm run build:itch`, copy `itch-page.html` as `index.html` into an empty folder, zip it (ONLY index.html),
-  SendUserFile.
-- Icon sheet (all page icons with real frames): a node script calling `pageIconArt` + `framedIconPixels` that writes
-  HTML, then a Playwright screenshot (session 46 scratch `icons/all.mjs`, gone with the scratchpad: rewrite it, ~25 lines).
-- DEV TOOLS (`scripts/dev/`, dev server on :5190 from the scratchpad): `smoke.mjs`, `tap-stress.mjs`,
-  `idle-time.mjs <repo>`, `push-drift.mjs <repo>`.
+## START HERE (session 48): TRY A NEW UI LOOK (user: 'I kinda want this vibe'), reference picture below
+- BRANCH: `main` has EVERYTHING (session 47 merged in at the handoff). Start the next branch from `main`.
+- TASK: a new interface look inspired by `docs/references/ui-vibe-pick-a-class.png` (a screenshot of ANOTHER game's
+  'Pick a class' window: make OUR OWN take, never copy it). What gives it its vibe:
+  - cool, muted palette: deep navy / slate panels, a dark DITHERED (checker) background, thin 2px pale steel-blue
+    lines, flat colours (no gradients, no studs, no gold);
+  - the window is split into CELLS by thin divider lines (a grid of sections: icons on top, info left, skill right);
+  - a THIN, light pixel font in pale lavender-grey (not bold); the title in salmon / orange CAPITALS in a title bar
+    with small '?' and 'X' icons at its right;
+  - small square coloured stat icons with numbers; locked choices dim with a small red X; the chosen one has a
+    teal / green outline;
+  - two big flat buttons side by side along the bottom: green 'Choose' and maroon 'Cancel'.
+  Today's look is crimson + gold (`UI.goldTheme`, docs/systems/ui.md; session 38 reverted a stone look: 'check a new
+  look IN THE REAL GAME before choosing'). Ask first with the question tool what to try it on (one screen like the
+  squad screen or hero card, or the whole interface) and whether the font changes too; then build 2-3 takes as a
+  TRIAL (registry / url flag + a switch button), screenshots side by side, let them pick.
+- DONE in session 47 (all on main; details at the bottom of `docs/systems/saving-squad.md`, ui.md 'PUSHABLE BUTTONS'):
+  - Buttons PUSH IN when held (`pressable()` / `pressDown()` in uiKit, `UI.press`), act on release; the camp's flat
+    button is shared (`drawFlatButton` in uiKit, `UI.flat`).
+  - SQUAD SCREEN REDONE through many user rounds: squad of 3 in front of the gate (heroes walk in from the side),
+    big names on a slope with an X button each (= send back), ONE swipeable row of quiet hero tiles (open heroes +
+    one '?' tile for the next unlock; arrow tabs, dark edges, a nudge on open), BEGIN DESCENT = crimson with a gold
+    band all round, sinks as one piece. Dock like the camp. Locked hero card shows only shape + goal + progress bar.
+    Readable hero card (each skill in a box with a coloured tag, airy cream text).
+  - Necromancer is shown as NECROMAGE (id stays `necromancer`).
+  - Squad screen demo page: `npm run build:squad-demo` (starts like a new player), https://claude.ai/artifact/91YYyyPt6hFqW5TwJewZQ2
+  - Game page republished with all of it (session 47).
+- OTHER CANDIDATES (older): skills are a small share of damage (design talk); page leftovers (Twin Crescent animation,
+  Executioner on Arrow Rain, Defense Bash power pages, icon look-alikes); bosses rework; transitions phase 2-5.
 - PUBLISH (Artifact tool): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
   dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. The first publish of a session
   is refused 'not viewed', the second as 'unchanged': Read the LAST 3 lines of the saved live copy (offset), then the
   third identical publish goes through.
-- Browser checks: vite + Playwright FROM THE SCRATCHPAD dir (`<repo>/node_modules/.bin/vite <repo> --port 5190`). Fresh
-  clone: `npm install` first. Playwright in an .mjs file: `createRequire(import.meta.url)('playwright')`. Dev:
-  `window.__game`; start a fight: stop 'Title', start 'Battle'.
-- TESTS: seed BOTH the state rng and Math.random for crowd tests, with a mixing rng (mulberry32). Test heroes with a
-  made-up 100000 health get their REAL max health back after any refreshStats (a heal, a kill, a buff): set health
-  relative to the real max (`s.refreshStats()` first), or compare two states that both refreshed.
+- Browser checks: vite + Playwright FROM THE SCRATCHPAD dir (`<repo>/node_modules/.bin/vite <repo> --port 5190`, run it
+  in the background with a long timeout). Fresh clone: `npm install` first. Playwright in an .mjs file:
+  `createRequire(import.meta.url)('playwright')`. Dev: `window.__game`; start a screen: stop the others, start 'Squad'.
+- TESTS: seed BOTH the state rng and Math.random for crowd tests, with a mixing rng (mulberry32).
 
 ## How we work with this user
+- LOOK ROUNDS (session 47, worked very well): when unsure the user says 'I need to see it' / 'do all three': build
+  every option INTO THE GAME behind a small switch button in the dock (registry key + scene restart) on a DEMO PAGE
+  (`build:squad-demo`), republish it, let them flip on the phone; on their pick delete the other options + the switch.
+  They then send phone screenshots with short fixes ('too crowded', 'not clear how to scroll', 'not bold'): fix all in
+  one round, republish the demo. Words can be misheard by voice typing ('goal' = gold, 'bend' = band, 'scroll design'
+  = the gold one): when a word makes no sense, match it to what is on screen.
 - PAGE / BALANCE WORK (session 46): 'go on' = next batch without asking; 'go with your suggestions' = apply all of my
   listed suggestions; they asked 'how did we test items?' before agreeing to a new tool: explain the existing tools
   first, then propose. They like a ranked table + before / after table, then 2-3 concrete options to pick from.

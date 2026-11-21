@@ -1,6 +1,47 @@
 # Handoff ARCHIVE (sessions 2-43, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
 
+## (session 47 start note, 2026-11-21; session 47 redid the squad screen, pushable buttons, Necromage, readable card)
+- BRANCH: `main` has EVERYTHING (session 46 merged in at the handoff). Start the next branch from `main`.
+- DONE in session 46 (all on main; details in `docs/systems/skill-books.md`, newest blocks at the bottom):
+  - ALL 31 NEW SKILL-BOOK PAGES built in 4 batches (8 common, 8 rare, 5 legendary, 10 hero pages), a test per mechanic,
+    an icon each. Hero pages: `hero` + `skill` + `patch`; they only fit that hero's named skill ('wrongSkill',
+    reward screen 'Not this skill'). Page icons lost the clasp gem (user: 'the lock feels weird').
+  - NEW TOOL `scripts/tests/pageruns.mjs [runsPerSquad] [ids]` ranks every page in full runs (same dice with/without,
+    all cores, ~6 min for all at 16). Result: survival pages win, damage pages ~0 (skills = 15-40% of a hero's damage,
+    `dmgshare.mjs`). Tuning round 1 + 1b applied (Siphon / Blood Price nerfed, Cyclone fixed at +4.8, damage pages and
+    4 hero pages buffed, Executioner heals, Elemental Storm weakens). Executioner / Elemental Storm still ~+1 / ~0: user
+    chose to keep them as 'small fry' legendaries and move on.
+  - DEALER shows 3 pages (was 5). BOSS PRIZE GROWS: `specialsByBoss.golden` (1st boss rares only, 2nd legendary for
+    sure + 5% hero, 3rd +15% hero, 4th+ 25% hero), golden card carries `bossNo`. Smart curve median 39-40.
+  - Game page republished with all of it (session 46). The user has NOT played the new pages yet: ask how they feel.
+- CANDIDATES for the next session (ask the user which; one per session):
+  1. SKILLS ARE A SMALL SHARE OF DAMAGE (15-40%), so every skill-damage page is weak: a design talk about making skills
+     matter more (bigger skill damage, shorter cooldowns...). Big topic: discuss first.
+  2. Small page leftovers: Twin Crescent has no second crescent animation (only a zone flash); Executioner on a
+     channel (Arrow Rain) refunds cooldown per wave; power pages don't grow Defense Bash's defense part; icon symbols
+     are first drafts (Finisher vs Reckless look alike).
+  3. Older OPEN items: art redo KIV, bosses rework, transitions phase 2-5, camp header frame, fight HUD in boss fights /
+     rooms (details in the archive), itch.io upload (did the user delete the old Oct 20 upload, viewport 390 x 844?).
+- ITCH.IO: `npm run build:itch`, copy `itch-page.html` as `index.html` into an empty folder, zip it (ONLY index.html),
+  SendUserFile.
+- Icon sheet (all page icons with real frames): a node script calling `pageIconArt` + `framedIconPixels` that writes
+  HTML, then a Playwright screenshot (session 46 scratch `icons/all.mjs`, gone with the scratchpad: rewrite it, ~25 lines).
+- DEV TOOLS (`scripts/dev/`, dev server on :5190 from the scratchpad): `smoke.mjs`, `tap-stress.mjs`,
+  `idle-time.mjs <repo>`, `push-drift.mjs <repo>`.
+- PUBLISH (Artifact tool): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
+  dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. The first publish of a session
+  is refused 'not viewed', the second as 'unchanged': Read the LAST 3 lines of the saved live copy (offset), then the
+  third identical publish goes through.
+- Browser checks: vite + Playwright FROM THE SCRATCHPAD dir (`<repo>/node_modules/.bin/vite <repo> --port 5190`). Fresh
+  clone: `npm install` first. Playwright in an .mjs file: `createRequire(import.meta.url)('playwright')`. Dev:
+  `window.__game`; start a fight: stop 'Title', start 'Battle'.
+- TESTS: seed BOTH the state rng and Math.random for crowd tests, with a mixing rng (mulberry32). Test heroes with a
+  made-up 100000 health get their REAL max health back after any refreshStats (a heal, a kill, a buff): set health
+  relative to the real max (`s.refreshStats()` first), or compare two states that both refreshed.
+
+
+
 ## (session 46 start note, 2026-11-20; session 46 built the 31 pages, pageruns.mjs, page tuning, dealer 3 pages, boss prize grows)
 START HERE (session 46): BUILD THE 31 NEW SKILL-BOOK PAGES (user: 'handoff first before executing')
 - BRANCH: `main` has EVERYTHING (session 45 merged in at the handoff). Start the next branch from `main`.

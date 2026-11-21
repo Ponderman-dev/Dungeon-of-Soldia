@@ -1,6 +1,45 @@
 # Handoff ARCHIVE (sessions 2-43, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
 
+## (session 46 start note, 2026-11-20; session 46 built the 31 pages, pageruns.mjs, page tuning, dealer 3 pages, boss prize grows)
+START HERE (session 46): BUILD THE 31 NEW SKILL-BOOK PAGES (user: 'handoff first before executing')
+- BRANCH: `main` has EVERYTHING (session 45 merged in at the handoff). Start the next branch from `main`.
+- TASK: build the 31 new pages the user picked. The full list (name + one line each, tiers) is in
+  `docs/systems/skill-books.md` 'NEXT: 31 NEW PAGES'; read that file first. Build in BATCHES of about 8 (commons first),
+  numbers in skillBooks.json, one test per mechanic in `skill-books.test.mjs`, a `tier` on every page, and an ICON
+  entry in `src/data/pageIcons.json` for every new page (a test fails without it; hero pages = crimson `heroFrame`).
+  Hero pages need `hero: '<heroId>'` and only fit that hero's named skill (pageFit must refuse other skills: not built
+  yet). After each batch: full `npm test`, then show the user the new icons (all-icons sheet, see below).
+- DONE in session 45 (all on main):
+  - NO SHOVING (movement.md 'NO SHOVING'): a walker stops at a standing fighter, steps around it, or waits for a gap.
+    Push per fighter in a 12-enemy crowd 222px -> 21-31px. Not yet seen by eye on screen; ask how fights feel now.
+  - PHONE SPEED (ui.md 'PHONE SPEED'): text canvases kept in memory, no redraw for an unchanged colour, 'TEST: speed
+    (fps)' readout in the TEST menu. SOLVED: the user confirmed on their Android phone (itch.io in Chrome) that the
+    lag is gone with that zip.
+  - PAGE TIERS + PAGE ICONS (skill-books.md): common / rare / legendary / hero; golden book 20% legendary, 5% hero
+    page (both can happen); every page a coloured spell tome (user picked 'F' out of 6 kinds). First-draft symbols:
+    offer tweaks (Razor Ink reads weakest, Titan dull, Desperate small).
+- ITCH.IO: `npm run build:itch`, copy `itch-page.html` as `index.html` into an empty folder, zip it (ONLY index.html),
+  SendUserFile. The user uploads it, ticks 'played in the browser'. Their page still had the OLD Oct 20 html upload and
+  a 405 x 720 viewport (told them: delete the old file, set 390 x 844); ask if done.
+- Icon sheet (all page icons with real frames, no browser game needed): a node script calling `pageIconArt` +
+  `framedIconPixels` that writes HTML, then a Playwright screenshot (session 45 scratch `icons/all.mjs`, rewrite it).
+- OPEN from earlier: art redo KIV, optimization ideas, bosses rework, transitions phase 2-5, camp header frame
+  (offered to flatten, no answer), fight HUD not checked in boss fights / rooms: details in the archive.
+- DEV TOOLS (`scripts/dev/`, dev server on :5190 from the scratchpad): `smoke.mjs`, `tap-stress.mjs`,
+  `idle-time.mjs <repo>`, `push-drift.mjs <repo>` (NEW: px shoved per fighter, drift, swings; before/after tables).
+- PUBLISH (Artifact tool): `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/
+  dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. The first publish of a session
+  is refused 'not viewed', the second as 'unchanged': Read the LAST 3 lines of the saved live copy (offset), then the
+  third identical publish goes through. (Last published: session 45, with the no-shoving fix only.)
+- Browser checks: vite + Playwright FROM THE SCRATCHPAD dir (`<repo>/node_modules/.bin/vite <repo> --port 5190`, it dies
+  when the worker restarts: start it again). Fresh clone: `npm install` first. Playwright in an .mjs file:
+  `createRequire(import.meta.url)('playwright')`. Dev: `window.__game`; start a fight: stop 'Title', start 'Battle'.
+  Open the reward screen by hand: `battleScene.scene.launch('Reward', { state, choices: [card], floor, onDone(){} })`,
+  then set `bookPages` and call `showPages()` (`g.scene.launch` does not exist on the game's scene manager).
+- TESTS: seed BOTH the state rng and Math.random for crowd tests, and use a mixing rng (mulberry32): the simple
+  16807 one gives the same fight for small seeds (session 45 hid a 1-in-10 case that way).
+
 ## (session 45 start note, 2026-11-16; session 45 did no-shoving, phone speed, page tiers + page icons)
 START HERE (session 45): TWO TASKS FROM THE USER (one per session; ask which first)
 - BRANCH: `main` has EVERYTHING (session 44 merged in at the handoff). Start the next branch from `main`.

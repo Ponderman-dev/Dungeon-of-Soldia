@@ -1,5 +1,33 @@
-# Handoff ARCHIVE (sessions 2-43, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-50, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## (session 50 start note, 2026-11-21; session 50 did square skill squares, rarity tags, stutter fixes, door sound timing, Shield Totem vanish + spot) MORE UI TWEAKS on the new DUSK look (user's phone screenshots + short fixes)
+- BRANCH: `main` has EVERYTHING (session 49 merged in). Start the next branch from `main`.
+- TASK: the user plays the game page on the phone and sends screenshots with small UI fixes. Fix all in one round,
+  check each screen in a browser (vite + Playwright from the scratchpad), commit, bring main up, republish the GAME page.
+  Ask with the question tool when a complaint is vague ('doesn't follow the theme' = ask which parts: lines / text /
+  fill / colours; their pick was lines + fill + yellow in fights).
+- THE LOOK NOW (session 49; full notes docs/systems/ui.md 'THE DUSK LOOK', end of file): square windows, one thin lavender
+  line, flat fills, no studs; flat one-colour buttons: SALMON main (EXPEDITION, BEGIN DESCENT), MAROON others; salmon
+  titles + picked / chosen outlines; header boxes = `drawWindow(.., { quiet: true })` (like the squad name plates);
+  Soldia Small font; `UI.gold` YELLOW for normal text (user wanted it back), `UI.fightGold` soft PEACH in fights; the
+  TITLE page keeps yellow SOLDIA + white text. Colours: config.js `UI.goldTheme` (old name kept) + UI.text/dim/pageBg/
+  dither. Crimson + gold: `git show 4fc5724:src/config.js`. Reference picture: docs/references/ui-vibe-pick-a-class.png.
+- PRESS: every button has `zone.onPress(fn)` (dark cover + label drops, click sound on finger DOWN, action on release;
+  `{ instant }` for fight skills). New buttons: use onPress or pressable, never a bare 'pointerup'.
+- CAMP <-> SQUAD SLIDE: the next screen is built while the finger holds the button (uiKit prepareScreen / whenScreenReady
+  / slideToScreen, screens have arrive()); old timing (motion.slow, easeMove) kept: the user REJECTED a faster slide.
+- LEFT YELLOW ON PURPOSE (offer if asked): item icons + tier frames (art), the check marks on picked tiles, rage bars.
+  Not themed yet / candidates: the reward sheet + hero card layouts (reference's title bar with ? / X, cells split by
+  lines), menu pages' other transitions (same stutter check), the squad demo page still holds the old look trial.
+- OTHER CANDIDATES (older): full item text pass (~98 items still old style); skills small share of damage; page
+  leftovers; bosses rework; transitions phase 2-5.
+- PUBLISH: `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat dist-page.html; } > <scratchpad>/dungeon-of-soldia.html`,
+  publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr. First publish of a session is refused 'not viewed', the
+  second 'unchanged': Read the LAST 3 lines of the saved live copy (offset), then publish again (third try goes through).
+- Browser checks: `<repo>/node_modules/.bin/vite <repo> --port 5190` from the scratchpad, in the background with a long
+  timeout (it gets killed at the default limit). Playwright: `NODE_PATH=$(npm root -g) node x.cjs`; `window.__game`.
+  ALWAYS load the screen after a scene edit (`npm test` does not run scenes).
 
 ## (session 49 start note, 2026-11-21; session 49 did the Dusk look, press on every button, stutter-free camp <-> squad slide) TRY A NEW UI LOOK (user: 'I kinda want this vibe'), reference picture below
 - BRANCH: `main` has EVERYTHING (session 48 merged in at the handoff). Start the next branch from `main`.

@@ -17,15 +17,14 @@ import combatRules from '../data/combat.json';
 import defaultSquad from '../data/squad.json';
 import { DEMO as DEMO_KIND, demoSquad } from './demoMode.js'; // a demo page's saved squad
 const DEMO = !!DEMO_KIND;
-// The SQUAD SCREEN DEMO page (npm run build:squad-demo, session 47 trial): opens here like a new player (test toggle
-// to open every hero), the TILES button flips the locked-hero styles; BEGIN DESCENT walks into the gate and comes back
-// here (no fight).
+// The SQUAD SCREEN DEMO page (npm run build:squad-demo, session 47): opens here like a new player (the test toggle
+// opens every hero); BEGIN DESCENT walks into the gate and comes back here (no fight).
 const SQUAD_DEMO = import.meta.env.VITE_SQUAD_DEMO === '1';
 const TESTER = import.meta.env.VITE_TESTER === '1'; // the playtest build for itch.io: no test buttons
 import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
 import { slotsFrom, addToSlots, removeFromSlots, isFull, squadOrder } from '../systems/squadSlots.js';
-import { squadGrid, SQUAD_VIEW, LOCKED_STYLES, SQUAD_DEPTH } from './squad/squadGrid.js';
+import { squadGrid, SQUAD_VIEW, SQUAD_DEPTH } from './squad/squadGrid.js';
 
 // The interface look (config.js UI, entities/uiKit.js): black windows, white lines, Ironslab text (sizes 8 / 16 / 24 = 10 / 20 / 30px, see config.js fontGrid).
 const INK = UI.text;
@@ -39,13 +38,13 @@ const DOOR_X = GAME_WIDTH / 2;
 const SIDE = 24; // the gap to the screen sides (camp.json ui.side)
 const BEGIN = { y: 672, h: 60 }; // the 'Begin descent' button, over the dock (screen review: thumb reach, the gate stays clear)
 const DOCK = { y: 742, btnY: 754, btnH: 44, gap: 8, toolY: 808 }; // the dock: its gold line, CAMP / RANDOM, the test row
-// Where the squad stands, how big, the name plates and the hero grid: squad/squadGrid.js (SQUAD_VIEW).
+// Where the squad stands, how big, the names and the hero grid: squad/squadGrid.js (SQUAD_VIEW).
 const WALK = combatRules.movement.walkSpeedPxPerSec * 1.6; // a bit quicker than in fights
 const T = combatRules.transition;
 const DEPTH = SQUAD_DEPTH;
 
 // The squad select screen, drawn as the room at the dungeon's entrance: the squad of 3 stands in front of the gate
-// (slot order = battle order) with name plates and Send back buttons; under them every hero is a tile (squadGrid.js,
+// (slot order = battle order) with their names and Send back buttons; under them every hero is a tile (squadGrid.js,
 // the user's pick C of the session 47 trial); a tap opens the details card. A picked hero walks in from the side of the
 // screen, a sent back one walks off it. With all 3 slots filled 'Begin descent' lights up; the squad walks into the gate.
 export default class SquadScene extends Phaser.Scene {
@@ -67,7 +66,6 @@ export default class SquadScene extends Phaser.Scene {
     this.leaving = this.descending = false;
     this.walkers = new Map(); // hero id -> tween of a hero that is walking
     this.L = SQUAD_VIEW;
-    this.lockedStyle = this.registry.get('lockedStyle') || 'goals'; // TRIAL (squadGrid.js): goals / teaser / folded
     this.tiles = null; this.gridParts = [];
 
     this.drawRoom();
@@ -125,7 +123,7 @@ export default class SquadScene extends Phaser.Scene {
 
   drawSlots() {
     // Each slot: a soft shadow on the floor; an empty one also has a faint pale ring and a small "+". A hero standing in
-    // it has a name plate (squadGrid drawPlates) and a small "Send back" button under it; tapping the hero opens its card.
+    // it has its name (squadGrid drawNames) and a small "Send back" button under it; tapping the hero opens its card.
     this.slotMarks = this.L.slots.map((s, i) => {
       const k = this.L.heroScale / 3;
       const shadow = this.add.ellipse(s.x, s.y, 64 * k, 16 * k, 0x000000, 0.28).setDepth(DEPTH.slot);
@@ -136,9 +134,7 @@ export default class SquadScene extends Phaser.Scene {
         const id = this.slots[i];
         if (id && !this.walkers.has(id) && !this.panel && !this.leaving) this.openPanel(id);
       });
-      const plateG = this.add.graphics().setDepth(DEPTH.ui);
-      const plateT = this.add.text(s.x, this.L.plateY + this.L.plateH / 2 + 1, '', { fontFamily: FONT, fontSize: '8px', color: INK }).setOrigin(0.5).setDepth(DEPTH.ui);
-      (this.plates = this.plates || [])[i] = { g: plateG, t: plateT };
+      (this.names = this.names || [])[i] = uiText(this, s.x, this.L.nameY, '', 'normal', UI.goldTheme.title, { stroke: '#120c0a', strokeThickness: 5 }).setOrigin(0.5).setDepth(DEPTH.ui);
       const V = this.L, back = this.add.container(s.x, V.backY + V.backH / 2).setDepth(DEPTH.ui);
       const bg = this.add.graphics();
       const redraw = (pressed) => drawFlatButton(bg.clear(), -V.backW / 2, -V.backH / 2, V.backW, V.backH, { pressed }); // a flat button, one even row
@@ -211,17 +207,11 @@ export default class SquadScene extends Phaser.Scene {
       pressable(this, this.add.zone(x + dw / 2, DOCK.btnY + DOCK.btnH / 2, dw, DOCK.btnH).setInteractive().setDepth(DEPTH.ui), { redraw, sink: [t], onTap, enabled: () => !this.leaving && !this.panel });
     });
     const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));
-    this.uiParts = { up: shown(this.children.list.slice(n0, n1)), fade: [...this.slotMarks.map((m) => m.back), ...this.plates.flatMap((P) => [P.g, P.t]), ...shown(this.gridParts)] };
+    this.uiParts = { up: shown(this.children.list.slice(n0, n1)), fade: [...this.slotMarks.map((m) => m.back), ...this.names, ...shown(this.gridParts)] };
     this.uiParts.down = shown(this.children.list.slice(n1)); // (the test toggle below joins it)
     if (TESTER || DEMO) return; // the playtest build (npm run build:itch) and the fight demos have no test row
-    // LOCKED-TILES TRIAL (session 47): a small button bottom left flips goals -> teaser -> folded (squadGrid.js).
-    const style = this.smallButton(SIDE, DOCK.toolY, 110, 24, `TILES: ${this.lockedStyle.toUpperCase()}`, () => {
-      this.registry.set('lockedStyle', LOCKED_STYLES[(LOCKED_STYLES.indexOf(this.lockedStyle) + 1) % LOCKED_STYLES.length]);
-      this.scene.restart({ lastRun: this.lastRun });
-    });
-    this.uiParts.down.push(...style.filter((o) => !(o instanceof Phaser.GameObjects.Zone)));
-    this.toggleText = this.add.text(260, DOCK.toolY + 12, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
-    this.add.zone(260, DOCK.toolY + 12, 220, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
+    this.toggleText = this.add.text(GAME_WIDTH / 2, DOCK.toolY + 12, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
+    this.add.zone(GAME_WIDTH / 2, DOCK.toolY + 12, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
     this.uiParts.down.push(this.toggleText);
   }
 
@@ -265,7 +255,7 @@ export default class SquadScene extends Phaser.Scene {
     this.beginText.setText(ready ? 'BEGIN DESCENT' : `PICK ${missing} MORE`).setColor(buttonTextColor(ready, false, true));
     this.titleText.setText(`Squad ${squadOrder(this.slots).length}/${this.need()}`);
     if (this.tiles) for (const t of this.tiles.values()) t.draw();
-    this.drawPlates();
+    this.drawNames();
     if (this.toggleText) this.toggleText.setText(`${this.progress.unlockAll ? '[X]' : '[ ]'} test: unlock every hero`).setColor(this.progress.unlockAll ? UI.green : MUTE);
   }
 
@@ -369,7 +359,7 @@ export default class SquadScene extends Phaser.Scene {
     saveProgress(this.progress);
     for (const id of [...this.slots]) if (id && !this.unlocked(id)) this.sendBack(id); // locked heroes can't stay picked
     this.uiParts.fade = this.uiParts.fade.filter((o) => !this.gridParts.includes(o));
-    this.buildGrid(); // which heroes have tiles changes (teaser / folded)
+    this.buildGrid(); // which heroes have tiles changes
     this.uiParts.fade.push(...this.gridParts.filter((o) => !(o instanceof Phaser.GameObjects.Zone)));
     this.refresh();
   }

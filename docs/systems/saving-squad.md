@@ -42,3 +42,9 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   to find'; `folded` = open heroes big, locked ones in a small row 'LOCKED: n'. The squad demo page now starts like a
   NEW PLAYER (3 heroes) with the 'unlock every hero' test switch. Tests: `progress.test.mjs` (shortGoal, nextUnlock).
   When the user picks a style: delete the other two + the TILES button.
+- **TEASER PICKED + ADAPTIVE GRID (session 47, user):** goals / folded and the TILES button are GONE. The grid shows
+  every open hero + ONE '?' tile (`nextUnlock`: grey shape, gold '?', its goal in two lines). It ADAPTS to the count
+  (`gridShape(n)` in squadGrid.js): up to 4 tiles = one row, more = two balanced rows (5 = 3 + 2 ... 10 = 5 + 5),
+  tiles as wide as fits (max 80, h 100, heroes x3), the block centred between the Send back row and BEGIN DESCENT;
+  'n more heroes to find' only when there is one row. Squad NAMES have no box: big cream text (`goldTheme.title`,
+  normal size) with a dark outline, one row (`SQUAD_VIEW.nameY`), Send back buttons in the row under them.

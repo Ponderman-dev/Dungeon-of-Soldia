@@ -74,4 +74,5 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
 - **BEGIN DESCENT LOOK PICKED (session 47, user: 'the gold design but crimson', no arrows, no black outline on the
   words):** `squad/beginButton.js` = a crimson body between two gold bands (top + bottom, no side frame), plain cream
   words. The crimson / iron looks, the chevrons and the BUTTON switch are GONE. Pressed = the WHOLE button (gold
-  bands too) drops sinkPx onto a dark ledge and goes a shade darker (user: the bands must move with it).
+  bands too) drops sinkPx onto a dark ledge and goes a shade darker (user: the bands must move with it). Then the gold
+  band runs ALL ROUND (left + right too, user).

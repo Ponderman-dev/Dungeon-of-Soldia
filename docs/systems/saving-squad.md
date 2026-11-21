@@ -71,3 +71,6 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   `beginLook`, the 'BUTTON: ...' button in the dock: `crimson` (camp banded red), `iron` (iron frame + rivets like the
   gate, crimson body, gold words), `gold` (gold body, crimson bands, dark words). Dim 'PICK n MORE' until full.
   When the user picks: delete the other looks + the BUTTON button.
+- **BEGIN DESCENT LOOK PICKED (session 47, user: 'the gold design but crimson', no arrows, no black outline on the
+  words):** `squad/beginButton.js` = a crimson body between two gold bands (top + bottom, no side frame), plain cream
+  words. The crimson / iron looks, the chevrons and the BUTTON switch are GONE.

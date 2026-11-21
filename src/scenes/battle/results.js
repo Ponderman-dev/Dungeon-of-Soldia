@@ -26,7 +26,6 @@ export const resultsMethods = {
   onWin() {
     this.mode = 'won';
     sfx.play('floorClear');
-    sfx.play('doorOpen');
     for (const e of this.state.endFloor()) this.showEvent(e); // weak minions vanish with the floor
     if (this.castBars) this.castBars.clear(); // a wind-up still going is dropped
     if (this.tauntLines) this.tauntLines.clear();

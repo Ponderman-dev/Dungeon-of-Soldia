@@ -100,7 +100,8 @@
       "skullPx": 3, "teeth": 7, "shakeMul": 3, "dustMul": 2
     },
     "anim": {
-      "_about": "How the door opens (Door.open): rattleMs of shaking (rattlePx, rattles times) as it unlocks, then the halves swing open over swingMs (they speed up like a heavy door) to openScale, getting darker as they turn (shadeAlpha), bounce back by bounce and settle (bounceMs). On the hit: a thud shake (shakeMs, shakeIntensity), dust puffs at the foot (puffs each side) and dust falling from the arch (fallingDust).",
+      "_about": "How the door opens (Door.open): rattleMs of shaking (rattlePx, rattles times) as it unlocks, then the halves swing open over swingMs (they speed up like a heavy door) to openScale, getting darker as they turn (shadeAlpha), bounce back by bounce and settle (bounceMs). On the hit: a thud shake (shakeMs, shakeIntensity), dust puffs at the foot (puffs each side) and dust falling from the arch (fallingDust). The doorOpen sound starts soundDelayMs after open() so its loud hit (about 200ms into the file) lands on the slam (user, session 50: it played early).",
+      "soundDelayMs": 480,
       "rattleMs": 220,
       "rattles": 4,
       "rattlePx": 1,

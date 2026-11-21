@@ -81,6 +81,7 @@ export default class Door {
       sc.tweens.add({ targets: leaf.shadow, alpha: A.shadeAlpha, delay: A.rattleMs, duration: A.swingMs, ease: 'Cubic.easeIn' });
     }
     sc.time.delayedCall(A.rattleMs + A.swingMs, () => this.slam());
+    if (!this.big) sc.time.delayedCall(A.soundDelayMs, () => this.isOpen && sfx.play('doorOpen')); // on the scene clock: stays with the animation
   }
 
   // The halves hit the wall: a thud shake, dust puffs at the foot of the door and dust falling from the arch.

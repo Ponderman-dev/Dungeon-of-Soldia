@@ -683,23 +683,24 @@ export const effectsMethods = {
     view.popSlot = ((view.popSlot ?? -1) + 1) % 4;
     // Above where the fighter is right now (a hero may be away at an enemy).
     const y = view.ch.y + view.ch.hopOffset - view.unit.def.height * charScale(view.unit.def) - 22 - view.popSlot * 15;
-    const t = this.add
-      .text(view.ch.x, y, text, {
-        fontFamily: UI.font,
-        fontSize: sizePx ? `${sizePx}px` : big ? '20px' : '14px',
-        color,
-        stroke: '#000000',
-        strokeThickness: 3,
-        align: 'center',
-      })
-      .setOrigin(0.5)
-      .setDepth(DEPTH.popup);
+    // Pop texts are REUSED (session 50: a new text per hit = a new canvas + texture each time, frames stuttered):
+    // a finished one waits in a pool per look and only redraws when its words change.
+    const fontSize = sizePx ? `${sizePx}px` : big ? '20px' : '14px';
+    const key = `${fontSize}|${color}`;
+    this.popPool = this.popPool || new Map();
+    const pool = this.popPool.get(key) || this.popPool.set(key, []).get(key);
+    let t = pool.pop();
+    while (t && !t.active) t = pool.pop(); // (a destroyed one is dropped)
+    if (t) t.setText(text).setPosition(view.ch.x, y).setScale(1).setAlpha(1).setVisible(true);
+    else t = this.add.text(view.ch.x, y, text, { fontFamily: UI.font, fontSize, color, stroke: '#000000', strokeThickness: 3, align: 'center' }).setOrigin(0.5);
+    t.setDepth(DEPTH.popup);
+    const done = () => { if (t.active) { t.setVisible(false); pool.push(t); } };
     t.x = Phaser.Math.Clamp(t.x, t.width / 2 + 4, GAME_WIDTH - t.width / 2 - 4); // keep it on screen
     if (sizePx) {
       t.setScale(1.5); // skill numbers pop in big, then settle
       this.tweens.add({ targets: t, scale: 1, duration: 150, ease: 'Back.easeOut' });
     }
-    this.tweens.add({ targets: t, y: y - 30, alpha: 0, duration: sizePx ? 1000 : 800, onComplete: () => t.destroy() });
+    this.tweens.add({ targets: t, y: y - 30, alpha: 0, duration: sizePx ? 1000 : 800, onComplete: done });
   },
 
   // A new item or book page on a hero (user: the old 20px '+Name' popup looked 'stretchy and big'): its name at one

@@ -30,7 +30,8 @@ const ROW_GAP = 8; // hero row: the gap under the name and under the change line
 const ICON_PAD = 18; // the icon's gap from the card's left edge (user, session 41: neater gaps)
 const ICON_PX = 80; // the framed item icon at 4x
 const ICON_X = ICON_PAD + ICON_PX / 2; // the icon column's middle
-const TEXT_X = ICON_PAD + ICON_PX + 16; // where a card's text starts (the same gap again right of the icon)
+const TEXT_X = ICON_PAD + ICON_PX + 16;
+const CARD_H = new Map(); // item id -> its card's height (measured once by drawCard) // where a card's text starts (the same gap again right of the icon)
 const DESC_PX = 8; // description text size
 const BACK_W = 84; // the Back pill's width (top right of the sheet)
 const TITLE_H = 54; // the step title above the cards
@@ -63,6 +64,13 @@ export default class RewardScene extends Phaser.Scene {
     this.stepObjects = [];
     this.busy = false;
     this.closing = false;
+    // The animations wait until the sheet has drawn twice (session 50: building the cards takes one long frame on a
+    // phone, and the slide then jumped to catch up = a stutter). timeScale 0 holds every tween at its start.
+    this.tweens.timeScale = 0;
+    this.events.once(Phaser.Scenes.Events.RENDER, () => this.events.once(Phaser.Scenes.Events.RENDER, () => {
+      this.tweens.timeScale = 1;
+      sfx.play('rewardUp');
+    }));
 
     // The dungeon behind gets darker; the sheet slides up from the bottom.
     this.dim = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x05030a, 0).setInteractive();
@@ -82,7 +90,6 @@ export default class RewardScene extends Phaser.Scene {
     this.sheet.add(this.banner);
     this.top = null; // the sheet's top edge now (each step sets it with fitSheet)
     this.tweens.add({ targets: this.sheet, y: 0, duration: 420, ease: 'Cubic.easeOut' });
-    sfx.play('rewardUp');
 
     // A lone golden book (boss prize) opens straight on its pages.
     if (this.payload.choices.length === 1 && this.payload.choices[0].kind === 'book') {
@@ -168,6 +175,7 @@ export default class RewardScene extends Phaser.Scene {
 
   // How tall a card must be for its description (the card grows instead of the text spilling out).
   cardHeight(item) {
+    if (CARD_H.has(item.id)) return CARD_H.get(item.id); // drawCard remembers what it measured
     const probe = this.add.text(0, 0, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, lineSpacing: 4, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
     let h = probe.height;
     probe.destroy();
@@ -190,34 +198,38 @@ export default class RewardScene extends Phaser.Scene {
     return h;
   }
 
-  // One reward card: icon in its rarity frame + type, rarity, name, description.
-  drawCard(item, x, y, h, highlighted = false) {
+  // One reward card: icon in its rarity frame + type, rarity, name, description. `h` = null: the card is as tall as
+  // its text needs (its texts are made ONCE and measured, session 50: making them twice stuttered the sheet).
+  drawCard(item, x, y, h = null, highlighted = false) {
     const rc = this.rarityColor(item);
     const card = this.add.container(x, y);
     this.track(card);
     const g = this.add.graphics();
+    card.add(g);
+    // The rarity TAG: a solid block in the rarity colour with dark text (user, session 50: the thin coloured words
+    // alone made common / rare / epic / legendary hard to tell apart).
+    const tagText = this.add.text(TEXT_X + 4, 13, rarities[item.rarity].label.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: '#14121c' });
+    const tag = this.add.rectangle(TEXT_X, 10, Math.ceil(tagText.width) + 8, Math.ceil(tagText.height) + 6, rc).setOrigin(0);
+    // The name: 16px, or two 16px lines when it is long (never an in-between size: they blur).
+    const name = this.add.text(TEXT_X, 34, item.name, { fontFamily: FONT, fontSize: '16px', color: UI.text, lineSpacing: 6, wordWrap: { width: CARD_W - TEXT_X - 12, useAdvancedWrap: true } });
+    const desc = this.add.text(TEXT_X, 34 + name.height + 10, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, color: MUTE, lineSpacing: 4, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
+    const per = item.perStack ? this.add.text(TEXT_X, desc.y + desc.height + 8, `Per stack: ${item.perStack}`, this.perStackStyle()) : null;
+    const need = Math.max(136, 34 + name.height + desc.height + (per ? per.height + 8 : 0) + 10 + 18);
+    CARD_H.set(item.id, need);
+    if (h == null) h = need;
     const R = rarities[item.rarity];
     const paint = (lit) => {
       g.clear();
       drawRarityFrame(g, 0, 0, CARD_W, h, R, { lit }); // the card's frame = its rarity (the chosen card lights up)
     };
     paint(highlighted);
-    card.add(g);
     if (item.rarity === 'legendary') rarityShine(this, card, CARD_W, h, R);
     card.add(this.add.image(ICON_X, h / 2 - 9, itemIconKey(this, item.id, item.rarity)).setScale(4));
     card.add(this.add.text(ICON_X, h / 2 + 42, itemTypes[item.type].label.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5));
-    // The rarity TAG: a solid block in the rarity colour with dark text (user, session 50: the thin coloured words
-    // alone made common / rare / epic / legendary hard to tell apart).
-    const tagText = this.add.text(TEXT_X + 4, 13, rarities[item.rarity].label.toUpperCase(), { fontFamily: FONT, fontSize: '8px', color: '#14121c' });
-    card.add(this.add.rectangle(TEXT_X, 10, Math.ceil(tagText.width) + 8, Math.ceil(tagText.height) + 6, rc).setOrigin(0));
-    card.add(tagText);
-    // The name: 16px, or two 16px lines when it is long (never an in-between size: they blur).
-    const name = this.add.text(TEXT_X, 34, item.name, { fontFamily: FONT, fontSize: '16px', color: UI.text, lineSpacing: 6, wordWrap: { width: CARD_W - TEXT_X - 12, useAdvancedWrap: true } });
-    card.add(name);
-    const desc = this.add.text(TEXT_X, 34 + name.height + 10, item.description, { fontFamily: FONT, fontSize: `${DESC_PX}px`, color: MUTE, lineSpacing: 4, wordWrap: { width: CARD_W - TEXT_X - 16, useAdvancedWrap: true } });
-    card.add(desc);
-    if (item.perStack) card.add(this.add.text(TEXT_X, desc.y + desc.height + 8, `Per stack: ${item.perStack}`, this.perStackStyle()));
+    card.add([tag, tagText, name, desc]);
+    if (per) card.add(per);
     card.paint = paint;
+    card.h = h;
     return card;
   }
 
@@ -227,7 +239,8 @@ export default class RewardScene extends Phaser.Scene {
     this.step = 'pick';
     this.clearStep();
     // The sheet fits the title and the cards (screen review: smaller, the dungeon shows above it).
-    const heights = this.payload.choices.map((item) => this.cardHeight(item));
+    const cards = this.payload.choices.map((item) => this.drawCard(item, PAD, 0)); // made once, each as tall as it needs
+    const heights = cards.map((c) => c.h);
     const total = TITLE_H + heights.reduce((a, b) => a + b, 0) + 14 * (heights.length - 1);
     const top = this.fitSheet(total + 16) + HEAD - 8;
     this.text(GAME_WIDTH / 2, top, 'Choose a reward', 28, UI.text, true).setOrigin(0.5, 0);
@@ -235,7 +248,7 @@ export default class RewardScene extends Phaser.Scene {
     let y = top + TITLE_H;
     this.payload.choices.forEach((item, i) => {
       const h = heights[i];
-      const card = this.drawCard(item, PAD, y, h);
+      const card = cards[i].setY(y);
       const hit = this.track(this.add.zone(PAD + CARD_W / 2, y + h / 2, CARD_W, h).setInteractive());
       hit.on('pointerdown', () => {
         if (this.busy || this.closing) return;

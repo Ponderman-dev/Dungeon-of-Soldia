@@ -174,3 +174,11 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   (hud.js drawSkillFrame). Reward item cards: a SOLID rarity TAG (colour block + dark rarity word only, e.g. 'RARE'; user dropped 'ITEM') instead of
   thin coloured words; rarities.json `frame.line` = border px (common/rare 2, epic/legendary 4) and clearer fills
   (common neutral grey-black, rare blue, epic purple, legendary brown-gold). Legendary keeps its shine.
+- Session 50 STUTTER pass (user: fights + reward screen stutter; measured under 4x CPU slowdown): (1) uiKit's small-
+  font measureText remembers each letter's width per font (it measured every letter of every text again); (2) fight
+  pop numbers (effects.js popText) are POOLED per size + colour (`this.popPool`): a finished one hides and is reused,
+  no new canvas + texture per hit; (3) RewardScene cards make their texts ONCE (drawCard measures its own height,
+  `CARD_H` remembers it for cardHeight) and every reward tween waits (tweens.timeScale 0) until the sheet has drawn
+  twice, so the slide never jumps after the build frame. Found: only 4 WebGL shaders, all built at fight start (not a cause).
+- Door sound (user: plays early): Door.open() plays 'doorOpen' itself, `floorArt.json door.anim.soundDelayMs` (480)
+  after the door starts, on the scene clock, so the sound's loud hit (~200ms into the file) lands on the slam.

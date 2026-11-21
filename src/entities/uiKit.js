@@ -39,6 +39,7 @@ const isSmall = (size) => parseFloat(size) <= SMALL.maxPx;
 // The small font's size: its own px (px2From, when set, draws bigger asks at 2x: unused since the session 49 trial).
 const smallPx = (size) => (parseFloat(size) > (SMALL.px2From ?? Infinity) ? SMALL.px * 2 : SMALL.px);
 let gridInstalled = false;
+const charWidths = new Map(); // ctx.font -> (letter -> whole-pixel width)
 function installFontGrid() {
   if (gridInstalled) return;
   gridInstalled = true;
@@ -75,7 +76,12 @@ function installFontGrid() {
     const ctx = this.context, measure = ctx.measureText, fill = ctx.fillText, stroke = ctx.strokeText;
     ctx.measureText = function (str) {
       let w = 0;
-      for (const ch of str) w += Math.ceil(measure.call(this, ch).width - 0.05);
+      const widths = charWidths.get(this.font) || charWidths.set(this.font, new Map()).get(this.font); // letter widths are remembered per font (session 50: measuring every letter of every text again made frames stutter)
+      for (const ch of str) {
+        let cw = widths.get(ch);
+        if (cw === undefined) widths.set(ch, (cw = Math.ceil(measure.call(this, ch).width - 0.05)));
+        w += cw;
+      }
       const m = measure.call(this, str);
       return { width: w, actualBoundingBoxAscent: m.actualBoundingBoxAscent, actualBoundingBoxDescent: m.actualBoundingBoxDescent, fontBoundingBoxAscent: m.fontBoundingBoxAscent, fontBoundingBoxDescent: m.fontBoundingBoxDescent };
     };

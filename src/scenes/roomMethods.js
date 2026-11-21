@@ -262,7 +262,6 @@ export const roomMethods = {
     if (this.roomHint) this.roomHint.destroy();
     this.roomHint = null;
     this.layer.setDoorOpen(true);
-    sfx.play('doorOpen');
     this.time.delayedCall(700, () => this.goToNextFloor());
   },
 

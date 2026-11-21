@@ -72,6 +72,9 @@ export const UI = {
   // the button face sinks in (dark inset band on top, no shine) and the label drops sinkPx; the action runs on
   // RELEASE, after the press has shown for at least holdMs (a very quick tap still shows the push).
   press: { sinkPx: 2, holdMs: 90 },
+  // FLAT BUTTON (uiKit drawFlatButton; the camp's look, session 44 'cleaner and sleeker', shared with the squad screen
+  // session 47): gold line px, darker foot px, the gold band px of a banded main button (EXPEDITION, BEGIN DESCENT).
+  flat: { line: 2, foot: 6, band: 8 },
   motion: {
     fast: 140, normal: 220, slow: 450, story: 1100,
     easeIn: 'Cubic.easeIn', easeOut: 'Cubic.easeOut', easeMove: 'Sine.easeInOut', easeDrop: 'Back.easeOut',

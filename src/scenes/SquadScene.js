@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, SKILL_COLORS, UI } from '../config.js';
-import { drawWindow, drawCursor, uiShift, drawButton, buttonTextColor, pressable, pressDown } from '../entities/uiKit.js';
+import { drawWindow, drawCursor, uiShift, uiText, drawFlatButton, buttonTextColor, pressable, pressDown } from '../entities/uiKit.js';
+import pauseData from '../data/pause.json';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
 import { skillIconKey } from '../entities/skillIconTexture.js';
@@ -28,7 +29,12 @@ const MUTE = '#a8a8b8';
 const FONT = UI.font;
 const WALL_H = 200; // the back wall with the door, as on the battle floors
 const DOOR_X = GAME_WIDTH / 2;
-const BEGIN_Y = 700; // the 'Begin descent' button, at the bottom over RANDOM (screen review: thumb reach, the gate stays clear)
+// THE SAME LOOK AS THE CAMP AND THE FIGHT (session 47, user): flat camp buttons (uiKit drawFlatButton), BEGIN DESCENT
+// banded like EXPEDITION, CAMP / RANDOM in a dock (gold line + dark band, like the camp's tab bar), a title window top
+// left like the fight's floor counter, the sound button where the fight's pause button is (pause.json buttons).
+const SIDE = 24; // the gap to the screen sides (camp.json ui.side)
+const BEGIN = { y: 672, h: 60 }; // the 'Begin descent' button, over the dock (screen review: thumb reach, the gate stays clear)
+const DOCK = { y: 742, btnY: 754, btnH: 44, gap: 8, toolY: 808 }; // the dock: its gold line, CAMP / RANDOM, the test row
 // Where the squad stands, how big, and the rest of the middle of the screen: the layout (squad/squadLayouts.js).
 const WALK = combatRules.movement.walkSpeedPxPerSec * 1.6; // a bit quicker than in fights
 const T = combatRules.transition;
@@ -131,7 +137,7 @@ export default class SquadScene extends Phaser.Scene {
       if (!this.L.sendBack) return { shadow, ring, num, back: null };
       const back = this.add.container(s.x, s.y + 42).setDepth(DEPTH.ui);
       const bg = this.add.graphics();
-      const redraw = (pressed) => drawButton(bg.clear(), -52, -15, 104, 30, { pressed }); // roomy (user: more space between box and text); a solid button
+      const redraw = (pressed) => drawFlatButton(bg.clear(), -52, -15, 104, 30, { pressed }); // roomy (user: more space between box and text); a flat button
       redraw(false);
       const label = this.add.text(0, 0, 'Send back', { fontFamily: FONT, fontSize: '8px', color: buttonTextColor() }).setOrigin(0.5);
       back.add([bg, label]);
@@ -142,9 +148,9 @@ export default class SquadScene extends Phaser.Scene {
   drawUi() {
     const n0 = this.children.list.length; // what drawUi adds: the top part, then the bottom part (for uiShift)
     // Sound on/off: a small pixel speaker icon top right (waves = on, a cross = off); saved in the progress.
-    const sx = GAME_WIDTH - 30, sy = TESTER ? 30 : 92, P = 2; // centre (under the TEST buttons when they are there), pixel size
+    const PB = pauseData.buttons, sx = PB.pause.x + PB.pause.w / 2, sy = PB.y + PB.h / 2, P = 2; // centre: the fight's pause button spot; pixel size
     const soundBox = this.add.graphics().setDepth(DEPTH.ui);
-    const drawBox = (pressed) => drawWindow(soundBox.clear(), sx - 18, sy - 18, 36, 36, pressed ? { fill: UI.pressed } : {});
+    const drawBox = (pressed) => drawWindow(soundBox.clear(), PB.pause.x, PB.y, PB.pause.w, PB.h, pressed ? { fill: UI.pressed } : {});
     drawBox(false);
     this.soundIcon = this.add.graphics().setDepth(DEPTH.ui);
     const px = (g, x, y, w = 1, h = 1) => g.fillRect(sx + x * P, sy + y * P, w * P, h * P); // on a 2px grid around the centre
@@ -157,7 +163,7 @@ export default class SquadScene extends Phaser.Scene {
       else { px(g, 1, -1, 1, 2); px(g, 3, -3, 1, 1); px(g, 4, -2, 1, 4); px(g, 3, 2, 1, 1); px(g, 5, -5, 1, 1); px(g, 6, -4, 1, 8); px(g, 5, 4, 1, 1); } // sound waves
     };
     drawSound();
-    this.soundBtn = this.add.zone(sx, sy, 44, 44).setInteractive().setDepth(DEPTH.ui);
+    this.soundBtn = this.add.zone(sx, sy, PB.pause.w + 4, PB.h + 8).setInteractive().setDepth(DEPTH.ui);
     pressable(this, this.soundBtn, { redraw: drawBox, sink: [this.soundIcon], onTap: () => {
       sfx.setMuted(!sfx.isMuted());
       this.progress.settings = { ...(this.progress.settings || {}), muted: sfx.isMuted() }; // keep the scene's copy of the save in step
@@ -165,48 +171,54 @@ export default class SquadScene extends Phaser.Scene {
       sfx.play('tap');
     } });
     if (this.lastRun && (this.lastRun.newly || []).length) this.time.delayedCall(400, () => sfx.play('unlock'));
-    // One short line at the top after a run: how deep it got (no 'Choose 3 heroes' hint any more, user 2026-10-20).
+    // The title window top left (like the fight's floor counter): 'Squad n/3'; after a run a small line under it says
+    // how deep that run got.
+    drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 8, 160, 32);
+    this.titleText = uiText(this, 20, 25, '', 'normal').setOrigin(0, 0.5).setDepth(DEPTH.ui);
     if (this.lastRun) {
-      drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 8, 196, 26);
-      this.add.text(20, 21, `Last run: floor ${this.lastRun.floor}`, { fontFamily: FONT, fontSize: '8px', color: UI.gold }).setOrigin(0, 0.5).setDepth(DEPTH.ui);
+      drawWindow(this.add.graphics().setDepth(DEPTH.ui), 8, 44, 160, 24);
+      uiText(this, 20, 57, `Last run: floor ${this.lastRun.floor}`, 'small', UI.gold).setOrigin(0, 0.5).setDepth(DEPTH.ui);
     }
 
     const n1 = this.children.list.length;
-    // "Begin descent": only when all 3 slots are filled, at the bottom over RANDOM.
-    this.begin = this.add.container(DOOR_X, BEGIN_Y).setDepth(DEPTH.ui);
+    // BEGIN DESCENT: the screen's main action, banded like the camp's EXPEDITION. Until the squad is full it is dim
+    // and says how many heroes are still missing.
+    const bw = GAME_WIDTH - 2 * SIDE, by = BEGIN.y + BEGIN.h / 2;
+    this.begin = this.add.container(GAME_WIDTH / 2, by).setDepth(DEPTH.ui);
     const bg = this.add.graphics();
-    const drawBegin = (pressed) => drawButton(bg.clear(), -150, -28, 300, 56, { primary: true, pressed }); // THE bright button (user: only this one is red)
-    drawBegin(false);
-    const cur = drawCursor(this.add.graphics(), -128, 0, Number('0x' + buttonTextColor(true, false, true).slice(1))); // the blinking ▶ cursor: everything is ready
-    this.time.addEvent({ delay: 500, loop: true, callback: () => cur.setVisible(!cur.visible) });
-    const beginText = this.add.text(8, 1, 'BEGIN DESCENT', { fontFamily: FONT, fontSize: '16px', color: buttonTextColor(true, false, true) }).setOrigin(0.5);
-    this.begin.add([bg, cur, beginText]);
-    pressable(this, this.add.zone(DOOR_X, BEGIN_Y, 300, 56).setInteractive().setDepth(DEPTH.ui), {
-      redraw: drawBegin, sink: [cur, beginText], onTap: () => this.descend(), enabled: () => this.begin.visible && !this.leaving,
+    const drawBegin = (pressed) => drawFlatButton(bg.clear(), -bw / 2, -BEGIN.h / 2, bw, BEGIN.h, { primary: true, bands: true, pressed, enabled: this.ready() });
+    this.beginText = uiText(this, 0, 1, 'BEGIN DESCENT', 'big', buttonTextColor(true, false, true)).setOrigin(0.5);
+    this.begin.add([bg, this.beginText]);
+    this.drawBegin = drawBegin;
+    pressable(this, this.add.zone(GAME_WIDTH / 2, by, bw, BEGIN.h).setInteractive().setDepth(DEPTH.ui), {
+      redraw: drawBegin, sink: [this.beginText], onTap: () => this.descend(), enabled: () => this.ready() && this.begin.visible && !this.leaving && !this.panel,
     });
 
-    // The bottom row: '< CAMP' (back to the camp hub, user: at the bottom for the flow) and RANDOM; then the small test
-    // toggle at the very bottom.
-    [['< CAMP', 30, () => this.toCamp()], ['RANDOM', GAME_WIDTH - 180, () => this.pickRandom()]].forEach(([label, x, onTap]) => {
+    // The dock (like the camp's tab bar): a gold line, a dark band, '< CAMP' (back to the camp hub) and RANDOM; the
+    // test row at its foot.
+    const T = UI.goldTheme;
+    this.add.graphics().setDepth(DEPTH.ui).fillStyle(T.frame, 1).fillRect(0, DOCK.y, GAME_WIDTH, 2).fillStyle(T.outline, 0.9).fillRect(0, DOCK.y + 2, GAME_WIDTH, GAME_HEIGHT - DOCK.y);
+    const dw = (GAME_WIDTH - 2 * SIDE - DOCK.gap) / 2;
+    [['< CAMP', SIDE, () => this.toCamp()], ['RANDOM', SIDE + dw + DOCK.gap, () => this.pickRandom()]].forEach(([label, x, onTap]) => {
       const rb = this.add.graphics().setDepth(DEPTH.ui);
-      const redraw = (pressed) => drawButton(rb.clear(), x, 744, 150, 46, { pressed });
+      const redraw = (pressed) => drawFlatButton(rb.clear(), x, DOCK.btnY, dw, DOCK.btnH, { pressed });
       redraw(false);
-      const t = this.add.text(x + 75, 767, label, { fontFamily: FONT, fontSize: '16px', color: buttonTextColor() }).setOrigin(0.5).setDepth(DEPTH.ui);
-      pressable(this, this.add.zone(x + 75, 767, 150, 46).setInteractive().setDepth(DEPTH.ui), { redraw, sink: [t], onTap, enabled: () => !this.leaving && !this.panel });
+      const t = uiText(this, x + dw / 2, DOCK.btnY + DOCK.btnH / 2 - 1, label, 'normal', buttonTextColor()).setOrigin(0.5).setDepth(DEPTH.ui);
+      pressable(this, this.add.zone(x + dw / 2, DOCK.btnY + DOCK.btnH / 2, dw, DOCK.btnH).setInteractive().setDepth(DEPTH.ui), { redraw, sink: [t], onTap, enabled: () => !this.leaving && !this.panel });
     });
     const shown = (list) => list.filter((o) => !(o instanceof Phaser.GameObjects.Zone));
     this.uiParts = { up: shown(this.children.list.slice(n0, n1)), fade: [...this.slotMarks.map((m) => m.back).filter(Boolean), ...shown(this.layoutParts)] };
     this.uiParts.down = shown(this.children.list.slice(n1)); // (the test toggle below joins it)
     if (TESTER || DEMO) return; // the playtest build (npm run build:itch) has no test toggle
     // LAYOUT TRIAL (session 47): a small button bottom left flips A -> B -> C (the screen starts again in it).
-    const lay = this.smallButton(8, 806, 96, 26, `LAYOUT ${this.layoutKey}`, () => {
+    const lay = this.smallButton(SIDE, DOCK.toolY, 96, 24, `LAYOUT ${this.layoutKey}`, () => {
       const next = LAYOUT_KEYS[(LAYOUT_KEYS.indexOf(this.layoutKey) + 1) % LAYOUT_KEYS.length];
       this.registry.set('squadLayout', next);
       this.scene.restart({ lastRun: this.lastRun });
     });
     this.uiParts.down.push(...lay.filter((o) => !(o instanceof Phaser.GameObjects.Zone)));
-    this.toggleText = this.add.text(236, 818, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
-    this.add.zone(236, 818, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
+    this.toggleText = this.add.text(246, DOCK.toolY + 12, '', { fontFamily: FONT, fontSize: '8px', color: MUTE }).setOrigin(0.5).setDepth(DEPTH.ui).setAlpha(0.8);
+    this.add.zone(246, DOCK.toolY + 12, 260, 28).setInteractive().setDepth(DEPTH.ui).on('pointerdown', () => this.toggleUnlockAll());
     this.uiParts.down.push(this.toggleText);
   }
 
@@ -254,8 +266,11 @@ export default class SquadScene extends Phaser.Scene {
       m.num.setVisible(!id);
       if (m.back) m.back.setVisible(!!id && !this.walkers.has(id) && (!this.leaving || this.shifting)); // shifting: they fade with the menu
     });
-    const ready = this.ready() && (!this.leaving || this.shifting);
-    this.begin.setVisible(ready);
+    this.begin.setVisible(!this.leaving || this.shifting);
+    this.drawBegin(false);
+    const ready = this.ready(), missing = this.need() - squadOrder(this.slots).length;
+    this.beginText.setText(ready ? 'BEGIN DESCENT' : `PICK ${missing} MORE`).setColor(buttonTextColor(ready, false, true));
+    this.titleText.setText(`Squad ${squadOrder(this.slots).length}/${this.need()}`);
     this.refreshLayout();
     if (this.toggleText) this.toggleText.setText(`${this.progress.unlockAll ? '[X]' : '[ ]'} test: unlock every hero`).setColor(this.progress.unlockAll ? UI.green : MUTE);
   }

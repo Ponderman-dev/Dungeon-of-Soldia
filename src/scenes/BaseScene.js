@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
-import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc, uiShift, buttonTextColor } from '../entities/uiKit.js';
+import { drawWindow, uiText, comingSoonWindow, drawGear, pixelDisc, uiShift, buttonTextColor, drawFlatButton } from '../entities/uiKit.js';
 import { nextBossFloor } from '../systems/dungeon.js';
 import camp from '../data/camp.json';
 import { openFloor, darkLayer, lightTint, fireLayers, propLayer, blendProp } from '../systems/campArt.js';
@@ -86,18 +86,8 @@ export default class BaseScene extends Phaser.Scene {
 
   // The hub (user, session 42: 'more like a mobile game menu', picked A1 + header H1): one gold header panel at the top
   // (profile, gems, settings), the big gold-framed EXPEDITION button, and a bar of 4 tabs at the bottom.
-  // A flat camp button (session 44, user: 'cleaner and sleeker'; camp.json ui.flat): a dark outline, a thin gold line,
-  // a plain body with a darker foot and a light top edge. Square corners, no studs. primary = the red main button;
-  // bands = a thick gold band along its top and bottom (the EXPEDITION button only: 'a tiny bit fancy').
-  flatButton(g, x, y, w, h, { primary = false, bands = false } = {}) {
-    const T = UI.goldTheme, F = U.flat, L = F.line;
-    const [body, dark, light] = primary ? [T.button, T.buttonDark, T.buttonLight] : [T.second, T.secondDark, T.secondLight];
-    g.fillStyle(T.outline, 1).fillRect(x - 2, y - 2, w + 4, h + 4).fillStyle(T.frame, 1).fillRect(x, y, w, h);
-    g.fillStyle(body, 1).fillRect(x + L, y + L, w - 2 * L, h - 2 * L).fillStyle(dark, 1).fillRect(x + L, y + h - L - F.foot, w - 2 * L, F.foot);
-    g.fillStyle(light, 1).fillRect(x + L, y + L, w - 2 * L, 2);
-    if (bands) for (const by of [y, y + h - F.band]) g.fillStyle(T.frame, 1).fillRect(x, by, w, F.band).fillStyle(T.stud, 1).fillRect(x + 2, by + 2, w - 4, 2).fillStyle(T.frameDark, 1).fillRect(x + 2, by + F.band - 2, w - 4, 2);
-    return g;
-  }
+  // Flat camp buttons: uiKit drawFlatButton (shared with the squad screen).
+  flatButton(g, x, y, w, h, opts = {}) { return drawFlatButton(g, x, y, w, h, opts); }
 
   drawUi() {
     const ui = [];

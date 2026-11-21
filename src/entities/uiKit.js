@@ -276,6 +276,25 @@ export function pressable(scene, hit, { redraw, sink = [], onTap, enabled = () =
   hit.once('destroy', () => { release = null; });
   return hit;
 }
+// A FLAT BUTTON (the camp's look, session 44; shared with the squad screen, session 47): a dark outline, a thin gold
+// line, a plain body with a darker foot and a light top edge. Square corners, no studs. primary = the red main button;
+// bands = a thick gold band along its top and bottom (the screen's ONE main action: EXPEDITION, BEGIN DESCENT);
+// enabled false = a dim body. pressed = PUSHED IN: the face darker, a shadow band under the top line, no shine, no
+// foot (its label drops UI.press.sinkPx: pressable / pressDown). Returns g.
+export function drawFlatButton(g, x, y, w, h, { primary = false, bands = false, pressed = false, enabled = true } = {}) {
+  const T = UI.goldTheme, F = UI.flat, L = F.line;
+  const [body, dark, light] = !enabled ? [T.dim, T.dim, T.dim] : primary ? [T.button, T.buttonDark, T.buttonLight] : [T.second, T.secondDark, T.secondLight];
+  g.fillStyle(T.outline, 1).fillRect(x - 2, y - 2, w + 4, h + 4).fillStyle(enabled ? T.frame : T.frameDark, 1).fillRect(x, y, w, h);
+  if (pressed) {
+    g.fillStyle(dark, 1).fillRect(x + L, y + L, w - 2 * L, h - 2 * L);
+    g.fillStyle(T.outline, 1).fillRect(x + L, y + L + (bands ? F.band - L : 0), w - 2 * L, UI.press.sinkPx);
+  } else {
+    g.fillStyle(body, 1).fillRect(x + L, y + L, w - 2 * L, h - 2 * L).fillStyle(dark, 1).fillRect(x + L, y + h - L - F.foot, w - 2 * L, F.foot);
+    g.fillStyle(light, 1).fillRect(x + L, y + L, w - 2 * L, 2);
+  }
+  if (bands) for (const by of [y, y + h - F.band]) g.fillStyle(enabled ? T.frame : T.frameDark, 1).fillRect(x, by, w, F.band).fillStyle(enabled ? T.stud : T.dim, 1).fillRect(x + 2, by + 2, w - 4, 2).fillStyle(T.frameDark, 1).fillRect(x + 2, by + F.band - 2, w - 4, 2);
+  return g;
+}
 export const buttonTextColor = (enabled = true, pressed = false, primary = false) => (!enabled ? '#9a96a6' : primary ? UI.goldTheme.buttonText : UI.goldTheme.secondText);
 // A title strip across the top of a panel h px tall, `i` px inside the panel's left/top edge.
 export function drawStrip(g, x, y, w, h) {

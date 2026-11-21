@@ -7,7 +7,7 @@
 //   a tap opens the card.
 // Mixed into SquadScene.prototype (like roomMethods.js into BattleScene).
 import { GAME_WIDTH, UI } from '../../config.js';
-import { drawWindow, drawButton, buttonTextColor, pressable } from '../../entities/uiKit.js';
+import { drawWindow, drawFlatButton, buttonTextColor, pressable } from '../../entities/uiKit.js';
 import Character from '../../entities/Character.js';
 import { skillIconKey } from '../../entities/skillIconTexture.js';
 import heroDefs from '../../data/heroes.json';
@@ -48,7 +48,7 @@ export const squadLayouts = {
   // A small solid button with a centred label that pushes in (uiKit pressable). Returns its parts.
   smallButton(x, y, w, h, label, onTap, { enabled = true, primary = false, px = 8 } = {}) {
     const g = this.add.graphics().setDepth(D.ui);
-    const redraw = (pressed) => drawButton(g.clear(), x, y, w, h, { pressed, enabled, primary });
+    const redraw = (pressed) => drawFlatButton(g.clear(), x, y, w, h, { pressed, enabled, primary }); // the camp's flat button
     redraw(false);
     const t = text(this, x + w / 2, y + h / 2 + 1, label, px, buttonTextColor(enabled, false, primary)).setOrigin(0.5).setDepth(D.ui);
     const hit = this.add.zone(x + w / 2, y + h / 2, w, h).setInteractive().setDepth(D.ui);

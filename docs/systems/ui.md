@@ -117,7 +117,7 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   SPEED READOUT: TEST tab > 'TEST: speed (fps)' (`toggleFps` in testPanel.js): fps (+ lowest), slowest gap between
   frames, the game's own slowest frame, and the device line. Measuring scripts were scratch only (count gl draw /
   texImage2D calls per frame; time `game.step` under CDP `Emulation.setCPUThrottlingRate`).
-- **PUSHABLE BUTTONS (session 47, user: 'look like it's being pushed, not just one tap design'):** `drawButton(...,
+- **PUSHABLE BUTTONS (session 47; `drawFlatButton` (the camp look, now in uiKit) has the same pressed look, user: 'look like it's being pushed, not just one tap design'):** `drawButton(...,
   { pressed: true })` = the face SINKS: rim stays, a near-black band on top (the rim's shadow), the face in its dark
   colour, no shine. uiKit `pressable(scene, zone, { redraw(pressed), sink: [label, cursor...], onTap, enabled })`:
   finger down = pressed look + the sink parts drop `UI.press.sinkPx` (2); finger slides off = cancelled; finger up on it

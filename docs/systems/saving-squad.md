@@ -24,3 +24,9 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   the squad bigger (x4) with names + Send back buttons, the tile grid under them, a tap opens the details card. A
   picked hero walks out of its tile growing to full size (and back in shrinking), drawn over the panels while it
   walks. When the user picks one: delete the other two and the LAYOUT button.
+- **SAME LOOK AS THE CAMP + FIGHT (session 47, user: 'follow the main screen and battle screen designs'):** every squad
+  button is the camp's FLAT button (`drawFlatButton` moved from BaseScene into uiKit, sizes `UI.flat`; pressed = darker
+  face + shadow band, label sinks). BEGIN DESCENT = banded like EXPEDITION (side gap 24, 'big' text, always there:
+  dim 'PICK n MORE' until the squad is full). CAMP / RANDOM sit in a DOCK (gold line + dark band, like the camp's tab
+  bar) with the LAYOUT button + test toggle at its foot. Top left: a title window like the fight's floor counter
+  ('Squad n/3', 'Last run: floor N' under it); the sound button sits where the fight's pause button is (pause.json).

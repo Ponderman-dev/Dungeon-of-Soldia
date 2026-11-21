@@ -5,6 +5,7 @@
 import effectsData from '../data/effects.json';
 import { makeTuner } from '../systems/fxTune.js';
 import { FxStage, catalog, GROUPS, W, H, hex } from './fxStage.js';
+import { validEffect } from './validDesign.js';
 
 const Z = 3; // drawn at game size
 const key0x = (n) => '0x' + n.toString(16).padStart(6, '0');
@@ -118,7 +119,7 @@ export default class EffectsEditor extends FxStage {
     this.localKey = localKey;
     const use = (docs) => {
       for (const d of docs) {
-        if (!d || !d.group || !d.name) continue;
+        if (!validEffect(d)) continue; // untrusted row (studio/validDesign.js)
         const v = { speed: d.speed || 1, colors: d.colors || {} };
         (this.saved[d.group] = this.saved[d.group] || {})[d.name] = v;
         (this.work[d.group] = this.work[d.group] || {})[d.name] = JSON.parse(JSON.stringify(v));

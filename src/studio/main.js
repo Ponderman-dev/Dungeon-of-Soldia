@@ -8,6 +8,7 @@ import Character from '../entities/Character.js';
 import Board, { partBox, transformPart } from './board.js';
 import Timeline, { mainColor } from './timeline.js';
 import EffectsEditor from './effects.js';
+import { validDesign, validLook } from './validDesign.js'; // store rows are untrusted: bad shapes are skipped
 import { partArt, artPixels, flipGridH, flipGridV, rotateGrid90, outlineGrid, replaceColorGrid, pixelsToArt, OUTLINE } from '../systems/pixelArt.js';
 import heroes from '../data/heroes.json';
 import enemies from '../data/enemies.json';
@@ -682,7 +683,7 @@ const versions = {};
 async function loadVersions(key) {
   if (!store || versions[key]) return;
   try {
-    versions[key] = await store.versions(key);
+    versions[key] = (await store.versions(key)).filter(validLook);
   } catch {
     versions[key] = [];
   }
@@ -1317,7 +1318,7 @@ function loadDraft() {
       localStorage.removeItem(LOCAL_KEY + '-draft');
     }
     const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-    if (d) for (const k of Object.keys(d)) if (working[k] && d[k].base === fingerprint(gameLook[k])) working[k] = d[k].look;
+    if (d && typeof d === 'object') for (const k of Object.keys(d)) if (working[k] && d[k] && d[k].base === fingerprint(gameLook[k]) && validLook(d[k].look)) working[k] = d[k].look;
   } catch {
     /* nothing */
   }
@@ -1325,6 +1326,7 @@ function loadDraft() {
 
 function useSaved(docs) {
   for (const d of docs) {
+    if (!validDesign(d)) continue;
     const key = `${d.kind}-${d.id}`;
     if (!byKey[key]) continue;
     const l = { height: d.height, parts: d.parts };

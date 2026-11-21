@@ -4,6 +4,7 @@
 // <designs.json> is a list of saved designs: { kind: "hero"|"enemy"|"minion"|"item", id, height, hover?, parts }.
 // Only the look changes (parts, height, hover, anims); stats and everything else stay as they are.
 import fs from 'node:fs';
+import { validDesign, validEffect } from '../src/studio/validDesign.js';
 
 const file = process.argv[2];
 if (!file) throw new Error('Usage: node scripts/apply-designs.mjs <designs.json>');
@@ -32,6 +33,8 @@ function iconArt(part) {
 }
 
 for (const d of designs) {
+  // Store rows are untrusted: skip any with a bad shape (studio/validDesign.js) instead of writing it into the game.
+  if (!(d && d.kind === 'effect' ? validEffect(d) : validDesign(d))) { console.log('SKIPPED (bad shape):', JSON.stringify(d).slice(0, 120)); continue; }
   if (d.kind === 'effect') {
     // An effect's speed and colour swaps; back to normal (speed 1, no swaps) removes the entry.
     const g = (effects[d.group] = effects[d.group] || {});

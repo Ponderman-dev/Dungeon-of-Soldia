@@ -125,3 +125,11 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   (returns release) for taps a scene finds itself. Framed buttons press with `fill: UI.pressed`. Done on: SQUAD screen
   (BEGIN DESCENT, < CAMP, RANDOM, sound, Send back, hero card CHOOSE / SEND BACK and X) and every `uiButton` (Puzzle,
   defeat BACK). Actions now run on RELEASE (were on finger down). Next: the other screens (camp, menu pages, reward).
+
+## TEXT STYLE for skill / passive / item descriptions (session 48, user: 'too long and bloaty')
+- 1 to 3 short lines (skills/passives about 50-120 letters, items 50-110). Numbers stay; no 'he/she does...' sentences.
+- KEYWORDS in CAPITALS (STUN, BLEED, BURN, POISON, CHILL, FREEZE, BLIND, CHARM, TAUNT, SILENCE, DOOM, MARK, SHIELD,
+  INVULNERABLE, PARRIED, REFLECTS, CRIT, ON-HIT, CHANNEL, REACTION, MIXING, SOUL): the glossary explains each once
+  (statuses chapter, or a BASICS page: ON-HIT ITEMS, CHANNEL, REACTIONS, MIXING ELEMENTS). Rule reminders never go in
+  a description. Don't repeat in a skill what the hero's passive says (Grudge, Bloodthirst).
+- Session 48 rewrote the 20 kit skills, 10 passives and the 20 longest items to this style.

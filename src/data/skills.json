@@ -249,7 +249,7 @@
         "durationMs": 4000
       }
     ],
-    "description": "The whole squad gets +30 evasion for 4s and all enemies are Blinded (they miss 25% of their attacks)."
+    "description": "Squad +30 evasion for 4s. All enemies are BLINDED (25% miss)."
   },
   "rain_of_arrows": {
     "name": "Rain of Arrows",
@@ -298,7 +298,7 @@
         "damageTakenPercent": 25
       }
     ],
-    "description": "Mark an enemy: it takes +25% damage from everyone for 6s."
+    "description": "MARK an enemy for 6s: it takes +25% damage from everyone."
   },
   "savage_leap": {
     "name": "Savage Leap",
@@ -397,7 +397,7 @@
     "castMs": 700,
     "damageMultiplier": 2.5,
     "projectile": "crescent",
-    "description": "A wide crescent slash across the field: 250% to every enemy in the same row as his target, ALWAYS a crit (his crit damage). If it kills, its cooldown is cut by 60%. He stays in his slot.",
+    "description": "Always CRITS: 250% to every enemy in the target's row. A kill cuts its cooldown by 60%.",
     "area": {
       "shape": "band",
       "halfHeight": 55
@@ -418,7 +418,7 @@
         "durationMs": 4000
       }
     ],
-    "description": "4s stance: every hit on him is parried and thrown back at the attacker as a counter-cut that always crits, even from far away."
+    "description": "For 4s every hit on him is PARRIED and answered with a counter-cut that always CRITS."
   },
   "elemental_rotation": {
     "name": "Elemental Rotation",
@@ -613,7 +613,7 @@
         }
       }
     ],
-    "description": "Each cast is the next spell: Fireball > Frost Nova > Chain Lightning. Her element charms make each spell bigger."
+    "description": "Casts in turn: Fireball > Frost Nova > Chain Lightning. Element charms make each one bigger."
   },
   "mage_ward": {
     "name": "Arcane Ward",
@@ -639,7 +639,7 @@
         ]
       }
     ],
-    "description": "The whole squad gets a magic shield (2.5x the Mage's attack) and +10 resist for 4s, and for 5s every squad hit leaves a random element (fire, ice or electric), so the whole team sets off reactions.",
+    "description": "Squad SHIELD (250% attack) and +10 resist for 4s. For 5s, squad hits add a random element (REACTIONS).",
     "teamElements": {
       "durationMs": 5000
     }
@@ -691,7 +691,7 @@
       "damageMultiplier": 0.6,
       "healSharePercent": 25
     },
-    "description": "Heals the most hurt hero (10% of their health + her attack) and every enemy around THAT hero takes 60% holy damage plus a quarter of the heal."
+    "description": "Heal the most hurt hero (10% health + attack). Enemies around them take 60% holy + 25% of the heal."
   },
   "sanctuary": {
     "name": "Sanctuary",
@@ -712,7 +712,7 @@
         "percentMaxHpPerSec": 3
       }
     ],
-    "description": "The most hurt hero gets a shield (25% of their health) and strong regen (3% of their health per second) for 5s."
+    "description": "The most hurt hero gets a SHIELD (25% health) and regen 3% health/s for 5s."
   },
   "death_coil": {
     "name": "Death Coil",
@@ -764,7 +764,7 @@
       "raise": "skeleton"
     },
     "projectile": "darkbolt",
-    "description": "A dark bolt: 250% (+50% against debuffed enemies), +20% per Soul he has (all Souls are spent). If it kills, a skeleton rises.",
+    "description": "Dark bolt: 250% (+50% vs debuffed), +20% per SOUL (spends all). A kill raises a skeleton.",
     "soulBonusPercent": 20
   },
   "bone_sacrifice": {
@@ -780,7 +780,7 @@
       "perMinionPercent": 6,
       "durationMs": 6000
     },
-    "description": "Sacrifices ALL his skeletons: every hero gets a shield of 5% + 6% per skeleton of their health for 6s. Each skeleton gives a Soul; with Grave Dust they explode."
+    "description": "Sacrifice all skeletons: squad SHIELD of 5% + 6% health per skeleton for 6s. Each gives a SOUL."
   },
   "crescendo": {
     "name": "Crescendo",
@@ -959,7 +959,7 @@
         "multiplier": 0.5
       }
     },
-    "description": "Throws 5 poison flasks at random enemies; each splashes and poisons the enemies next to where it lands."
+    "description": "Throws 5 flasks at random enemies. Each splashes and POISONS enemies where it lands."
   },
   "alch_brew": {
     "name": "Mystery Brew",
@@ -1009,7 +1009,7 @@
       ],
       "healsMostHurt": true
     },
-    "description": "Throws 4 random flasks at teammates: heal (30%), speed boost or shield. Healing flasks always go to the most hurt heroes."
+    "description": "Throws 4 random flasks at allies: heal (30%), speed or SHIELD. Heals go to the most hurt."
   },
   "knight_bash": {
     "name": "Shield Bash",
@@ -1042,7 +1042,7 @@
         "durationMs": 1500
       }
     ],
-    "description": "Bashes one enemy for 100% of his attack PLUS 300% of his defense, and stuns it for 1.5s. Every hit he reflected since the last Bash adds +10% (Grudge). Stuns stop enemy wind-ups.",
+    "description": "Hit one enemy for 100% attack + 300% defense and STUN it 1.5s. Grudge makes it stronger.",
     "defenseMultiplier": 3,
     "grudgeCharged": true
   },
@@ -1076,7 +1076,7 @@
         ]
       }
     ],
-    "description": "Taunts every enemy around him for 3s (they must attack him) and gives himself +30 defense."
+    "description": "TAUNT every enemy around him for 3s. +30 defense."
   },
   "blood_pact": {
     "name": "Blood Pact",
@@ -1115,7 +1115,7 @@
       "damageMultiplier": 3.5
     },
     "procBoost": 2,
-    "description": "Leaps at an enemy: 350% damage to it AND every enemy around where he lands. Each enemy hit rolls his on-hit items at DOUBLE their chance."
+    "description": "Leap at an enemy: 350% to it and every enemy around. ON-HIT items roll at double chance."
   },
   "blood_feast": {
     "name": "Blood Feast",
@@ -1136,7 +1136,7 @@
         ]
       }
     ],
-    "description": "He drinks deep: 50% lifesteal for 4s (doubled by Bloodthirst when he is below half health)."
+    "description": "50% lifesteal for 4s."
   },
   "eviscerate": {
     "name": "Eviscerate",
@@ -1186,7 +1186,7 @@
       }
     ],
     "waveOnHit": true,
-    "description": "5 quick hits of 50% on one enemy: every hit makes it Bleed and rolls his on-hit items."
+    "description": "5 quick hits of 50% on one enemy. Each hit causes BLEED and rolls ON-HIT items."
   },
   "headshot": {
     "name": "Headshot",
@@ -1234,7 +1234,7 @@
       "at": "target",
       "radius": 110
     },
-    "description": "Arrows fall on an area around her target for 2s: 6 waves of 60% damage, and every wave sets off her on-hit items on each enemy it hits. She is busy while it rains."
+    "description": "CHANNEL 2s: 6 waves of 60% on an area around the target. Every wave triggers ON-HIT items."
   },
   "discord": {
     "name": "Discord",
@@ -1256,7 +1256,7 @@
         "durationMs": 2500
       }
     ],
-    "description": "A jarring tune around his target: 40% damage and the enemies there are CHARMED for 2.5s (they attack each other)."
+    "description": "40% to enemies around the target and CHARM them for 2.5s."
   },
   "change_song": {
     "name": "Change Song",
@@ -1266,6 +1266,6 @@
     "cooldownMs": 10000,
     "castMs": 400,
     "songSwitch": true,
-    "description": "Plays a song for 5s, March and Ballad in turn. MARCH: squad attacks 15% faster and item procs are 25% likelier. BALLAD: squad regenerates 0.6% health/s and item heals are 25% stronger. Each starts with a burst: a speed rush or a quick heal."
+    "description": "Plays a 5s song, in turn. MARCH: squad +15% attack speed, +25% proc chance. BALLAD: squad regen 0.6%/s, item heals +25%."
   }
 }

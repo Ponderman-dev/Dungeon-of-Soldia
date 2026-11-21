@@ -136,7 +136,7 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "Summons a Shield Totem in front of the squad. It never attacks; while it stands EVERY hero blocks 4% of hits. No upkeep.",
+    "description": "Summons a Shield Totem. While it stands, every hero blocks 4% of hits. No upkeep.",
     "effects": [
       {
         "greaterMinion": "shield_totem",
@@ -1039,7 +1039,7 @@
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "Electric hits add a small ice hit (30%) and 1 Chill. At 2 Chill (or Frozen) the enemy shatters: 250% ice on it and its neighbours. Electric + ice count as ONE element for mixing.",
+    "description": "Electric hits add 30% ice and 1 CHILL. At 2 CHILL the enemy shatters: 250% ice around it. Electric + ice = one element (MIXING).",
     "effects": [
       {
         "special": "frozenThunderbolt",
@@ -1184,7 +1184,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "+20 defense. When an ally drops below 30% health, this hero takes all hits meant for them for 3s (20s cooldown).",
+    "description": "+20 defense. When an ally drops below 30% health, take their hits for 3s (20s cooldown).",
     "effects": [
       {
         "stat": "defense",
@@ -1351,7 +1351,7 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "A flying Wisp (shock bolts) joins every fight, then another every 15s. Wisps get half this hero's +electric damage.",
+    "description": "A Wisp (shock bolts) joins every fight, +1 every 15s. Wisps get half this hero's +electric.",
     "effects": [
       {
         "minionSpawner": {
@@ -1401,7 +1401,7 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "Below 50% health, 30% when this hero is hit: a Mimic pops out. It never attacks: it taunts the enemies around it, then explodes when it dies.",
+    "description": "Below 50% health, 30% when hit: a Mimic pops out. It TAUNTS enemies around it and explodes on death.",
     "effects": [
       {
         "special": "mimic",
@@ -1448,7 +1448,7 @@
     "rarity": "epic",
     "type": "minion",
     "scope": "self",
-    "description": "Summons an Ice Spirit Knight (ice hits) that grows stronger every floor it survives. It gets half this hero's +ice damage.",
+    "description": "Summons an Ice Spirit Knight that grows every floor it survives. It gets half this hero's +ice.",
     "effects": [
       {
         "greaterMinion": "spirit_knight"
@@ -1466,7 +1466,7 @@
     "rarity": "legendary",
     "type": "minion",
     "scope": "self",
-    "description": "Summons a flying Phoenix whose fire hits Burn. It heals itself 2% per second, comes back once per floor at 50% health, and gets half this hero's +fire damage.",
+    "description": "Summons a Phoenix (fire, BURN). Regen 2%/s, revives once per floor. It gets half this hero's +fire.",
     "effects": [
       {
         "greaterMinion": "phoenix"
@@ -1686,7 +1686,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "This hero's burn, poison and bleed deal +30% damage, their ticks can crit (crit chance) and crits deal +25% more.",
+    "description": "This hero's BURN, POISON and BLEED: +30% damage, ticks can CRIT, crits +25%.",
     "effects": [
       {
         "special": "dotCrit",
@@ -1740,7 +1740,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Only once per run. Every 7 kills by the squad: +1% max health, attack and attack speed, +1 defense for the rest of the run.",
+    "description": "One per run. Every 7 squad kills: +1% health, attack and attack speed, +1 defense for the run.",
     "effects": [
       {
         "special": "soulLantern",
@@ -1755,7 +1755,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Used up: when this hero would die, they live, are invulnerable for 3s and heal to 100%; every other living hero heals 30% max health.",
+    "description": "Used up: when this hero would die, they live, are INVULNERABLE 3s and heal fully. Allies heal 30%.",
     "effects": [
       {
         "special": "phoenixFeather",
@@ -1838,7 +1838,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "+100 max health and +10% max health. Heals 2% of max health per second in fights, twice as fast below 30% health.",
+    "description": "+100 and +10% max health. Regen 2%/s in fights, double below 30% health.",
     "effects": [
       {
         "stat": "health",
@@ -1892,7 +1892,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "Fire hits and burns from this hero also deal 40% as dark. Burning enemies attack 8% slower. Fire + dark count as ONE element for mixing.",
+    "description": "Fire hits and BURNS also deal 40% as dark. Burning enemies attack 8% slower. Fire + dark = one element (MIXING).",
     "effects": [
       {
         "special": "ghastly",
@@ -1920,7 +1920,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Stores this hero's dark damage. When full, 2-3 random enemies are Doomed for 4s: 50% slower attacks, 35% less resist and 350% dark damage every second.",
+    "description": "Fills with this hero's dark damage. When full: DOOM 2-3 random enemies for 4s (350% dark/s).",
     "effects": [
       {
         "special": "eclipse",
@@ -1960,7 +1960,7 @@
     "rarity": "legendary",
     "type": "onhit",
     "scope": "self",
-    "description": "8% on attack: a circle grows under the strongest enemy, then a giant THUNDERBOLT hits it for 700% (sets off your on-hit items).",
+    "description": "8% on attack: a giant thunderbolt hits the strongest enemy for 700%. Triggers ON-HIT.",
     "effects": [
       {
         "proc": "onAttack",
@@ -2269,7 +2269,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "When this hero kills an enemy: 50% chance a spirit haunts another enemy for 5s (-20% damage, Silence 2s, 1 Armor Break). Max 3 spirits.",
+    "description": "On kill, 50%: a spirit haunts another enemy 5s (-20% damage, SILENCE 2s, ARMOR BREAK). Max 3.",
     "effects": [
       {
         "special": "reaperBell",
@@ -2481,7 +2481,7 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "Every dodge stores a charge. At 3 charges the weapon glows: the next attack is a LIGHTNING strike for 400% electric damage.",
+    "description": "Each dodge stores a charge. At 3, the next attack is a lightning strike for 400% electric.",
     "effects": [
       {
         "special": "kineticCoil",
@@ -2501,7 +2501,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Pure steel: if this hero has no element, attacks deal +40% and every 5th is a HEART STRIKE: 500% + exactly 15% of the enemy's max health (bosses 2%), stun 2.5s and -50% armor 5s. A kill makes the next one a Heart Strike too.",
+    "description": "No element only: +40% damage. Every 5th attack is a Heart Strike: 500% + 15% max health, STUN 2.5s, -50% armor. Kills ready the next.",
     "effects": [
       {
         "special": "heartStrike",
@@ -2553,7 +2553,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Each element past the first among your items: +15% element damage (no mixing penalty). Hits with 2+ elements fill a prism: when full, a 4-colour PRISM BURST hits every enemy for 300%.",
+    "description": "Each extra element in your items: +15% element damage, no MIXING penalty. Mixed hits fill a prism: 300% to all.",
     "effects": [
       {
         "special": "euclid",
@@ -2579,7 +2579,7 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "+50% ice damage. Ice damage fills the Head: Ice Spikes hit the strongest enemy for 700% and freeze it 5s. This hero's fire, electric and dark attacks turn to ice; such item hits turn to ice at 50% damage.",
+    "description": "+50% ice damage. Ice fills it: Ice Spikes hit the strongest for 700% and FREEZE 5s. Other elements turn to ice.",
     "effects": [
       {
         "damageBonus": "ice",
@@ -2662,7 +2662,7 @@
     "rarity": "epic",
     "type": "minion",
     "scope": "self",
-    "description": "All of this hero's minions attack with electric damage. Does not stack with other collars (the newest one counts).",
+    "description": "This hero's minions deal electric damage. Collars don't stack (the newest counts).",
     "effects": [
       {
         "special": "collar",

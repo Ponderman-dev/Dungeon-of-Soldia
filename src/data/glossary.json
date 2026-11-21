@@ -12,7 +12,11 @@
     { "title": "CRIT AND DODGE", "text": "A crit hits much harder than a normal hit. Dodge is the chance to take no damage at all from a hit." },
     { "title": "ITEMS", "text": "Items work on their own, all the time. Each item goes to one hero. More copies of an item stack up." },
     { "title": "LEVELS", "text": "Beaten enemies give XP, shared by the heroes still standing. A level up makes a hero stronger." },
-    { "title": "PERKS AND PASSIVES", "text": "Each hero gives the whole squad a perk while alive, and has a passive of their own." }
+    { "title": "PERKS AND PASSIVES", "text": "Each hero gives the whole squad a perk while alive, and has a passive of their own." },
+    { "title": "ON-HIT ITEMS", "text": "Items with a chance on hit (bleeds, burns, bonus hits). Skills that 'trigger ON-HIT' roll them on every enemy hit." },
+    { "title": "CHANNEL", "text": "A skill that lasts a while. The hero is busy until it ends and does not attack." },
+    { "title": "REACTIONS", "text": "Fire, ice and electric hits leave their element. A different one on top reacts: Steam (Blind), Shatter (+50% hit), Overload (fire burst)." },
+    { "title": "MIXING ELEMENTS", "text": "Each extra element among a hero's items cuts their elemental damage a little. Items that say 'one element' count as one." }
   ],
   "statuses": {
     "bleed": { "tab": "bad", "text": "Physical damage every second. Defense does not help. Stacks." },

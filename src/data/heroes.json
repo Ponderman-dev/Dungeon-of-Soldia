@@ -162,7 +162,7 @@
     },
     "passive": {
       "name": "Grudge",
-      "description": "Every hit he reflects (thorns items, Spite Mail, Mirror Buckler) charges his next Shield Bash: +10% per reflect, up to +200%.",
+      "description": "Each hit he REFLECTS adds +10% to his next Defense Bash (up to +200%).",
       "grudge": {
         "perReflectPercent": 10,
         "maxStacks": 20
@@ -330,7 +330,7 @@
     },
     "passive": {
       "name": "Bloodthirst",
-      "description": "Below 50% health: +40% attack and his lifesteal is doubled. It lasts 3s after he heals back above 50%.",
+      "description": "Below 50% health: +40% attack and double lifesteal. Lasts 3s after he heals back above.",
       "bloodthirst": {
         "belowPercent": 50,
         "attackPercent": 40,
@@ -492,7 +492,7 @@
     },
     "passive": {
       "name": "Dirty Fighting",
-      "description": "15% chance on hit to make the enemy Bleed. Enemies he has debuffed miss 20% of their attacks on HIM.",
+      "description": "15% on hit: BLEED. Enemies he debuffed miss 20% of their attacks on him.",
       "procs": [
         {
           "proc": "onAttack",
@@ -682,7 +682,7 @@
     },
     "passive": {
       "name": "Volley",
-      "description": "Every 4th shot also fires at the 2 enemies nearest to her target (+1 per Quiver of Plenty). Every arrow sets off her on-hit items.",
+      "description": "Every 4th shot also hits the 2 enemies nearest the target (+1 per Quiver of Plenty). Arrows trigger ON-HIT.",
       "volley": {
         "every": 4,
         "arrows": 3,
@@ -736,7 +736,7 @@
     },
     "passive": {
       "name": "Iaido",
-      "description": "Every 3rd hit he takes is parried. A parried, blocked or dodged hit is answered with a 120% counter-cut that always crits (his crit damage). +10 evasion.",
+      "description": "Every 3rd hit on him is PARRIED. Parried, blocked or dodged hits: a 120% counter-cut that always CRITS. +10 evasion.",
       "iaido": {
         "every": 3,
         "counterMultiplier": 1.2,
@@ -907,7 +907,7 @@
     },
     "passive": {
       "name": "Element Cycle",
-      "description": "Her basic attacks go fire > ice > electric in turn. Fire, ice and electric hits leave their element on the enemy; a different element on top reacts: fire+ice = Steam (Blind), ice+electric = Shatter (+50% hit), fire+electric = Overload (fire burst on enemies around it). Item hits count too.",
+      "description": "Her attacks cycle fire > ice > electric. Two elements on one enemy set off a REACTION. Item hits count too.",
       "elementCycle": [
         "fire",
         "ice",
@@ -1097,7 +1097,7 @@
     },
     "passive": {
       "name": "Grace",
-      "description": "Heal items (lifesteal, regen, item heals) are 10% stronger while she lives. Every 7s she heals the most hurt hero (8% of their health + her attack). Healing someone else gives HER +20% attack and +20% attack speed for 4s.",
+      "description": "Heal items +10%. Every 7s she heals the most hurt hero (8% health + attack). Healing others: +20% attack and speed 4s.",
       "regenAura": {
         "baseRegenPercentPerSec": 0,
         "healMultiplierPercent": 10
@@ -1283,7 +1283,7 @@
     },
     "passive": {
       "name": "Legion",
-      "description": "Raises a skeleton every 5-6s (up to 5; two at the start of every floor). His skeletons get +3% health and attack per Necromage level, and minion items count double for him. Every minion that dies gives him a Soul (up to 10) for Death Coil.",
+      "description": "Raises a skeleton every 5-6s (max 5; 2 at floor start). Skeletons grow with his level, minion items count double. Dead minions give SOULS (max 10).",
       "spawner": {
         "minion": "skeleton",
         "minMs": 5000,
@@ -1461,7 +1461,7 @@
     },
     "passive": {
       "name": "Battle Hymn",
-      "description": "Squad items work 35% stronger while he lives. Every 10s of a fight he plays the lute: a random boost for the whole squad for 5s (attack, speed, defense or regen).",
+      "description": "Squad items +35% stronger while he lives. Every 10s: a random squad boost for 5s (attack, speed, defense or regen).",
       "hymn": {
         "squadItemMultiplier": 1.35
       },
@@ -1695,13 +1695,13 @@
     },
     "passive": {
       "name": "Lobbed Shots",
-      "description": "His basic attacks are flasks: they splash 40% on enemies near the target and poison every enemy they hit. In exchange he attacks 25% slower.",
+      "description": "His attacks are flasks: 40% splash around the target and POISON on every enemy hit. Attacks 25% slower.",
       "lobbed": {
         "splashRadius": 70,
         "splashMultiplier": 0.4,
         "attackSpeedPercent": -25,
         "color": "0x6bd16a",
-      "flightMs": 450,
+        "flightMs": 450,
         "apply": [
           {
             "status": "poison",

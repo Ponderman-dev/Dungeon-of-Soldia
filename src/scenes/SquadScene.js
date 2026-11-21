@@ -373,10 +373,10 @@ export default class SquadScene extends Phaser.Scene {
     const g = put(this.add.graphics());
     drawWindow(g, X, Y, W, H);
     // Portrait: the hero big in an inner window on the dungeon floor colour.
-    drawWindow(g, X + 12, Y + 12, W - 24, open ? 120 : 150, { fill: 0x14101f }); // shorter for an open hero: room for the text
-    const feet = open ? Y + 114 : Y + 142;
-    g.fillStyle(0x000000, 0.35).fillEllipse(GAME_WIDTH / 2, feet, open ? 96 : 120, open ? 18 : 22);
-    const big = put(new Character(this, GAME_WIDTH / 2, feet, def).setScale(open ? 4 : 5));
+    drawWindow(g, X + 12, Y + 12, W - 24, open ? this.L.card.portraitH : 150, { fill: 0x14101f }); // shorter for an open hero: room for the text
+    const feet = open ? Y + this.L.card.portraitH - 6 : Y + 142;
+    g.fillStyle(0x000000, 0.35).fillEllipse(GAME_WIDTH / 2, feet, open ? 72 : 120, open ? 14 : 22);
+    const big = put(new Character(this, GAME_WIDTH / 2, feet, def).setScale(open ? this.L.card.heroScale : 5));
     if (!open) big.setWash(this.L.lockedWash, 1);
     // Every size lands on the font's 8px grid: big titles 24, names 16, the rest 8.
     const text = (x, y, str, size, color, bold = false, wrap = 0) => put(this.add.text(x, y, str, { fontFamily: FONT, fontSize: `${size >= 24 ? 24 : size >= 14 ? 16 : 8}px`, color, wordWrap: wrap ? { width: wrap, useAdvancedWrap: true } : undefined, lineSpacing: size >= 14 ? 6 : 4 }));
@@ -388,9 +388,10 @@ export default class SquadScene extends Phaser.Scene {
     // them; the tip in a box of its own when it fits. Sizes and colours: SQUAD_VIEW.card.
     const C = this.L.card;
     const small = (x, y, str, color, wrap) => put(this.add.text(x, y, str, { fontFamily: FONT, fontSize: '8px', color, wordWrap: wrap ? { width: wrap, useAdvancedWrap: true } : undefined, lineSpacing: C.lineGap }));
-    text(GAME_WIDTH / 2, Y + 144, def.name, 24, INK, true).setOrigin(0.5, 0);
-    small(GAME_WIDTH / 2, Y + 184, `${def.role || ''} - ${def.damageType === 'melee' ? 'melee' : 'ranged'}${element}`.toUpperCase(), UI.gold).setOrigin(0.5, 0);
-    const sum = small(GAME_WIDTH / 2, Y + 202, def.summary || '', C.body, W - 48).setOrigin(0.5, 0).setAlign('center');
+    const prose = (x, y, str, color, wrap) => small(x, y, str, color, wrap).setLetterSpacing(C.letterGap); // longer text: airier
+    text(GAME_WIDTH / 2, Y + 122, def.name, 24, INK, true).setOrigin(0.5, 0);
+    small(GAME_WIDTH / 2, Y + 160, `${def.role || ''} - ${def.damageType === 'melee' ? 'melee' : 'ranged'}${element}`.toUpperCase(), UI.gold).setOrigin(0.5, 0);
+    const sum = prose(GAME_WIDTH / 2, Y + 176, def.summary || '', C.body, W - 48).setOrigin(0.5, 0).setAlign('center');
     const team = small(GAME_WIDTH / 2, sum.y + sum.height + 8, `TEAM BONUS: ${this.perkLine(def)}`, UI.gold).setOrigin(0.5, 0);
     let y = team.y + team.height + 12;
     const bx = X + 12, bw = W - 24;
@@ -400,7 +401,7 @@ export default class SquadScene extends Phaser.Scene {
       const key = skillIconKey(this, iconId);
       const nm = text(bx + P + 44, top + P - 1, name, 16, INK, true, bw - 2 * P - 44);
       const tg = small(bx + P + 44, nm.y + nm.height + 4, tag, tagColor);
-      const ds = small(bx + P, Math.max(tg.y + tg.height, top + P + 36) + 8, body, C.body, bw - 2 * P);
+      const ds = prose(bx + P, Math.max(tg.y + tg.height, top + P + 36) + 8, body, C.body, bw - 2 * P);
       const h = ds.y + ds.height + P - top;
       box(top, h); // drawn once its height is known (the card graphics sits under every text, so it stays behind)
       drawWindow(g, bx + P, top + P, 36, 36, { line: tagColor === UI.gold ? 0xffd84a : UI.line });
@@ -415,7 +416,7 @@ export default class SquadScene extends Phaser.Scene {
     // The button at the bottom; the tip (one) in its own box above it, only when it fits.
     const by = Y + H - 64;
     if (def.tips && def.tips.length) {
-      const P = C.pad, tip = small(bx + P, y + P, `TIP: ${def.tips[0]}`, C.tip, bw - 2 * P);
+      const P = C.pad, tip = prose(bx + P, y + P, `TIP: ${def.tips[0]}`, C.tip, bw - 2 * P);
       const h = tip.height + 2 * P;
       if (y + h > by - 30) tip.destroy();
       else box(y, h);

@@ -32,7 +32,10 @@ export const SQUAD_VIEW = {
   lockedCard: { h: 350, goalY: 250, barY: 296, barH: 8 }, // a locked hero's small card (SquadScene.lockedCardBody)
   // The hero card (SquadScene.openPanel): bright body text, the gap between its lines, the skill boxes' fill / edge /
   // inner padding / gap between boxes, the tip's colour.
-  card: { body: '#ece4d4', lineGap: 6, fill: 0x16110f, edge: 0x3a2a22, pad: 10, gap: 8, tip: '#ffd88a' },
+  // Body text = the user's pick A (session 47: 'more space between text, not bold'): 1px between letters, more between
+  // lines, a softer cream.
+  card: { body: '#cfc6b4', lineGap: 8, letterGap: 1, fill: 0x16110f, edge: 0x3a2a22, pad: 8, gap: 6, tip: '#ffd88a',
+    portraitH: 100, heroScale: 3 }, // the portrait (an open hero) and the hero's size in it
   grid: { bottom: 606, w: 84, h: 124, foot: 112, tileScale: 4, gap: 12, side: 8, shadowW: 52, dragPx: 8,
     bar: { w: 120, h: 4, gap: 12 }, // bar = the scroll bar under the row (gap = from the row)
     // SCROLL HINTS (user: 'not clear how people will know to scroll'): arrow tabs on the row's ends (only where more is

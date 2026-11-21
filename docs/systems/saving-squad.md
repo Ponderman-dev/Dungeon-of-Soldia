@@ -90,3 +90,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   gold line; then each skill in its OWN BOX (quiet tile colours): icon + name + a coloured TAG (PASSIVE gold / ATTACK -
   10s red / SUPPORT - 12s green: the cooldown lives in the tag), the description under them; the tip in its own box
   when it fits above the button. 'X leaves the squad.' (was 'goes back to the bench').
+- **CARD TEXT = PICK A (session 47, user: 'more space between text, not bold'):** the card's longer text (summary,
+  descriptions, tip: `prose()` in openPanel) has 1px between letters, 8px between lines and a softer cream
+  (`SQUAD_VIEW.card`); short labels (role, tags, team bonus) unchanged. To fit, the open hero's portrait is 100 tall
+  (hero x3) and the boxes a little tighter; all 10 cards fit above the button (checked in a browser).

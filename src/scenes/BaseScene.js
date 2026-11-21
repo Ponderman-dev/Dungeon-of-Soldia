@@ -44,9 +44,9 @@ export default class BaseScene extends Phaser.Scene {
     this.drawHeroes();
     this.drawUi();
     if (this.fromTitle) this.cameras.main.fadeIn(UI.motion.slow, 0, 0, 0);
-    if (this.fromSquad) { // the buttons come in as the slide down ends (landing with it); no taps before that
+    if (this.fromSquad) { // the buttons come in once the slide down has ended; no taps before that
       this.leaving = true;
-      this.time.delayedCall(Math.max(0, UI.motion.screenMs - UI.motion.fast), () => uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = false; } }));
+      this.time.delayedCall(UI.motion.slow, () => uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = false; } }));
     }
   }
 
@@ -164,8 +164,7 @@ export default class BaseScene extends Phaser.Scene {
     if (this.leaving || this.modal) return;
     this.leaving = true;
     sfx.play('tap');
-    uiShift(this, this.uiParts, false); // the buttons leave while the screen slides (no wait)
-    this.slideToSquad();
+    uiShift(this, this.uiParts, false, { onDone: () => this.slideToSquad() }); // the buttons leave first
   }
 
   slideToSquad() {
@@ -173,9 +172,8 @@ export default class BaseScene extends Phaser.Scene {
     squad.events.once(Phaser.Scenes.Events.CREATE, () => {
       const cam = squad.cameras.main, mine = this.cameras.main;
       cam.scrollY = GAME_HEIGHT; // the squad screen starts just above this one
-      const M = UI.motion;
-      this.tweens.add({ targets: cam, scrollY: 0, duration: M.screenMs, ease: M.easeScreen });
-      this.tweens.add({ targets: mine, scrollY: -GAME_HEIGHT, duration: M.screenMs, ease: M.easeScreen, onComplete: () => this.scene.stop() });
+      this.tweens.add({ targets: cam, scrollY: 0, duration: UI.motion.slow, ease: UI.motion.easeMove });
+      this.tweens.add({ targets: mine, scrollY: -GAME_HEIGHT, duration: UI.motion.slow, ease: UI.motion.easeMove, onComplete: () => this.scene.stop() });
     });
     this.scene.launch('Squad', { fromCamp: true });
   }

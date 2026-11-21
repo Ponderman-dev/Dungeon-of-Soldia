@@ -162,6 +162,3 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   reward buttons, fight HUD (skills `instant`), squad test toggle. NOT the title gear (its tap must stop 'tap anywhere'
   at once) or reward cards (they light up themselves).
 - Still yellow (left on purpose): item icons + tier frames (art), the check marks on picked tiles, rage/grudge bars.
-- CAMP <-> SQUAD SLIDE (session 49, user: 'kind of slow, the ease is awkward'): `UI.motion.screenMs` (300) with
-  `easeScreen` (Cubic.easeOut: starts fast, settles); the leaving buttons go WHILE it slides, the new screen's buttons
-  land as it ends (delay screenMs - fast). Tap to ready: ~0.38s (was ~0.8s: buttons out, then 450ms Sine.easeInOut).

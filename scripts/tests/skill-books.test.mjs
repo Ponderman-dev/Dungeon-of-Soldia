@@ -202,11 +202,11 @@ import { pageIconArt } from '../../src/systems/pageIcon.js';
 { const a = withPage('finisher', 0, ['knight']), b = withPage('finisher', 0, ['knight']);
   for (const e of b.es) e.hp = e.maxHp * (books.finisher.vsLow.belowPercent - 5) / 100;
   const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
-  ok('Finisher: +20% power only vs enemies under 30% health', Math.abs(d1 / d0 - (1 + books.finisher.vsLow.power / 100)) < 0.03, `${d0}->${d1}`); }
+  ok(`Finisher: +${books.finisher.vsLow.power}% power only vs enemies under 30% health`, Math.abs(d1 / d0 - (1 + books.finisher.vsLow.power / 100)) < 0.03, `${d0}->${d1}`); }
 { const a = withPage('giantSlayer', 0, ['knight']), b = withPage('giantSlayer', 0, ['knight']);
   for (const e of b.es) e.elite = { traits: [] };
   const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
-  ok('Giant Slayer: +15% power only vs elites / bosses', Math.abs(d1 / d0 - (1 + books.giantSlayer.vsBig.power / 100)) < 0.03, `${d0}->${d1}`); }
+  ok(`Giant Slayer: +${books.giantSlayer.vsBig.power}% power only vs elites / bosses`, Math.abs(d1 / d0 - (1 + books.giantSlayer.vsBig.power / 100)) < 0.03, `${d0}->${d1}`); }
 // NEW PAGES batch 2 (session 46, the 8 rares): numbers read from the data.
 { const { s, es, h } = withPage('shockInk', 0, ['knight']); s.castSkill(h[0].uid, 0);
   ok('Shock Ink: the enemy hit is Shocked', es.some((e) => s.has(e, 'shock'))); }
@@ -315,3 +315,17 @@ const s0has = (e) => e.statuses.some((x) => x.type === 'weaken');
 { const a = withPage('elementalStorm', 0, ['samurai']), b = withPage('elementalStorm', 0, ['samurai']); for (const e of b.es) e.weak = ['ice'];
   a.s.castSkill(a.h[0].uid, 0); b.s.castSkill(b.h[0].uid, 0);
   ok('Elemental Storm: an enemy hit with its weakness is Weakened (and only then)', b.es.some((e) => e.statuses.some((x) => x.type === 'weaken' && x.attackPercent === books.elementalStorm.elementalStorm.weakApply[0].attackPercent)) && !a.es.some((e) => s0has(e))); }
+// THE BOSS PRIZE GROWS (session 46): the golden book of the Nth boss uses specialsByBoss.golden[N-1] (the last for later).
+import { bossNumber } from '../../src/systems/books.js';
+{ const real = r('skillBooks.json'), table = real.specialsByBoss.golden, dung = r('dungeons.json').A;
+  const bossFloors = Object.keys(dung.bosses).map(Number).sort((a, b) => a - b);
+  ok('bossNumber: 1 for the first boss floor, 2 for the second, 0 for a normal floor', bossNumber(dung, bossFloors[0]) === 1 && bossNumber(dung, bossFloors[1]) === 2 && bossNumber(dung, bossFloors[0] + 1) === 0);
+  let x = 11; const rng = () => { x |= 0; x = (x + 0x6d2b79f5) | 0; let t = Math.imul(x ^ (x >>> 15), 1 | x); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const squad = ['knight', 'mage', 'cleric'], N = 4000;
+  const rate = (bossNo) => { let L = 0, H = 0; for (let i = 0; i < N; i++) { const ps = rollBookPages(real, 'golden', rng, squad, { bossNo }); if (ps.some((p) => p.tier === 'legendary')) L++; if (ps.some((p) => p.tier === 'hero')) H++; } return { L: L / N, H: H / N }; };
+  const rates = [1, 2, 3, 4, 7].map(rate);
+  ok('1st boss: no legendary, no hero page', rates[0].L === table[0].legendary && rates[0].H === table[0].hero);
+  ok('2nd boss: a legendary for sure', rates[1].L === 1 && Math.abs(rates[1].H - table[1].hero) < 0.015, JSON.stringify(rates[1]));
+  ok('...3rd and 4th: hero page chance grows', Math.abs(rates[2].H - table[2].hero) < 0.02 && Math.abs(rates[3].H - table[3].hero) < 0.02, `${rates[2].H} ${rates[3].H}`);
+  ok('...later bosses keep the last entry', Math.abs(rates[4].H - table[table.length - 1].hero) < 0.02 && rates[4].L === 1);
+  ok('a golden book without bossNo still uses specials.golden', Math.abs(rate(undefined).L - real.specials.golden.legendary) < 0.02); }

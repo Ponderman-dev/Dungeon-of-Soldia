@@ -12,7 +12,7 @@ import dialogue from '../../data/dialogue.json';
 import { pickSpeech, clearSpeech } from '../../systems/dialogue.js';
 import { rollChoices } from '../../systems/rewards.js';
 import bookData from '../../data/skillBooks.json';
-import { maybeAddBook } from '../../systems/books.js';
+import { maybeAddBook, bossNumber } from '../../systems/books.js';
 import { loadProgress, saveProgress, recordRun, unlockedIds } from '../../systems/progress.js';
 import { newRunStats, finishRun } from '../../systems/runStats.js';
 import profileData from '../../data/profile.json';
@@ -129,7 +129,7 @@ export const resultsMethods = {
     let choices = bossFloor ? this.rollItems(null, 0, rewardRules.bossRarities) : this.rollItems(null, this.state.floorHadElite ? combatRules.elites.rewardBump : 0); // an elite: one card a rarity higher
     if (!bossFloor) choices = maybeAddBook(choices, bookData, this.state.heroes, bookData.bookChancePerScreen); // a skill book card, about 1 in 15 screens
     // After a BOSS the squad also gets a free golden book (3 modifier pages), after the item reward.
-    const afterNormal = bossFloor ? () => this.openRewardSheet([bookData.cards.golden], next, 'BOSS DEFEATED: A GOLDEN BOOK') : next;
+    const afterNormal = bossFloor ? () => this.openRewardSheet([{ ...bookData.cards.golden, bossNo: bossNumber(this.dungeon, this.floor) }], next, 'BOSS DEFEATED: A GOLDEN BOOK') : next; // bossNo: the prize grows with every boss
     if (!choices.length) return afterNormal();
     this.openRewardSheet(choices, afterNormal);
   },

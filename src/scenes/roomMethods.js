@@ -11,7 +11,7 @@ import { roomForFloor } from '../systems/rooms.js';
 
 // SPECIAL ROOMS (user's choice): from floor 4 about 1 floor in 4 is not a fight but a room (rooms.json):
 // TREASURE (1-2 chests, each = a 1-of-3 item pick), MIMIC (one chest that jumps up and fights; its prize is
-// rare/epic only), REST FOUNTAIN (heals 50% + a regen buff for the next 3 fights), SKILL DEALER (1 of 5 pages)
+// rare/epic only), REST FOUNTAIN (heals 50% + a regen buff for the next 3 fights), SKILL DEALER (1 of 3 pages)
 // and a SLIDE PUZZLE (PuzzleScene; solved = an item pick). The rules live in systems/rooms.js; these methods are
 // mixed into BattleScene (like bossMethods into BattleState). When the room is done the door opens and the
 // squad walks on as after a fight.
@@ -227,7 +227,7 @@ export const roomMethods = {
     });
   },
 
-  // The dealer opens a book of 5 pages (skillBooks.json contents.dealer).
+  // The dealer opens a book of 3 pages (skillBooks.json contents.dealer: 1 stat + 2 modifier).
   visitDealer(after) {
     if (!this.state.heroes.some((h) => h.alive)) return after();
     this.openRewardSheet([bookData.cards.dealer], after, 'THE SKILL DEALER');

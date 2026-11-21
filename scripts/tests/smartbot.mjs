@@ -13,7 +13,7 @@ import BattleState from '../../src/systems/BattleState.js';
 import { loadItems, canReceive, countOf } from '../../src/systems/items.js';
 import { rollChoices, squadSources } from '../../src/systems/rewards.js';
 import { enemiesForFloor } from '../../src/systems/dungeon.js';
-import { maybeAddBook, rollBookPages, pageFit } from '../../src/systems/books.js';
+import { maybeAddBook, rollBookPages, pageFit, bossNumber } from '../../src/systems/books.js';
 import { roomForFloor } from '../../src/systems/rooms.js';
 
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
@@ -92,11 +92,11 @@ export function takeReward(s, cards, opts, log) {
   if (!cards.length) return null;
   const rng = opts.rng;
   const ids = s.heroes.filter((h) => h.alive).map((h) => h.def.id);
-  const book = (b) => usePages(s, opts.random ? [pick(rollBookPages(DATA.bookData, b, rng, ids), rng)] : rollBookPages(DATA.bookData, b, rng, ids));
+  const book = (b, card = {}) => usePages(s, opts.random ? [pick(rollBookPages(DATA.bookData, b, rng, ids, { bossNo: card.bossNo }), rng)] : rollBookPages(DATA.bookData, b, rng, ids, { bossNo: card.bossNo }));
   if (opts.random) {
     const item = pick(cards, rng);
     if (item.kind === 'potion') return s.healHeroes(item.healPercent), 'potion';
-    if (item.kind === 'book') return book(item.book);
+    if (item.kind === 'book') return book(item.book, item);
     const tg = s.heroes.filter((h) => h.alive && canReceive(h, item));
     if (tg.length) s.giveItem(pick(tg, rng).uid, item.id);
     return item.id;
@@ -112,7 +112,7 @@ export function takeReward(s, cards, opts, log) {
   }
   if (!best) return null;
   if (best.c.kind === 'potion') return s.healHeroes(best.c.healPercent), 'potion';
-  if (best.c.kind === 'book') return book(best.c.book);
+  if (best.c.kind === 'book') return book(best.c.book, best.c);
   s.giveItem(best.h.uid, best.c.id);
   if (log) log.push([best.h.def.id, best.c.id]);
   return best.c.id;
@@ -183,7 +183,7 @@ export function playRun(squad, opts = {}) {
     s.endFloor(); s.winHeal(rules.winHealPercent); s.clearStatuses();
     if (s.monsterHouse) { out.houses = (out.houses || 0) + 1; reward(DATA.rw.choices, dungeon.director.monsterHouse.rewardOdds); continue; } // its own prize
     reward(DATA.rw.choices, null, boss ? DATA.rw.bossRarities : null);
-    if (boss) takeReward(s, [DATA.bookData.cards.golden], opts, out.log);
+    if (boss) takeReward(s, [{ ...DATA.bookData.cards.golden, bossNo: bossNumber(dungeon, floor) }], opts, out.log); // the prize grows with every boss
   }
   if (opts.keepState) out.state = s; // the fight state at the end (make-demo-squad.mjs saves its heroes; not sent between workers)
   out.levels = s.heroes.map((h) => h.level);

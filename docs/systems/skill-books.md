@@ -68,3 +68,10 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   +1.1, Elemental Storm -0.3 (still ~0: Executioner skips bosses, where runs end; Storm needs a weakness).
   After round 1 (pageruns 24): Cyclone +4.8, Blood Price +3.2, Siphon +2.3, Big Batch +1.7; damage pages still ~0:
   skills deal only 15-40% of a hero's damage on floors 11-45 (`dmgshare.mjs`), so +20% skill power = +3-8% total.
+- **DEALER + BOSS PRIZE REWORK (session 46, user picked 'what it offers' / 'what it gives'):** the Skill Dealer shows
+  3 pages (contents.dealer 1 stat + 2 modifier, was 2 + 3; user: 'fewer picks, so good choices are harder to get').
+  THE BOSS PRIZE GROWS: `specialsByBoss.golden` = one entry per boss (the last one repeats): 1st boss rares only, 2nd a
+  legendary for sure + 5% hero page, 3rd legendary + 15% hero, 4th+ legendary + 25% hero. The golden book card
+  carries `bossNo` (results.js `bossNumber(dungeon, floor)` from books.js); `rollBookPages(..., { bossNo })`; without
+  bossNo the old `specials.golden` is used (older bots: review, rankitems, pageruns). smartbot passes bossNo.
+  Smart curve median 39 (was 40, noise). Tests: skill-books.test.mjs last block, rooms.test.mjs dealer count.

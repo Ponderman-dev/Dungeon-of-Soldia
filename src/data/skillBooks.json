@@ -16,6 +16,15 @@
   "specials": {
     "golden": { "legendary": 0.2, "hero": 0.05 }
   },
+  "_specialsByBoss": "THE BOSS PRIZE GROWS (user, session 46): the golden book after the Nth boss uses entry N (the last entry for every later boss) instead of specials.golden. 1st boss: rares only; 2nd: 1 legendary for sure + 5% hero page; 3rd: legendary + 15% hero; 4th and later: legendary + 25% hero.",
+  "specialsByBoss": {
+    "golden": [
+      { "legendary": 0, "hero": 0 },
+      { "legendary": 1, "hero": 0.05 },
+      { "legendary": 1, "hero": 0.15 },
+      { "legendary": 1, "hero": 0.25 }
+    ]
+  },
   "pages": {
     "sharpen": {
       "kind": "stat",
@@ -747,7 +756,7 @@
       "type": "book",
       "rarity": "epic",
       "name": "Skill Dealer",
-      "description": "Choose 1 of 5 pages and put it on one hero's skill for the rest of the run."
+      "description": "Choose 1 of 3 pages and put it on one hero's skill for the rest of the run."
     }
   },
   "contents": {
@@ -760,8 +769,8 @@
       "modifier": 3
     },
     "dealer": {
-      "stat": 2,
-      "modifier": 3
+      "stat": 1,
+      "modifier": 2
     }
   }
 }

@@ -88,7 +88,7 @@ export default class RewardScene extends Phaser.Scene {
     // A lone golden book (boss prize) opens straight on its pages.
     if (this.payload.choices.length === 1 && this.payload.choices[0].kind === 'book') {
       this.chosen = this.payload.choices[0];
-      this.bookPages = rollBookPages(bookData, this.chosen.book, Math.random, this.squadIds());
+      this.bookPages = rollBookPages(bookData, this.chosen.book, Math.random, this.squadIds(), { bossNo: this.chosen.bossNo });
       this.showPages();
     } else this.showPick(true);
   }
@@ -254,7 +254,7 @@ export default class RewardScene extends Phaser.Scene {
     this.chosen = item;
     if (item.kind === 'potion') return this.finish(item.id, null); // the potion heals the whole party: no hero to choose
     if (item.kind === 'book') {
-      this.bookPages = this.bookPages || rollBookPages(bookData, item.book, Math.random, this.squadIds()); // the same 3 pages if you go back and forth
+      this.bookPages = this.bookPages || rollBookPages(bookData, item.book, Math.random, this.squadIds(), { bossNo: item.bossNo }); // the same 3 pages if you go back and forth
       return this.showPages();
     }
     this.showAssign();

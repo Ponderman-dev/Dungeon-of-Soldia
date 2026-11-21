@@ -9,7 +9,9 @@ export const pageOf = (data, id) => ({ id, ...data.pages[id] });
 // `tierOdds[book]`; then `specials[book]` may upgrade one modifier page to a legendary and (rolled separately) another
 // to a hero-only page. Hero pages only for `heroIds` (the living squad). An empty tier falls back to the next lower one.
 const TIER_ORDER = ['common', 'rare', 'legendary', 'hero'];
-export function rollBookPages(data, book, rng = Math.random, heroIds = null) {
+// opts.bossNo: the golden book of the Nth boss (1 = the first) uses `specialsByBoss[book][N-1]` (the last entry for later
+// bosses) instead of `specials[book]` (user, session 46: the boss prize grows with every boss).
+export function rollBookPages(data, book, rng = Math.random, heroIds = null, opts = {}) {
   const want = data.contents[book];
   const out = [];
   const taken = new Set();
@@ -39,7 +41,8 @@ export function rollBookPages(data, book, rng = Math.random, heroIds = null) {
   };
   for (let i = 0; i < (want.stat || 0); i++) { const p = take('stat', null); if (p) out.push(p); }
   const tiers = Array.from({ length: want.modifier || 0 }, rollTier);
-  const specials = (data.specials || {})[book] || {};
+  const byBoss = opts.bossNo && (data.specialsByBoss || {})[book];
+  const specials = byBoss ? byBoss[Math.min(opts.bossNo, byBoss.length) - 1] : (data.specials || {})[book] || {};
   let slot = tiers.length - 1; // specials replace the LAST modifier pages (the order is shuffled below)
   for (const tier of ['hero', 'legendary']) if (slot >= 0 && specials[tier] && rng() < specials[tier]) tiers[slot--] = tier;
   // a hero page needs a hero in the squad who has one: else that page stays a normal roll
@@ -72,4 +75,10 @@ export function maybeAddBook(choices, data, heroes, chance, rng = Math.random) {
   const out = [...choices];
   out[Math.floor(rng() * out.length)] = data.cards.blue;
   return out;
+}
+
+// Which boss this is: 1 for the dungeon's first boss floor, 2 for the second... (0 = not a boss floor).
+export function bossNumber(dungeon, floor) {
+  const floors = Object.keys((dungeon && dungeon.bosses) || {}).map(Number).sort((a, b) => a - b);
+  return floors.includes(floor) ? floors.indexOf(floor) + 1 : 0;
 }

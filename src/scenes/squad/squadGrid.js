@@ -29,12 +29,13 @@ const D = SQUAD_DEPTH;
 export const SQUAD_VIEW = {
   slots: [{ x: 90, y: 350 }, { x: GAME_WIDTH / 2, y: 336 }, { x: GAME_WIDTH - 90, y: 350 }], // outer ones nearer the middle (user)
   heroScale: 4, sideOffPx: 48, lockedWash: 0x4a4458, edge: 8,
+  lockedCard: { h: 350, goalY: 250, barY: 296, barH: 8 }, // a locked hero's small card (SquadScene.lockedCardBody)
   grid: { bottom: 606, w: 84, h: 124, foot: 112, tileScale: 4, gap: 12, side: 8, shadowW: 52, dragPx: 8,
     bar: { w: 120, h: 4, gap: 12 }, // bar = the scroll bar under the row (gap = from the row)
     // SCROLL HINTS (user: 'not clear how people will know to scroll'): arrow tabs on the row's ends (only where more is
     // hidden; tap = one tile along), darker edges there, and a nudge when the screen opens (the row slides nudgePx
     // left and back after nudgeDelayMs).
-    hint: { tabW: 24, tabH: 56, shade: [0.55, 0.35, 0.18], shadeW: 6, nudgePx: 44, nudgeDelayMs: 700, nudgeMs: 380, stepMs: 220 } },
+    hint: { tabW: 16, tabH: 36, shade: [0.55, 0.35, 0.18], shadeW: 6, nudgePx: 44, nudgeDelayMs: 700, nudgeMs: 380, stepMs: 220 } },
   // The quiet tile's colours: fill, edge, a picked tile's edge, the '?' tile's edge, a pushed tile's fill.
   tile: { fill: 0x16110f, edge: 0x3a2a22, picked: 0xd8a640, locked: 0x2e2a30, pressed: 0x2a201c, shadow: 0.35 },
 };
@@ -96,7 +97,7 @@ export const squadGrid = {
         drawFlatButton(tg, tx, ty, H.tabW, H.tabH, { pressed: tab.pressed });
         const cx = tx + H.tabW / 2, cy = ty + H.tabH / 2 + (tab.pressed ? UI.press.sinkPx : 0); // a pixel arrow < or >
         tg.fillStyle(Number('0x' + buttonTextColor().slice(1)), 1);
-        for (let i = 0; i < 4; i++) tg.fillRect(cx - dir * (3 - i) * 2 - 1, cy - 7 + i * 2, 2, 2).fillRect(cx - dir * (3 - i) * 2 - 1, cy + 5 - i * 2, 2, 2);
+        for (let i = 0; i < 3; i++) tg.fillRect(cx - dir * (2 - i) * 2 - 1, cy - 5 + i * 2, 2, 2).fillRect(cx - dir * (2 - i) * 2 - 1, cy + 3 - i * 2, 2, 2); // a small pixel < or >
       };
       tab.hit = this.add.zone(tx + H.tabW / 2, ty + H.tabH / 2, H.tabW + 12, H.tabH).setInteractive().setDepth(D.ui + 2);
       pressable(this, tab.hit, { redraw: (p) => { tab.pressed = p; tab.draw(); }, enabled: () => tab.hit.visible && !this.panel && !this.leaving,

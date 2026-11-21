@@ -81,3 +81,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   `glideGrid`); darker stepped EDGES there; a NUDGE once per visit (the row slides 44px left and back ~0.7s after the
   screen opens). Numbers in `SQUAD_VIEW.grid.hint`. Tile order: the starting heroes first (unlocks.json `start`:
   Knight, Rogue, Archer), then heroes.json order (heroes.json itself is unchanged).
+- **LOCKED CARD + SMALLER TABS (session 47, user: 'when locked we shouldn't show info', 'make the side arrow button
+  smaller'):** a locked hero's card is a small centred card (`SQUAD_VIEW.lockedCard`, `SquadScene.lockedCardBody`):
+  its grey shape, '? ? ?', LOCKED HERO, the goal ('Reach floor 5'), a gold progress bar + '0 / 5 best floor'; no
+  name, kit, perk or tips; a tap anywhere closes it. Arrow tabs 16 x 36 with a smaller pixel < / >.

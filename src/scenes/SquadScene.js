@@ -21,7 +21,7 @@ const DEMO = !!DEMO_KIND;
 // opens every hero); BEGIN DESCENT walks into the gate and comes back here (no fight).
 const SQUAD_DEMO = import.meta.env.VITE_SQUAD_DEMO === '1';
 const TESTER = import.meta.env.VITE_TESTER === '1'; // the playtest build for itch.io: no test buttons
-import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad } from '../systems/progress.js';
+import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad, requirementProgress } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
 import { slotsFrom, addToSlots, removeFromSlots, isFull, squadOrder } from '../systems/squadSlots.js';
 import { squadGrid, SQUAD_VIEW, SQUAD_DEPTH } from './squad/squadGrid.js';
@@ -361,8 +361,11 @@ export default class SquadScene extends Phaser.Scene {
     const add = (o) => { objs.push(o.setDepth(DEPTH.panel)); return o; };
     const X = 16;
     const W = GAME_WIDTH - 32;
-    const Y = 40;
-    const H = GAME_HEIGHT - Y - 16;
+    // A LOCKED hero's card shows nothing of its kit (user, session 47): a smaller card, centred, with only its grey
+    // shape, '? ? ?', how to unlock it and a progress bar (SQUAD_VIEW.lockedCard).
+    const LC = this.L.lockedCard;
+    const H = open ? GAME_HEIGHT - 40 - 16 : LC.h;
+    const Y = open ? 40 : Math.round((GAME_HEIGHT - LC.h) / 2);
     add(this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x05030a, 0.8)).setInteractive(); // blocks taps behind
     const card = this.add.container(0, 0).setDepth(DEPTH.panel);
     const put = (o) => { card.add(o); return o; };
@@ -373,10 +376,11 @@ export default class SquadScene extends Phaser.Scene {
     drawWindow(g, X + 12, Y + 12, W - 24, 150, { fill: 0x14101f });
     g.fillStyle(0x000000, 0.35).fillEllipse(GAME_WIDTH / 2, Y + 142, 120, 22);
     const big = put(new Character(this, GAME_WIDTH / 2, Y + 142, def).setScale(5));
-    if (!open) big.setWash(0x05030a, 0.92);
+    if (!open) big.setWash(this.L.lockedWash, 1);
     // Every size lands on the font's 8px grid: big titles 24, names 16, the rest 8.
     const text = (x, y, str, size, color, bold = false, wrap = 0) => put(this.add.text(x, y, str, { fontFamily: FONT, fontSize: `${size >= 24 ? 24 : size >= 14 ? 16 : 8}px`, color, wordWrap: wrap ? { width: wrap, useAdvancedWrap: true } : undefined, lineSpacing: size >= 14 ? 6 : 4 }));
     const element = ['fire', 'holy', 'dark', 'ice', 'electric'].includes(def.damageType) ? ` - ${def.damageType}` : '';
+    if (!open) return this.lockedCardBody(id, { objs, put, text, g, X, Y, W, H, card });
     text(GAME_WIDTH / 2, Y + 178, def.name, 24, INK, true).setOrigin(0.5, 0);
     text(GAME_WIDTH / 2, Y + 210, `${def.role || ''} - ${def.damageType === 'melee' ? 'melee' : 'ranged'}${element}`.toUpperCase(), 11, UI.gold, true).setOrigin(0.5, 0);
     const perk = this.perkLine(def);
@@ -455,6 +459,31 @@ export default class SquadScene extends Phaser.Scene {
     this.panel = objs;
     sfx.play('cardOpen');
     // The card slides up a little and fades in.
+    card.setAlpha(0).setY(30);
+    this.tweens.add({ targets: card, alpha: 1, y: 0, duration: 200, ease: 'Quad.easeOut' });
+    objs[0].setAlpha(0);
+    this.tweens.add({ targets: objs[0], alpha: 1, duration: 160 });
+  }
+
+  // The rest of a LOCKED hero's card: '? ? ?', LOCKED HERO, the goal, a progress bar with the numbers, and the X
+  // (a tap anywhere on the card or outside closes it).
+  lockedCardBody(id, { objs, put, text, g, X, Y, W, H, card }) {
+    const req = unlocks.requirements[id], LC = this.L.lockedCard;
+    text(GAME_WIDTH / 2, Y + 178, '? ? ?', 24, INK, true).setOrigin(0.5, 0);
+    text(GAME_WIDTH / 2, Y + 216, 'LOCKED HERO', 11, UI.gold, true).setOrigin(0.5, 0);
+    if (req) {
+      text(GAME_WIDTH / 2, Y + LC.goalY, describeRequirement(req, unlocks), 16, INK, true, W - 32).setOrigin(0.5, 0).setAlign('center');
+      const p = requirementProgress(req, this.progress), bw = W - 64, bx = X + 32, by = Y + LC.barY;
+      g.fillStyle(0x000000, 1).fillRect(bx - 2, by - 2, bw + 4, LC.barH + 4).fillStyle(0x3a2a22, 1).fillRect(bx, by, bw, LC.barH);
+      g.fillStyle(0xd8a640, 1).fillRect(bx, by, Math.round(bw * Math.min(1, p.have / p.need)), LC.barH);
+      text(GAME_WIDTH / 2, by + LC.barH + 10, describeProgress(req, this.progress, unlocks), 8, MUTE, true).setOrigin(0.5, 0);
+    }
+    put(this.add.zone(X + W / 2, Y + H / 2, W, H).setInteractive()).on('pointerdown', () => { sfx.play('cardClose'); this.closePanel(); });
+    drawWindow(g, X + W - 42, Y + 10, 32, 32);
+    text(X + W - 26, Y + 27, 'X', 16, INK, true).setOrigin(0.5);
+    add_shade_close(objs[0], this);
+    this.panel = objs;
+    sfx.play('cardOpen');
     card.setAlpha(0).setY(30);
     this.tweens.add({ targets: card, alpha: 1, y: 0, duration: 200, ease: 'Quad.easeOut' });
     objs[0].setAlpha(0);
@@ -543,5 +572,8 @@ export default class SquadScene extends Phaser.Scene {
     });
   }
 }
+
+// A tap on the dark shade around a locked hero's card closes it.
+function add_shade_close(shade, scene) { shade.on('pointerdown', () => { if (scene.panel) { sfx.play('cardClose'); scene.closePanel(); } }); }
 
 Object.assign(SquadScene.prototype, squadGrid);

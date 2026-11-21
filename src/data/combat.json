@@ -1,4 +1,11 @@
 {
+  "bossEnrage": {
+    "_about": "TIMED ENRAGE (session 51, user OK): a boss fight that drags on (healer squads vs Morthul / Sela sometimes ran past 5 minutes) ends sooner. After afterMs of fighting, every boss gets one ENRAGED step (the 'ENRAGED!' pop) and another every everyMs, up to maxSteps; each step adds mods (percent of its base stats). systems/bosses.js tickTimeEnrage, test boss-enrage.test.mjs.",
+    "afterMs": 180000,
+    "everyMs": 15000,
+    "maxSteps": 10,
+    "mods": [ { "stat": "attack", "percent": 25 }, { "stat": "attackEfficiency", "percent": 10 } ]
+  },
   "baseAttackIntervalMs": 1000,
   "critMultiplier": 2,
   "weakMultiplier": 1.5,

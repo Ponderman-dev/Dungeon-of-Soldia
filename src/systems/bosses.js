@@ -117,6 +117,21 @@ export const bossMethods = {
       if (u.burrowed) this.tickBurrow(u, dt, events);
       if (u.adapt) this.tickAdapt(u, dt, events);
       if (u.abilities && u.abilities.length) this.tickAbilities(u, dt, events);
+      if (d.boss && this.rules.bossEnrage) this.tickTimeEnrage(u, dt, events);
+    }
+  },
+
+  // TIMED ENRAGE (combat.json bossEnrage): after `afterMs` of fighting a boss gets an ENRAGED step, then one more every
+  // `everyMs` (max `maxSteps`); each step is its own `buff` status with `mods`, so they add up.
+  tickTimeEnrage(u, dt, events) {
+    const E = this.rules.bossEnrage;
+    u.fightMs = (u.fightMs || 0) + dt;
+    if (u.fightMs < E.afterMs) return;
+    const want = Math.min(E.maxSteps, Math.floor((u.fightMs - E.afterMs) / E.everyMs) + 1);
+    while ((u.enrageSteps || 0) < want) {
+      u.enrageSteps = (u.enrageSteps || 0) + 1;
+      this.applyStatus(u, { status: 'buff', durationMs: 3600000, mods: E.mods }, u, `timeEnrage${u.enrageSteps}`, events);
+      events.push({ type: 'enrage', unit: u, timed: u.enrageSteps });
     }
   },
 

@@ -144,6 +144,10 @@ export const resultsMethods = {
     // paused under the reward screen, so the reward screen's clock removes it.
     const bubble = this.speech && this.speech.c.active ? this.speech : null;
     if (bubble) this.scene.get('Reward').events.once('create', (rs) => rs.time.delayedCall(dialogue.rules.goneAfterRewardMs, () => bubble.c.destroy()));
+    // The next floor's picture is made now, once the cards have landed and the sheet stands still (it used to be made
+    // as the squad walked through the door: a long frame just as the camera slid; stutter fix, session 51).
+    const nextFloor = this.floor + 1;
+    this.scene.get('Reward').events.once('create', (rs) => rs.time.delayedCall(rewardRules.prepareNextFloorMs, () => { if (this.dungeon) this.floorKey(nextFloor); }));
     this.scene.launch('Reward', {
       state: this.state,
       choices,

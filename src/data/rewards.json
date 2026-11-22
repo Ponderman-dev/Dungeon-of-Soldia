@@ -1,5 +1,7 @@
 {
   "choices": 3,
+  "prepareNextFloorMs": 1000,
+  "_prepareNextFloorMs": "After the reward sheet opens (its own clock), the next floor's picture is made: the cards have landed and the player is reading. Was made during the door walk = a long frame as the camera slid (stutter fix, session 51).",
   "bossRarities": ["epic", "epic", "legendary"],
   "_bossRarities": "A boss floor's item reward: one card of each of these rarities (user, session 25), no potion or book card. The golden book still comes after.",
   "potionChance": 0.05,

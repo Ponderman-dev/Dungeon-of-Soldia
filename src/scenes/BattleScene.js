@@ -326,16 +326,22 @@ export default class BattleScene extends Phaser.Scene {
     return view;
   }
 
+  // Floor n's pixel-art picture (made once per tile colour + variant, then kept). Making one takes a long frame,
+  // so openRewardSheet makes the NEXT floor's while the reward screen stands still (stutter fix, session 51).
+  floorKey(n) {
+    const colors = this.dungeon.tileColors;
+    const tint = colors[(n - 1) % colors.length];
+    const variant = Math.floor((n - 1) / colors.length) % floorArt.variants;
+    return floorTextureKey(this, tint, variant, WALL_H);
+  }
+
   // Builds one floor: back wall, door, tiled ground and the enemies. yOffset places it off-screen.
   buildFloor(n, yOffset) {
     const container = this.add.container(0, yOffset).setDepth(DEPTH.floor);
     // (kept for the floor slide; the heroes now fade out in the doorway instead of being covered)
     const front = this.add.container(0, yOffset).setDepth(DEPTH.doorFront);
     // The floor's pixel art (old flagstones, dirt, grass; a brick wall with pillars): entities/floorTexture.js.
-    const colors = this.dungeon.tileColors;
-    const tint = colors[(n - 1) % colors.length];
-    const variant = Math.floor((n - 1) / colors.length) % floorArt.variants;
-    container.add(this.add.image(0, 0, floorTextureKey(this, tint, variant, WALL_H)).setOrigin(0).setScale(FLOOR_PIXEL));
+    container.add(this.add.image(0, 0, this.floorKey(n)).setOrigin(0).setScale(FLOOR_PIXEL));
 
     // The door in the back wall: closed wooden doors that swing open when the floor is cleared.
     const door = new Door(this, container, DOOR_X, WALL_H);

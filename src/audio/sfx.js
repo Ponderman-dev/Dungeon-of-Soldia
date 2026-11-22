@@ -99,6 +99,11 @@ export function has(cue) {
   return !!soundData.cues[cue];
 }
 
+// True when the cue plays when the skill HITS (sounds.json `atHit`, e.g. Flask Barrage's glass break), not at the cast.
+export function atHit(cue) {
+  return !!(soundData.cues[cue] && soundData.cues[cue].atHit);
+}
+
 export function isMuted() {
   return muted;
 }

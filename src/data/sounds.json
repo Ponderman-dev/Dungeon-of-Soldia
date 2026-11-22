@@ -331,7 +331,8 @@
       "minGapMs": 120,
       "source": "new_75-cc0-breaking-falling-hit-sfx-bfh1-glass-breaking-06.mp3",
       "file": "picked/skill_alch_barrage",
-      "always": true
+      "always": true,
+      "atHit": true
     },
     "skill_alch_brew": {
       "volume": 0.3,

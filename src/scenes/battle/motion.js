@@ -257,7 +257,7 @@ export const motionMethods = {
   },
 
   // Alchemist v2: one named flask (Flask Barrage / Mystery Brew) spins over and shatters (combat.json skillFx.flask).
-  playFlaskLook(from, to, flask) {
+  playFlaskLook(from, to, flask, skillId = null) {
     if (!from || !to) return;
     const F = FX.flask, seed = (this.impactSeed = (this.impactSeed || 0) + 1);
     let a = this.fxBody(from), b = this.fxBody(to);
@@ -268,7 +268,7 @@ export const motionMethods = {
       return { draws: out.draws, tints: out.tints.map(([list, , tint]) => [list === 'targets' ? to : from, tint]) };
     }, ['skill', F.recipe]);
     this.time.delayedCall(F.hitMs, () => {
-      sfx.play('flaskBreak');
+      sfx.play(sfx.atHit(`skill_${skillId}`) ? `skill_${skillId}` : 'flaskBreak'); // the skill's own `atHit` sound (Flask Barrage's glass break) as it lands
       if (to.unit.side === 'enemy') { this.cameras.main.shake(F.shakeMs, F.shakeIntensity); this.jitter(to, F.jitterPx, F.jitterMs); }
     });
   },

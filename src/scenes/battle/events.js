@@ -166,7 +166,7 @@ export const eventsMethods = {
     } else if (e.type === 'cast') {
       const caster = this.views.get(e.unit.uid);
       this.stopStep(caster); // an instant skill also cuts the attack short
-      if (e.unit.side === 'hero' && !e.unit.minion) sfx.play(sfx.has(`skill_${e.skillId}`) ? `skill_${e.skillId}` : 'skillCast'); // each skill its own sound
+      if (e.unit.side === 'hero' && !e.unit.minion && !sfx.atHit(`skill_${e.skillId}`)) sfx.play(sfx.has(`skill_${e.skillId}`) ? `skill_${e.skillId}` : 'skillCast'); // each skill its own sound (an `atHit` sound waits for the hit instead)
       if (e.zone) this.showZone(e.zone, FX.areaMs);
       const look = e.unit.side === 'hero' ? LOOK_BY_NAME[e.skill.name] : null;
       if (look) this.lookMoves(caster, e, look); // before the burst: the look wants to know where he lands
@@ -212,7 +212,7 @@ export const eventsMethods = {
         this.addMoment('grace', this.views.get(e.target.uid));
         return;
       }
-      if (e.flask.name && e.unit.side === 'hero') this.playFlaskLook(this.views.get(e.unit.uid), this.views.get(e.target.uid), e.flask); // Alchemist v2 look
+      if (e.flask.name && e.unit.side === 'hero') this.playFlaskLook(this.views.get(e.unit.uid), this.views.get(e.target.uid), e.flask, e.skillId); // Alchemist v2 look
       else this.showFlask(this.views.get(e.unit.uid), this.views.get(e.target.uid), Number(e.flask.color), e.flask.look);
     } else if (e.type === 'minionSpawn') {
       this.showMinion(e.unit);

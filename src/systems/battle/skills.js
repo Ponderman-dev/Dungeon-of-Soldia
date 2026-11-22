@@ -483,7 +483,7 @@ export const skillsMethods = {
       if (open.length) target = open.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a));
       healed.add(target);
     }
-    events.push({ type: 'flask', unit: hero, target, flask });
+    events.push({ type: 'flask', unit: hero, target, flask, skillId: slotId }); // skillId: the scene can play that skill's own sound when it lands
     this.skillHit(hero, { damageType: flask.damageType, damageMultiplier: flask.damageMultiplier, apply: flask.apply, heal: flask.heal }, `${slotId}_${flask.name}`, target, events);
     // Enemy flasks splash a small area where they land (`splash: { radius, multiplier }`).
     if (r.target === 'enemy' && r.splash) {

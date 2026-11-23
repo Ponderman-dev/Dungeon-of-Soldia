@@ -82,3 +82,10 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   NEW FREE TRACKS (credit needed, not CC0): Kevin MacLeod (CC BY 4.0; github Sayshal/minstrel-packs-music-01) and
   Alexander Nakarada / Rafael Krux / KM on the filmmusic.io licence (github SomeTroglodyte/Additional-Music-Various,
   its credits.md). If any is picked: add a credits screen line + `docs/credits-music.md`.
+- ROUND 2 PICKS (db `music`): LOVE title = Haven + Lord of the Land (free, CREDIT), squad = Muster (real
+  instruments, ours); MAYBE title = Fjeld, Hearthfire (ours), Hearth (real, ours), Medieval Fantasy Theme 4; battle =
+  Crossing the Chasm; boss = Unholy Knight. Everything else NO (incl. Suonatore, Iron Stair, Crown of Bones).
+  Still kept from round 1: squad RPG 12 (love), battle RPG 8 (love) / RPG 10 (maybe), boss RPG 14 (maybe).
+  User (general note): 'remove every NO, more options; too much tavern / atmospheric / slow. Try video-gamey,
+  arcadey RPG music like Castlevania, Risk of Rain 2'. NEXT = round 3 in that direction (energetic, driving,
+  melodic; our own songs only INSPIRED by that style, never copies).

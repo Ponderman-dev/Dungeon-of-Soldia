@@ -1,0 +1,192 @@
+<title>Soldia Music Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: the game's own dark DUSK-ish look (black windows, white lines, pixel headings). One window per game screen,
+   each a grid of song cards: play/stop, LOVE / MAYBE / NO. A sticky 'now playing' bar with the volume on top. */
+@font-face { font-family: "Press Start 2P"; src: url(/*FONT*/) format("woff2"); font-display: block; }
+:root {
+  --bg: #0e0b16; --panel: #000000; --line: #ffffff; --soft: #3a3150; --fg: #f0ecf8; --muted: #aaa0c0;
+  --gold: #ffd84a; --ok: #7fe0a0; --warn: #ff8a6a; --code: #8fc8ff; --free: #c9a3ff;
+  --display: "Press Start 2P", "Courier New", monospace;
+  --body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.55; margin: 0; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
+.wrap { max-width: 1400px; margin: 0 auto; padding-block: 20px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 22px; }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(16px, 4vw, 24px); line-height: 1.4; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 400; font-size: 14px; margin: 0; color: var(--gold); line-height: 1.5; }
+.lede { color: var(--muted); max-width: 72ch; margin: 10px 0 0; }
+.status { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+.status.bad { color: var(--warn); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--panel); border: 3px solid var(--line); padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.bar .now { flex: 1 1 200px; min-width: 0; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar .now b { color: var(--fg); }
+.vol { display: flex; gap: 8px; align-items: center; }
+.vol input { width: 120px; accent-color: var(--gold); }
+section.win { background: var(--panel); border: 3px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+section.win > p { margin: 0; color: var(--muted); max-width: 72ch; }
+.opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.opt { border: 2px solid var(--soft); padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.opt.love { border-color: var(--gold); } .opt.no { opacity: 0.55; }
+.opt.playing { border-color: var(--ok); }
+.ttl { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.ltr { font: 12px var(--display); color: var(--gold); }
+.nm { font-weight: 600; }
+.tag { font: 8px var(--display); padding: 4px 6px; border: 1px solid currentColor; letter-spacing: 0.04em; }
+.tag.code { color: var(--code); } .tag.free { color: var(--free); }
+.opt p { margin: 0; font-size: 13px; color: var(--muted); }
+.opt .cr { font-size: 12px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+.btn { font: 9px var(--display); color: var(--fg); background: var(--panel); border: 2px solid var(--line); padding: 10px 10px; cursor: pointer; }
+.btn.play { border-color: var(--ok); color: var(--ok); min-width: 84px; }
+.btn[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: #000; }
+.btn.v-no[aria-pressed="true"] { background: var(--warn); border-color: var(--warn); }
+.btn:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+label { font: 9px var(--display); color: var(--muted); }
+textarea { width: 100%; min-height: 60px; resize: vertical; font: 14px/1.45 var(--body); color: var(--fg); background: #15101f; border: 1px solid var(--soft); padding: 8px 10px; }
+.saved { font-size: 12px; color: var(--muted); min-height: 1em; }
+.saved.ok { color: var(--ok); } .saved.bad { color: var(--warn); }
+.key { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .opt { transition: border-color .15s, opacity .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Soldia Music Board</h1>
+    <p class="lede">Music for 4 places in the game. Tap <b>PLAY</b> to hear a song (it loops; one plays at a time). Mark each one <b>LOVE</b>, <b>MAYBE</b> or <b>NO</b>. You can love more than one per screen (battle floors could rotate a few songs). Add a note if you want changes like "slower", "darker", "less beepy".</p>
+    <div class="key"><span><span class="tag code">CODE SONG</span> written by me, played live by the game's own synth: tiny, and I can change anything in it.</span><span><span class="tag free">FREE TRACK</span> a free CC0 track from GitHub (free in a game, no credit needed). The text under it is a guess from measuring the sound.</span></div>
+    <p class="status" id="status" aria-live="polite">Connecting…</p>
+  </header>
+
+  <div class="bar" role="region" aria-label="Now playing">
+    <button class="btn" id="stopall" type="button">■ STOP</button>
+    <div class="now" id="now" aria-live="polite">Nothing playing</div>
+    <div class="vol"><label for="vol">VOLUME</label><input id="vol" type="range" min="0" max="100" value="70"></div>
+  </div>
+
+  <div id="screens"></div>
+
+  <section class="win">
+    <h2>Anything else</h2>
+    <p>Other music ideas: a song per boss, a short victory jingle after a floor, a Game Over tune, quieter music under fights…</p>
+    <label for="note-general">NOTE</label>
+    <textarea id="note-general" placeholder="Other ideas…"></textarea>
+    <div class="saved" id="saved-general"></div>
+  </section>
+</div>
+
+<script>
+/*ENGINE*/
+const FREE = /*FREE*/;
+const BLOBS = /*BLOBS*/;
+const SCREENS = [
+  ['title', 'Title + Base camp', 'The opening title page and the camp hub. Heard first, every time the game opens: it sets the mood.'],
+  ['squad', 'Squad / hero select', 'While choosing your 3 heroes before the descent.'],
+  ['battle', 'Battle floors', 'The fight loop: the song heard MOST, so it must not get tiring. Loving 2-3 lets the game rotate them.'],
+  ['boss', 'Boss fights', 'Every 20 floors. Bigger and scarier. Later each of the 8 bosses could get its own.'],
+];
+// ---------- options ----------
+const OPTS = [];
+for (const [id, s] of Object.entries(SONGS)) OPTS.push({ id: 'code:' + id, kind: 'code', screen: s.screen, title: s.title, desc: s.desc, song: s });
+for (const f of FREE) OPTS.push({ ...f, id: 'free:' + f.id, blob: f.id });
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const host = document.getElementById('screens');
+for (const [sid, name, about] of SCREENS) {
+  const list = OPTS.filter((o) => o.screen === sid);
+  const sec = document.createElement('section'); sec.className = 'win';
+  sec.innerHTML = `<h2>${esc(name)}</h2><p>${esc(about)}</p><div class="opts"></div>
+    <label for="note-${sid}">NOTE ON ${esc(name.toUpperCase())}</label>
+    <textarea id="note-${sid}" placeholder="e.g. Ember Gate but faster, or free Theme 4 for the camp…"></textarea><div class="saved" id="saved-${sid}"></div>`;
+  const box = sec.querySelector('.opts');
+  list.forEach((o, i) => {
+    o.letter = String.fromCharCode(65 + i);
+    const d = document.createElement('div'); d.className = 'opt'; d.dataset.id = o.id;
+    d.innerHTML = `<div class="ttl"><span class="ltr">${o.letter}</span><span class="nm">${esc(o.title)}</span><span class="tag ${o.kind}">${o.kind === 'code' ? 'CODE SONG' : 'FREE TRACK'}</span></div>
+      <p>${esc(o.desc)}</p>${o.credit ? `<p class="cr">By ${esc(o.credit)}</p>` : ''}
+      <div class="row"><button class="btn play" type="button">▶ PLAY</button>
+      <button class="btn v-love" type="button" aria-pressed="false">LOVE</button><button class="btn v-maybe" type="button" aria-pressed="false">MAYBE</button><button class="btn v-no" type="button" aria-pressed="false">NO</button></div>`;
+    o.el = d; box.appendChild(d);
+  });
+  host.appendChild(sec);
+}
+// ---------- audio ----------
+let ctx = null, out = null, player = null, src = null, current = null, vol = 0.7;
+const decoded = {};
+function ensureAudio() {
+  if (ctx) return;
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  out = ctx.createGain(); out.gain.value = vol; out.connect(ctx.destination);
+  player = createMusicPlayer(ctx, out);
+}
+function bytesOf(b64) { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u.buffer; }
+function stopAll() {
+  if (player) player.stop(0.3);
+  if (src) { try { const g = src._g; g.gain.setTargetAtTime(0, ctx.currentTime, 0.08); const s = src; setTimeout(() => { try { s.stop(); } catch (e) {} }, 500); } catch (e) {} src = null; }
+  if (current) current.el.classList.remove('playing'), current.el.querySelector('.play').textContent = '▶ PLAY';
+  current = null; document.getElementById('now').textContent = 'Nothing playing';
+}
+async function play(o) {
+  ensureAudio(); if (ctx.state === 'suspended') await ctx.resume();
+  if (current === o) { stopAll(); return; }
+  stopAll(); current = o;
+  o.el.classList.add('playing'); o.el.querySelector('.play').textContent = '■ STOP';
+  const now = document.getElementById('now');
+  now.innerHTML = `Playing <b>${esc(o.screen.toUpperCase())} ${o.letter}: ${esc(o.title)}</b>`;
+  if (o.kind === 'code') { player.play(o.song); return; }
+  try {
+    if (!decoded[o.blob]) { now.innerHTML += ' (loading…)'; decoded[o.blob] = await ctx.decodeAudioData(bytesOf(BLOBS[o.blob])); }
+    if (current !== o) return;
+    now.innerHTML = `Playing <b>${esc(o.screen.toUpperCase())} ${o.letter}: ${esc(o.title)}</b>`;
+    const s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = decoded[o.blob]; s.loop = true; g.gain.value = 0.8;
+    s.connect(g); g.connect(out); s._g = g; s.start(); src = s;
+  } catch (e) { now.textContent = 'Could not play this one on this device'; }
+}
+document.getElementById('stopall').addEventListener('click', stopAll);
+document.getElementById('vol').addEventListener('input', (e) => { vol = e.target.value / 100; if (out) out.gain.setTargetAtTime(vol, ctx.currentTime, 0.05); });
+// ---------- verdicts + notes (db collection 'music') ----------
+const state = {}; let db = null;
+function local(v) { try { if (v === undefined) return JSON.parse(localStorage.getItem('soldia-music') || 'null'); localStorage.setItem('soldia-music', JSON.stringify(v)); } catch (e) { return null; } }
+function render() {
+  for (const o of OPTS) {
+    const v = (state[o.id] || {}).verdict || null;
+    o.el.classList.toggle('love', v === 'love'); o.el.classList.toggle('no', v === 'no');
+    for (const k of ['love', 'maybe', 'no']) o.el.querySelector('.v-' + k).setAttribute('aria-pressed', String(v === k));
+  }
+  for (const sid of [...SCREENS.map((s) => s[0]), 'general']) { const ta = document.getElementById('note-' + sid); if (document.activeElement !== ta) ta.value = (state['note:' + sid] || {}).text || ''; }
+}
+async function save(id, val, el) {
+  state[id] = val; local(state); render();
+  if (!db) { if (el) { el.textContent = 'Kept in this browser only (not saved online)'; el.className = 'saved bad'; } return; }
+  try {
+    const ref = db.collection('music').doc(id.replace(/[:/]/g, '_'));
+    const empty = !val.verdict && !(val.text || '').trim();
+    if (empty) await ref.delete(); else await ref.set({ key: id, ...val, updatedAt: new Date().toISOString() });
+    if (el) { el.textContent = 'Saved'; el.className = 'saved ok'; }
+  } catch (e) { if (el) { el.textContent = 'Could not save, try again'; el.className = 'saved bad'; } }
+}
+for (const o of OPTS) {
+  o.el.querySelector('.play').addEventListener('click', () => play(o));
+  for (const k of ['love', 'maybe', 'no']) o.el.querySelector('.v-' + k).addEventListener('click', () => {
+    const cur = (state[o.id] || {}).verdict;
+    save(o.id, { verdict: cur === k ? null : k, screen: o.screen, title: o.title }, document.getElementById('saved-' + o.screen));
+  });
+}
+for (const sid of [...SCREENS.map((s) => s[0]), 'general']) {
+  const ta = document.getElementById('note-' + sid), el = document.getElementById('saved-' + sid); let t = null;
+  ta.addEventListener('input', () => { el.textContent = 'Typing…'; el.className = 'saved'; clearTimeout(t); t = setTimeout(() => save('note:' + sid, { text: ta.value }, el), 900); });
+  ta.addEventListener('blur', () => { if (t) { clearTimeout(t); t = null; save('note:' + sid, { text: ta.value }, el); } });
+}
+Object.assign(state, local() || {}); render();
+(async () => {
+  const st = document.getElementById('status');
+  db = window.claude ? await window.claude.use('db') : null;
+  if (!db) { st.textContent = 'Picks stay in this browser (sign in to claude.ai to save them)'; st.classList.add('bad'); return; }
+  st.textContent = 'Picks and notes save automatically';
+  db.collection('music').onSnapshot((snap) => {
+    for (const d of snap.docs) { const v = d.data() || {}; if (typeof v.key === 'string') state[v.key] = { verdict: v.verdict || null, screen: v.screen, title: v.title, text: typeof v.text === 'string' ? v.text : '' }; }
+    local(state); render();
+  });
+})();
+</script>

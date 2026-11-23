@@ -46,3 +46,23 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   played by BattleScene when Grace heals (with `ch.bless()`). Holy Nova / Sanctuary not re-picked (unchanged).
   Page-2 `assign` fountain = potion drink = already the game's sound.
 - UNUSED FILES REMOVED (session 51): 31 sound files no cue used (146 KB) were deleted (git history has them); `sounds.test.mjs` now fails if a packed file is not used by a cue. To try an old sound again, restore it from git (`git log --diff-filter=D --name-only -- src/assets/sounds`).
+
+## MUSIC (session 52, started; NOT in the game yet)
+- No music system in the game yet; Settings already has a MUSIC bar (`settings.json` `music`, 0-10) waiting for it.
+- MUSIC BOARD = the reused Skill Effects page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN (CLAUDE.md: reuse it).
+  4 screens: title + camp, squad, battle, boss. Each = 2 CODE SONGS + free CC0 tracks. The user marks each LOVE /
+  MAYBE / NO + a note per screen; saved in the page's db, collection `music` (doc id = option key with ':' -> '_',
+  `{key: 'code:<songId>' | 'free:<id>', verdict, screen, title}`; notes `note_<screen>` / `note_general` `{key, text}`).
+- CODE SONGS: `docs/proposals/music/synth.js` = a tiny Web Audio music engine (no files: pad, choir, pluck, bell,
+  lead, bass, drums; stone-room reverb; schedules bars ahead with a 50ms timer; `renderAll()` for offline checks).
+  `songs.js` = the songs as DATA (bpm, sections of chords + parts: chord / arp / bass / mel / drums, order).
+  Ember Gate + Hearth (title/camp), Muster + Roll Call (squad), Descent + Steel and Stone (battle), The Brood +
+  The Twentieth Floor (boss). Loops are 26-56s; the battle ones (~28s) may need more sections if picked.
+- FREE TRACKS (CC0, free in a game, no credit needed): Superpowers asset packs by Pixel-boy / Sparklin Labs
+  (github sparklinlabs/superpowers-asset-packs: medieval-fantasy, rpg-battle-system, ninja-adventure music) and
+  Juhani Junkala's Retro Game Music Pack (copy in github skillmoph/academe-play-assets). Not in the repo: clone
+  them (`git clone --depth 1 --filter=blob:none --no-checkout` + checkout the music folders). Their board text is a
+  GUESS from measuring loudness / busyness / brightness / key (I cannot listen).
+- Rebuild: `python3 docs/proposals/music/make-board.py <sources dir> <out.html>` (mp3 mono 48k packed in, ~12 MB).
+- NEXT: read the db picks, then build the real music system (`src/audio/music.js`: code songs via synth.js and/or
+  looping files; crossfade between screens; MUSIC volume from settings; respect mute) and hook the scenes.

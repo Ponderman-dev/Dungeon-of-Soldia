@@ -100,3 +100,15 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   music/tracks.txt), Matthew Pablo / ViRiX / Joth (CC0) / Zhelanov (cxong/cdogs-sdl music/*.txt). Before shipping any
   pick: re-check its exact licence page and add the credit line. CC BY-SA: an edited (trimmed/looped) file must stay
   CC BY-SA.
+- ROUND 3 PICKS -> STANDING LIST after 3 rounds (db `music`, latest verdict wins):
+  TITLE: LOVE Haven, Lord of the Land, xDeviruchi Title Theme; MAYBE Hearthfire (ours).
+  SQUAD: LOVE Muster (ours, real), RPG Battle 12, Eric Skiff 'Come and Find Me'; MAYBE Night Gate (ours).
+  BATTLE: LOVE RPG Battle 8; MAYBE RPG 10, Crossing the Chasm, cynicmusic Battle Theme A, Hero Immortal,
+  xDeviruchi Exploring The Unknown; Crimson Gallery (ours) UNMARKED. BOSS: MAYBE RPG 14, Unholy Knight,
+  xDeviruchi Decisive Battle, Bell Tower Duel (ours). All else NO.
+  User notes: 'remove every NO, more options; simpler music, add 16-BIT music; more ZELDA-ish, less gothic';
+  battle: 'no slow-start songs'; boss: 'too many cyberpunk aesthetics'; title / squad: 'more new options'.
+  Pattern: the loves lean RETRO (Pixel-boy RPG pack, xDeviruchi, Eric Skiff chiptune). ROUND 4 IDEA: our own
+  16-bit (SNES-like) adventure songs: bright heroic major / mixolydian tunes, march snare, harp, flute, brass,
+  rendered with the real samples then made 16-bit (32 kHz, lowpass, light bit-crush); every battle song starts
+  at full energy on beat 1; + more retro / 16-bit free tracks (no synthwave / cyber).

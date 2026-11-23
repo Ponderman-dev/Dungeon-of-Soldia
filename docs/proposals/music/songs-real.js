@@ -209,3 +209,120 @@ REAL.night_gate = {
   },
   order: ['A', 'B'],
 };
+
+// ---------- ROUND 4 (user: 'simpler, 16-bit, more ZELDA-ish, less gothic; battle: no slow starts; boss: not cyber') ----------
+// Bright heroic adventure songs. Rendered on the samples, then made to sound 16-bit by make16bit() in make-board4.py.
+const MARCH = (b, extra = {}) => ({ snare: 'x . o o x . o . x . o o x . x .', kick: 'x . . . . . . . x . . . . . . .', ...(b === 0 ? { crash: 'x . . . . . . . . . . . . . . .' } : {}), ...extra });
+const FIGHT = (b, extra = {}) => ({ kick: 'x . . . x . . . x . . . x . . .', snare: '. . . . x . . . . . . . x . x x', timp: 'x . . . . . . . x . . . . . . .', ...(b === 0 ? { crash: 'x . . . . . . . . . . . . . . .' } : {}), ...extra });
+REAL.heros_dawn = {
+  title: "Hero's Dawn", screen: 'title', bpm: 92,
+  desc: 'NEW (16-bit adventure). A bright, hopeful opening: rippling harp, soft strings, a flute melody, then a horn answer. Like the first screen of an old adventure game. C major.',
+  inst: { harp: { sample: 'harp', vol: 0.55, pan: -0.25 }, pad: { sample: 'strings', vol: 0.3 }, fl: { sample: 'flute', vol: 1.2, pan: 0.15 },
+    horn: { sample: 'horns', vol: 1.3, pan: 0.15 }, glock: { sample: 'glock', vol: 0.77, pan: 0.3 }, bass: { sample: 'celli', vol: 0.45 } },
+  sections: {
+    A: { prog: ['C', 'Am', 'F', 'G', 'C', 'Am', 'F G', 'C'], parts: [
+      { type: 'arp', inst: 'harp', oct: 3, every: 1, pat: [0, 1, 2, 3, 4, 3, 2, 1] },
+      { type: 'chord', inst: 'pad', oct: 3 },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R - - - - - - -' },
+      { type: 'mel', inst: 'fl', bars: ['E5 - - - G5 - C6 -', 'B5 - A5 - - - E5 -', 'F5 - A5 - C6 - A5 -', 'G5 - - - - - D5 -',
+        'E5 - - - G5 - C6 -', 'D6 - C6 - B5 - A5 -', 'A5 - G5 F5 G5 - D5 -', 'C5 - - - - - . .'] }] },
+    B: { prog: ['F', 'G', 'Em', 'Am', 'Dm', 'G', 'C', 'G'], parts: [
+      { type: 'arp', inst: 'harp', oct: 3, every: 1, pat: [0, 1, 2, 3, 4, 3, 2, 1] },
+      { type: 'chord', inst: 'pad', oct: 3 },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R - - - 5 - - -' },
+      { type: 'mel', inst: 'horn', shift: -12, bars: ['A4 - - - C5 - F5 -', 'D5 - - - B4 - G4 -', 'G4 - B4 - E5 - - -', 'C5 - - - A4 - - -',
+        'F5 - - - D5 - A4 -', 'B4 - - - D5 - G5 -', 'E5 - - - G5 - C6 -', 'D5 - - - B4 - G4 -'] },
+      { type: 'mel', inst: 'glock', bars: ['A5 - - - - - - -', 'B5 - - - - - - -', 'G5 - - - - - - -', 'A5 - - - - - - -', 'F5 - - - - - - -', 'G5 - - - - - - -', 'E5 - - - - - - -', 'D5 - - - - - - -'] },
+      { type: 'drums', kit: (b) => (b === 0 ? { timp: 'x . . . . . . . . . . . . . . .' } : {}), vel: 0.6 }] },
+  },
+  order: ['A', 'B'],
+};
+REAL.into_the_wilds = {
+  title: 'Into the Wilds', screen: 'squad', bpm: 120,
+  desc: 'NEW (16-bit adventure). A cheerful march: snare drum, plucked bass, a trumpet tune doubled by glockenspiel, then flute and harp. Packing up for the journey. D major.',
+  inst: { tpt: { sample: 'trumpets', vol: 1.4, pan: 0.1 }, glock: { sample: 'glock', vol: 0.88, pan: 0.3 }, bass: { sample: 'pizz', vol: 0.6 },
+    pad: { sample: 'strings', vol: 0.25 }, fl: { sample: 'flute', vol: 1.2, pan: 0.15 }, harp: { sample: 'harp', vol: 0.45, pan: -0.3 } },
+  sections: {
+    A: { prog: ['D', 'G', 'D', 'A', 'D', 'G', 'A', 'D'], parts: [
+      { type: 'chord', inst: 'pad', oct: 3 },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R . 5 . R . 5 .' },
+      { type: 'mel', inst: 'tpt', bars: ['D5 - - A4 D5 - F#5 -', 'G5 - F#5 - E5 - D5 -', 'F#5 - - - A5 - F#5 -', 'E5 - - - - - A4 -',
+        'D5 - - A4 D5 - F#5 -', 'B5 - A5 - G5 - B5 -', 'A5 - G5 - F#5 - E5 -', 'D5 - - - - - . .'] },
+      { type: 'mel', inst: 'glock', bars: ['D6 - - A5 D6 - F#6 -', 'G6 - F#6 - E6 - D6 -', 'F#6 - - - A6 - F#6 -', 'E6 - - - - - A5 -',
+        'D6 - - A5 D6 - F#6 -', 'B6 - A6 - G6 - B6 -', 'A6 - G6 - F#6 - E6 -', 'D6 - - - - - . .'] },
+      { type: 'drums', kit: (b) => MARCH(b), vel: 0.85 }] },
+    B: { prog: ['Bm', 'G', 'D', 'A', 'Bm', 'G', 'Em', 'A'], parts: [
+      { type: 'arp', inst: 'harp', oct: 4, every: 1, pat: [0, 1, 2, 1] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R . 5 . R . 5 .' },
+      { type: 'mel', inst: 'fl', bars: ['F#5 - - - D5 - B4 -', 'G5 - - - B5 - - -', 'A5 - - - F#5 - D5 -', 'E5 - - - C#5 - A4 -',
+        'B4 - D5 - F#5 - B5 -', 'A5 - G5 - F#5 - G5 -', 'E5 - - - G5 - B5 -', 'A5 - - - C#5 - E5 -'] },
+      { type: 'drums', kit: (b) => MARCH(b, { snare: 'x . o . x . o . x . o . x . o o' }), vel: 0.8 }] },
+  },
+  order: ['A', 'B'],
+};
+REAL.sword_and_spark = {
+  title: 'Sword and Spark', screen: 'battle', bpm: 152,
+  desc: 'NEW (16-bit adventure). Full energy from the first beat: racing strings, a brave horn tune, snare and timpani, then trumpets soar. A minor, heroic not gloomy.',
+  inst: { str: { sample: 'stacc', vol: 0.5, pan: -0.25 }, bass: { sample: 'pizz', vol: 0.55 }, horn: { sample: 'horns', vol: 1.7, pan: 0.15 },
+    tpt: { sample: 'trumpets', vol: 1.5, pan: 0.15 }, glock: { sample: 'glock', vol: 0.66, pan: 0.3 } },
+  sections: {
+    A: { prog: ['Am', 'Am', 'F', 'G', 'Am', 'Am', 'F', 'E'], parts: [
+      { type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 2, 1, 2] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R 5 R' },
+      { type: 'mel', inst: 'horn', bars: ['A4 - - - C5 - E5 -', 'D5 - C5 - B4 - C5 -', 'A4 - - - F4 - A4 -', 'B4 - - - D5 - G5 -',
+        'E5 - - - A5 - E5 -', 'G5 - F5 - E5 - D5 -', 'C5 - D5 - E5 - F5 -', 'E5 - - - G#4 - B4 -'] },
+      { type: 'drums', kit: (b) => FIGHT(b), vel: 0.9 }] },
+    B: { prog: ['F', 'G', 'Em', 'Am', 'F', 'G', 'E', 'E'], parts: [
+      { type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 1, 2, 3] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R R R' },
+      { type: 'mel', inst: 'tpt', bars: ['C6 - - - A5 - F5 -', 'D6 - - - B5 - G5 -', 'B5 - - - G5 - E5 -', 'C6 - - - A5 - - -',
+        'A5 - C6 - A5 - F5 -', 'B5 - D6 - B5 - G5 -', 'G#5 - - - B5 - - -', 'E6 - D6 - B5 - G#5 -'] },
+      { type: 'mel', inst: 'glock', bars: ['C6 - - - - - - -', 'D6 - - - - - - -', 'B5 - - - - - - -', 'C6 - - - - - - -', 'A5 - - - - - - -', 'B5 - - - - - - -', 'G#5 - - - - - - -', 'E6 - - - - - - -'] },
+      { type: 'drums', kit: (b) => FIGHT(b, { kick: 'x . . x x . . . x . . x x . . .', ...(b === 7 ? { snare: '. . . . x . . . x . x x x x x x' } : {}) }), vel: 0.9 }] },
+  },
+  order: ['A', 'B'],
+};
+REAL.moss_cavern = {
+  title: 'Moss Cavern Clash', screen: 'battle', bpm: 144,
+  desc: 'NEW (16-bit adventure). Bouncy and lively from beat one: a flute and glockenspiel tune over off-beat strings and a hopping bass, then trumpets. A cave fight, but fun. E (Dorian).',
+  inst: { fl: { sample: 'flute', vol: 1.3, pan: 0.1 }, glock: { sample: 'glock', vol: 0.88, pan: 0.3 }, str: { sample: 'stacc', vol: 0.45, pan: -0.3 },
+    bass: { sample: 'pizz', vol: 0.6 }, tpt: { sample: 'trumpets', vol: 1.5, pan: 0.15 } },
+  sections: {
+    A: { prog: ['Em', 'A', 'Em', 'A', 'C', 'D', 'Em', 'B'], parts: [
+      { type: 'arp', inst: 'str', oct: 4, every: 2, pat: [null, 2, null, 1, null, 2, null, 1] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R 8 R . R 8' },
+      { type: 'mel', inst: 'fl', bars: ['E5 - G5 - B5 - A5 G5', 'F#5 - E5 - C#5 - E5 -', 'G5 - B5 - E6 - D6 B5', 'C#6 - - - A5 - - -',
+        'G5 - - - E5 - G5 -', 'F#5 - - - D5 - F#5 -', 'E5 - G5 - B5 - G5 -', 'F#5 - - - D#5 - B4 -'] },
+      { type: 'mel', inst: 'glock', bars: ['E6 - - - - - - -', 'C#6 - - - - - - -', 'B6 - - - - - - -', 'A6 - - - - - - -', 'G6 - - - - - - -', 'F#6 - - - - - - -', 'E6 - - - - - - -', 'D#6 - - - - - - -'] },
+      { type: 'drums', kit: (b) => ({ kick: 'x . . x . . x . x . . x . . x .', snare: '. . . . x . . . . . . . x . . .', shaker: 'x . x . x . x . x . x . x . x .', ...(b === 0 ? { crash: 'x . . . . . . . . . . . . . . .' } : {}) }), vel: 0.85 }] },
+    B: { prog: ['C', 'D', 'Bm', 'Em', 'C', 'D', 'B', 'B'], parts: [
+      { type: 'arp', inst: 'str', oct: 4, every: 2, pat: [null, 2, null, 1, null, 2, null, 1] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R 8 R . R 8' },
+      { type: 'mel', inst: 'tpt', bars: ['E5 - - - G5 - C6 -', 'D6 - - - A5 - F#5 -', 'F#5 - - - B5 - D6 -', 'E6 - - - - - B5 -',
+        'C6 - - - E6 - G6 -', 'F#6 - - - A6 - F#6 -', 'D#6 - - - F#6 - - -', 'B6 - A6 - F#6 - D#6 -'] },
+      { type: 'drums', kit: (b) => ({ kick: 'x . . x . . x . x . . x . . x .', snare: '. . . . x . . . . . . . x . . .', shaker: 'x x x x x x x x x x x x x x x x', ...(b === 7 ? { snare: '. . . . x . . . x . x . x x x x' } : {}) }), vel: 0.85 }] },
+  },
+  order: ['A', 'B'],
+};
+REAL.guardian_deep = {
+  title: 'Guardian of the Deep', screen: 'boss', bpm: 136,
+  desc: 'NEW (16-bit adventure boss). A giant guardian, not a cyber machine: pounding timpani, low trombones, racing strings and a heroic trumpet theme, then the horns. C minor.',
+  inst: { tbn: { sample: 'trombones', vol: 1.0 }, str: { sample: 'stacc', vol: 0.5, pan: -0.25 }, tpt: { sample: 'trumpets', vol: 1.6, pan: 0.15 },
+    horn: { sample: 'horns', vol: 1.7, pan: 0.15 }, pad: { sample: 'strings', vol: 0.25 } },
+  sections: {
+    A: { prog: ['Cm', 'Cm', 'Ab', 'Bb', 'Cm', 'Cm', 'Ab', 'G'], parts: [
+      { type: 'bass', inst: 'tbn', oct: 2, pat: 'R . . R . . R . R . . R . . 5 .' },
+      { type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 1, 2, 1] },
+      { type: 'mel', inst: 'tpt', bars: ['C5 - - - G4 - C5 -', 'Eb5 - D5 - C5 - G4 -', 'Ab4 - C5 - Eb5 - Ab5 -', 'G5 - F5 - D5 - Bb4 -',
+        'C5 - - - Eb5 - G5 -', 'C6 - Bb5 - G5 - Eb5 -', 'F5 - Eb5 - D5 - C5 -', 'B4 - - - D5 - G5 -'] },
+      { type: 'drums', kit: (b) => ({ timp: 'x . x . x . x . x . x . x . x .', kick: 'x . . x . . x . x . . x . . x .', snare: '. . . . x . . . . . . . x . . .', ...(b === 0 ? { crash: 'x . . . . . . . . . . . . . . .' } : {}) }), vel: 0.85 }] },
+    B: { prog: ['Fm', 'Fm', 'Cm', 'Cm', 'Ab', 'Bb', 'G', 'G'], parts: [
+      { type: 'chord', inst: 'pad', oct: 3 },
+      { type: 'bass', inst: 'tbn', oct: 2, pat: 'R . . R . . R . R . . R . . 5 .' },
+      { type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 1, 2, 3] },
+      { type: 'mel', inst: 'horn', bars: ['F4 - - - Ab4 - C5 -', 'Db5 - C5 - Ab4 - F4 -', 'G4 - - - C5 - Eb5 -', 'D5 - C5 - Bb4 - G4 -',
+        'Ab4 - - - C5 - Eb5 -', 'D5 - - - F5 - Bb4 -', 'B4 - - - D5 - - -', 'G4 - B4 - D5 - F5 -'] },
+      { type: 'drums', kit: (b) => ({ timp: 'x . x . x . x . x . x . x . x .', kick: 'x . . x . . x . x . . x . . x .', snare: '. . . . x . . . . . . . x . . .', ...(b === 7 ? { snare: 'x . x . x . x . x x x x x x x x' } : {}) }), vel: 0.85 }] },
+  },
+  order: ['A', 'B'],
+};

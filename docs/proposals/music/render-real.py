@@ -41,11 +41,12 @@ INST = {
   'organ': (sset(SSO + 'Organ/great-opendiapason8ft/*.flac'), 'sus', 0.03, 0.25, 0),
   'organ4': (sset(SSO + 'Organ/great-principal4ft/*.flac'), 'sus', 0.03, 0.25, 0),
   'bells': (sset(VC + 'Idiophones/Struck Idiophones/Tubular Bells 1/*.wav', keep=r'_ff'), 'pluck', 0.002, 0.5, 3.0),
+  'glock': (sset(SSO + 'Percussion/glockenspiel-*.wav'), 'pluck', 0.002, 0.3, 1.5),
   'choir': (sset(SSO + 'Chorus/*male*', SSO + 'Chorus/*female*'), 'sus', 0.25, 0.6, 0),
 }
 P = SSO + 'Percussion/'
 DRUM = {  # name: (file, gain)
-  'kick': (P + 'bass_drum-p.wav', 0.9), 'boom': (P + 'bass_drum-f.wav', 1.0), 'snare': (P + 'snare-rh-mf.wav', 0.45),
+  'kick': (P + 'bass_drum-p.wav', 0.7), 'boom': (P + 'bass_drum-f.wav', 1.0), 'snare': (P + 'snare-rh-mf.wav', 0.45),
   'timp': (P + 'timpani-f-rh-a1.wav', 0.8), 'crash': (P + 'piatti.wav', 0.45), 'tamtam': (P + 'tamtam-a.wav', 0.6),
   'tom': (P + 'timpani-p-rh-c2.wav', 0.7), 'tamb': (P + 'tambourine-hit-mf.wav', 0.3), 'shaker': (P + 'shaker-hi-a.wav', 0.3),
   'hat': (P + 'shaker-hi-a.wav', 0.25), 'ohat': (P + 'tambourine-shake.wav', 0.25),

@@ -112,3 +112,12 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   16-bit (SNES-like) adventure songs: bright heroic major / mixolydian tunes, march snare, harp, flute, brass,
   rendered with the real samples then made 16-bit (32 kHz, lowpass, light bit-crush); every battle song starts
   at full energy on beat 1; + more retro / 16-bit free tracks (no synthwave / cyber).
+- ROUND 4 BOARD (same url/db; `make-board4.py <sources> <real mp3 dir> <out dir>`; the real dir = render-real.py
+  output with the round-4 songs replaced by their 16-bit versions, see the script header). OURS: 5 '16-bit adventure'
+  songs (songs-real.js ROUND 4: Hero's Dawn = title, Into the Wilds = squad march, Sword and Spark + Moss Cavern Clash
+  = battle, Guardian of the Deep = boss; new 'glock' instrument = SSO glockenspiel; MARCH / FIGHT drum helpers; every
+  battle/boss song is full energy on beat 1). NEW FREE: SuperTux Advance music folder (github
+  KelvinShadewing/supertux-advance res/mus + docs/CREDITS.md: SubspaceAudio, Trex0n, jkfite01, bart, Spring, Snabisch,
+  Hitctrl, migfus20, Joth; most licences NOT in the credits file = confirm on OpenGameArt before shipping), Eric Skiff
+  (DAKSie/Synk), more xDeviruchi (home, minigame, epilogue) and the Pixel-boy themes not shown before. All fight
+  tracks were checked for slow starts (first 4s within 4 dB of the whole song).

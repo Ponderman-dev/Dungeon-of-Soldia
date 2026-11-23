@@ -115,3 +115,97 @@ REAL.hearth_real = remap('hearth', 'Hearth (real instruments)', 'Round 1 Hearth 
 REAL.muster_real = remap('muster', 'Muster (real instruments)', 'Round 1 Muster (you did not mark it) on real instruments: horns, plucked strings, harp, marching snare. Brave, getting ready. E minor.',
   { brass: { sample: 'horns', vol: 1.15 }, pizz: { sample: 'pizz', vol: 0.6, pan: -0.2 }, bassp: { sample: 'pizz', vol: 0.55 },
     pad: { sample: 'strings', vol: 0.3 }, harp: { sample: 'harp', vol: 0.5, pan: 0.3 } });
+
+// ---------- ROUND 3 (user: 'video-gamey, arcadey RPG music, like Castlevania / Risk of Rain 2'): GOTHIC ACTION ----------
+// Our own songs in a dark, fast, catchy 'gothic action' style: harpsichord / organ riffs, rushing strings, rock kit.
+const ROCK = (b, extra = {}) => ({ rkick: 'x . . . x . . x x . . . x . . .', rsnare: '. . . . x . . . . . . . x . . .', rhat: 'x . x . x . x . x . x . x . x .', ...(b === 0 ? { rcrash: 'x . . . . . . . . . . . . . . .' } : {}), ...extra });
+REAL.blood_moon_stair = {
+  title: 'Blood Moon Stair', screen: 'battle', bpm: 150,
+  desc: 'NEW (gothic action). Fast harpsichord riff, a church-organ melody, rock drums and plucked bass, then soaring violins. Dark, catchy, driving. D minor.',
+  inst: { hpsi: { sample: 'harpsichord', vol: 0.55, pan: -0.3 }, org: { sample: 'organ', vol: 1.5, pan: 0.1 }, bass: { sample: 'pizz', vol: 0.5 },
+    vln: { sample: 'violins', vol: 1.9, pan: 0.2 }, str: { sample: 'stacc', vol: 0.35, pan: 0.3 } },
+  sections: {
+    A: { prog: ['Dm', 'Dm', 'Bb', 'A', 'Dm', 'Dm', 'Gm A', 'Dm'], parts: [
+      { type: 'arp', inst: 'hpsi', oct: 4, every: 1, pat: [0, 1, 2, 1, 3, 1, 2, 1] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R 5 8' },
+      { type: 'mel', inst: 'org', bars: ['D5 - A4 - D5 - E5 F5', 'E5 - D5 - C#5 - D5 -', 'F5 - D5 - Bb4 - D5 F5', 'E5 - - - C#5 - A4 -',
+        'D5 - A4 - D5 - F5 A5', 'G5 - F5 - E5 - F5 D5', 'Bb5 - A5 G5 A5 - E5 -', 'D5 - - - - - . .'] },
+      { type: 'drums', kit: (b) => ROCK(b), vel: 0.9 }] },
+    B: { prog: ['Bb', 'C', 'Am', 'Dm', 'Bb', 'C', 'A', 'A'], parts: [
+      { type: 'arp', inst: 'hpsi', oct: 4, every: 1, pat: [0, 1, 2, 3] },
+      { type: 'arp', inst: 'str', oct: 3, every: 2, pat: [0, 0, 2, 0] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R R R' },
+      { type: 'mel', inst: 'vln', bars: ['F5 - - - D5 - F5 -', 'G5 - - - E5 - G5 -', 'A5 - G5 - F5 - E5 -', 'F5 - - - D5 - - -',
+        'D6 - C6 - Bb5 - A5 -', 'G5 - A5 - Bb5 - G5 -', 'A5 - - - C#6 - - -', 'E6 - D6 - C#6 - A5 -'] },
+      { type: 'drums', kit: (b) => ROCK(b, { rkick: 'x . . x x . . x x . . x x . x .', rhat: 'x o x o x o x o x o x o x o x o', ...(b === 7 ? { rsnare: '. . . . x . . . x . x . x x x x' } : {}) }), vel: 0.9 }] },
+  },
+  order: ['A', 'B'],
+};
+REAL.crimson_gallery = {
+  title: 'Crimson Gallery', screen: 'battle', bpm: 138,
+  desc: 'NEW (gothic action). Galloping strings, a heroic horn tune, rock beat, then a fast harpsichord with a high violin line. A minor.',
+  inst: { gal: { sample: 'stacc', vol: 0.55, pan: -0.25 }, horn: { sample: 'horns', vol: 1.7, pan: 0.15 }, bass: { sample: 'pizz', vol: 0.5 },
+    hpsi: { sample: 'harpsichord', vol: 0.5, pan: -0.3 }, vln: { sample: 'violins', vol: 1.8, pan: 0.2 }, pad: { sample: 'organ', vol: 0.3 } },
+  sections: {
+    A: { prog: ['Am', 'F', 'G', 'E', 'Am', 'F', 'Dm E', 'Am'], parts: [
+      { type: 'arp', inst: 'gal', oct: 3, every: 1, pat: [0, null, 0, 0, 2, null, 2, 2] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R R R . R R' },
+      { type: 'chord', inst: 'pad', oct: 3, vel: 0.6 },
+      { type: 'mel', inst: 'horn', bars: ['A4 - - - E5 - - -', 'F5 - E5 - D5 - C5 -', 'D5 - - - G4 - B4 D5', 'E5 - - - - - G#4 -',
+        'A4 - - - E5 - A5 -', 'A5 - G5 - F5 - E5 -', 'F5 - E5 D5 E5 - B4 -', 'A4 - - - - - . .'] },
+      { type: 'drums', kit: (b) => ROCK(b, { rkick: 'x . . . . . x . x . x . . . . .' }), vel: 0.9 }] },
+    B: { prog: ['Dm', 'Am', 'E', 'Am', 'Dm', 'Am', 'E', 'E'], parts: [
+      { type: 'arp', inst: 'hpsi', oct: 4, every: 1, pat: [0, 1, 2, 3] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R R R' },
+      { type: 'mel', inst: 'vln', bars: ['D5 - F5 - A5 - D6 -', 'C6 - B5 - A5 - E5 -', 'G#5 - - - B5 - E6 -', 'C6 - - - A5 - - -',
+        'F5 - A5 - D6 - C6 -', 'B5 - A5 - G5 - E5 -', 'G#5 - A5 - B5 - D6 -', 'C6 - B5 - G#5 - E5 -'] },
+      { type: 'drums', kit: (b) => ROCK(b, { rhat: 'x o x o x o x o x o x o x o x o', ...(b === 7 ? { rsnare: 'x . x . x . x . x x x x x x x x' } : {}) }), vel: 0.9 }] },
+  },
+  order: ['A', 'B'],
+};
+REAL.bell_tower_duel = {
+  title: 'Bell Tower Duel', screen: 'boss', bpm: 160,
+  desc: 'NEW (gothic action). The fastest: double-time rock drums, church organ and choir, tower bells, a fanfare of trumpets, then a choir theme over racing harpsichord. E minor.',
+  inst: { org: { sample: 'organ', vol: 0.5 }, choir: { sample: 'choir', vol: 0.55 }, bell: { sample: 'bells', vol: 1.2 }, bass: { sample: 'pizz', vol: 0.5 },
+    tpt: { sample: 'trumpets', vol: 1.8, pan: 0.15 }, chm: { sample: 'choir', vol: 1.8 }, hpsi: { sample: 'harpsichord', vol: 0.5, pan: -0.3 } },
+  sections: {
+    A: { prog: ['Em', 'Em', 'C', 'C', 'Am', 'Am', 'B', 'B'], parts: [
+      { type: 'chord', inst: 'org', oct: 3 },
+      { type: 'chord', inst: 'choir', oct: 3, vel: 0.6 },
+      { type: 'mel', inst: 'bell', bars: ['E5 - - - - - - -', null, 'C5 - - - - - - -', null, 'A4 - - - - - - -', null, 'B4 - - - - - - -', null] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R R R' },
+      { type: 'mel', inst: 'tpt', bars: ['E5 - B4 - E5 - G5 -', 'F#5 - E5 - D#5 - B4 -', 'C5 - E5 - G5 - C6 -', 'B5 - A5 - G5 - E5 -',
+        'A5 - E5 - C5 - A4 -', 'C5 - D5 - E5 - F#5 -', 'D#5 - - - F#5 - B5 -', 'A5 - G5 - F#5 - D#5 -'] },
+      { type: 'drums', kit: (b) => ROCK(b, { rkick: 'x . x . x . x . x . x . x . x .', ...(b % 4 === 0 ? { timp: 'x . . . . . . . . . . . . . . .' } : {}) }), vel: 0.9 }] },
+    B: { prog: ['Am', 'B', 'Em', 'C', 'Am', 'B', 'C', 'B'], parts: [
+      { type: 'arp', inst: 'hpsi', oct: 4, every: 1, pat: [0, 1, 2, 3, 2, 1, 2, 1] },
+      { type: 'chord', inst: 'org', oct: 3, vel: 0.7 },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R R R' },
+      { type: 'mel', inst: 'chm', bars: ['A4 - - - - - - -', 'B4 - - - - - - -', 'G4 - - - B4 - - -', 'C5 - - - - - - -',
+        'E5 - - - - - D5 -', 'D#5 - - - - - B4 -', 'E5 - - - G5 - - -', 'F#5 - - - D#5 - - -'] },
+      { type: 'drums', kit: (b) => ROCK(b, { rkick: 'x . x . x . x . x . x . x . x .', rhat: 'x o x o x o x o x o x o x o x o', ...(b === 7 ? { rsnare: 'x . x . x . x . x x x x x x x x' } : {}) }), vel: 0.9 }] },
+  },
+  order: ['A', 'B'],
+};
+REAL.night_gate = {
+  title: 'Night Gate', screen: 'squad', bpm: 126,
+  desc: 'NEW (gothic action, lighter). A harpsichord riff, violin tune, steady rock beat, then horns. Ready for the descent. G minor.',
+  inst: { hpsi: { sample: 'harpsichord', vol: 0.55, pan: -0.3 }, bass: { sample: 'pizz', vol: 0.55 }, vln: { sample: 'violins', vol: 1.9, pan: 0.2 },
+    horn: { sample: 'horns', vol: 1.4, pan: 0.15 }, pad: { sample: 'strings', vol: 0.25 } },
+  sections: {
+    A: { prog: ['Gm', 'Eb', 'F', 'D', 'Gm', 'Eb', 'Cm D', 'Gm'], parts: [
+      { type: 'arp', inst: 'hpsi', oct: 4, every: 1, pat: [0, 1, 2, 3, 2, 1, 2, 1] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R . 5 . R .' },
+      { type: 'mel', inst: 'vln', bars: ['G4 - Bb4 - D5 - G5 -', 'G5 - F5 - Eb5 - D5 -', 'C5 - D5 - Eb5 - F5 -', 'F#5 - - - D5 - A4 -',
+        'G4 - Bb4 - D5 - G5 -', 'Bb5 - A5 - G5 - F5 -', 'Eb5 - D5 C5 D5 - F#4 -', 'G4 - - - - - . .'] },
+      { type: 'drums', kit: (b) => ROCK(b, { rkick: 'x . . . . . . . x . . . . . . .', rhat: 'o . o . o . o . o . o . o . o .' }), vel: 0.85 }] },
+    B: { prog: ['Eb', 'F', 'Gm', 'Gm', 'Eb', 'F', 'D', 'D'], parts: [
+      { type: 'arp', inst: 'hpsi', oct: 4, every: 1, pat: [0, 1, 2, 3] },
+      { type: 'chord', inst: 'pad', oct: 3 },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R . R . R .' },
+      { type: 'mel', inst: 'horn', bars: ['Bb4 - - - G4 - - -', 'C5 - - - A4 - - -', 'D5 - - - Bb4 - D5 -', 'G5 - - - - - . .',
+        'Eb5 - - - G5 - - -', 'F5 - - - A5 - - -', 'F#5 - - - A5 - - -', 'D5 - - - F#4 - A4 -'] },
+      { type: 'drums', kit: (b) => ROCK(b, { rkick: 'x . . . x . . . x . . . x . . .' }), vel: 0.85 }] },
+  },
+  order: ['A', 'B'],
+};

@@ -7,6 +7,8 @@ HERE = os.path.dirname(os.path.abspath(__file__)); SR = 44100
 SSO = os.path.join(LIB, 'sso/Sonatina Symphonic Orchestra/Samples/'); VC = os.path.join(LIB, 'VCSL/')
 NOTE = {'c': 0, 'd': 2, 'e': 4, 'f': 5, 'g': 7, 'a': 9, 'b': 11}
 def note_of(path):  # last 'a#2' / 'D2' / 'A#1' style token in the file name
+    num = re.match(r'^(\d{3})-', os.path.basename(path))
+    if num: return int(num.group(1))  # organ files are named by MIDI number ('060-C.flac')
     m = re.findall(r'(?:^|[-_ ])([A-Ga-g])(#?)(\d)(?=[-_.])', os.path.basename(path))
     if not m: return None
     l, s, o = m[-1]; return 12 * (int(o) + 1) + NOTE[l.lower()] + (1 if s else 0)
@@ -35,6 +37,10 @@ INST = {
   'hornstc': (sset(SSO + 'Horns/*stc-rr1*'), 'pluck', 0.002, 0.15, 0.6),
   'trombones': (sset(SSO + 'Trombones/*sus*'), 'sus', 0.05, 0.3, 0),
   'trumpets': (sset(SSO + 'Trumpets/*stc-rr1*'), 'pluck', 0.002, 0.15, 0.6),
+  'harpsichord': (sset(SSO + 'Harpsichord/Sustains/High/*.flac', SSO + 'Harpsichord/Sustains/Low/*.flac', keep=r'rr1'), 'pluck', 0.002, 0.12, 1.0),
+  'organ': (sset(SSO + 'Organ/great-opendiapason8ft/*.flac'), 'sus', 0.03, 0.25, 0),
+  'organ4': (sset(SSO + 'Organ/great-principal4ft/*.flac'), 'sus', 0.03, 0.25, 0),
+  'bells': (sset(VC + 'Idiophones/Struck Idiophones/Tubular Bells 1/*.wav', keep=r'_ff'), 'pluck', 0.002, 0.5, 3.0),
   'choir': (sset(SSO + 'Chorus/*male*', SSO + 'Chorus/*female*'), 'sus', 0.25, 0.6, 0),
 }
 P = SSO + 'Percussion/'
@@ -43,6 +49,11 @@ DRUM = {  # name: (file, gain)
   'timp': (P + 'timpani-f-rh-a1.wav', 0.8), 'crash': (P + 'piatti.wav', 0.45), 'tamtam': (P + 'tamtam-a.wav', 0.6),
   'tom': (P + 'timpani-p-rh-c2.wav', 0.7), 'tamb': (P + 'tambourine-hit-mf.wav', 0.3), 'shaker': (P + 'shaker-hi-a.wav', 0.3),
   'hat': (P + 'shaker-hi-a.wav', 0.25), 'ohat': (P + 'tambourine-shake.wav', 0.25),
+  'rkick': (VC + 'Membranophones/Struck Membranophones/Bass Drum 1/BDrumNew_hit_v5_rr1_Sum.wav', 0.7),
+  'rsnare': (VC + 'Membranophones/Struck Membranophones/Snare Drum, Modern 1/Snare2_HitSN_v5_rr1_Mid.wav', 0.8),
+  'rhat': (VC + 'Idiophones/Struck Idiophones/Hi-Hat Cymbal/HiHat_HitC_v3_rr1_Mid.wav', 0.35),
+  'rohat': (VC + 'Idiophones/Struck Idiophones/Hi-Hat Cymbal/HiHat_HitO_rr1_Mid.wav', 0.35),
+  'rcrash': (VC + 'Idiophones/Struck Idiophones/Suspended Cymbal 1/susCymb1_hit_f1.wav', 0.5),
   'frame': (glob.glob(VC + 'Membranophones/Struck Membranophones/Frame Drum/HDrumL_Hit_v2_rr1*')[0], 0.8),
 }
 @functools.lru_cache(None)

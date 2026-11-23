@@ -89,3 +89,14 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   User (general note): 'remove every NO, more options; too much tavern / atmospheric / slow. Try video-gamey,
   arcadey RPG music like Castlevania, Risk of Rain 2'. NEXT = round 3 in that direction (energetic, driving,
   melodic; our own songs only INSPIRED by that style, never copies).
+- ROUND 3 BOARD (same url/db; `make-board3.py <sources> <real mp3 dir> <out dir>`, reuses board2-template.html with
+  round-3 texts): keeps every round 1-2 LOVE/MAYBE, drops the rest. OURS: 4 'gothic action' songs in songs-real.js
+  (Blood Moon Stair + Crimson Gallery = battle, Bell Tower Duel = boss, Night Gate = squad): harpsichord / organ
+  (SSO, organ files named by MIDI number) + tubular bells + VCSL rock kit (rkick / rsnare / rhat / rohat / rcrash).
+  NEW FREE (energetic, all CREDIT unless CC0): xDeviruchi 8-Bit Fantasy & Adventure pack (CC BY-SA 4.0; github
+  benesmartin/necromancers-mystery audio/soundtrack), Zander Noriega (CC BY; Selulox/BrotatoMagic, rmanley/retro-3d-fps,
+  jaaslen/IsometricMining, ValyriaTear), Trevor Lentz 'Hero Immortal' (CC BY-SA; Gr1moire/Versus-Quest), cynicmusic
+  'battleThemeA' (CC0), djsaryon 'Accion' (CC BY-SA), Eric Skiff + Essa + Seropard (AlexNisnevich/untrusted
+  music/tracks.txt), Matthew Pablo / ViRiX / Joth (CC0) / Zhelanov (cxong/cdogs-sdl music/*.txt). Before shipping any
+  pick: re-check its exact licence page and add the credit line. CC BY-SA: an edited (trimmed/looped) file must stay
+  CC BY-SA.

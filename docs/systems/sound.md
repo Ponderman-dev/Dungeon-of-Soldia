@@ -66,3 +66,19 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
 - Rebuild: `python3 docs/proposals/music/make-board.py <sources dir> <out.html>` (mp3 mono 48k packed in, ~12 MB).
 - NEXT: read the db picks, then build the real music system (`src/audio/music.js`: code songs via synth.js and/or
   looping files; crossfade between screens; MUSIC volume from settings; respect mute) and hook the scenes.
+- ROUND 1 PICKS (db `music`): LOVE squad = RPG Battle Theme 12, battle = RPG Battle Theme 8; MAYBE Ember Gate (code),
+  RPG 10 (battle), RPG 14 (boss); 23 NO incl. 7 of 8 synth code songs. User: 'code songs feel cyber, not western RPG,
+  find another sound bank'; title: 'slow music with a lute, like Skyrim'.
+- ROUND 2 BOARD (same url, same db; `make-board2.py <sources> <real mp3 dir> <out dir>` + `board2-template.html`):
+  NOs removed. Audio is NOT packed in any more: each song is a FILE beside the page (`m/<id>.mp3`, published with the
+  Artifact `files` list, played by one looping `<audio>`; free previews capped 120s, loudnorm -16 LUFS, mono 56k).
+  REAL-INSTRUMENT SONGS ('OUR SONG'): `songs-real.js` (Hearthfire = slow lute/recorder 3/4, Road to the Gate = folk
+  jig, Iron Stair = orchestral battle, Crown of Bones = choir/brass boss; + Ember Gate / Hearth / Muster re-played),
+  rendered by `render-real.py <samples dir> <songId> <out.mp3>` (node `export-events.mjs` gives the notes; numpy plays
+  them on recorded samples, hall reverb, seamless loop, prints each instrument's share of the mix). Samples: VCSL
+  (sgossner/VCSL, CC0: strumstick = lute, folk harp, alto recorder, frame drum) + Sonatina Symphonic Orchestra
+  (peastman/sso, CC Sampling Plus 1.0: strings, horns, trombones, choir, flute, harp, percussion). Rendered music
+  made with them is ours to ship.
+  NEW FREE TRACKS (credit needed, not CC0): Kevin MacLeod (CC BY 4.0; github Sayshal/minstrel-packs-music-01) and
+  Alexander Nakarada / Rafael Krux / KM on the filmmusic.io licence (github SomeTroglodyte/Additional-Music-Various,
+  its credits.md). If any is picked: add a credits screen line + `docs/credits-music.md`.

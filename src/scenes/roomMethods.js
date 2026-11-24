@@ -127,6 +127,7 @@ export const roomMethods = {
 
   // The room is ready: its name and a hint show, a small gold arrow bobs over everything that can be tapped.
   startRoom() {
+    if (this.mode === 'lost') return; // GIVE UP during the walk-in (see startFighting)
     this.mode = 'room';
     this.showSlots(true);
     const room = this.layer.room;

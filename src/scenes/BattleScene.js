@@ -169,6 +169,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   startFighting() {
+    if (this.mode === 'lost') return; // GIVE UP during the floor walk-in: the run has ended, no fight starts behind the defeat screen
     // A boss floor: the boss roars and the screen shakes first, then a short wait before the fight starts.
     const bossViews = [...this.views.values()].filter((v) => v.unit.side === 'enemy' && v.unit.def.boss && v.unit.alive);
     if (bossViews.length && !this.bossIntroDone) {

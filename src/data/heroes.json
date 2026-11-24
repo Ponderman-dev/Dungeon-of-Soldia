@@ -11,6 +11,7 @@
       "Challenge pulls every enemy around him onto himself: great with thorns."
     ],
     "damageType": "melee",
+    "hitLook": "steelArc",
     "height": 24,
     "stats": {
       "health": 120,
@@ -184,6 +185,7 @@
       "Blood Feast: 50% lifesteal for 4s. Splash and area items love him."
     ],
     "damageType": "melee",
+    "hitLook": "chop",
     "height": 23,
     "stats": {
       "health": 105,
@@ -351,6 +353,7 @@
       "Attack speed, double hits and on-hit items love him. Smoke Bomb is the squad's escape: evasion + blind."
     ],
     "damageType": "melee",
+    "hitLook": "glint",
     "height": 23,
     "stats": {
       "health": 100,
@@ -703,6 +706,7 @@
       "Crit damage and evasion items love him. Counter Stance throws every hit back, even from far away."
     ],
     "damageType": "melee",
+    "hitLook": "iaido",
     "height": 23,
     "stats": {
       "health": 100,

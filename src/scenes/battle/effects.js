@@ -540,7 +540,10 @@ export const effectsMethods = {
 
   // A hit landed: start its impact effect (and the crit layer) on the target.
   addImpact(e, a, t) {
-    const type = IMPACT_MS[e.damageType] ? e.damageType : IMPACT_MS[e.attacker.damageType] ? e.attacker.damageType : 'melee';
+    let type = IMPACT_MS[e.damageType] ? e.damageType : IMPACT_MS[e.attacker.damageType] ? e.attacker.damageType : 'melee';
+    // (session 54) a plain melee basic hit plays the attacker's own look (heroes / enemies.json `hitLook`: steelArc, chop...)
+    const look = e.basic && !e.rider && type === 'melee' && e.attacker.def && e.attacker.def.hitLook;
+    if (look && IMPACT_MS[look]) type = look;
     const side = a && a.ch.x < t.ch.x ? -1 : 1;
     const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
     const ghastly = type === 'fire' && e.attacker.side === 'hero' && !e.attacker.minion && e.attacker.specials && e.attacker.specials.ghastly > 0;

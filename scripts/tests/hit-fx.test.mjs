@@ -42,3 +42,11 @@ ok('electric shot: a short spark, not a line from the shooter', projectileFx('el
 ok('elemental melee: a slash in the element colour on the attacker side', Object.entries(ELEMENT_SLASH).every(([k, [c]]) => { const d = impactFx(k, 0.3, u, 0, 1, null, true).draws; return d.some((p) => p[4] === c) && d.every((p) => p[0] <= u.x); }));
 ok('elemental melee looks different from the plain slash and from the shot impact', Object.keys(ELEMENT_SLASH).every((k) => { const m = JSON.stringify(impactFx(k, 0.3, u, 0, 1, null, true).draws); return m !== JSON.stringify(impactFx('melee', 0.3, u, 0, 1).draws) && m !== JSON.stringify(impactFx(k, 0.3, u, 0, 1).draws); }));
 ok('elemental melee is over when it ends', Object.keys(ELEMENT_SLASH).every((k) => impactFx(k, 1, u, 0, 1, null, true).draws.length === 0));
+// Session 54 (user picks): a melee look per hero weapon / enemy kind (`hitLook` in the data), shots per damage type.
+import { MELEE_LOOK_NAMES } from '../../src/systems/hitFx.js';
+const withLook = [...r('heroes.json'), ...Object.values(r('enemies.json'))].filter((d) => d.hitLook);
+ok('every hitLook in the data is a real melee look', withLook.length > 0 && withLook.every((d) => MELEE_LOOK_NAMES.includes(d.hitLook)), withLook.filter((d) => !MELEE_LOOK_NAMES.includes(d.hitLook)).map((d) => d.name).join());
+ok('only melee fighters have a melee look', withLook.every((d) => d.damageType === 'melee'));
+ok('each melee look lands on the side facing the attacker', MELEE_LOOK_NAMES.every((k) => { const d = impactFx(k, 0.15, u, 0).draws; return d.length > 0 && d.filter((p) => p[0] < u.x).length > d.filter((p) => p[0] > u.x).length; }));
+ok('the melee looks all look different', new Set(MELEE_LOOK_NAMES.map((k) => JSON.stringify(impactFx(k, 0.3, u, 0).draws))).size === MELEE_LOOK_NAMES.length);
+ok('a shot hit works without knowing the attacker', ['ranged', 'fire', 'ice', 'electric', 'dark', 'holy'].every((k) => clean(impactFx(k, 0.3, u, 0, 1, null).draws)));

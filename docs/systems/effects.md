@@ -52,3 +52,15 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   Shadow... charm, `e.result.riders`) shows ONE slash in the first rider's element colour (`addImpact` with that
   damageType -> the `melee` element-slash path) and NO rider splash; rider sounds still play. Ranged shooters keep
   the rider's shot-style impact on top of the arrow. (Ember Charm is a burn proc, not a rider: unchanged.)
+- **HIT LOOKS (session 54, user picks on the hit look review page, `docs/proposals/skill-fx/hits.js` + `make-hits.mjs`,
+  db collection `hits`):** `src/systems/hitLooks.js` (no Phaser). MELEE: a plain melee basic hit plays the attacker's own
+  look, `hitLook` in heroes.json / enemies.json (BattleScene `addImpact`; elemental melee and riders keep the coloured
+  slash; no hitLook = the old grey slash): Knight `steelArc` (steel arc + metal sparks), Berserker `chop` (red chop + blood,
+  knock-back), Rogue `glint` (thin cut + white twinkle, red bleed tint), Samurai `iaido` (one long white cut, then the
+  late hit flash); enemies `bite` (rats, spiders, worm, bat, Mimic), `claws` (hound, imps, ghost, Brood Mother), `thump`
+  (slime, brutes, golem, beetle, shroom, Grukk, Ignatius, Frost Warden); swordsmen (goblin, bandit, skeleton...) keep
+  the slash. All `MELEE_LOOK_MS` (420). SHOTS per damage type (`SHOT_LOOKS`, both the flight in `projectileFx` and the
+  landing in `impactFx`): ranged = a real arrow (steel head, red-white feathers) that STICKS in the target and wobbles,
+  fire = a bigger fireball (flame tongues, embers; explosion + smoke), holy = a light spear (gold cross flash, motes),
+  dark = a green-purple soul wisp (wisps spiral up the target), ice = a frost orb (snowflake flash), electric = ball
+  lightning (5-bolt zap, flicker). New durations in `IMPACT_MS`. Bard: not picked yet (shoots the arrow).

@@ -544,6 +544,8 @@ export const effectsMethods = {
     // (session 54) a plain melee basic hit plays the attacker's own look (heroes / enemies.json `hitLook`: steelArc, chop...)
     const look = e.basic && !e.rider && type === 'melee' && e.attacker.def && e.attacker.def.hitLook;
     if (look && IMPACT_MS[look]) type = look;
+    const shotLook = e.basic && !e.rider && !e.attacker.hitType && type === e.attacker.damageType && e.attacker.def && e.attacker.def.shotLook; // the Bard's note
+    if (shotLook && IMPACT_MS[shotLook]) type = shotLook;
     const side = a && a.ch.x < t.ch.x ? -1 : 1;
     const seed = (this.impactSeed = (this.impactSeed || 0) + 1);
     const ghastly = type === 'fire' && e.attacker.side === 'hero' && !e.attacker.minion && e.attacker.specials && e.attacker.specials.ghastly > 0;

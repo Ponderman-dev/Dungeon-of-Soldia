@@ -63,4 +63,4 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   landing in `impactFx`): ranged = a real arrow (steel head, red-white feathers) that STICKS in the target and wobbles,
   fire = a bigger fireball (flame tongues, embers; explosion + smoke), holy = a light spear (gold cross flash, motes),
   dark = a green-purple soul wisp (wisps spiral up the target), ice = a frost orb (snowflake flash), electric = ball
-  lightning (5-bolt zap, flicker). New durations in `IMPACT_MS`. Bard: not picked yet (shoots the arrow).
+  lightning (5-bolt zap, flicker). New durations in `IMPACT_MS`. BARD (user pick): a pink music note that wobbles as it flies and pops into little notes (heroes.json `shotLook: "note"`; the scene uses it for his shot kind and his basic hit, an elite `hitType` wins).

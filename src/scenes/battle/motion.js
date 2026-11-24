@@ -42,7 +42,7 @@ export const motionMethods = {
     // The shot itself is drawn in pixels by drawHitFx() (its look per damage type: systems/hitFx.js);
     // this empty container only carries its position along the flight.
     const arrow = this.add.container(from.x, from.y);
-    arrow.kind = a.unit.hitType || a.unit.damageType; // an elite archer shoots its element
+    arrow.kind = a.unit.hitType || a.unit.def.shotLook || a.unit.damageType; // an elite archer shoots its element; the Bard a note (heroes.json shotLook)
     if (a.unit.specials && a.unit.specials.demonHead && ['fire', 'electric', 'dark'].includes(arrow.kind)) arrow.kind = 'ice'; // Frozen Demon Head: its shots are ice
     a.arrow = arrow;
     this.flyArrow(a, arrow, t, hitInMs);

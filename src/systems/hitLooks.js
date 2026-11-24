@@ -1,7 +1,7 @@
 // Hit looks (session 54, user picks on the hit look review page, docs/proposals/skill-fx/hits.js):
 // MELEE_LOOKS = a basic melee hit per hero weapon / enemy kind (heroes.json / enemies.json `hitLook`):
 //   steelArc (Knight), chop (Berserker), glint (Rogue), iaido (Samurai), claws / thump / bite (enemies).
-// SHOT_LOOKS = the shot in the air + its hit, per damage type: ranged = a real arrow that sticks, fire = fireball,
+// SHOT_LOOKS = the shot in the air + its hit, per damage type (+ `note` = the Bard, heroes.json `shotLook`): ranged = a real arrow that sticks, fire = fireball,
 //   holy = light spear, dark = soul wisp, ice = frost orb, electric = ball lightning.
 // No Phaser: character pixels, the same pen as statusFx / hitFx. Melee: fn(q, u, t) -> { draws, tint, dx }.
 // Shots: shot(start, head, t) -> draws; hit(q, u, t, from) -> { draws, tint, dx } (from may be null).
@@ -147,5 +147,15 @@ const LOOKS = {
       if (q < 0.15) g.disc(x, y, 2.5, C.white);
       sparks(g, x, y, 6, [C.elec, C.white], ph(q, 0.2, 1), 9, 11, 1);
       return { draws: g.out, tint: q < 0.45 ? (Math.floor(t / 50) % 2 ? [C.white, 0.6] : [C.elec, 0.3]) : null, dx: q < 0.45 ? (Math.floor(t / 40) % 2 ? 1 : -1) : 0 }; } },
+  note: { ms: 420,
+    shot(s, h) { // wobbles up and down along the way (by distance flown: about 3 waves over a normal shot)
+      const g = pen(), [ux, uy] = dirOf(s, h), d = Math.hypot(h.x - s.x, h.y - s.y), wv = (k) => Math.sin(k * 0.17) * 3;
+      const w = wv(d), x = h.x - uy * w, y = h.y + ux * w;
+      g.disc(x, y + 1, 1.2, K.pink); g.px(x, y + 1, C.white); g.line(x + 1, y + 1, x + 1, y - 3, K.pink); g.px(x + 2, y - 3, K.pink); g.px(x + 2, y - 2, K.pink, 0.8);
+      for (let i = 1; i < 4; i++) { const k = d - i * 4; if (k < 0) break; const wb = wv(k); g.px(s.x + ux * k - uy * wb, s.y + uy * k + ux * wb + 1, i % 2 ? C.gold : K.pink, 0.6 - i * 0.15); }
+      return g.out; },
+    hit(q, u) { const g = pen(), { x, y } = front(u); if (q > 0 && q < 0.6) g.ring(x, y, 2 + q * 8, K.pink, 1 - q / 0.6);
+      for (let i = 0; i < 3; i++) { const p = ph(q, i * 0.12, 0.7 + i * 0.1); if (p <= 0 || p >= 1) continue; const nx = x + (i - 1) * 4 + Math.sin(p * 6 + i) , ny = y - 2 - p * 10; g.px(nx, ny, i % 2 ? C.gold : K.pink, 1 - p); g.px(nx + 1, ny, i % 2 ? C.gold : K.pink, 1 - p); g.line(nx + 1, ny, nx + 1, ny - 3, i % 2 ? C.gold : K.pink, 1 - p); }
+      return { draws: g.out, tint: q < 0.3 ? [K.pink, 0.3] : null, dx: 0 }; } },
 };
-export const SHOT_LOOKS = { ranged: LOOKS.realArrow, fire: LOOKS.fireball, holy: LOOKS.spear, dark: LOOKS.soulWisp, ice: LOOKS.frostOrb, electric: LOOKS.ballLightning };
+export const SHOT_LOOKS = { note: LOOKS.note, ranged: LOOKS.realArrow, fire: LOOKS.fireball, holy: LOOKS.spear, dark: LOOKS.soulWisp, ice: LOOKS.frostOrb, electric: LOOKS.ballLightning };

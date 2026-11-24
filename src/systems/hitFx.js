@@ -13,7 +13,7 @@ const easeOut = (p) => 1 - (1 - p) * (1 - p);
 
 // How long each impact plays (ms). A crit adds its own layer on top.
 // (session 54, user picks) shots + their hits per damage type and the melee looks live in hitLooks.js.
-export const IMPACT_MS = { melee: 300, ranged: 300, fire: 460, ice: 460, electric: 400, dark: 520, holy: 400,
+export const IMPACT_MS = { melee: 300, ranged: 300, fire: 460, ice: 460, electric: 400, dark: 520, holy: 400, note: 420,
   ...Object.fromEntries(Object.keys(MELEE_LOOKS).map((k) => [k, MELEE_LOOK_MS])) };
 export const MELEE_LOOK_NAMES = Object.keys(MELEE_LOOKS);
 export const CRIT_MS = 340;

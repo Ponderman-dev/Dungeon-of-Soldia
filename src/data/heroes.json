@@ -1432,6 +1432,7 @@
       "Discord charms a group: they hit each other for 2.5s."
     ],
     "damageType": "ranged",
+    "shotLook": "note",
     "height": 23,
     "stats": {
       "health": 90,

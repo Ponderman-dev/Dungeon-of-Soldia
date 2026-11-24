@@ -15,6 +15,7 @@ import unlocks from '../data/unlocks.json';
 import dungeons from '../data/dungeons.json';
 import combatRules from '../data/combat.json';
 import defaultSquad from '../data/squad.json';
+import campData from '../data/camp.json';
 import { DEMO as DEMO_KIND, demoSquad } from './demoMode.js'; // a demo page's saved squad
 const DEMO = !!DEMO_KIND;
 // The SQUAD SCREEN DEMO page (npm run build:squad-demo, session 47): opens here like a new player (the test toggle
@@ -90,8 +91,8 @@ export default class SquadScene extends Phaser.Scene {
     });
     for (const f of this.figures.values()) {
       const s = this.slots.indexOf(f.def.id);
-      if (s >= 0) this.size(f.ch.setPosition(this.L.slots[s].x, this.L.slots[s].y).setDepth(DEPTH.hero + this.L.slots[s].y / 10000), this.L.heroScale);
-    }
+      if (s >= 0) this.size(f.ch.setPosition(this.fromCamp ? this.sideX(s, false) : this.L.slots[s].x, this.L.slots[s].y).setDepth(DEPTH.hero + this.L.slots[s].y / 10000), this.L.heroScale);
+    } // (from the camp the squad waits off the sides and walks in after the slide: arrive)
     this.refresh();
     this.setupInput();
     this.events.once('shutdown', () => {
@@ -506,9 +507,22 @@ export default class SquadScene extends Phaser.Scene {
   // ---- start the run -------------------------------------------------------------------------
 
   // The squad walks into the door one after another (smaller as they go deeper), then the run starts.
-  // The slide from the camp has ended (uiKit slideToScreen): the buttons come in.
+  // The slide from the camp has ended (uiKit slideToScreen): the squad walks in from the left and right (user, session
+  // 55), then the buttons come in.
   arrive() {
-    uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = this.shifting = false; this.refresh(); } });
+    this.squadWalk(false, () => uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = this.shifting = false; this.refresh(); } }));
+  }
+
+  // The picked heroes walk in from the screen sides to their slots (out = false), or off to the sides (out = true), one
+  // after another (camp.json toSquad.squadStaggerMs). done runs when the last one has arrived.
+  squadWalk(out, done) {
+    const picked = this.slots.map((id, s) => [id, s]).filter(([id]) => id);
+    let left = picked.length;
+    if (!left) { done(); return; }
+    picked.forEach(([id, s], i) => this.time.delayedCall(i * campData.toSquad.squadStaggerMs, () => {
+      const f = this.figures.get(id), to = this.L.slots[s];
+      this.walk(f, out ? this.sideX(s, true) : to.x, to.y, () => { if (--left === 0) done(); });
+    }));
   }
 
   // '< CAMP': the screen slides down back into the camp hub (the reverse of BaseScene.toExpedition).
@@ -516,8 +530,12 @@ export default class SquadScene extends Phaser.Scene {
     if (this.panel || this.leaving) return;
     this.leaving = this.shifting = true;
     sfx.play('tap');
-    whenScreenReady(this, 'Base', { fromSquad: true }, -GAME_HEIGHT, () => // the camp is built, then the buttons leave
-      uiShift(this, this.uiParts, false, { onDone: () => this.slideToCamp() }));
+    whenScreenReady(this, 'Base', { fromSquad: true }, -GAME_HEIGHT, () => { // the camp is built, then the buttons leave
+      let left = 2; // and the squad walks off the sides (the reverse of arrive)
+      const both = () => { if (--left === 0) this.slideToCamp(); };
+      uiShift(this, this.uiParts, false, { onDone: both });
+      this.squadWalk(true, both);
+    });
   }
 
   slideToCamp() { // the camp comes up from below (built early: uiKit slideToScreen)

@@ -22,7 +22,7 @@ liked clips, session 26), then rolled out.
 |---|---|---|---|
 | 1 | Boot -> Title | instant | fade in from black, logo drops in, TAP TO START appears last |
 | 2 | Title -> Camp | camera zooms into the tower + fade | keep; time it with the tokens; camp UI rises in |
-| 3 | Camp <-> Squad | camera slide + buttons shift | keep; same timing both ways |
+| 3 | Camp <-> Squad | buttons leave + camp heroes walk up off the top, camera slide, squad walks in from the sides, then buttons (session 55; reverse for back; camp.json toSquad) | done |
 | 4 | Camp -> menu pages | rise in / drop away (session 40) | keep (done) |
 | 5 | Page -> page (Glossary -> Heroes) | opens on top, instant | slides sideways (sibling page), back = reverse |
 | 6 | Inside pages: tabs, chapters, lists, hero card, shop tabs | instant swap | content slides sideways (FAST), the frame stays still |

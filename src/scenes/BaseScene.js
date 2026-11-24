@@ -32,6 +32,7 @@ export default class BaseScene extends Phaser.Scene {
     this.fromSquad = !!(data && data.fromSquad); // back from the squad screen: the buttons come in after the slide
     this.modal = null;
     this.leaving = false;
+    this.heroesGone = false;
   }
 
   create() {
@@ -50,9 +51,38 @@ export default class BaseScene extends Phaser.Scene {
     if (this.fromSquad) this.leaving = true; // the buttons come in when the slide down has ended (arrive); no taps before that
   }
 
-  // The slide from the squad screen has ended (uiKit slideToScreen): the buttons come in.
+  // The slide from the squad screen has ended (uiKit slideToScreen): the heroes walk down from the top to their spots,
+  // then the buttons come in (camp.json toSquad; the reverse of toExpedition).
   arrive() {
-    uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = false; } });
+    this.heroesWalk(false, () => {
+      for (const ch of this.heroes) this.time.delayedCall(Phaser.Math.Between(...camp.hero.pauseMs) * 0.5, () => this.wander(ch, ch.home.x, ch.home.y));
+      uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = false; } });
+    });
+  }
+
+  // The camp's heroes walk straight up off the top of the screen (out = true; one after another), or come back down
+  // from there to their spots (out = false). done runs when the last one has arrived.
+  heroesWalk(out, done) {
+    const C = camp.toSquad, top = -C.offTopPx;
+    if (!this.heroes.length) { done(); return; }
+    let left = this.heroes.length;
+    this.heroes.forEach((ch, i) => {
+      this.stopWander(ch);
+      const from = { x: ch.x, y: out ? ch.y : top }, to = { x: out ? ch.x : ch.home.x, y: out ? top : ch.home.y };
+      ch.setPosition(from.x, from.y).setVisible(true).setWalking(true);
+      this.tweens.addCounter({ from: 0, to: 1, delay: i * C.staggerMs, duration: (Math.abs(to.y - from.y) / C.upSpeed) * 1000,
+        onUpdate: (tw) => { const t = tw.getValue(); ch.setPosition(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t).setDepth(ch.y); },
+        onComplete: () => {
+          ch.setWalking(false);
+          if (out) ch.setVisible(false); else ch.face(ch.x <= camp.fire.x ? 1 : -1);
+          if (--left === 0) done();
+        } });
+    });
+  }
+
+  stopWander(ch) {
+    if (ch.wanderTween) { ch.wanderTween.stop(); ch.wanderTween = null; }
+    if (ch.wanderTimer) { ch.wanderTimer.remove(false); ch.wanderTimer = null; }
   }
 
   // Up to 3 random unlocked heroes round the fire, each idly wandering near its spot (camp.json hero).
@@ -62,24 +92,26 @@ export default class BaseScene extends Phaser.Scene {
     this.heroes = defs.map((def, i) => {
       const [x, y] = H.spots[i];
       const ch = this.add.existing(new Character(this, x, y, def).setDepth(y));
+      ch.home = { x, y };
       ch.face(x <= camp.fire.x ? 1 : -1);
-      this.time.delayedCall(Phaser.Math.Between(...H.pauseMs) * (0.3 + 0.4 * i), () => this.wander(ch, x, y));
+      if (this.fromSquad) ch.setVisible(false); // they walk down from the top after the slide (arrive)
+      else ch.wanderTimer = this.time.delayedCall(Phaser.Math.Between(...H.pauseMs) * (0.3 + 0.4 * i), () => this.wander(ch, x, y));
       return ch;
     });
   }
 
   // One idle stroll: a few steps to a random spot near home, a look at the fire, a pause, then again.
   wander(ch, homeX, homeY) {
-    if (!ch.active) return;
+    if (!ch.active || this.heroesGone) return; // walking off to the squad screen
     const H = camp.hero, a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random());
     const to = { x: homeX + Math.cos(a) * r * H.radiusPx[0], y: homeY + Math.sin(a) * r * H.radiusPx[1] };
     const dist = Math.hypot(to.x - ch.x, to.y - ch.y);
-    const next = () => this.time.delayedCall(Phaser.Math.Between(...H.pauseMs), () => this.wander(ch, homeX, homeY));
+    const next = () => { ch.wanderTween = null; ch.wanderTimer = this.time.delayedCall(Phaser.Math.Between(...H.pauseMs), () => this.wander(ch, homeX, homeY)); };
     if (dist < 4) return next();
     ch.face(to.x < ch.x ? -1 : 1);
     ch.setWalking(true);
     const from = { x: ch.x, y: ch.y };
-    this.tweens.addCounter({ from: 0, to: 1, duration: (dist / H.speed) * 1000, onUpdate: (tw) => {
+    ch.wanderTween = this.tweens.addCounter({ from: 0, to: 1, duration: (dist / H.speed) * 1000, onUpdate: (tw) => {
       const t = tw.getValue();
       ch.setPosition(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t).setDepth(ch.y);
     }, onComplete: () => {
@@ -168,13 +200,19 @@ export default class BaseScene extends Phaser.Scene {
     uiShift(this, this.uiParts, false, { onDone: () => { this.scene.launch(key, { from: 'Base' }); this.scene.pause(); } });
   }
 
-  // TO EXPEDITION: the screen slides up into the squad screen.
+  // TO EXPEDITION (user, session 55): the buttons leave while the heroes walk up off the top, then the screen slides up
+  // into the squad screen (where the squad walks in from the sides, SquadScene.arrive).
   toExpedition() {
     if (this.leaving || this.modal) return;
     this.leaving = true;
     sfx.play('tap');
-    whenScreenReady(this, 'Squad', { fromCamp: true }, GAME_HEIGHT, () => // the squad screen is built, then the buttons leave
-      uiShift(this, this.uiParts, false, { onDone: () => this.slideToSquad() }));
+    whenScreenReady(this, 'Squad', { fromCamp: true }, GAME_HEIGHT, () => { // the squad screen is built, then the camp empties
+      let left = 2;
+      const both = () => { if (--left === 0) this.slideToSquad(); };
+      this.heroesGone = true;
+      uiShift(this, this.uiParts, false, { onDone: both });
+      this.heroesWalk(true, both);
+    });
   }
 
   slideToSquad() { // the squad screen comes down from above (built early: uiKit slideToScreen)

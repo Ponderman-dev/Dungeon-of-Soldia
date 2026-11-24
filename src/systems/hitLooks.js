@@ -46,42 +46,53 @@ function bolt(g, x0, y0, x1, y1, c, seed, segs = 3, jag = 2, a = 1) {
   }
 }
 const front = (u) => ({ x: u.x + u.side * u.hw, y: u.mid, f: -u.side }); // f = +1 when the hit travels to the right
+// (user, session 54: 'the hits are not centered to the enemies') melee looks land on the MIDDLE of the body.
+const centre = (u) => ({ x: u.x, y: u.mid, f: -u.side });
 
 // ---- melee looks: (q 0..1, u body, t) -> { draws, tint, dx } ----
 export const MELEE_LOOKS = {
-  steelArc(q, u) { const g = pen(), { x, y, f } = front(u);
-    swoosh(g, x - 3 * f, y - 2, 9, -1.8, 1.25, q, f, [C.white, K.steel, K.steel2], 3);
-    sparks(g, x, y + 1, 6, [K.spark, C.white, C.fire2], ph(q, 0.25, 1), 9, 3, 1.2, -f);
+  steelArc(q, u) { // (user, session 54: 'make the knight slash a bit different, it doesn't look centered') one curved sword
+    // slash mark right through the middle of the body: high on the attacker's side to low on the far side, thick in the
+    // middle and thin at the ends (white edge, steel body), drawn fast, then it fades; metal sparks fly from the middle.
+    const g = pen(), { x, y, f } = centre(u);
+    const ax = x - 8 * f, ay = y - 8, bx = x + 8 * f, by = y + 7, nx = 0.7 * f, ny = -0.7; // ends + the bulge direction
+    const head = easeOut(Math.min(1, q * 2.4)), a = fade(q, 0.45);
+    if (q > 0 && a > 0) for (let s = 0; s <= head; s += 0.025) {
+      const bend = Math.sin(Math.PI * s) * 3, px = ax + (bx - ax) * s + nx * bend, py = ay + (by - ay) * s + ny * bend;
+      const thick = 1 + Math.round(2 * Math.sin(Math.PI * s));
+      for (let k = 0; k < thick; k++) g.px(px - nx * k, py - ny * k, k === 0 ? C.white : k === 1 ? K.steel : K.steel2, a * (k ? 0.9 : 1));
+    }
+    sparks(g, x, y, 6, [K.spark, C.white, C.fire2], ph(q, 0.25, 1), 9, 3, 1.2);
     return { draws: g.out, tint: q < 0.3 ? [C.white, 0.35] : null, dx: q < 0.25 ? f : 0 }; },
-  chop(q, u) { const g = pen(), { x, f } = front(u); const p = ph(q, 0, 0.22), a = fade(q, 0.4);
+  chop(q, u) { const g = pen(), { x, f } = centre(u); const p = ph(q, 0, 0.22), a = fade(q, 0.4);
     const x0 = x - 4 * f, y0 = u.top - 2, x1 = x + 6 * f, y1 = u.y - 3; const ex = x0 + (x1 - x0) * easeOut(p), ey = y0 + (y1 - y0) * easeOut(p);
     if (p > 0 && a > 0) { g.line(x0 - f, y0, ex - f, ey, K.red, a); g.line(x0, y0, ex, ey, C.white, a); g.line(x0 + f, y0, ex + f, ey, K.red, a); g.line(x0 + f, y0 + 1, ex + f, ey + 1, C.blood2, a * 0.8); }
     sparks(g, x + 1 * f, u.mid, 7, [C.blood, C.red, C.blood2], ph(q, 0.2, 1), 9, 11, 2.2, f);
     return { draws: g.out, tint: q > 0.15 && q < 0.5 ? [C.red, 0.35 * (1 - ph(q, 0.15, 0.5))] : null, dx: q > 0.15 && q < 0.5 ? Math.round(3 * f * (1 - ph(q, 0.15, 0.5))) : 0 }; },
-  glint(q, u) { const g = pen(), { x, y, f } = front(u); const p = ph(q, 0, 0.25), a = fade(q, 0.45);
+  glint(q, u) { const g = pen(), { x, y, f } = centre(u); const p = ph(q, 0, 0.25), a = fade(q, 0.45);
     if (p > 0 && a > 0) { const e = easeOut(p); g.line(x - 5 * f, y - 5, x - 5 * f + 11 * f * e, y - 5 + 9 * e, C.white, a); }
     const s = ph(q, 0.2, 0.7); if (s > 0 && s < 1) star(g, x + 1 * f, y, 3 + Math.round(Math.sin(s * Math.PI) * 2), C.white, Math.sin(s * Math.PI), K.cyan2);
     sparks(g, x, y + 1, 5, [C.blood, C.blood2], ph(q, 0.3, 1), 6, 9, 2, f);
     return { draws: g.out, tint: q > 0.25 && q < 0.8 ? [C.red, 0.3 * (1 - ph(q, 0.25, 0.8))] : null, dx: 0 }; },
-  iaido(q, u) { const g = pen(), { x, y, f } = front(u);
-    const x0 = x - 9 * f, y0 = y - 4, x1 = x + 13 * f, y1 = y + 3;
+  iaido(q, u) { const g = pen(), { x, y, f } = centre(u);
+    const x0 = x - 11 * f, y0 = y - 4, x1 = x + 11 * f, y1 = y + 3;
     const show = q < 0.45 ? 1 : 0, thin = ph(q, 0.45, 0.75); // the line flashes across at once, holds, then shrinks to its middle
     if (show) { g.line(x0, y0, x1, y1, C.white); if (q > 0.12) g.line(x0 + 2 * f, y0 + 1, x1 - 2 * f, y1 + 1, K.samurai, 0.9); }
     else if (thin < 1) { const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, k = 1 - thin; g.line(mx - (mx - x0) * k, my - (my - y0) * k, mx + (x1 - mx) * k, my + (y1 - my) * k, C.white, k); }
     sparks(g, (x0 + x1) / 2, (y0 + y1) / 2, 6, [K.samurai, C.blood], ph(q, 0.3, 1), 8, 4, 1.5, f);
     return { draws: g.out, tint: q > 0.28 && q < 0.5 ? [C.white, 0.55] : null, dx: q > 0.28 && q < 0.4 ? f : 0 }; },
-  claws(q, u) { const g = pen(), { x, y, f } = front(u);
+  claws(q, u) { const g = pen(), { x, y, f } = centre(u);
     for (let i = 0; i < 3; i++) { const p = ph(q, i * 0.08, i * 0.08 + 0.25), a = fade(q, 0.45); if (p <= 0 || a <= 0) continue;
       const x0 = x - 3 * f + (i - 1) * 3 * f, y0 = y - 6, e = easeOut(p); const x1 = x0 + 5 * f * e, y1 = y0 + 10 * e;
       g.line(x0, y0, x1, y1, C.red, a); g.line(x0 + f, y0, x1 + f, y1, C.white, a * (1 - ph(q, 0.2, 0.4))); }
     sparks(g, x + 2 * f, y + 2, 4, [C.blood, C.blood2], ph(q, 0.3, 1), 6, 8, 2, f);
     return { draws: g.out, tint: q > 0.15 && q < 0.45 ? [C.red, 0.3] : null, dx: 0 }; },
-  thump(q, u) { const g = pen(), { x, y, f } = front(u); const p = ph(q, 0, 0.45);
+  thump(q, u) { const g = pen(), { x, y, f } = centre(u); const p = ph(q, 0, 0.45);
     if (p > 0 && p < 1) { const r0 = 2 + 3 * easeOut(p), r1 = r0 + 4; for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2 + 0.39; g.line(x + Math.cos(a) * r0, y + Math.sin(a) * r0, x + Math.cos(a) * r1, y + Math.sin(a) * r1, i % 2 ? C.fire2 : C.white, 1 - p); } }
     if (q < 0.2) g.disc(x, y, 3 * (1 - q / 0.2) + 0.5, C.white, 1);
     const d = ph(q, 0.1, 1); if (d > 0 && d < 1) for (let i = 0; i < 4; i++) g.px(u.x + (i < 2 ? -1 : 1) * (u.hw + 1 + d * (3 + (i % 2) * 3)), u.y - 1 - Math.sin(d * Math.PI) * 2, K.dust, 1 - d);
     return { draws: g.out, tint: q < 0.3 ? [C.white, 0.4] : null, dx: q < 0.4 ? Math.round(3 * f * (1 - q / 0.4)) : 0 }; },
-  bite(q, u) { const g = pen(), { x, y, f } = front(u); const c = easeOut(ph(q, 0, 0.3)), a = fade(q, 0.5);
+  bite(q, u) { const g = pen(), { x, y, f } = centre(u); const c = easeOut(ph(q, 0, 0.3)), a = fade(q, 0.5);
     if (a > 0) { const gap = 4 * (1 - c); for (let i = 0; i < 4; i++) { const tx = x - 3 * f + i * 2 * f; g.px(tx, y - 1 - gap, C.white, a); g.px(tx, y - 2 - gap, C.white, a); g.px(tx + f, y - 2 - gap, C.white, a * 0.6);
       g.px(tx + f, y + 1 + gap, C.white, a); g.px(tx + f, y + 2 + gap, C.white, a); g.px(tx, y + 2 + gap, C.white, a * 0.6); } }
     sparks(g, x, y, 6, [C.blood, C.red, C.blood2], ph(q, 0.3, 1), 7, 13, 2.2);

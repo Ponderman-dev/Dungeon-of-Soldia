@@ -51,18 +51,20 @@ export function projectileFx(type, start, head, t) {
 export const ELEMENT_SLASH = { fire: [C.fire, C.fire2], ice: [C.ice, C.white], electric: [C.elec, C.white], dark: [C.dark, C.dark2], holy: [C.holy, C.gold] };
 export function impactFx(type, q, u, t, seed = 0, from = null, melee = false) {
   const g = pen();
-  const fx = u.x + u.side * u.hw, fy = u.mid; // the front of the body, facing the attacker
+  // (user, session 54) melee hits land on the MIDDLE of the body and sweep THROUGH it (away from the attacker; it was
+  // reversed: it swept back towards the attacker, on its front edge)
+  const fx = u.x, fy = u.mid, dir = -u.side;
   let tint = null, dx = 0;
   if (MELEE_LOOKS[type] || (!melee && SHOT_LOOKS[type])) { // (session 54) a hero / enemy melee look, or a shot's own hit
     const o = MELEE_LOOKS[type] ? MELEE_LOOKS[type](q, u, t) : SHOT_LOOKS[type].hit(q, u, t, from || { x: u.x + u.side * 30, y: u.mid });
     ({ tint = null, dx = 0 } = o); g.out.push(...o.draws);
   } else if (melee && ELEMENT_SLASH[type]) { // (user, session 39) recoloured slash + a few bits of the element + its tint
     const [c1, c2] = ELEMENT_SLASH[type];
-    slash(g, fx, fy, 8, c1, q, u.side);
+    slash(g, fx, fy, 8, c1, q, dir);
     burst(g, fx, fy, 5, [c1, c2], ph(q, 0.15, 1), 7, 3 + seed, type === 'fire' ? 1 : 0);
     if (type !== 'holy' && type !== 'electric') tint = [c1, 0.3 * (1 - q)];
   } else if (type === 'melee') {
-    slash(g, fx, fy, 8, C.grey, q, u.side);
+    slash(g, fx, fy, 8, C.grey, q, dir);
     burst(g, fx, fy, 6, [C.white, C.grey], ph(q, 0.15, 1), 7, 3 + seed);
   }
   if (tint) tint = [tint[0], Math.round(clamp(tint[1]) * 20) / 20];
@@ -74,9 +76,9 @@ export function impactFx(type, q, u, t, seed = 0, from = null, melee = false) {
 // q = 0..1 over CRIT_MS.
 export function critFx(q, u, t) {
   const g = pen();
-  const fx = u.x + u.side * u.hw, fy = u.mid;
-  slash(g, fx, fy, 10, C.gold, q, u.side);
-  slash(g, fx, fy, 10, C.white, ph(q, 0.2, 1), -u.side);
+  const fx = u.x, fy = u.mid; // (session 54) on the middle of the body, like the melee hits
+  slash(g, fx, fy, 10, C.gold, q, -u.side);
+  slash(g, fx, fy, 10, C.white, ph(q, 0.2, 1), u.side);
   rays(g, fx, fy, 8, 14, C.gold, ph(q, 0.1, 1), t / 400);
   return g.out;
 }

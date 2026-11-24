@@ -37,7 +37,7 @@ const DOOR_X = GAME_WIDTH / 2;
 // banded like EXPEDITION, CAMP / RANDOM in a dock (gold line + dark band, like the camp's tab bar), a title window top
 // left like the fight's floor counter, the sound button where the fight's pause button is (pause.json buttons).
 const SIDE = 24; // the gap to the screen sides (camp.json ui.side)
-const BEGIN = { y: 644, h: 76, side: 14 }; // 'Begin descent': right under the hero row, bigger (user, session 47); lower with the row (session 48)
+const BEGIN = { y: 644, h: 76 }; // 'Begin descent': right under the hero row, bigger (user, session 47); lower with the row (session 48)
 const DOCK = { y: 742, btnY: 754, btnH: 44, gap: 8, toolY: 808 }; // the dock: its gold line, CAMP / RANDOM, the test row
 // Where the squad stands, how big, the names and the hero grid: squad/squadGrid.js (SQUAD_VIEW).
 const WALK = combatRules.movement.walkSpeedPxPerSec * 1.6; // a bit quicker than in fights
@@ -181,7 +181,7 @@ export default class SquadScene extends Phaser.Scene {
     // BEGIN DESCENT: the screen's main action, banded like the camp's EXPEDITION. Until the squad is full it is dim
     // and says how many heroes are still missing.
     // Its look: the gold design in crimson (squad/beginButton.js).
-    const bw = GAME_WIDTH - 2 * BEGIN.side, by = BEGIN.y + BEGIN.h / 2;
+    const bw = GAME_WIDTH - 2 * SIDE, by = BEGIN.y + BEGIN.h / 2; // as wide as CAMP + RANDOM below it (user, session 54)
     this.begin = this.add.container(GAME_WIDTH / 2, by).setDepth(DEPTH.ui);
     const bg = this.add.graphics();
     this.beginText = uiText(this, 0, 1, 'BEGIN DESCENT', 'big', beginTextColor(true)).setOrigin(0.5);

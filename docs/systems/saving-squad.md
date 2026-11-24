@@ -104,3 +104,10 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   or an arrow tap ends on a whole tile; the row and BEGIN DESCENT sit a bit lower (grid bottom 638, BEGIN y 644).
   The row's clip now works: Phaser 4 masks are filters (`enableFilters().filters.external.addMask`), `setMask` did
   nothing (the screen edge used to hide the overflow).
+- **HEAD TILES (session 54, user: 'Begin descent should match the camp / random buttons', 'for the slide just show the
+  characters' heads'; picked B of a row / grid trial):** the hero picker is a GRID of small head tiles (`SQUAD_VIEW.grid`:
+  60 x 62, rows of `cols` 5, gap 10, `headScale` 5): each tile is a Character made of only the hero's `head` part, its
+  middle on the tile's middle, STILL (user: 'don't make them bounce': no idle motion); check mark in the top right corner, NEW tag at the foot; the '?' tile = the grey head + a
+  gold '?' (its goal is on the card a tap opens; the two goal lines are gone). All 10 heroes fit (2 rows), so nothing
+  scrolls any more (the swipe / arrow tabs / scroll bar code stays for a row wider than the screen). A new player sees one
+  centred row (3 + '?') and 'n more heroes to find'. BEGIN DESCENT is as wide as CAMP + RANDOM (`SIDE` margins).

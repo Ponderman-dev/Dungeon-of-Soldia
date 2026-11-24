@@ -19,7 +19,12 @@ ok('impacts are over when they end', HIT_TYPES.every((k) => impactFx(k, 1, u, 0,
 const types2 = HIT_TYPES.map((k) => JSON.stringify(impactFx(k, 0.3, u, 0, 1, { x: 20, y: 40 }).draws));
 ok('each damage type looks different', new Set(types2).size === HIT_TYPES.length);
 ok('fire, ice and dark colour the target for a moment', ['fire', 'ice', 'dark'].every((k) => impactFx(k, 0.2, u, 0).tint) && !impactFx('melee', 0.2, u, 0).tint);
-ok('the hit lands on the side facing the attacker', impactFx('melee', 0.3, u, 0).draws.every((p) => p[0] <= u.x) && impactFx('melee', 0.3, { ...u, side: 1 }, 0).draws.every((p) => p[0] >= u.x));
+// (session 54, user: 'not centered to the enemies', the old slash 'reversed') melee hits sit on the middle of the body
+// and sweep away from the attacker.
+const midX = (d) => d.reduce((t, p) => t + p[0], 0) / d.length;
+const centred = (d) => d.length > 0 && Math.abs(midX(d) - u.x) <= u.hw;
+ok('the melee slash lands on the middle of the body', centred(impactFx('melee', 0.3, u, 0).draws) && centred(impactFx('melee', 0.3, { ...u, side: 1 }, 0).draws));
+ok('the melee slash sweeps away from the attacker', midX(impactFx('melee', 0.15, u, 0).draws) < midX(impactFx('melee', 0.45, u, 0).draws));
 ok('crits add slashes and rays', critFx(0.3, u, 0).length > 20 && critFx(1, u, 0).length === 0);
 // The other hit moments: miss, block, shield soak, shield break, heal, death puff.
 import { MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, deathPuffFx } from '../../src/systems/hitFx.js';
@@ -39,7 +44,7 @@ const span = (d) => d.length ? Math.max(...d.map((p) => p[1])) - Math.min(...d.m
 ok('holy hit: no tall light column any more', [0.1, 0.3, 0.6].every((q) => span(impactFx('holy', q, u, 0, 1).draws) < 20));
 ok('electric hit: no bolt from the attacker', [0.1, 0.3, 0.6].every((q) => impactFx('electric', q, u, 0, 1, { x: 0, y: 40 }).draws.every((p) => p[0] > 40)));
 ok('electric shot: a short spark, not a line from the shooter', projectileFx('electric', { x: 0, y: 0 }, { x: 40, y: 0 }, 0, 1).every((p) => p[0] > 30));
-ok('elemental melee: a slash in the element colour on the attacker side', Object.entries(ELEMENT_SLASH).every(([k, [c]]) => { const d = impactFx(k, 0.3, u, 0, 1, null, true).draws; return d.some((p) => p[4] === c) && d.every((p) => p[0] <= u.x); }));
+ok('elemental melee: a slash in the element colour on the body', Object.entries(ELEMENT_SLASH).every(([k, [c]]) => { const d = impactFx(k, 0.3, u, 0, 1, null, true).draws; return d.some((p) => p[4] === c) && centred(d); }));
 ok('elemental melee looks different from the plain slash and from the shot impact', Object.keys(ELEMENT_SLASH).every((k) => { const m = JSON.stringify(impactFx(k, 0.3, u, 0, 1, null, true).draws); return m !== JSON.stringify(impactFx('melee', 0.3, u, 0, 1).draws) && m !== JSON.stringify(impactFx(k, 0.3, u, 0, 1).draws); }));
 ok('elemental melee is over when it ends', Object.keys(ELEMENT_SLASH).every((k) => impactFx(k, 1, u, 0, 1, null, true).draws.length === 0));
 // Session 54 (user picks): a melee look per hero weapon / enemy kind (`hitLook` in the data), shots per damage type.
@@ -47,6 +52,6 @@ import { MELEE_LOOK_NAMES } from '../../src/systems/hitFx.js';
 const withLook = [...r('heroes.json'), ...Object.values(r('enemies.json'))].filter((d) => d.hitLook);
 ok('every hitLook in the data is a real melee look', withLook.length > 0 && withLook.every((d) => MELEE_LOOK_NAMES.includes(d.hitLook)), withLook.filter((d) => !MELEE_LOOK_NAMES.includes(d.hitLook)).map((d) => d.name).join());
 ok('only melee fighters have a melee look', withLook.every((d) => d.damageType === 'melee'));
-ok('each melee look lands on the side facing the attacker', MELEE_LOOK_NAMES.every((k) => { const d = impactFx(k, 0.15, u, 0).draws; return d.length > 0 && d.filter((p) => p[0] < u.x).length > d.filter((p) => p[0] > u.x).length; }));
+ok('each melee look lands on the middle of the body', MELEE_LOOK_NAMES.every((k) => centred(impactFx(k, 0.3, u, 0).draws)), MELEE_LOOK_NAMES.filter((k) => !centred(impactFx(k, 0.3, u, 0).draws)).join());
 ok('the melee looks all look different', new Set(MELEE_LOOK_NAMES.map((k) => JSON.stringify(impactFx(k, 0.3, u, 0).draws))).size === MELEE_LOOK_NAMES.length);
 ok('a shot hit works without knowing the attacker', ['ranged', 'fire', 'ice', 'electric', 'dark', 'holy'].every((k) => clean(impactFx(k, 0.3, u, 0, 1, null).draws)));

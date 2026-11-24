@@ -6,7 +6,7 @@ import itemTypes from '../data/itemTypes.json';
 import rarities from '../data/rarities.json';
 import { canReceive } from '../systems/items.js';
 import { itemIconKey } from '../entities/itemIconTexture.js';
-import { bookPageIconKey } from '../entities/skillIconTexture.js';
+import { bookPageIconKey, skillIconKey } from '../entities/skillIconTexture.js';
 import { FRAMED_SIZE } from '../systems/itemIcons.js';
 import * as sfx from '../audio/sfx.js';
 import bookData from '../data/skillBooks.json';
@@ -403,7 +403,10 @@ export default class RewardScene extends Phaser.Scene {
         const IN = 12; // the text's gap from the box's frame (user: neater)
         this.fitText(bx + IN, by + IN - 2, skillDefs[slot.id].name, 13, usable ? UI.text : MUTE, bw - 2 * IN, 34, true);
         const note = fit === 'dead' ? 'Fallen' : fit === 'full' ? 'Stat pages full' : fit === 'duplicate' ? 'Already has it' : fit === 'wrongSkill' ? 'Not this skill' : fit === 'replace' ? 'Full: replaces one' : `${stats}${limits.maxStatPages != null ? '/' + limits.maxStatPages : ''} stats\n${mods}${limits.modifierSlots != null ? '/' + limits.modifierSlots : ''} mods`;
-        this.fitText(bx + IN, by + bh - 30 - IN + 6, note, 11, fit === 'replace' ? '#ffd9a0' : MUTE, bw - 2 * IN, 26); // shrinks to stay inside the box
+        // The skill's own pixel icon (skillIcons.json, at the battle HUD's 2x) in the bottom-right corner (user, session 54)
+        const iconKey = skillIconKey(this, slot.id), ICON = 32;
+        if (iconKey) this.track(this.add.image(bx + bw - IN - ICON / 2 + 2, by + bh - IN - ICON / 2 + 4, iconKey).setScale(2).setAlpha(usable ? 1 : 0.4));
+        this.fitText(bx + IN, by + bh - 30 - IN + 6, note, 11, fit === 'replace' ? '#ffd9a0' : MUTE, bw - 2 * IN - (iconKey ? ICON + 2 : 0), 26); // shrinks to stay inside the box
         if (usable) this.track(this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive()).onPress(() => this.selectSkill(btn));
         this.skillButtons.push(btn);
       });

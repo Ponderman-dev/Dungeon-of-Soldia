@@ -149,6 +149,17 @@ export const motionMethods = {
     }); // any other kind: a plain orange ball (fallback)
   },
 
+  // (user, session 54: dash / leap skills 'don't really reach the enemy') The rules leave a dash / leap at the target's
+  // push-apart edge; for the hit the view goes the last bit into contact, like a melee swing's step-in
+  // (attackMotion.meleeStep contactPx x the two body sizes). Returns that extra offset {x, y} in screen pixels.
+  contactReach(caster, target, contactPx = null) { // contactPx: a skill's own (Savage Leap lands deeper)
+    const S = combatRules.attackMotion.meleeStep, u = caster.unit, o = target.unit;
+    if (!S || u.x == null || o.x == null) return { x: 0, y: 0 };
+    const dx = o.x - u.x, dy = o.y - u.y, len = Math.hypot(dx, dy) || 1, k = ((u.size || 1) + (o.size || 1)) / 2;
+    const px = Math.max(0, len - (contactPx ?? S.contactPx) * k);
+    return { x: (dx / len) * px, y: (dy / len) * px };
+  },
+
   // Floating number above a fighter.
   // Savage Leap: the hero jumps at the target in an arc and lands back in his spot.
   // With `S` (combat.json skillFx.look.brawl_leap.leap) it is the v2 SLAM: up fast and high (liftPx), hangs, slams down
@@ -156,15 +167,17 @@ export const motionMethods = {
   leapAt(caster, target, S = null, from = null) {
     if (!target) return;
     if (from) { // the rules already put him where he lands (skills.json staysAtImpact): fly over from where he was, stay there
-      const u = caster.unit, ox = from.x - u.x, oy = from.y - u.y, lift = S ? S.liftPx : 26, j = { p: 0 };
-      const setF = () => {
-        caster.leapX = ox * (1 - j.p);
-        caster.leapY = oy * (1 - j.p);
-        caster.leapLift = S ? Math.sin(Math.pow(j.p, 0.6) * Math.PI) * lift : Math.sin(j.p * Math.PI) * 26;
+      const u = caster.unit, ox = from.x - u.x, oy = from.y - u.y, lift = S ? S.liftPx : 26, j = { p: 0 }, ex = this.contactReach(caster, target, S && S.contactPx), r = { k: 1 };
+      const setF = () => { // lands in contact (ex), then settles back onto the rules spot (r.k 1 -> 0)
+        caster.leapX = ox * (1 - j.p) + ex.x * j.p * r.k;
+        caster.leapY = oy * (1 - j.p) + ex.y * j.p * r.k;
+        caster.leapLift = j.p < 1 ? (S ? Math.sin(Math.pow(j.p, 0.6) * Math.PI) * lift : Math.sin(j.p * Math.PI) * 26) : 0;
       };
       setF();
-      this.tweens.add({ targets: j, p: 1, duration: S ? S.upMs : 230, ease: S ? 'Linear' : 'Quad.easeOut', onUpdate: setF, onComplete: () => { caster.leapX = caster.leapY = caster.leapLift = 0; } });
-      return;
+      this.tweens.add({ targets: j, p: 1, duration: S ? S.upMs : 230, ease: S ? 'Linear' : 'Quad.easeOut', onUpdate: setF,
+        onComplete: () => this.tweens.add({ targets: r, k: 0, delay: S ? S.holdMs : 120, duration: S ? S.backMs : 300, ease: 'Quad.easeInOut', onUpdate: setF,
+          onComplete: () => { caster.leapX = caster.leapY = caster.leapLift = 0; } }) });
+      return { x: ex.x, y: ex.y };
     }
     const share = S ? S.share : 0.8;
     const dx = (target.ch.x - caster.ch.x) * share;
@@ -187,8 +200,8 @@ export const motionMethods = {
     const t0 = e.targets[0] && this.views.get(e.targets[0].uid);
     if (L.leap && t0) {
       const a = this.fxBody(caster), b = this.fxBody(t0); // before the leap: he is still drawn where he takes off
-      this.leapAt(caster, t0, L.leap, e.moved);
-      e.land = e.moved ? { x: a.x + (e.unit.x - e.moved.x) / CHAR_SCALE, y: a.y + (e.unit.y - e.moved.y) / CHAR_SCALE } // where the rules put him
+      const ex = this.leapAt(caster, t0, L.leap, e.moved) || { x: 0, y: 0 }; // + the last bit into contact (session 54)
+      e.land = e.moved ? { x: a.x + (e.unit.x - e.moved.x + ex.x) / CHAR_SCALE, y: a.y + (e.unit.y - e.moved.y + ex.y) / CHAR_SCALE } // where he lands, at the enemy
         : { x: a.x + (b.x - a.x) * L.leap.share, y: a.y + (b.y - a.y) * L.leap.share }; // where he lands: it never moves
     }
     if (L.move && L.move.type === 'recoil') {
@@ -198,15 +211,27 @@ export const motionMethods = {
       this.tweens.add({ targets: r, p: 1, duration: 50, ease: 'Quad.easeOut', onUpdate: set,
         onComplete: () => this.tweens.add({ targets: r, p: 0, duration: 270, ease: 'Quad.easeOut', onUpdate: set, onComplete: () => { caster.leapX = caster.leapY = 0; } }) });
     }
-    const hitViews = e.targets.filter((u) => u.side === 'enemy').map((u) => this.views.get(u.uid)).filter(Boolean);
+    // Savage Leap (session 54): the enemies the rules pushed out of his way stay put until he lands, then get shoved over.
+    const shoved = [];
+    for (const { unit, from } of e.pushed || []) {
+      const v = this.views.get(unit.uid); if (!v || !v.ch.active) continue;
+      const ox = from.x - unit.x, oy = from.y - unit.y, sh = { p: 1 };
+      v.leapX = ox; v.leapY = oy; shoved.push(v);
+      this.time.delayedCall(L.hitMs || 0, () => this.tweens.add({ targets: sh, p: 0, duration: 220, ease: 'Back.easeOut', onUpdate: () => { if (v.ch.active) { v.leapX = ox * sh.p; v.leapY = oy * sh.p; } }, onComplete: () => { v.leapX = v.leapY = 0; } }));
+    }
+    const hitViews = e.targets.filter((u) => u.side === 'enemy').map((u) => this.views.get(u.uid)).filter((v) => v && !shoved.includes(v));
     const radius = (L.leap ? L.landSplash && L.landSplash.radius : 0) || 0;
+    const nudged = []; // (session 54) just outside the landing area: a small shove (leap.pushPx), picture only
     if (L.leap && radius && e.land) for (const en of this.state.enemies) { // everyone in the landing area is thrown back too
-      const v = en.alive && this.views.get(en.uid); if (!v || hitViews.includes(v)) continue;
-      const b = this.fxBody(v); if (Math.hypot(b.x - e.land.x, (b.y - e.land.y) * 1.4) * CHAR_SCALE <= radius) hitViews.push(v);
+      const v = en.alive && this.views.get(en.uid); if (!v || hitViews.includes(v) || shoved.includes(v)) continue;
+      const b = this.fxBody(v), d = Math.hypot(b.x - e.land.x, (b.y - e.land.y) * 1.4) * CHAR_SCALE;
+      if (d <= radius) hitViews.push(v);
+      else if (L.leap.pushPx && d <= radius * (L.leap.pushRadius || 1.5)) nudged.push(v);
     }
     this.time.delayedCall(L.hitMs || 0, () => {
       if (L.shakeMs) this.cameras.main.shake(L.shakeMs, L.shakeIntensity);
       if (L.stopMs) this.hitStop = Math.max(this.hitStop || 0, L.stopMs);
+      if (e.land) for (const v of nudged) this.knockFrom(v, e.land, L.leap.pushPx);
       hitViews.forEach((v, i) => {
         if (L.leap && L.leap.knockPx && e.land) this.knockFrom(v, e.land, L.leap.knockPx);
         else if (L.jitterPx) this.time.delayedCall((L.staggerMs || 0) * i, () => this.jitter(v, L.jitterPx, L.jitterMs));
@@ -296,11 +321,12 @@ export const motionMethods = {
     if (!target || !target.ch.active) return;
     if (from) { // the rules already put him at the hit (skills.json staysAtImpact): shoot over from where he was, stay there
       const u = caster.unit, ox = from.x - u.x, oy = from.y - u.y, olen = Math.hypot(ox, oy) || 1, go = { p: 0 };
-      const setF = () => { caster.leapX = ox * (1 - go.p); caster.leapY = oy * (1 - go.p); };
+      const ex = this.contactReach(caster, target), r = { k: 1 }; // (session 54) hits in contact, then settles on the rules spot
+      const setF = () => { caster.leapX = ox * (1 - go.p) + ex.x * go.p * r.k; caster.leapY = oy * (1 - go.p) + ex.y * go.p * r.k; };
       setF();
       this.tweens.add({ targets: go, p: 1, duration: D.inMs, ease: 'Quad.easeIn', onUpdate: setF,
         onComplete: () => {
-          caster.leapX = caster.leapY = 0;
+          this.tweens.add({ targets: r, k: 0, delay: D.holdMs, duration: D.outMs, ease: 'Quad.easeOut', onUpdate: setF, onComplete: () => { caster.leapX = caster.leapY = 0; } });
           if (D.shakeMs) this.cameras.main.shake(D.shakeMs, D.shakeIntensity);
           if (!D.knockPx || !target.ch.active) return;
           const ux = -ox / olen, uy = -oy / olen, kb = { p: 0 };

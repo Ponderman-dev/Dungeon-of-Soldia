@@ -330,9 +330,8 @@ export const movementMethods = {
   },
 
   // A dash or leap skill (skills.json `staysAtImpact`: Defense Bash, Multistrike, Savage Leap) really moves the hero to
-  // where it hits, and it stays there (user 2026-10-20: no walking back to its spot). How far is the skill's look
-  // (combat.json skillFx): a dash goes the distance minus `stopPx`, between `minPx` and `maxPx`; a leap goes `share` of
-  // the way, but never past the target's push-apart edge. Returns where it came from (the scene slides it over from
+  // where it hits, and it stays there (user 2026-10-20: no walking back to its spot). It goes up to the
+  // target's push-apart edge (session 54; the old stopPx / maxPx / share no longer limit it). Returns where it came from (the scene slides it over from
   // there), or null without positions.
   moveToImpact(hero, target, skillId) {
     const M = this.rules.movement, F = this.rules.skillFx || {};
@@ -341,14 +340,39 @@ export const movementMethods = {
     if (!dash && !leap) return null;
     const dx = target.x - hero.x, dy = target.y - hero.y, len = Math.hypot(dx, dy);
     if (len < 1) return null;
-    let go = dash ? Math.min(dash.maxPx, Math.max(dash.minPx, len - dash.stopPx)) : len * leap.share;
-    // Never into the target's body: stop at the push-apart edge (else he is slowly shoved back out = looks like going back).
+    // (user, session 54: 'they don't really reach the enemy') all the way to the target's push-apart edge (no distance cap,
+    // no share): never into its body, else he is slowly shoved back out (= looks like going back). The scene lunges the
+    // last bit into contact for the hit (BattleScene contactReach).
     const ux = dx / len, uy = dy / len, k = ((hero.size || 1) + (target.size || 1)) / 2;
     const edge = 1 / Math.hypot(ux / (M.separateX * k), uy / (M.separateY * (1 + (k - 1) * 0.5)));
-    go = Math.max(0, Math.min(go, len - edge - 1));
+    // Savage Leap (user, session 54: 'reach more toward the destination and push the enemies around just a bit'): he
+    // lands deep (leap.landGapPx from the target) and the enemies he lands among are PUSHED out of his way instead.
+    const deep = leap && leap.landGapPx != null;
+    const go = Math.max(0, deep ? len - leap.landGapPx * k : len - edge - 1);
     const from = { x: hero.x, y: hero.y }, L = M.layout;
     hero.x = Math.min(L.width - L.marginX, Math.max(L.marginX, hero.x + ux * go));
     hero.y = Math.min(L.heroY, Math.max(L.enemyY + L.topMarginY, hero.y + uy * go));
+    this.leapPushed = deep ? this.pushAside(hero, ux, uy) : null;
     return from;
+  },
+
+  // Every living enemy standing inside the hero's push-apart oval is moved straight out to its edge (away from the
+  // hero), kept inside the floor. Returns [{ unit, from }] (the scene shoves them over from there).
+  pushAside(hero, ux, uy) {
+    const M = this.rules.movement, L = M.layout, out = [];
+    for (const e of this.enemies) {
+      if (!e.alive || !this.hasPositions(e)) continue;
+      const k = ((hero.size || 1) + (e.size || 1)) / 2, sx = M.separateX * k, sy = M.separateY * (1 + (k - 1) * 0.5);
+      let dx = e.x - hero.x, dy = e.y - hero.y;
+      if (Math.hypot(dx / sx, dy / sy) >= 1) continue;
+      let d = Math.hypot(dx, dy);
+      if (d < 1) { dx = ux; dy = uy; d = 1; }
+      const vx = dx / d, vy = dy / d, edge = 1 / Math.hypot(vx / sx, vy / sy) + 1;
+      const from = { x: e.x, y: e.y };
+      e.x = Math.min(L.width - L.marginX, Math.max(L.marginX, hero.x + vx * edge));
+      e.y = Math.min(L.heroY, Math.max(L.enemyY + L.topMarginY, hero.y + vy * edge));
+      out.push({ unit: e, from });
+    }
+    return out;
   },
 };

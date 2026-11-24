@@ -1,6 +1,6 @@
 // Dash and leap skills (skills.json `staysAtImpact`: Defense Bash, Multistrike, Savage Leap): the hero really moves to
-// where the skill hits and STAYS there afterwards (user 2026-10-20: no going back to its old spot). How far comes from
-// the skill's look in combat.json skillFx (dash: distance minus stopPx, between minPx and maxPx; leap: share of the way).
+// where the skill hits and STAYS there afterwards (user 2026-10-20: no going back to its old spot). How far: all the way
+// to the target's push-apart edge (session 54, user: 'they don't really reach the enemy'; no cap, no share any more).
 import fs from 'fs';
 import BattleState from '../../src/systems/BattleState.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
@@ -28,9 +28,15 @@ for (const heroId of ['knight', 'rogue', 'berserker']) {
   const dash = F.dash[skillId], leap = F.look[skillId] && F.look[skillId].leap;
   const M = rules.movement, k = ((hero.size || 1) + (enemy.size || 1)) / 2;
   const edge = M.separateY * (1 + (k - 1) * 0.5); // straight up: the push-apart edge is the oval's height
-  const want = Math.min(dash ? Math.min(dash.maxPx, Math.max(dash.minPx, gap - dash.stopPx)) : gap * leap.share, gap - edge - 1);
-  ok(`${sk.name}: he moves the skill's distance towards the target`, Math.abs(went - want) < 6 && hero.y < before.y, `${went.toFixed(0)} / ${want.toFixed(0)}px`);
+  const want = gap - edge - 1; // right up to its edge
+  ok(`${sk.name}: is a dash or a leap`, !!(dash || leap));
+  ok(`${sk.name}: he goes right up to the target`, Math.abs(went - want) < 6 && hero.y < before.y, `${went.toFixed(0)} / ${want.toFixed(0)}px`);
   ok(`${sk.name}: ...but never into the target's body`, Math.hypot(enemy.x - hero.x, enemy.y - hero.y) >= edge - 4, `${Math.hypot(enemy.x - hero.x, enemy.y - hero.y).toFixed(0)} >= ${edge.toFixed(0)}`);
+  if (leap && leap.landGapPx != null) { // Savage Leap (session 54): he lands deep and the target is pushed out of his way
+    const p = cast && cast.pushed && cast.pushed.find((q) => q.unit === enemy);
+    ok('Savage Leap: he lands deep, right at where the target stood', p && Math.abs(Math.hypot(p.from.x - hero.x, p.from.y - hero.y) - leap.landGapPx * k) < 3, p ? `${Math.hypot(p.from.x - hero.x, p.from.y - hero.y).toFixed(0)}px from it` : 'not pushed');
+    ok('Savage Leap: the target is pushed away from him (the cast says from where)', p && Math.hypot(enemy.x - hero.x, enemy.y - hero.y) > Math.hypot(p.from.x - hero.x, p.from.y - hero.y));
+  }
   // The target is gone (nothing to walk to): he must stay where he landed, not walk back to his old spot.
   const landed = { x: hero.x, y: hero.y };
   s.killUnit(enemy, []);

@@ -1,4 +1,4 @@
-// SQUAD SCREEN: THE HERO GRID (session 47: the user picked layout C of the A/B/C trial, 'make it neater', then the
+// SQUAD SCREEN: THE HERO GRID (session 54: HEAD TILES, every hero as its head in rows of 5, see SQUAD_VIEW.grid; session 47: the user picked layout C of the A/B/C trial, 'make it neater', then the
 // TEASER way of showing locked heroes). Under the squad (standing in front of the gate) every OPEN hero is a framed
 // TILE with the hero standing in it, plus ONE '?' tile: the locked hero closest to unlocking (nextUnlock), with its
 // goal in two tiny lines. QUIET TILES (user: the grid 'looks busy and crowded'): a plain dark tile with a thin dark
@@ -15,7 +15,7 @@ import Character from '../../entities/Character.js';
 import heroDefs from '../../data/heroes.json';
 import unlocks from '../../data/unlocks.json';
 import { perkMods } from '../../systems/party.js';
-import { shortGoal, nextUnlock } from '../../systems/progress.js';
+import { nextUnlock } from '../../systems/progress.js';
 
 const FONT = UI.font, MUTE = '#a8a8b8';
 const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'EVA', crit: 'CRIT', attackEfficiency: 'SPD' };
@@ -36,9 +36,11 @@ export const SQUAD_VIEW = {
   // lines, a softer cream.
   card: { get body() { return UI.goldTheme.body; }, lineGap: 8, letterGap: 1, get fill() { return UI.goldTheme.tileFill; }, get edge() { return UI.goldTheme.tileEdge; }, pad: 8, gap: 6, tip: '#ffd88a',
     portraitH: 100, heroScale: 3 }, // the portrait (an open hero) and the hero's size in it
-  // TIDIER ROW (session 48, user: 'keep scrolling, just tidier, bring it down a bit' x2): exactly 4 whole tiles in the
-    // view (side margins hold the arrow tabs, off the tiles), the row snaps to a whole tile when a swipe ends.
-    grid: { bottom: 638, w: 78, h: 124, foot: 112, tileScale: 4, gap: 10, side: 24, shadowW: 52, dragPx: 8,
+  // HEAD TILES (session 54, user: 'just show the characters' heads', picked B of a row / grid trial): every hero as a
+  // small tile with only its HEAD picture (headScale), in rows of `cols` (5 x 2 = all 10 heroes, nothing hidden). Was a
+  // swiping row of big standing tiles (session 48); the swipe, arrow tabs and scroll bar stay for a row wider than the
+  // screen (not with 5 per row). rowGap = between the rows.
+    grid: { bottom: 638, w: 60, h: 62, gap: 10, rowGap: 10, cols: 5, headScale: 5, side: 24, dragPx: 8,
     bar: { w: 120, h: 4, gap: 12 }, // bar = the scroll bar under the row (gap = from the row)
     // SCROLL HINTS (user: 'not clear how people will know to scroll'): arrow tabs on the row's ends (only where more is
     // hidden; tap = one tile along), darker edges there, and a nudge when the screen opens (the row slides nudgePx
@@ -79,6 +81,11 @@ export const squadGrid = {
     return { ids: next ? [...open, next] : open, hidden: locked - (next ? 1 : 0) };
   },
 
+  // The tile layout: { w, h, gap, rowGap, cols, scale }.
+  gridDims() {
+    return { w: G.w, h: G.h, gap: G.gap, rowGap: G.rowGap, cols: G.cols, scale: G.headScale };
+  },
+
   // (Re)builds the row: every tile in a container (masked to the screen between the side gaps) that scrolls sideways;
   // the scroll bar and the 'n more heroes to find' line under it. Returns its parts (also kept in this.gridParts).
   buildGrid() {
@@ -86,23 +93,29 @@ export const squadGrid = {
     const parts = (this.gridParts = []);
     this.tiles = new Map();
     const { ids, hidden } = this.tileList();
-    const B = G.bar, viewW = GAME_WIDTH - 2 * G.side;
-    const rowW = ids.length * G.w + (ids.length - 1) * G.gap;
+    const B = G.bar, viewW = GAME_WIDTH - 2 * G.side, M = (this.gridDim = this.gridDims());
+    const perRow = Math.min(ids.length, M.cols), rows = Math.ceil(ids.length / perRow);
+    const rowW = perRow * M.w + (perRow - 1) * M.gap, areaH = rows * M.h + (rows - 1) * M.rowGap;
     this.gridMax = Math.max(0, rowW - viewW); // how far the row can scroll
-    const blockH = G.h + B.gap + B.h + (hidden > 0 ? 20 : 0);
+    const blockH = areaH + B.gap + B.h + (hidden > 0 ? 20 : 0);
     const top = NAMES.gridTop + Math.max(0, Math.round((G.bottom - NAMES.gridTop - blockH) / 2));
     this.gridTopY = top;
     const x0 = this.gridMax ? G.side : Math.round((GAME_WIDTH - rowW) / 2);
     const box = (this.gridBox = this.add.container(0, 0).setDepth(D.ui));
-    ids.forEach((id, i) => box.add(this.makeTile(id, x0 + i * (G.w + G.gap), top, G.w, G.h)));
-    const maskG = this.make.graphics({ add: false }).fillStyle(0xffffff, 1).fillRect(G.side - 2, top - 4, viewW + 4, G.h + 8);
+    ids.forEach((id, i) => { // rows of perRow; a short last row is centred
+      const r = Math.floor(i / perRow), c = i % perRow, inRow = Math.min(perRow, ids.length - r * perRow);
+      const rx = r ? Math.round((GAME_WIDTH - (inRow * M.w + (inRow - 1) * M.gap)) / 2) : x0;
+      box.add(this.makeTile(id, rx + c * (M.w + M.gap), top + r * (M.h + M.rowGap), M.w, M.h));
+    });
+    this.gridAreaH = areaH;
+    const maskG = this.make.graphics({ add: false }).fillStyle(0xffffff, 1).fillRect(G.side - 2, top - 4, viewW + 4, areaH + 8);
     box.enableFilters().filters.external.addMask(maskG); // Phaser 4: masks are filters (setMask did nothing)
     this.gridScroll = 0;
     this.gridBar = this.add.graphics().setDepth(D.ui);
     this.gridShade = this.add.graphics().setDepth(D.ui + 1); // the darker edges where more is hidden
     parts.push(box, this.gridBar, this.gridShade);
     this.gridTabs = [-1, 1].map((dir) => { // the arrow tabs: push in, scroll one tile along
-      const H = G.hint, tx = dir < 0 ? G.side - H.tabGap - H.tabW : GAME_WIDTH - G.side + H.tabGap, ty = top + Math.round((G.h - H.tabH) / 2);
+      const H = G.hint, tx = dir < 0 ? G.side - H.tabGap - H.tabW : GAME_WIDTH - G.side + H.tabGap, ty = top + Math.round((areaH - H.tabH) / 2);
       const tg = this.add.graphics().setDepth(D.ui + 2);
       const tab = { dir, g: tg, x: tx, y: ty, pressed: false };
       tab.draw = () => {
@@ -117,11 +130,11 @@ export const squadGrid = {
       };
       tab.hit = this.add.zone(tx + H.tabW / 2, ty + H.tabH / 2, H.tabW + 12, H.tabH).setInteractive().setDepth(D.ui + 2);
       pressable(this, tab.hit, { redraw: (p) => { tab.pressed = p; tab.draw(); }, enabled: () => tab.hit.visible && !this.panel && !this.leaving,
-        onTap: () => { const step = G.w + G.gap; this.glideGrid((Math.round(this.gridScroll / step) + dir) * step, G.hint.stepMs); } });
+        onTap: () => { const step = M.w + M.gap; this.glideGrid((Math.round(this.gridScroll / step) + dir) * step, G.hint.stepMs); } });
       parts.push(tg, tab.hit);
       return tab;
     });
-    if (hidden > 0) parts.push(text(this, GAME_WIDTH / 2, top + G.h + B.gap + B.h + 8, `${hidden} more heroes to find`, MUTE).setOrigin(0.5, 0).setDepth(D.ui));
+    if (hidden > 0) parts.push(text(this, GAME_WIDTH / 2, top + areaH + B.gap + (this.gridMax ? B.h + 8 : 0), `${hidden} more heroes to find`, MUTE).setOrigin(0.5, 0).setDepth(D.ui));
     this.scrollGrid(0);
     if (this.gridMax && !this.gridNudged) { // once per visit: the row slides a little left and back (it can move)
       this.gridNudged = true;
@@ -149,13 +162,13 @@ export const squadGrid = {
     const B = G.bar, g = this.gridBar.clear(), sh = this.gridShade.clear(), H = G.hint;
     if (this.gridTabs) this.gridTabs.forEach((t) => t.draw());
     if (!this.gridMax) return;
-    const y0 = this.gridTopY - 2, hh = G.h + 4; // darker steps at an edge with more hidden behind it
+    const y0 = this.gridTopY - 2, hh = this.gridAreaH + 4; // darker steps at an edge with more hidden behind it
     H.shade.forEach((a, k) => {
       if (this.gridScroll > 0) sh.fillStyle(0x000000, a).fillRect(G.side - 2 + k * H.shadeW, y0, H.shadeW, hh);
       if (this.gridScroll < this.gridMax) sh.fillStyle(0x000000, a).fillRect(GAME_WIDTH - G.side + 2 - (k + 1) * H.shadeW, y0, H.shadeW, hh);
     });
     const viewW = GAME_WIDTH - 2 * G.side, rowW = this.gridMax + viewW;
-    const bx = Math.round((GAME_WIDTH - B.w) / 2), by = this.gridTopY + G.h + B.gap;
+    const bx = Math.round((GAME_WIDTH - B.w) / 2), by = this.gridTopY + this.gridAreaH + B.gap;
     const tw = Math.max(16, Math.round((B.w * viewW) / rowW)), tx = bx + Math.round(((B.w - tw) * this.gridScroll) / this.gridMax);
     g.fillStyle(0x000000, 0.6).fillRect(bx - 1, by - 1, B.w + 2, B.h + 2).fillStyle(SQUAD_VIEW.tile.edge, 1).fillRect(bx, by, B.w, B.h);
     g.fillStyle(SQUAD_VIEW.tile.picked, 1).fillRect(tx, by, tw, B.h);
@@ -165,7 +178,7 @@ export const squadGrid = {
   gridDown(p) {
     if (this.gridTabs && this.gridTabs.some((t) => t.hit.visible && Math.abs(p.x - t.hit.x) <= t.hit.width / 2)) return; // on an arrow tab
     if (this.gridGlide) { this.gridGlide.stop(); this.gridGlide = null; }
-    if (!this.gridMax || this.panel || this.leaving || p.y < this.gridTopY || p.y > this.gridTopY + G.h) return;
+    if (!this.gridMax || this.panel || this.leaving || p.y < this.gridTopY || p.y > this.gridTopY + this.gridAreaH) return;
     this.gridDrag = { x: p.x, from: this.gridScroll, moved: false };
   },
   gridMove(p) {
@@ -177,7 +190,7 @@ export const squadGrid = {
   gridUp() { // a swipe ends on a whole tile
     const d = this.gridDrag;
     this.gridDrag = null;
-    if (d && d.moved) { const step = G.w + G.gap; this.glideGrid(Math.round(this.gridScroll / step) * step, G.hint.stepMs); }
+    if (d && d.moved) { const step = this.gridDim.w + this.gridDim.gap; this.glideGrid(Math.round(this.gridScroll / step) * step, G.hint.stepMs); }
   },
 
   // One tile. Returns its parts; the tile goes in this.tiles.
@@ -185,19 +198,18 @@ export const squadGrid = {
     const def = heroDefs.find((d) => d.id === id);
     const open = this.unlocked(id);
     const g = this.add.graphics().setDepth(D.ui);
-    const shadow = this.add.ellipse(x + w / 2, y + G.foot, G.shadowW, 10, 0x000000, SQUAD_VIEW.tile.shadow).setDepth(D.ui);
-    const ch = new Character(this, x + w / 2, y + G.foot, def).setDepth(D.ui);
-    ch.setScale(G.tileScale);
+    const M = this.gridDim, hp = def.parts.head;
+    // Only the head picture (a Character of just the head part), its middle on the tile's middle; still (user: no bounce).
+    const ch = new Character(this, x + w / 2 - hp.x * M.scale, y + h / 2 + 2 - hp.y * M.scale, { ...def, parts: { head: { ...hp, idle: undefined } }, anims: {} }).setDepth(D.ui);
+    ch.setScale(M.scale);
     ch.setWash(SQUAD_VIEW.lockedWash, open ? 0 : 1);
     const mark = this.add.graphics().setDepth(D.ui + 1); // the check mark of a picked hero
-    const out = [g, shadow, ch, mark];
-    if (!open) { // the '?' tile: a big gold '?' and the goal in two tiny lines
-      out.push(this.add.text(x + w / 2, y + 18, '?', { fontFamily: FONT, fontSize: '16px', color: UI.gold, stroke: '#000000', strokeThickness: 4 }).setOrigin(0.5).setDepth(D.ui + 1));
-      const req = unlocks.requirements[id];
-      if (req) shortGoal(req, unlocks).forEach((line, k) => out.push(text(this, x + w / 2, y + h - 28 + k * 12, line, UI.gold).setOrigin(0.5, 0).setStroke('#000000', 3).setDepth(D.ui + 1)));
+    const out = [g, ch, mark];
+    if (!open) { // the '?' tile: a big gold '?' over the grey head (its goal is on the card a tap opens)
+      out.push(this.add.text(x + w / 2, y + h / 2, '?', { fontFamily: FONT, fontSize: '16px', color: UI.gold, stroke: '#000000', strokeThickness: 4 }).setOrigin(0.5).setDepth(D.ui + 1));
     }
     // NEW: a green tag drawn behind black text (a text backgroundColor is lost to the small font's pixel snapping).
-    const tag = this.add.container(x + w / 2, y + 4).setDepth(D.ui + 1);
+    const tag = this.add.container(x + w / 2, y + h - 16).setDepth(D.ui + 1); // the NEW tag at the tile's foot
     tag.add([this.add.graphics().fillStyle(0x6ee07a, 1).fillRect(-16, 0, 32, 14), text(this, 1, 8, 'NEW', '#000000').setOrigin(0.5)]);
     out.push(tag);
     const tile = { id, g, ch, mark, tag, x, y, w, h, pressed: false, hit: null };
@@ -209,9 +221,10 @@ export const squadGrid = {
       g.fillStyle(tile.pressed ? C.pressed : C.fill, 1).fillRect(x + 2, y + 2, w - 4, h - 4);
       mark.clear();
       if (picked) { // a gold check mark in the top right corner (2px pixels) on a dark square
-        mark.fillStyle(0x000000, 1).fillRect(x + w - 22, y + 8, 16, 14);
+        const mx = x + w - 18, my = y + 2; // tucked in the corner
+        mark.fillStyle(0x000000, 1).fillRect(mx, my, 16, 14);
         mark.fillStyle(0xffd84a, 1);
-        [[0, 4], [2, 6], [4, 4], [6, 2], [8, 0]].forEach(([dx, dy]) => mark.fillRect(x + w - 19 + dx, y + 10 + dy, 2, 4));
+        [[0, 4], [2, 6], [4, 4], [6, 2], [8, 0]].forEach(([dx, dy]) => mark.fillRect(mx + 3 + dx, my + 2 + dy, 2, 4));
       }
       tag.setVisible(open && !picked && this.isNew(id));
     };

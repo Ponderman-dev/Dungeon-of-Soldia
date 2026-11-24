@@ -158,7 +158,9 @@ export const skillsMethods = {
     }
 
     const moved = skill.staysAtImpact && targets[0] ? this.moveToImpact(hero, targets[0], slot.id) : null; // dash / leap: he stays where he hit
-    events.push({ type: 'cast', unit: hero, skill, skillId: slot.id, targets, zone, moved }); // skillId: the skill's own sound (skill_<id>); moved = where he came from
+    const pushed = moved && this.leapPushed && this.leapPushed.length ? this.leapPushed : undefined; // Savage Leap: enemies pushed aside
+    this.leapPushed = null;
+    events.push({ type: 'cast', unit: hero, skill, skillId: slot.id, targets, zone, moved, pushed }); // skillId: the skill's own sound (skill_<id>); moved = where he came from
     if (!echo) this.bookCast(hero, skill, book.mods, events, targets);
     this.castPages = book.mods.length ? { hero, mods: book.mods } : null; // on-hit modifiers (Inks, Siphon) for this cast's hits
     // Blood Pact: the skill costs the caster some of their own health.

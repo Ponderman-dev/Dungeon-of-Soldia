@@ -42,7 +42,7 @@ MIXES = [
   ('mix_battle8_long', MIX + '/battle8_long_preview.wav', 'battle', 'NEW: Theme 8 LONG', 'Theme 8 full energy, a build-up (0:44), then the whole theme TWO STEPS HIGHER (0:52), back to the start (1:21). 74 s loop instead of 37 s. Fixed: no more glitchy drum fills.', 'Pixel-boy, rearranged', CC0),
   ('mix_battle10_long', MIX + '/battle10_long_preview.wav', 'battle', 'NEW: Theme 10 LONG', 'All of RPG 10 with a build-up at its end (0:55), then all of it again TWO STEPS HIGHER (1:02), back to the start (2:03).', 'Pixel-boy, rearranged', CC0),
   ('mix_tr_land_soft', MIX + '/tr_land_soft_preview.wav', 'blend', 'C. Build-up lands, softened (your pick)', "RPG 8's build-up (0:14) lands on RPG 10's loud part with a half-second blend (0:20).", 'Pixel-boy, rearranged', CC0),
-  ('mix_tr_land_drum', MIX + '/tr_land_drum_preview.wav', 'blend', 'C + drum bar', "Like C, plus one bar of RPG 10's drum hit right at the landing (0:20), then RPG 10's loud part (0:22).", 'Pixel-boy, rearranged', CC0),
+  ('mix_tr_land_drum', MIX + '/tr_land_drum_preview.wav', 'blend', 'C + drum bar', "Same timing as C: the last bar of RPG 8's build-up (0:18) is RPG 10's drum hit, then RPG 10's loud part lands at 0:20, like in C.", 'Pixel-boy, rearranged', CC0),
   ('mix_boss_rising', MIX + '/boss_rising_preview.wav', 'boss', 'Theme 14: rising', 'RPG 14 twice, then twice one step higher and a bit faster, so the fight heats up; then round again (88 s loop instead of 23 s).', 'Pixel-boy, rearranged', CC0),
   ('mix_boss_rage', MIX + '/boss_rage_preview.wav', 'boss', 'Theme 14: rage', 'RPG 14 two steps higher and 10% faster: an idea for when the boss drops below half HP (the game would switch to it).', 'Pixel-boy, rearranged', CC0),
 ]

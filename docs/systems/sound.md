@@ -214,3 +214,5 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   the measured jump at the change halves (0.56 vs 1.2). Old blend clips removed from the board (tr_cut kept).
 - ROUND 9f: user: 'C (tr_land_soft) is best, add another bar of the drum at 0:20, remove the other blends'. New
   tr_land_drum = C + RPG 10's drum-hit fill bar 3 at the landing, then RPG 10 bar 4. Board blend screen = C + C-drum.
+  That landed 1 bar late ('ruined, cut a bit later'): tr_land_drum now REPLACES RPG 8's last build bar (19) with the
+  drum bar, so RPG 10's loud part lands exactly where C lands (same length). Lesson: never shift the landing time.

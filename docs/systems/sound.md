@@ -133,3 +133,14 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   samples 'basses' (SSO string basses sus), 'xylo', drum 'wood'. Every song is mastered with make-board5.py MASTER
   (bass +6 dB @80 Hz, treble +5 dB @6 kHz, gentle compressor, limiter -1 dB). Measured: bass share up from ~-7.5 to
   -2..-4.5 dB, treble share from ~-28 to -12..-16 dB of the mix.
+- ROUND 4 PICKS (marked late): free LOVE RPG 14 (boss); MAYBE Castle (boss), Ninja Adventure 6 (title), RPG 2 (squad);
+  code MAYBE Hero's Dawn; everything else of round 4 NO (incl. Haven, Lord of the Land, Come and Find Me, Crimson
+  Gallery, Bell Tower Duel, Night Gate). Still LOVE from before: xD Title Theme, RPG 12, RPG 8, Muster. Round 5 unmarked.
+- ROUND 6 BOARD (same url/db; `make-board6.py`; user: '16-bit again, ditch gothic + dark, Risk-of-Rain energy but
+  dungeon crawler / general RPG, at least 4 per category'): CODE ONLY, 17 new songs from a SONG BUILDER in
+  songs-real.js (`build6(spec)`, list `ROUND6`): a spec = chords A/B, bpm, two lead instruments, a melody MOTIF per
+  section (rhythm + chord-tone contour); `genMel` sequences it over the chords (bars 2/6 reversed, 5-6 lifted, cadences
+  on bars 4 and 8) and the screen style lays out the parts (title: harp + pad + sub drone; squad: harp / arp + groove;
+  battle: syncopated 3-3-2 bass + string and xylo/glock arps + rock kit with 16th hats; boss: + trombones, timpani,
+  double-time kick). No organ / harpsichord / choir. Fight leads x1.35. Post: 16-bit chain + MASTER (render6 chain in
+  the make-board6 header). Kept: Muster, Hero's Dawn, Hearthfire.

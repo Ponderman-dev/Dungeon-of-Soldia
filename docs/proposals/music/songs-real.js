@@ -464,3 +464,116 @@ REAL.ember_watch = {
   },
   order: ['A', 'B'],
 };
+
+// ---------- ROUND 6 (user: '16-bit again, NO gothic / dark; Risk-of-Rain energy but dungeon crawler / general RPG; at
+// least 4 per screen'). A song BUILDER: each spec = chords, tempo, instruments, a melody MOTIF (rhythm + chord-tone
+// contour); build6() writes the melody (sequenced over the chords, varied on bars 2/6, cadences on bars 4/8) and the
+// whole arrangement for its screen style. No organ / harpsichord / choir (the 'gothic' sounds). Made 16-bit + mastered
+// in make-board6.py.
+const PCN = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const midiName = (m) => PCN[m % 12] + (Math.floor(m / 12) - 1);
+const CQ = { '': [0, 4, 7], m: [0, 3, 7], '7': [0, 4, 7, 10] };
+function chordAt(cell) {
+  const m = /^([A-G])(#|b)?(m|7)?$/.exec(cell.split(' ')[0]);
+  return { root: ({ C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0) + 12) % 12, tones: CQ[m[3] || ''] };
+}
+const tone = (ch, i, oct) => { const n = ch.tones.length, k = ((i % n) + n) % n; return 12 * (oct + 1) + ch.root + ch.tones[k] + 12 * Math.floor(i / n); };
+function genMel(prog, motif, oct) {
+  return prog.map((cell, bi) => {
+    const ch = chordAt(cell);
+    let r = motif.r, c = motif.c;
+    if (bi === 7) { r = 'x - - - - - . .'; c = [0]; }
+    else if (bi === 3) { r = 'x - - - x - - -'; c = [2, 1]; }
+    else { if (bi % 2 === 1) c = [...c].reverse(); if (bi === 4 || bi === 5) c = c.map((v) => v + 1); }
+    let k = 0;
+    return r.split(' ').map((t) => (t === 'x' ? midiName(tone(ch, c[k++ % c.length], oct)) : t)).join(' ');
+  });
+}
+const KITS = {
+  title: (b) => (b === 0 ? { timp: 'x . . . . . . . . . . . . . . .' } : {}),
+  titleB: (b) => ({ kick: 'x . . . . . . . x . . . . . . .', shaker: '. . x . . . x . . . x . . . x .', ...(b === 0 ? { crash: 'x . . . . . . . . . . . . . . .' } : {}) }),
+  squad: (b) => ({ rkick: 'x . . . . . x . x . . . . . . .', rsnare: '. . . . x . . . . . . . x . . .', rhat: 'x . x . x . x . x . x . x . x .', ...(b === 0 ? { rcrash: 'x . . . . . . . . . . . . . . .' } : {}) }),
+  squadB: (b) => ({ rkick: 'x . . . x . . . x . . . x . . .', rsnare: '. . . . x . . . . . . . x . . .', rhat: 'x o x o x o x o x o x o x o x o', ...(b === 7 ? { rsnare: '. . . . x . . . x . x . x x x x' } : {}) }),
+  battle: (b) => ({ rkick: 'x . . x . . x . . . x . . x . .', rsnare: '. . . . x . . . . . . . x . . .', rhat: 'x o x o x o x o x o x o x o x o', ...(b === 0 ? { rcrash: 'x . . . . . . . . . . . . . . .' } : {}) }),
+  battleB: (b) => ({ rkick: 'x . . . x . . x x . . . x . . .', rsnare: '. . . . x . . . . . . . x . . .', rhat: 'x x x x x x x x x x x x x x x x', ...(b === 0 ? { rcrash: 'x . . . . . . . . . . . . . . .' } : {}), ...(b === 7 ? { rsnare: '. . . . x . . . x . x x x x x x' } : {}) }),
+  boss: (b) => ({ rkick: 'x . . x . . x . x . . x . . x .', rsnare: '. . . . x . . . . . . . x . . .', rhat: 'x o x o x o x o x o x o x o x o', timp: 'x . . . x . . . x . . . x . . .', ...(b === 0 ? { rcrash: 'x . . . . . . . . . . . . . . .' } : {}) }),
+  bossB: (b) => ({ rkick: 'x . x . x . x . x . x . x . x .', rsnare: '. . . . x . . . . . . . x . . .', rhat: 'x x x x x x x x x x x x x x x x', timp: 'x . . . . . . . x . . . . . . .', ...(b === 0 ? { rcrash: 'x . . . . . . . . . . . . . . .' } : {}), ...(b === 7 ? { rsnare: 'x . x . x . x . x x x x x x x x' } : {}) }),
+};
+const LEAD = { flute: ['flute', 1.4], horns: ['horns', 1.7], trumpets: ['trumpets', 1.6], violins: ['violins', 1.8], xylo: ['xylo', 1.4], glock: ['glock', 1.0], celli: ['celli', 1.4] };
+function build6(sp) {
+  const [la, lb] = sp.leads, A = sp.A, B = sp.B;
+  const fight = sp.screen === 'battle' || sp.screen === 'boss', lv = fight ? 1.35 : 1;
+  const inst = { leadA: { sample: LEAD[la][0], vol: LEAD[la][1] * lv, pan: 0.1 }, leadB: { sample: LEAD[lb][0], vol: LEAD[lb][1] * lv, pan: 0.15 },
+    dbl: { sample: 'glock', vol: 0.45, pan: 0.3 }, bass: { sample: 'pizz', vol: fight ? 0.5 : 0.6, sub: 0.6 }, low: { sample: 'basses', vol: 0.4 },
+    pad: { sample: 'strings', vol: 0.25 }, str: { sample: 'stacc', vol: 0.45, pan: -0.25 }, harp: { sample: 'harp', vol: 0.5, pan: -0.3 },
+    arp: { sample: sp.arp || 'xylo', vol: 0.45, pan: 0.3 }, tbn: { sample: 'trombones', vol: 0.8, sub: 0.6 } };
+  const melA = genMel(A, sp.mA, sp.oA), melB = genMel(B, sp.mB, sp.oB);
+  const P = { title: [
+      [{ type: 'arp', inst: 'harp', oct: 3, every: 1, pat: [0, 1, 2, 3, 4, 3, 2, 1] }, { type: 'chord', inst: 'pad', oct: 3 }, { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+       { type: 'mel', inst: 'leadA', bars: melA }, { type: 'arp', inst: 'dbl', oct: 5, every: 4, pat: [3, 4, 2, 4] }, { type: 'drums', kit: KITS.title, vel: 0.6 }],
+      [{ type: 'arp', inst: 'harp', oct: 3, every: 1, pat: [0, 1, 2, 3, 4, 3, 2, 1] }, { type: 'bass', inst: 'bass', oct: 2, pat: 'R . . . R . . .' }, { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+       { type: 'mel', inst: 'leadB', bars: melB }, { type: 'mel', inst: 'dbl', shift: 12, bars: melB }, { type: 'drums', kit: KITS.titleB, vel: 0.7 }]],
+    squad: [
+      [{ type: 'arp', inst: 'harp', oct: 4, every: 1, pat: [0, 1, 2, 3, 2, 1, 2, 1] }, { type: 'chord', inst: 'pad', oct: 3 }, { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R . R . 5 .' },
+       { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' }, { type: 'mel', inst: 'leadA', bars: melA }, { type: 'drums', kit: KITS.squad, vel: 0.85 }],
+      [{ type: 'arp', inst: 'arp', oct: 5, every: 1, pat: [0, 1, 2, 1] }, { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R R R . R R' }, { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+       { type: 'mel', inst: 'leadB', bars: melB }, { type: 'mel', inst: 'dbl', shift: 12, bars: melB }, { type: 'drums', kit: KITS.squadB, vel: 0.85 }]],
+    battle: [
+      [{ type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 1, 2, 1] }, { type: 'arp', inst: 'arp', oct: 5, every: 1, pat: [0, 2, 1, 3] },
+       { type: 'bass', inst: 'bass', oct: 2, pat: 'R . . R . . R . R . . R . . 5 .' }, { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+       { type: 'mel', inst: 'leadA', bars: melA }, { type: 'drums', kit: KITS.battle, vel: 0.9 }],
+      [{ type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 2, 1, 3] }, { type: 'arp', inst: 'arp', oct: 5, every: 1, pat: [0, 1, 2, 3] },
+       { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R R . R R . R . R R . R 8 .' }, { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+       { type: 'mel', inst: 'leadB', bars: melB }, { type: 'mel', inst: 'dbl', shift: 12, bars: melB }, { type: 'drums', kit: KITS.battleB, vel: 0.9 }]],
+    boss: [
+      [{ type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 1, 0, 2] }, { type: 'arp', inst: 'arp', oct: 5, every: 1, pat: [0, 2, 1, 3] },
+       { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R R R' }, { type: 'bass', inst: 'tbn', oct: 2, pat: 'R - - - R - - - R - - - R - - -' },
+       { type: 'mel', inst: 'leadA', bars: melA }, { type: 'drums', kit: KITS.boss, vel: 0.9 }],
+      [{ type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 1, 2, 3] }, { type: 'arp', inst: 'arp', oct: 5, every: 1, pat: [0, 1, 2, 3] },
+       { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R R R' }, { type: 'bass', inst: 'tbn', oct: 2, pat: 'R - - - R - - - R - - - R - - -' },
+       { type: 'mel', inst: 'leadB', bars: melB }, { type: 'mel', inst: 'dbl', shift: 12, bars: melB }, { type: 'drums', kit: KITS.bossB, vel: 0.9 }]] }[sp.screen];
+  return { title: sp.title, screen: sp.screen, bpm: sp.bpm, desc: 'NEW (round 6, 16-bit). ' + sp.desc, inst,
+    sections: { A: { prog: A, parts: P[0] }, B: { prog: B, parts: P[1] } }, order: ['A', 'B'] };
+}
+const R6 = [
+  // ---- title (general RPG, uplifting, not town) ----
+  { id: 'banner_of_dawn', title: 'Banner of Dawn', screen: 'title', bpm: 92, leads: ['flute', 'horns'], A: ['C', 'G', 'Am', 'F', 'C', 'G', 'F', 'G'], B: ['Am', 'F', 'C', 'G', 'Am', 'F', 'G', 'G'],
+    mA: { r: 'x - - - x - x -', c: [2, 3, 4] }, oA: 4, mB: { r: 'x - - x - - x -', c: [0, 1, 2] }, oB: 3, desc: 'A proud RPG opening: harp, flute theme, then horns with a glockenspiel shine and a light beat. C major.' },
+  { id: 'hall_of_heroes', title: 'Hall of Heroes', screen: 'title', bpm: 96, leads: ['horns', 'violins'], A: ['D', 'A', 'Bm', 'G', 'D', 'A', 'G', 'A'], B: ['Bm', 'G', 'D', 'A', 'Bm', 'G', 'Em', 'A'],
+    mA: { r: 'x - - x - - x -', c: [0, 1, 2, 3] }, oA: 3, mB: { r: 'x - x - x - - -', c: [2, 3, 4, 3] }, oB: 4, desc: 'Heroic and warm: a horn theme over harp, then high violins. D major.' },
+  { id: 'wayfarers_oath', title: "Wayfarer's Oath", screen: 'title', bpm: 88, leads: ['flute', 'violins'], A: ['Em', 'C', 'G', 'D', 'Em', 'C', 'D', 'D'], B: ['C', 'D', 'Em', 'Em', 'C', 'D', 'B', 'B'],
+    mA: { r: 'x - - - x x x -', c: [4, 3, 2, 3] }, oA: 4, mB: { r: 'x - - - x - x -', c: [0, 2, 3] }, oB: 4, desc: 'An adventure about to begin, a little wistful but hopeful. E minor with bright chords.' },
+  { id: 'starfall_gate', title: 'Starfall Gate', screen: 'title', bpm: 100, leads: ['glock', 'horns'], A: ['F', 'C', 'Dm', 'Bb', 'F', 'C', 'Bb', 'C'], B: ['Dm', 'Bb', 'F', 'C', 'Dm', 'Bb', 'Gm', 'C'],
+    mA: { r: 'x - x - x - x -', c: [2, 3, 4, 3] }, oA: 4, mB: { r: 'x - - x - - x -', c: [0, 1, 2] }, oB: 3, desc: 'Sparkly and magical: a glockenspiel tune over harp, then a broad horn theme. F major.' },
+  // ---- squad (getting ready, steady drive) ----
+  { id: 'gear_up', title: 'Gear Up', screen: 'squad', bpm: 118, leads: ['trumpets', 'flute'], arp: 'glock', A: ['G', 'F', 'C', 'G', 'G', 'F', 'C', 'D'], B: ['Em', 'C', 'G', 'D', 'Em', 'C', 'Am', 'D'],
+    mA: { r: 'x - x x - x x -', c: [0, 1, 2, 1] }, oA: 4, mB: { r: 'x - - x - - x -', c: [2, 3, 4] }, oB: 4, desc: 'Strapping on the armour: a bright trumpet tune over a rolling beat, then flute. G (Mixolydian).' },
+  { id: 'party_assemble', title: 'Party Assemble', screen: 'squad', bpm: 112, leads: ['horns', 'xylo'], A: ['A', 'E', 'F#m', 'D', 'A', 'E', 'D', 'E'], B: ['F#m', 'D', 'A', 'E', 'F#m', 'D', 'Bm', 'E'],
+    mA: { r: 'x - - x - - x -', c: [0, 2, 3, 2] }, oA: 3, mB: { r: 'x x x - x - x -', c: [2, 1, 0, 1, 2] }, oB: 5, desc: 'Picking your team: confident horns, then a quick xylophone line. A major.' },
+  { id: 'map_and_compass', title: 'Map and Compass', screen: 'squad', bpm: 120, leads: ['violins', 'trumpets'], arp: 'glock', A: ['Dm', 'G', 'Dm', 'C', 'Dm', 'G', 'Bb', 'C'], B: ['Bb', 'C', 'Dm', 'Dm', 'Bb', 'C', 'A', 'A'],
+    mA: { r: 'x - x - x x - x', c: [0, 1, 2, 3] }, oA: 4, mB: { r: 'x - - - x - x -', c: [2, 1, 3] }, oB: 4, desc: 'Planning the route: busy violins over a steady groove, then trumpets. D (Dorian).' },
+  { id: 'last_supplies', title: 'Last Supplies', screen: 'squad', bpm: 124, leads: ['flute', 'horns'], A: ['Bm', 'G', 'D', 'A', 'Bm', 'G', 'A', 'A'], B: ['G', 'A', 'Bm', 'Bm', 'G', 'A', 'F#', 'F#'],
+    mA: { r: 'x x x - x - x -', c: [4, 3, 2, 3, 4] }, oA: 4, mB: { r: 'x - - x - - x -', c: [0, 1, 2] }, oB: 3, desc: 'Ready to go: a quick flute tune over drums, then horns. B minor, upbeat.' },
+  // ---- battle (Risk-of-Rain drive, dungeon crawler) ----
+  { id: 'stormvault', title: 'Stormvault', screen: 'battle', bpm: 148, leads: ['trumpets', 'violins'], A: ['Em', 'C', 'G', 'D', 'Em', 'C', 'D', 'B'], B: ['C', 'D', 'Em', 'C', 'Am', 'D', 'B', 'B'],
+    mA: { r: 'x - - x - - x -', c: [0, 1, 2, 3] }, oA: 4, mB: { r: 'x - x x - x x -', c: [2, 3, 4, 3] }, oB: 4, desc: 'Syncopated driving bass, racing arpeggios, a trumpet hook, then soaring violins. E minor, epic not gloomy.' },
+  { id: 'ore_and_ember', title: 'Ore and Ember', screen: 'battle', bpm: 152, leads: ['xylo', 'trumpets'], A: ['Am', 'F', 'C', 'G', 'Am', 'F', 'G', 'E'], B: ['F', 'G', 'Am', 'Am', 'F', 'G', 'E', 'E'],
+    mA: { r: 'x x x - x x x -', c: [0, 1, 2, 3, 2, 1] }, oA: 4, mB: { r: 'x - - x - - x -', c: [2, 3, 4] }, oB: 4, desc: 'A fast mining-tunnel fight: a busy xylophone hook over a punchy beat, then trumpets. A minor.' },
+  { id: 'hivebreak', title: 'Hivebreak', screen: 'battle', bpm: 144, leads: ['horns', 'xylo'], A: ['F#m', 'D', 'A', 'E', 'F#m', 'D', 'E', 'E'], B: ['D', 'E', 'F#m', 'D', 'Bm', 'E', 'C#', 'C#'],
+    mA: { r: 'x - x - x - - x', c: [0, 2, 3, 2] }, oA: 3, mB: { r: 'x x x x x - x -', c: [4, 3, 2, 1, 2, 3] }, oB: 4, desc: 'Swarms everywhere: pushing horns, then a frantic xylophone line. F-sharp minor, energetic.' },
+  { id: 'runeshard_rush', title: 'Runeshard Rush', screen: 'battle', bpm: 156, leads: ['violins', 'trumpets'], arp: 'glock', A: ['Dm', 'Bb', 'F', 'C', 'Dm', 'Bb', 'C', 'A'], B: ['Bb', 'C', 'Dm', 'Dm', 'Gm', 'C', 'A', 'A'],
+    mA: { r: 'x - x x x - x x', c: [0, 1, 2, 3, 2] }, oA: 4, mB: { r: 'x - - x - - x -', c: [2, 3, 4] }, oB: 4, desc: 'The fastest: rushing violins and glockenspiel arpeggios, then a trumpet charge. D minor, bright.' },
+  { id: 'spire_climb', title: 'Spire Climb', screen: 'battle', bpm: 140, leads: ['trumpets', 'flute'], A: ['Gm', 'C', 'Gm', 'F', 'Gm', 'C', 'Eb', 'D'], B: ['Eb', 'F', 'Gm', 'Gm', 'Eb', 'F', 'D', 'D'],
+    mA: { r: 'x - - x - - x -', c: [2, 3, 4, 3] }, oA: 4, mB: { r: 'x x x - x x x -', c: [0, 1, 2, 3] }, oB: 5, desc: 'Climbing floor after floor: a bold trumpet riff, then a quick high flute. G (Dorian).' },
+  // ---- boss (big and driving, not gothic) ----
+  { id: 'colossus', title: 'Colossus', screen: 'boss', bpm: 136, leads: ['horns', 'trumpets'], A: ['Cm', 'Ab', 'Eb', 'Bb', 'Cm', 'Ab', 'Bb', 'G'], B: ['Ab', 'Bb', 'Cm', 'Cm', 'Ab', 'Bb', 'G', 'G'],
+    mA: { r: 'x - - - x - x -', c: [0, 2, 3] }, oA: 3, mB: { r: 'x - - x - - x -', c: [2, 3, 4, 3] }, oB: 4, desc: 'A giant wakes up: low trombones and sub, pounding drums, a big horn theme, then trumpets. C minor, heroic.' },
+  { id: 'titan_core', title: 'Titan Core', screen: 'boss', bpm: 144, leads: ['trumpets', 'violins'], A: ['Em', 'C', 'D', 'B', 'Em', 'C', 'D', 'B'], B: ['Am', 'C', 'D', 'Em', 'Am', 'C', 'B', 'B'],
+    mA: { r: 'x - x - x - - x', c: [0, 1, 2, 3] }, oA: 4, mB: { r: 'x - x x - x x -', c: [4, 3, 2, 3] }, oB: 4, desc: 'Fast and relentless: a trumpet riff over double-time drums, then violins. E minor.' },
+  { id: 'warlords_arena', title: "Warlord's Arena", screen: 'boss', bpm: 150, leads: ['horns', 'xylo'], A: ['Bm', 'G', 'A', 'F#', 'Bm', 'G', 'A', 'F#'], B: ['G', 'A', 'Bm', 'Bm', 'Em', 'A', 'F#', 'F#'],
+    mA: { r: 'x - - x - - x -', c: [0, 1, 2] }, oA: 3, mB: { r: 'x x x - x x x -', c: [2, 3, 4, 3, 2] }, oB: 4, desc: 'An arena showdown: horns over pounding drums and timpani, then a racing xylophone. B minor.' },
+  { id: 'leviathan_rise', title: 'Leviathan Rise', screen: 'boss', bpm: 132, leads: ['trumpets', 'horns'], A: ['Dm', 'Bb', 'C', 'A', 'Dm', 'Bb', 'C', 'A'], B: ['Gm', 'Bb', 'Dm', 'Dm', 'Gm', 'Bb', 'A', 'A'],
+    mA: { r: 'x - - x - - x -', c: [2, 3, 4] }, oA: 4, mB: { r: 'x - - - x - x -', c: [0, 1, 2, 3] }, oB: 3, desc: 'Something huge rises from the deep: heavy and steady, a trumpet call, then horns. D minor, epic.' },
+];
+for (const sp of R6) REAL[sp.id] = build6(sp);
+export const ROUND6 = R6.map((s) => [s.id, s.screen]);

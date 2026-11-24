@@ -106,11 +106,12 @@ export default class SquadScene extends Phaser.Scene {
   // ---- drawing -------------------------------------------------------------------------------
 
   drawRoom() {
-    this.add.image(0, 0, floorTextureKey(this, dungeons.A.tileColors[0], 0, WALL_H)).setOrigin(0).setScale(FLOOR_PIXEL).setDepth(DEPTH.floor); // as on the battle floors
+    const Z = floorArt.closeUpPixel; // a CLOSE-UP of the battle floor (user, session 55): bigger pixels, same layout
+    this.add.image(0, 0, floorTextureKey(this, dungeons.A.tileColors[0], 0, WALL_H, Z)).setOrigin(0).setScale(Z).setDepth(DEPTH.floor);
     // The door into the dungeon: closed until the squad sets off.
-    this.door = new Door(this, this.add.container(0, 0).setDepth(DEPTH.floor), DOOR_X, WALL_H, { big: true }); // the dungeon entrance
+    this.door = new Door(this, this.add.container(0, 0).setDepth(DEPTH.floor), DOOR_X, WALL_H, { big: true, pixel: Z }); // the dungeon entrance
     // Two torches on the pillars beside the door (entities/wallTorches.js).
-    drawWallTorches(this, WALL_H, (o) => o.setDepth(DEPTH.floor));
+    drawWallTorches(this, WALL_H, (o) => o.setDepth(DEPTH.floor), Z);
   }
 
   drawSlots() {

@@ -4,13 +4,13 @@
 import floorArt from '../data/floorArt.json';
 import { torchLayers } from '../systems/torchArt.js';
 import { layerTexture } from './pixelLayer.js';
-import { FLOOR_PIXEL } from './floorTexture.js';
+import { FLOOR_PIXEL, floorArtAt } from './floorTexture.js';
 
-export function drawWallTorches(scene, wallH, add) {
-  const T = floorArt.torch, L = torchLayers(T), P = FLOOR_PIXEL;
+export function drawWallTorches(scene, wallH, add, P = FLOOR_PIXEL) { // P = a close-up's pixel size
+  const T = floorArt.torch, L = torchLayers(T);
   const img = (lay, key, x, y) => add(scene.add.image(x, y, layerTexture(scene, key, lay)).setOrigin(lay.ax / lay.w, lay.ay / lay.h).setScale(P));
   const flameKeys = L.flames.map((f, i) => layerTexture(scene, `torch-flame-${i}`, f));
-  for (const x of (floorArt.torchPillars || floorArt.pillars.x).map((ax) => ax * P)) { // on the two middle pillars (floorArt.json torchPillars)
+  for (const x of floorArtAt(P).torchPillars.map((ax) => ax * P)) { // on the two middle pillars (floorArt.json torchPillars)
     const y = wallH - 33 * P; // the top of the handle
     const glow = img(L.glow, 'torch-glow', x, y);
     scene.tweens.add({ targets: glow, alpha: 0.75, duration: 300 + Math.random() * 120, yoyo: true, repeat: -1 });

@@ -40,7 +40,7 @@ export function lightTint(art, x, y) {
 // top of the screen stays open floor (the way deeper). Returns a layer.
 export function openFloor(floorArt, art, { width, height, tint }) {
   const R = art.room, cut = R.wallArt + R.cutBelow;
-  const look = { ...floorArt, grain: R.grain ?? floorArt.grain, floor: { ...floorArt.floor, ...R.floor }, wall: { ...floorArt.wall, ...R.wall }, pillars: { ...floorArt.pillars, ...R.pillars }, decor: null }; // camp.json room.floor, no decorations
+  const look = { ...floorArt, decor: null }; // the battle floor as is, without its decorations (the camp has its own props) // camp.json room.floor, no decorations
   const full = floorArtPixels(look, { width, height: height + cut, wallH: R.wallArt, tint, seed: R.seed });
   return { w: width, h: height, ax: 0, ay: 0, pixels: Int32Array.from(full.pixels.subarray(cut * width, (cut + height) * width)) };
 }

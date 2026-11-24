@@ -4,7 +4,7 @@ import * as sfx from '../audio/sfx.js';
 import { doorArtLayers } from '../systems/doorArt.js';
 import { layerTexture } from './pixelLayer.js';
 
-const P = floorArt.pixel;
+const P0 = floorArt.pixel; // screen px per art px (a close-up passes its own `pixel`)
 
 
 // The door in the back wall of every floor, drawn to match the stone wall (screen review, user): a stone arch of
@@ -18,7 +18,8 @@ const C = Object.fromEntries(['stone', 'stoneLight', 'mortar', 'hole', 'wood', '
 const A = D.anim;
 
 export default class Door {
-  constructor(scene, container, x, baseY, { big = false } = {}) {
+  constructor(scene, container, x, baseY, { big = false, pixel = P0 } = {}) {
+    const P = pixel;
     // The art is pixel art at the floor's pixel size (systems/doorArt.js); sizes here are screen pixels for the
     // animation (dust, rattle) = art pixels x P.
     const L = doorArtLayers(D, big);

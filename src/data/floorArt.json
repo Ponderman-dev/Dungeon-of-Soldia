@@ -3,6 +3,7 @@
   "pixel": 3,
   "torches": true,
   "torchPillars": [24, 106],
+  "closeUpPixel": 4,
   "grain": 0.03,
   "variants": 6,
   "tintShare": 0.3,

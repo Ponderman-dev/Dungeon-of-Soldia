@@ -144,3 +144,12 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   battle: syncopated 3-3-2 bass + string and xylo/glock arps + rock kit with 16th hats; boss: + trombones, timpani,
   double-time kick). No organ / harpsichord / choir. Fight leads x1.35. Post: 16-bit chain + MASTER (render6 chain in
   the make-board6 header). Kept: Muster, Hero's Dawn, Hearthfire.
+- ROUND 7 BOARD (same url/db; `make-board7.py`; user: 'what about my loves / maybes? real instruments too trebly,
+  too much reverb, back to CHIPTUNE'): shows every CURRENT love/maybe (free: xD Title Theme, RPG 12, RPG 8, RPG 14
+  LOVE; NA 6, RPG 2, RPG 10, Castle, Unholy Knight MAYBE; code: Muster LOVE, Hero's Dawn + Hearthfire MAYBE, as they
+  were) + CHIPTUNE versions (ids 'chip:<songId>') of all 17 round-6 songs and the 3 liked code songs.
+  `chip-render.py <songId> <out.mp3>`: plays any songs-real.js song as chiptune (numpy): leads = polyBLEP pulse 50% /
+  25% with delayed vibrato, plucked parts = short 12.5% pulse, bass = NES-style 16-step triangle (a second bass line
+  quieter), pads dropped, the glock 'dbl' doubling dropped, drums = triangle-sweep kick, noise snare / hats / crash.
+  NO reverb, lowpass 7 kHz, limiter. Balance matched to the user's LOVED tracks (measured: tune 300-3k Hz about
+  -1.5..-3 dB, bass < 150 Hz -6..-9 dB, treble > 5 kHz about -19 dB; boss songs a bit heavier).

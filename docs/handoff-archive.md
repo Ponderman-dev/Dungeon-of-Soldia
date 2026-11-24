@@ -1,5 +1,44 @@
-# Handoff ARCHIVE (sessions 2-50, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-51, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## (session 51 start note, NOT DONE YET: session 52 did music instead) DEEP BUG HUNT + OPTIMIZATION + SECURITY CHECK (no new features, no look changes)
+- BRANCH: `main` has EVERYTHING (session 50 merged in). Start the next branch from `main`.
+- TASK (user): find and fix real bugs, make the game run smoother on the phone, look for security holes. Work in
+  small rounds: FIND (list what you found, ranked: crash / wrong rules / stutter / security / tidy-up) -> show the user
+  the list in plain words -> fix the ones they OK, one commit each, a test per fixed bug (`scripts/tests/`, 97 files).
+  Ask before anything big (refactors, new libraries, changing how saving works).
+- BUG HUNT IDEAS: run long seeded runs and watch for errors / NaN health / stuck fights (`node scripts/tests/curve.mjs 3
+  smart`, `review.mjs`, `bosscheck.mjs`; docs/systems/balance-tools.md). Scenes are NOT covered by `npm test`: drive
+  them in Playwright (`window.__game`, dev url flags `?floor=N ?room= ?elite=1 ?house=1 ?lineup=`) and log
+  `pageerror` / console errors through a whole run: floors 1-60, every room kind, every boss, reward steps (books,
+  potions, 'Who gets it?'), hero death, Game Over, camp pages and back. Things that run across floors are the usual
+  suspects (session 50: the Shield Totem followed the squad into rooms): timers, tweens, `events.on('update')`
+  listeners, pools and views that outlive a floor or a scene restart (Phaser REUSES scene objects: anything kept on
+  `this` must be reset in create()).
+- OPTIMIZATION (session 50 method, keep it): 4x CPU slowdown (CDP `Emulation.setCPUThrottlingRate`), record every
+  frame's gap + long tasks + a CPU profile, find WHICH frame and WHAT code; never guess. Already done in session 50:
+  letter widths remembered (uiKit measureText), pooled fight pop numbers (effects.js `popPool`), reward cards built
+  once + reward tweens wait for the first draw (RewardScene `tweens.timeScale`). Only 4 WebGL shaders, built at fight
+  start (not a cause). Headless Chromium draws in SOFTWARE: big '(program)' time in profiles is that, not the phone.
+  Left to check: onWin (~30ms at 4x: saveProgress + speech + popTexts in one frame), other `this.add.text` made
+  per event (gainText, heroFell, status chips redrawn by drawChips), Graphics redrawn every frame (drawStatusFx,
+  drawDangerGlow, refreshHud), the boss floors and the Monster House (most enemies), the 2.5 MB page size / load time.
+  Ask the user WHEN it stutters on the phone (many hits, a death, a skill) before tuning.
+- SECURITY (a client-only game today; Solana Seeker dApp Store later): (1) `npm audit`: 1 HIGH in vite 8.3.0-8.3.2
+  (dev server only, not in the built page) -> ask, then `npm audit fix`; (2) the save (`systems/progress.js`,
+  localStorage JSON.parse): a broken or hand-edited save must never crash the game or give impossible values (check
+  every field is clamped / type-checked; gems, unlocks, best floor can be edited by anyone: fine for now, but write
+  down what a future server / wallet must re-check); (3) `innerHTML` in src/scenes/testPanel.js (dev TEST panel) and
+  src/studio/*.js: make sure no saved or user text goes in unescaped; the TEST panel must not ship to players (check
+  how it is gated); (4) the Studio page's shared `db` (window.claude.use('db')): treat rows as untrusted data (bad
+  shapes must not break the Studio). Explain each finding simply: the user is a beginner.
+- PUBLISH only at the end of a batch of visible fixes: `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat
+  dist-page.html; } > <scratchpad>/dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr
+  (the first publish of a session is refused 'not viewed': Read the LAST 3 lines of the saved copy, publish again).
+- Browser checks: `<repo>/node_modules/.bin/vite <repo> --port 5190` from the scratchpad (run `npm install` first if
+  node_modules is missing), in the background. Playwright: `NODE_PATH=$(npm root -g) node x.cjs`. Starting a fight
+  from a script: stop the running scenes, `game.scene.start('Battle')` (keep 'Debug').
+- Pushing to `main` needs the user's OK in chat (the auto check blocks it otherwise).
 
 ## (session 50 start note, 2026-11-21; session 50 did square skill squares, rarity tags, stutter fixes, door sound timing, Shield Totem vanish + spot) MORE UI TWEAKS on the new DUSK look (user's phone screenshots + short fixes)
 - BRANCH: `main` has EVERYTHING (session 49 merged in). Start the next branch from `main`.

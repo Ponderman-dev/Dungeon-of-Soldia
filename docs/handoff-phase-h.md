@@ -1,45 +1,36 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 51): DEEP BUG HUNT + OPTIMIZATION + SECURITY CHECK (no new features, no look changes)
-- BRANCH: `main` has EVERYTHING (session 50 merged in). Start the next branch from `main`.
-- TASK (user): find and fix real bugs, make the game run smoother on the phone, look for security holes. Work in
-  small rounds: FIND (list what you found, ranked: crash / wrong rules / stutter / security / tidy-up) -> show the user
-  the list in plain words -> fix the ones they OK, one commit each, a test per fixed bug (`scripts/tests/`, 97 files).
-  Ask before anything big (refactors, new libraries, changing how saving works).
-- BUG HUNT IDEAS: run long seeded runs and watch for errors / NaN health / stuck fights (`node scripts/tests/curve.mjs 3
-  smart`, `review.mjs`, `bosscheck.mjs`; docs/systems/balance-tools.md). Scenes are NOT covered by `npm test`: drive
-  them in Playwright (`window.__game`, dev url flags `?floor=N ?room= ?elite=1 ?house=1 ?lineup=`) and log
-  `pageerror` / console errors through a whole run: floors 1-60, every room kind, every boss, reward steps (books,
-  potions, 'Who gets it?'), hero death, Game Over, camp pages and back. Things that run across floors are the usual
-  suspects (session 50: the Shield Totem followed the squad into rooms): timers, tweens, `events.on('update')`
-  listeners, pools and views that outlive a floor or a scene restart (Phaser REUSES scene objects: anything kept on
-  `this` must be reset in create()).
-- OPTIMIZATION (session 50 method, keep it): 4x CPU slowdown (CDP `Emulation.setCPUThrottlingRate`), record every
-  frame's gap + long tasks + a CPU profile, find WHICH frame and WHAT code; never guess. Already done in session 50:
-  letter widths remembered (uiKit measureText), pooled fight pop numbers (effects.js `popPool`), reward cards built
-  once + reward tweens wait for the first draw (RewardScene `tweens.timeScale`). Only 4 WebGL shaders, built at fight
-  start (not a cause). Headless Chromium draws in SOFTWARE: big '(program)' time in profiles is that, not the phone.
-  Left to check: onWin (~30ms at 4x: saveProgress + speech + popTexts in one frame), other `this.add.text` made
-  per event (gainText, heroFell, status chips redrawn by drawChips), Graphics redrawn every frame (drawStatusFx,
-  drawDangerGlow, refreshHud), the boss floors and the Monster House (most enemies), the 2.5 MB page size / load time.
-  Ask the user WHEN it stutters on the phone (many hits, a death, a skill) before tuning.
-- SECURITY (a client-only game today; Solana Seeker dApp Store later): (1) `npm audit`: 1 HIGH in vite 8.3.0-8.3.2
-  (dev server only, not in the built page) -> ask, then `npm audit fix`; (2) the save (`systems/progress.js`,
-  localStorage JSON.parse): a broken or hand-edited save must never crash the game or give impossible values (check
-  every field is clamped / type-checked; gems, unlocks, best floor can be edited by anyone: fine for now, but write
-  down what a future server / wallet must re-check); (3) `innerHTML` in src/scenes/testPanel.js (dev TEST panel) and
-  src/studio/*.js: make sure no saved or user text goes in unescaped; the TEST panel must not ship to players (check
-  how it is gated); (4) the Studio page's shared `db` (window.claude.use('db')): treat rows as untrusted data (bad
-  shapes must not break the Studio). Explain each finding simply: the user is a beginner.
-- PUBLISH only at the end of a batch of visible fixes: `npm run build:page`, `{ echo '<!DOCTYPE html>'; cat
-  dist-page.html; } > <scratchpad>/dungeon-of-soldia.html`, publish to https://claude.ai/artifact/XFmqyv3GvFfw5731nv6eqr
-  (the first publish of a session is refused 'not viewed': Read the LAST 3 lines of the saved copy, publish again).
-- Browser checks: `<repo>/node_modules/.bin/vite <repo> --port 5190` from the scratchpad (run `npm install` first if
-  node_modules is missing), in the background. Playwright: `NODE_PATH=$(npm root -g) node x.cjs`. Starting a fight
-  from a script: stop the running scenes, `game.scene.start('Battle')` (keep 'Debug').
-- Pushing to `main` needs the user's OK in chat (the auto check blocks it otherwise).
+## START HERE (session 53): MUSIC. The user REARRANGES songs they found into a new soundtrack, then the music player
+- BRANCH: `main` has EVERYTHING (session 52 merged in). Start the next branch from `main`.
+- READ FIRST: `docs/systems/sound.md`, section MUSIC (rounds 1-8 of the music board, sources, licences, tools).
+- WHERE WE ARE: no music in the game yet (Settings already has a MUSIC bar, `settings.json` `music`). Session 52 ran 8
+  rounds on the MUSIC BOARD (the reused Skill Effects page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN, db
+  collection `music`, LOVE / MAYBE / NO + notes). Final LOVES (a full soundtrack, now the only songs on the page):
+  title/camp = xDeviruchi 'Title Theme' (CC BY-SA 4.0, credit) + Pixel-boy Ninja Adventure theme 6; squad = RPG Battle
+  theme 12; battle = RPG Battle themes 8 + 10; boss = RPG Battle theme 14 (Pixel-boy / Sparklin Labs superpowers-asset-
+  packs, CC0). ALL our own 'code' songs were rejected in every style (synth, real instruments, gothic, 16-bit, chiptune,
+  SNES-style): do NOT offer more of our compositions unless the user asks.
+- NEXT TASK (user, end of session 52): 'I got some song options, I want to DECONSTRUCT and REARRANGE them into a new
+  soundtrack with a similar feeling'. The user will attach a zip + say where each song came from. Do: (1) check every
+  licence (CC0 / Pixabay / CC BY OK; CC BY-SA OK but the remix stays CC BY-SA; ND / NC = NO, flag them); (2) start with
+  CUT AND REARRANGE (ffmpeg: find sections, reorder / loop / join, match key + tempo, change speed or pitch) to make
+  versions per screen (title, camp, squad, battle, boss, maybe a victory sting); (3) only then TRY stem separation on
+  ONE song (AI tool, may not install here; test first); (4) MIDI / tracker files in a pack = best source for new songs.
+  Show results on the same board page (make-board8.py pattern, swap the list; the audio goes beside the page as files).
+- AFTER THAT: build the in-game MUSIC PLAYER (`src/audio/music.js`, no Phaser; Web Audio; files packed like sfx.js
+  with `?inline` + atob, NEVER fetch): one loop per screen (title, camp, squad, battle floors, boss), crossfade between
+  screens, battle songs take turns, MUSIC bar volume + the existing mute, data in `src/data/music.json`, a test.
+  Keep the page size in mind (2.5 MB now; ogg/mp3 ~0.5-1 MB per song).
+- STILL OPEN from session 51 (not started; session 52 did music instead): the deep BUG HUNT + OPTIMIZATION + SECURITY
+  CHECK. Its full plan is the session-51 note at the top of `docs/handoff-archive.md`.
+- PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').
 
 ## How we work with this user
+- MUSIC (session 52): the user judges by ear on the board (LOVE / MAYBE / NO + short notes) and changes direction often
+  ('too cyber', 'too cheery / town', 'too gothic', 'too trebly / reverb', 'just 8-bit'); their LOVES were all retro RPG
+  tracks by Pixel-boy and xDeviruchi. Measuring loved tracks (spectrograms, balance numbers) helped explain WHY, but our
+  own compositions never landed: prefer music they pick, and help them shape it. They stayed in one very long session
+  despite fresh-session advice: suggest it once per topic change, then follow their lead.
 - FEEL WORDS (session 49): 'slow' / 'looks stuck, like low FPS' = STUTTER, not length: record every frame's camera /
   positions under a 4x slowed CPU (CDP setCPUThrottlingRate) and find the frame gaps before changing timings. A faster
   slide was 'way weird and bad' (reverted). 'Not that, X' = undo my change first, then fix X.

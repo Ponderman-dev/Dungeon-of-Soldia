@@ -51,13 +51,13 @@ export default class BaseScene extends Phaser.Scene {
     if (this.fromSquad) this.leaving = true; // the buttons come in when the slide down has ended (arrive); no taps before that
   }
 
-  // The slide from the squad screen has ended (uiKit slideToScreen): the heroes walk down from the top to their spots,
-  // then the buttons come in (camp.json toSquad; the reverse of toExpedition).
+  // The slide from the squad screen has ended (uiKit slideToScreen): the heroes walk down from the top to their spots
+  // and the buttons come in at once, not waiting for them (user, session 55; camp.json toSquad).
   arrive() {
     this.heroesWalk(false, () => {
-      for (const ch of this.heroes) this.time.delayedCall(Phaser.Math.Between(...camp.hero.pauseMs) * 0.5, () => this.wander(ch, ch.home.x, ch.home.y));
-      uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = false; } });
+      for (const ch of this.heroes) ch.wanderTimer = this.time.delayedCall(Phaser.Math.Between(...camp.hero.pauseMs) * 0.5, () => this.wander(ch, ch.home.x, ch.home.y));
     });
+    uiShift(this, this.uiParts, true, { onDone: () => { this.leaving = false; } });
   }
 
   // The camp's heroes walk straight up off the top of the screen (out = true; one after another), or come back down
@@ -70,7 +70,7 @@ export default class BaseScene extends Phaser.Scene {
       this.stopWander(ch);
       const from = { x: ch.x, y: out ? ch.y : top }, to = { x: out ? ch.x : ch.home.x, y: out ? top : ch.home.y };
       ch.setPosition(from.x, from.y).setVisible(true).setWalking(true);
-      this.tweens.addCounter({ from: 0, to: 1, delay: i * C.staggerMs, duration: (Math.abs(to.y - from.y) / C.upSpeed) * 1000,
+      ch.wanderTween = this.tweens.addCounter({ from: 0, to: 1, delay: i * C.staggerMs, // (stopWander stops it: EXPEDITION mid-walk) duration: (Math.abs(to.y - from.y) / C.upSpeed) * 1000,
         onUpdate: (tw) => { const t = tw.getValue(); ch.setPosition(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t).setDepth(ch.y); },
         onComplete: () => {
           ch.setWalking(false);

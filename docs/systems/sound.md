@@ -212,3 +212,5 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   land on the new song's phrase start (where the old song's loud part would come). Clips tr_land (RPG 8 16-20 ->
   RPG 10 bar 4), tr_land_fill (RPG 8 16-19 + RPG 10 fill bar 3 -> 4), tr_land_soft (tr_land + half-bar blend);
   the measured jump at the change halves (0.56 vs 1.2). Old blend clips removed from the board (tr_cut kept).
+- ROUND 9f: user: 'C (tr_land_soft) is best, add another bar of the drum at 0:20, remove the other blends'. New
+  tr_land_drum = C + RPG 10's drum-hit fill bar 3 at the landing, then RPG 10 bar 4. Board blend screen = C + C-drum.

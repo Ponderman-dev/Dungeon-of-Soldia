@@ -53,6 +53,9 @@ MIXES = {
   'tr_land': ([], [('rb8', 4, 12, {'tempo': 140 / 130}), ('rb8', 16, 20, {'tempo': 140 / 130}), ('rb10', 4, 16, {})]),
   'tr_land_fill': ([], [('rb8', 4, 12, {'tempo': 140 / 130}), ('rb8', 16, 19, {'tempo': 140 / 130}), ('rb10', 3, 16, {})]),
   'tr_land_soft': ([], [('rb8', 4, 12, {'tempo': 140 / 130}), ('rb8', 16, 20, {'tempo': 140 / 130}), ('~', 0.5, 'blend'), ('rb10', 4, 16, {})]),
+  # user: 'C (tr_land_soft) is the best, add another bar of the drum at 0:20': C + RPG 10's drum-hit fill bar (3) at the
+  # landing, then RPG 10's phrase.
+  'tr_land_drum': ([], [('rb8', 4, 12, {'tempo': 140 / 130}), ('rb8', 16, 20, {'tempo': 140 / 130}), ('~', 0.5, 'blend'), ('rb10', 3, 16, {})]),
   # BOSS RISING: RPG 14 twice, then twice one semitone higher and 6% faster (the fight heats up), then round again.
   'boss_rising': ([], [('rb14', 0, 8, {}), ('rb14', 0, 8, {}), ('rb14', 0, 8, {'pitch': ST, 'tempo': 1.06}),
                        ('rb14', 0, 8, {'pitch': ST, 'tempo': 1.06})]),

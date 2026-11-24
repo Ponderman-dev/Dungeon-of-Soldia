@@ -224,3 +224,9 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   coloured blocks + needle (drag), LOOP, presets (C, C + drum bar, Battle suite, LONG, 'full suite with C landings').
   SAVE -> db `music` doc `arr_battle` {key 'arr:battle', blocks}. NEXT: render the saved blocks into the game file
   (make-mixes.py pieces: bars from-1..to; fade beats -> a pre-roll blend that ENDS at the landing, not after it).
+  User: 'wtf is this arranger, I can't understand a single thing' -> HIDDEN (make-board9.py SHOW_ARRANGER = False).
+  Too many controls at once for this user: one clear job per tool, 1-2 taps + PLAY.
+- FINAL PICKS (session 53): TITLE + BASE CAMP = xDeviruchi 'Title Theme (Loop).wav' (8-bit pack, CC BY-SA 4.0, credit
+  'xDeviruchi'); HERO SELECT = RPG Battle Theme 12 as is (CC0); BOSS = mix boss_final (RPG 14 x2, +1 st +6% x2,
+  +2 st +10% x2, 129 s loop; CC0). Board now shows only 'Picked' + 'Battle floors'. Battle floors still open
+  (loves: battle8_energy, battle_suite; the RPG 8 -> RPG 10 change should land RPG 8's build on RPG 10, user liked C).

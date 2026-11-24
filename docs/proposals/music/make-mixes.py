@@ -61,6 +61,10 @@ MIXES = {
   # BOSS RISING: RPG 14 twice, then twice one semitone higher and 6% faster (the fight heats up), then round again.
   'boss_rising': ([], [('rb14', 0, 8, {}), ('rb14', 0, 8, {}), ('rb14', 0, 8, {'pitch': ST, 'tempo': 1.06}),
                        ('rb14', 0, 8, {'pitch': ST, 'tempo': 1.06})]),
+  # BOSS FINAL (user pick: 'the mix of B and C'): normal x2, rising (+1 st, +6%) x2, rage (+2 st, +10%) x2, round again.
+  'boss_final': ([], [('rb14', 0, 8, {}), ('rb14', 0, 8, {}), ('rb14', 0, 8, {'pitch': ST, 'tempo': 1.06}),
+                      ('rb14', 0, 8, {'pitch': ST, 'tempo': 1.06}), ('rb14', 0, 8, {'pitch': ST ** 2, 'tempo': 1.10}),
+                      ('rb14', 0, 8, {'pitch': ST ** 2, 'tempo': 1.10})]),
   # BOSS RAGE: RPG 14 two semitones up and 10% faster: a 'boss below half HP' version.
   'boss_rage': ([], [('rb14', 0, 8, {'pitch': ST ** 2, 'tempo': 1.10})]),
 }

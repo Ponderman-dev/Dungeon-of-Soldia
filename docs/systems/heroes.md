@@ -72,6 +72,10 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       ONE-ENEMY channel (skill `target: 'enemy'` + `channel` = every wave hits `ch.aimUid`, the next target if it died):
       5 waves of 50% every 120ms, `waveApply` Bleed, `waveOnHit` = on-hit items each hit; 7s cooldown. Smoke Bomb kept.
       review.mjs 3 all (x2): avg floor ~30 -> 28.9 / 31.7 (still 2nd).
+      ROGUE TONE-DOWN (2026-11-24, user picked 'B'): he was 1st (~33-34) because DODGE stacks, not damage (switch-off
+      test: perk -8, own evasion -8, Smoke Bomb -6.5, miss passive -5 floors; crit/bleed ~0). Shadow Step perk +10 -> +5
+      evasion (growth 0.25 -> 0.125), Smoke Bomb squad +30 -> +20 evasion, Dirty Fighting missPercent 20 -> 10.
+      review.mjs 4 all: rogue 32.8 (1st) -> 29.6 (4th; cleric 30.9, samurai 30.1, knight 29.7). Archer still last (~24).
     - **Samurai** ONE-STRIKE MASTER (built session 6; USER KEPT the wide Wind Cutter slash instead of the design's one perfect
       cut): IAIDO v3 (`passive.iaido`): every 3rd hit parried; parried/blocked/dodged hits get a 120% counter-cut with
       `counterCrit` = sure crit (his crit damage), on-hit items roll once (not twice); `evasionFlat` +10 (statUpkeep).

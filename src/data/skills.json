@@ -238,7 +238,7 @@
         "mods": [
           {
             "stat": "evasion",
-            "flat": 30
+            "flat": 20
           }
         ]
       }
@@ -249,7 +249,7 @@
         "durationMs": 4000
       }
     ],
-    "description": "Squad +30 evasion for 4s. All enemies are BLINDED (25% miss)."
+    "description": "Squad +20 evasion for 4s. All enemies are BLINDED (25% miss)."
   },
   "rain_of_arrows": {
     "name": "Rain of Arrows",

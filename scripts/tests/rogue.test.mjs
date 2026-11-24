@@ -70,7 +70,8 @@ const slot = (u, kind) => u.skills.findIndex((x) => x.kind === kind);
 // ---- Smoke Bomb
 { const { s, es, h, rogue } = mk(); s.refreshStats(); const e0 = h.map((x) => x.stats.evasion);
   const ev = s.castSkill(rogue.uid, slot(rogue, 'support'));
-  ok('Smoke Bomb: the whole squad gets +30 evasion', h.every((x, n) => x.stats.evasion === e0[n] + 30));
+  const smoke = skills.smoke_bomb.apply[0].mods[0].flat;
+  ok(`Smoke Bomb: the whole squad gets +${smoke} evasion`, h.every((x, n) => x.stats.evasion === e0[n] + smoke));
   ok('...and every enemy is Blinded', es.every((e) => e.statuses.some((x) => x.type === 'blind')));
   const hp0 = es.map((e) => e.hp); void hp0;
   for (let t = 0; t < 4200; t += 50) s.update(50);

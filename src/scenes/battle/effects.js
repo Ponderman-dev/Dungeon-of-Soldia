@@ -10,7 +10,8 @@ import { itemIconKey } from '../../entities/itemIconTexture.js';
 import itemFxData from '../../data/itemFx.json';
 import * as itemFx from '../../systems/itemFx.js';
 import { statusLook, iceBreak, bodyBox } from '../../systems/statusFx.js';
-import { eliteGlow, crownPixels } from '../../systems/eliteFx.js';
+import { eliteGlow, crownPixels, eliteSprite, eliteBodyColor, eliteOverlay, ELITE_FRAME_MS, ELITE_FRAMES } from '../../systems/eliteFx.js';
+import { artPixels, partArt } from '../../systems/pixelArt.js';
 import * as bossFx from '../../systems/bossFx.js';
 import { projectileFx, impactFx, critFx, IMPACT_MS, ELEMENT_SLASH, CRIT_MS, MOMENT_MS, dodgeFx, blockFx, soakFx, shieldBreakFx, healFx, graceFx, deathPuffFx } from '../../systems/hitFx.js';
 import { BAR_WIDTH, POP_REPEAT_MS, FX, itemDefs, TUNE, charScale, DEPTH } from './shared.js';
@@ -102,6 +103,7 @@ export const effectsMethods = {
     const g = this.eliteG, cg = this.crownG;
     g.clear();
     cg.clear();
+    if (this.eliteTopG) this.eliteTopG.clear();
     const crown = (this.crown = this.crown || crownPixels());
     for (const v of this.views.values()) {
       const u = v.unit;
@@ -113,10 +115,29 @@ export const effectsMethods = {
       if (!v.box) v.box = bodyBox(u.def.parts, u.def.height);
       const color = (u.elite.colorInt ??= Phaser.Display.Color.HexStringToColor(u.elite.color).color);
       this.paintFx(g, v, eliteGlow(v.box, color, now + u.uid * 97));
+      this.drawEliteBody(v, now + u.uid * 97);
       if (!v.bg.visible) continue;
       const P = 2; // crown pixel size
       const x0 = v.bg.x - BAR_WIDTH / 2 - 1 - 6 * P, y0 = v.bg.y - 2 * P;
       for (const [c, r, col] of crown) cg.fillStyle(col, v.bg.alpha).fillRect(x0 + c * P, y0 + r * P, P, P);
+    }
+  },
+
+  // An elite's BODY (session 54, user picks; systems/eliteFx.js): its element's colours baked into the sprite (8 frames
+  // that cycle) + the moving extras and its trait's sign, painted over it in its own pixels (mirrored with its facing).
+  drawEliteBody(v, t) {
+    const u = v.unit, ch = v.ch;
+    if (!this.eliteTopG) this.eliteTopG = this.add.graphics().setDepth(DEPTH.heroBar - 0.07);
+    if (!v.eliteSprite) {
+      const s = (v.eliteSprite = eliteSprite(u.def.parts, (p) => artPixels(partArt(p))));
+      ch.setEliteLook({ key: `${u.elite.element}:${u.def.id || u.def.name}`, color: (c, gx, gy, f) => eliteBodyColor(u.elite.element, c, s.at.get(gx + ',' + gy) || null, f) });
+    }
+    ch.setEliteFrame(Math.floor(t / ELITE_FRAME_MS) % ELITE_FRAMES);
+    if (!ch.visible || ch.alpha <= 0) return;
+    const sx = ch.scaleX, sy = Math.abs(ch.scaleY), w = Math.abs(sx), g = this.eliteTopG;
+    for (const [gx, gy, c, a] of eliteOverlay(u.elite.element, u.elite.trait, v.eliteSprite, t)) {
+      g.fillStyle(c, a * ch.alpha);
+      g.fillRect(sx > 0 ? ch.x + gx * sx : ch.x + (gx + 1) * sx, ch.y + gy * sy, w, sy);
     }
   },
 

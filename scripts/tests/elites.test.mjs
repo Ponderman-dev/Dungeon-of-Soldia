@@ -153,3 +153,18 @@ ok('a second elite: none before 60, 15% at 60, 35% from 100', pointValue(A.direc
   }
   ok('every element x trait fights without errors', errors === 0, `${done} fights`);
 }
+// Session 54 (user picks): an elite's BODY shows its element (Living look) and its trait (a sign on the body).
+import { eliteSprite, eliteBodyColor, eliteOverlay, ELITE_FRAMES } from '../../src/systems/eliteFx.js';
+import { artPixels, partArt } from '../../src/systems/pixelArt.js';
+{
+  const sp = eliteSprite(enemyDefs.goblin.parts, (p) => artPixels(partArt(p)));
+  const p0 = sp.list[0];
+  ok('the elite sprite knows its body pixels, edges and outline', sp.list.length > 30 && sp.outline.length > 10 && sp.list.some((p) => p.top) && sp.at.size === sp.list.length);
+  ok('every element recolours the body', Object.keys(E.elements).every((el) => sp.list.some((p) => eliteBodyColor(el, p.c, p, 0) !== p.c)));
+  ok('the body look moves between frames (Burning edge flickers)', new Set([...Array(ELITE_FRAMES).keys()].map((f) => sp.list.filter((p) => p.top).map((p) => eliteBodyColor('burning', p.c, p, f)).join())).size > 1);
+  ok('a pixel off the body (the weapon) is still tinted', eliteBodyColor('frozen', p0.c, null, 0) !== p0.c);
+  const clean = (d) => d.every((q) => q.length === 4 && q.every((v) => typeof v === 'number' && !Number.isNaN(v)) && q[3] > 0 && q[3] <= 1);
+  const els = Object.keys(E.elements), trs = Object.keys(E.traits);
+  ok('every element and trait draws clean extras', els.every((el) => trs.every((tr) => [0, 333, 1200, 5000].every((t) => clean(eliteOverlay(el, tr, sp, t))))));
+  ok('every trait shows a sign on the body', trs.every((tr) => [0, 200, 500, 900].some((t) => eliteOverlay('nothing', tr, sp, t).length > 0)), trs.filter((tr) => ![0, 200, 500, 900].some((t) => eliteOverlay('nothing', tr, sp, t).length > 0)).join());
+}

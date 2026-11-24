@@ -48,7 +48,7 @@ export default class Character extends Phaser.GameObjects.Container {
         name, x, y, angle: 0, restX: x, restY: y, restAngle: 0,
         width: w, height: h, originX: ax / w, originY: ay / h,
         pixels: artPixels(art), anchor: [ax, ay], key: artKey(art), image,
-        wash: null, look: null, shown: null, top0: p.y - h / 2,
+        wash: null, look: null, shown: null, top0: p.y - h / 2, left0: p.x - w / 2,
       };
       this.parts[name] = part;
       this.add(image);
@@ -170,7 +170,8 @@ export default class Character extends Phaser.GameObjects.Container {
   texture(part) {
     const wash = part.wash ? `${part.wash.color.toString(16)}-${Math.round(part.wash.amount * 100)}` : '';
     const look = part.look ? `-${part.look.tint ? part.look.tint[0].toString(16) + '-' + Math.round(part.look.tint[1] * 100) : ''}-i${Math.round(part.look.ice * 100)}` : '';
-    const key = `px-${part.key}-${wash}${look}`;
+    const elite = this.elite ? `-e${this.elite.key}${this.eliteFrame}` : '';
+    const key = `px-${part.key}-${wash}${look}${elite}`;
     const iceCut = part.look && part.look.ice > 0 ? -part.look.ice * ((this.def.height || 24) + 2) : Infinity;
     const textures = this.scene.textures;
     if (!textures.exists(key)) {
@@ -179,6 +180,7 @@ export default class Character extends Phaser.GameObjects.Container {
       part.pixels.forEach((row, y) =>
         row.forEach((c, x) => {
           if (c === null) return;
+          if (this.elite) c = this.elite.color(c, Math.floor(part.left0 + x), Math.floor(part.top0 + y), this.eliteFrame, part.name); // an elite's body look (systems/eliteFx.js)
           let col = part.top0 + y + 1 > iceCut ? iceColor(c) : c; // Freeze: ice climbs up from the feet
           if (part.look && part.look.tint) col = mixColor(col, part.look.tint[0], part.look.tint[1]);
           if (part.wash) col = mixColor(col, part.wash.color, part.wash.amount);
@@ -291,6 +293,20 @@ export default class Character extends Phaser.GameObjects.Container {
     for (const t of this.castTweens || []) t.stop();
     this.castTweens = [];
     if (!keepWeapon && this.swingTween) this.swingTween.stop();
+  }
+
+  // An ELITE's body look (systems/eliteFx.js): look = { key, color(c, gx, gy, frame, partName) } recolours every pixel,
+  // baked per frame; setEliteFrame() steps through the frames (each frame's pictures are made once and shared).
+  setEliteLook(look) {
+    this.elite = look;
+    this.eliteFrame = 0;
+    this.syncParts();
+  }
+
+  setEliteFrame(f) {
+    if (!this.elite || f === this.eliteFrame) return;
+    this.eliteFrame = f;
+    this.syncParts();
   }
 
   // A faint colour wash over the whole character (morale): every part is mixed `amount` (0 to 1)

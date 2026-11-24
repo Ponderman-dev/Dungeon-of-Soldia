@@ -87,7 +87,7 @@ for oid, f, t, d in [('mix_sting_victory', MIX + '/sting_victory_preview.wav', '
 # PICKED (session 53): title + camp = mix_title, squad = RPG 12 as is, boss = boss_final. The board now shows only
 # these (screen 'picked') + the battle floors; everything else is hidden (the files stay published).
 add('mix_boss_final', MIX + '/boss_final_preview.wav', 'boss', 'pick', 'Boss: rising into rage', 'Your pick (B + C): RPG 14 twice, then one step higher and faster (0:45), then two steps higher and faster again (1:28), then round again (2:09).', 'Pixel-boy, rearranged', CC0, 250)
-PICK = {'mix:title': 'Title + Base camp', 'free:rb12': 'Hero select', 'mix:battle8_long': 'Battle floors (takes turns)', 'mix:battle10_long': 'Battle floors (takes turns)', 'mix:boss_final': 'Boss fights'}
+PICK = {'mix:title': 'Title + Base camp', 'free:rb12': 'Hero select', 'mix:battle_suite_long': 'Battle floors (takes turns)', 'mix:battle8_long': 'Battle floors (takes turns)', 'mix:battle10_long': 'Battle floors (takes turns)', 'mix:boss_final': 'Boss fights'}
 for o in opts:
     if o['id'] in PICK: o['screen'] = 'picked'; o['tag'] = 'pick'; o['title'] = PICK[o['id']] + ': ' + o['title'].replace('Boss: ', '')
 opts = [o for o in opts if o['screen'] == 'picked']   # user: battle = F + G taking turns -> the soundtrack is complete

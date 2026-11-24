@@ -228,7 +228,8 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   Too many controls at once for this user: one clear job per tool, 1-2 taps + PLAY.
 - FINAL PICKS (session 53): TITLE + BASE CAMP = xDeviruchi 'Title Theme (Loop).wav' (8-bit pack, CC BY-SA 4.0, credit
   'xDeviruchi'); HERO SELECT = RPG Battle Theme 12 as is (CC0); BOSS = mix boss_final (RPG 14 x2, +1 st +6% x2,
-  +2 st +10% x2, 129 s loop; CC0). BATTLE FLOORS = mixes battle8_long + battle10_long (CC0), TAKING TURNS: when
+  +2 st +10% x2, 129 s loop; CC0). BATTLE FLOORS = mixes battle_suite_long + battle8_long + battle10_long (CC0;
+  the suite added after: 'E Pokemon style is kind of good, add it'), TAKING TURNS: when
   one has played, the other starts (user: 'just use F and G, after a song ends use the other; simplify'). No
   medleys / song-to-song joins. THE SOUNDTRACK IS COMPLETE; the board shows only these 5 ('Your soundtrack').
   Game files: rebuild with make-mixes.py (ids title = xD loop file as is; battle8_long has intro + loop; battle10_long,

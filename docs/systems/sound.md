@@ -153,3 +153,8 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   quieter), pads dropped, the glock 'dbl' doubling dropped, drums = triangle-sweep kick, noise snare / hats / crash.
   NO reverb, lowpass 7 kHz, limiter. Balance matched to the user's LOVED tracks (measured: tune 300-3k Hz about
   -1.5..-3 dB, bass < 150 Hz -6..-9 dB, treble > 5 kHz about -19 dB; boss songs a bit heavier).
+- ROUND 7 RESULT = FINAL LOVES (db `music`, 2026-11-24): title = xDeviruchi 'Title Theme' (CC BY-SA 4.0, credit) +
+  Ninja Adventure Theme 6 (Pixel-boy, CC0); squad = RPG Battle Theme 12; battle = RPG Battle Theme 8 + Theme 10;
+  boss = RPG Battle Theme 14 (all Pixel-boy superpowers-asset-packs, CC0). Every code song (chip + real) was NO.
+  The board page now shows only these 6 ('your loves'). NEXT (fresh session): the in-game music player
+  (src/audio/music.js: loop per screen, crossfade, MUSIC volume from settings, mute), files from the sources above.

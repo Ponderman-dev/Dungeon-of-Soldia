@@ -7,13 +7,13 @@ import { floorArtPixels } from '../systems/floorArt.js';
 export const FLOOR_PIXEL = floorArt.pixel;
 
 // CLOSE-UP (session 55, user: the squad screen is a close-up view): the same floor drawn with bigger pixels (`pixel`
-// screen px per art px). Things placed in art px (pillars, torches, props) are moved so they stay at the same screen spot.
+// screen px per art px). Pillars and torches are moved so they stay at the same screen spot; no props (user).
 export function floorArtAt(pixel) {
   if (pixel === floorArt.pixel) return floorArt;
   const k = floorArt.pixel / pixel, at = (v) => Math.round(v * k);
   const D = floorArt.decor;
   return { ...floorArt, pillars: { ...floorArt.pillars, x: floorArt.pillars.x.map(at) }, torchPillars: floorArt.torchPillars.map(at),
-    decor: { ...D, props: D.props.map(([n, x, y, f]) => [n, at(x), at(y), f]), plankPiles: D.plankPiles.map(([x, y]) => [at(x), at(y)]) } };
+    decor: { ...D, props: null } }; // no barrels / crates on the squad screen (user)
 }
 
 export function floorTextureKey(scene, tint, variant, wallH, pixel = floorArt.pixel) {

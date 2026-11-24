@@ -100,7 +100,7 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
 - Pause = Battle pauses, `PauseScene` opens over it: PAUSED window with RESUME (main button), SETTINGS (the Settings page
   over the pause window, '< BACK' returns; DELETE SAVE there also stops the fight), GIVE UP (red; asks 'GIVE UP? The run
   ends here. Your best floor is kept.' FIGHT ON / GIVE UP) -> `BattleScene.giveUp()` = `onLoss()` (defeat screen, game
-  over summary, run saved). A run can't be saved halfway yet. Back in the fight the settings are read again.
+  over summary, run saved). Given up during the floor walk-in: `startFighting` / `startRoom` see mode 'lost' and never start (session 55 fix). A run can't be saved halfway yet. Back in the fight the settings are read again.
 
 ## FIGHT HUD: hero slots (session 44, user picked 'L' from the minimal mock-ups)
 - Per hero, bottom of the screen (`drawHeroSlots`, `drawDock` in `scenes/battle/hud.js`; numbers in `shared.js`

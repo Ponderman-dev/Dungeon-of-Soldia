@@ -87,10 +87,11 @@ for oid, f, t, d in [('mix_sting_victory', MIX + '/sting_victory_preview.wav', '
 # PICKED (session 53): title + camp = mix_title, squad = RPG 12 as is, boss = boss_final. The board now shows only
 # these (screen 'picked') + the battle floors; everything else is hidden (the files stay published).
 add('mix_boss_final', MIX + '/boss_final_preview.wav', 'boss', 'pick', 'Boss: rising into rage', 'Your pick (B + C): RPG 14 twice, then one step higher and faster (0:45), then two steps higher and faster again (1:28), then round again (2:09).', 'Pixel-boy, rearranged', CC0, 250)
-PICK = {'free:rb12': 'Hero select', 'mix:title': 'Title + Base camp', 'mix:boss_final': 'Boss fights'}
+PICK = {'mix:title': 'Title + Base camp', 'free:rb12': 'Hero select', 'mix:battle8_long': 'Battle floors (takes turns)', 'mix:battle10_long': 'Battle floors (takes turns)', 'mix:boss_final': 'Boss fights'}
 for o in opts:
     if o['id'] in PICK: o['screen'] = 'picked'; o['tag'] = 'pick'; o['title'] = PICK[o['id']] + ': ' + o['title'].replace('Boss: ', '')
-opts = [o for o in opts if o['screen'] in ('picked', 'battle')]
+opts = [o for o in opts if o['screen'] == 'picked']   # user: battle = F + G taking turns -> the soundtrack is complete
+opts.sort(key=lambda o: list(PICK).index(o['id']))
 # ---------- page ----------
 T = open(os.path.join(HERE, 'board2-template.html')).read()
 INTRO = '<p class="lede">Round 9: <b>your loves, rearranged into a soundtrack</b>, plus <b>22 new xDeviruchi songs</b> from their 16-bit pack (2025): the same console style as your loves. Gold <b>YOUR PICK</b> = your loves as they are. Blue <b>MIX</b> = your loves cut up, reordered and joined for the game (the preview plays the start once, then the loop twice, so you can hear if the loop point is smooth). Green <b>NEW</b> = the new xDeviruchi songs. Tap <b>PLAY</b>, then <b>LOVE</b> / <b>MAYBE</b> / <b>NO</b>.</p>'
@@ -99,7 +100,7 @@ T = T.replace('Soldia Music Board · Round 2', 'Soldia Music Board · Round 9')
 T = re.sub(r'<div class="key">.*?</div>', '<div class="key"><span><span class="tag CC0">CC0</span> free, no credit needed.</span><span><span class="tag lic">CREDIT</span> free, but the game\'s credits must name the composer (normal for games).</span></div>', T, count=1, flags=re.S)
 T = T.replace('<p>Other music ideas: a song per boss, a short victory jingle after a floor, a Game Over tune…</p>', '<p>Ideas: a rage version when the boss is low, a shop song at the camp merchant, a different song every 20 floors… Anything you want changed in a MIX (e.g. "battle suite but no speed-up")?</p>')
 T = re.sub(r'<details class="lic">.*?</details>', '<details class="lic"><summary>About the credit lines</summary><p>xDeviruchi\'s 16-bit pack: free in a game you sell, and we may edit it; the credits must say "Original music by Marllon Silva (xDeviruchi)". The 8-bit Title Theme is CC BY-SA 4.0: credit "xDeviruchi", and our edited loop stays CC BY-SA. Pixel-boy\'s songs are CC0: no credit needed (we will thank them anyway). I keep this list for the credits screen.</p></details>', T, count=1, flags=re.S)
-SCREENS = "const SCREENS = [\n  ['picked', 'Picked', 'Your choices so far (title + camp, hero select, boss).'],\n  ['battle', 'Battle floors', 'Now: the battle floors.'],\n];"
+SCREENS = "const SCREENS = [\n  ['picked', 'Your soundtrack', 'Every screen is picked. Next: putting the music into the game.'],\n];"
 T = re.sub(r'const SCREENS = \[.*?\n\];', lambda m: SCREENS, T, count=1, flags=re.S)
 T = T.replace("const ORDER = { pick: 0, ours: 1, new: 2, r1: 3 };", "const ORDER = { pick: 0, mix: 1, new: 2 };")
 T = T.replace(""": o.tag === 'r1' ? '<span class="badge r1">ROUND 1</span>'""", """: o.tag === 'mix' ? '<span class="badge mix">MIX</span>'""")

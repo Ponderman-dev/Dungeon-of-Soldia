@@ -228,5 +228,9 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   Too many controls at once for this user: one clear job per tool, 1-2 taps + PLAY.
 - FINAL PICKS (session 53): TITLE + BASE CAMP = xDeviruchi 'Title Theme (Loop).wav' (8-bit pack, CC BY-SA 4.0, credit
   'xDeviruchi'); HERO SELECT = RPG Battle Theme 12 as is (CC0); BOSS = mix boss_final (RPG 14 x2, +1 st +6% x2,
-  +2 st +10% x2, 129 s loop; CC0). Board now shows only 'Picked' + 'Battle floors'. Battle floors still open
-  (loves: battle8_energy, battle_suite; the RPG 8 -> RPG 10 change should land RPG 8's build on RPG 10, user liked C).
+  +2 st +10% x2, 129 s loop; CC0). BATTLE FLOORS = mixes battle8_long + battle10_long (CC0), TAKING TURNS: when
+  one has played, the other starts (user: 'just use F and G, after a song ends use the other; simplify'). No
+  medleys / song-to-song joins. THE SOUNDTRACK IS COMPLETE; the board shows only these 5 ('Your soundtrack').
+  Game files: rebuild with make-mixes.py (ids title = xD loop file as is; battle8_long has intro + loop; battle10_long,
+  boss_final = loop only; RPG 12 = the original file, whole-file loop). Audio is NOT in the repo yet.
+  NEXT: the in-game MUSIC PLAYER (src/audio/music.js) with these files. Credits: xDeviruchi (CC BY-SA 4.0, title).

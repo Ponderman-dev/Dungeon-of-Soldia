@@ -9,12 +9,10 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.join(HERE, '..
 OUT = os.path.join(ROOT, 'src/assets/music'); os.makedirs(OUT, exist_ok=True)
 TARGET = -16.0
 # track id -> (intro file or None, loop file)
+# (battle_suite_long / battle8_long / battle10_long were here; the user removed battle-floor music)
 TRACKS = {
   'title': (None, os.path.join(SRC, 'xd_title_loop.wav')),   # xDeviruchi 'Title Theme (Loop).wav' (8-bit pack)
   'squad': (None, os.path.join(SRC, 'superpowers-asset-packs/rpg-battle-system/music/theme-12.ogg')),
-  'battle_suite_long': (os.path.join(MIX, 'battle_suite_long_intro.wav'), os.path.join(MIX, 'battle_suite_long_loop.wav')),
-  'battle8_long': (os.path.join(MIX, 'battle8_long_intro.wav'), os.path.join(MIX, 'battle8_long_loop.wav')),
-  'battle10_long': (None, os.path.join(MIX, 'battle10_long_loop.wav')),
   'boss_final': (None, os.path.join(MIX, 'boss_final_loop.wav')),
 }
 def run(cmd): return subprocess.run(cmd, capture_output=True, text=True, check=True)

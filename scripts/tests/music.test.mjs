@@ -18,8 +18,9 @@ const dead = files.filter((f) => !Object.values(data.tracks).some((t) => t.file 
 ok('every music file is played by some screen (no dead weight in the page)', dead.length === 0, dead.join());
 // rules
 ok('title and camp share the title song (it keeps playing between them)', trackFor('title', 0, data) === trackFor('camp', 0, data));
-const list = data.screens.battle;
-ok('battle floors: the songs take turns and wrap around', isTurnTrack('battle', data) && list.every((id, i) => trackFor('battle', i, data) === id) && trackFor('battle', list.length, data) === list[0]);
+const fake = { screens: { floors: ['a', 'b', 'c'] } };
+ok('a LIST screen takes turns and wraps around (rule kept for later)', isTurnTrack('floors', fake) && ['a', 'b', 'c', 'a'].every((id, i) => trackFor('floors', i, fake) === id));
+ok('battle floors are silent (user removed the battle songs)', trackFor('battle', 0, data) === null);
 ok('boss floors play one song, not a list', !isTurnTrack('boss', data) && !!trackFor('boss', 0, data));
 ok('game over and BEGIN DESCENT are silent', trackFor('gameOver', 0, data) === null && trackFor('descent', 0, data) === null);
 ok('music sits under the sound effects (volume at most 0.3, user: 0.5 drowned them)', data.volume > 0 && data.volume <= 0.3);
@@ -29,6 +30,7 @@ ok('MUSIC 10 = music.json volume, MUSIC 0 = silent, muted = silent',
 // scenes say where we are
 const src = (f) => fs.readFileSync(new URL('../../src/scenes/' + f, import.meta.url), 'utf8');
 const plays = ['TitleScene.js', 'BaseScene.js', 'SquadScene.js', 'BattleScene.js', 'GameOverScene.js'].map(src).join('\n');
-const screens = new Set([...plays.matchAll(/music\.play\('([a-zA-Z]+)'/g)].map((m) => m[1]).concat(/'boss' : 'battle'/.test(plays) ? ['boss', 'battle'] : []));
+const screens = new Set([...plays.matchAll(/music\.play\('([a-zA-Z]+)'/g)].map((m) => m[1]));
 ok('every music.json screen is played by a scene', Object.keys(data.screens).every((s) => screens.has(s)), Object.keys(data.screens).filter((s) => !screens.has(s)).join());
+ok('the boss song starts only after the roar (in startFighting, past the roar wait)', /bossIntroDone = false;\n\s*if \(this\.state\.enemies\.some\(\(u\) => u\.def\.boss\)\) music\.play\('boss'\)/.test(src('BattleScene.js')));
 ok('the MUSIC bar and mute button update the music', /music\.refresh\(\)/.test(src('SettingsScene.js')) && /music\.refresh\(\)/.test(src('SquadScene.js')));

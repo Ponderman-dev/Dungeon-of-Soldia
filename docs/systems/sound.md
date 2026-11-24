@@ -240,7 +240,9 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   (screens -> track or a LIST that takes turns, null = silence; tracks: file, loopStart, seconds, credit; volume 0.2
   at MUSIC 10 (0.5 drowned the sound effects, user), SquadScene.descend() plays 'descent' (null: the squad song fades out),
   fadeSec 1 between screens, turnFadeSec 2.5). Scenes call `music.play(screen)`: TitleScene 'title', BaseScene 'camp'
-  (same song: keeps playing), SquadScene 'squad', BattleScene.buildFloor 'boss' (a boss enemy) or 'battle',
+  (same song: keeps playing), SquadScene 'squad', BattleScene.buildFloor 'battle' (= null: BATTLE FLOORS ARE SILENT,
+  user: 'the battle floor songs are not good, remove everything'; the 3 battle mp3s deleted), startFighting 'boss' when
+  a boss is there (= AFTER the roar: a boss floor is silent until the roar ends, user),
   GameOverScene 'gameOver' (null = fades out). A list song plays intro + loop once, then fades into the next; leaving
   the list (boss floor) and coming back = the next song. MUSIC bar + mute: `music.refresh()` (SettingsScene save /
   delete save, SquadScene mute button). START: the player tries to start at once (user: 'I need the music to play

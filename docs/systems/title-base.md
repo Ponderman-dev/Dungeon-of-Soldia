@@ -142,7 +142,10 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   changeSetting / stepSetting; values saved in progress.settings). REAL: BATTLE SPEED (BattleScene.applySettings: scene
   time + tweens + fight step x speed), SCREEN SHAKE off (camera shake does nothing), DAMAGE NUMBERS off (popText skips
   numbers, words still show), VIBRATION (navigator.vibrate on hero hits, gap in settings.json), EFFECTS volume (sfx.refresh,
-  0 = silent). MUSIC is saved but there is no music yet. WALLET / BACK UP / CREDITS / HELP = 'Coming soon'. DELETE SAVE =
+  0 = silent). MUSIC = music volume (music.refresh; sound.md MUSIC). WALLET / BACK UP = 'Coming soon'. CREDITS /
+  HELP (session 53) = a scrolling text window (`entities/infoWindow.js`, data `info.json`: title + sections {head,
+  lines}; HELP shows glossary.json basics by title + its own lines; drag / wheel scrolls when taller than the window;
+  CLOSE at the bottom). Credits must follow the licences (test: info.test.mjs). DELETE SAVE =
   red KEEP / DELETE window, then `progress.deleteProgress()` and back to the title. Test: settings.test.mjs.
 - SETTINGS (gear button) PICKED D (`settings-picked-D.png`; others tried: `settings-variations.png` = A paired
   buttons, B switches, C classic RPG '< value >' list). User found a lone ON button unclear ('how do I interact'), so

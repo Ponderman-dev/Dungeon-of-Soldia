@@ -243,7 +243,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   (same song: keeps playing), SquadScene 'squad', BattleScene.buildFloor 'battle' (= null: BATTLE FLOORS ARE SILENT,
   user: 'the battle floor songs are not good, remove everything'; the 3 battle mp3s deleted), startFighting 'boss' when
   a boss is there (= AFTER the roar: a boss floor is silent until the roar ends, user),
-  GameOverScene 'gameOver' (null = fades out). A list song plays intro + loop once, then fades into the next; leaving
+  GameOverScene: NO call (the defeat screen keeps the floor's song, user). A list song plays intro + loop once, then fades into the next; leaving
   the list (boss floor) and coming back = the next song. MUSIC bar + mute: `music.refresh()` (SettingsScene save /
   delete save, SquadScene mute button). START: the player tries to start at once (user: 'I need the music to play
   at the beginning'); a BROWSER blocks sound until the first tap (autoplay rule), so there the first tap starts it.

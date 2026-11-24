@@ -11,7 +11,6 @@ import items from '../data/items.json';
 import dungeons from '../data/dungeons.json';
 import { clockText } from '../systems/runStats.js';
 import * as sfx from '../audio/sfx.js';
-import * as music from '../audio/music.js';
 
 // The game-over summary (docs/systems/title-base.md section 5, user's pick B), after the defeat screen's CONTINUE.
 // Page 1: the run (floor, time, kills, NEW BEST!), the 3 heroes on the dungeon floor (tap one = gold outline + bigger)
@@ -38,7 +37,7 @@ export default class GameOverScene extends Phaser.Scene {
   }
 
   create() {
-    music.play('gameOver');
+    // (no music.play: the defeat screen keeps the floor's song, user: a boss floor's song plays on, a normal floor stays silent)
     pageBackdrop(this, Number(G.bg));
     this.page = null;
     this.showSummary();

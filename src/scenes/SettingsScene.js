@@ -7,6 +7,7 @@ import { loadProgress, saveProgress, deleteProgress } from '../systems/progress.
 import { readSettings, changeSetting, stepSetting } from '../systems/settings.js';
 import * as sfx from '../audio/sfx.js';
 import * as music from '../audio/music.js';
+import { infoWindow } from '../entities/infoWindow.js';
 
 // The Settings screen (docs/systems/title-base.md section 5, user's pick D): tabs SOUND / GAME / MORE, each setting a
 // card (gold name, small hint, big buttons under it; the chosen one FILLED gold). Opened over the camp or the title
@@ -80,7 +81,7 @@ export default class SettingsScene extends Phaser.Scene {
     const x = L.side, W = GAME_WIDTH - L.side * 2, P = L.pad, inner = W - P * 2;
     if (c.type === 'pair') { // two plain buttons side by side, no card
       const w = (W - L.rowGap) / 2;
-      c.buttons.forEach((b, i) => this.button(x + i * (w + L.rowGap), y, w, L.plainH, b.label, { look: 'solid', into: page, onTap: () => this.soon(b.label, b.soon) }));
+      c.buttons.forEach((b, i) => this.button(x + i * (w + L.rowGap), y, w, L.plainH, b.label, { look: 'solid', into: page, onTap: () => (b.id === 'credits' || b.id === 'help' ? this.info(b.id) : this.soon(b.label, b.soon)) }));
       return y + L.plainH;
     }
     if (c.type === 'danger') {
@@ -122,6 +123,12 @@ export default class SettingsScene extends Phaser.Scene {
     music.refresh();
     sfx.play('tap');
     this.showTab(lastTab);
+  }
+
+  // CREDITS / HELP: the scrolling text window (entities/infoWindow.js, data/info.json).
+  info(kind) {
+    if (this.modal) return;
+    this.modal = infoWindow(this, kind, { depth: DEPTH.modal, onClose: () => this.time.delayedCall(0, () => { this.modal = null; }) });
   }
 
   soon(title, who) {

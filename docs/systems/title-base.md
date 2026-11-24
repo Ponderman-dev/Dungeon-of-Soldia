@@ -95,7 +95,16 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   (user: 'animate these'): short loops (vLoop / vLater / vTween, kept in this.vMotion and stopped by newPage ->
   visualStop), in the fight's own look (damage numbers skillFx.attackColor, crits / LEVEL UP UI.fightGold, weak '!' /
   resist '…', 'Miss', reaction words + colours from events.js). Texts were shortened (user: 'remove unnecessary words').
-  Test: glossary.test.mjs (every basic has its picture, only real heroes / enemies / items). Grave pixels shared: `entities/grave.js`. One line per status + tab bad/good/control, shortNames, hiddenEnemies, layout). Chapters with found
+  Test: glossary.test.mjs (every basic has its picture, only real heroes / enemies / items).
+  ROUND 2 (user: 'not what it looks like in game'): every picture now uses the FIGHT'S OWN pieces: hit effects =
+  systems/hitFx.js recipes (projectileFx / impactFx / critFx / dodgeFx / blockFx / soakFx / deathPuffFx) painted in
+  character pixels by vFxPaint (shots at shotScale 4 = bigger than in the fight, user); health bars like makeView (green /
+  red, light-blue shield line, 'Lv' label); item procs = the framed icon popping over the HERO (iconPop); statuses = the
+  icon over the ENEMY's bar; drag = orders.js arrow (red onto an enemy + red ring, white onto the floor + white ring,
+  orange order rings); tap = the red ring burst; LEVEL UP = 8px peach two lines over the bar. CRIT AND DODGE shows 4
+  fights (crit, dodge 'Miss', block 'Blocked!', shield 'Shield -12'). REACTIONS removed (user: Mage-only, not a basic).
+  Holy removed from DAMAGE TYPES (user: 'we don't have holy damage'; NOTE: the Cleric's smite / holy_nova still have
+  damageType holy in skills.json, and some enemies are weak to holy: ask the user before changing those). Grave pixels shared: `entities/grave.js`. One line per status + tab bad/good/control, shortNames, hiddenEnemies, layout). Chapters with found
   counts: BASICS (2 pages), STATUSES (tabs, coloured tag or '???'), ENEMIES (12 per page + card: floor-1 stats, hits
   with, weak/resists, times beaten), BOSSES (shadows + floor until beaten), ITEMS (36 per page + card; the card shows the picked item BIG in a box on its right, layout itemGrid.bigIcon, and grows to fit long text, user session 53), HEROES (opens
   HeroesScene with from 'Glossary', '< BACK'). Memory: `systems/glossary.js` (noteEvents in BattleScene.showEvents:

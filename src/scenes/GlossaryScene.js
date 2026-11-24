@@ -171,7 +171,7 @@ export default class GlossaryScene extends Phaser.Scene {
       let h = B.rowH;
       if (open) {
         let cy = y + B.rowH;
-        if (b.visual) { this.basicVisual(page, b.visual, x + P, cy, W - P * 2, B.picH); cy += B.picH + P; }
+        if (b.visual) { const ph = this.pictureHeight(b.visual); this.basicVisual(page, b.visual, x + P, cy, W - P * 2, ph); cy += ph + P; }
         const t = this.text(page, x + P, cy, b.text, 'small', UI.text, { wordWrap: { width: W - P * 2 }, lineSpacing: 6 });
         h = cy + t.height + P - y;
       }

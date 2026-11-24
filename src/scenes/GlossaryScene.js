@@ -60,6 +60,7 @@ export default class GlossaryScene extends Phaser.Scene {
   // ---- helpers -----------------------------------------------------------------------------------
 
   newPage() {
+    this.visualStop(); // the basics pictures' loops stop with their page
     if (this.page) this.page.destroy();
     this.page = this.add.container(0, 0);
     return this.page;

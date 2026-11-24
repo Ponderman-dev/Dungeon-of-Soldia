@@ -81,7 +81,7 @@
       "floor": { "layout": "squares", "cell": 16, "highlight": 5, "cracks": 22, "dirtPatches": 3, "grassTufts": 40, "pebbles": 12, "mossSpecks": 90 },
       "decor": { "props": [["crate", 4, 176], ["crate", 12, 188], ["crate", 116, 140]] } },
     "D": { "grain": 0.03,
-      "wall": { "sides": 9, "vines": 14, "vineLen": [20, 50], "caps": { "y": 2, "h": 6, "w": 8, "light": 16 } },
+      "wall": { "vines": 14, "vineLen": [20, 50], "caps": { "y": 2, "h": 6, "w": 8, "light": 16 } },
       "pillars": { "x": [6, 24, 106, 124] },
       "floor": { "layout": "squares", "cell": 16, "highlight": 5, "cracks": 22, "dirtPatches": 3, "grassTufts": 40, "pebbles": 12, "mossSpecks": 90 },
       "decor": { "props": [["barrel", 12, 72], ["barrel", 20, 78], ["crate", 108, 70], ["crate", 110, 80], ["chest", 86, 69], ["crate", 11, 214], ["crate", 19, 225], ["crate", 108, 140]], "plankPiles": [[44, 74]], "bones": 1 } }

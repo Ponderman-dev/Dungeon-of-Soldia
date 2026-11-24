@@ -265,12 +265,20 @@ export default class GlossaryScene extends Phaser.Scene {
     });
     this.pager(page, I.pagerY, at, Math.ceil(ITEM_IDS.length / per), (i) => this.showItems(i));
     const y = I.cardY, P = L.pad;
-    page.add(drawWindow(this.add.graphics(), x, y, W, I.cardH, { line: pick ? gold() : DIM }));
+    const card = this.add.graphics(); page.add(card);
+    drawWindow(card, x, y, W, I.cardH, { line: pick ? gold() : DIM });
     if (!pick) { this.text(page, GAME_WIDTH / 2, y + I.cardH / 2, 'Find items in the dungeon to fill this page.', 'small', UI.dim, { align: 'center', wordWrap: { width: W - P * 2 } }).setOrigin(0.5); return; }
     const def = items[pick], rar = rarities[def.rarity] || {};
-    this.text(page, x + P, y + 14, def.name.toUpperCase(), 'normal', UI.gold, { wordWrap: { width: W - P * 2 } });
-    this.text(page, x + P, y + 40, rar.label || def.rarity.toUpperCase(), 'small', rar.color ? '#' + rar.color.slice(2) : UI.dim);
-    this.text(page, x + P, y + 62, def.description || '', 'small', UI.text, { wordWrap: { width: W - P * 2 }, lineSpacing: 6 });
+    // the picked item's icon, big, in a box at the card's right (user); the text wraps left of it
+    const B = I.bigIcon, bx = x + W - P - B.box, tw = W - P * 2 - B.box - B.gap;
+    page.add(drawWindow(this.add.graphics(), bx, y + P, B.box, B.box, { line: UI.line }));
+    page.add(this.add.image(bx + B.box / 2, y + P + B.box / 2, bareIconKey(this, pick)).setScale(B.scale));
+    const name = this.text(page, x + P, y + 14, def.name.toUpperCase(), 'normal', UI.gold, { wordWrap: { width: tw } });
+    const rarY = y + 14 + Math.max(26, name.height + 8); // a long name takes two lines: the rest moves down
+    this.text(page, x + P, rarY, rar.label || def.rarity.toUpperCase(), 'small', rar.color ? '#' + rar.color.slice(2) : UI.dim);
+    const desc = this.text(page, x + P, rarY + 22, def.description || '', 'small', UI.text, { wordWrap: { width: tw }, lineSpacing: 6 });
+    const need = Math.max(I.cardH, desc.y + desc.height + P - y); // long text: the card grows down to fit it
+    if (need > I.cardH) drawWindow(card.clear(), x, y, W, need, { line: gold() });
   }
 
   // HEROES: the Heroes screen (list, hero page, kit) over the Glossary.

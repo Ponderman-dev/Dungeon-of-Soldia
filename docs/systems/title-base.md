@@ -91,7 +91,7 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
 - GLOSSARY — BUILT (session 37): `GlossaryScene` (camp GLOSSARY button, camp.json `scene`), data `glossary.json`
   (12 basics pages, one line per status + tab bad/good/control, shortNames, hiddenEnemies, layout). Chapters with found
   counts: BASICS (2 pages), STATUSES (tabs, coloured tag or '???'), ENEMIES (12 per page + card: floor-1 stats, hits
-  with, weak/resists, times beaten), BOSSES (shadows + floor until beaten), ITEMS (36 per page + card), HEROES (opens
+  with, weak/resists, times beaten), BOSSES (shadows + floor until beaten), ITEMS (36 per page + card; the card shows the picked item BIG in a box on its right, layout itemGrid.bigIcon, and grows to fit long text, user session 53), HEROES (opens
   HeroesScene with from 'Glossary', '< BACK'). Memory: `systems/glossary.js` (noteEvents in BattleScene.showEvents:
   deaths = beaten, status apply = learned; mergeSeen at every floor clear and in onLoss: floor enemies = met, held
   items = found) -> progress.seen. Test: glossary.test.mjs.

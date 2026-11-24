@@ -60,7 +60,7 @@
     "statusRows": { "y": 180, "h": 56, "gap": 8, "chipW": 88 },
     "enemyGrid": { "countY": 116, "y": 136, "cols": 4, "rows": 3, "h": 84, "gap": 10, "pagerY": 428, "cardY": 484, "cardH": 336 },
     "bossList": { "y": 124, "h": 68, "gap": 8 },
-    "itemGrid": { "countY": 116, "y": 136, "cols": 6, "rows": 6, "cell": 50, "pagerY": 488, "cardY": 540, "cardH": 150 },
+    "itemGrid": { "countY": 116, "y": 136, "cols": 6, "rows": 6, "cell": 50, "pagerY": 488, "cardY": 540, "cardH": 150, "bigIcon": { "box": 84, "scale": 4, "gap": 12 } },
     "dim": "0x55556a",
     "bg": "0x0c0b10"
   }

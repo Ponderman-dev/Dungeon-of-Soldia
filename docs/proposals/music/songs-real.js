@@ -326,3 +326,141 @@ REAL.guardian_deep = {
   },
   order: ['A', 'B'],
 };
+
+// ---------- ROUND 5 (user: 'round 4 too cheery / town / open-land; more code music with MORE BASS AND TREBLE') ----------
+// Dungeon action: minor keys, driving bass with a sine SUB under it (render-real.py `sub`) + string basses, and bright
+// octave-up doubles (glock / xylo / harpsichord) + 16th hats for treble. Mastered with a bass + treble boost (make-board5.py).
+const DRIVE = (b, extra = {}) => ({ kick: 'x . . x x . . . x . . x x . . .', snare: '. . . . x . . . . . . . x . . .', rhat: 'x o x o x o x o x o x o x o x o', ...(b === 0 ? { crash: 'x . . . . . . . . . . . . . . .' } : {}), ...extra });
+REAL.deepdelve = {
+  title: 'Deepdelve', screen: 'battle', bpm: 140,
+  desc: 'NEW (round 5). Driving dungeon fight: a pounding bass line with deep sub, rushing strings, a trumpet tune doubled high by harpsichord, then violins with glockenspiel. D minor.',
+  inst: { str: { sample: 'stacc', vol: 0.45, pan: -0.25 }, bass: { sample: 'pizz', vol: 0.6, sub: 0.6 }, low: { sample: 'basses', vol: 0.45 },
+    tpt: { sample: 'trumpets', vol: 1.6, pan: 0.1 }, hi: { sample: 'harpsichord', vol: 0.4, pan: -0.2 }, vln: { sample: 'violins', vol: 1.8, pan: 0.15 }, glock: { sample: 'glock', vol: 0.7, pan: 0.3 } },
+  sections: {
+    A: { prog: ['Dm', 'Dm', 'Bb', 'C', 'Dm', 'Dm', 'Gm', 'A'], parts: [
+      { type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 0, 2, 0, 3, 0, 2, 0] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R 5 R' },
+      { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+      { type: 'mel', inst: 'tpt', bars: ['D5 - - - F5 - A5 -', 'G5 - F5 - E5 - F5 -', 'D5 - - - Bb4 - D5 -', 'E5 - - - G5 - C6 -', 'A5 - - - F5 - D5 -', 'E5 - F5 - G5 - A5 -', 'Bb5 - A5 - G5 - D5 -', 'C#5 - - - E5 - A5 -'] },
+      { type: 'mel', inst: 'hi', shift: 12, bars: ['D5 - - - F5 - A5 -', 'G5 - F5 - E5 - F5 -', 'D5 - - - Bb4 - D5 -', 'E5 - - - G5 - C6 -', 'A5 - - - F5 - D5 -', 'E5 - F5 - G5 - A5 -', 'Bb5 - A5 - G5 - D5 -', 'C#5 - - - E5 - A5 -'] },
+      { type: 'drums', kit: (b) => DRIVE(b), vel: 0.9 }] },
+    B: { prog: ['Gm', 'Gm', 'Dm', 'Dm', 'Bb', 'C', 'A', 'A'], parts: [
+      { type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 1, 2, 1] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R R R' },
+      { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+      { type: 'mel', inst: 'vln', bars: ['G5 - - - Bb5 - D6 -', 'C6 - Bb5 - A5 - G5 -', 'F5 - - - A5 - D6 -', 'E6 - D6 - C#6 - D6 -', 'F6 - - - D6 - Bb5 -', 'G6 - - - E6 - C6 -', 'C#6 - - - E6 - - -', 'A6 - G6 - F6 - E6 -'] },
+      { type: 'mel', inst: 'glock', bars: ['G5 - - - - - - -', 'C6 - - - - - - -', 'F5 - - - - - - -', 'E6 - - - - - - -', 'F6 - - - - - - -', 'G6 - - - - - - -', 'C#6 - - - - - - -', 'A6 - - - - - - -'] },
+      { type: 'drums', kit: (b) => DRIVE(b, { kick: 'x . x . x . x . x . x . x . x .', ...(b === 7 ? { snare: '. . . . x . . . x . x x x x x x' } : {}) }), vel: 0.9 }] },
+  },
+  order: ['A', 'B'],
+};
+REAL.rattling_bones = {
+  title: 'Rattling Bones', screen: 'battle', bpm: 156,
+  desc: 'NEW (round 5). A skeleton fight: a clacking xylophone tune and woodblock over a bouncing bass with deep sub, then trumpets. Fast, dark but playful. E minor.',
+  inst: { xylo: { sample: 'xylo', vol: 1.3, pan: 0.15 }, bass: { sample: 'pizz', vol: 0.6, sub: 0.6 }, low: { sample: 'basses', vol: 0.4 },
+    str: { sample: 'stacc', vol: 0.45, pan: -0.3 }, tpt: { sample: 'trumpets', vol: 1.6, pan: 0.1 }, xa: { sample: 'xylo', vol: 0.5, pan: 0.3 } },
+  sections: {
+    A: { prog: ['Em', 'Em', 'C', 'B', 'Em', 'Em', 'Am B', 'Em'], parts: [
+      { type: 'arp', inst: 'str', oct: 4, every: 2, pat: [null, 2, null, 1, null, 2, null, 1] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R R R . R R' },
+      { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+      { type: 'mel', inst: 'xylo', bars: ['E5 - G5 E5 B4 - E5 -', 'F#5 - G5 - A5 - G5 F#5', 'E5 - - - C5 - E5 -', 'D#5 - - - F#5 - B4 -', 'E5 - G5 E5 B5 - G5 -', 'A5 - G5 - F#5 - E5 -', 'C5 - E5 - D#5 - F#5 -', 'E5 - - - - - . .'] },
+      { type: 'drums', kit: (b) => ({ kick: 'x . . . x . . . x . . . x . . .', snare: '. . . . x . . . . . . . x . . x', wood: '. . x . . . x . . . x . . . x .', rhat: 'x . x . x . x . x . x . x . x .', ...(b === 0 ? { crash: 'x . . . . . . . . . . . . . . .' } : {}) }), vel: 0.9 }] },
+    B: { prog: ['Am', 'Am', 'Em', 'Em', 'C', 'D', 'B', 'B'], parts: [
+      { type: 'arp', inst: 'xa', oct: 5, every: 1, pat: [0, 1, 2, 1] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R R R' },
+      { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+      { type: 'mel', inst: 'tpt', bars: ['A4 - - - C5 - E5 -', 'D5 - C5 - B4 - A4 -', 'G4 - - - B4 - E5 -', 'D#5 - E5 - F#5 - G5 -', 'E5 - - - G5 - C6 -', 'D6 - - - A5 - F#5 -', 'D#5 - - - F#5 - B5 -', 'A5 - G5 - F#5 - D#5 -'] },
+      { type: 'drums', kit: (b) => ({ kick: 'x . . x x . . . x . . x x . . .', snare: '. . . . x . . . . . . . x . . .', wood: 'x . x . x . x . x . x . x . x .', rhat: 'x o x o x o x o x o x o x o x o', ...(b === 7 ? { snare: '. . . . x . . . x . x x x x x x' } : {}) }), vel: 0.9 }] },
+  },
+  order: ['A', 'B'],
+};
+REAL.torchlight_run = {
+  title: 'Torchlight Run', screen: 'battle', bpm: 148,
+  desc: 'NEW (round 5). Running through dark halls: galloping strings, a deep string-bass and sub, a high flute tune with glockenspiel sparkle, then horns. A minor.',
+  inst: { gal: { sample: 'stacc', vol: 0.55, pan: -0.25 }, low: { sample: 'basses', vol: 0.5, sub: 0.5 }, bass: { sample: 'pizz', vol: 0.55, sub: 0.4 },
+    fl: { sample: 'flute', vol: 1.5, pan: 0.15 }, glock: { sample: 'glock', vol: 0.6, pan: 0.3 }, horn: { sample: 'horns', vol: 1.7, pan: 0.15 } },
+  sections: {
+    A: { prog: ['Am', 'G', 'F', 'E', 'Am', 'G', 'F', 'E'], parts: [
+      { type: 'arp', inst: 'gal', oct: 3, every: 1, pat: [0, null, 0, 0, 1, null, 1, 1] },
+      { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R R R . R R' },
+      { type: 'mel', inst: 'fl', bars: ['A5 - - - E5 - A5 -', 'B5 - A5 - G5 - D5 -', 'C6 - - - A5 - F5 -', 'E5 - - - G#5 - B5 -', 'C6 - B5 - A5 - E5 -', 'D5 - E5 - G5 - B5 -', 'A5 - C6 - F5 - A5 -', 'G#5 - - - - - E5 -'] },
+      { type: 'mel', inst: 'glock', shift: 12, bars: ['A5 - - - - - - -', 'B5 - - - - - - -', 'C6 - - - - - - -', 'E5 - - - - - - -', 'C6 - - - - - - -', 'D5 - - - - - - -', 'A5 - - - - - - -', 'G#5 - - - - - - -'] },
+      { type: 'drums', kit: (b) => ({ kick: 'x . . . x . . . x . . . x . . .', snare: '. . . . x . . . . . . . x . x x', shaker: 'x x x x x x x x x x x x x x x x', timp: 'x . . . . . . . x . . . . . . .', ...(b === 0 ? { crash: 'x . . . . . . . . . . . . . . .' } : {}) }), vel: 0.9 }] },
+    B: { prog: ['F', 'G', 'Am', 'Am', 'F', 'G', 'E', 'E'], parts: [
+      { type: 'arp', inst: 'gal', oct: 3, every: 1, pat: [0, null, 0, 0, 2, null, 2, 2] },
+      { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R R R' },
+      { type: 'mel', inst: 'horn', bars: ['F4 - - - A4 - C5 -', 'D5 - - - B4 - G4 -', 'A4 - - - C5 - E5 -', 'D5 - C5 - B4 - A4 -', 'C5 - - - F5 - A4 -', 'B4 - - - D5 - G4 -', 'G#4 - - - B4 - E5 -', 'D5 - C5 - B4 - G#4 -'] },
+      { type: 'mel', inst: 'fl', bars: [null, null, null, null, 'A5 - - - C6 - - -', 'B5 - - - D6 - - -', 'G#5 - - - B5 - - -', 'E6 - D6 - B5 - G#5 -'] },
+      { type: 'drums', kit: (b) => ({ kick: 'x . . x x . . . x . . x x . . .', snare: '. . . . x . . . . . . . x . . .', shaker: 'x x x x x x x x x x x x x x x x', ...(b === 7 ? { snare: '. . . . x . . . x . x x x x x x' } : {}) }), vel: 0.9 }] },
+  },
+  order: ['A', 'B'],
+};
+REAL.warden_of_chains = {
+  title: 'Warden of Chains', screen: 'boss', bpm: 132,
+  desc: 'NEW (round 5). Heavy boss: a stomping low riff of trombones, string basses and deep sub, a choir, timpani and trumpets, with a glockenspiel and harpsichord shine on top. C minor.',
+  inst: { riff: { sample: 'trombones', vol: 0.9, sub: 0.7 }, low: { sample: 'basses', vol: 0.5 }, choir: { sample: 'choir', vol: 0.5 }, str: { sample: 'stacc', vol: 0.45, pan: -0.25 },
+    tpt: { sample: 'trumpets', vol: 1.6, pan: 0.15 }, glock: { sample: 'glock', vol: 0.55, pan: 0.3 }, chm: { sample: 'choir', vol: 1.6 }, hi: { sample: 'harpsichord', vol: 0.45, pan: -0.3 } },
+  sections: {
+    A: { prog: ['Cm', 'Cm', 'Db', 'Db', 'Cm', 'Cm', 'Ab', 'G'], parts: [
+      { type: 'bass', inst: 'riff', oct: 2, pat: 'R . R . . R . R R . R . . 5 . .' },
+      { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+      { type: 'chord', inst: 'choir', oct: 3, vel: 0.6 },
+      { type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 1, 0, 2] },
+      { type: 'mel', inst: 'tpt', bars: ['C5 - - - - - Eb5 -', 'D5 - C5 - G4 - - -', 'Db5 - - - - - F5 -', 'Eb5 - Db5 - Ab4 - - -', 'C5 - - - G5 - - -', 'F5 - Eb5 - D5 - C5 -', 'Eb5 - - - C5 - Ab4 -', 'B4 - - - D5 - G5 -'] },
+      { type: 'mel', inst: 'glock', shift: 12, bars: ['C5 - - - - - - -', 'D5 - - - - - - -', 'Db5 - - - - - - -', 'Eb5 - - - - - - -', 'C5 - - - - - - -', 'F5 - - - - - - -', 'Eb5 - - - - - - -', 'B4 - - - - - - -'] },
+      { type: 'drums', kit: (b) => ({ kick: 'x . . x . . x . x . . x . . x .', snare: '. . . . x . . . . . . . x . . .', timp: 'x . x . x . x . x . x . x . x .', rhat: 'x o x o x o x o x o x o x o x o', ...(b === 0 ? { crash: 'x . . . . . . . . . . . . . . .', tamtam: 'x . . . . . . . . . . . . . . .' } : {}) }), vel: 0.85 }] },
+    B: { prog: ['Ab', 'Bb', 'G', 'Cm', 'Ab', 'Bb', 'G', 'G'], parts: [
+      { type: 'bass', inst: 'riff', oct: 2, pat: 'R . R . . R . R R . R . . 5 . .' },
+      { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+      { type: 'arp', inst: 'hi', oct: 5, every: 1, pat: [0, 1, 2, 3] },
+      { type: 'mel', inst: 'chm', bars: ['C5 - - - - - - -', 'D5 - - - - - - -', 'B4 - - - - - D5 -', 'Eb5 - - - - - - -', 'C5 - - - Eb5 - - -', 'F5 - - - D5 - - -', 'G5 - - - - - F5 -', 'D5 - - - B4 - - -'] },
+      { type: 'drums', kit: (b) => ({ kick: 'x . x . x . x . x . x . x . x .', snare: '. . . . x . . . . . . . x . . .', timp: 'x . . . . . . . x . . . . . . .', rhat: 'x o x o x o x o x o x o x o x o', ...(b === 7 ? { snare: 'x . x . x . x . x x x x x x x x' } : {}) }), vel: 0.85 }] },
+  },
+  order: ['A', 'B'],
+};
+REAL.lair_gate = {
+  title: 'Lair Gate', screen: 'squad', bpm: 116,
+  desc: 'NEW (round 5). Before the descent: tense but steady. Harp arpeggios, a firm bass with sub, a horn theme doubled by glockenspiel, then high violins. G minor.',
+  inst: { harp: { sample: 'harp', vol: 0.5, pan: -0.3 }, bass: { sample: 'pizz', vol: 0.6, sub: 0.6 }, low: { sample: 'basses', vol: 0.4 },
+    horn: { sample: 'horns', vol: 1.7, pan: 0.1 }, glock: { sample: 'glock', vol: 0.5, pan: 0.3 }, vln: { sample: 'violins', vol: 1.8, pan: 0.15 } },
+  sections: {
+    A: { prog: ['Gm', 'Gm', 'Eb', 'D', 'Gm', 'Gm', 'Cm', 'D'], parts: [
+      { type: 'arp', inst: 'harp', oct: 4, every: 1, pat: [0, 1, 2, 3, 2, 1, 2, 1] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R . R . 5 .' },
+      { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+      { type: 'mel', inst: 'horn', bars: ['G4 - - - D5 - - -', 'C5 - Bb4 - A4 - G4 -', 'Bb4 - - - G4 - Eb4 -', 'F#4 - - - A4 - D5 -', 'G4 - - - D5 - G5 -', 'F5 - D5 - C5 - Bb4 -', 'C5 - Eb5 - D5 - C5 -', 'A4 - - - F#4 - D4 -'] },
+      { type: 'mel', inst: 'glock', shift: 12, bars: ['G4 - - - D5 - - -', 'C5 - Bb4 - A4 - G4 -', 'Bb4 - - - G4 - Eb4 -', 'F#4 - - - A4 - D5 -', 'G4 - - - D5 - G5 -', 'F5 - D5 - C5 - Bb4 -', 'C5 - Eb5 - D5 - C5 -', 'A4 - - - F#4 - D4 -'] },
+      { type: 'drums', kit: (b) => ({ kick: 'x . . . . . x . x . . . . . . .', snare: '. . . . x . . . . . . . x . . .', rhat: 'x . x . x . x . x . x . x . x .', ...(b === 0 ? { crash: 'x . . . . . . . . . . . . . . .' } : {}) }), vel: 0.85 }] },
+    B: { prog: ['Eb', 'F', 'Gm', 'Gm', 'Eb', 'F', 'D', 'D'], parts: [
+      { type: 'arp', inst: 'harp', oct: 4, every: 1, pat: [0, 1, 2, 3] },
+      { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R . R . R .' },
+      { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+      { type: 'mel', inst: 'vln', bars: ['G5 - - - Eb5 - - -', 'F5 - - - C5 - - -', 'D5 - - - G5 - Bb5 -', 'A5 - G5 - F5 - D5 -', 'Eb5 - - - G5 - Bb5 -', 'C6 - - - A5 - F5 -', 'F#5 - - - A5 - D6 -', 'C6 - Bb5 - A5 - F#5 -'] },
+      { type: 'drums', kit: (b) => ({ kick: 'x . . . x . . . x . . . x . . .', snare: '. . . . x . . . . . . . x . . .', rhat: 'x o x o x o x o x o x o x o x o' }), vel: 0.85 }] },
+  },
+  order: ['A', 'B'],
+};
+REAL.ember_watch = {
+  title: 'Ember Watch', screen: 'title', bpm: 84,
+  desc: 'NEW (round 5). Title: dark and calm but not sleepy. Harp ripples over a deep string-bass drone with sub, a flute theme with glockenspiel sparkle, then a low cello answer. D minor.',
+  inst: { harp: { sample: 'harp', vol: 0.55, pan: -0.25 }, low: { sample: 'basses', vol: 0.5, sub: 0.6 }, fl: { sample: 'flute', vol: 1.4, pan: 0.15 },
+    glock: { sample: 'glock', vol: 0.5, pan: 0.3 }, cel: { sample: 'celli', vol: 1.3, pan: -0.1 }, choir: { sample: 'choir', vol: 0.35 } },
+  sections: {
+    A: { prog: ['Dm', 'Bb', 'Gm', 'A', 'Dm', 'Bb', 'C', 'A'], parts: [
+      { type: 'arp', inst: 'harp', oct: 3, every: 1, pat: [0, 1, 2, 3, 4, 3, 2, 1] },
+      { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+      { type: 'mel', inst: 'fl', bars: ['A5 - - - F5 - D5 -', 'D5 - - - F5 - - -', 'G5 - - - Bb5 - A5 G5', 'E5 - - - - - . .', 'A5 - - - D6 - C6 -', 'Bb5 - - - F5 - D5 -', 'E5 - G5 - C6 - Bb5 -', 'A5 - - - - - . .'] },
+      { type: 'arp', inst: 'glock', oct: 5, every: 4, pat: [3, 4, 2, 4] }] },
+    B: { prog: ['Dm', 'Bb', 'Gm', 'A', 'Dm', 'Bb', 'C', 'A'], parts: [
+      { type: 'arp', inst: 'harp', oct: 3, every: 1, pat: [0, 1, 2, 3, 4, 3, 2, 1] },
+      { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
+      { type: 'chord', inst: 'choir', oct: 3, vel: 0.6 },
+      { type: 'mel', inst: 'cel', bars: ['D3 - - - F3 - A3 -', 'Bb3 - - - D4 - - -', 'G3 - - - Bb3 - D4 -', 'C#4 - - - E4 - - -', 'D4 - - - F4 - A4 -', 'Bb3 - - - F3 - D3 -', 'E3 - G3 - C4 - E4 -', 'A3 - - - - - . .'] },
+      { type: 'arp', inst: 'glock', oct: 5, every: 4, pat: [3, 4, 2, 4] },
+      { type: 'drums', kit: (b) => (b === 0 ? { timp: 'x . . . . . . . . . . . . . . .' } : {}), vel: 0.6 }] },
+  },
+  order: ['A', 'B'],
+};

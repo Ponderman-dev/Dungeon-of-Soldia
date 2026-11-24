@@ -126,3 +126,10 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   CC0 / CC BY / CC BY-SA / Pixabay OK, NonCommercial (NC) and NoDerivatives (ND) NOT OK for a paid store game).
   They send the files (zip in chat) with the screen each is for; then: put them on the board (make-board4.py pattern,
   tag 'yours') or straight into the game. Round 4 picks were not marked on the board.
+- ROUND 5 BOARD (same url/db; `make-board5.py`; user: 'more code music only, more bass and treble'): 6 new songs
+  (songs-real.js ROUND 5: Ember Watch = title, Lair Gate = squad, Deepdelve / Rattling Bones / Torchlight Run =
+  battle, Warden of Chains = boss) + REMASTERS of the liked code songs (Hearthfire, Muster, Night Gate, Crimson
+  Gallery, Bell Tower Duel). render-real.py: inst option `sub` (a sine under the note, folded into 40-110 Hz), new
+  samples 'basses' (SSO string basses sus), 'xylo', drum 'wood'. Every song is mastered with make-board5.py MASTER
+  (bass +6 dB @80 Hz, treble +5 dB @6 kHz, gentle compressor, limiter -1 dB). Measured: bass share up from ~-7.5 to
+  -2..-4.5 dB, treble share from ~-28 to -12..-16 dB of the mix.

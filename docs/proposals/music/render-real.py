@@ -41,6 +41,8 @@ INST = {
   'organ': (sset(SSO + 'Organ/great-opendiapason8ft/*.flac'), 'sus', 0.03, 0.25, 0),
   'organ4': (sset(SSO + 'Organ/great-principal4ft/*.flac'), 'sus', 0.03, 0.25, 0),
   'bells': (sset(VC + 'Idiophones/Struck Idiophones/Tubular Bells 1/*.wav', keep=r'_ff'), 'pluck', 0.002, 0.5, 3.0),
+  'xylo': (sset(SSO + 'Percussion/xylophone-*.wav'), 'pluck', 0.002, 0.2, 0.8),
+  'basses': (sset(SSO + 'Basses/*sus*'), 'sus', 0.06, 0.3, 0),
   'glock': (sset(SSO + 'Percussion/glockenspiel-*.wav'), 'pluck', 0.002, 0.3, 1.5),
   'choir': (sset(SSO + 'Chorus/*male*', SSO + 'Chorus/*female*'), 'sus', 0.25, 0.6, 0),
 }
@@ -55,6 +57,7 @@ DRUM = {  # name: (file, gain)
   'rhat': (VC + 'Idiophones/Struck Idiophones/Hi-Hat Cymbal/HiHat_HitC_v3_rr1_Mid.wav', 0.35),
   'rohat': (VC + 'Idiophones/Struck Idiophones/Hi-Hat Cymbal/HiHat_HitO_rr1_Mid.wav', 0.35),
   'rcrash': (VC + 'Idiophones/Struck Idiophones/Suspended Cymbal 1/susCymb1_hit_f1.wav', 0.5),
+  'wood': (P + 'wood_block-hi.wav', 0.35),
   'frame': (glob.glob(VC + 'Membranophones/Struck Membranophones/Frame Drum/HDrumL_Hit_v2_rr1*')[0], 0.8),
 }
 @functools.lru_cache(None)
@@ -90,6 +93,14 @@ for e in song['events']:
         r0 = int(dur * SR)
         if r0 < n: x[r0:] *= np.linspace(1, 0, n - r0) ** 2
         pan, rev = cfg.get('pan', 0.0), 0.45
+        if cfg.get('sub'):  # round 5 (user: 'more bass'): a deep sine under the note, folded into the 40-110 Hz range
+            f = 440 * 2 ** ((e['midi'] - 69) / 12)
+            while f > 110: f /= 2
+            L = int((e['dur'] * 0.95 + 0.08) * SR); tt = np.arange(L) / SR
+            y = (np.sin(2 * np.pi * f * tt) * cfg['sub'] * 0.12 * e['vel']).astype(np.float32)
+            a5, r6 = int(0.005 * SR), min(L, int(0.06 * SR)); y[:a5] *= np.linspace(0, 1, a5); y[-r6:] *= np.linspace(1, 0, r6)
+            if len(y) > len(x): x = np.concatenate([x, np.zeros(len(y) - len(x), np.float32)])
+            x[:len(y)] += y
     n = min(len(x), N - s0)
     k = e.get('drum') or e['inst']; ENERGY[k] = ENERGY.get(k, 0) + float((x[:max(n,0)] ** 2).sum())
     if n <= 0: continue

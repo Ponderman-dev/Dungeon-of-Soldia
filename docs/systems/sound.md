@@ -121,3 +121,8 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   Hitctrl, migfus20, Joth; most licences NOT in the credits file = confirm on OpenGameArt before shipping), Eric Skiff
   (DAKSie/Synk), more xDeviruchi (home, minigame, epilogue) and the Pixel-boy themes not shown before. All fight
   tracks were checked for slow starts (first 4s within 4 dB of the whole song).
+- AFTER ROUND 4 (user): 'too cheery and relaxed, town / big-open-land vibes'. The user will now FIND THEIR OWN music
+  (I gave them a guide: OpenGameArt, itch.io free packs, Pixabay Music, FreePD, Free Music Archive; licence rules:
+  CC0 / CC BY / CC BY-SA / Pixabay OK, NonCommercial (NC) and NoDerivatives (ND) NOT OK for a paid store game).
+  They send the files (zip in chat) with the screen each is for; then: put them on the board (make-board4.py pattern,
+  tag 'yours') or straight into the game. Round 4 picks were not marked on the board.

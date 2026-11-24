@@ -105,26 +105,46 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
   const gap = tinted(F.gap);
   for (let y = wallH; y < height; y++) for (let x = 0; x < width; x++) set(x, y, gap);
   const stones = []; // { x, y, w, h } of every flagstone (cracks and grass use them)
-  for (let top = wallH - 1; top < height; ) {
-    const h = between(F.rowH);
-    let x = -between([0, F.stoneW[1]]);
-    while (x < width) {
-      const w = between(F.stoneW);
-      const sunk = rnd() < F.sunkenShare; // a few stones have sunk and lie in shadow
-      const c = shade(tinted(pick(F.stone)), sunk ? -12 : 0);
-      // Each stone is inset 1 pixel (the gap) and has its corners knocked off (worn).
-      for (let y = top + 1; y < Math.min(top + h, height); y++) {
-        for (let i = x + 1; i < x + w; i++) {
-          const corner = (y === top + 1 || y === top + h - 1) && (i === x + 1 || i === x + w - 1);
-          if (corner) continue;
-          const v = y === top + 1 ? F.highlight : y === top + h - 1 || i === x + w - 1 ? -F.shade : 0;
-          set(i, y, shade(c, v + (rnd() < grain ? (rnd() < 0.5 ? -5 : 5) : 0))); // a little grain
-        }
+  const bevel = F.bevel || 0; // > 0: the stone's LEFT edge is lit too and a darker inner line runs along its bottom (raised stones)
+  const stone = (x, top, w, h) => {
+    const sunk = rnd() < F.sunkenShare; // a few stones have sunk and lie in shadow
+    const c = shade(tinted(pick(F.stone)), sunk ? -12 : 0);
+    // Each stone is inset 1 pixel (the gap) and has its corners knocked off (worn).
+    for (let y = top + 1; y < Math.min(top + h, height); y++) {
+      for (let i = x + 1; i < x + w; i++) {
+        const corner = (y === top + 1 || y === top + h - 1) && (i === x + 1 || i === x + w - 1);
+        if (corner) continue;
+        let v = y === top + 1 ? F.highlight : y === top + h - 1 || i === x + w - 1 ? -F.shade : 0;
+        if (bevel && v === 0 && i === x + 1) v = Math.round(F.highlight * 0.6);
+        if (bevel && v === 0 && (y === top + h - 2 || i === x + w - 2)) v = -Math.round(F.shade * 0.45);
+        set(i, y, shade(c, v + (rnd() < grain ? (rnd() < 0.5 ? -5 : 5) : 0))); // a little grain
       }
-      stones.push({ x, y: top, w, h });
-      x += w;
     }
-    top += h;
+    stones.push({ x, y: top, w, h });
+  };
+  if (F.layout === 'ashlar') {
+    // MIXED FLAGSTONES: a grid of `cell` px squares filled with random slabs of 1-3 x 1-2 cells (squares, long ones, big).
+    const cw = F.cell, cols = Math.ceil(width / cw) + 1, rows = Math.ceil((height - wallH) / cw) + 1;
+    const used = new Uint8Array(cols * rows);
+    for (let r = 0; r < rows; r++) for (let q = 0; q < cols; q++) {
+      if (used[r * cols + q]) continue;
+      let w = 1 + Math.floor(Math.sqrt(rnd()) * F.maxCells[0]), h = 1 + Math.floor(Math.sqrt(rnd()) * F.maxCells[1]); // leaning to bigger slabs
+      while (w > 1 && [...Array(w).keys()].some((k) => q + k >= cols || used[r * cols + q + k])) w--;
+      if (r + h > rows) h = rows - r;
+      for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) used[(r + dy) * cols + q + dx] = 1;
+      stone(q * cw - Math.floor(cw / 2), wallH - 1 + r * cw, w * cw, h * cw);
+    }
+  } else {
+    for (let top = wallH - 1; top < height; ) {
+      const h = between(F.rowH);
+      let x = -between([0, F.stoneW[1]]);
+      while (x < width) {
+        const w = between(F.stoneW);
+        stone(x, top, w, h);
+        x += w;
+      }
+      top += h;
+    }
   }
   // Cracks: short wandering dark lines inside stones.
   for (let i = 0; i < F.cracks; i++) {

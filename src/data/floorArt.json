@@ -66,6 +66,13 @@
       "skull": [".bbb.", "bbbbb", "bkbkb", "dbbbd", ".b.b."]
     }
   },
+  "looks": {
+    "_about": "STONE TRIAL (session 55, user: 'how about the floor itself? make me options'): presets merged (deep) over this file by entities/floorTexture.js; dev url flag ?floorlook=1|2|3|4; none = today. Delete once the user picks.",
+    "1": { "grain": 0.07, "floor": { "rowH": [11, 14], "stoneW": [16, 26], "shade": 12 } },
+    "2": { "floor": { "highlight": 12, "shade": 18, "bevel": 1 } },
+    "3": { "floor": { "layout": "ashlar", "cell": 5, "maxCells": [4, 3], "highlight": 7, "shade": 14 } },
+    "4": { "floor": { "stone": ["0x4a4744", "0x423f3b", "0x524e48", "0x3a3835", "0x4d463b", "0x46423a", "0x575049"], "gap": "0x120d09", "highlight": 8, "shade": 14 } }
+  },
   "torch": {
     "_about": "The wall torches (squad screen) as pixel art: systems/torchArt.js. holder rows from the handle top down; flames = frames shown in turn (frameMs); glow = a few solid rings of warm light round the flame (glowSteps).",
     "holder": ["..w..", ".wWw.", ".wWw.", ".wWw.", "iiiii", "..i..", "..i.."],

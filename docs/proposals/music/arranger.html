@@ -1,0 +1,234 @@
+<!-- ARRANGER (session 53; user: 'make me a timeline so I can manually adjust'). Inserted into the music board by
+     make-board9.py (replaces /*ARR_CFG*/ with the sources config). Web Audio, no libraries.
+     An arrangement = blocks {src, from, to, fade}: bars from..to (1-based, inclusive) of a source; 'fade' = beats of the
+     block's own music BEFORE its first bar that fade in under the previous block, so the LANDING (its first bar) never
+     moves. Saved to the board's db: collection 'music', doc 'arr_<slot>' {key: 'arr:<slot>', blocks, updatedAt}. -->
+<style>
+.arr { gap: 12px; }
+.arr .tl { position: relative; height: 64px; border: 2px solid var(--line); background: #0b0812; touch-action: none; cursor: pointer; user-select: none; }
+.arr .tl .blk { position: absolute; top: 0; bottom: 0; border-right: 2px solid #000; overflow: hidden; font: 8px var(--display); color: #000; padding: 4px 3px; white-space: nowrap; }
+.arr .tl .fd { position: absolute; bottom: 0; height: 10px; background: repeating-linear-gradient(45deg, #fff8, #fff8 3px, transparent 3px, transparent 6px); }
+.arr .tl .ph { position: absolute; top: -6px; bottom: -6px; width: 3px; background: var(--gold); pointer-events: none; }
+.arr .tl .ph::after { content: ""; position: absolute; top: -4px; left: -6px; border: 7px solid transparent; border-top-color: var(--gold); }
+.arr .tl .lm { position: absolute; top: 0; bottom: 0; width: 1px; background: #fff; opacity: .5; pointer-events: none; }
+.arr .trow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.arr .time { font: 10px var(--display); color: var(--fg); min-width: 110px; }
+.arr .maps { display: flex; flex-direction: column; gap: 10px; }
+.arr .map { display: flex; flex-direction: column; gap: 4px; }
+.arr .map .nm { font: 8px var(--display); color: var(--muted); }
+.arr .cells { display: grid; gap: 2px; height: 46px; align-items: end; }
+.arr .cell { background: var(--soft); cursor: pointer; position: relative; min-width: 0; border: 0; padding: 0; }
+.arr .cell.on { outline: 2px solid var(--gold); }
+.arr .cell.play { background: var(--ok) !important; }
+.arr .nums { display: grid; gap: 2px; font: 600 9px var(--body); color: var(--muted); text-align: center; }
+.arr .blist { display: flex; flex-direction: column; gap: 8px; }
+.arr .b { border: 2px solid var(--soft); padding: 8px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.arr .b .sw { width: 14px; height: 14px; flex: none; }
+.arr .b select, .arr select.slot { font: 13px var(--body); color: var(--fg); background: #15101f; border: 1px solid var(--soft); padding: 6px; }
+.arr .st { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--muted); }
+.arr .st b { color: var(--fg); min-width: 22px; text-align: center; }
+.arr .sm { font: 9px var(--display); color: var(--fg); background: #000; border: 2px solid var(--line); padding: 6px 8px; min-width: 32px; cursor: pointer; }
+.arr .sm:disabled { opacity: .35; cursor: default; }
+.arr .hint { font-size: 13px; color: var(--muted); margin: 0; }
+</style>
+<section class="win arr" id="arr">
+  <h2>Arranger: make your own battle mix</h2>
+  <p class="hint">Your mix is the list of BLOCKS below, played top to bottom. Each block = some bars of one song (RPG 8 is already sped up to RPG 10's speed). Tap a bar in a song map to hear that song from there. <b>Fade-in</b> = how much of the next block fades in early, under the end of the one before; its first bar (the landing) stays on time. Drag on the timeline to move the needle. SAVE when you like it and I will make the game file from it.</p>
+  <div class="trow">
+    <button class="btn play" id="arr-play" type="button">▶ PLAY</button>
+    <span class="time" id="arr-time">0:00 / 0:00</span>
+    <label><input type="checkbox" id="arr-loop" checked> LOOP</label>
+  </div>
+  <div class="tl" id="arr-tl" role="slider" aria-label="Mix position" tabindex="0"></div>
+  <div class="maps" id="arr-maps"></div>
+  <div class="blist" id="arr-blocks"></div>
+  <div class="trow">
+    <button class="btn" id="arr-add" type="button">+ ADD BLOCK</button>
+    <select class="slot" id="arr-preset" aria-label="Start from"></select>
+    <button class="btn" id="arr-load" type="button">LOAD</button>
+    <button class="btn v-love" id="arr-save" type="button">SAVE</button>
+  </div>
+  <div class="saved" id="arr-saved"></div>
+</section>
+<script>
+(() => {
+  const CFG = /*ARR_CFG*/;   // {sources: [{id, name, file, bars, dur, beats, color, lv: [dB per bar]}], presets: {name: blocks}}
+  const $ = (id) => document.getElementById(id);
+  const SRC = Object.fromEntries(CFG.sources.map((s) => [s.id, s]));
+  let ctx = null, bufs = {}, nodes = [], playing = false, t0 = 0, pos = 0, raf = 0, solo = null;
+  let blocks = JSON.parse(JSON.stringify(CFG.presets[Object.keys(CFG.presets)[0]]));
+  const barSec = (s) => s.dur / s.bars;
+  const fmt = (t) => { t = Math.max(0, t); const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + s.toFixed(1).padStart(4, '0'); };
+  // ---------- layout: each block occupies [start, start + len); its fade-in starts 'fade' beats before 'start' ----------
+  function plan() {
+    let t = 0; const out = [];
+    for (const b of blocks) { const s = SRC[b.src], bs = barSec(s), len = (b.to - b.from + 1) * bs; out.push({ b, s, start: t, len, fade: Math.min(b.fade * bs / s.beats, t) }); t += len; }
+    return { items: out, total: t };
+  }
+  // ---------- audio ----------
+  async function ensure() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') await ctx.resume();
+    await Promise.all(CFG.sources.map(async (s) => {
+      if (bufs[s.id]) return;
+      const r = await fetch(s.file); bufs[s.id] = await ctx.decodeAudioData(await r.arrayBuffer());
+    }));
+  }
+  function stopNodes() { for (const n of nodes) { try { n.stop(); } catch (e) {} } nodes = []; }
+  function voice(s, when, offset, dur, fadeIn, fadeOut, total) {
+    // play source s from 'offset' (wraps around the song: the song loops) at ctx time 'when' for 'dur' seconds
+    const src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = bufs[s.id]; src.loop = true; src.loopStart = 0; src.loopEnd = s.dur;
+    src.connect(g); g.connect(master);
+    const o = ((offset % s.dur) + s.dur) % s.dur; g.gain.setValueAtTime(fadeIn > 0 ? 0.0001 : 1, when);
+    if (fadeIn > 0) curve(g.gain, when, fadeIn, true);
+    if (fadeOut > 0) curve(g.gain, when + dur - fadeOut, fadeOut, false);
+    src.start(when, o); src.stop(when + dur + 0.01); nodes.push(src);
+  }
+  function curve(param, at, d, up) {   // equal-power fade
+    const n = 64, c = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i / (n - 1); c[i] = up ? Math.sin(x * Math.PI / 2) : Math.cos(x * Math.PI / 2); }
+    try { param.setValueCurveAtTime(c, Math.max(at, ctx.currentTime), Math.max(d, 0.01)); } catch (e) {}
+  }
+  let master = null;
+  async function playFrom(p) {
+    await ensure(); if (!master) { master = ctx.createGain(); master.connect(ctx.destination); }
+    master.gain.value = (document.getElementById('vol') ? document.getElementById('vol').value / 100 : 0.8);
+    stopNodes(); solo = null; markSolo(-1, null);
+    const P = plan(); if (!P.total) return;
+    pos = Math.min(Math.max(p, 0), P.total - 0.01); t0 = ctx.currentTime + 0.08 - pos; playing = true; schedule(P, 0); tick();
+    $('arr-play').textContent = '■ STOP';
+  }
+  function schedule(P, pass) {
+    // one pass of the whole mix starting at ctx time t0 + pass * total (the next pass is scheduled while this one plays)
+    const base = t0 + pass * P.total;
+    P.items.forEach((it, i) => {
+      const next = P.items[i + 1] || ($('arr-loop').checked ? P.items[0] : null);
+      const nfade = next ? next.fade || 0 : 0;
+      const songOff = (it.b.from - 1) * barSec(it.s);
+      let start = base + it.start - it.fade, off = songOff - it.fade, dur = it.len + it.fade;
+      const now = ctx.currentTime + 0.05;
+      if (start + dur <= now) return;
+      if (start < now) { const cut = now - start; start = now; off += cut; dur -= cut; }
+      const fin = Math.max(0, Math.min(it.fade, base + it.start - start));
+      voice(it.s, start, off, dur, fin, Math.min(nfade, dur), P.total);
+    });
+    // the first block's fade-in at the loop point needs the start of pass+1 to be ahead of time: scheduled by tick()
+  }
+  let scheduledPass = 0;
+  function tick() {
+    cancelAnimationFrame(raf);
+    const P = plan();
+    const step = () => {
+      if (!playing) return;
+      pos = ctx.currentTime - t0;
+      if (pos >= P.total) {
+        if ($('arr-loop').checked) { t0 += P.total; pos -= P.total; scheduledPass = 0; } else { stop(); return; }
+      }
+      if ($('arr-loop').checked && P.total - pos < 2 + (P.items[0] ? P.items[0].fade : 0) && scheduledPass === 0) { schedule(P, 1); scheduledPass = 1; }
+      drawHead(P); raf = requestAnimationFrame(step);
+    };
+    scheduledPass = 0; step();
+  }
+  function stop() { playing = false; stopNodes(); cancelAnimationFrame(raf); $('arr-play').textContent = '▶ PLAY'; markSolo(-1, null); }
+  // solo preview: hear one song from a bar
+  async function soloFrom(sid, bar) {
+    if (playing) stop();
+    await ensure(); if (!master) { master = ctx.createGain(); master.connect(ctx.destination); }
+    stopNodes(); const s = SRC[sid]; voice(s, ctx.currentTime + 0.05, bar * barSec(s), 600, 0, 0); solo = { sid, bar, at: ctx.currentTime + 0.05 };
+    $('arr-play').textContent = '■ STOP'; playing = false; soloTick();
+  }
+  function soloTick() {
+    cancelAnimationFrame(raf);
+    const step = () => { if (!solo) return; const s = SRC[solo.sid]; const b = Math.floor(((ctx.currentTime - solo.at) / barSec(s) + solo.bar) % s.bars); markSolo(b, solo.sid); raf = requestAnimationFrame(step); };
+    step();
+  }
+  function markSolo(b, sid) { document.querySelectorAll('.arr .cell.play').forEach((c) => c.classList.remove('play')); if (sid) { const c = document.querySelector(`.arr .cells[data-sid="${sid}"] .cell:nth-child(${b + 1})`); if (c) c.classList.add('play'); } }
+  // ---------- drawing ----------
+  function drawTl() {
+    const P = plan(), tl = $('arr-tl'); tl.innerHTML = '';
+    for (const it of P.items) {
+      const d = document.createElement('div'); d.className = 'blk'; d.style.left = (100 * it.start / P.total) + '%'; d.style.width = (100 * it.len / P.total) + '%';
+      d.style.background = it.s.color; d.textContent = it.s.short + ' ' + it.b.from + '-' + it.b.to; tl.appendChild(d);
+      if (it.fade > 0) { const f = document.createElement('div'); f.className = 'fd'; f.style.left = (100 * (it.start - it.fade) / P.total) + '%'; f.style.width = (100 * it.fade / P.total) + '%'; tl.appendChild(f); }
+      if (it.start > 0) { const m = document.createElement('div'); m.className = 'lm'; m.style.left = (100 * it.start / P.total) + '%'; tl.appendChild(m); }
+    }
+    const ph = document.createElement('div'); ph.className = 'ph'; ph.id = 'arr-ph'; tl.appendChild(ph); drawHead(P);
+    // song maps: highlight bars used
+    document.querySelectorAll('.arr .cell.on').forEach((c) => c.classList.remove('on'));
+    for (const b of blocks) for (let k = b.from; k <= b.to; k++) { const c = document.querySelector(`.arr .cells[data-sid="${b.src}"] .cell:nth-child(${k})`); if (c) c.classList.add('on'); }
+  }
+  function drawHead(P) { const ph = $('arr-ph'); if (ph && P.total) ph.style.left = (100 * Math.min(pos, P.total) / P.total) + '%'; $('arr-time').textContent = fmt(pos) + ' / ' + fmt(P.total); }
+  function drawMaps() {
+    const host = $('arr-maps'); host.innerHTML = '';
+    for (const s of CFG.sources) {
+      const lo = Math.min(...s.lv), hi = Math.max(...s.lv);
+      const m = document.createElement('div'); m.className = 'map';
+      m.innerHTML = `<span class="nm">${s.name} · tap a bar to hear from there</span><div class="cells" data-sid="${s.id}" style="grid-template-columns:repeat(${s.bars},1fr)"></div><div class="nums" style="grid-template-columns:repeat(${s.bars},1fr)"></div>`;
+      const cells = m.querySelector('.cells'), nums = m.querySelector('.nums');
+      s.lv.forEach((v, i) => {
+        const c = document.createElement('button'); c.type = 'button'; c.className = 'cell'; c.setAttribute('aria-label', s.name + ' bar ' + (i + 1));
+        c.style.height = (20 + 80 * (v - lo) / Math.max(hi - lo, 1)) + '%'; c.style.background = s.color + 'aa';
+        c.addEventListener('click', () => soloFrom(s.id, i)); cells.appendChild(c);
+        const n = document.createElement('span'); n.textContent = (i + 1) % 4 === 1 ? String(i + 1) : ''; nums.appendChild(n);
+      });
+      host.appendChild(m);
+    }
+  }
+  function drawBlocks() {
+    const host = $('arr-blocks'); host.innerHTML = '';
+    blocks.forEach((b, i) => {
+      const s = SRC[b.src], d = document.createElement('div'); d.className = 'b';
+      const opts = CFG.sources.map((q) => `<option value="${q.id}"${q.id === b.src ? ' selected' : ''}>${q.name}</option>`).join('');
+      const fades = [0, 1, 2, 4, 8].map((f) => `<option value="${f}"${f === b.fade ? ' selected' : ''}>${f === 0 ? 'no fade-in (cut)' : f === 4 ? 'fade-in 1 bar' : f === 8 ? 'fade-in 2 bars' : 'fade-in ' + f + ' beat' + (f > 1 ? 's' : '')}</option>`).join('');
+      d.innerHTML = `<span class="sw" style="background:${s.color}"></span><b>${i + 1}.</b><select data-k="src" aria-label="Song">${opts}</select>
+        <span class="st">bars <button class="sm" data-k="from" data-d="-1">−</button><b>${b.from}</b><button class="sm" data-k="from" data-d="1">+</button>
+        to <button class="sm" data-k="to" data-d="-1">−</button><b>${b.to}</b><button class="sm" data-k="to" data-d="1">+</button></span>
+        <select data-k="fade" aria-label="Fade-in"${i === 0 ? ' disabled' : ''}>${fades}</select>
+        <button class="sm" data-k="up"${i === 0 ? ' disabled' : ''} aria-label="Move up">↑</button><button class="sm" data-k="down"${i === blocks.length - 1 ? ' disabled' : ''} aria-label="Move down">↓</button>
+        <button class="sm" data-k="hear" aria-label="Play from this block">▶</button><button class="sm" data-k="del" aria-label="Delete">✕</button>`;
+      d.addEventListener('click', (e) => {
+        const k = e.target.dataset && e.target.dataset.k; if (!k || e.target.tagName === 'SELECT') return;
+        if (k === 'from' || k === 'to') { const dd = +e.target.dataset.d; b[k] = Math.max(1, Math.min(s.bars, b[k] + dd)); if (b.from > b.to) { if (k === 'from') b.to = b.from; else b.from = b.to; } }
+        if (k === 'up') blocks.splice(i - 1, 0, blocks.splice(i, 1)[0]);
+        if (k === 'down') blocks.splice(i + 1, 0, blocks.splice(i, 1)[0]);
+        if (k === 'del') blocks.splice(i, 1);
+        if (k === 'hear') { const P = plan(); playFrom(Math.max(0, P.items[i].start - P.items[i].fade - 2)); return; }
+        changed();
+      });
+      d.addEventListener('change', (e) => {
+        const k = e.target.dataset.k; if (k === 'src') { b.src = e.target.value; const q = SRC[b.src]; b.from = Math.min(b.from, q.bars); b.to = Math.min(b.to, q.bars); }
+        if (k === 'fade') b.fade = +e.target.value; changed();
+      });
+      host.appendChild(d);
+    });
+  }
+  function changed() { const was = playing, p = pos; drawBlocks(); drawTl(); local(); if (was) playFrom(p); }
+  function local() { try { localStorage.setItem('soldia-arr', JSON.stringify(blocks)); } catch (e) {} }
+  // ---------- timeline drag ----------
+  const tl = $('arr-tl'); let drag = false;
+  const at = (e) => { const r = tl.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * plan().total; };
+  tl.addEventListener('pointerdown', (e) => { drag = true; tl.setPointerCapture(e.pointerId); pos = at(e); drawHead(plan()); });
+  tl.addEventListener('pointermove', (e) => { if (drag) { pos = at(e); drawHead(plan()); } });
+  tl.addEventListener('pointerup', (e) => { if (!drag) return; drag = false; pos = at(e); if (playing) playFrom(pos); else drawHead(plan()); });
+  tl.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { pos = Math.max(0, pos + (e.key === 'ArrowRight' ? 1 : -1)); if (playing) playFrom(pos); else drawHead(plan()); } });
+  $('arr-play').addEventListener('click', () => { if (playing || solo) { solo = null; stop(); } else playFrom(pos); });
+  $('arr-loop').addEventListener('change', () => { if (playing) playFrom(pos); });
+  $('arr-add').addEventListener('click', () => { const last = blocks[blocks.length - 1]; blocks.push(last ? { src: last.src, from: Math.min(last.to + 1, SRC[last.src].bars), to: Math.min(last.to + 4, SRC[last.src].bars), fade: 0 } : { src: CFG.sources[0].id, from: 1, to: 4, fade: 0 }); changed(); });
+  // ---------- presets / save / load ----------
+  const sel = $('arr-preset');
+  const fill = (saved) => { sel.innerHTML = (saved ? '<option value="__saved">My saved mix</option>' : '') + Object.keys(CFG.presets).map((k) => `<option value="${k}">${k}</option>`).join(''); };
+  let savedBlocks = null, db = null; fill(false);
+  $('arr-load').addEventListener('click', () => { const v = sel.value; const src = v === '__saved' ? savedBlocks : CFG.presets[v]; if (!src) return; if (playing) stop(); blocks = JSON.parse(JSON.stringify(src)); pos = 0; changed(); });
+  $('arr-save').addEventListener('click', async () => {
+    const el = $('arr-saved'); local();
+    if (!db) { el.textContent = 'Kept in this browser only (not saved online)'; el.className = 'saved bad'; return; }
+    try { await db.collection('music').doc('arr_battle').set({ key: 'arr:battle', blocks, updatedAt: new Date().toISOString() }); savedBlocks = JSON.parse(JSON.stringify(blocks)); fill(true); el.textContent = 'Saved: tell me in chat and I will make it the game file'; el.className = 'saved ok'; }
+    catch (e) { el.textContent = 'Could not save, try again'; el.className = 'saved bad'; }
+  });
+  try { const l = JSON.parse(localStorage.getItem('soldia-arr') || 'null'); if (Array.isArray(l) && l.length && l.every((b) => SRC[b.src])) blocks = l; } catch (e) {}
+  drawMaps(); drawBlocks(); drawTl();
+  (async () => {
+    db = window.claude ? await window.claude.use('db').catch(() => null) : null; if (!db) return;
+    try { const d = await db.collection('music').doc('arr_battle').get(); const v = d && (d.data ? d.data() : d); if (v && Array.isArray(v.blocks)) { savedBlocks = v.blocks; fill(true); } } catch (e) {}
+  })();
+})();
+</script>

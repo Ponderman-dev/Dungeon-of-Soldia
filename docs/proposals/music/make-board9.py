@@ -124,9 +124,40 @@ document.addEventListener('click', (e) => {
 });
 audio.addEventListener('emptied', () => { seek.value = 0; seek.disabled = true; tcur.textContent = '0:00'; tdur.textContent = '0:00'; });
 </script>""", 1)
+# ARRANGER (user: 'make me a timeline so I can manually adjust'): arranger.html goes on top of the board. Sources =
+# RPG 8 sped to 140 bpm, RPG 10, and both two semitones up; mp3 stereo 128k, RPG 8 levelled to RPG 10 (whole-file loudness).
+def render_src(src, dst, af):
+    if not os.path.exists(dst): subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', src, '-af', af, '-ar', '44100', '-ac', '2', dst], check=True)
+def pcm(f):
+    return np.frombuffer(subprocess.run(['ffmpeg', '-v', 'error', '-i', f, '-ac', '1', '-ar', '44100', '-f', 'f32le', '-'], capture_output=True).stdout, np.float32)
+RB_ = SRC + '/' + RB; RBQ = 'transients=crisp:detector=compound:pitchq=quality:channels=together'
+g8 = 20 * np.log10(np.sqrt((pcm(RB_ + 'theme-10.ogg') ** 2).mean()) / np.sqrt((pcm(RB_ + 'theme-8.ogg') ** 2).mean()))
+ARR = [('rb8', 'RPG 8', 'R8', RB_ + 'theme-8.ogg', 28, f'rubberband=tempo={140 / 130}:pitch=1:{RBQ},volume={g8:.2f}dB', '#ffd84a'),
+       ('rb10', 'RPG 10', 'R10', RB_ + 'theme-10.ogg', 36, 'anull', '#8fc8ff'),
+       ('rb8hi', 'RPG 8 two steps higher', 'R8+', RB_ + 'theme-8.ogg', 28, f'rubberband=tempo={140 / 130}:pitch={2 ** (2 / 12)}:{RBQ},volume={g8:.2f}dB', '#ff8a6a'),
+       ('rb10hi', 'RPG 10 two steps higher', 'R10+', RB_ + 'theme-10.ogg', 36, f'rubberband=tempo=1:pitch={2 ** (2 / 12)}:{RBQ}', '#c9a3ff')]
+arr_src = []
+for aid, name, short, f, bars, af, col in ARR:
+    wavf = os.path.join(OUT, 'a_' + aid + '.wav'); render_src(f, wavf, af + ',alimiter=limit=0.95')
+    x = pcm(wavf); d = len(x) / 44100; bar = len(x) / bars
+    lv = [round(float(20 * np.log10(np.sqrt((x[int(k * bar):int((k + 1) * bar)] ** 2).mean()) + 1e-9)), 1) for k in range(bars)]
+    mp = os.path.join(OUT, 'm', 'a_' + aid + '.mp3')
+    if not os.path.exists(mp): subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', wavf, '-b:a', '128k', mp], check=True)
+    arr_src.append({'id': aid, 'name': name, 'short': short, 'file': 'm/a_' + aid + '.mp3', 'bars': bars, 'dur': d, 'beats': 4, 'color': col, 'lv': lv})
+PRESETS = {
+  'Your pick C (RPG 8 build lands on RPG 10)': [{'src': 'rb8', 'from': 5, 'to': 12, 'fade': 0}, {'src': 'rb8', 'from': 17, 'to': 20, 'fade': 0}, {'src': 'rb10', 'from': 5, 'to': 16, 'fade': 2}],
+  'C + drum bar': [{'src': 'rb8', 'from': 5, 'to': 12, 'fade': 0}, {'src': 'rb8', 'from': 17, 'to': 19, 'fade': 0}, {'src': 'rb10', 'from': 4, 'to': 16, 'fade': 2}],
+  'Battle suite (your love)': [{'src': 'rb8', 'from': 5, 'to': 12, 'fade': 0}, {'src': 'rb8', 'from': 17, 'to': 28, 'fade': 0}, {'src': 'rb10', 'from': 1, 'to': 36, 'fade': 0}],
+  'Battle suite LONG (as now)': [{'src': 'rb8', 'from': 5, 'to': 12, 'fade': 0}, {'src': 'rb8', 'from': 17, 'to': 28, 'fade': 0}, {'src': 'rb10', 'from': 1, 'to': 36, 'fade': 0},
+                                 {'src': 'rb8hi', 'from': 5, 'to': 12, 'fade': 0}, {'src': 'rb8hi', 'from': 17, 'to': 28, 'fade': 0}],
+  'Idea: full suite with C landings': [{'src': 'rb8', 'from': 5, 'to': 12, 'fade': 0}, {'src': 'rb8', 'from': 17, 'to': 20, 'fade': 0}, {'src': 'rb10', 'from': 5, 'to': 36, 'fade': 2},
+                                       {'src': 'rb8hi', 'from': 1, 'to': 12, 'fade': 0}, {'src': 'rb8hi', 'from': 17, 'to': 20, 'fade': 0}, {'src': 'rb10', 'from': 5, 'to': 16, 'fade': 2}],
+}
+ARRH = open(os.path.join(HERE, 'arranger.html')).read().replace('/*ARR_CFG*/', json.dumps({'sources': arr_src, 'presets': PRESETS}))
+T = T.replace('<div id="screens"></div>', ARRH + '\n  <div id="screens"></div>', 1)
 FONT = base64.b64encode(open(os.path.join(HERE, '../../../src/assets/fonts/press-start-2p.woff2'), 'rb').read()).decode()
 html = T.replace('/*FONT*/', 'data:font/woff2;base64,' + FONT).replace('/*OPTS*/', json.dumps(opts))
-for must in ['MIX</span>', "['sting'", 'Round 9', 'id="seek"', 'blobUrl(o).then', 'class="tj"']: assert must in html, must
+for must in ['MIX</span>', "['sting'", 'Round 9', 'id="seek"', 'blobUrl(o).then', 'class="tj"', 'id="arr"']: assert must in html, must
 open(os.path.join(OUT, 'index.html'), 'w').write(html)
 tot = sum(os.path.getsize(p) for p in glob.glob(os.path.join(OUT, 'm', '*.mp3')))
 print(len(opts), 'options,', len(html) // 1024, 'KB page,', tot // 1048576, 'MB audio')

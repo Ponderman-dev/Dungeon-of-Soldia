@@ -216,3 +216,11 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   tr_land_drum = C + RPG 10's drum-hit fill bar 3 at the landing, then RPG 10 bar 4. Board blend screen = C + C-drum.
   That landed 1 bar late ('ruined, cut a bit later'): tr_land_drum now REPLACES RPG 8's last build bar (19) with the
   drum bar, so RPG 10's loud part lands exactly where C lands (same length). Lesson: never shift the landing time.
+- ARRANGER (user: 'just make me a timeline so I can manually adjust'): `arranger.html`, put on top of the board by
+  make-board9.py. Web Audio editor: sources = RPG 8 at 140 bpm, RPG 10, both +2 semitones (m/a_*.mp3, 128k stereo,
+  RPG 8 levelled to RPG 10; decoded lengths checked exact). Song maps = a column per bar (height = loudness), tap =
+  hear from that bar. Blocks {src, from, to (1-based bars, inclusive), fade (beats)}: fade = the block's own music
+  before its first bar fades in under the previous block (equal power), so the landing never moves. Timeline =
+  coloured blocks + needle (drag), LOOP, presets (C, C + drum bar, Battle suite, LONG, 'full suite with C landings').
+  SAVE -> db `music` doc `arr_battle` {key 'arr:battle', blocks}. NEXT: render the saved blocks into the game file
+  (make-mixes.py pieces: bars from-1..to; fade beats -> a pre-roll blend that ENDS at the landing, not after it).

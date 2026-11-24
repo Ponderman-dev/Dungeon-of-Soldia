@@ -242,7 +242,12 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   (same song: keeps playing), SquadScene 'squad', BattleScene.buildFloor 'boss' (a boss enemy) or 'battle',
   GameOverScene 'gameOver' (null = fades out). A list song plays intro + loop once, then fades into the next; leaving
   the list (boss floor) and coming back = the next song. MUSIC bar + mute: `music.refresh()` (SettingsScene save /
-  delete save, SquadScene mute button). Music waits for the first tap (browser rule); app hidden = paused.
+  delete save, SquadScene mute button). START: the player tries to start at once (user: 'I need the music to play
+  at the beginning'); a BROWSER blocks sound until the first tap (autoplay rule), so there the first tap starts it.
+  ANDROID APP TODO: the web view must allow sound without a tap: Capacitor MainActivity
+  `bridge.getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false)` (plain WebView: the same setting);
+  then the title song plays as the app opens (checked with Chromium --autoplay-policy=no-user-gesture-required).
+  App hidden = paused.
   `nowPlaying()` = the track id (browser checks: `await import('/src/audio/music.js')` on the dev server).
   FILES: `python3 docs/proposals/music/make-game-music.py <sources> <mixes>` writes src/assets/music/*.mp3 (intro +
   loop in one file, -16 LUFS, limiter, MONO 56k: 4.2 MB for 6 songs) and loopStart / seconds into music.json.

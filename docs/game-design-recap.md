@@ -84,6 +84,7 @@ Engine: Phaser 3 + Vite + plain JS, to be wrapped for Android with Capacitor lat
   look / theme). Still to decide: the floor 180 and 200 bosses, the extra bosses per floor, the 5 looks, and what
   happens after floor 200 (win screen? endless?).
 - More dungeons after Dungeon A.
-- Android wrap (Capacitor) and the Solana / dApp Store side (wallet, gem payments, server checks).
+- Android wrap (Capacitor) and the Solana / dApp Store side (wallet, gem payments, server checks). Wrap note: allow sound
+  without a tap in the web view (setMediaPlaybackRequiresUserGesture(false)) so the title music plays at launch (sound.md MUSIC).
 - Sound (on hold), skins, hero lore, online leaderboard (today a sample board).
 - Playtests with real players.

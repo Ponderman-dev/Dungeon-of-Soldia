@@ -135,6 +135,13 @@ if (typeof window !== 'undefined') {
   };
   window.addEventListener('pointerdown', unlock, true);
   window.addEventListener('keydown', unlock, true);
+  // Try at once too: the Android app lets sound start without a tap (its web view is set up with
+  // mediaPlaybackRequiresUserGesture = false), so the title song plays as the game opens. A browser says no
+  // (the context stays 'suspended') and the first tap starts it instead.
+  try {
+    const a = audioContext();
+    if (a) a.resume().then(() => { if (a.state === 'running' && !unlocked) unlock(); }, () => {});
+  } catch { /* ignore */ }
   document.addEventListener('visibilitychange', () => {
     if (!ctx || !unlocked) return;
     if (document.hidden) ctx.suspend().catch(() => {}); else ctx.resume().catch(() => {});

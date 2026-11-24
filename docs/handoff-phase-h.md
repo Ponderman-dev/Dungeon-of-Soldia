@@ -1,31 +1,33 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 53): MUSIC. The user REARRANGES songs they found into a new soundtrack, then the music player
-- BRANCH: `main` has EVERYTHING (session 52 merged in). Start the next branch from `main`.
-- READ FIRST: `docs/systems/sound.md`, section MUSIC (rounds 1-8 of the music board, sources, licences, tools).
-- WHERE WE ARE: no music in the game yet (Settings already has a MUSIC bar, `settings.json` `music`). Session 52 ran 8
-  rounds on the MUSIC BOARD (the reused Skill Effects page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN, db
-  collection `music`, LOVE / MAYBE / NO + notes). Final LOVES (a full soundtrack, now the only songs on the page):
-  title/camp = xDeviruchi 'Title Theme' (CC BY-SA 4.0, credit) + Pixel-boy Ninja Adventure theme 6; squad = RPG Battle
-  theme 12; battle = RPG Battle themes 8 + 10; boss = RPG Battle theme 14 (Pixel-boy / Sparklin Labs superpowers-asset-
-  packs, CC0). ALL our own 'code' songs were rejected in every style (synth, real instruments, gothic, 16-bit, chiptune,
-  SNES-style): do NOT offer more of our compositions unless the user asks.
-- NEXT TASK (user, end of session 52): 'I got some song options, I want to DECONSTRUCT and REARRANGE them into a new
-  soundtrack with a similar feeling'. The user will attach a zip + say where each song came from. Do: (1) check every
-  licence (CC0 / Pixabay / CC BY OK; CC BY-SA OK but the remix stays CC BY-SA; ND / NC = NO, flag them); (2) start with
-  CUT AND REARRANGE (ffmpeg: find sections, reorder / loop / join, match key + tempo, change speed or pitch) to make
-  versions per screen (title, camp, squad, battle, boss, maybe a victory sting); (3) only then TRY stem separation on
-  ONE song (AI tool, may not install here; test first); (4) MIDI / tracker files in a pack = best source for new songs.
-  Show results on the same board page (make-board8.py pattern, swap the list; the audio goes beside the page as files).
-- AFTER THAT: build the in-game MUSIC PLAYER (`src/audio/music.js`, no Phaser; Web Audio; files packed like sfx.js
-  with `?inline` + atob, NEVER fetch): one loop per screen (title, camp, squad, battle floors, boss), crossfade between
-  screens, battle songs take turns, MUSIC bar volume + the existing mute, data in `src/data/music.json`, a test.
-  Keep the page size in mind (2.5 MB now; ogg/mp3 ~0.5-1 MB per song).
-- STILL OPEN from session 51 (not started; session 52 did music instead): the deep BUG HUNT + OPTIMIZATION + SECURITY
-  CHECK. Its full plan is the session-51 note at the top of `docs/handoff-archive.md`.
+## START HERE (session 54): MELEE HIT EFFECTS + RANGED ATTACK / PROJECTILE EDITS
+- BRANCH: `main` has EVERYTHING (session 53 merged in). Start the next branch from `main`.
+- NEXT TASK (user, end of session 53): edit the MELEE hit effects and the RANGED attacks / projectiles. Ask WHAT to change
+  (look / size / speed / per damage type / per hero) with the question tool before building; then show options IN THE
+  GAME or on the reused Skill Effects page (`docs/proposals/skill-fx`, its projectiles review from session 40).
+- READ FIRST: `docs/systems/effects.md` (HIT EFFECTS: `src/systems/hitFx.js` projectileFx / impactFx / critFx /
+  dodgeFx / blockFx / soakFx; scene side `battle/effects.js` drawHitFx, `shootArrow`, `addImpact`; PROJECTILE REVIEW
+  session 40). The Glossary BASICS pictures (`scenes/glossary/basicVisuals.js`) paint the SAME hitFx recipes, so a
+  change there shows in the glossary too (shots at shotScale 4 there).
+- KIV (user): HOLY damage. The user says 'we don't have holy damage' but the Cleric's smite / holy_nova still have
+  damageType holy (skills.json) and some enemies are weak to holy. Removed from the Basics only; don't change the data
+  until the user decides.
+- SESSION 53 DONE (all on main): music in the game (`src/audio/music.js`, title/camp = xDeviruchi Title Theme, squad =
+  RPG 12, boss = boss_final after the roar, battle floors SILENT, defeat keeps the floor song; sound.md MUSIC), CREDITS +
+  HELP windows (`entities/infoWindow.js`, `info.json`), Glossary item card big icon, Glossary BASICS = drop-down with an
+  animated game-art picture per basic (15 basics; Reactions removed: Mage-only). Open: a 'made by' name for the credits
+  (ask the user); battle-floor music (user may look for more later); the Android wrap must allow sound without a tap.
+- STILL OPEN from session 51: the deep BUG HUNT + OPTIMIZATION + SECURITY CHECK (plan: the session-51 note near the top of
+  `docs/handoff-archive.md`).
 - PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').
 
 ## How we work with this user
+- SESSION 53 lessons: the user wants pictures / effects to look EXACTLY like the game ('not what it looks like in
+  game'): reuse the game's own drawing code (hitFx recipes, orders.js lines, iconPop, bars, popText sizes and colours),
+  never look-alikes. A 'simple tool' must be SIMPLE: the music Arranger (many controls) got 'wtf, I can't understand a
+  single thing' and was hidden. Before a big feature they asked for '4 questions first on how you will tackle it'
+  (question tool, 4 questions with options), then 'do 4 first, then the rest'. Timing words matter: an added bar that
+  moved a landing later 'ruined' it: never shift the moment they liked.
 - MUSIC (session 52): the user judges by ear on the board (LOVE / MAYBE / NO + short notes) and changes direction often
   ('too cyber', 'too cheery / town', 'too gothic', 'too trebly / reverb', 'just 8-bit'); their LOVES were all retro RPG
   tracks by Pixel-boy and xDeviruchi. Measuring loved tracks (spectrograms, balance numbers) helped explain WHY, but our

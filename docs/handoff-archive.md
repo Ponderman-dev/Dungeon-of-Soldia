@@ -1,5 +1,31 @@
-# Handoff ARCHIVE (sessions 2-51, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-53, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## SESSION 53 (archived; started as): MUSIC. The user REARRANGES songs they found into a new soundtrack, then the music player
+- BRANCH: `main` has EVERYTHING (session 52 merged in). Start the next branch from `main`.
+- READ FIRST: `docs/systems/sound.md`, section MUSIC (rounds 1-8 of the music board, sources, licences, tools).
+- WHERE WE ARE: no music in the game yet (Settings already has a MUSIC bar, `settings.json` `music`). Session 52 ran 8
+  rounds on the MUSIC BOARD (the reused Skill Effects page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN, db
+  collection `music`, LOVE / MAYBE / NO + notes). Final LOVES (a full soundtrack, now the only songs on the page):
+  title/camp = xDeviruchi 'Title Theme' (CC BY-SA 4.0, credit) + Pixel-boy Ninja Adventure theme 6; squad = RPG Battle
+  theme 12; battle = RPG Battle themes 8 + 10; boss = RPG Battle theme 14 (Pixel-boy / Sparklin Labs superpowers-asset-
+  packs, CC0). ALL our own 'code' songs were rejected in every style (synth, real instruments, gothic, 16-bit, chiptune,
+  SNES-style): do NOT offer more of our compositions unless the user asks.
+- NEXT TASK (user, end of session 52): 'I got some song options, I want to DECONSTRUCT and REARRANGE them into a new
+  soundtrack with a similar feeling'. The user will attach a zip + say where each song came from. Do: (1) check every
+  licence (CC0 / Pixabay / CC BY OK; CC BY-SA OK but the remix stays CC BY-SA; ND / NC = NO, flag them); (2) start with
+  CUT AND REARRANGE (ffmpeg: find sections, reorder / loop / join, match key + tempo, change speed or pitch) to make
+  versions per screen (title, camp, squad, battle, boss, maybe a victory sting); (3) only then TRY stem separation on
+  ONE song (AI tool, may not install here; test first); (4) MIDI / tracker files in a pack = best source for new songs.
+  Show results on the same board page (make-board8.py pattern, swap the list; the audio goes beside the page as files).
+- AFTER THAT: build the in-game MUSIC PLAYER (`src/audio/music.js`, no Phaser; Web Audio; files packed like sfx.js
+  with `?inline` + atob, NEVER fetch): one loop per screen (title, camp, squad, battle floors, boss), crossfade between
+  screens, battle songs take turns, MUSIC bar volume + the existing mute, data in `src/data/music.json`, a test.
+  Keep the page size in mind (2.5 MB now; ogg/mp3 ~0.5-1 MB per song).
+- STILL OPEN from session 51 (not started; session 52 did music instead): the deep BUG HUNT + OPTIMIZATION + SECURITY
+  CHECK. Its full plan is the session-51 note at the top of `docs/handoff-archive.md`.
+- PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').
+  (Session 53 outcome: see the session-54 START HERE 'SESSION 53 DONE' line and sound.md MUSIC.)
 
 ## (session 51 start note, NOT DONE YET: session 52 did music instead) DEEP BUG HUNT + OPTIMIZATION + SECURITY CHECK (no new features, no look changes)
 - BRANCH: `main` has EVERYTHING (session 50 merged in). Start the next branch from `main`.

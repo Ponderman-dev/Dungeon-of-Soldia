@@ -6,7 +6,8 @@
   "room": {
     "wallArt": 60,
     "cutBelow": 10,
-    "seed": 4242
+    "seed": 4242,
+    "_floor": "the camp uses the battle floor as is (user, session 55: 'camp should be the same floor'), without its decorations (the camp has its own props)"
   },
   "light": {
     "x": 65,

@@ -2,6 +2,10 @@
 
 ## START HERE (session 56): BATTLE-FLOOR MUSIC SEARCH (continue)
 - BRANCH: `main` has EVERYTHING (session 55 merged in). Start the next branch from `main`.
+- SESSION 55 ALSO DID (all on main): NEW FLOOR (user's mix after their 3 reference pictures, drawn by floorArt.js):
+  big square slabs, less grain, capstones + 4 pillars, vines, barrels / crates / chest at RANDOM spots (wall foot, or
+  only the far left / right edges: never in the fight path), no side walls; the camp uses it too (no props); the squad
+  screen is a CLOSE-UP (`closeUpPixel` 4, no props). Details + every rejected round: `docs/systems/floors-rooms.md`.
 - NEXT TASK (user, end of session 55): continue the search for BATTLE-FLOOR music. Today battle floors are SILENT
   (`src/data/music.json` screen 'battle' = null; user, session 53: 'the battle floor songs are not good, remove
   everything'). Every other screen has its song (title/camp xDeviruchi, squad RPG Battle 12, boss boss_final).
@@ -19,6 +23,10 @@
 - PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').
 
 ## How we work with this user
+- SESSION 55 FLOOR lessons: 4 rounds of my own redesigns were all rejected ('too different', 'not it'); what worked
+  was the user's REFERENCE PICTURES drawn with the game's OWN art code (same colours / moss / door), then their mix
+  ('floor C, walls mix, props mix'). Ask for a reference picture early. 'Walls mix' did NOT mean side walls (they hated
+  them): when a mix word is unclear, show only parts they named. Props must never sit in the fight path.
 - SESSION 55 lessons: asked 'what feels wrong' with options, they answered 'my idea' and then described it in one line:
   build THEIR idea directly, then tune in quick rounds ('faster', 'don't wait', 'wait 0.5-0.7s'), republishing each round.
   Feel bugs ('still battling after defeat'): reproduce in the browser with and without the fix (before / after).

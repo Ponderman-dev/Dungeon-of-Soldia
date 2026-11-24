@@ -7,8 +7,7 @@ import Door from '../entities/Door.js';
 import { skillIconKey } from '../entities/skillIconTexture.js';
 import floorArt from '../data/floorArt.json';
 import { floorTextureKey, FLOOR_PIXEL } from '../entities/floorTexture.js';
-import { layerTexture } from '../entities/pixelLayer.js';
-import { torchLayers } from '../systems/torchArt.js';
+import { drawWallTorches } from '../entities/wallTorches.js';
 import heroDefs from '../data/heroes.json';
 import skillDefs from '../data/skills.json';
 import unlocks from '../data/unlocks.json';
@@ -107,22 +106,12 @@ export default class SquadScene extends Phaser.Scene {
   // ---- drawing -------------------------------------------------------------------------------
 
   drawRoom() {
-    this.add.image(0, 0, floorTextureKey(this, dungeons.A.tileColors[0], 0, WALL_H)).setOrigin(0).setScale(FLOOR_PIXEL).setDepth(DEPTH.floor); // as on the battle floors
+    const Z = floorArt.closeUpPixel; // a CLOSE-UP of the battle floor (user, session 55): bigger pixels, same layout
+    this.add.image(0, 0, floorTextureKey(this, dungeons.A.tileColors[0], 0, WALL_H, Z)).setOrigin(0).setScale(Z).setDepth(DEPTH.floor);
     // The door into the dungeon: closed until the squad sets off.
-    this.door = new Door(this, this.add.container(0, 0).setDepth(DEPTH.floor), DOOR_X, WALL_H, { big: true }); // the dungeon entrance
-    // Two torches on the pillars beside the door: pixel art (systems/torchArt.js), the flame flickers by switching frames.
-    const T = floorArt.torch, L = torchLayers(T), P = FLOOR_PIXEL;
-    const img = (lay, key, x, y) => this.add.image(x, y, layerTexture(this, key, lay)).setOrigin(lay.ax / lay.w, lay.ay / lay.h).setScale(P).setDepth(DEPTH.floor);
-    const flameKeys = L.flames.map((f, i) => layerTexture(this, `torch-flame-${i}`, f));
-    for (const x of floorArt.pillars.x.map((ax) => ax * P)) { // on the two pillars
-      const y = WALL_H - 33 * P; // the top of the handle
-      const glow = img(L.glow, 'torch-glow', x, y);
-      this.tweens.add({ targets: glow, alpha: 0.75, duration: 300 + Math.random() * 120, yoyo: true, repeat: -1 });
-      img(L.holder, 'torch-holder', x, y);
-      const flame = img(L.flames[0], 'torch-flame-0', x, y);
-      let f = Math.floor(Math.random() * flameKeys.length);
-      this.time.addEvent({ delay: T.frameMs, loop: true, callback: () => { f = (f + 1 + Math.floor(Math.random() * 2)) % flameKeys.length; flame.setTexture(flameKeys[f]); } });
-    }
+    this.door = new Door(this, this.add.container(0, 0).setDepth(DEPTH.floor), DOOR_X, WALL_H, { big: true, pixel: Z }); // the dungeon entrance
+    // Two torches on the pillars beside the door (entities/wallTorches.js).
+    drawWallTorches(this, WALL_H, (o) => o.setDepth(DEPTH.floor), Z);
   }
 
   drawSlots() {

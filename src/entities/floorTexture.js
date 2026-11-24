@@ -6,13 +6,24 @@ import { floorArtPixels } from '../systems/floorArt.js';
 
 export const FLOOR_PIXEL = floorArt.pixel;
 
-export function floorTextureKey(scene, tint, variant, wallH) {
-  const key = `floorArt-${tint}-${variant}`;
+// CLOSE-UP (session 55, user: the squad screen is a close-up view): the same floor drawn with bigger pixels (`pixel`
+// screen px per art px). Pillars and torches are moved so they stay at the same screen spot; no props (user).
+export function floorArtAt(pixel) {
+  if (pixel === floorArt.pixel) return floorArt;
+  const k = floorArt.pixel / pixel, at = (v) => Math.round(v * k);
+  const D = floorArt.decor;
+  return { ...floorArt, pillars: { ...floorArt.pillars, x: floorArt.pillars.x.map(at) }, torchPillars: floorArt.torchPillars.map(at),
+    decor: { ...D, props: null } }; // no barrels / crates on the squad screen (user)
+}
+
+export function floorTextureKey(scene, tint, variant, wallH, pixel = floorArt.pixel) {
+  const art = floorArtAt(pixel);
+  const key = `floorArt-${tint}-${variant}${pixel === floorArt.pixel ? '' : `-x${pixel}`}`;
   if (scene.textures.exists(key)) return key;
-  const width = Math.ceil(GAME_WIDTH / floorArt.pixel);
-  const height = Math.ceil(GAME_HEIGHT / floorArt.pixel);
+  const width = Math.ceil(GAME_WIDTH / pixel);
+  const height = Math.ceil(GAME_HEIGHT / pixel);
   const seed = (Number(tint) ^ Math.imul(variant + 1, 2654435761)) >>> 0;
-  const { pixels } = floorArtPixels(floorArt, { width, height, wallH: Math.round(wallH / floorArt.pixel), tint, seed });
+  const { pixels } = floorArtPixels(art, { width, height, wallH: Math.round(wallH / pixel), tint, seed });
   const tex = scene.textures.createCanvas(key, width, height);
   const img = tex.context.createImageData(width, height);
   pixels.forEach((c, i) => {

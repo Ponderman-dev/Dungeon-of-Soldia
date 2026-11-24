@@ -1,6 +1,10 @@
 {
   "_about": "The pixel-art look of every floor (systems/floorArt.js draws it, no Phaser). pixel = screen pixels per art pixel. Each floor uses one of `variants` random layouts per tile colour (dungeons.json tileColors; tintShare = how much that colour tints the stones). Wall: stone bricks (brickH, brick widths), PILLARS (x centres in art pixels, width, capital/base), moss and vines from the top. Floor: old flagstones (row heights, stone widths) with dark dirt in the gaps, cracks, DIRT patches (count, radius), GRASS tufts (mostly near dirt and the walls), moss specks and pebbles, a shadow under the wall and darker side edges.",
   "pixel": 3,
+  "torches": true,
+  "torchPillars": [24, 106],
+  "closeUpPixel": 4,
+  "grain": 0.03,
   "variants": 6,
   "tintShare": 0.3,
   "wall": {
@@ -17,13 +21,14 @@
     "brickW": [7,  13],
     "stone": ["0x33302d", "0x2d2a27", "0x393532", "0x282522"],
     "mortar": "0x17130f",
-    "highlight": 0,
-    "vines": 5,
-    "vineLen": [7,  23],
-    "mossBase": 27
+    "highlight": 4,
+    "vines": 14,
+    "vineLen": [20, 50],
+    "caps": { "y": 2, "h": 6, "w": 8, "light": 16 },
+    "mossBase": 48
   },
   "pillars": {
-    "x": [24,  106],
+    "x": [6, 24, 106, 124],
     "width": 10,
     "capitalH": 5,
     "baseH": 5,
@@ -34,27 +39,45 @@
     "cracks": 2
   },
   "floor": {
+    "layout": "squares",
+    "cell": 16,
     "rowH": [7,  9],
     "stoneW": [9,  16],
     "stone": ["0x3a3836", "0x34322f", "0x403d39", "0x2f2d2b", "0x3b362e", "0x36332c"],
     "gap": "0x1d1610",
-    "highlight": 0,
+    "highlight": 5,
     "shade": 10,
-    "cracks": 15,
+    "cracks": 22,
     "sunkenShare": 0.12,
     "dirt": ["0x3a2b1f", "0x33251a", "0x433222", "0x2c2016"],
-    "dirtPatches": 6,
+    "dirtPatches": 3,
     "dirtRadius": [5,  12],
     "grass": ["0x4a4a30", "0x57553a", "0x3d3c28", "0x655f42"],
-    "grassTufts": 46,
+    "grassTufts": 40,
     "moss": ["0x36362a", "0x3e3c2e"],
-    "mossSpecks": 140,
-    "pebbles": 40,
+    "mossSpecks": 90,
+    "pebbles": 12,
     "pebble": ["0x5a5650", "0x4a4640"],
     "seamDirt": 14,
     "seamRubble": 26,
-    "seamTufts": 16,
+    "seamTufts": 28,
     "edgeShade": 15
+  },
+  "decor": {
+    "_about": "Floor decorations (systems/floorArt.js drawDecor): counts per floor picture; stamps = rows of colour letters ('.' = nothing); shadow = how much darker the pixel under a stamp gets; cobwebs in the wall's top corners and beside the pillar capitals (webSize art px, webShare = how pale). The MOSSY RUIN look (user pick, session 55; cobwebs off: they sat under the top bar), + props (barrels, crates, a chest at fixed spots [stamp, x, y], plank piles) from the session-55 mix.",
+    "puddles": 3, "puddleR": [6, 10], "mossPatches": 9, "mossR": [4, 9], "rubble": 7, "bones": 1, "skulls": 1,
+    "props": { "_about": "random per floor picture: `wall` = along the foot of the wall (zone x0, x1, y0, y1; y from the floor line), never within doorGap of the door's middle; `floor` = loose at the far left / right edges only (zones; never in the fight path, user); plankPiles = how many [min, max]",
+      "doorGap": 20, "plankPiles": [0, 1],
+      "wall": { "stamps": ["barrel", "barrel", "crate", "crate", "chest"], "count": [3, 5], "zones": [[3, 127, 2, 16]] },
+      "floor": { "stamps": ["crate", "crate", "barrel"], "count": [0, 2], "zones": [[0, 11, 30, 150], [119, 130, 30, 150]] } }, "cobwebs": false, "webSize": 7, "webShare": 0.35, "shadow": 14,
+    "colors": { "b": "0x9c9482", "d": "0x6a6456", "k": "0x1a1612", "w": "0x3a2618", "W": "0x553a24", "L": "0x6a4a2e", "i": "0x2a2826", "I": "0x4a4642", "g": "0x8a6a2a", "Y": "0xb8943c", "water": "0x252c34", "waterRim": "0x1a1e23", "glint": "0x58626e", "web": "0xc8c8c8", "moss": ["0x3c4a2a", "0x45542f", "0x34402a"] },
+    "stamps": {
+      "bones": [["b.....b", "dbbbbbd", "b.....b"], ["b....", "db...", "..bb.", "...db", "....b"], ["b.b.b", "d.d.d", "bbbbb"]],
+      "skull": [".bbb.", "bbbbb", "bkbkb", "dbbbd", ".b.b."],
+      "barrel": [".........", ".wWLLLWw.", ".IIIIIII.", ".wWLLLWw.", ".wWLLLWw.", ".wWLLLWw.", ".wWLLLWw.", ".IIIIIII.", ".wWLLLWw.", ".wwWWWww.", "........."],
+      "crate": ["..........", ".LLLLLLLL.", ".LwWwWwWL.", ".LwWwWwWL.", ".LwWwWwWL.", ".LLLLLLLL.", ".LwWwWwWL.", ".LwWwWwWL.", ".LLLLLLLL.", ".........."],
+      "chest": ["............", ".WLLLLLLLLW.", ".wWWWWWWWWw.", ".gggggggggg.", ".wWWWgYgWWw.", ".wWWWgggWWw.", ".wWWWWWWWWw.", ".gggggggggg.", "............"]
+    }
   },
   "torch": {
     "_about": "The wall torches (squad screen) as pixel art: systems/torchArt.js. holder rows from the handle top down; flames = frames shown in turn (frameMs); glow = a few solid rings of warm light round the flame (glowSteps).",

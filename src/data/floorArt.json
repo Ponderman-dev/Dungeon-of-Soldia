@@ -73,10 +73,10 @@
     "_about": "LOOK TRIAL (session 55): the user's 3 reference pictures made with THIS floor's own drawing (colours, grain, moss): presets merged (deep) over this file by entities/floorTexture.js; dev url flag ?floorlook=A|B|C; none = today. Delete once the user picks.",
     "A": { "grain": 0.03, "wall": { "sides": 9, "vines": 16, "vineLen": [20, 58] },
       "floor": { "layout": "ashlar", "cell": 4, "maxCells": [3, 2], "pebbles": 12, "mossSpecks": 90 } },
-    "B": { "grain": 0.03, "wall": { "ledgeY": 24, "ledgeH": 8, "ledgeLight": 14 },
+    "B": { "grain": 0.03, "wall": { "ledgeY": 2, "ledgeH": 7, "ledgeLight": 14 },
       "floor": { "layout": "octagon", "cell": 14, "cut": 4, "insetDark": 10, "highlight": 5, "dirtPatches": 3, "grassTufts": 45, "pebbles": 12, "mossSpecks": 90 },
       "decor": { "props": [["barrel", 6, 72], ["barrel", 14, 78], ["crate", 112, 70], ["crate", 114, 80], ["chest", 88, 69]], "plankPiles": [[42, 74]], "bones": 1 } },
-    "C": { "grain": 0.03, "wall": { "caps": { "y": 24, "h": 6, "w": 8, "light": 16 } },
+    "C": { "grain": 0.03, "wall": { "caps": { "y": 2, "h": 6, "w": 8, "light": 16 } },
       "pillars": { "x": [6, 24, 106, 124] },
       "floor": { "layout": "squares", "cell": 16, "highlight": 5, "cracks": 22, "dirtPatches": 3, "grassTufts": 40, "pebbles": 12, "mossSpecks": 90 },
       "decor": { "props": [["crate", 4, 176], ["crate", 12, 188], ["crate", 116, 140]] } }

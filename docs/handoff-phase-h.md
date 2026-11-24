@@ -1,28 +1,33 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 54): MELEE HIT EFFECTS + RANGED ATTACK / PROJECTILE EDITS
-- BRANCH: `main` has EVERYTHING (session 53 merged in). Start the next branch from `main`.
-- NEXT TASK (user, end of session 53): edit the MELEE hit effects and the RANGED attacks / projectiles. Ask WHAT to change
-  (look / size / speed / per damage type / per hero) with the question tool before building; then show options IN THE
-  GAME or on the reused Skill Effects page (`docs/proposals/skill-fx`, its projectiles review from session 40).
-- READ FIRST: `docs/systems/effects.md` (HIT EFFECTS: `src/systems/hitFx.js` projectileFx / impactFx / critFx /
-  dodgeFx / blockFx / soakFx; scene side `battle/effects.js` drawHitFx, `shootArrow`, `addImpact`; PROJECTILE REVIEW
-  session 40). The Glossary BASICS pictures (`scenes/glossary/basicVisuals.js`) paint the SAME hitFx recipes, so a
-  change there shows in the glossary too (shots at shotScale 4 there).
-- KIV (user): HOLY damage. The user says 'we don't have holy damage' but the Cleric's smite / holy_nova still have
-  damageType holy (skills.json) and some enemies are weak to holy. Removed from the Basics only; don't change the data
-  until the user decides.
-- SESSION 53 DONE (all on main): music in the game (`src/audio/music.js`, title/camp = xDeviruchi Title Theme, squad =
-  RPG 12, boss = boss_final after the roar, battle floors SILENT, defeat keeps the floor song; sound.md MUSIC), CREDITS +
-  HELP windows (`entities/infoWindow.js`, `info.json`), Glossary item card big icon, Glossary BASICS = drop-down with an
-  animated game-art picture per basic (15 basics; Reactions removed: Mage-only). Open: a 'made by' name for the credits
-  (ask the user); battle-floor music (user may look for more later); the Android wrap must allow sound without a tap;
-  Settings HELP becomes the CRYPTO help (wallet / Solana / Seeker / payments) at the Solana integration (user).
-- STILL OPEN from session 51: the deep BUG HUNT + OPTIMIZATION + SECURITY CHECK (plan: the session-51 note near the top of
-  `docs/handoff-archive.md`).
+## START HERE (session 55): TRANSITION EDIT, MAIN MENU (CAMP) <-> HERO SELECT (SQUAD SCREEN)
+- BRANCH: `main` has EVERYTHING (session 54 merged in). Start the next branch from `main`.
+- NEXT TASK (user, end of session 54): edit the TRANSITION between the main menu (the camp hub, `BaseScene`) and the hero
+  select (`SquadScene`), both ways. Ask WHAT feels wrong / what they want (question tool: look / speed / direction /
+  what moves) before building; show options IN THE GAME (a dev switch or the squad demo page) with clips, not guesses.
+- READ FIRST: `docs/transition-plan.md` (row 3 'Camp <-> Squad', motion tokens: SLOW 450ms for big moves) and
+  `docs/systems/ui.md` (motion tokens, `slideToScreen`, `uiShift`). Code today: camp EXPEDITION press = `prepareScreen`
+  builds the squad screen while the finger holds, `BaseScene.toExpedition()` -> `whenScreenReady` -> `uiShift` (buttons
+  leave) -> `slideToSquad()` (the squad screen comes down from above, `uiKit slideToScreen`); back = `SquadScene.toCamp()`
+  ('< CAMP', the reverse, camp built on press). Squad side: `fromCamp` (buttons come in after the slide).
+- FEEL WORDS (session 49): 'slow' / 'stuck, low FPS' = STUTTER: record frames under a 4x slowed CPU before changing timings.
+- SESSION 54 DONE (all on main): hit looks (`systems/hitLooks.js`: melee per hero / enemy `hitLook`, shots per element,
+  Bard `shotLook` note; melee hits CENTRED on the body, Knight slash through the middle), elite BODY look (element
+  'Living' colours baked in the sprite + trait sign, `eliteFx.js`), Skill Dealer icons, dashes / Savage Leap reach the
+  enemy (leap lands deep and pushes enemies aside, `pushAside`), squad screen HEAD tiles (2 rows of 5, still) + Begin
+  Descent as wide as CAMP / RANDOM. Review pages: `docs/proposals/skill-fx/hits.js`, `elites.js` (db `hits`, `elites`).
+- KIV (user): HOLY damage (Cleric's smite / holy_nova still holy; user said 'we don't have holy'): don't change until asked.
+  Open from session 53: a 'made by' name for the credits; battle-floor music; Android must allow sound without a tap;
+  Settings HELP -> crypto help at the Solana integration. From session 51: the deep BUG HUNT + OPTIMIZATION + SECURITY
+  CHECK (plan: session-51 note in `docs/handoff-archive.md`).
 - PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').
 
 ## How we work with this user
+- SESSION 54 lessons: pick rounds on the reused review page worked (TODAY / A / B / C per row + I PICK THIS, picks read
+  from the db). 'Not centered' / 'doesn't reach' = check the REAL game with frame crops (Playwright, fixed crop on the
+  target, hero/enemy made unkillable) and still renders of the effect on a sprite from both sides; then fix the cause
+  (it was the front-edge anchor, the push-apart gap). 'Still doesn't feel like it reached' after a picture-only fix =
+  change the RULES position (they accepted pushing enemies aside). Ambiguous words ('slide') -> ask with options first.
 - SESSION 53 lessons: the user wants pictures / effects to look EXACTLY like the game ('not what it looks like in
   game'): reuse the game's own drawing code (hitFx recipes, orders.js lines, iconPop, bars, popText sizes and colours),
   never look-alikes. A 'simple tool' must be SIMPLE: the music Arranger (many controls) got 'wtf, I can't understand a

@@ -1,5 +1,28 @@
-# Handoff ARCHIVE (sessions 2-53, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-54, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## SESSION 54 (archived; started as): MELEE HIT EFFECTS + RANGED ATTACK / PROJECTILE EDITS
+- BRANCH: `main` has EVERYTHING (session 53 merged in). Start the next branch from `main`.
+- NEXT TASK (user, end of session 53): edit the MELEE hit effects and the RANGED attacks / projectiles. Ask WHAT to change
+  (look / size / speed / per damage type / per hero) with the question tool before building; then show options IN THE
+  GAME or on the reused Skill Effects page (`docs/proposals/skill-fx`, its projectiles review from session 40).
+- READ FIRST: `docs/systems/effects.md` (HIT EFFECTS: `src/systems/hitFx.js` projectileFx / impactFx / critFx /
+  dodgeFx / blockFx / soakFx; scene side `battle/effects.js` drawHitFx, `shootArrow`, `addImpact`; PROJECTILE REVIEW
+  session 40). The Glossary BASICS pictures (`scenes/glossary/basicVisuals.js`) paint the SAME hitFx recipes, so a
+  change there shows in the glossary too (shots at shotScale 4 there).
+- KIV (user): HOLY damage. The user says 'we don't have holy damage' but the Cleric's smite / holy_nova still have
+  damageType holy (skills.json) and some enemies are weak to holy. Removed from the Basics only; don't change the data
+  until the user decides.
+- SESSION 53 DONE (all on main): music in the game (`src/audio/music.js`, title/camp = xDeviruchi Title Theme, squad =
+  RPG 12, boss = boss_final after the roar, battle floors SILENT, defeat keeps the floor song; sound.md MUSIC), CREDITS +
+  HELP windows (`entities/infoWindow.js`, `info.json`), Glossary item card big icon, Glossary BASICS = drop-down with an
+  animated game-art picture per basic (15 basics; Reactions removed: Mage-only). Open: a 'made by' name for the credits
+  (ask the user); battle-floor music (user may look for more later); the Android wrap must allow sound without a tap;
+  Settings HELP becomes the CRYPTO help (wallet / Solana / Seeker / payments) at the Solana integration (user).
+- STILL OPEN from session 51: the deep BUG HUNT + OPTIMIZATION + SECURITY CHECK (plan: the session-51 note near the top of
+  `docs/handoff-archive.md`).
+- PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').
+
 
 ## SESSION 53 (archived; started as): MUSIC. The user REARRANGES songs they found into a new soundtrack, then the music player
 - BRANCH: `main` has EVERYTHING (session 52 merged in). Start the next branch from `main`.

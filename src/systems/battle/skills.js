@@ -53,6 +53,35 @@ export const skillsMethods = {
   // Taps a hero's skill: it goes on cooldown at once and starts winding up (castStart); it goes off
   // when the wind-up is done (see tickCasting). Instant if the wind-up time is 0.
   // Returns events (empty if the skill could not be cast).
+
+  // Warden's Chain Hook (`target: 'farthestEnemy'`): the enemy the player tapped or ordered him onto, else the
+  // FARTHEST one that can be hit (the archer or caster at the back).
+  farthestFoe(hero) {
+    const foes = this.targetableEnemies();
+    if (!foes.length) return null;
+    const order = this.orderOf(hero);
+    const picked = foes.find((e) => (order ? e === order : e.uid === this.focusUid));
+    if (picked) return picked;
+    let best = foes[0];
+    for (const e of foes) if (this.distance(hero, e) > this.distance(hero, best)) best = e;
+    return best;
+  },
+
+  // `pull: { gapPx, ms }`: the target is dragged to `gapPx` in front of the caster over `ms` (it uses the knockback
+  // slide, so it moves even while stunned). Bosses are never pulled (they do the shoving); its swing is dropped.
+  pullTo(hero, target, pull, events) {
+    if (!target.alive || target.def.boss || !this.hasPositions(hero) || !this.hasPositions(target)) return;
+    const dx = target.x - hero.x, dy = target.y - hero.y;
+    const d = Math.hypot(dx, dy);
+    const far = d - pull.gapPx;
+    if (far <= 1) return;
+    target.knock = { vx: (-dx / d) * far / pull.ms, vy: (-dy / d) * far / pull.ms, remaining: pull.ms };
+    if (target.pending) {
+      target.pending = null;
+      events.push({ type: 'attackCancel', unit: target, reason: 'pull' });
+    }
+    events.push({ type: 'pull', unit: hero, target, from: { x: target.x, y: target.y }, ms: pull.ms });
+  },
   castSkill(heroUid, index) {
     const events = [];
     const hero = this.heroes.find((h) => h.uid === heroUid);
@@ -140,6 +169,7 @@ export const skillsMethods = {
     else if (skill.target === 'squad') targets = this.squadUnits(); // every living hero and minion
     else if (skill.target === 'lowestAlly') targets = [this.lowestHealthPercent()];
     else if (skill.target === 'allEnemies') ({ targets, zone } = this.areaHit(hero, skill)); // an `area` skill hits only who stands in it
+    else if (skill.target === 'farthestEnemy') targets = [this.farthestFoe(hero)]; // Warden's Chain Hook
     else targets = [this.pickTarget(hero)];
     targets = targets.filter(Boolean); // a pick can come back empty (no target left): never hit "nobody"
     if (!skill.random && !targets.length) {
@@ -247,6 +277,7 @@ export const skillsMethods = {
         for (const n of this.neighbours(target)) this.skillHit(hero, skill, slot.id, n, events, { multiplier: skill.splash.damageMultiplier, scale: echo ? echo.power : 1 });
       }
     }
+    if (skill.pull && targets[0]) this.pullTo(hero, targets[0], skill.pull, events); // Chain Hook: drag it over
     if (skill.secondBand) targets = [...targets, ...this.secondBandHit(hero, skill, slot.id, zone, targets, events)]; // Twin Crescent page
     // Wind Cutter v3 (`killCooldownCutPercent`): if the cast killed an enemy, its cooldown is cut.
     if (skill.killCooldownCutPercent && !echo && targets.some((t) => !t.alive)) {

@@ -68,7 +68,9 @@ export const statusesMethods = {
     // Catalyst (Alchemist): debuffs on ENEMIES last longer.
     const cat = target.side === 'enemy' && this.statusDefs[spec.status] && this.statusDefs[spec.status].debuff ? this.catalyst() : { dur: 1, dot: 1 };
     const will = info.control && target.side === 'hero' && target.specials ? target.specials.ironWill || 0 : 0; // Iron Will Talisman
-    const duration = (spec.durationMs ?? (spec.status === 'shield' ? Infinity : 0)) * scale * cat.dur * (1 - Math.min(95, will) / 100);
+    // Warden's perk Iron Grip (special `controlDuration`, squad-wide): control the heroes put on enemies lasts longer.
+    const grip = info.control && target.side === 'enemy' && source && source.side === 'hero' && source.specials ? 1 + (source.specials.controlDuration || 0) / 100 : 1;
+    const duration = (spec.durationMs ?? (spec.status === 'shield' ? Infinity : 0)) * scale * cat.dur * grip * (1 - Math.min(95, will) / 100);
     const key = `${spec.status}:${skillId}`;
 
     if (info.instant) {

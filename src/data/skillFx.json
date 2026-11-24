@@ -33,5 +33,7 @@
   "arrow_rain": "arrowRainShot",
   "mage_rotation:FB": "fireballNew",
   "mage_rotation:CL": "chainNew",
-  "discord": "discordNew"
+  "discord": "discordNew",
+  "chain_hook": "shieldBash",
+  "lockdown": "challenge"
 }

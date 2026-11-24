@@ -23,7 +23,18 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       green flask lob instead of an arrow. Skills `alch_barrage` (Flask Barrage, 5 POISON flasks only, 90% + poison each; user: no random debuffs) and `alch_brew` (Mystery Brew,
       4 flasks, 9s, heal 30%); the old `flask_barrage` / `mystery_brew` / `catalyst()` stay for the v1 fixture tests. FLASKS ONE BY ONE (user): `random.intervalMs` 250 = the first flask flies at once, the next every 0.25s (`hero.casting.flasks`, `tickCasting()` -> `throwFlask()`); the hero is busy until the last one, a stun stops the rest (like a channel), no Echo. Without `intervalMs` all flasks go at once (old skills). Sound cue `flaskBreak` (Kenney glass, pitch 1.6) when a flask lands, skill flasks and his basic lobs.
       review.mjs 3 all: avg floor 24.3 (last) -> 28.8 (5th of 10); after poison-only Barrage 27.1 (7th, within noise).
-    - **Bard** BATTLE HYMN (built session 6): `passive.hymn.squadItemMultiplier` 1.35 = squad items (items.json `type: 'squad'`:
+    - **WARDEN (replaces the Bard, user's pick "Jailer"; hero id stays `bard` so saves/unlocks/art keep working):** melee
+      tank who protects by locking enemies down (NO taunt, NO reflect: that is the Knight). SHACKLES = a `counter`
+      (`passive.counter`, every 4th landed basic hit, `effect: empower` with no strike): ROOTED 1.5s + Weaken -30% 4s.
+      ROOTED (new status, control + debuff, icon in statusIcons.json): can't walk (`move()` skips it), still attacks what
+      is in reach. CHAIN HOOK (`chain_hook`, target `farthestEnemy` = `farthestFoe()`: the tapped/ordered enemy, else the
+      farthest one): 120% + stun 1s + `pull {gapPx, ms}` (`pullTo()`: the knockback slide towards him; bosses are never
+      pulled; `pull` event). LOCKDOWN (`lockdown`, area circle at the caster 150): Weaken -25% + 2 Chill, 4s. Perk IRON
+      GRIP (special `controlDuration` %, squad-wide): control statuses the heroes put on ENEMIES last longer
+      (`applyStatus()`). Hero page `heavyChains` (Chain Hook stun +1s) replaced `massCharm`. Old Bard kit frozen in
+      `scripts/tests/fixtures/bard-v3-kit.json` (`bardV3()` in util.mjs); its code (songs, lute, hymn, charm) stays.
+      Tests `warden.test.mjs`. Look (skill effects, art) still the Bard's for now.
+    - **Bard** (OLD, replaced by the Warden) BATTLE HYMN (built session 6): `passive.hymn.squadItemMultiplier` 1.35 = squad items (items.json `type: 'squad'`:
       War Banner, Jolly Banner, Spotter's Lens, Last Stand Banner) x1.35 while he lives (`squadItemMult()` -> 7th arg of
       `computeHeroStats()`, which multiplies those items' effect factor: proc chances, specials, Last Stand shield/attack).
       LUTE (`passive.lute`): every `everyMs` 10s of a floor's fight (`hero.floor.lute`, `tickLute()`) a random boost for the

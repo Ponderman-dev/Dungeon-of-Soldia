@@ -191,6 +191,7 @@ export const movementMethods = {
         continue;
       }
       if (this.isStunned(u) || u.pending || u.casting || u.bossCast || u.def.object || u.dust || u.burrowed) continue; // frozen in place, busy, an object, underground
+      if (this.has(u, 'rooted')) continue; // Warden's Shackles: chained to the spot (it can still attack what is in reach)
       let goal = null;
       // A lit Kobold Sapper bomb is NOT avoided (user: it blocked walking and the bomb never hit): fighters keep going.
       if (u.walkTo && !this.has(u, 'fear')) {

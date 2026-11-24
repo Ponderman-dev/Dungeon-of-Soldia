@@ -373,7 +373,7 @@
       "source": "pixabay_earth-magic-6-378601.mp3",
       "always": true
     },
-    "skill_discord": {
+    "skill_chain_hook": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,
@@ -397,7 +397,7 @@
       "source": "new_100-cc0-sfx-metal-04.mp3",
       "always": true
     },
-    "skill_change_song": {
+    "skill_lockdown": {
       "volume": 0.3,
       "pitchJitter": 0.06,
       "minGapMs": 120,

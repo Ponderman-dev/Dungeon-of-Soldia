@@ -206,6 +206,13 @@
     "color": "#c9a8ff",
     "textColor": "#000000"
   },
+  "rooted": {
+    "label": "ROOTED",
+    "color": "#8a8f99",
+    "textColor": "#000000",
+    "control": true,
+    "debuff": true
+  },
   "webbed": {
     "label": "WEBBED",
     "color": "#e9e0f0",

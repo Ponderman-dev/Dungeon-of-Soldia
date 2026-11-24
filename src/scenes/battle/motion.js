@@ -364,7 +364,7 @@ export const motionMethods = {
     caster.ch.flash(heroColor ? Phaser.Display.Color.HexStringToColor(heroColor).color : color, FX.flashMs);
     const own = SKILL_FX_BY_NAME[e.skill.name];
     if (own) this.playSkillFx(own, caster, e); // the skill's own effect (systems/skillFx.js) instead of the plain rings
-    const spots = own ? [] : attack || e.skill.target === 'squad' || e.skill.target === 'enemy' || e.skill.target === 'lowestAlly' ? e.targets.map((t) => this.views.get(t.uid)).filter(Boolean) : [caster];
+    const spots = own ? [] : attack || e.skill.target === 'squad' || e.skill.target === 'enemy' || e.skill.target === 'farthestEnemy' || e.skill.target === 'lowestAlly' ? e.targets.map((t) => this.views.get(t.uid)).filter(Boolean) : [caster];
     for (const v of spots) {
       const c = this.center(v);
       const ring = this.add.circle(c.x, c.y, 10).setStrokeStyle(4, color).setDepth(DEPTH.popup - 1);

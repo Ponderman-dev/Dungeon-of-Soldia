@@ -158,3 +158,10 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   boss = RPG Battle Theme 14 (all Pixel-boy superpowers-asset-packs, CC0). Every code song (chip + real) was NO.
   The board page now shows only these 6 ('your loves'). NEXT (fresh session): the in-game music player
   (src/audio/music.js: loop per screen, crossfade, MUSIC volume from settings, mute), files from the sources above.
+- ROUND 8 BOARD (same url/db; `make-board8.py`; user: 'copy how my loved songs sound'). ANALYSIS of the 6 loves
+  (spectrograms + numbers): they are 16-BIT CONSOLE (SNES-like) music, NOT chiptune: dense (14-38 partial peaks per
+  frame vs our chip 9-11), top cut ~8-10 kHz, stereo width -9..-15 dB (our chip ~-22 = near mono; our real ~-4 = too
+  wide), sustained (pads), warm 200-700 Hz middle, short echo, no hall. Fix: `STYLE=snes python3 render-real.py ...`
+  (every sample resampled to 16 kHz, 0.9 s small room instead of the 2.6 s hall) + a soft pad in EVERY build6 style +
+  POST chain (make-board8.py `POST`: +4 dB @420 Hz, -3 dB @55 Hz, console echo 120/240 ms, lowpass 8 kHz, limiter).
+  Result measured inside the loves' range on every number. Ids 'snes:<songId>'; board = 6 loves + 17 songs.

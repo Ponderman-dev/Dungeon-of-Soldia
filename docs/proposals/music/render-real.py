@@ -3,6 +3,9 @@
 # (github peastman/sso, CC Sampling Plus 1.0). Usage: python3 render-real.py <samples dir> <songId> <out.mp3>
 import sys, os, re, glob, json, subprocess, functools, numpy as np
 LIB, SONG, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
+# ROUND 8: STYLE=snes (env var) = 16-bit console sound like the user's loved Pixel-boy tracks: samples at 16 kHz,
+# a small dry room instead of the hall (the short console echo is added by make-board8.py's post chain).
+SNES = os.environ.get('STYLE') == 'snes'
 HERE = os.path.dirname(os.path.abspath(__file__)); SR = 44100
 SSO = os.path.join(LIB, 'sso/Sonatina Symphonic Orchestra/Samples/'); VC = os.path.join(LIB, 'VCSL/')
 NOTE = {'c': 0, 'd': 2, 'e': 4, 'f': 5, 'g': 7, 'a': 9, 'b': 11}
@@ -62,7 +65,8 @@ DRUM = {  # name: (file, gain)
 }
 @functools.lru_cache(None)
 def load(f):
-    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', f, '-ac', '1', '-ar', str(SR), '-f', 'f32le', '-'], capture_output=True, check=True).stdout
+    lo = ['-af', 'aresample=16000:filter_size=8,aresample=44100'] if SNES else []
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', f] + lo + ['-ac', '1', '-ar', str(SR), '-f', 'f32le', '-'], capture_output=True, check=True).stdout
     x = np.frombuffer(raw, np.float32).copy()
     i = np.argmax(np.abs(x) > 0.01 * (np.abs(x).max() + 1e-9)); x = x[max(0, i - 40):]  # cut leading silence
     w = SR // 4; fr = x[: len(x) // w * w].reshape(-1, w) if len(x) >= w else x[None, :]
@@ -108,9 +112,9 @@ for e in song['events']:
     mix[0, s0:s0 + n] += x[:n] * L; mix[1, s0:s0 + n] += x[:n] * R
     send[0, s0:s0 + n] += x[:n] * L * rev; send[1, s0:s0 + n] += x[:n] * R * rev
 # hall reverb: convolve the send with a decaying noise tail (FFT)
-irn = int(2.6 * SR); t = np.arange(irn) / SR
+irn = int((0.9 if SNES else 2.6) * SR); t = np.arange(irn) / SR
 for ch in range(2):
-    ir = rng.standard_normal(irn).astype(np.float32) * np.exp(-t * 2.6) * 0.03
+    ir = rng.standard_normal(irn).astype(np.float32) * np.exp(-t * (6.0 if SNES else 2.6)) * (0.02 if SNES else 0.03)
     ir[: int(0.02 * SR)] = 0  # small pre-delay
     m = 1 << int(np.ceil(np.log2(N + irn)))
     wet = np.fft.irfft(np.fft.rfft(send[ch], m) * np.fft.rfft(ir, m), m)[:N]

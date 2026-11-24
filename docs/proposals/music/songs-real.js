@@ -512,26 +512,26 @@ function build6(sp) {
       [{ type: 'arp', inst: 'harp', oct: 3, every: 1, pat: [0, 1, 2, 3, 4, 3, 2, 1] }, { type: 'chord', inst: 'pad', oct: 3 }, { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
        { type: 'mel', inst: 'leadA', bars: melA }, { type: 'arp', inst: 'dbl', oct: 5, every: 4, pat: [3, 4, 2, 4] }, { type: 'drums', kit: KITS.title, vel: 0.6 }],
       [{ type: 'arp', inst: 'harp', oct: 3, every: 1, pat: [0, 1, 2, 3, 4, 3, 2, 1] }, { type: 'bass', inst: 'bass', oct: 2, pat: 'R . . . R . . .' }, { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
-       { type: 'mel', inst: 'leadB', bars: melB }, { type: 'mel', inst: 'dbl', shift: 12, bars: melB }, { type: 'drums', kit: KITS.titleB, vel: 0.7 }]],
+       { type: 'mel', inst: 'leadB', bars: melB }, { type: 'chord', inst: 'pad', oct: 3, vel: 0.8 }, { type: 'mel', inst: 'dbl', shift: 12, bars: melB }, { type: 'drums', kit: KITS.titleB, vel: 0.7 }]],
     squad: [
       [{ type: 'arp', inst: 'harp', oct: 4, every: 1, pat: [0, 1, 2, 3, 2, 1, 2, 1] }, { type: 'chord', inst: 'pad', oct: 3 }, { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R . R . 5 .' },
        { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' }, { type: 'mel', inst: 'leadA', bars: melA }, { type: 'drums', kit: KITS.squad, vel: 0.85 }],
       [{ type: 'arp', inst: 'arp', oct: 5, every: 1, pat: [0, 1, 2, 1] }, { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R R R . R R' }, { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
-       { type: 'mel', inst: 'leadB', bars: melB }, { type: 'mel', inst: 'dbl', shift: 12, bars: melB }, { type: 'drums', kit: KITS.squadB, vel: 0.85 }]],
+       { type: 'mel', inst: 'leadB', bars: melB }, { type: 'chord', inst: 'pad', oct: 3, vel: 0.8 }, { type: 'mel', inst: 'dbl', shift: 12, bars: melB }, { type: 'drums', kit: KITS.squadB, vel: 0.85 }]],
     battle: [
       [{ type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 1, 2, 1] }, { type: 'arp', inst: 'arp', oct: 5, every: 1, pat: [0, 2, 1, 3] },
        { type: 'bass', inst: 'bass', oct: 2, pat: 'R . . R . . R . R . . R . . 5 .' }, { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
-       { type: 'mel', inst: 'leadA', bars: melA }, { type: 'drums', kit: KITS.battle, vel: 0.9 }],
+       { type: 'chord', inst: 'pad', oct: 3, vel: 0.8 }, { type: 'mel', inst: 'leadA', bars: melA }, { type: 'drums', kit: KITS.battle, vel: 0.9 }],
       [{ type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 2, 1, 3] }, { type: 'arp', inst: 'arp', oct: 5, every: 1, pat: [0, 1, 2, 3] },
        { type: 'bass', inst: 'bass', oct: 2, pat: 'R . R R . R R . R . R R . R 8 .' }, { type: 'bass', inst: 'low', oct: 1, pat: 'R - - - - - - -' },
-       { type: 'mel', inst: 'leadB', bars: melB }, { type: 'mel', inst: 'dbl', shift: 12, bars: melB }, { type: 'drums', kit: KITS.battleB, vel: 0.9 }]],
+       { type: 'mel', inst: 'leadB', bars: melB }, { type: 'chord', inst: 'pad', oct: 3, vel: 0.8 }, { type: 'mel', inst: 'dbl', shift: 12, bars: melB }, { type: 'drums', kit: KITS.battleB, vel: 0.9 }]],
     boss: [
       [{ type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 1, 0, 2] }, { type: 'arp', inst: 'arp', oct: 5, every: 1, pat: [0, 2, 1, 3] },
        { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R R R' }, { type: 'bass', inst: 'tbn', oct: 2, pat: 'R - - - R - - - R - - - R - - -' },
-       { type: 'mel', inst: 'leadA', bars: melA }, { type: 'drums', kit: KITS.boss, vel: 0.9 }],
+       { type: 'chord', inst: 'pad', oct: 3, vel: 0.8 }, { type: 'mel', inst: 'leadA', bars: melA }, { type: 'drums', kit: KITS.boss, vel: 0.9 }],
       [{ type: 'arp', inst: 'str', oct: 4, every: 1, pat: [0, 1, 2, 3] }, { type: 'arp', inst: 'arp', oct: 5, every: 1, pat: [0, 1, 2, 3] },
        { type: 'bass', inst: 'bass', oct: 2, pat: 'R R R R R R R R' }, { type: 'bass', inst: 'tbn', oct: 2, pat: 'R - - - R - - - R - - - R - - -' },
-       { type: 'mel', inst: 'leadB', bars: melB }, { type: 'mel', inst: 'dbl', shift: 12, bars: melB }, { type: 'drums', kit: KITS.bossB, vel: 0.9 }]] }[sp.screen];
+       { type: 'mel', inst: 'leadB', bars: melB }, { type: 'chord', inst: 'pad', oct: 3, vel: 0.8 }, { type: 'mel', inst: 'dbl', shift: 12, bars: melB }, { type: 'drums', kit: KITS.bossB, vel: 0.9 }]] }[sp.screen];
   return { title: sp.title, screen: sp.screen, bpm: sp.bpm, desc: 'NEW (round 6, 16-bit). ' + sp.desc, inst,
     sections: { A: { prog: A, parts: P[0] }, B: { prog: B, parts: P[1] } }, order: ['A', 'B'] };
 }

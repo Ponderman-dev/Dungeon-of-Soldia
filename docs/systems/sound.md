@@ -47,7 +47,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   Page-2 `assign` fountain = potion drink = already the game's sound.
 - UNUSED FILES REMOVED (session 51): 31 sound files no cue used (146 KB) were deleted (git history has them); `sounds.test.mjs` now fails if a packed file is not used by a cue. To try an old sound again, restore it from git (`git log --diff-filter=D --name-only -- src/assets/sounds`).
 
-## MUSIC (session 52, started; NOT in the game yet)
+## MUSIC (sessions 52-53; NOT in the game yet)
 - No music system in the game yet; Settings already has a MUSIC bar (`settings.json` `music`, 0-10) waiting for it.
 - MUSIC BOARD = the reused Skill Effects page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN (CLAUDE.md: reuse it).
   4 screens: title + camp, squad, battle, boss. Each = 2 CODE SONGS + free CC0 tracks. The user marks each LOVE /
@@ -165,3 +165,25 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   (every sample resampled to 16 kHz, 0.9 s small room instead of the 2.6 s hall) + a soft pad in EVERY build6 style +
   POST chain (make-board8.py `POST`: +4 dB @420 Hz, -3 dB @55 Hz, console echo 120/240 ms, lowpass 8 kHz, limiter).
   Result measured inside the loves' range on every number. Ids 'snes:<songId>'; board = 6 loves + 17 songs.
+- ROUND 9 (session 53; user: 'rearrange my songs into a soundtrack + more xDeviruchi'). No zip came, so 'my songs' =
+  the 6 loves. MIXES by `make-mixes.py <sources> <out>`: each = intro (once) + loop body; pieces cut on BAR LINES
+  (every Pixel-boy file is an exact bar count starting on beat 1: rb8 28 bars @130 bpm, rb10 36 @140, rb12 10 @80,
+  rb14 8 @85, na6 30 @83.3), 20 ms equal-power crossfades, other songs level-matched, tempo / key via ffmpeg
+  `rubberband`. Mixes: camp_loop (NA6 minus its fading last 6 bars), camp_night (that, 12% slower, softer top),
+  squad_medley (RPG 12 + NA6 bars 8-24 slowed to 80 bpm; same key family), battle8_energy (RPG 8 minus bars 0-3
+  and the quiet break 12-15), battle_suite (that at 140 bpm + all of RPG 10 = 96 s loop), boss_rising (RPG 14 x2,
+  then x2 +1 semitone +6%), boss_rage (+2 semitones +10%: boss below half HP idea); title = xDeviruchi's OWN
+  'Title Theme (Loop).wav' (8-bit pack separated files, e.g. github Krinowa/gameHub_assignment). Stings: victory =
+  xD16 Victory! first 10 s (its loop starts at 8.5 s) with fade, defeat = Never Give Up, rest = Peaceful Night.
+  Seam check (scratch tool): cuts inside one song measure like the song's own phrase changes; the medley song
+  changes are bigger (flagged on the board). Tools to find structure: tempo / bar grid, phrase similarity, loop finder
+  (numpy, kept in the scratchpad; easy to rewrite).
+  NEW SOURCE: xDeviruchi '16-bit Fantasy & Adventure (2025)', 22 SNES-style songs (copies in github
+  The-Rogues/RoguesProject common/music/placeholder/... and XabierMatute/AssetsSurvivors, with its
+  'DOCUMENTATION & LICENSE.pdf'). LICENCE (own, not CC): commercial games OK, modify / remix OK, credit
+  'Original music by Marllon Silva (xDeviruchi)' (+ link to their YouTube when possible); NOT allowed: redistributing
+  the originals or minor edits as music (no OST / sound pack), claiming authorship. 'Loopable' oggs = intro + one loop
+  body (loop start / length in the PDF table and in LOOPSTART / LOOPLENGTH tags); one-shots: 01, 02, 15, 18, 20.
+  Victory! (06) and Never Give Up (18, 8 s) and Peaceful Night (15, 11 s) suit stings.
+  BOARD 9 (same url/db; `make-board9.py <sources> <mixes> <out>`): screens title / camp / squad / battle / boss /
+  sting; tags pick (loves), mix (blue MIX badge), new (xD16); ids free:*, mix:*, x16:NN. Previews: intro + loop x2.

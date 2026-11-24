@@ -1,0 +1,102 @@
+# MUSIC BOARD ROUND 9 (session 53; user: 'rearrange my songs into a soundtrack, and add more xDeviruchi').
+# Shows: (1) your 6 loves, (2) MIXES = the loves cut / reordered / joined by make-mixes.py (previews play intro + loop
+# twice), (3) the NEW xDeviruchi '16-bit Fantasy & Adventure (2025)' pack (22 songs, own licence: commercial OK,
+# edits OK, credit 'Original music by Marllon Silva (xDeviruchi)'; loop points from its DOCUMENTATION & LICENSE.pdf,
+# previews = intro + loop body twice), (4) stings. Screens: title, camp, squad, battle, boss, sting.
+# Usage: python3 make-board9.py <sources dir> <mixes dir> <out dir>
+#   sources dir has the clones (sound.md) + 'xd16' = the pack's 'Loopable + one shots/ogg' folder
+#   + 'xd_title_loop.wav' = xDeviruchi 'Title Theme (Loop).wav' from the 8-bit pack's separated files.
+import sys, os, re, subprocess, json, base64, glob
+SRC, MIX, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
+HERE = os.path.dirname(os.path.abspath(__file__)); os.makedirs(os.path.join(OUT, 'm'), exist_ok=True)
+RB = 'superpowers-asset-packs/rpg-battle-system/music/'; NA = 'superpowers-asset-packs/ninja-adventure/musics/'
+CC0 = ('CC0', 'free, no credit needed'); XDL = ('CREDIT', 'CC BY-SA 4.0: credit "xDeviruchi"; an edited version stays CC BY-SA')
+X16L = ('CREDIT', 'free in a paid game, edits OK; credit "Original music by Marllon Silva (xDeviruchi)"')
+def enc(src, dst, cap=None, ss=0):
+    af = 'loudnorm=I=-16:TP=-1.5:LRA=11'
+    if cap: af += f',afade=t=out:st={cap - 3}:d=3'
+    cmd = ['ffmpeg', '-v', 'error', '-y', '-ss', str(ss), '-i', src] + (['-t', str(cap)] if cap else []) + ['-af', af, '-ar', '44100', '-ac', '1', '-b:a', '64k', dst]
+    if not os.path.exists(dst): subprocess.run(cmd, check=True)
+def dur(f): return float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f], capture_output=True, text=True).stdout)
+opts = []
+def add(oid, src, screen, tag, title, desc, by, lic, cap=None):
+    enc(src, os.path.join(OUT, 'm', oid + '.mp3'), cap)
+    opts.append({'id': oid.replace('_', ':', 1), 'file': 'm/' + oid + '.mp3', 'screen': screen, 'tag': tag, 'title': title, 'desc': desc, 'by': by, 'lic': lic[0], 'licText': lic[1]})
+# 1. YOUR LOVES (as you heard them)
+LOVES = [('free_xd_title', SRC + '/benesmartin_necromancers-mystery/audio/soundtrack/title.mp3', 'title', 'Title Theme (8-bit)', 'xDeviruchi', XDL),
+         ('free_na6', SRC + '/' + NA + 'theme-6.ogg', 'camp', 'Ninja Adventure: Theme 6', 'Pixel-boy', CC0),
+         ('free_rb12', SRC + '/' + RB + 'theme-12.ogg', 'squad', 'RPG Battle: Theme 12', 'Pixel-boy', CC0),
+         ('free_rb8', SRC + '/' + RB + 'theme-8.ogg', 'battle', 'RPG Battle: Theme 8', 'Pixel-boy', CC0),
+         ('free_rb10', SRC + '/' + RB + 'theme-10.ogg', 'battle', 'RPG Battle: Theme 10', 'Pixel-boy', CC0),
+         ('free_rb14', SRC + '/' + RB + 'theme-14.ogg', 'boss', 'RPG Battle: Theme 14', 'Pixel-boy', CC0)]
+for oid, f, scr, t, by, lic in LOVES: add(oid, f, scr, 'pick', t, 'Your LOVE, as it is now (plays on repeat).', by, lic, 120)
+# 2. MIXES of your loves
+MIXES = [
+  ('mix_title', SRC + '/xd_title_loop.wav', 'title', 'Title Theme: game loop', "Your love as the game would play it: xDeviruchi's own loop version (no silence at the end, starts again smoothly).", 'xDeviruchi', XDL),
+  ('mix_camp_loop', MIX + '/camp_loop_preview.wav', 'camp', 'Theme 6: camp loop', 'Ninja Adventure 6 without its fading last bars, so it never dips: the warm part loops forever (69 s loop).', 'Pixel-boy, rearranged', CC0),
+  ('mix_camp_night', MIX + '/camp_night_preview.wav', 'camp', 'Theme 6: camp at night', 'The camp loop 12% slower (same notes and pitch) and a little softer on top: calmer, sleepier.', 'Pixel-boy, rearranged', CC0),
+  ('mix_squad_medley', MIX + '/squad_medley_preview.wav', 'squad', 'Squad medley: Theme 12 + Theme 6', 'RPG 12, then the middle of Ninja Adventure 6 slowed to the same speed. They share a key, so one flows into the other: a 78 s loop instead of 30 s. The change of song (at 0:30) may be noticeable.', 'Pixel-boy, rearranged', CC0),
+  ('mix_battle8_energy', MIX + '/battle8_energy_preview.wav', 'battle', 'Theme 8: full energy', 'RPG 8 with its quiet break taken out: after the opening it only loops the driving parts (37 s loop).', 'Pixel-boy, rearranged', CC0),
+  ('mix_battle_suite', MIX + '/battle_suite_preview.wav', 'battle', 'Battle suite: Theme 8 into Theme 10', 'Your two battle loves as ONE long loop (96 s): RPG 8 (driving parts) sped up to RPG 10\'s speed, then all of RPG 10. Less repetition on long runs. The change of song (at 0:34) may be noticeable.', 'Pixel-boy, rearranged', CC0),
+  ('mix_boss_rising', MIX + '/boss_rising_preview.wav', 'boss', 'Theme 14: rising', 'RPG 14 twice, then twice one step higher and a bit faster, so the fight heats up; then round again (88 s loop instead of 23 s).', 'Pixel-boy, rearranged', CC0),
+  ('mix_boss_rage', MIX + '/boss_rage_preview.wav', 'boss', 'Theme 14: rage', 'RPG 14 two steps higher and 10% faster: an idea for when the boss drops below half HP (the game would switch to it).', 'Pixel-boy, rearranged', CC0),
+]
+for oid, f, scr, t, d, by, lic in MIXES: add(oid, f, scr, 'mix', t, d, by, lic, 180 if dur(f) > 180 else None)
+# 3. NEW: xDeviruchi 16-bit pack. (file number, screen, short use note). Loop points from the pack's PDF.
+LOOP = {3: (23.106, 74.483), 4: (0, 85.807), 5: (10.760, 62.608), 6: (8.501, 32.0), 7: (2.135, 76.8), 8: (0, 53.615),
+        9: (0.63, 63.278), 10: (0, 92.957), 11: (11.503, 54.715), 12: (0, 73.41), 13: (0.167, 107.502), 14: (2.675, 71.287),
+        16: (2.438, 83.267), 17: (13.846, 82.308), 19: (0.639, 66.032), 21: (36.416, 92.6), 22: (5.337, 114.667)}
+X16 = [(2, 'title', 'Their new 16-bit title song.'), (1, 'title', 'A long, story-like opening (no loop).'),
+       (20, 'title', 'Adventure-setting-out mood (no loop).'), (22, 'title', 'Finale / credits mood; could also be an end-of-run song.'),
+       (14, 'camp', 'Town / home mood.'), (3, 'camp', 'Town mood.'), (7, 'camp', 'Town by the sea mood.'),
+       (8, 'camp', 'Shop mood: could play at the camp merchant.'), (4, 'camp', 'Calm forest mood.'), (19, 'camp', 'Open-world travel mood.'),
+       (11, 'squad', 'Proud, royal mood.'), (16, 'squad', 'Getting ready before danger: fits picking your squad.'),
+       (5, 'battle', 'Their main battle song.'), (9, 'battle', 'Their second battle song.'),
+       (10, 'battle', 'Dungeon / ruins mood: could be the floor music between fights.'), (12, 'battle', 'Ice dungeon mood.'),
+       (13, 'boss', 'Boss battle.'), (17, 'boss', 'Second boss battle, darker.'), (21, 'boss', 'Final boss battle (long build-up).'),
+       (6, 'sting', 'Full Victory! song (the short sting version is above).')]
+files = {int(os.path.basename(f)[:2]): f for f in glob.glob(os.path.join(SRC, 'xd16', '*.ogg'))}
+import numpy as np
+def level(f, t0, t1):
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-ss', str(t0), '-t', str(t1 - t0), '-i', f, '-ac', '1', '-ar', '22050', '-f', 'f32le', '-'], capture_output=True).stdout
+    x = np.frombuffer(raw, np.float32); return 20 * np.log10(np.sqrt((x ** 2).mean()) + 1e-9)
+for n, scr, note in X16:
+    f = files[n]; title = re.sub(r'^\d+ - ', '', os.path.basename(f)[:-4]).strip(); d = dur(f); oid = f'x16_{n:02d}'
+    if n in LOOP:
+        a, L = LOOP[n]; tmp = os.path.join(OUT, oid + '.wav')
+        if not os.path.exists(os.path.join(OUT, 'm', oid + '.mp3')):   # intro + loop body twice, as the game would play it
+            subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', f, '-i', f, '-filter_complex',
+                            f'[0]atrim=0:{a + L}[p];[1]atrim={a}:{a + L},asetpts=PTS-STARTPTS[q];[p][q]concat=n=2:v=0:a=1', tmp], check=True)
+        intro = f'{a:.0f} s intro, then a {L:.0f} s loop' if a > 1 else f'{L:.0f} s loop'
+        src = tmp
+    else: intro = f'{d:.0f} s, plays once (no loop)'; src = f
+    calm = level(f, 0, 4) - level(f, 0, min(d, 60))
+    start = ' Starts quiet.' if calm < -6 and scr in ('battle', 'boss') else (' Full energy from the start.' if scr in ('battle', 'boss') else '')
+    add(oid, src, scr, 'new', title, f'NEW 16-bit. {note} {intro}.{start}', 'xDeviruchi (16-bit Fantasy & Adventure, 2025)', X16L, 150)
+    if os.path.exists(os.path.join(OUT, oid + '.wav')): os.remove(os.path.join(OUT, oid + '.wav'))
+# 4. STINGS
+for oid, f, t, d in [('mix_sting_victory', MIX + '/sting_victory_preview.wav', 'Victory! (short)', 'The opening of xDeviruchi\'s Victory!, cut before its loop with a fade: a jingle after a floor or boss is won (10 s).'),
+                     ('x16_18', MIX + '/sting_defeat_preview.wav', 'Never Give Up', 'A short xDeviruchi piece (8 s): could play when the whole squad falls (Game Over).'),
+                     ('x16_15', MIX + '/sting_rest_preview.wav', 'Peaceful Night', 'A short xDeviruchi piece (11 s): could play at a rest / fountain room, or when you get back to camp.')]:
+    add(oid, f, 'sting', 'mix' if oid.startswith('mix') else 'new', t, d, 'xDeviruchi (16-bit Fantasy & Adventure, 2025)', X16L)
+# ---------- page ----------
+T = open(os.path.join(HERE, 'board2-template.html')).read()
+INTRO = '<p class="lede">Round 9: <b>your loves, rearranged into a soundtrack</b>, plus <b>22 new xDeviruchi songs</b> from their 16-bit pack (2025): the same console style as your loves. Gold <b>YOUR PICK</b> = your loves as they are. Blue <b>MIX</b> = your loves cut up, reordered and joined for the game (the preview plays the start once, then the loop twice, so you can hear if the loop point is smooth). Green <b>NEW</b> = the new xDeviruchi songs. Tap <b>PLAY</b>, then <b>LOVE</b> / <b>MAYBE</b> / <b>NO</b>.</p>'
+T = re.sub(r'<p class="lede">.*?</p>', lambda m: INTRO, T, count=1, flags=re.S)
+T = T.replace('Soldia Music Board · Round 2', 'Soldia Music Board · Round 9')
+T = re.sub(r'<div class="key">.*?</div>', '<div class="key"><span><span class="tag CC0">CC0</span> free, no credit needed.</span><span><span class="tag lic">CREDIT</span> free, but the game\'s credits must name the composer (normal for games).</span></div>', T, count=1, flags=re.S)
+T = T.replace('<p>Other music ideas: a song per boss, a short victory jingle after a floor, a Game Over tune…</p>', '<p>Ideas: a rage version when the boss is low, a shop song at the camp merchant, a different song every 20 floors… Anything you want changed in a MIX (e.g. "battle suite but no speed-up")?</p>')
+T = re.sub(r'<details class="lic">.*?</details>', '<details class="lic"><summary>About the credit lines</summary><p>xDeviruchi\'s 16-bit pack: free in a game you sell, and we may edit it; the credits must say "Original music by Marllon Silva (xDeviruchi)". The 8-bit Title Theme is CC BY-SA 4.0: credit "xDeviruchi", and our edited loop stays CC BY-SA. Pixel-boy\'s songs are CC0: no credit needed (we will thank them anyway). I keep this list for the credits screen.</p></details>', T, count=1, flags=re.S)
+SCREENS = "const SCREENS = [\n  ['title', 'Title screen', 'The first thing you hear.'],\n  ['camp', 'Base camp', 'Your hub between runs.'],\n  ['squad', 'Squad / hero select', 'Choosing your 3 heroes.'],\n  ['battle', 'Battle floors', 'The music you will hear MOST: loving 2-3 lets the game take turns.'],\n  ['boss', 'Boss fights', 'Every 20 floors.'],\n  ['sting', 'Short jingles', 'One-shots: floor won, Game Over, rest room.'],\n];"
+T = re.sub(r'const SCREENS = \[.*?\n\];', lambda m: SCREENS, T, count=1, flags=re.S)
+T = T.replace("const ORDER = { pick: 0, ours: 1, new: 2, r1: 3 };", "const ORDER = { pick: 0, mix: 1, new: 2 };")
+T = T.replace(""": o.tag === 'r1' ? '<span class="badge r1">ROUND 1</span>'""", """: o.tag === 'mix' ? '<span class="badge mix">MIX</span>'""")
+T = T.replace('.badge.r1 { background: var(--soft); color: var(--fg); }', '.badge.mix { background: var(--code); color: #000; }')
+T = T.replace('placeholder="e.g. Hearthfire but slower, or Fjeld for the camp…"', 'placeholder="e.g. Battle suite but without the speed-up…"')
+T = T.replace('.sort((a, b) => ORDER[a.tag] - ORDER[b.tag])', '.sort((a, b) => (ORDER[a.tag] ?? 9) - (ORDER[b.tag] ?? 9))')
+FONT = base64.b64encode(open(os.path.join(HERE, '../../../src/assets/fonts/press-start-2p.woff2'), 'rb').read()).decode()
+html = T.replace('/*FONT*/', 'data:font/woff2;base64,' + FONT).replace('/*OPTS*/', json.dumps(opts))
+for must in ['MIX</span>', "['sting'", 'Round 9']: assert must in html, must
+open(os.path.join(OUT, 'index.html'), 'w').write(html)
+tot = sum(os.path.getsize(p) for p in glob.glob(os.path.join(OUT, 'm', '*.mp3')))
+print(len(opts), 'options,', len(html) // 1024, 'KB page,', tot // 1048576, 'MB audio')

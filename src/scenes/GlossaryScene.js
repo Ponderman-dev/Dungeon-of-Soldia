@@ -3,6 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
 import { drawWindow, uiText, drawCursor, drawButton, buttonTextColor, drawStrip, pageEnter, pageLeave, markBar, pageBackdrop } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
+import { basicVisualMethods } from './glossary/basicVisuals.js';
 import G from '../data/glossary.json';
 import heroes from '../data/heroes.json';
 import enemies from '../data/enemies.json';
@@ -144,25 +145,41 @@ export default class GlossaryScene extends Phaser.Scene {
     point(0);
   }
 
-  // BASICS: every help page as a card (title + text).
+  // BASICS: a DROP-DOWN list (user, session 53): every help page is a title row; tapping one opens it under its title
+  // (its picture, if it has one, then the text) and closes the one that was open. Tap the open one again to close it.
   showBasics() {
-    const page = this.newPage(), x = L.side, P = L.pad;
+    const page = this.newPage(), x = L.side, B = L.basics, P = B.pad;
     this.top(page, '< BACK', 'BASICS', () => this.showChapters());
-    // Two columns of short cards would be cramped: one column, small text, as many as fit; the rest on page 2.
-    let y = L.basics.y;
-    const all = G.basics;
-    this.basicsAt = this.basicsAt || 0;
-    const per = 6, pages = Math.ceil(all.length / per), at = this.basicsAt;
-    for (const b of all.slice(at * per, at * per + per)) {
-      const t = this.text(page, x + P, 0, b.text, 'small', UI.text, { wordWrap: { width: W - P * 2 }, lineSpacing: 6 });
-      t.setY(y + 40);
-      const h = 40 + t.height + P - 4;
-      page.addAt(drawWindow(this.add.graphics(), x, y, W, h), page.list.indexOf(t));
-      this.text(page, x + P, y + 12, b.title, 'normal', UI.gold);
-      y += h + L.basics.gap;
-    }
-    this.pager(page, Math.max(y + 4, 760), at, pages, (i) => { this.basicsAt = i; this.showBasics(); });
+    const all = G.basics, pages = Math.ceil(all.length / B.perPage);
+    this.basicsAt = Math.min(this.basicsAt || 0, pages - 1);
+    const at = this.basicsAt, first = at * B.perPage;
+    if (this.basicsOpen === undefined) this.basicsOpen = 0; // the first page opens on its first basic
+    let y = B.y;
+    all.slice(first, first + B.perPage).forEach((b, k) => {
+      const i = first + k, open = this.basicsOpen === i;
+      const box = this.add.graphics(); page.add(box);
+      this.text(page, x + P, y + B.rowH / 2, b.title, 'normal', open ? UI.gold : UI.text).setOrigin(0, 0.5);
+      const mark = this.add.graphics().fillStyle(open ? gold() : DIM, 1); // a small pixel triangle: down = open, right = shut
+      const mx = x + W - P - 10, my = y + B.rowH / 2;
+      if (open) for (let r = 0; r < 4; r++) mark.fillRect(mx - 6 + r * 2, my - 4 + r * 2, 12 - r * 4, 2);
+      else for (let r = 0; r < 4; r++) mark.fillRect(mx - 4 + r * 2, my - 6 + r * 2, 2, 12 - r * 4);
+      page.add(mark);
+      page.add(this.add.zone(x, y, W, B.rowH).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => {
+        sfx.play('tap'); this.basicsOpen = open ? null : i; this.showBasics();
+      }));
+      let h = B.rowH;
+      if (open) {
+        let cy = y + B.rowH;
+        if (b.visual) { this.basicVisual(page, b.visual, x + P, cy, W - P * 2, B.picH); cy += B.picH + P; }
+        const t = this.text(page, x + P, cy, b.text, 'small', UI.text, { wordWrap: { width: W - P * 2 }, lineSpacing: 6 });
+        h = cy + t.height + P - y;
+      }
+      drawWindow(box, x, y, W, h, { line: open ? gold() : UI.line });
+      y += h + B.gap;
+    });
+    this.pager(page, B.pagerY, at, pages, (i) => { this.basicsAt = i; this.basicsOpen = i * B.perPage; this.showBasics(); });
   }
+
 
   // STATUSES: tabs BAD / GOOD / CONTROL; a coloured tag + one line, or '???' until met.
   showStatuses(tab) {
@@ -293,3 +310,5 @@ export default class GlossaryScene extends Phaser.Scene {
     pageLeave(this, () => { this.scene.resume(this.from); this.scene.stop(); }); // the page slides away first (uiKit)
   }
 }
+
+Object.assign(GlossaryScene.prototype, basicVisualMethods); // the BASICS pictures (glossary/basicVisuals.js)

@@ -1,6 +1,7 @@
 // Part of BattleScene (mixed into its prototype at the bottom of ../BattleScene.js; `this` is the scene).
 // Drawn effects: status body effects, elites, bombs, hit / item effects, pop-up words, deaths and graves (docs/systems/effects.md, statuses.md).
 import Phaser from 'phaser';
+import { drawGrave } from '../../entities/grave.js';
 import { GAME_WIDTH, GAME_HEIGHT, CHAR_SCALE, UI } from '../../config.js';
 import combatRules from '../../data/combat.json';
 import damageTypes from '../../data/damageTypes.json';
@@ -609,14 +610,7 @@ export const effectsMethods = {
 
   // A pixel tombstone (grey stone, dark cross) standing at x, y (its foot); it pops up out of the smoke.
   makeGrave(x, y) {
-    const P = CHAR_SCALE, w = 8, hgt = 10;
-    const grave = this.add.graphics().setDepth(DEPTH.hero - 0.5);
-    grave.fillStyle(0x1a1a1a).fillRect(-w / 2 * P - P, -hgt * P - P, (w + 2) * P, (hgt + 1) * P); // outline
-    grave.fillStyle(0x8a8a96).fillRect(-w / 2 * P, -hgt * P, w * P, hgt * P);
-    grave.fillStyle(0x1a1a1a).fillRect(-w / 2 * P - P, -hgt * P - P, P, P).fillRect((w / 2) * P, -hgt * P - P, P, P); // round top corners
-    grave.fillStyle(0xb4b4c0).fillRect(-w / 2 * P, -hgt * P, w * P, P); // light top edge
-    grave.fillStyle(0x3a3a44).fillRect(-P, -8 * P, P, 6 * P).fillRect(-2 * P, -6 * P, 4 * P, P); // the cross
-    grave.fillStyle(0x2a2a30, 0.6).fillRect(-w / 2 * P - 2 * P, 0, (w + 4) * P, P); // a little dirt at its foot
+    const grave = drawGrave(this.add.graphics().setDepth(DEPTH.hero - 0.5), CHAR_SCALE);
     grave.setPosition(x, y).setScale(0.3, 0.3);
     this.tweens.add({ targets: grave, scaleX: 1, scaleY: 1, duration: 260, ease: 'Back.easeOut' });
     return grave;

@@ -8,8 +8,10 @@
     "cutBelow": 10,
     "seed": 4242,
     "_floor": "the camp keeps the battle floor's look from BEFORE the session-55 mossy polish (no decorations): floor / wall overrides below (same random layout as before)",
-    "floor": { "highlight": 0, "dirtPatches": 6, "grassTufts": 46, "mossSpecks": 140, "seamTufts": 16 },
-    "wall": { "highlight": 0, "vines": 5, "mossBase": 27 }
+    "grain": 0.12,
+    "floor": { "layout": "rows", "highlight": 0, "cracks": 15, "dirtPatches": 6, "grassTufts": 46, "mossSpecks": 140, "pebbles": 40, "seamTufts": 16 },
+    "wall": { "highlight": 0, "vines": 5, "vineLen": [7, 23], "mossBase": 27, "caps": null },
+    "pillars": { "x": [24, 106] }
   },
   "light": {
     "x": 65,

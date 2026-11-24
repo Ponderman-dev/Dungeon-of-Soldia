@@ -105,8 +105,7 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
   const gap = tinted(F.gap);
   for (let y = wallH; y < height; y++) for (let x = 0; x < width; x++) set(x, y, gap);
   const stones = []; // { x, y, w, h } of every flagstone (cracks and grass use them)
-  const bevel = F.bevel || 0; // > 0: the stone's LEFT edge is lit too and a darker inner line runs along its bottom (raised stones)
-  const stone = (x, top, w, h, cut = 0) => { // cut > 0: corners cut off diagonally (octagon tiles)
+  const stone = (x, top, w, h) => {
     const sunk = rnd() < F.sunkenShare; // a few stones have sunk and lie in shadow
     const c = shade(tinted(pick(F.stone)), sunk ? -12 : 0);
     // Each stone is inset 1 pixel (the gap) and has its corners knocked off (worn).
@@ -114,43 +113,16 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
       for (let i = x + 1; i < x + w; i++) {
         const corner = (y === top + 1 || y === top + h - 1) && (i === x + 1 || i === x + w - 1);
         if (corner) continue;
-        const cd = cut ? Math.min(i - x - 1, x + w - 1 - i) + Math.min(y - top - 1, top + h - 1 - y) : 99;
-        if (cd < cut) continue;
         let v = y === top + 1 ? F.highlight : y === top + h - 1 || i === x + w - 1 ? -F.shade : 0;
-        if (cd === cut) v = y < top + h / 2 ? F.highlight : -F.shade; // the cut edge: lit on top, shaded below
-        if (bevel && v === 0 && i === x + 1) v = Math.round(F.highlight * 0.6);
-        if (bevel && v === 0 && (y === top + h - 2 || i === x + w - 2)) v = -Math.round(F.shade * 0.45);
         set(i, y, shade(c, v + (rnd() < grain ? (rnd() < 0.5 ? -5 : 5) : 0))); // a little grain
       }
     }
     stones.push({ x, y: top, w, h });
   };
-  if (F.layout === 'ashlar') {
-    // MIXED FLAGSTONES: a grid of `cell` px squares filled with random slabs of 1-3 x 1-2 cells (squares, long ones, big).
-    const cw = F.cell, cols = Math.ceil(width / cw) + 1, rows = Math.ceil((height - wallH) / cw) + 1;
-    const used = new Uint8Array(cols * rows);
-    for (let r = 0; r < rows; r++) for (let q = 0; q < cols; q++) {
-      if (used[r * cols + q]) continue;
-      let w = 1 + Math.floor(Math.sqrt(rnd()) * F.maxCells[0]), h = 1 + Math.floor(Math.sqrt(rnd()) * F.maxCells[1]); // leaning to bigger slabs
-      while (w > 1 && [...Array(w).keys()].some((k) => q + k >= cols || used[r * cols + q + k])) w--;
-      if (r + h > rows) h = rows - r;
-      for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) used[(r + dy) * cols + q + dx] = 1;
-      stone(q * cw - Math.floor(cw / 2), wallH - 1 + r * cw, w * cw, h * cw);
-    }
-  } else if (F.layout === 'octagon' || F.layout === 'squares') {
-    // OCTAGON tiles (corners cut, a small darker diamond stone where four meet) or big SQUARE slabs, on a straight grid.
-    const cw = F.cell, oct = F.layout === 'octagon', x0 = -Math.floor(((Math.ceil(width / cw) * cw) - width) / 2);
-    for (let top = wallH - 1; top < height; top += cw) for (let x = x0; x < width; x += cw) stone(x, top, cw + 1, cw + 1, oct ? F.cut : 0);
-    if (oct) {
-      for (let top = wallH - 1; top < height + cw; top += cw) for (let x = x0; x < width + cw; x += cw) {
-        const c = shade(tinted(pick(F.stone)), -F.insetDark);
-        for (let dy = -F.cut + 1; dy <= F.cut - 1; dy++) for (let dx = -F.cut + 1; dx <= F.cut - 1; dx++) {
-          const d = Math.abs(dx) + Math.abs(dy);
-          if (d > F.cut - 1 || top + dy <= wallH) continue;
-          set(x + dx, top + dy, d === F.cut - 1 ? gap : dy < 0 && d === F.cut - 2 ? shade(c, F.highlight) : c);
-        }
-      }
-    }
+  if (F.layout === 'squares') {
+    // BIG SQUARE slabs on a straight grid (session 55, the user's mix after their reference pictures).
+    const cw = F.cell, x0 = -Math.floor(((Math.ceil(width / cw) * cw) - width) / 2);
+    for (let top = wallH - 1; top < height; top += cw) for (let x = x0; x < width; x += cw) stone(x, top, cw + 1, cw + 1);
   } else {
     for (let top = wallH - 1; top < height; ) {
       const h = between(F.rowH);
@@ -264,15 +236,7 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
     // (No block shadow on the floor: the wall's contact shadow runs under the pillar too; a square looked like it floated.)
   }
 
-  // WALL TOP EDGE (look trial): the top `ledgeH` rows are the wall's top seen from above: lighter, a dark line under it.
-  if (W.ledgeH) { // (from ledgeY down: darkness above it, under the screen's top bar)
-    const y0 = W.ledgeY || 0;
-    for (let y = 0; y < y0; y++) for (let x = 0; x < width; x++) set(x, y, shade(get(x, y), -40));
-    for (let x = 0; x < width; x++) set(x, y0, mortar);
-    for (let y = y0 + 1; y < y0 + W.ledgeH; y++) for (let x = 0; x < width; x++) set(x, y, shade(get(x, y), y === y0 + 1 ? W.ledgeLight + 8 : W.ledgeLight));
-    for (let x = 0; x < width; x++) { set(x, y0 + W.ledgeH, mortar); set(x, y0 + W.ledgeH + 1, shade(get(x, y0 + W.ledgeH + 1), -12)); }
-  }
-  // CAPSTONES (look trial): a row of rounded cap stones along the top of the wall, darkness above them.
+  // CAPSTONES (session 55 mix): a row of rounded cap stones along the top of the wall, darkness above them.
   if (W.caps) {
     const C = W.caps;
     for (let y = 0; y < C.y; y++) for (let x = 0; x < width; x++) set(x, y, shade(get(x, y), -40));
@@ -286,28 +250,6 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
     }
     for (let x = 0; x < width; x++) set(x, C.y + C.h, mortar);
   }
-  // SIDE WALLS (look trial): brick walls down both sides framing the room (same bricks as the back wall).
-  if (W.sides) {
-    for (const [a, b] of [[0, W.sides], [width - W.sides, width]]) {
-      for (let top = wallH - 1; top < height; top += W.brickH) {
-        for (let x = a - between([0, 4]); x < b; ) {
-          const w = between(W.brickW), c = shade(tinted(pick(W.stone)), rnd() < W.darkShare ? -10 : 0);
-          for (let y = top; y < Math.min(top + W.brickH, height); y++) for (let i = Math.max(a, x); i < Math.min(b, x + w); i++) {
-            const g2 = y === top || i === x;
-            set(i, y, g2 ? mortar : y === top + 1 ? shade(c, W.highlight) : y === top + W.brickH - 1 || i === x + w - 1 ? shade(c, -W.shade) : shade(c, rnd() < grain ? -5 : 0));
-          }
-          x += w;
-        }
-      }
-      const edge = a === 0 ? b : a - 1; // the inner edge: a dark line and a soft shadow on the floor
-      for (let y = wallH - 1; y < height; y++) {
-        set(edge, y, mortar);
-        const out = a === 0 ? 1 : -1;
-        set(edge + out, y, shade(get(edge + out, y), -16)); set(edge + 2 * out, y, shade(get(edge + 2 * out, y), -8));
-      }
-    }
-  }
-
   // Hanging vines from the top of the wall (over bricks and pillars).
   for (let i = 0; i < W.vines; i++) {
     let x = Math.floor(rnd() * width);
@@ -406,7 +348,7 @@ function drawDecor(art, { width, height, wallH, rnd, between, pick, tinted, get,
     else if (r < 0.75) heap(between([4, width - 4]), wallH + between([1, 3]));
     else heap(between([6, width - 6]), floorY());
   }
-  // PROPS (look trial): barrels, crates, a chest... at fixed spots (decor.props [stamp, x, y, flip]), and plank piles.
+  // PROPS (session 55 mix): barrels, crates, a chest... at fixed spots (decor.props [stamp, x, y, flip]), and plank piles.
   for (const [name, x, y, flip] of D.props || []) stamp(D.stamps[name], x, y, !!flip);
   for (const [cx, cy] of D.plankPiles || []) {
     for (const [dx, dy, len] of [[-6, 2, 11], [-3, 4, 9]]) for (let k = 0; k < len; k++) {

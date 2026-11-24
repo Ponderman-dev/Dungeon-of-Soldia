@@ -6,24 +6,13 @@ import { floorArtPixels } from '../systems/floorArt.js';
 
 export const FLOOR_PIXEL = floorArt.pixel;
 
-// LOOK TRIAL (session 55): floorArt.json `looks` presets merged over the file; dev url flag ?floorlook=A|B|C.
-const merge = (base, over) => {
-  const out = { ...base };
-  for (const [k, v] of Object.entries(over || {})) out[k] = v && typeof v === 'object' && !Array.isArray(v) && base[k] ? merge(base[k], v) : v;
-  return out;
-};
-const lookId = () => {
-  try { return (import.meta.env.DEV && new URLSearchParams(location.search).get('floorlook')) || ''; } catch { return ''; }
-};
-const floorLook = () => (lookId() && floorArt.looks && floorArt.looks[lookId()] ? merge(floorArt, floorArt.looks[lookId()]) : floorArt);
-
 export function floorTextureKey(scene, tint, variant, wallH) {
-  const key = `floorArt-${lookId()}-${tint}-${variant}`;
+  const key = `floorArt-${tint}-${variant}`;
   if (scene.textures.exists(key)) return key;
   const width = Math.ceil(GAME_WIDTH / floorArt.pixel);
   const height = Math.ceil(GAME_HEIGHT / floorArt.pixel);
   const seed = (Number(tint) ^ Math.imul(variant + 1, 2654435761)) >>> 0;
-  const { pixels } = floorArtPixels(floorLook(), { width, height, wallH: Math.round(wallH / floorArt.pixel), tint, seed });
+  const { pixels } = floorArtPixels(floorArt, { width, height, wallH: Math.round(wallH / floorArt.pixel), tint, seed });
   const tex = scene.textures.createCanvas(key, width, height);
   const img = tex.context.createImageData(width, height);
   pixels.forEach((c, i) => {

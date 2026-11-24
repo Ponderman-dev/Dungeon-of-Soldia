@@ -275,7 +275,7 @@ export default class SquadScene extends Phaser.Scene {
   // ---- walking -------------------------------------------------------------------------------
 
   // A hero walks to (x, y) at a steady pace with a little hop each step, then calls done.
-  walk(f, x, y, done) {
+  walk(f, x, y, done, speed = WALK) {
     const ch = f.ch;
     if (this.walkers.has(f.def.id)) this.walkers.get(f.def.id).stop();
     const from = { x: ch.x, y: ch.y };
@@ -285,7 +285,7 @@ export default class SquadScene extends Phaser.Scene {
     const tween = this.tweens.addCounter({
       from: 0,
       to: 1,
-      duration: Math.max(1, (dist / WALK) * 1000),
+      duration: Math.max(1, (dist / speed) * 1000),
       onUpdate: (tw) => {
         const t = tw.getValue();
         const hop = Math.abs(Math.sin(((t * dist) / T.stepLenPx) * Math.PI)) * T.stepHeight;
@@ -521,7 +521,7 @@ export default class SquadScene extends Phaser.Scene {
     if (!left) { done(); return; }
     picked.forEach(([id, s], i) => this.time.delayedCall(i * campData.toSquad.squadStaggerMs, () => {
       const f = this.figures.get(id), to = this.L.slots[s];
-      this.walk(f, out ? this.sideX(s, true) : to.x, to.y, () => { if (--left === 0) done(); });
+      this.walk(f, out ? this.sideX(s, true) : to.x, to.y, () => { if (--left === 0) done(); }, campData.toSquad.squadSpeed);
     }));
   }
 
@@ -531,10 +531,11 @@ export default class SquadScene extends Phaser.Scene {
     this.leaving = this.shifting = true;
     sfx.play('tap');
     whenScreenReady(this, 'Base', { fromSquad: true }, -GAME_HEIGHT, () => { // the camp is built, then the buttons leave
-      let left = 2; // and the squad walks off the sides (the reverse of arrive)
+      let left = 2; // and the squad walks off the sides (the reverse of arrive); the slide starts while they walk
       const both = () => { if (--left === 0) this.slideToCamp(); };
       uiShift(this, this.uiParts, false, { onDone: both });
-      this.squadWalk(true, both);
+      this.squadWalk(true, () => {});
+      this.time.delayedCall(campData.toSquad.slideAfterMs, both);
     });
   }
 

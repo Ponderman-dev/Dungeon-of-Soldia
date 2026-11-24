@@ -207,11 +207,12 @@ export default class BaseScene extends Phaser.Scene {
     this.leaving = true;
     sfx.play('tap');
     whenScreenReady(this, 'Squad', { fromCamp: true }, GAME_HEIGHT, () => { // the squad screen is built, then the camp empties
-      let left = 2;
+      let left = 2; // the slide starts while the heroes are still walking up (camp.json toSquad.slideAfterMs)
       const both = () => { if (--left === 0) this.slideToSquad(); };
       this.heroesGone = true;
       uiShift(this, this.uiParts, false, { onDone: both });
-      this.heroesWalk(true, both);
+      this.heroesWalk(true, () => {});
+      this.time.delayedCall(camp.toSquad.slideAfterMs, both);
     });
   }
 

@@ -504,10 +504,12 @@
     "speed": 34
   },
   "toSquad": {
-    "_about": "Camp <-> squad screen (user, session 55). EXPEDITION: the buttons leave while the camp's heroes walk up off the top (upSpeed px/s, one after another every staggerMs, until offTopPx above the screen), then the screen slides; on the squad screen the squad walks in from the left and right sides (squadStaggerMs apart), then the buttons come in. '< CAMP' is the same, reversed: the squad walks off to the sides, the slide, the camp heroes walk down from the top to their spots, then the camp buttons come in.",
+    "_about": "Camp <-> squad screen (user, session 55). EXPEDITION: the buttons leave while the camp's heroes walk up off the top (upSpeed px/s, one after another every staggerMs, until offTopPx above the screen), then the screen slides; on the squad screen the squad walks in from the left and right sides (squadStaggerMs apart), then the buttons come in. The slide starts slideAfterMs after the heroes set off (and the buttons are gone), not when they are off screen; the squad walks at squadSpeed px/s. '< CAMP' is the same, reversed: the squad walks off to the sides, the slide, the camp heroes walk down from the top to their spots, then the camp buttons come in.",
     "upSpeed": 480,
     "staggerMs": 110,
     "offTopPx": 70,
-    "squadStaggerMs": 110
+    "squadStaggerMs": 110,
+    "squadSpeed": 480,
+    "slideAfterMs": 250
   }
 }

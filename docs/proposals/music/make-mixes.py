@@ -27,22 +27,18 @@ MIXES = {
   'battle_suite': ([], [('rb8', 4, 12, {'tempo': 140 / 130}), ('rb8', 16, 28, {'tempo': 140 / 130}), ('rb10', 0, 36, {})]),
   # LONG BATTLE SONGS (round 10; user loved battle8_energy + battle_suite: 'more parts / variations, longer, more
   # exciting in places, like a Pokemon battle song'). Tricks: KEY-UP (+2 semitones) climax, high-pass BUILD-UP
-  # (sweep), drum-roll FILL into the next part, the two themes taking turns.
+  # (sweep), the two themes taking turns. Every cut follows the song's own order (bar k -> what followed it in the
+  # original, or the loop seams the user already loved); the drum-roll 'roll' mod sounded like a GLITCH: don't use it.
   'battle_suite_long': ([('rb8', 0, 4, {'tempo': 140 / 130})], [
-      ('rb8', 4, 12, {'tempo': 140 / 130}),                                # A: RPG 8 theme
-      ('rb8', 16, 24, {'tempo': 140 / 130}),                               # A'
-      ('rb8', 24, 28, {'tempo': 140 / 130, 'roll': True}),                 # end of A + fill
-      ('rb10', 0, 20, {}),                                                 # B: RPG 10
-      ('rb10', 20, 24, {'sweep': (2500, 30)}),                             # build-up
-      ('rb8', 4, 12, {'tempo': 140 / 130, 'pitch': ST ** 2}),              # CLIMAX: A two steps higher
-      ('rb8', 20, 24, {'tempo': 140 / 130, 'pitch': ST ** 2, 'roll': True}),
-      ('rb10', 24, 36, {})]),                                              # B ending, then round again
+      ('rb8', 4, 12, {'tempo': 140 / 130}), ('rb8', 16, 28, {'tempo': 140 / 130}),        # A: RPG 8 (as battle8_energy)
+      ('rb10', 0, 32, {}), ('rb10', 32, 36, {'sweep': (2500, 30)}),                       # B: all of RPG 10, last 4 bars = build-up
+      ('rb8', 4, 12, {'tempo': 140 / 130, 'pitch': ST ** 2}),                             # CLIMAX: A two steps higher
+      ('rb8', 16, 28, {'tempo': 140 / 130, 'pitch': ST ** 2})]),                          # then back to A (normal key)
   'battle8_long': ([('rb8', 0, 4, {})], [
-      ('rb8', 4, 12, {}), ('rb8', 16, 24, {}), ('rb8', 24, 28, {'sweep': (2500, 30), 'roll': True}),
-      ('rb8', 4, 12, {'pitch': ST ** 2}), ('rb8', 20, 28, {'pitch': ST ** 2, 'roll': True})]),
+      ('rb8', 4, 12, {}), ('rb8', 16, 24, {}), ('rb8', 24, 28, {'sweep': (2500, 30)}),
+      ('rb8', 4, 12, {'pitch': ST ** 2}), ('rb8', 16, 28, {'pitch': ST ** 2})]),
   'battle10_long': ([], [
-      ('rb10', 0, 20, {}), ('rb10', 20, 24, {'sweep': (2500, 30), 'roll': True}),
-      ('rb10', 4, 16, {'pitch': ST ** 2}), ('rb10', 24, 36, {'roll': True})]),
+      ('rb10', 0, 32, {}), ('rb10', 32, 36, {'sweep': (2500, 30)}), ('rb10', 0, 36, {'pitch': ST ** 2})]),
   # BOSS RISING: RPG 14 twice, then twice one semitone higher and 6% faster (the fight heats up), then round again.
   'boss_rising': ([], [('rb14', 0, 8, {}), ('rb14', 0, 8, {}), ('rb14', 0, 8, {'pitch': ST, 'tempo': 1.06}),
                        ('rb14', 0, 8, {'pitch': ST, 'tempo': 1.06})]),

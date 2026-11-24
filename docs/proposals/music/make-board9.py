@@ -38,9 +38,9 @@ MIXES = [
   ('mix_squad_medley', MIX + '/squad_medley_preview.wav', 'squad', 'Squad medley: Theme 12 + Theme 6', 'RPG 12, then the middle of Ninja Adventure 6 slowed to the same speed. They share a key, so one flows into the other: a 78 s loop instead of 30 s. The change of song (at 0:30) may be noticeable.', 'Pixel-boy, rearranged', CC0),
   ('mix_battle8_energy', MIX + '/battle8_energy_preview.wav', 'battle', 'Theme 8: full energy', 'RPG 8 with its quiet break taken out: after the opening it only loops the driving parts (37 s loop).', 'Pixel-boy, rearranged', CC0),
   ('mix_battle_suite', MIX + '/battle_suite_preview.wav', 'battle', 'Battle suite: Theme 8 into Theme 10', 'Your two battle loves as ONE long loop (96 s): RPG 8 (driving parts) sped up to RPG 10\'s speed, then all of RPG 10. Less repetition on long runs. The change of song (at 0:34) may be noticeable.', 'Pixel-boy, rearranged', CC0),
-  ('mix_battle_suite_long', MIX + '/battle_suite_long_preview.wav', 'battle', 'NEW: Battle suite LONG (Pokemon-style)', 'Your battle suite grown into a 2-minute loop with big moments: RPG 8 theme, a drum fill, then RPG 10 (0:41), a BUILD-UP where the bass drops out and comes back (1:15), then the RPG 8 theme TWO STEPS HIGHER for the climax (1:22), a fill, RPG 10\'s ending, and round again (2:04).', 'Pixel-boy, rearranged', CC0),
-  ('mix_battle8_long', MIX + '/battle8_long_preview.wav', 'battle', 'NEW: Theme 8 LONG', 'Theme 8 full energy with a build-up and drum fill (0:37), then the theme TWO STEPS HIGHER (0:44) with a fill back to the start (1:14). 67 s loop instead of 37 s.', 'Pixel-boy, rearranged', CC0),
-  ('mix_battle10_long', MIX + '/battle10_long_preview.wav', 'battle', 'NEW: Theme 10 LONG', 'RPG 10 with a build-up and drum fill (0:34), the theme TWO STEPS HIGHER (0:41), then its ending with a fill (1:02) back to the start (1:22).', 'Pixel-boy, rearranged', CC0),
+  ('mix_battle_suite_long', MIX + '/battle_suite_long_preview.wav', 'battle', 'NEW: Battle suite LONG (Pokemon-style)', 'Your battle suite grown into a 2:10 loop: the RPG 8 theme, then all of RPG 10 (0:41), a BUILD-UP where the bass drops out and comes back (1:36), then the RPG 8 theme TWO STEPS HIGHER for the climax (1:43), and round again (2:17). Fixed: no more glitchy drum fills.', 'Pixel-boy, rearranged', CC0),
+  ('mix_battle8_long', MIX + '/battle8_long_preview.wav', 'battle', 'NEW: Theme 8 LONG', 'Theme 8 full energy, a build-up (0:44), then the whole theme TWO STEPS HIGHER (0:52), back to the start (1:21). 74 s loop instead of 37 s. Fixed: no more glitchy drum fills.', 'Pixel-boy, rearranged', CC0),
+  ('mix_battle10_long', MIX + '/battle10_long_preview.wav', 'battle', 'NEW: Theme 10 LONG', 'All of RPG 10 with a build-up at its end (0:55), then all of it again TWO STEPS HIGHER (1:02), back to the start (2:03).', 'Pixel-boy, rearranged', CC0),
   ('mix_boss_rising', MIX + '/boss_rising_preview.wav', 'boss', 'Theme 14: rising', 'RPG 14 twice, then twice one step higher and a bit faster, so the fight heats up; then round again (88 s loop instead of 23 s).', 'Pixel-boy, rearranged', CC0),
   ('mix_boss_rage', MIX + '/boss_rage_preview.wav', 'boss', 'Theme 14: rage', 'RPG 14 two steps higher and 10% faster: an idea for when the boss drops below half HP (the game would switch to it).', 'Pixel-boy, rearranged', CC0),
 ]
@@ -97,9 +97,34 @@ T = T.replace(""": o.tag === 'r1' ? '<span class="badge r1">ROUND 1</span>'""", 
 T = T.replace('.badge.r1 { background: var(--soft); color: var(--fg); }', '.badge.mix { background: var(--code); color: #000; }')
 T = T.replace('placeholder="e.g. Hearthfire but slower, or Fjeld for the camp…"', 'placeholder="e.g. Battle suite but without the speed-up…"')
 T = T.replace('.sort((a, b) => ORDER[a.tag] - ORDER[b.tag])', '.sort((a, b) => (ORDER[a.tag] ?? 9) - (ORDER[b.tag] ?? 9))')
+# TIMELINE (user: 'a timeline so I can drag the needle to some parts'): a seek bar in the sticky bar + every 'm:ss'
+# in a card's text is a button that jumps there. Songs load as blobs so seeking always works.
+T = T.replace('<div class="vol"><label for="vol">VOLUME</label>', '<div class="seek"><span id="tcur">0:00</span><input id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Song position" disabled><span id="tdur">0:00</span></div>\n    <div class="vol"><label for="vol">VOLUME</label>')
+T = T.replace('details.lic { font-size', '.seek { flex: 1 1 100%; display: flex; gap: 10px; align-items: center; font: 9px var(--display); color: var(--muted); }\n.seek input { flex: 1; min-width: 0; height: 28px; accent-color: var(--ok); }\n.tj { font: 600 13px var(--body); color: var(--ok); background: none; border: 1px solid var(--ok); padding: 1px 5px; cursor: pointer; }\ndetails.lic { font-size')
+T = T.replace('<p>${esc(o.desc)}</p>', '<p>${esc(o.desc).replace(/(\\d+:\\d\\d)/g, (m) => `<button class="tj" type="button" data-t="${m}">${m}</button>`)}</p>')
+T = T.replace('  audio.src = o.file;', '  blobUrl(o).then((u) => { if (current !== o) return; audio.src = u; audio.play().then(() => { if (current === o) nowEl.innerHTML = \'Playing \' + label(o); if (o.jump != null) { audio.currentTime = o.jump; o.jump = null; } }).catch(() => {}); });\n  return;')
+T = T.replace('</script>', r"""
+// ---------- timeline ----------
+const blobs = {};
+function blobUrl(o) { if (!blobs[o.id]) blobs[o.id] = fetch(o.file).then((r) => r.blob()).then((b) => URL.createObjectURL(b)).catch(() => o.file); return blobs[o.id]; }
+const seek = document.getElementById('seek'), tcur = document.getElementById('tcur'), tdur = document.getElementById('tdur');
+const fmt = (t) => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
+let dragging = false;
+audio.addEventListener('loadedmetadata', () => { seek.disabled = false; tdur.textContent = fmt(audio.duration); });
+audio.addEventListener('timeupdate', () => { if (!dragging && audio.duration) { seek.value = Math.round(1000 * audio.currentTime / audio.duration); tcur.textContent = fmt(audio.currentTime); } });
+seek.addEventListener('input', () => { dragging = true; if (audio.duration) tcur.textContent = fmt(seek.value / 1000 * audio.duration); });
+seek.addEventListener('change', () => { if (audio.duration) audio.currentTime = seek.value / 1000 * audio.duration; dragging = false; });
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('.tj'); if (!b) return;
+  const [m, s] = b.dataset.t.split(':').map(Number), t = m * 60 + s;
+  const o = OPTS.find((q) => q.el.contains(b)); if (!o) return;
+  if (current === o && audio.duration) audio.currentTime = t; else { o.jump = t; if (current === o) return; play(o); }
+});
+audio.addEventListener('emptied', () => { seek.value = 0; seek.disabled = true; tcur.textContent = '0:00'; tdur.textContent = '0:00'; });
+</script>""", 1)
 FONT = base64.b64encode(open(os.path.join(HERE, '../../../src/assets/fonts/press-start-2p.woff2'), 'rb').read()).decode()
 html = T.replace('/*FONT*/', 'data:font/woff2;base64,' + FONT).replace('/*OPTS*/', json.dumps(opts))
-for must in ['MIX</span>', "['sting'", 'Round 9']: assert must in html, must
+for must in ['MIX</span>', "['sting'", 'Round 9', 'id="seek"', 'blobUrl(o).then', 'class="tj"']: assert must in html, must
 open(os.path.join(OUT, 'index.html'), 'w').write(html)
 tot = sum(os.path.getsize(p) for p in glob.glob(os.path.join(OUT, 'm', '*.mp3')))
 print(len(opts), 'options,', len(html) // 1024, 'KB page,', tot // 1048576, 'MB audio')

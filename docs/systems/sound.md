@@ -193,3 +193,9 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   repeats = drum FILL), pitch ST**2 = KEY-UP climax; level match by whole-file loudness; peak safety -1 dB.
   battle_suite_long (116 s loop: RPG 8 A / A' / fill, RPG 10, build-up, RPG 8 +2 st climax + fill, RPG 10 ending),
   battle8_long (67 s), battle10_long (82 s). On the board as 'NEW: ...' MIX cards (preview cap 250 s).
+- ROUND 9c: user: the transitions in the long mixes 'felt like a GLITCH'. Cause = the 'roll' drum fill (chopped
+  repeats): removed from every mix (the mod stays in the code, unused). Rule now: only cut where the music already
+  went that way (original order, or a loop seam the user loved); song changes only at the seams of the loved
+  battle_suite. New lengths: battle_suite_long 130 s (A, all of RPG 10 with a build-up on its last 4 bars, A +2 st),
+  battle8_long 74 s, battle10_long 123 s (RPG 10, then all of it +2 st). BOARD TIMELINE: a seek bar in the sticky
+  bar + every 'm:ss' in a card's text is a jump button (make-board9.py; songs load as blobs so seeking works).

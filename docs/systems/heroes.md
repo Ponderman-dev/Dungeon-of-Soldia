@@ -28,7 +28,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       (`passive.counter`, every 4th landed basic hit, `effect: empower` with no strike): ROOTED 1.5s + Weaken -35% 4s.
       ROOTED (new status, control + debuff, icon in statusIcons.json): can't walk (`move()` skips it), still attacks what
       is in reach. CHAIN HOOK (`chain_hook`, target `farthestEnemy` = `farthestFoe()`: the tapped/ordered enemy, else the
-      farthest one): 160% + stun 3s (user: +2s), 8s cooldown + `pull {gapPx, ms}` (`pullTo()`: the knockback slide towards him; bosses are never
+      farthest one): 160% + stun 2s (user), 8s cooldown + `pull {gapPx, ms}` (`pullTo()`: the knockback slide towards him; bosses are never
       pulled; `pull` event). LOCKDOWN (`lockdown`, area circle at the caster 150, 10s): Weaken -30% + 2 Chill, 4s. Perk IRON
       GRIP (special `controlDuration` %, squad-wide): control statuses the heroes put on ENEMIES last longer
       (`applyStatus()`). Hero page `heavyChains` (Chain Hook stun +1s) replaced `massCharm`. Old Bard kit frozen in

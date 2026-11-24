@@ -1283,10 +1283,10 @@
     "apply": [
       {
         "status": "stun",
-        "durationMs": 3000
+        "durationMs": 2000
       }
     ],
-    "description": "Hooks the FARTHEST enemy (or the one you tapped): 160% damage, drags it to him and STUNS it 3s. Bosses are not dragged."
+    "description": "Hooks the FARTHEST enemy (or the one you tapped): 160% damage, drags it to him and STUNS it 2s. Bosses are not dragged."
   },
   "lockdown": {
     "name": "Lockdown",

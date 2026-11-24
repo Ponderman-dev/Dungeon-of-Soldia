@@ -527,6 +527,7 @@ export default class SquadScene extends Phaser.Scene {
   descend() {
     if (!this.ready() || this.panel || this.leaving || this.walkers.size) return;
     sfx.play('descend');
+    music.play('descent'); // the squad song fades out (user); the battle songs start on floor 1
     this.leaving = this.shifting = this.descending = true;
     uiShift(this, this.uiParts, false); // every button leaves (user: not only BEGIN DESCENT)
     const ids = squadOrder(this.slots);

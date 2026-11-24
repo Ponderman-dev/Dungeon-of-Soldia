@@ -21,7 +21,8 @@ ok('title and camp share the title song (it keeps playing between them)', trackF
 const list = data.screens.battle;
 ok('battle floors: the songs take turns and wrap around', isTurnTrack('battle', data) && list.every((id, i) => trackFor('battle', i, data) === id) && trackFor('battle', list.length, data) === list[0]);
 ok('boss floors play one song, not a list', !isTurnTrack('boss', data) && !!trackFor('boss', 0, data));
-ok('game over is silent', trackFor('gameOver', 0, data) === null);
+ok('game over and BEGIN DESCENT are silent', trackFor('gameOver', 0, data) === null && trackFor('descent', 0, data) === null);
+ok('music sits under the sound effects (volume at most 0.3, user: 0.5 drowned them)', data.volume > 0 && data.volume <= 0.3);
 const full = musicGain({ settings: { music: cardOf(defs, 'music').max } }, data, defs, readSettings, cardOf);
 ok('MUSIC 10 = music.json volume, MUSIC 0 = silent, muted = silent',
   Math.abs(full - data.volume) < 1e-9 && musicGain({ settings: { music: 0 } }, data, defs, readSettings, cardOf) === 0 && musicGain({ settings: { music: 10, muted: true } }, data, defs, readSettings, cardOf) === 0);

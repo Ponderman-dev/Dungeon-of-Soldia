@@ -237,7 +237,8 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   NEXT: the in-game MUSIC PLAYER (src/audio/music.js) with these files. Credits: xDeviruchi (CC BY-SA 4.0, title).
 - MUSIC PLAYER (session 53): `src/audio/music.js` (Web Audio; files packed with `?inline` + atob like sfx.js, never
   fetch) + rules in `src/systems/music.js` (trackFor / isTurnTrack / musicGain, no browser) + data `src/data/music.json`
-  (screens -> track or a LIST that takes turns; tracks: file, loopStart, seconds, credit; volume 0.5 at MUSIC 10,
+  (screens -> track or a LIST that takes turns, null = silence; tracks: file, loopStart, seconds, credit; volume 0.2
+  at MUSIC 10 (0.5 drowned the sound effects, user), SquadScene.descend() plays 'descent' (null: the squad song fades out),
   fadeSec 1 between screens, turnFadeSec 2.5). Scenes call `music.play(screen)`: TitleScene 'title', BaseScene 'camp'
   (same song: keeps playing), SquadScene 'squad', BattleScene.buildFloor 'boss' (a boss enemy) or 'battle',
   GameOverScene 'gameOver' (null = fades out). A list song plays intro + loop once, then fades into the next; leaving

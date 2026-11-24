@@ -1,12 +1,13 @@
 {
-  "_about": "Music (src/audio/music.js; picks + tools in docs/systems/sound.md MUSIC). screens: which track each screen plays; a LIST = those tracks take turns (each plays its intro + loop once, then fades into the next). tracks: file in src/assets/music/<file>.mp3, loopStart = seconds where the repeating part starts (it repeats to the end of the file), written by docs/proposals/music/make-game-music.py. volume = music loudness at MUSIC 10 (the Settings bar scales it). fadeSec = crossfade between screens, turnFadeSec = crossfade when battle songs take turns.",
-  "volume": 0.5,
+  "_about": "Music (src/audio/music.js; picks + tools in docs/systems/sound.md MUSIC). screens: which track each screen plays; a LIST = those tracks take turns (each plays its intro + loop once, then fades into the next). tracks: file in src/assets/music/<file>.mp3, loopStart = seconds where the repeating part starts (it repeats to the end of the file), written by docs/proposals/music/make-game-music.py. volume = music loudness at MUSIC 10 (the Settings bar scales it; 0.5 drowned the sound effects, user: now 0.2). null = silence (descent: the squad song fades out on BEGIN DESCENT; game over). fadeSec = crossfade between screens, turnFadeSec = crossfade when battle songs take turns.",
+  "volume": 0.2,
   "fadeSec": 1.0,
   "turnFadeSec": 2.5,
   "screens": {
     "title": "title",
     "camp": "title",
     "squad": "squad",
+    "descent": null,
     "battle": [
       "battle_suite_long",
       "battle8_long",

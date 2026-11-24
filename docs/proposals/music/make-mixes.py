@@ -46,6 +46,13 @@ MIXES = {
   'tr_blend4': ([], [('rb8', 16, 28, {'tempo': 140 / 130}), ('~', 4, 'blend'), ('rb10', 0, 12, {})]),
   'tr_filter4': ([], [('rb8', 16, 28, {'tempo': 140 / 130}), ('~', 4, 'filter'), ('rb10', 0, 12, {})]),
   'tr_bridge': ([], [('rb8', 4, 16, {'tempo': 140 / 130}), ('~', 2, 'blend'), ('rb10', 0, 12, {})]),
+  # TRANSITION TESTS 2 (user: 'you didn't cut at the right place: RPG 8 is getting hype, then RPG 10 starts').
+  # Bar map (per-bar loudness / busyness): RPG 8 = build 0-3, main 4-11 (winds down 10-11), quiet break 12-15,
+  # build 16-19, main 20-25, wind-down 26-27. RPG 10 = 4-bar phrases (bar 0 a soft pickup), every 4th bar
+  # (3, 7, 11 ...) a drum-hit FILL bar; quieter part 16-22. So: RPG 8's BUILD lands on RPG 10's phrase start.
+  'tr_land': ([], [('rb8', 4, 12, {'tempo': 140 / 130}), ('rb8', 16, 20, {'tempo': 140 / 130}), ('rb10', 4, 16, {})]),
+  'tr_land_fill': ([], [('rb8', 4, 12, {'tempo': 140 / 130}), ('rb8', 16, 19, {'tempo': 140 / 130}), ('rb10', 3, 16, {})]),
+  'tr_land_soft': ([], [('rb8', 4, 12, {'tempo': 140 / 130}), ('rb8', 16, 20, {'tempo': 140 / 130}), ('~', 0.5, 'blend'), ('rb10', 4, 16, {})]),
   # BOSS RISING: RPG 14 twice, then twice one semitone higher and 6% faster (the fight heats up), then round again.
   'boss_rising': ([], [('rb14', 0, 8, {}), ('rb14', 0, 8, {}), ('rb14', 0, 8, {'pitch': ST, 'tempo': 1.06}),
                        ('rb14', 0, 8, {'pitch': ST, 'tempo': 1.06})]),

@@ -205,3 +205,10 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   after ('pre' / 'post'), overlapped with an equal-power crossfade; mode 'filter' = old song low-passed 9k -> 250 Hz,
   new song high-passed 1.5k -> 30 Hz (DJ style). Board screen 'blend' = 5 test clips (tr_cut, tr_blend2, tr_blend4,
   tr_filter4, tr_bridge = RPG 8's quiet break then a 2-bar blend); the user's pick goes into every song change.
+- ROUND 9e: user note: 'you didn't cut at the right place: RPG 8 is getting hype, then RPG 10 starts'. BAR MAPS
+  (per-bar loudness / busyness / downbeat hits): RPG 8 = build 0-3, main 4-11 (winds down 10-11), quiet 12-15,
+  build 16-19, main 20-25, wind-down 26-27; RPG 10 = 4-bar phrases (bar 0 soft pickup), a drum-hit FILL bar every 4th
+  bar (3, 7, 11, 15, 23, 27, 31, 35), quieter 16-22 and 28-30. RULE for song changes: let the old song's BUILD-UP
+  land on the new song's phrase start (where the old song's loud part would come). Clips tr_land (RPG 8 16-20 ->
+  RPG 10 bar 4), tr_land_fill (RPG 8 16-19 + RPG 10 fill bar 3 -> 4), tr_land_soft (tr_land + half-bar blend);
+  the measured jump at the change halves (0.56 vs 1.2). Old blend clips removed from the board (tr_cut kept).

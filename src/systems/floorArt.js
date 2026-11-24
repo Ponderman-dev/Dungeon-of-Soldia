@@ -349,8 +349,8 @@ function drawDecor(art, { width, height, wallH, rnd, between, pick, tinted, get,
     else heap(between([6, width - 6]), floorY());
   }
   // PROPS (session 55 mix; user: 'they should be random too'): barrels, crates, a chest at RANDOM spots per floor
-  // picture: a few along the foot of the wall (never in front of the door), a few loose on the floor's right side
-  // (decor.props.floor.zone, away from the knight's side), and plank piles by the wall. No two overlap.
+  // picture: a few along the foot of the wall (never in front of the door), a few loose at the far LEFT / RIGHT EDGES
+  // of the floor (decor.props.floor.zones; user: never in the middle of the fight path), plank piles by the wall. No overlaps.
   const taken = [];
   const free = (x, y, w, h) => taken.every((r) => x + w + 1 < r.x || r.x + r.w + 1 < x || y + h + 1 < r.y || r.y + r.h + 1 < y);
   const place = (rows, x0, x1, y0, y1, avoidDoor) => {
@@ -369,8 +369,8 @@ function drawDecor(art, { width, height, wallH, rnd, between, pick, tinted, get,
   if (PR) {
     for (let i = between(PR.plankPiles); i > 0; i--) { const at = place(Array(6).fill('.'.repeat(14)), 4, width - 4, wallH + 1, wallH + 10, true); if (at) piles.push([at.x + 7, at.y + 3]); }
     for (const [zone, avoidDoor] of [[PR.wall, true], [PR.floor, false]]) {
-      const [x0, x1, y0, y1] = zone.zone.map((v, j) => (j < 2 ? v : wallH + v));
       for (let i = between(zone.count); i > 0; i--) {
+        const [x0, x1, y0, y1] = pick(zone.zones).map((v, j) => (j < 2 ? v : wallH + v));
         const rows = D.stamps[pick(zone.stamps)], at = place(rows, x0, x1, y0, y1, avoidDoor);
         if (at) stamp(rows, at.x, at.y, rnd() < 0.5);
       }

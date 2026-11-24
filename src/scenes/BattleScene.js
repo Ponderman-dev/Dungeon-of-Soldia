@@ -16,6 +16,7 @@ import Door from '../entities/Door.js';
 import { floorTextureKey, FLOOR_PIXEL } from '../entities/floorTexture.js';
 import floorArt from '../data/floorArt.json';
 import * as sfx from '../audio/sfx.js';
+import * as music from '../audio/music.js';
 import { bodyBox } from '../systems/statusFx.js';
 import BattleState from '../systems/BattleState.js';
 import { validateDungeon, validateHeroSkills, validateDamageTypes } from '../systems/validate.js';
@@ -367,6 +368,7 @@ export default class BattleScene extends Phaser.Scene {
       if (i >= 0) lineUp.elites = [i];
     }
     const enemies = this.state.spawnEnemies(lineUp, n);
+    music.play(enemies.some((u) => u.def.boss) ? 'boss' : 'battle'); // boss floors: the boss song; else the battle songs take turns
     const L = combatRules.movement.layout;
     const spots = enemySpots(enemies, { width: GAME_WIDTH, y: ENEMY_Y, perRow: L.enemyPerRow, rowGap: L.enemyRowGap, room: { rowRoom: L.rowRoom, eliteRowRoom: L.eliteRowRoom, maxGap: L.enemyRowGapMax }, top: L.enemyY + L.topMarginY });
     enemies.forEach((unit, i) => this.makeView(unit, spots[i].x, spots[i].y, container));

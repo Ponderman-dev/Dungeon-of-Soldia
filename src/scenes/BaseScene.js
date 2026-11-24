@@ -13,6 +13,7 @@ import unlocks from '../data/unlocks.json';
 import { loadProgress, unlockedIds } from '../systems/progress.js';
 import profileData from '../data/profile.json';
 import * as sfx from '../audio/sfx.js';
+import * as music from '../audio/music.js';
 
 // The Base: a campfire camp on the dungeon's flagstones (docs/systems/title-base.md). Pixel art: systems/campArt.js,
 // camp.json. A mobile-game hub: a gold header (profile, gems, settings), 3 heroes idle round the fire in the middle,
@@ -34,6 +35,7 @@ export default class BaseScene extends Phaser.Scene {
   }
 
   create() {
+    music.play('camp');
     const width = Math.ceil(GAME_WIDTH / P), height = Math.ceil(GAME_HEIGHT / P);
     // The same stone floor as the battle rooms, with no wall: the top stays open, the way deeper.
     const floor = openFloor(floorArt, camp, { width, height, tint: dungeons.A.tileColors[0] });

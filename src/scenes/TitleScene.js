@@ -7,6 +7,7 @@ import { layerTexture } from '../entities/pixelLayer.js';
 import { drawWindow, uiText, drawGear } from '../entities/uiKit.js';
 import { loadProgress } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
+import * as music from '../audio/music.js';
 
 // The title screen (docs/systems/title-base.md): a thick night forest seen from above with the dungeon tower far away,
 // full moon, drifting clouds, twinkling stars, the logo (stand-in text), TAP TO START, best floor, settings, version.
@@ -20,6 +21,7 @@ export default class TitleScene extends Phaser.Scene {
   }
 
   create() {
+    music.play('title');
     this.busy = false;
     this.modal = null; // (the scene is reused: a Settings flag from last time must not stick)
     const width = Math.ceil(GAME_WIDTH / P), height = Math.ceil(GAME_HEIGHT / P);

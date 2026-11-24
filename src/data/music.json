@@ -1,0 +1,56 @@
+{
+  "_about": "Music (src/audio/music.js; picks + tools in docs/systems/sound.md MUSIC). screens: which track each screen plays; a LIST = those tracks take turns (each plays its intro + loop once, then fades into the next). tracks: file in src/assets/music/<file>.mp3, loopStart = seconds where the repeating part starts (it repeats to the end of the file), written by docs/proposals/music/make-game-music.py. volume = music loudness at MUSIC 10 (the Settings bar scales it). fadeSec = crossfade between screens, turnFadeSec = crossfade when battle songs take turns.",
+  "volume": 0.5,
+  "fadeSec": 1.0,
+  "turnFadeSec": 2.5,
+  "screens": {
+    "title": "title",
+    "camp": "title",
+    "squad": "squad",
+    "battle": [
+      "battle_suite_long",
+      "battle8_long",
+      "battle10_long"
+    ],
+    "boss": "boss_final",
+    "gameOver": null
+  },
+  "tracks": {
+    "title": {
+      "credit": "xDeviruchi, 'Title Theme' (8-Bit Fantasy & Adventure Music Pack), CC BY-SA 4.0",
+      "file": "title",
+      "loopStart": 0.0,
+      "seconds": 120.624
+    },
+    "squad": {
+      "credit": "Pixel-boy / Sparklin Labs, RPG Battle Theme 12, CC0",
+      "file": "squad",
+      "loopStart": 0.0,
+      "seconds": 30.0
+    },
+    "battle_suite_long": {
+      "credit": "Pixel-boy / Sparklin Labs, RPG Battle Themes 8 + 10 (rearranged), CC0",
+      "file": "battle_suite_long",
+      "loopStart": 6.8557,
+      "seconds": 137.136
+    },
+    "battle8_long": {
+      "credit": "Pixel-boy / Sparklin Labs, RPG Battle Theme 8 (rearranged), CC0",
+      "file": "battle8_long",
+      "loopStart": 7.3846,
+      "seconds": 81.231
+    },
+    "battle10_long": {
+      "credit": "Pixel-boy / Sparklin Labs, RPG Battle Theme 10 (rearranged), CC0",
+      "file": "battle10_long",
+      "loopStart": 0.0,
+      "seconds": 123.429
+    },
+    "boss_final": {
+      "credit": "Pixel-boy / Sparklin Labs, RPG Battle Theme 14 (rearranged), CC0",
+      "file": "boss_final",
+      "loopStart": 0.0,
+      "seconds": 128.859
+    }
+  }
+}

@@ -6,6 +6,7 @@ import pkg from '../../package.json';
 import { loadProgress, saveProgress, deleteProgress } from '../systems/progress.js';
 import { readSettings, changeSetting, stepSetting } from '../systems/settings.js';
 import * as sfx from '../audio/sfx.js';
+import * as music from '../audio/music.js';
 
 // The Settings screen (docs/systems/title-base.md section 5, user's pick D): tabs SOUND / GAME / MORE, each setting a
 // card (gold name, small hint, big buttons under it; the chosen one FILLED gold). Opened over the camp or the title
@@ -118,6 +119,7 @@ export default class SettingsScene extends Phaser.Scene {
   save() {
     saveProgress(this.progress);
     sfx.refresh();
+    music.refresh();
     sfx.play('tap');
     this.showTab(lastTab);
   }
@@ -142,6 +144,7 @@ export default class SettingsScene extends Phaser.Scene {
     const wipe = () => {
       deleteProgress();
       sfx.refresh();
+      music.refresh();
       this.scene.stop(this.from);
       if (this.from === 'Pause') this.scene.stop('Battle'); // opened from a paused fight: that fight ends too
       this.scene.start('Title');

@@ -47,7 +47,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   Page-2 `assign` fountain = potion drink = already the game's sound.
 - UNUSED FILES REMOVED (session 51): 31 sound files no cue used (146 KB) were deleted (git history has them); `sounds.test.mjs` now fails if a packed file is not used by a cue. To try an old sound again, restore it from git (`git log --diff-filter=D --name-only -- src/assets/sounds`).
 
-## MUSIC (sessions 52-53; NOT in the game yet)
+## MUSIC (sessions 52-53; IN THE GAME since session 53)
 - No music system in the game yet; Settings already has a MUSIC bar (`settings.json` `music`, 0-10) waiting for it.
 - MUSIC BOARD = the reused Skill Effects page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN (CLAUDE.md: reuse it).
   4 screens: title + camp, squad, battle, boss. Each = 2 CODE SONGS + free CC0 tracks. The user marks each LOVE /
@@ -235,3 +235,16 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   Game files: rebuild with make-mixes.py (ids title = xD loop file as is; battle8_long has intro + loop; battle10_long,
   boss_final = loop only; RPG 12 = the original file, whole-file loop). Audio is NOT in the repo yet.
   NEXT: the in-game MUSIC PLAYER (src/audio/music.js) with these files. Credits: xDeviruchi (CC BY-SA 4.0, title).
+- MUSIC PLAYER (session 53): `src/audio/music.js` (Web Audio; files packed with `?inline` + atob like sfx.js, never
+  fetch) + rules in `src/systems/music.js` (trackFor / isTurnTrack / musicGain, no browser) + data `src/data/music.json`
+  (screens -> track or a LIST that takes turns; tracks: file, loopStart, seconds, credit; volume 0.5 at MUSIC 10,
+  fadeSec 1 between screens, turnFadeSec 2.5). Scenes call `music.play(screen)`: TitleScene 'title', BaseScene 'camp'
+  (same song: keeps playing), SquadScene 'squad', BattleScene.buildFloor 'boss' (a boss enemy) or 'battle',
+  GameOverScene 'gameOver' (null = fades out). A list song plays intro + loop once, then fades into the next; leaving
+  the list (boss floor) and coming back = the next song. MUSIC bar + mute: `music.refresh()` (SettingsScene save /
+  delete save, SquadScene mute button). Music waits for the first tap (browser rule); app hidden = paused.
+  `nowPlaying()` = the track id (browser checks: `await import('/src/audio/music.js')` on the dev server).
+  FILES: `python3 docs/proposals/music/make-game-music.py <sources> <mixes>` writes src/assets/music/*.mp3 (intro +
+  loop in one file, -16 LUFS, limiter, MONO 56k: 4.2 MB for 6 songs) and loopStart / seconds into music.json.
+  Decoded lengths in the browser match music.json exactly (LAME gapless info). The game page grew 2.5 -> 9 MB.
+  Test: `music.test.mjs` (data complete, files used, rules, scenes call play / refresh).

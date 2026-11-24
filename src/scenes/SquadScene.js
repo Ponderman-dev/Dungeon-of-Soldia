@@ -23,6 +23,7 @@ const SQUAD_DEMO = import.meta.env.VITE_SQUAD_DEMO === '1';
 const TESTER = import.meta.env.VITE_TESTER === '1'; // the playtest build for itch.io: no test buttons
 import { loadProgress, saveProgress, isUnlocked, unlockedIds, newHeroes, describeRequirement, describeProgress, randomSquad, requirementProgress } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
+import * as music from '../audio/music.js';
 import { slotsFrom, addToSlots, removeFromSlots, isFull, squadOrder } from '../systems/squadSlots.js';
 import { squadGrid, squadLabel, SQUAD_VIEW, SQUAD_DEPTH } from './squad/squadGrid.js';
 import { drawBeginButton, beginTextColor } from './squad/beginButton.js';
@@ -58,6 +59,7 @@ export default class SquadScene extends Phaser.Scene {
   }
 
   create() {
+    music.play('squad');
     this.progress = loadProgress();
     this.newIds = newHeroes(heroDefs, this.progress, unlocks);
     const last = DEMO ? demoSquad.heroes.map((h) => h.id) : this.registry.get('squadIds') || this.progress.lastSquad || defaultSquad; // the demo page: its saved squad
@@ -160,6 +162,7 @@ export default class SquadScene extends Phaser.Scene {
     this.soundBtn = this.add.zone(sx, sy, PB.pause.w + 4, PB.h + 8).setInteractive().setDepth(DEPTH.ui);
     pressable(this, this.soundBtn, { redraw: drawBox, sink: [this.soundIcon], onTap: () => {
       sfx.setMuted(!sfx.isMuted());
+      music.refresh();
       this.progress.settings = { ...(this.progress.settings || {}), muted: sfx.isMuted() }; // keep the scene's copy of the save in step
       drawSound();
       sfx.play('tap');

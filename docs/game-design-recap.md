@@ -86,5 +86,6 @@ Engine: Phaser 3 + Vite + plain JS, to be wrapped for Android with Capacitor lat
 - More dungeons after Dungeon A.
 - Android wrap (Capacitor) and the Solana / dApp Store side (wallet, gem payments, server checks). Wrap note: allow sound
   without a tap in the web view (setMediaPlaybackRequiresUserGesture(false)) so the title music plays at launch (sound.md MUSIC).
+  Settings > HELP will then explain the crypto side (wallet, Solana, Seeker, payments) (user, session 53).
 - Sound (on hold), skins, hero lore, online leaderboard (today a sample board).
 - Playtests with real players.

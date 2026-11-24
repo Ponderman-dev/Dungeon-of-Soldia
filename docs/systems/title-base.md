@@ -160,7 +160,9 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   0 = silent). MUSIC = music volume (music.refresh; sound.md MUSIC). WALLET / BACK UP = 'Coming soon'. CREDITS /
   HELP (session 53) = a scrolling text window (`entities/infoWindow.js`, data `info.json`: title + sections {head,
   lines}; HELP shows glossary.json basics by title + its own lines; drag / wheel scrolls when taller than the window;
-  CLOSE at the bottom). Credits must follow the licences (test: info.test.mjs). DELETE SAVE =
+  CLOSE at the bottom). Credits must follow the licences (test: info.test.mjs).
+  PLAN (user, session 53): HELP will become the CRYPTO help (wallet, Solana, Seeker, gems / payments) when the Solana /
+  Seeker integration is built; today it shows the game basics. DELETE SAVE =
   red KEEP / DELETE window, then `progress.deleteProgress()` and back to the title. Test: settings.test.mjs.
 - SETTINGS (gear button) PICKED D (`settings-picked-D.png`; others tried: `settings-variations.png` = A paired
   buttons, B switches, C classic RPG '< value >' list). User found a lone ON button unclear ('how do I interact'), so

@@ -16,7 +16,8 @@
   RPG 12, boss = boss_final after the roar, battle floors SILENT, defeat keeps the floor song; sound.md MUSIC), CREDITS +
   HELP windows (`entities/infoWindow.js`, `info.json`), Glossary item card big icon, Glossary BASICS = drop-down with an
   animated game-art picture per basic (15 basics; Reactions removed: Mage-only). Open: a 'made by' name for the credits
-  (ask the user); battle-floor music (user may look for more later); the Android wrap must allow sound without a tap.
+  (ask the user); battle-floor music (user may look for more later); the Android wrap must allow sound without a tap;
+  Settings HELP becomes the CRYPTO help (wallet / Solana / Seeker / payments) at the Solana integration (user).
 - STILL OPEN from session 51: the deep BUG HUNT + OPTIMIZATION + SECURITY CHECK (plan: the session-51 note near the top of
   `docs/handoff-archive.md`).
 - PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').

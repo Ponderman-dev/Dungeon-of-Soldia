@@ -1,32 +1,79 @@
 {
-  "_about": "The CREDITS and HELP windows (Settings > MORE; entities/infoWindow.js). A window = a title + sections {head, lines}. help.fromGlossary = glossary.json basics shown by title (the text lives there, not here). credits: keep in step with src/assets/*/LICENSE*.txt and docs/credits-sounds.md (CC BY-SA music MUST be credited). layout = screen px.",
-  "layout": { "side": 16, "top": 48, "bottom": 40, "pad": 18, "titleY": 18, "bodyTop": 60, "headGap": 18, "lineGap": 8, "sectionGap": 22, "closeH": 44, "bar": 3 },
+  "_about": "The CREDITS and HELP windows (Settings > MORE; entities/infoWindow.js). A window = a title + sections {head, lines}. help.fromGlossary = glossary.json basics shown by title (the text lives there, not here). credits: keep in step with src/assets/*/LICENSE*.txt and docs/credits-sounds.md (CC BY-SA music MUST be credited). layout = screen px. PLAN (user): HELP will become the crypto help (wallet, Solana, Seeker, payments) when the Solana / Seeker integration is built.",
+  "layout": {
+    "side": 16,
+    "top": 48,
+    "bottom": 40,
+    "pad": 18,
+    "titleY": 18,
+    "bodyTop": 60,
+    "headGap": 18,
+    "lineGap": 8,
+    "sectionGap": 22,
+    "closeH": 44,
+    "bar": 3
+  },
   "credits": {
     "title": "CREDITS",
     "sections": [
-      { "head": "DUNGEON OF SOLDIA", "lines": ["Thank you for playing!"] },
-      { "head": "MUSIC", "lines": [
-        "Title Theme by xDeviruchi, from the 8-Bit Fantasy & Adventure Music Pack (CC BY-SA 4.0).",
-        "RPG Battle Themes by Pixel-boy and Sparklin Labs (CC0), rearranged for this game."
-      ] },
-      { "head": "SOUND EFFECTS", "lines": [
-        "Kenney (kenney.nl), uisfx and Mixkit.",
-        "Pixabay creators: freesound_gamestudio, yodguard, universfield, dragon-studio, djartmusic, biww and freesound_community.",
-        "Public domain (CC0) collections by lavenderdotpet and PanderMusubi."
-      ] },
-      { "head": "FONTS", "lines": [
-        "Ironslab: made for this game.",
-        "Soldia Small: based on Press Start 2P by CodeMan38 (SIL Open Font License 1.1)."
-      ] },
-      { "head": "MADE WITH", "lines": ["Phaser (phaser.io) and Vite."] }
+      {
+        "head": "DUNGEON OF SOLDIA",
+        "lines": [
+          "Thank you for playing!"
+        ]
+      },
+      {
+        "head": "MUSIC",
+        "lines": [
+          "Title Theme by xDeviruchi, from the 8-Bit Fantasy & Adventure Music Pack (CC BY-SA 4.0).",
+          "RPG Battle Themes by Pixel-boy and Sparklin Labs (CC0), rearranged for this game."
+        ]
+      },
+      {
+        "head": "SOUND EFFECTS",
+        "lines": [
+          "Kenney (kenney.nl), uisfx and Mixkit.",
+          "Pixabay creators: freesound_gamestudio, yodguard, universfield, dragon-studio, djartmusic, biww and freesound_community.",
+          "Public domain (CC0) collections by lavenderdotpet and PanderMusubi."
+        ]
+      },
+      {
+        "head": "FONTS",
+        "lines": [
+          "Ironslab: made for this game.",
+          "Soldia Small: based on Press Start 2P by CodeMan38 (SIL Open Font License 1.1)."
+        ]
+      },
+      {
+        "head": "MADE WITH",
+        "lines": [
+          "Phaser (phaser.io) and Vite."
+        ]
+      }
     ]
   },
   "help": {
     "title": "HELP",
-    "fromGlossary": ["YOUR SQUAD", "FLOORS", "AUTO BATTLE", "SKILLS", "TAP AND DRAG"],
+    "fromGlossary": [
+      "YOUR SQUAD",
+      "FLOORS",
+      "AUTO BATTLE",
+      "SKILLS",
+      "TAP AND DRAG"
+    ],
     "sections": [
-      { "head": "MOVING", "lines": ["Tap the empty floor: the whole squad walks there."] },
-      { "head": "MORE", "lines": ["The GLOSSARY at camp explains damage, items, statuses and every enemy you have met."] }
+      {
+        "head": "MOVING",
+        "lines": [
+          "Tap the empty floor: the whole squad walks there."
+        ]
+      },
+      {
+        "head": "MORE",
+        "lines": [
+          "The GLOSSARY at camp explains damage, items, statuses and every enemy you have met."
+        ]
+      }
     ]
   }
 }

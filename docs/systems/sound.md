@@ -199,3 +199,9 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   battle_suite. New lengths: battle_suite_long 130 s (A, all of RPG 10 with a build-up on its last 4 bars, A +2 st),
   battle8_long 74 s, battle10_long 123 s (RPG 10, then all of it +2 st). BOARD TIMELINE: a seek bar in the sticky
   bar + every 'm:ss' in a card's text is a jump button (make-board9.py; songs load as blobs so seeking works).
+- ROUND 9d: user: the RPG 8 -> RPG 10 cut (suite_long 0:41) is 'too jarring, sudden drop of theme, how to blend?'.
+  Beats DO line up (checked: both files start on the beat; rubberband adds no delay), so the jar is musical. make-mixes.py
+  now takes ('~', bars, mode) between two pieces = a LONG BLEND: both pieces get the song's own extra music before /
+  after ('pre' / 'post'), overlapped with an equal-power crossfade; mode 'filter' = old song low-passed 9k -> 250 Hz,
+  new song high-passed 1.5k -> 30 Hz (DJ style). Board screen 'blend' = 5 test clips (tr_cut, tr_blend2, tr_blend4,
+  tr_filter4, tr_bridge = RPG 8's quiet break then a 2-bar blend); the user's pick goes into every song change.

@@ -1,5 +1,32 @@
-# Handoff ARCHIVE (sessions 2-54, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-55, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## SESSION 55 (archived; started as): TRANSITION EDIT, MAIN MENU (CAMP) <-> HERO SELECT (SQUAD SCREEN)
+- BRANCH: `main` has EVERYTHING (session 54 merged in). Start the next branch from `main`.
+- NEXT TASK (user, end of session 54): edit the TRANSITION between the main menu (the camp hub, `BaseScene`) and the hero
+  select (`SquadScene`), both ways. Ask WHAT feels wrong / what they want (question tool: look / speed / direction /
+  what moves) before building; show options IN THE GAME (a dev switch or the squad demo page) with clips, not guesses.
+- READ FIRST: `docs/transition-plan.md` (row 3 'Camp <-> Squad', motion tokens: SLOW 450ms for big moves) and
+  `docs/systems/ui.md` (motion tokens, `slideToScreen`, `uiShift`). Code today: camp EXPEDITION press = `prepareScreen`
+  builds the squad screen while the finger holds, `BaseScene.toExpedition()` -> `whenScreenReady` -> `uiShift` (buttons
+  leave) -> `slideToSquad()` (the squad screen comes down from above, `uiKit slideToScreen`); back = `SquadScene.toCamp()`
+  ('< CAMP', the reverse, camp built on press). Squad side: `fromCamp` (buttons come in after the slide).
+- FEEL WORDS (session 49): 'slow' / 'stuck, low FPS' = STUTTER: record frames under a 4x slowed CPU before changing timings.
+- SESSION 54 DONE (all on main): hit looks (`systems/hitLooks.js`: melee per hero / enemy `hitLook`, shots per element,
+  Bard `shotLook` note; melee hits CENTRED on the body, Knight slash through the middle), elite BODY look (element
+  'Living' colours baked in the sprite + trait sign, `eliteFx.js`), Skill Dealer icons, dashes / Savage Leap reach the
+  enemy (leap lands deep and pushes enemies aside, `pushAside`), squad screen HEAD tiles (2 rows of 5, still) + Begin
+  Descent as wide as CAMP / RANDOM. Review pages: `docs/proposals/skill-fx/hits.js`, `elites.js` (db `hits`, `elites`).
+- KIV (user): HOLY damage (Cleric's smite / holy_nova still holy; user said 'we don't have holy'): don't change until asked.
+  Open from session 53: a 'made by' name for the credits; battle-floor music; Android must allow sound without a tap;
+  Settings HELP -> crypto help at the Solana integration. From session 51: the deep BUG HUNT + OPTIMIZATION + SECURITY
+  CHECK (plan: session-51 note in `docs/handoff-archive.md`).
+- PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').
+- SESSION 55 DONE (all on main): camp <-> squad transition (user's idea): EXPEDITION = camp buttons leave while the 3
+  camp heroes walk up off the top, the slide starts 0.6s after they set off, the squad walks in from the left / right,
+  then the buttons; '< CAMP' = the reverse (camp buttons come in while the heroes still walk down). `camp.json toSquad`,
+  `BaseScene.heroesWalk`, `SquadScene.squadWalk`. Bug fix: GIVE UP during the floor walk-in no longer starts the fight
+  behind the defeat screen (`startFighting` / `startRoom` return on mode 'lost').
 
 ## SESSION 54 (archived; started as): MELEE HIT EFFECTS + RANGED ATTACK / PROJECTILE EDITS
 - BRANCH: `main` has EVERYTHING (session 53 merged in). Start the next branch from `main`.

@@ -1,28 +1,27 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 55): TRANSITION EDIT, MAIN MENU (CAMP) <-> HERO SELECT (SQUAD SCREEN)
-- BRANCH: `main` has EVERYTHING (session 54 merged in). Start the next branch from `main`.
-- NEXT TASK (user, end of session 54): edit the TRANSITION between the main menu (the camp hub, `BaseScene`) and the hero
-  select (`SquadScene`), both ways. Ask WHAT feels wrong / what they want (question tool: look / speed / direction /
-  what moves) before building; show options IN THE GAME (a dev switch or the squad demo page) with clips, not guesses.
-- READ FIRST: `docs/transition-plan.md` (row 3 'Camp <-> Squad', motion tokens: SLOW 450ms for big moves) and
-  `docs/systems/ui.md` (motion tokens, `slideToScreen`, `uiShift`). Code today: camp EXPEDITION press = `prepareScreen`
-  builds the squad screen while the finger holds, `BaseScene.toExpedition()` -> `whenScreenReady` -> `uiShift` (buttons
-  leave) -> `slideToSquad()` (the squad screen comes down from above, `uiKit slideToScreen`); back = `SquadScene.toCamp()`
-  ('< CAMP', the reverse, camp built on press). Squad side: `fromCamp` (buttons come in after the slide).
-- FEEL WORDS (session 49): 'slow' / 'stuck, low FPS' = STUTTER: record frames under a 4x slowed CPU before changing timings.
-- SESSION 54 DONE (all on main): hit looks (`systems/hitLooks.js`: melee per hero / enemy `hitLook`, shots per element,
-  Bard `shotLook` note; melee hits CENTRED on the body, Knight slash through the middle), elite BODY look (element
-  'Living' colours baked in the sprite + trait sign, `eliteFx.js`), Skill Dealer icons, dashes / Savage Leap reach the
-  enemy (leap lands deep and pushes enemies aside, `pushAside`), squad screen HEAD tiles (2 rows of 5, still) + Begin
-  Descent as wide as CAMP / RANDOM. Review pages: `docs/proposals/skill-fx/hits.js`, `elites.js` (db `hits`, `elites`).
+## START HERE (session 56): BATTLE-FLOOR MUSIC SEARCH (continue)
+- BRANCH: `main` has EVERYTHING (session 55 merged in). Start the next branch from `main`.
+- NEXT TASK (user, end of session 55): continue the search for BATTLE-FLOOR music. Today battle floors are SILENT
+  (`src/data/music.json` screen 'battle' = null; user, session 53: 'the battle floor songs are not good, remove
+  everything'). Every other screen has its song (title/camp xDeviruchi, squad RPG Battle 12, boss boss_final).
+- READ FIRST: `docs/systems/sound.md` MUSIC section only (what they LOVED / said NO to, rounds 1-5, FINAL PICKS, MUSIC
+  PLAYER; `make-game-music.py` makes the game files). Board = the reused Skill Effects page (url in sound.md, db `music`).
+- WHAT THEY LIKE: RETRO RPG tracks (Pixel-boy RPG pack, xDeviruchi, Eric Skiff chiptune), full energy from beat 1 (no
+  slow starts), simple, 8-bit / 16-bit. NOT: cyber / synthwave, gothic, cheery town / open-land vibes, our own code
+  songs never landed. A battle LIST takes turns (music.json supports a list). They may bring their OWN files (zip in
+  chat): licence check (CC0 / CC BY / CC BY-SA / Pixabay OK; NC / ND not OK), credit line in music.json.
+- How: ask with the question tool first (mood, where to look, own files or my search), then a SMALL board round
+  (few options, LOVE / MAYBE / NO), then the pick into the game (music.json + make-game-music.py, `music.test.mjs`).
 - KIV (user): HOLY damage (Cleric's smite / holy_nova still holy; user said 'we don't have holy'): don't change until asked.
-  Open from session 53: a 'made by' name for the credits; battle-floor music; Android must allow sound without a tap;
-  Settings HELP -> crypto help at the Solana integration. From session 51: the deep BUG HUNT + OPTIMIZATION + SECURITY
-  CHECK (plan: session-51 note in `docs/handoff-archive.md`).
+  Open: a 'made by' name for the credits; Android must allow sound without a tap; Settings HELP -> crypto help at the
+  Solana integration; the deep BUG HUNT + OPTIMIZATION + SECURITY CHECK (plan: session-51 note in `docs/handoff-archive.md`).
 - PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').
 
 ## How we work with this user
+- SESSION 55 lessons: asked 'what feels wrong' with options, they answered 'my idea' and then described it in one line:
+  build THEIR idea directly, then tune in quick rounds ('faster', 'don't wait', 'wait 0.5-0.7s'), republishing each round.
+  Feel bugs ('still battling after defeat'): reproduce in the browser with and without the fix (before / after).
 - SESSION 54 lessons: pick rounds on the reused review page worked (TODAY / A / B / C per row + I PICK THIS, picks read
   from the db). 'Not centered' / 'doesn't reach' = check the REAL game with frame crops (Playwright, fixed crop on the
   target, hero/enemy made unkillable) and still renders of the effect on a sprite from both sides; then fix the cause

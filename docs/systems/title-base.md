@@ -91,8 +91,11 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
 - GLOSSARY — BUILT (session 37): `GlossaryScene` (camp GLOSSARY button, camp.json `scene`), data `glossary.json`
   (basics pages: session 53 BASICS = a DROP-DOWN list, 8 titles per page, tap = opens its picture + text, one open at a
   time; pictures = GAME ART ONLY, still (user picks), `scenes/glossary/basicVisuals.js` methods visual_<name> named
-  by basics[i].visual, sprites / items chosen in layout.basics.visuals; first batch: squad, floors, skills, defense;
-  the other 12 next. Grave pixels shared: `entities/grave.js`. One line per status + tab bad/good/control, shortNames, hiddenEnemies, layout). Chapters with found
+  by basics[i].visual, sprites / items / timings in layout.basics.visuals; ALL 16 have one (session 53). They ANIMATE
+  (user: 'animate these'): short loops (vLoop / vLater / vTween, kept in this.vMotion and stopped by newPage ->
+  visualStop), in the fight's own look (damage numbers skillFx.attackColor, crits / LEVEL UP UI.fightGold, weak '!' /
+  resist '…', 'Miss', reaction words + colours from events.js). Texts were shortened (user: 'remove unnecessary words').
+  Test: glossary.test.mjs (every basic has its picture, only real heroes / enemies / items). Grave pixels shared: `entities/grave.js`. One line per status + tab bad/good/control, shortNames, hiddenEnemies, layout). Chapters with found
   counts: BASICS (2 pages), STATUSES (tabs, coloured tag or '???'), ENEMIES (12 per page + card: floor-1 stats, hits
   with, weak/resists, times beaten), BOSSES (shadows + floor until beaten), ITEMS (36 per page + card; the card shows the picked item BIG in a box on its right, layout itemGrid.bigIcon, and grows to fit long text, user session 53), HEROES (opens
   HeroesScene with from 'Glossary', '< BACK'). Memory: `systems/glossary.js` (noteEvents in BattleScene.showEvents:

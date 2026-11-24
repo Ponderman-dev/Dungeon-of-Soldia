@@ -35,3 +35,18 @@ ok('basics pages all have a title and text', G.basics.every((b) => b.title && b.
   ok('leaders: every sample squad is 3 real heroes', all.every((p) => p.heroes.length === 3 && p.heroes.every((id) => heroIds.includes(id))));
   ok('leaders: every "ended by" is a real enemy and every item a real item', all.every((p) => enemies[p.endedBy] && p.items.every((id) => items[id])), all.flatMap((p) => p.items.filter((id) => !items[id])).join());
   ok('leaders: each board is sorted by floor, best first', [Ld.week, Ld.allTime].every((b) => b.every((p, i) => !i || b[i - 1].floor >= p.floor))); }
+// Session 53: every BASICS page has a game-art picture (scenes/glossary/basicVisuals.js visual_<name>) and its setup.
+{
+  const vis = fs.readFileSync(new URL('../../src/scenes/glossary/basicVisuals.js', import.meta.url), 'utf8');
+  const missing = G.basics.filter((b) => !b.visual || !vis.includes(`visual_${b.visual}(`) || !G.layout.basics.visuals[b.visual]);
+  ok('every basics page has a picture (visual_<name> + its layout.basics.visuals entry)', missing.length === 0, missing.map((b) => b.title).join());
+  const H = JSON.parse(fs.readFileSync(new URL('../../src/data/heroes.json', import.meta.url))).map((h) => h.id);
+  const E = JSON.parse(fs.readFileSync(new URL('../../src/data/enemies.json', import.meta.url)));
+  const I = JSON.parse(fs.readFileSync(new URL('../../src/data/items.json', import.meta.url)));
+  const ids = JSON.stringify(G.layout.basics.visuals);
+  const heroIds = [...ids.matchAll(/"(?:hero|melee|ranged|critHero|dodgeHero)":\s*"(\w+)"/g)].map((m) => m[1]);
+  const enemyIds = [...ids.matchAll(/"(?:enemy|fight|boss)":\s*"(\w+)"/g)].map((m) => m[1]);
+  const itemIds = [...ids.matchAll(/"item":\s*"(\w+)"/g)].map((m) => m[1]).concat(...Object.values(G.layout.basics.visuals).filter((v) => Array.isArray(v.items)).map((v) => v.items));
+  ok('the pictures only use heroes / enemies / items that exist', heroIds.every((h) => H.includes(h)) && enemyIds.every((e) => E[e]) && itemIds.every((i) => I[i]),
+    [...heroIds.filter((h) => !H.includes(h)), ...enemyIds.filter((e) => !E[e]), ...itemIds.filter((i) => !I[i])].join());
+}

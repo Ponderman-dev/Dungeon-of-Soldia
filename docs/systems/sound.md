@@ -187,3 +187,9 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   Victory! (06) and Never Give Up (18, 8 s) and Peaceful Night (15, 11 s) suit stings.
   BOARD 9 (same url/db; `make-board9.py <sources> <mixes> <out>`): screens title / camp / squad / battle / boss /
   sting; tags pick (loves), mix (blue MIX badge), new (xD16); ids free:*, mix:*, x16:NN. Previews: intro + loop x2.
+- ROUND 9 picks so far: LOVE mix battle8_energy + battle_suite. User: 'more parts / variations, longer, more exciting
+  in places, like a Pokemon battle song'. ROUND 9b mixes (make-mixes.py, last arg = only these ids): piece mods
+  'sweep' (high-pass glide = BUILD-UP, bass returns at the end), 'roll' (last bar's beats 3-4 become 8th / 16th
+  repeats = drum FILL), pitch ST**2 = KEY-UP climax; level match by whole-file loudness; peak safety -1 dB.
+  battle_suite_long (116 s loop: RPG 8 A / A' / fill, RPG 10, build-up, RPG 8 +2 st climax + fill, RPG 10 ending),
+  battle8_long (67 s), battle10_long (82 s). On the board as 'NEW: ...' MIX cards (preview cap 250 s).

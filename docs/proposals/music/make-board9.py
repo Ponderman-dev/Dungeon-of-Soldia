@@ -38,10 +38,13 @@ MIXES = [
   ('mix_squad_medley', MIX + '/squad_medley_preview.wav', 'squad', 'Squad medley: Theme 12 + Theme 6', 'RPG 12, then the middle of Ninja Adventure 6 slowed to the same speed. They share a key, so one flows into the other: a 78 s loop instead of 30 s. The change of song (at 0:30) may be noticeable.', 'Pixel-boy, rearranged', CC0),
   ('mix_battle8_energy', MIX + '/battle8_energy_preview.wav', 'battle', 'Theme 8: full energy', 'RPG 8 with its quiet break taken out: after the opening it only loops the driving parts (37 s loop).', 'Pixel-boy, rearranged', CC0),
   ('mix_battle_suite', MIX + '/battle_suite_preview.wav', 'battle', 'Battle suite: Theme 8 into Theme 10', 'Your two battle loves as ONE long loop (96 s): RPG 8 (driving parts) sped up to RPG 10\'s speed, then all of RPG 10. Less repetition on long runs. The change of song (at 0:34) may be noticeable.', 'Pixel-boy, rearranged', CC0),
+  ('mix_battle_suite_long', MIX + '/battle_suite_long_preview.wav', 'battle', 'NEW: Battle suite LONG (Pokemon-style)', 'Your battle suite grown into a 2-minute loop with big moments: RPG 8 theme, a drum fill, then RPG 10 (0:41), a BUILD-UP where the bass drops out and comes back (1:15), then the RPG 8 theme TWO STEPS HIGHER for the climax (1:22), a fill, RPG 10\'s ending, and round again (2:04).', 'Pixel-boy, rearranged', CC0),
+  ('mix_battle8_long', MIX + '/battle8_long_preview.wav', 'battle', 'NEW: Theme 8 LONG', 'Theme 8 full energy with a build-up and drum fill (0:37), then the theme TWO STEPS HIGHER (0:44) with a fill back to the start (1:14). 67 s loop instead of 37 s.', 'Pixel-boy, rearranged', CC0),
+  ('mix_battle10_long', MIX + '/battle10_long_preview.wav', 'battle', 'NEW: Theme 10 LONG', 'RPG 10 with a build-up and drum fill (0:34), the theme TWO STEPS HIGHER (0:41), then its ending with a fill (1:02) back to the start (1:22).', 'Pixel-boy, rearranged', CC0),
   ('mix_boss_rising', MIX + '/boss_rising_preview.wav', 'boss', 'Theme 14: rising', 'RPG 14 twice, then twice one step higher and a bit faster, so the fight heats up; then round again (88 s loop instead of 23 s).', 'Pixel-boy, rearranged', CC0),
   ('mix_boss_rage', MIX + '/boss_rage_preview.wav', 'boss', 'Theme 14: rage', 'RPG 14 two steps higher and 10% faster: an idea for when the boss drops below half HP (the game would switch to it).', 'Pixel-boy, rearranged', CC0),
 ]
-for oid, f, scr, t, d, by, lic in MIXES: add(oid, f, scr, 'mix', t, d, by, lic, 180 if dur(f) > 180 else None)
+for oid, f, scr, t, d, by, lic in MIXES: add(oid, f, scr, 'mix', t, d, by, lic, 250 if dur(f) > 250 else None)
 # 3. NEW: xDeviruchi 16-bit pack. (file number, screen, short use note). Loop points from the pack's PDF.
 LOOP = {3: (23.106, 74.483), 4: (0, 85.807), 5: (10.760, 62.608), 6: (8.501, 32.0), 7: (2.135, 76.8), 8: (0, 53.615),
         9: (0.63, 63.278), 10: (0, 92.957), 11: (11.503, 54.715), 12: (0, 73.41), 13: (0.167, 107.502), 14: (2.675, 71.287),

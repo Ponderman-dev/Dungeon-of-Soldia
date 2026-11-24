@@ -1426,7 +1426,7 @@
     "color": "0xe060a8",
     "summary": "The dungeon jailer: he chains enemies down so they can't hurt the squad.",
     "tips": [
-      "Shackles: every 4th hit chains the enemy: it can't walk for 1.5s and deals 30% less damage for 4s.",
+      "Shackles: every 4th hit chains the enemy: it can't walk for 1.5s and deals 35% less damage for 4s.",
       "Chain Hook drags the farthest enemy (an archer or caster at the back) to him and stuns it. Tap an enemy to pick who he hooks.",
       "Lockdown weakens and chills every enemy around him.",
       "Iron Grip: stuns, freezes, roots, chills and fears from the whole squad last longer."
@@ -1434,9 +1434,9 @@
     "damageType": "melee",
     "height": 23,
     "stats": {
-      "health": 115,
-      "attack": 15,
-      "defense": 8,
+      "health": 140,
+      "attack": 18,
+      "defense": 10,
       "resist": 8,
       "evasion": 3,
       "crit": 5,
@@ -1466,7 +1466,7 @@
     },
     "passive": {
       "name": "Shackles",
-      "description": "Every 4th hit chains the enemy: ROOTED 1.5s (can't walk) and it deals 30% less damage for 4s.",
+      "description": "Every 4th hit chains the enemy: ROOTED 1.5s (can't walk) and it deals 35% less damage for 4s.",
       "counter": {
         "id": "shackles",
         "label": "Shackles",
@@ -1483,7 +1483,7 @@
           {
             "status": "weaken",
             "durationMs": 4000,
-            "attackPercent": -30
+            "attackPercent": -35
           }
         ]
       }

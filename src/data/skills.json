@@ -1273,9 +1273,9 @@
     "short": "CH",
     "kind": "attack",
     "target": "farthestEnemy",
-    "cooldownMs": 9000,
+    "cooldownMs": 8000,
     "castMs": 500,
-    "damageMultiplier": 1.2,
+    "damageMultiplier": 1.6,
     "pull": {
       "gapPx": 60,
       "ms": 300
@@ -1286,7 +1286,7 @@
         "durationMs": 1000
       }
     ],
-    "description": "Hooks the FARTHEST enemy (or the one you tapped): 120% damage, drags it to him and STUNS it 1s. Bosses are not dragged."
+    "description": "Hooks the FARTHEST enemy (or the one you tapped): 160% damage, drags it to him and STUNS it 1s. Bosses are not dragged."
   },
   "lockdown": {
     "name": "Lockdown",
@@ -1298,13 +1298,13 @@
       "at": "caster",
       "radius": 150
     },
-    "cooldownMs": 12000,
+    "cooldownMs": 10000,
     "castMs": 500,
     "apply": [
       {
         "status": "weaken",
         "durationMs": 4000,
-        "attackPercent": -25
+        "attackPercent": -30
       },
       {
         "status": "chill",
@@ -1312,6 +1312,6 @@
         "durationMs": 4000
       }
     ],
-    "description": "Every enemy around him is WEAKENED (-25% damage) and gets 2 CHILL for 4s."
+    "description": "Every enemy around him is WEAKENED (-30% damage) and gets 2 CHILL for 4s."
   }
 }

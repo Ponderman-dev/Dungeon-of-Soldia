@@ -13,7 +13,8 @@ import leveling from '../data/leveling.json';
 import statusInfo from '../data/statuses.json';
 import Character from '../entities/Character.js';
 import Door from '../entities/Door.js';
-import { floorTextureKey, FLOOR_PIXEL } from '../entities/floorTexture.js';
+import { floorTextureKey, FLOOR_PIXEL, floorLook } from '../entities/floorTexture.js';
+import { drawWallTorches } from '../entities/wallTorches.js';
 import floorArt from '../data/floorArt.json';
 import * as sfx from '../audio/sfx.js';
 import * as music from '../audio/music.js';
@@ -339,6 +340,7 @@ export default class BattleScene extends Phaser.Scene {
     const tint = colors[(n - 1) % colors.length];
     const variant = Math.floor((n - 1) / colors.length) % floorArt.variants;
     container.add(this.add.image(0, 0, floorTextureKey(this, tint, variant, WALL_H)).setOrigin(0).setScale(FLOOR_PIXEL));
+    if (floorLook().torches) drawWallTorches(this, WALL_H, (o) => { container.add(o); return o; }); // torches on the pillars (look trial)
 
     // The door in the back wall: closed wooden doors that swing open when the floor is cleared.
     const door = new Door(this, container, DOOR_X, WALL_H);

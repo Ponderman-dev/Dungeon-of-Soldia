@@ -256,6 +256,7 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
     if (w > 1) set(x + 1, y + 1, shade(c, -12));
   }
   for (let i = 0; i < F.seamTufts; i++) tuft(Math.floor(rnd() * width), wallH + between([0, 2]));
+  if (art.decor) drawDecor(art, { width, height, wallH, rnd, between, pick, tinted, get, set, gap });
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const e = Math.min(x, width - 1 - x) / (width * 0.18);
@@ -263,4 +264,96 @@ export function floorArtPixels(art, { width, height, wallH, tint, seed }) {
     }
   }
   return { width, height, pixels: px };
+}
+
+// DECORATIONS (session 55, user: 'polish the floor, same style'): optional `art.decor` (floorArt.json looks): puddles,
+// rubble piles at the foot of the wall and the pillars, bones and skulls on the stones, cobwebs in the wall's top
+// corners and beside the pillar capitals. Stamps = rows of letters (decor.stamps; '.' = nothing), each with a dark
+// shadow pixel under its bottom edge so it lies ON the floor.
+function drawDecor(art, { width, height, wallH, rnd, between, pick, tinted, get, set }) {
+  const D = art.decor, F = art.floor, C = D.colors;
+  const col = (ch) => (C[ch] !== undefined ? num(C[ch]) : null);
+  const floorY = () => wallH + between([6, Math.max(7, height - wallH - 8)]);
+  const stamp = (rows, x0, y0, flip) => {
+    const w = rows[0].length;
+    rows.forEach((r, y) => [...r].forEach((ch, i) => {
+      const c = col(ch);
+      if (c === null) return;
+      const x = x0 + (flip ? w - 1 - i : i);
+      set(x, y0 + y, c);
+      const below = rows[y + 1] ? rows[y + 1][i] : '.';
+      if (below === '.') set(x, y0 + y + 1, shade(get(x, y0 + y + 1), -D.shadow)); // its shadow
+    }));
+  };
+  // Puddles: flat dark water with a light glint, a darker rim.
+  for (let i = 0; i < (D.puddles || 0); i++) {
+    const cx = between([8, width - 8]), cy = floorY(), rx = between(D.puddleR), ry = Math.max(1, Math.round(rx / 2.4));
+    const wob = [0, 1, 2, 3, 4, 5].map(() => 0.8 + rnd() * 0.3); // a lumpy outline
+    for (let y = cy - ry; y <= cy + ry; y++) for (let x = cx - rx; x <= cx + rx; x++) {
+      const k = wob[Math.floor(((Math.atan2(y - cy, x - cx) + Math.PI) / (Math.PI * 2)) * 6) % 6];
+      const d = Math.hypot((x - cx) / rx, (y - cy) / ry) / k;
+      if (d >= 1 || y <= wallH) continue;
+      set(x, y, d > 0.8 ? num(C.waterRim) : num(C.water));
+    }
+    for (let k = 0; k < Math.max(2, Math.round(rx / 3)); k++) set(cx - Math.round(rx / 3) + k, cy - Math.max(0, ry - 1), num(C.glint)); // a light streak
+    set(cx + Math.round(rx / 4), cy + Math.max(0, ry - 2), num(C.glint));
+  }
+  // Moss patches: soft green growing over the stones (dithered edge).
+  for (let i = 0; i < (D.mossPatches || 0); i++) {
+    const r = rnd(), cx = r < 0.5 ? (rnd() < 0.5 ? between([0, 14]) : width - 1 - between([0, 14])) : between([0, width - 1]);
+    const cy = r < 0.3 ? wallH + between([1, 6]) : floorY(), rr = between(D.mossR);
+    for (let y = cy - rr; y <= cy + rr; y++) for (let x = cx - rr * 1.5; x <= cx + rr * 1.5; x++) {
+      const d = Math.hypot((x - cx) / 1.5, y - cy) / rr;
+      if (d >= 1 || y <= wallH - 1) continue;
+      if (d > 0.6 && (x + y) % 2) continue; // dithered edge
+      if (rnd() < 0.15) continue;
+      set(Math.round(x), y, tinted(pick(C.moss)));
+    }
+  }
+  // Rubble: a little heap of broken stones (lit tops, dark bottoms), mostly at the foot of the wall and the pillars.
+  const heap = (cx, cy) => {
+    for (let j = between([3, 6]); j > 0; j--) {
+      const bx = cx + between([-4, 3]), by = cy + between([-2, 1]), w = between([2, 4]), h = between([2, 3]);
+      const base = shade(tinted(pick(art.wall.stone)), 14);
+      for (let y = by; y < by + h; y++) for (let x = bx; x < bx + w; x++) set(x, y, y === by ? shade(base, 12) : y === by + h - 1 ? shade(base, -10) : base);
+      for (let x = bx; x < bx + w; x++) set(x, by + h, shade(get(x, by + h), -D.shadow));
+    }
+  };
+  for (let i = 0; i < (D.rubble || 0); i++) {
+    const r = rnd();
+    if (r < 0.4) heap(pick(art.pillars.x) + between([-8, 8]), wallH + between([1, 3]));
+    else if (r < 0.75) heap(between([4, width - 4]), wallH + between([1, 3]));
+    else heap(between([6, width - 6]), floorY());
+  }
+  // Bones and skulls on the floor (some flipped), a few near the wall.
+  for (let i = 0; i < (D.bones || 0); i++) {
+    const rows = pick(D.stamps.bones);
+    stamp(rows, between([3, width - 10]), rnd() < 0.3 ? wallH + between([2, 6]) : floorY(), rnd() < 0.5);
+  }
+  for (let i = 0; i < (D.skulls || 0); i++) {
+    stamp(D.stamps.skull, between([4, width - 10]), rnd() < 0.4 ? wallH + between([1, 4]) : floorY(), rnd() < 0.5);
+  }
+  // Cobwebs: thin pale threads fanning out of a corner (the wall's top corners, beside each pillar capital).
+  if (D.cobwebs) {
+    const web = (x0, y0, dir, size) => {
+      const thread = (x, y) => set(x, y, mix(get(x, y), num(C.web), D.webShare));
+      for (let k = 0; k <= size; k++) { thread(x0 + dir * k, y0); thread(x0, y0 + k); }
+      for (const t of [0.35, 0.65]) { // two spokes
+        for (let k = 0; k < size * 0.9; k++) thread(x0 + dir * Math.round(k * (1 - t) * 1.1), y0 + Math.round(k * t * 1.1));
+      }
+      for (const r of [Math.round(size * 0.45), Math.round(size * 0.8)]) { // two sagging rings
+        for (let a = 0; a <= 12; a++) {
+          const ang = (a / 12) * (Math.PI / 2);
+          thread(x0 + dir * Math.round(Math.cos(ang) * r), y0 + Math.round(Math.sin(ang) * r));
+        }
+      }
+    };
+    const P = art.pillars, half = P.width / 2 + P.overhang;
+    web(0, 0, 1, D.webSize + 2);
+    web(width - 1, 0, -1, D.webSize + 2);
+    for (const cx of P.x) {
+      web(cx - half - 1, P.capitalH, -1, D.webSize);
+      web(cx + half, P.capitalH, 1, D.webSize);
+    }
+  }
 }

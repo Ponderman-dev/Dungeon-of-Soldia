@@ -56,6 +56,30 @@
     "seamTufts": 16,
     "edgeShade": 15
   },
+  "decor": {
+    "_about": "Floor decorations (systems/floorArt.js drawDecor): counts per floor picture; stamps = rows of colour letters ('.' = nothing); shadow = how much darker the pixel under a stamp gets; cobwebs in the wall's top corners and beside the pillar capitals (webSize art px, webShare = how pale). All 0 / false = today's floor.",
+    "puddles": 0, "puddleR": [6, 10], "mossPatches": 0, "mossR": [4, 9], "rubble": 0, "bones": 0, "skulls": 0, "cobwebs": false, "webSize": 7, "webShare": 0.35, "shadow": 14,
+    "colors": { "b": "0x9c9482", "d": "0x6a6456", "k": "0x1a1612", "water": "0x252c34", "waterRim": "0x1a1e23", "glint": "0x58626e", "web": "0xc8c8c8", "moss": ["0x3c4a2a", "0x45542f", "0x34402a"] },
+    "stamps": {
+      "bones": [["b.....b", "dbbbbbd", "b.....b"], ["b....", "db...", "..bb.", "...db", "....b"], ["b.b.b", "d.d.d", "bbbbb"]],
+      "skull": [".bbb.", "bbbbb", "bkbkb", "dbbbd", ".b.b."]
+    }
+  },
+  "looks": {
+    "_about": "TRIAL (session 55, user: 'polish the floor, same style'): look presets merged (deep) over this file by entities/floorTexture.js. Dev url flag ?floorlook=A|B|C; none = today. Delete the others once the user picks.",
+    "A": { "grain": 0.07, "torches": true,
+      "floor": { "highlight": 6, "shade": 12, "dirtPatches": 3, "dirtRadius": [4, 8], "grassTufts": 30, "mossSpecks": 90 },
+      "wall": { "highlight": 6 },
+      "decor": { "rubble": 5, "bones": 3, "skulls": 1 } },
+    "B": { "torches": true,
+      "floor": { "highlight": 4, "dirtPatches": 4, "dirtRadius": [4, 9], "grassTufts": 18, "mossSpecks": 70 },
+      "wall": { "highlight": 4, "vines": 2 },
+      "decor": { "rubble": 8, "bones": 9, "skulls": 4, "puddles": 1 } },
+    "C": { "torches": true,
+      "floor": { "highlight": 4, "dirtPatches": 5, "grassTufts": 75, "mossSpecks": 240, "seamTufts": 28 },
+      "wall": { "highlight": 4, "vines": 10, "mossBase": 48 },
+      "decor": { "rubble": 7, "bones": 2, "skulls": 1, "puddles": 3, "mossPatches": 9 } }
+  },
   "torch": {
     "_about": "The wall torches (squad screen) as pixel art: systems/torchArt.js. holder rows from the handle top down; flames = frames shown in turn (frameMs); glow = a few solid rings of warm light round the flame (glowSteps).",
     "holder": ["..w..", ".wWw.", ".wWw.", ".wWw.", "iiiii", "..i..", "..i.."],

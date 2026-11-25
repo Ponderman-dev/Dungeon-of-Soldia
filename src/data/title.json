@@ -156,8 +156,8 @@
     "scale": 5
   },
   "intro": {
-    "_about": "Session 58 (user: 'logo, the sky goes down to the current screen'): the game opens up in the night sky, `rise` screen px above the title view, with the logo and the LOADING bar (bar* = screen px) while entities/warmUp.js makes every picture once (stepMs of work per frame, shown at least minMs). Then the bar fades (barFadeMs), the camera glides down (glideMs, ease) with the logo staying put, and the rest of the title fades in (uiFadeMs). stars = extra dim stars in the sky above.",
+    "_about": "Session 58 (user: 'logo, the sky goes down to the current screen'): the game opens up in the night sky, `rise` screen px above the title view, with the LOADING bar (bar* = screen px) while entities/warmUp.js makes every picture once (stepMs of work per frame, shown at least minMs). Then the bar fades (barFadeMs), the camera glides down (glideMs, ease), THEN the logo drops in line by line (logoMs, logoGapMs apart; UI.motion popDropPx / easeDrop; user: 'finish the glide, then the logo'), then the rest of the title fades in (uiFadeMs). stars = extra dim stars in the sky above.",
     "rise": 844, "minMs": 700, "glideMs": 2200, "ease": "Sine.easeInOut",
-    "barW": 200, "barH": 16, "barY": 540, "barFadeMs": 250, "uiFadeMs": 450, "stepMs": 12, "stars": 70
+    "barW": 200, "barH": 16, "barY": 414, "barFadeMs": 250, "logoMs": 450, "logoGapMs": 120, "uiFadeMs": 450, "stepMs": 12, "stars": 70
   }
 }

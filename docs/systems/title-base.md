@@ -4,12 +4,12 @@ User's sketch + picks (2026-10-21). Flow: Title -> walk into the dungeon -> one 
 
 ## 0. LOADING + INTRO (TitleScene.intro, session 58)
 - Boot loads the font, then starts 'Title' with `{ intro: true }`. The camera starts `intro.rise` px up in the night sky
-  (extra sky + dim stars above the title's sky); the logo (scrollFactor 0) and a gold LOADING bar show there while
+  (extra sky + dim stars above the title's sky); a gold LOADING bar shows there while
   `entities/warmUp.js` makes every pixel picture once (heroes + shop looks, enemies, minions, room props, skill / item /
   status icons, hero + profile banners, all 24 battle floors, the font's letters; `stepMs` of work per frame), then
   draws each once hidden behind the sky (the graphics card gets it). Then the bar fades, the camera glides down
-  (`glideMs`, the logo stays put), and TAP TO START / gear / best floor / version fade in; taps wait till then.
-  User: 'logo, then the sky goes down to the current screen'. Numbers: title.json `intro`.
+  (`glideMs`), THEN the logo drops in line by line (user: 'finish the glide, then the logo'), then TAP TO START / gear /
+  best floor / version fade in; taps wait till then. Numbers: title.json `intro`.
 - Why: pictures were made the first time a page / floor needed them = stutters (user, itch build on the phone).
   4x slow CPU: loading ~3 s, glide smooth (worst frame 33 ms). Delete save restarts Title WITHOUT the intro.
 - NOT preloaded: elite looks and status recolours (frozen etc., made per fight), page text, music/sounds (in the file).

@@ -337,10 +337,10 @@
       "tier": "rare",
       "tag": "Defense",
       "name": "Guardian",
-      "text": "Casting shields the most hurt ally for 7% of its max health for 4s.",
+      "text": "Casting shields the most hurt ally for 5% of its max health for 4s.",
       "allyShield": {
         "status": "shield",
-        "percentMaxHp": 7,
+        "percentMaxHp": 5,
         "durationMs": 4000
       }
     },
@@ -845,7 +845,8 @@
         "percentMaxHp": 15,
         "includeSelf": true
       },
-      "text": "Casting heals the most hurt hero (the caster too) for 15% of its max health. Support skills only."
+      "text": "Casting heals the most hurt hero (the caster too) for 15% of its max health, but the cooldown is 25% longer. Support skills only.",
+      "cooldown": -25
     },
     "greaterMend": {
       "kind": "modifier",
@@ -858,7 +859,8 @@
         "percentMaxHp": 20,
         "includeSelf": true
       },
-      "text": "Casting heals the 2 most hurt heroes (the caster too) for 20% of their max health. Support skills only."
+      "text": "Casting heals the 2 most hurt heroes (the caster too) for 20% of their max health, but the cooldown is 40% longer. Support skills only.",
+      "cooldown": -40
     }
   },
   "cards": {

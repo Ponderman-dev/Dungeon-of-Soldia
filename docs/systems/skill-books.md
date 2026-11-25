@@ -80,3 +80,16 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   back; `releaseSkill`), Iron Circle (Lockdown `areaRadiusPercent` 50: `area.radius` x1.5; the look's ring reads the
   cast's real zone), Cold Iron (Chain Hook `addApply` 3 Chill 4s: a generic patch, adds statuses to every hit). He is
   the only hero with 4 hero pages. Tests: skill-books.test.mjs (last block).
+- **SESSION 56: ELEMENT RUNES, MEND, ONE INK PER SKILL, TUNING ROUND 2 (user: 'go with your suggestions, include holy'):**
+  GROUPS: a page with `group` ('ink' = the 6 '... Ink' pages; 'element' = the 5 runes + Elemental Storm) is one per skill:
+  `books.js groupMate()`, pageFit returns 'swap' and addPage puts the new page in the old one's place (reward screen note
+  'Swaps <name>', no 'Replace which page?' step). Sunder is NOT an ink. `onlyKind` ('attack' / 'support'): heroPageFits
+  refuses other skills ('wrongSkill'). ELEMENT RUNES (rare, attack only): Fire / Ice / Storm (electric) / Shadow (dark) /
+  Holy Rune, `element` (bookHitMods turns every skill hit into it) + power 75. MEND (common, support only): `allyHeal`
+  1 hero 15% with `includeSelf`, cooldown +25%; GREATER MEND (rare): 2 heroes 20%, cooldown +40% (without the cooldown
+  cost they ranked +8.6 / +10.5, Titan level). Tuning (pageruns 16, before -> after): Guardian 10 -> 5% (+6.3 -> +3.8),
+  Frost Ink 5s -> 3s (+4.2 -> +2.3), Quick Draw 50 -> 35 (+4.2 -> +1.8); buffs: Detonate 0.3 -> 0.5, Sunder -30% 6s,
+  Glass Cannon -10% health, Bone Harvest 4, Big Batch 11, Concussive 30%, Elemental Storm `baseBonus` 25 (always),
+  Steady 25, Sharpen 15, Heavy 30, Overcharge 80, Piercing 40. Runes ranked +1.2 (Shadow) to +3.7 (Holy). Still weak
+  after this round: Big Batch, Bone Harvest, Convergence, Cold Iron (Warden), Giant Slayer. pageruns now puts a
+  support-only page (and a support hero page like Iron Circle) on the SUPPORT skill. Smart curve median 39 (unchanged).

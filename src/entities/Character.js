@@ -79,14 +79,14 @@ export default class Character extends Phaser.GameObjects.Container {
     for (const part of Object.values(this.parts)) {
       const o = pose[part.name];
       const r = ready && part.name === 'weapon' ? ready : null;
-      part.image.x = part.x + (o ? o.x : 0);
+      part.image.x = part.x + (o ? o.x : 0) + (r ? r.x : 0);
       part.image.y = part.y + (o ? o.y : 0) + (r ? r.y : 0);
       part.image.angle = part.angle + (o ? o.angle : 0) + (r ? r.angle : 0);
     }
   }
 
   // READY POSE (a counter's `readyLook`, the Warden's Shackles): while the next attack is the charged one, the weapon
-  // turns `angle` degrees around its grip, floats `liftPx` up and bobs `bobPx` every `bobMs`; it eases in and out over
+  // turns `angle` degrees around its grip, floats `liftPx` up and `outPx` outward and bobs `bobPx` every `bobMs`; it eases in and out over
   // `easeMs`. spec null = back to normal.
   setWeaponReady(spec) {
     const on = !!spec;
@@ -110,7 +110,7 @@ export default class Character extends Phaser.GameObjects.Container {
     if (a <= 0) return null;
     const sp = this.readySpec;
     const bob = Math.sin((this.now() / (sp.bobMs || 700)) * Math.PI * 2) * (sp.bobPx || 0);
-    return { angle: (sp.angle || 0) * a, y: (-(sp.liftPx || 0) + bob) * a };
+    return { angle: (sp.angle || 0) * a, x: (sp.outPx || 0) * a, y: (-(sp.liftPx || 0) + bob) * a };
   }
 
   // ---- keyframe clips ---------------------------------------------------------------------------

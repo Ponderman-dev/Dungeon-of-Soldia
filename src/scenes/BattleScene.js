@@ -36,6 +36,7 @@ import { eventsMethods } from './battle/events.js';
 import { motionMethods } from './battle/motion.js';
 import { bossViewMethods } from './battle/bossView.js';
 import { resultsMethods } from './battle/results.js';
+import { aimMethods } from './battle/aim.js';
 
 // The battle screen: enemies at the top, the squad (3 heroes) at the bottom, everyone auto-attacks.
 // After a win the heroes walk through the door, the floor slides down, and they walk in
@@ -389,6 +390,7 @@ export default class BattleScene extends Phaser.Scene {
     this.refreshHud();
     this.placeSpeech();
     this.drawDangerGlow();
+    this.drawAim(); // tap-to-aim: rings + glowing button (ends itself when the skill can't go off)
     if (this.mode !== 'fighting') {
       this.drawStatusFx();
       return;
@@ -441,4 +443,4 @@ export default class BattleScene extends Phaser.Scene {
 }
 
 // The other method files (see the note above the class).
-Object.assign(BattleScene.prototype, hudMethods, ordersMethods, effectsMethods, walkMethods, eventsMethods, motionMethods, bossViewMethods, resultsMethods, roomMethods);
+Object.assign(BattleScene.prototype, aimMethods, hudMethods, ordersMethods, effectsMethods, walkMethods, eventsMethods, motionMethods, bossViewMethods, resultsMethods, roomMethods);

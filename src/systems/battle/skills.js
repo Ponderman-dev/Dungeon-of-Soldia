@@ -82,10 +82,22 @@ export const skillsMethods = {
     }
     events.push({ type: 'pull', unit: hero, target, from: { x: target.x, y: target.y }, ms: pull.ms });
   },
-  castSkill(heroUid, index) {
+  // TAP-TO-AIM (user): a skill that hits ONE enemy (target 'enemy' / 'farthestEnemy', no rotation, no random flasks) can
+  // be aimed: the player taps the skill, then the enemy. The scene asks aimable() whether to enter aim mode.
+  aimable(hero, index) {
+    const slot = hero && hero.skills[index];
+    if (!slot) return false;
+    const def = this.skillDefs[slot.id];
+    return !!def && !def.rotation && !def.random && (def.target === 'enemy' || def.target === 'farthestEnemy');
+  },
+
+  // aimUid (optional): the enemy the player tapped for an aimable skill. It is used when the skill goes off (after the
+  // wind-up) if that enemy can still be hit; otherwise the skill picks as usual (focus, nearest...).
+  castSkill(heroUid, index, aimUid = null) {
     const events = [];
     const hero = this.heroes.find((h) => h.uid === heroUid);
     if (!hero || !this.canCast(hero, index)) return events;
+    hero.aimUid = aimUid && this.aimable(hero, index) ? aimUid : null;
     const slot = hero.skills[index];
     const skill = this.currentSpell(hero, index);
     const book = this.pageTotals(slot); // skill book pages: shorter cooldown / wind-up (Swift, Steady Hands, Hasty, Overcharge)
@@ -162,6 +174,9 @@ export const skillsMethods = {
     }
     if (!echo && this.skillDefs[slot.id].rotation) slot.rotation = ((slot.rotation || 0) + 1) % this.skillDefs[slot.id].rotation.length; // next spell next time
 
+    // Tap-to-aim: the tapped enemy, if it is still alive and can be hit (used once; an Echo Rune repeat picks as usual).
+    const aimed = (skill.target === 'enemy' || skill.target === 'farthestEnemy') && hero.aimUid ? this.targetableEnemies().find((e) => e.uid === hero.aimUid) || null : null;
+    if (!echo) hero.aimUid = null;
     let targets;
     let zone = null;
     if (skill.random) targets = [];
@@ -169,6 +184,7 @@ export const skillsMethods = {
     else if (skill.target === 'squad') targets = this.squadUnits(); // every living hero and minion
     else if (skill.target === 'lowestAlly') targets = [this.lowestHealthPercent()];
     else if (skill.target === 'allEnemies') ({ targets, zone } = this.areaHit(hero, skill)); // an `area` skill hits only who stands in it
+    else if (aimed) targets = [aimed]; // tap-to-aim: the enemy the player tapped
     else if (skill.target === 'farthestEnemy') targets = [this.farthestFoe(hero)]; // Warden's Chain Hook
     else targets = [this.pickTarget(hero)];
     targets = targets.filter(Boolean); // a pick can come back empty (no target left): never hit "nobody"

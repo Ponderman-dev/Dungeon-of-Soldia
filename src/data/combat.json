@@ -531,5 +531,11 @@
         }
       }
     }
+  },
+  "aim": {
+    "_about": "TAP-TO-AIM (scenes/battle/aim.js): a skill that hits one enemy waits for a tap on an enemy. The fight keeps running. dimAlpha = how dark the floor gets, ring = the red ring under each enemy that can be hit, glow = the frame round the chosen skill button, hint = the text over it.",
+    "dimAlpha": 0.5, "dimInMs": 120, "pulseMs": 700,
+    "ringColor": 16731469, "ringW": 54, "ringH": 16,
+    "glowColor": 16765508, "hint": "TAP AN ENEMY", "hintColor": "#ffd24d"
   }
 }

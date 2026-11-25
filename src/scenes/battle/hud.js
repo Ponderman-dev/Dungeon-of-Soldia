@@ -140,7 +140,7 @@ export const hudMethods = {
           .zone(x, SKILL_Y, SKILL_W + 6, SKILL_H + 6)
           .setInteractive()
           .setDepth(6)
-          .onPress(() => this.castFromUI(unit.uid, j), { instant: true }); // instant: a fight tap never waits
+          .onPress(() => this.pressSkill(unit.uid, j), { instant: true }); // instant: a fight tap never waits; one-enemy skills aim first (aim.js)
         return button;
       });
       // The hero's passive: a small gold-framed icon left of the skill squares; tap it to read what it does.

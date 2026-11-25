@@ -584,8 +584,14 @@ export function pageEnter(scene) {
   scene.input.enabled = true;
   uiShift(scene, { up: pageBar(scene) }, false, { instant: true }); // the bar waits until the page is in
   cam[P.axis] = P.from; // the page waits one screen away, then slides over the screen behind
-  scene.tweens.add({ targets: cam, [P.axis]: P.to, duration: P.ms, ease: P.ease });
-  scene.time.delayedCall(P.ms, () => { if (!scene.pageLeaving) uiShift(scene, { up: pageBar(scene) }, true); });
+  // The slide starts after the page has been drawn twice (session 58, like RewardScene): building a page and its first
+  // draw take one long frame on a phone; started at once, the slide jumped to catch up = the 'fps drop' on page open.
+  const go = () => {
+    if (scene.pageLeaving) return;
+    scene.tweens.add({ targets: cam, [P.axis]: P.to, duration: P.ms, ease: P.ease });
+    scene.time.delayedCall(P.ms, () => { if (!scene.pageLeaving) uiShift(scene, { up: pageBar(scene) }, true); });
+  };
+  scene.events.once(Phaser.Scenes.Events.RENDER, () => scene.events.once(Phaser.Scenes.Events.RENDER, go));
 }
 export function pageLeave(scene, done) {
   if (scene.pageLeaving) return;

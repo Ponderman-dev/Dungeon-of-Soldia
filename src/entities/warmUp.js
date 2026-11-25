@@ -10,6 +10,7 @@ import { itemIconKey, bareIconKey } from './itemIconTexture.js';
 import { statusIconKey } from './statusIconTexture.js';
 import { floorTextureKey } from './floorTexture.js';
 import { heroBanner, hasBanner } from './heroBanner.js';
+import { profileBannerKey, profileBannerIds } from './profileBanner.js';
 import { uiText } from './uiKit.js';
 import { lookDef } from '../systems/looks.js';
 import heroes from '../data/heroes.json';
@@ -46,6 +47,8 @@ export function warmUpSteps(scene) {
   // The floors: the menu pages' floor, then each battle floor of the first dungeon (the first fights).
   steps.push(() => floorTextureKey(scene, dungeons.A.tileColors[0], 0, MENU_WALL_H));
   for (const tint of dungeons.A.tileColors.slice(1)) steps.push(() => floorTextureKey(scene, tint, 0, MENU_WALL_H));
+  // The Profile banners (crops of the title forest: working the forest out is slow, ~80 ms).
+  for (const id of profileBannerIds()) steps.push(() => profileBannerKey(scene, id));
   // Banners are PNGs decoded by the browser: wait for each one.
   steps.push(() => Promise.all(heroes.filter((h) => hasBanner(h.id)).map((h) => new Promise((done) => {
     const img = heroBanner(scene, h.id, -400, -400, 1, 1, 1);

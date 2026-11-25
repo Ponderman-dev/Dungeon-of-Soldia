@@ -4,16 +4,14 @@ import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, page
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import { bareIconKey } from '../entities/itemIconTexture.js';
-import { layerTexture } from '../entities/pixelLayer.js';
+import { profileBannerKey } from '../entities/profileBanner.js';
 import D from '../data/profile.json';
-import title from '../data/title.json';
 import heroes from '../data/heroes.json';
 import items from '../data/items.json';
 import unlocks from '../data/unlocks.json';
 import dungeons from '../data/dungeons.json';
 import { loadProgress, saveProgress, isUnlocked, topHero } from '../systems/progress.js';
 import { openBanners } from '../systems/achievements.js';
-import { bannerLayer } from '../systems/banners.js';
 import * as sfx from '../audio/sfx.js';
 
 // The Profile (docs/systems/title-base.md section 5, user's pick D), opened from the camp's profile box (the camp waits,
@@ -103,9 +101,8 @@ export default class ProfileScene extends Phaser.Scene {
 
   // A banner's picture (title forest crop, profile.json banners) as an image of w x h screen px.
   banner(page, id, x, y, w, h) {
-    const b = D.banners.find((v) => v.id === id) || D.banners[0], P = title.pixel, C = L.card;
-    const lay = bannerLayer(title, b, { w: C.artW, h: C.artH, width: Math.ceil(GAME_WIDTH / P), height: Math.ceil(GAME_HEIGHT / P) });
-    const img = this.add.image(x + w / 2, y + h / 2, layerTexture(this, `banner-${b.id}`, lay)).setScale(Math.min(w / lay.w, h / lay.h));
+    const key = profileBannerKey(this, id), f = this.textures.getFrame(key);
+    const img = this.add.image(x + w / 2, y + h / 2, key).setScale(Math.min(w / f.width, h / f.height));
     page.add(img);
     return img;
   }

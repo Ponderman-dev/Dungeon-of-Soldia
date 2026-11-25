@@ -197,3 +197,11 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   grid still use masks). Neater pass (user):
   no text over the banner art; name + role under the card; YOUR RECORDS and LOOKS are SECTIONS (window + DUSK title
   strip, salmon title) with cells divided by thin lines. showArmoury (bigger try-on page) is unused for now.
+
+## Page open smoothness (session 58)
+- `pageEnter` starts the slide only after the page has been DRAWN TWICE (like RewardScene): building a page = one long
+  frame on a phone; before, the slide jumped (Heroes: 794 of 844 px in one frame). Now 5-7 even steps (4x slow CPU).
+- Slow first-time pictures are made behind the LOADING bar (`entities/warmUp.js`, title-base.md section 0); Profile
+  banners: `entities/profileBanner.js` (the forest crop was ~80 ms each time a new banner was made).
+- Measured worst frame on open (4x slow CPU, before -> after): Profile 800 -> 133, Leaders 450 -> 217, Shop 433 -> 183,
+  Glossary / Settings / Heroes 250 -> 133. What is left is mostly making the page's text.

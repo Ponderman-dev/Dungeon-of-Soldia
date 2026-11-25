@@ -182,6 +182,7 @@ export const movementMethods = {
     const heading = new Map(); // walker -> { x, y } its walking direction, d = px walked this update, slide = px it may still sidestep
     for (const u of units) {
       if (u.sidestep && (u.sidestep.left -= dt) <= 0) u.sidestep = null;
+      if (u.knock && u.knock.delay > 0) { u.knock.delay -= dt; continue; } // Chain Hook: held until the hook bites
       if (u.knock) {
         const t = Math.min(dt, u.knock.remaining);
         u.x += u.knock.vx * t;

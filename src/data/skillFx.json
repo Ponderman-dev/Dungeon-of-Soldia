@@ -34,6 +34,6 @@
   "mage_rotation:FB": "fireballNew",
   "mage_rotation:CL": "chainNew",
   "discord": "discordNew",
-  "chain_hook": "shieldBash",
-  "lockdown": "challenge"
+  "chain_hook": "wardenHook",
+  "lockdown": "wardenLockdown"
 }

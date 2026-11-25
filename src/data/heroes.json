@@ -1488,7 +1488,7 @@
         ],
         "readyLook": {
           "angle": 0,
-          "liftPx": 8,
+          "liftPx": 13,
           "outPx": 1.5,
           "bobPx": 1,
           "bobMs": 700,

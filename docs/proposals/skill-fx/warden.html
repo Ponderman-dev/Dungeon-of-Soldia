@@ -1,0 +1,224 @@
+<title>Warden Looks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: the game's own look (black windows, white lines, Press Start 2P headings) on a dungeon-dark page.
+   Skill look cards (live scene + OK / CHANGE + note), then icon cards (A / B pick + note). One column on phones. */
+@font-face { font-family: "Press Start 2P"; src: url(/*FONT*/) format("woff2"); font-display: block; }
+:root {
+  --bg: #0e0b16; --panel: #000000; --line: #ffffff; --soft: #3a3150; --fg: #f0ecf8; --muted: #aaa0c0;
+  --steel: #9cc8ff; --gold: #f2c544; --ok: #7fe0a0; --warn: #ff8a6a;
+  --display: "Press Start 2P", "Courier New", monospace;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 900px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; display: flex; flex-direction: column; gap: 22px; }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(18px, 4.4vw, 26px); line-height: 1.4; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 400; font-size: 14px; line-height: 1.5; margin: 0; color: var(--steel); text-wrap: balance; }
+.lede { color: var(--muted); max-width: 68ch; margin: 10px 0 0; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--soft); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 14px; }
+.bar .status { margin-left: auto; color: var(--muted); font-size: 13px; }
+.bar .status.bad { color: var(--warn); }
+.seg { display: inline-flex; border: 2px solid var(--line); }
+.seg button { font: 10px var(--display); color: var(--fg); background: var(--panel); border: 0; padding: 8px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--line); color: #000; }
+section.win { background: var(--panel); border: 3px solid var(--line); outline: 3px solid #000; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+section.win > p { margin: 0; color: var(--muted); max-width: 70ch; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+.tile { border: 2px solid var(--soft); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tile.picked { border-color: var(--gold); }
+.tile .ttl { display: flex; gap: 10px; align-items: baseline; }
+.tile .ltr { font: 12px var(--display); color: var(--gold); }
+.tile .nm { font-weight: 600; }
+.tile p { margin: 0; font-size: 13px; color: var(--muted); }
+canvas.scene { width: 100%; max-width: 390px; aspect-ratio: 390 / 288; height: auto; image-rendering: pixelated; border: 2px solid var(--soft); background: #000; cursor: pointer; align-self: center; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { font: 10px var(--display); color: var(--fg); background: var(--panel); border: 2px solid var(--line); padding: 9px 12px; cursor: pointer; }
+.btn[aria-pressed="true"].ok { background: var(--ok); border-color: var(--ok); color: #000; }
+.btn[aria-pressed="true"].chg { background: var(--warn); border-color: var(--warn); color: #000; }
+.btn[aria-pressed="true"].pk { background: var(--gold); border-color: var(--gold); color: #000; }
+.btn:focus-visible, textarea:focus-visible, .seg button:focus-visible, canvas.scene:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+label { font: 9px var(--display); color: var(--muted); letter-spacing: .04em; }
+textarea { width: 100%; min-height: 56px; resize: vertical; font: 14px/1.45 var(--body); color: var(--fg); background: #15101f; border: 1px solid var(--soft); padding: 8px 10px; }
+textarea::placeholder { color: #6e6385; }
+.saved { font-size: 12px; color: var(--muted); min-height: 1em; }
+.saved.ok { color: var(--ok); } .saved.bad { color: var(--warn); }
+.beats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .beats { grid-template-columns: 1fr; } }
+.beat { border-left: 3px solid var(--steel); padding: 2px 0 2px 10px; font-size: 14px; }
+.beat b { font: 10px var(--display); color: var(--steel); display: block; margin-bottom: 4px; }
+ul.ideas { margin: 0; padding-left: 18px; color: var(--muted); }
+ul.ideas li b { color: var(--fg); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { canvas.scene { cursor: default; } }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 3px solid var(--line); outline: 3px solid #000; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card.ok { border-color: var(--ok); } .card.change { border-color: var(--warn); }
+.card h3 { font: 11px/1.5 var(--display); margin: 0; color: var(--steel); }
+.card .users { margin: 0; font-size: 13px; color: var(--muted); }
+.grp { font: 12px var(--display); color: var(--gold); margin: 8px 0 0; }
+.card h3 .tag { font-size: 8px; color: #000; background: var(--gold); padding: 3px 5px; margin-left: 8px; vertical-align: middle; }
+.card h3 .tag.new { background: var(--steel); }
+.card .was { margin: 0; font-size: 13px; color: var(--fg); border-left: 3px solid var(--gold); padding-left: 8px; }
+.card .was b { color: var(--gold); font-weight: 600; }
+
+.icons { display: flex; gap: 14px; flex-wrap: wrap; }
+.opt { display: flex; flex-direction: column; align-items: center; gap: 6px; border: 2px solid var(--soft); padding: 8px; background: #15101f; cursor: pointer; color: var(--fg); font: 10px var(--display); }
+.opt[aria-pressed="true"] { border-color: var(--gold); }
+.opt canvas { width: 96px; height: 96px; image-rendering: pixelated; }
+.opt .small { width: 32px; height: 32px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>The Warden: skills and icons</h1>
+    <p class="lede">The new skill looks of the Warden (the jailer who replaced the Bard), drawn by the game's own effect code at the game's speed and size. Tap a scene to replay it. Mark each one OK or CHANGE and add a note; for each icon pick A or B.</p>
+  </header>
+  <div class="bar">
+    <div class="seg" role="group" aria-label="Speed"><button id="sp1" aria-pressed="true">Normal</button><button id="sp4" aria-pressed="false">Slow x4</button></div>
+    <span class="status" id="status" aria-live="polite">Connecting…</span>
+  </div>
+  <h2 class="grp">Skill looks</h2>
+  <div class="grid" id="looks"></div>
+  <h2 class="grp">Icons</h2>
+  <div class="grid" id="icons"></div>
+  <section class="win">
+    <h2>Anything else</h2>
+    <p>Ideas for the Warden as a whole (colours, his look, sounds later), or something missing here.</p>
+    <label for="note-general">NOTE</label>
+    <textarea id="note-general" placeholder="Other ideas or changes…"></textarea>
+    <div class="saved" id="saved-general"></div>
+  </section>
+</div>
+
+<script>/*BUNDLE*/</script>
+<script>
+const S = window.SoldiaWarden;
+const COL = 'warden';
+const notes = {}; // doc id -> { verdict, pick, text }
+let db = null, speed = 1;
+const scenes = [];
+const ui = {};
+const ICONS = [
+  { id: 'chain_hook', name: 'Chain Hook', what: 'A: the hook hanging from its chain. B: the hook flying, chain trailing.' },
+  { id: 'lockdown', name: 'Lockdown', what: 'A: a padlock inside a ring of chain. B: two chains crossed, padlock in the middle.' },
+  { id: 'passive_bard', name: 'Shackles (passive)', what: 'A: a pair of iron cuffs. B: the jailer\'s ring of keys.' },
+];
+
+function wireText(docId, ta, saved) {
+  let timer = null;
+  ta.addEventListener('input', () => { saved.textContent = 'Typing…'; saved.className = 'saved'; clearTimeout(timer); timer = setTimeout(() => save(docId, { text: ta.value }, saved), 900); });
+  ta.addEventListener('blur', () => { if (timer) { clearTimeout(timer); timer = null; save(docId, { text: ta.value }, saved); } });
+}
+function noteBox(docId, labelText, hint) {
+  const lab = document.createElement('label'); lab.textContent = labelText;
+  const ta = document.createElement('textarea'); ta.id = 'note-' + docId.replace(':', '-'); lab.htmlFor = ta.id; ta.placeholder = hint;
+  const saved = document.createElement('div'); saved.className = 'saved';
+  wireText(docId, ta, saved);
+  return { lab, ta, saved };
+}
+for (const s of S.SCENES) {
+  const doc = s.id;
+  const card = document.createElement('div'); card.className = 'card';
+  const h = document.createElement('h3'); h.textContent = s.name;
+  const u = document.createElement('p'); u.className = 'users'; u.textContent = s.what;
+  const cv = document.createElement('canvas'); cv.className = 'scene'; cv.width = S.W * S.Z; cv.height = S.H * S.Z; cv.tabIndex = 0;
+  cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', s.name + ' (tap to replay)');
+  const sc = { cv, id: s.id, clock: 0, last: performance.now() };
+  const replay = () => { sc.clock = 0; };
+  cv.addEventListener('click', replay); cv.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); replay(); } });
+  scenes.push(sc);
+  const btns = document.createElement('div'); btns.className = 'btns';
+  const ok = document.createElement('button'); ok.className = 'btn ok'; ok.textContent = 'OK'; ok.setAttribute('aria-pressed', 'false');
+  const chg = document.createElement('button'); chg.className = 'btn chg'; chg.textContent = 'CHANGE'; chg.setAttribute('aria-pressed', 'false');
+  btns.append(ok, chg);
+  const n = noteBox(doc, 'NOTE ON ' + s.name.toUpperCase(), 'e.g. a longer chain, more sparks, slower, bigger shackle…');
+  for (const [b, v] of [[ok, 'ok'], [chg, 'change']]) b.addEventListener('click', () => { const cur = (notes[doc] || {}).verdict; save(doc, { verdict: cur === v ? null : v }, n.saved); });
+  card.append(h, u, cv, btns, n.lab, n.ta, n.saved);
+  document.getElementById('looks').append(card);
+  ui[doc] = { card, ok, chg, ta: n.ta };
+}
+function drawIcon(cv, icon) {
+  const g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); const s = cv.width / 16;
+  icon.rows.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === '.') return; g.fillStyle = '#' + icon.palette[+ch].slice(2); g.fillRect(x * s, y * s, s, s); }));
+}
+for (const ic of ICONS) {
+  const doc = 'icon:' + ic.id;
+  const card = document.createElement('div'); card.className = 'card';
+  const h = document.createElement('h3'); h.textContent = ic.name + ' icon';
+  const u = document.createElement('p'); u.className = 'users'; u.textContent = ic.what;
+  const row = document.createElement('div'); row.className = 'icons';
+  const n = noteBox(doc, 'NOTE ON THE ' + ic.name.toUpperCase() + ' ICON', 'e.g. A but with the chain thicker…');
+  const opts = {};
+  for (const L of ['A', 'B']) {
+    const b = document.createElement('button'); b.className = 'opt'; b.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-label', ic.name + ' icon option ' + L);
+    const big = document.createElement('canvas'); big.width = 96; big.height = 96; drawIcon(big, S.icons[ic.id + ':' + L]);
+    const small = document.createElement('canvas'); small.className = 'small'; small.width = 32; small.height = 32; drawIcon(small, S.icons[ic.id + ':' + L]);
+    const t = document.createElement('span'); t.textContent = 'OPTION ' + L;
+    b.append(big, small, t);
+    b.addEventListener('click', () => { const cur = (notes[doc] || {}).pick; save(doc, { pick: cur === L ? null : L }, n.saved); });
+    row.append(b); opts[L] = b;
+  }
+  card.append(h, u, row, n.lab, n.ta, n.saved);
+  document.getElementById('icons').append(card);
+  ui[doc] = { card, opts, ta: n.ta };
+}
+wireText('general', document.getElementById('note-general'), document.getElementById('saved-general'));
+
+function render() {
+  for (const [id, u] of Object.entries(ui)) {
+    const v = notes[id] || {};
+    if (u.ok) { u.ok.setAttribute('aria-pressed', String(v.verdict === 'ok')); u.chg.setAttribute('aria-pressed', String(v.verdict === 'change')); u.card.classList.toggle('ok', v.verdict === 'ok'); u.card.classList.toggle('change', v.verdict === 'change'); }
+    if (u.opts) { for (const [L, b] of Object.entries(u.opts)) b.setAttribute('aria-pressed', String(v.pick === L)); u.card.classList.toggle('ok', !!v.pick); }
+  }
+}
+function fillTexts() {
+  for (const [id, u] of Object.entries(ui)) if (document.activeElement !== u.ta) u.ta.value = (notes[id] || {}).text || '';
+  const g = document.getElementById('note-general'); if (document.activeElement !== g) g.value = (notes.general || {}).text || '';
+}
+function local(v) { try { if (v === undefined) return JSON.parse(localStorage.getItem('soldia-warden') || 'null'); localStorage.setItem('soldia-warden', JSON.stringify(v)); } catch (e) { return null; } }
+async function save(docId, patch, savedEl) {
+  const cur = { ...(notes[docId] || {}), ...patch };
+  notes[docId] = cur; local(notes); render();
+  if (!db) { savedEl.textContent = 'Kept in this browser only (not saved online)'; savedEl.className = 'saved bad'; return; }
+  try {
+    const ref = db.collection(COL).doc(docId);
+    if (!cur.verdict && !cur.pick && !(cur.text || '').trim()) await ref.delete(); else await ref.set({ verdict: cur.verdict || null, pick: cur.pick || null, text: cur.text || '', updatedAt: new Date().toISOString() });
+    savedEl.textContent = 'Saved'; savedEl.className = 'saved ok';
+  } catch (e) { savedEl.textContent = 'Could not save: ' + (e && e.message ? e.message : 'try again'); savedEl.className = 'saved bad'; }
+}
+Object.assign(notes, local() || {}); fillTexts(); render();
+
+for (const [id, v] of [['sp1', 1], ['sp4', 0.25]]) document.getElementById(id).addEventListener('click', () => {
+  speed = v; document.getElementById('sp1').setAttribute('aria-pressed', String(v === 1)); document.getElementById('sp4').setAttribute('aria-pressed', String(v !== 1));
+});
+const visible = new Set();
+const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((x) => (x.isIntersecting ? visible.add(x.target) : visible.delete(x.target))), { rootMargin: '80px' }) : null;
+for (const sc of scenes) if (io) io.observe(sc.cv);
+function frame(now) {
+  for (const sc of scenes) {
+    const dt = Math.min(100, now - sc.last); sc.last = now; sc.clock += dt * speed;
+    if (io && !visible.has(sc.cv)) continue;
+    try { S.drawScene(sc.cv.getContext('2d'), sc.id, sc.clock); } catch (e) { /* keep the page alive */ }
+  }
+  requestAnimationFrame(frame);
+}
+for (const sc of scenes) try { S.drawScene(sc.cv.getContext('2d'), sc.id, 900); } catch (e) {}
+(document.fonts && document.fonts.load ? document.fonts.load('16px "Press Start 2P"') : Promise.resolve()).catch(() => {}).then(() => requestAnimationFrame(frame));
+
+(async () => {
+  const status = document.getElementById('status');
+  try { db = window.claude ? await window.claude.use('db') : null; } catch (e) { db = null; }
+  if (!db) { status.textContent = 'Notes stay in this browser (sign in to claude.ai to save them)'; status.classList.add('bad'); return; }
+  status.textContent = 'Notes save automatically';
+  db.collection(COL).onSnapshot((snap) => {
+    for (const d of snap.docs) { const v = d.data() || {}; notes[d.id] = { verdict: v.verdict || null, pick: v.pick || null, text: v.text || '' }; }
+    local(notes); fillTexts(); render();
+  });
+})();
+</script>

@@ -56,7 +56,8 @@ ok('the Warden is a melee tank named Warden', W.name === 'Warden' && W.role === 
   ok('Chain Hook hits the FARTHEST enemy', ev.some((e) => e.type === 'attack' && e.target === far) && !ev.some((e) => e.type === 'attack' && e.target !== far && e.target && e.target.side === 'enemy'));
   ok(`...and STUNS it ${sk.apply[0].durationMs}ms`, st(far, 'stun') && st(far, 'stun').total === sk.apply[0].durationMs);
   ok('...a pull event', ev.some((e) => e.type === 'pull' && e.target === far));
-  for (let t = 0; t < sk.pull.ms + 40; t += 20) s.update(20);
+  { const x0 = far.x, y0 = far.y; for (let t = 0; t < (sk.pull.delayMs || 0) - 20; t += 20) s.update(20); ok(`...it waits ${sk.pull.delayMs}ms (the hook flying) before sliding`, far.x === x0 && far.y === y0); }
+  for (let t = 0; t < sk.pull.ms + 60; t += 20) s.update(20);
   const d1 = Math.hypot(far.x - a.x, far.y - a.y);
   ok(`...it is dragged to about ${sk.pull.gapPx}px in front of him`, Math.abs(d1 - sk.pull.gapPx) < 25, `${Math.round(d0)} -> ${Math.round(d1)}`); }
 { const { s, es, a } = mk(['bard']); es.forEach((e, i) => { e.x = a.x; e.y = a.y - 150 - i * 120; });

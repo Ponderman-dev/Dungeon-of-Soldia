@@ -67,7 +67,7 @@ export const skillsMethods = {
     return best;
   },
 
-  // `pull: { gapPx, ms }`: the target is dragged to `gapPx` in front of the caster over `ms` (it uses the knockback
+  // `pull: { gapPx, ms, delayMs }`: after delayMs the target is dragged to `gapPx` in front of the caster over `ms` (it uses the knockback
   // slide, so it moves even while stunned). Bosses are never pulled (they do the shoving); its swing is dropped.
   pullTo(hero, target, pull, events) {
     if (!target.alive || target.def.boss || !this.hasPositions(hero) || !this.hasPositions(target)) return;
@@ -75,7 +75,7 @@ export const skillsMethods = {
     const d = Math.hypot(dx, dy);
     const far = d - pull.gapPx;
     if (far <= 1) return;
-    target.knock = { vx: (-dx / d) * far / pull.ms, vy: (-dy / d) * far / pull.ms, remaining: pull.ms };
+    target.knock = { vx: (-dx / d) * far / pull.ms, vy: (-dy / d) * far / pull.ms, remaining: pull.ms, delay: pull.delayMs || 0 }; // delay: it slides once the hook bites (the look's hitMs)
     if (target.pending) {
       target.pending = null;
       events.push({ type: 'attackCancel', unit: target, reason: 'pull' });

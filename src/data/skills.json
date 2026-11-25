@@ -1278,7 +1278,8 @@
     "damageMultiplier": 1.6,
     "pull": {
       "gapPx": 60,
-      "ms": 300
+      "ms": 300,
+      "delayMs": 150
     },
     "apply": [
       {

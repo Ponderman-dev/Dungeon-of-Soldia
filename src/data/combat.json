@@ -166,6 +166,8 @@
       "mage_ward": "mageChargeArcane",
       "discord": "bardCharge",
       "change_song": "bardChargeSong",
+      "chain_hook": "wardenCharge",
+      "lockdown": "wardenCharge",
       "wind_cutter3": "samuraiCharge",
       "counter_stance": "samuraiCharge",
       "alch_barrage": { "recipe": "alchCharge", "tremble": 2 },
@@ -187,6 +189,8 @@
       "mage_ward": { "hitMs": 380 },
       "discord": { "hitMs": 320, "staggerMs": 40, "stopMs": 40, "shakeMs": 120, "shakeIntensity": 0.005, "jitterPx": 5, "jitterMs": 150, "allHit": true, "radius": "area", "move": { "type": "recoil", "px": 4 }, "swallow": ["note"] },
       "change_song": { "hitMs": 400, "targets": "squad" },
+      "chain_hook": { "hitMs": 150, "stopMs": 60, "shakeMs": 120, "shakeIntensity": 0.005, "jitterPx": 3, "jitterMs": 120, "move": { "type": "recoil", "px": -3 } },
+      "lockdown": { "hitMs": 300, "staggerMs": 40, "stopMs": 50, "shakeMs": 160, "shakeIntensity": 0.006, "jitterPx": 3, "jitterMs": 150, "allHit": true, "radius": "area" },
       "wind_cutter3": { "hitMs": 520, "staggerMs": 30, "stopMs": 90, "shakeMs": 220, "shakeIntensity": 0.01, "jitterPx": 9, "jitterMs": 220, "allHit": true, "move": { "type": "recoil", "px": -12 }, "swallow": ["crescent"] },
       "counter_stance": {  }
     },
@@ -212,7 +216,7 @@
       "holdMs": 700,
       "outMs": 300,
       "defaultColor": "#ffffff",
-      "heroColors": { "knight": "#9cc8ff", "berserker": "#ff8a7a", "rogue": "#7fe8ff", "cleric": "#ffe08a", "necromancer": "#a8f08a", "archer": "#b8f07a", "mage": "#c8a8ff", "bard": "#ff9ad8", "samurai": "#ff6a7f", "alchemist": "#7ae0b0" }
+      "heroColors": { "knight": "#9cc8ff", "berserker": "#ff8a7a", "rogue": "#7fe8ff", "cleric": "#ffe08a", "necromancer": "#a8f08a", "archer": "#b8f07a", "mage": "#c8a8ff", "bard": "#c8d0dc", "samurai": "#ff6a7f", "alchemist": "#7ae0b0" }
     },
     "areaColor": "0xffb27a",
     "areaMs": 520

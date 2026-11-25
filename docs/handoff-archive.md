@@ -1,5 +1,27 @@
-# Handoff ARCHIVE (sessions 2-55, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-56, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## SESSION 56 (archived; started as): BATTLE-FLOOR MUSIC SEARCH (session 56 did SKILL BOOKS instead)
+- BRANCH: `main` has EVERYTHING (session 55 merged in). Start the next branch from `main`.
+- SESSION 55 ALSO DID (all on main): NEW FLOOR (user's mix after their 3 reference pictures, drawn by floorArt.js):
+  big square slabs, less grain, capstones + 4 pillars, vines, barrels / crates / chest at RANDOM spots (wall foot, or
+  only the far left / right edges: never in the fight path), no side walls; the camp uses it too (no props); the squad
+  screen is a CLOSE-UP (`closeUpPixel` 4, no props). Details + every rejected round: `docs/systems/floors-rooms.md`.
+- NEXT TASK (user, end of session 55): continue the search for BATTLE-FLOOR music. Today battle floors are SILENT
+  (`src/data/music.json` screen 'battle' = null; user, session 53: 'the battle floor songs are not good, remove
+  everything'). Every other screen has its song (title/camp xDeviruchi, squad RPG Battle 12, boss boss_final).
+- READ FIRST: `docs/systems/sound.md` MUSIC section only (what they LOVED / said NO to, rounds 1-5, FINAL PICKS, MUSIC
+  PLAYER; `make-game-music.py` makes the game files). Board = the reused Skill Effects page (url in sound.md, db `music`).
+- WHAT THEY LIKE: RETRO RPG tracks (Pixel-boy RPG pack, xDeviruchi, Eric Skiff chiptune), full energy from beat 1 (no
+  slow starts), simple, 8-bit / 16-bit. NOT: cyber / synthwave, gothic, cheery town / open-land vibes, our own code
+  songs never landed. A battle LIST takes turns (music.json supports a list). They may bring their OWN files (zip in
+  chat): licence check (CC0 / CC BY / CC BY-SA / Pixabay OK; NC / ND not OK), credit line in music.json.
+- How: ask with the question tool first (mood, where to look, own files or my search), then a SMALL board round
+  (few options, LOVE / MAYBE / NO), then the pick into the game (music.json + make-game-music.py, `music.test.mjs`).
+- KIV (user): HOLY damage (Cleric's smite / holy_nova still holy; user said 'we don't have holy'): don't change until asked.
+  Open: a 'made by' name for the credits; Android must allow sound without a tap; Settings HELP -> crypto help at the
+  Solana integration; the deep BUG HUNT + OPTIMIZATION + SECURITY CHECK (plan: session-51 note in `docs/handoff-archive.md`).
+- PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').
 
 ## SESSION 55 (archived; started as): TRANSITION EDIT, MAIN MENU (CAMP) <-> HERO SELECT (SQUAD SCREEN)
 - BRANCH: `main` has EVERYTHING (session 54 merged in). Start the next branch from `main`.

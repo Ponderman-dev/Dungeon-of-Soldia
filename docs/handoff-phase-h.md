@@ -1,12 +1,14 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 56): BATTLE-FLOOR MUSIC SEARCH (continue)
-- BRANCH: `main` has EVERYTHING (session 55 merged in). Start the next branch from `main`.
-- SESSION 55 ALSO DID (all on main): NEW FLOOR (user's mix after their 3 reference pictures, drawn by floorArt.js):
-  big square slabs, less grain, capstones + 4 pillars, vines, barrels / crates / chest at RANDOM spots (wall foot, or
-  only the far left / right edges: never in the fight path), no side walls; the camp uses it too (no props); the squad
-  screen is a CLOSE-UP (`closeUpPixel` 4, no props). Details + every rejected round: `docs/systems/floors-rooms.md`.
-- NEXT TASK (user, end of session 55): continue the search for BATTLE-FLOOR music. Today battle floors are SILENT
+## START HERE (session 57): BATTLE-FLOOR MUSIC SEARCH (continue)
+- BRANCH: `main` has EVERYTHING (session 56 merged in). Start the next branch from `main`.
+- SESSION 56 DID (instead of music, all on main): SKILL BOOKS round 2 (`docs/systems/skill-books.md`, last 2 notes):
+  5 element RUNES (rare, attack only, +75%), MEND / GREATER MEND (support only, heal 15% / 20%, longer cooldown),
+  ONE INK / ONE ELEMENT PER SKILL (`group`, a new one swaps the old), nerfs (Guardian, Frost Ink, Quick Draw) and buffs
+  of every weak page; pageruns.mjs now puts support pages on the support skill. Smart curve median 39 (unchanged).
+  Also on main (a parallel session): the BARD IS NOW THE WARDEN (jailer tank, `id` still 'bard'; Chain Hook, Lockdown,
+  Shackles, 4 hero pages). Old lute music / sounds removed.
+- NEXT TASK (user, end of session 56): the search for BATTLE-FLOOR music. Today battle floors are SILENT
   (`src/data/music.json` screen 'battle' = null; user, session 53: 'the battle floor songs are not good, remove
   everything'). Every other screen has its song (title/camp xDeviruchi, squad RPG Battle 12, boss boss_final).
 - READ FIRST: `docs/systems/sound.md` MUSIC section only (what they LOVED / said NO to, rounds 1-5, FINAL PICKS, MUSIC
@@ -17,12 +19,18 @@
   chat): licence check (CC0 / CC BY / CC BY-SA / Pixabay OK; NC / ND not OK), credit line in music.json.
 - How: ask with the question tool first (mood, where to look, own files or my search), then a SMALL board round
   (few options, LOVE / MAYBE / NO), then the pick into the game (music.json + make-game-music.py, `music.test.mjs`).
-- KIV (user): HOLY damage (Cleric's smite / holy_nova still holy; user said 'we don't have holy'): don't change until asked.
-  Open: a 'made by' name for the credits; Android must allow sound without a tap; Settings HELP -> crypto help at the
-  Solana integration; the deep BUG HUNT + OPTIMIZATION + SECURITY CHECK (plan: session-51 note in `docs/handoff-archive.md`).
+- KIV (user): HOLY damage (Cleric's smite / holy_nova still holy; user said 'we don't have holy'; session 56 they asked
+  for a Holy Rune page, so holy is OK as a page): don't change the Cleric until asked. Open: a 'made by' name for the
+  credits; Android must allow sound without a tap; Settings HELP -> crypto help at the Solana integration; the deep BUG
+  HUNT + OPTIMIZATION + SECURITY CHECK (plan: session-51 note in `docs/handoff-archive.md`).
 - PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').
 
 ## How we work with this user
+- SESSION 56 lessons (skill book balance): 'bring the full list' = tables by tier; they gave ranges ('50-100%', '15-20%')
+  + 'make it balanced': pick inside their range, then use pageruns to fix the strength with a SIDE COST (cooldown) rather
+  than shrinking their number. Damage-only pages barely matter (skills = 15-40% of damage): shorter cooldowns and new
+  effects do. 'Push to main' is per round: ask again for the next round. 'Recheck, X changed' = fetch origin and look
+  at main (other sessions run in parallel: the Warden landed on main mid-session).
 - SESSION 55 FLOOR lessons: 4 rounds of my own redesigns were all rejected ('too different', 'not it'); what worked
   was the user's REFERENCE PICTURES drawn with the game's OWN art code (same colours / moss / door), then their mix
   ('floor C, walls mix, props mix'). Ask for a reference picture early. 'Walls mix' did NOT mean side walls (they hated

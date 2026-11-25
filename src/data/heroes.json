@@ -1423,7 +1423,7 @@
     "id": "bard",
     "name": "Warden",
     "role": "Tank",
-    "color": "0xe060a8",
+    "color": "0x9aa0ac",
     "summary": "The dungeon jailer: he chains enemies down so they can't hurt the squad.",
     "tips": [
       "Shackles: every 4th hit chains the enemy: it can't walk for 1.5s and deals 35% less damage for 4s.",

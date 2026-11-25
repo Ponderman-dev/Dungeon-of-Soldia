@@ -1,11 +1,10 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, SKILL_COLORS, UI } from '../config.js';
+import { GAME_WIDTH, UI } from '../config.js';
 import { drawWindow, uiText, comingSoonWindow, drawButton, buttonTextColor, pageEnter, pageLeave, markBar, pageBackdrop } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import { floorCrop } from '../entities/floorTexture.js';
 import D from '../data/heroPage.json';
 import heroes from '../data/heroes.json';
-import skills from '../data/skills.json';
 import unlocks from '../data/unlocks.json';
 import dungeons from '../data/dungeons.json';
 import shop from '../data/shop.json';
@@ -16,25 +15,18 @@ import { loadProgress, isUnlocked, requirementProgress, describeRequirement } fr
 import * as sfx from '../audio/sfx.js';
 
 // The Heroes button (docs/systems/title-base.md section 5, user's pick C), opened over the camp (the camp waits,
-// paused). LIST: every hero in 2 columns (locked = a shadow, its goal and a progress bar). HERO PAGE (session 57, user:
-// 'banner, stats, armoury, not lore'): the hero's BANNER on top (entities/heroBanner.js), the hero big on the dungeon
-// floor wearing the look being tried, an HP / ATK / DEF / RES strip, ARMOURY (looks: try on) and STATS (RECORDS / KIT).
-// Opened from the GLOSSARY instead (session 57, user: 'two different pages'): the list opens a SHORT glossary entry
-// (showEntry; heroPage.json glossaryStyle A / B / C while the user picks; dev url ?ghero=A|B|C). Data: heroPage.json.
+// paused). LIST: every hero in 2 columns (locked = a shadow, its goal and a progress bar). Tap a hero:
+// - from the camp: the HERO PAGE (session 57, user's pick 4): the hero in front of their banner, playtime records,
+//   the looks to try on, HERO DETAILS (= the glossary card). ARMOURY = a bigger try-on page (showArmoury).
+// - from the GLOSSARY: the hero CARD (pick F): hero, intro, stats, kit. Both drawn by heroes/heroPages.js.
 const L = D.layout;
 const gold = () => Phaser.Display.Color.HexStringToColor(UI.gold).color; // read when drawn
 const DIM = Number(L.dim);
 const SHADOW = 0x1c1c26;
 const W = GAME_WIDTH - L.side * 2;
 const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES', evasion: 'DODGE', crit: 'CRIT', attackEfficiency: 'SPD' };
-const num = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-const hex = (c) => '#' + c.toString(16).padStart(6, '0');
 const perkText = (def) => perkMods({ def, level: 1 }).map((m) => `${m.percent !== undefined ? `+${m.percent}%` : `+${m.flat}`} ${STAT_SHORT[m.stat] || ({ skillDamage: 'skill damage', regen: 'health/s', dotDamage: 'damage over time' })[m.special] || m.special}`).join(', ');
-// The page style being picked: heroPage.json, or a dev url flag (?hpage=N / ?ghero=X) for the screenshots.
-const pageStyle = (flag, fallback) => {
-  try { if (import.meta.env.DEV) { const q = new URLSearchParams(window.location.search).get(flag); if (q) return isNaN(Number(q)) ? q : Number(q); } } catch { /* no url */ }
-  return fallback;
-};
+
 
 export default class HeroesScene extends Phaser.Scene {
   constructor() {
@@ -128,9 +120,9 @@ export default class HeroesScene extends Phaser.Scene {
 
   // ---- HERO PAGE (pick C) --------------------------------------------------------------------------
 
-  // The hero page: one of the 5 styles (heroes/heroPages.js; heroPage.json heroPageStyle, dev ?hpage=N).
+  // The hero page (heroes/heroPages.js): banner backdrop, playtime records, looks, HERO DETAILS.
   showHero(def) {
-    heroPage(this, def, pageStyle('hpage', D.heroPageStyle || 1));
+    heroPage(this, def);
   }
 
   // The look `def` is trying on (ARMOURY), CLASSIC by default.
@@ -178,66 +170,10 @@ export default class HeroesScene extends Phaser.Scene {
     this.text(page, cx, ny, looks.length > 1 ? D.armoury.note : D.armoury.noneYet, 'small', UI.dim, { wordWrap: { width: W }, align: 'center' }).setOrigin(0.5, 0);
   }
 
-  // ---- GLOSSARY ENTRY (the short page, opened from the Glossary): one of 6 styles (heroes/heroPages.js) ------
+  // ---- GLOSSARY HERO (the card: opened from the Glossary, or HERO DETAILS on the hero page) ----------------
 
-  showEntry(def) {
-    glossaryPage(this, def, String(pageStyle('ghero', D.glossaryStyle || 'A')).toUpperCase());
-  }
-
-  // ---- STATS: RECORDS / KIT ------------------------------------------------------------------------
-
-  showStats(def, tab) {
-    const page = this.newPage(), x = L.side, T = L.tabs, tw = (W - T.gap) / 2;
-    this.top(page, '< BACK', def.name.toUpperCase(), () => this.showHero(def));
-    [['records', 'RECORDS'], ['kit', 'KIT']].forEach(([id, label], i) => {
-      this.button(page, x + i * (tw + T.gap), T.y, tw, T.h, label, () => { if (id !== tab) { sfx.play('tap'); this.showStats(def, id); } }, id === tab ? 'gold' : 'dim');
-    });
-    if (tab === 'records') this.drawRecords(page, def);
-    else this.drawKit(page, def);
-  }
-
-  // This hero's numbers over every run (kept from session 37 on).
-  drawRecords(page, def) {
-    const r = { runs: 0, bestFloor: 0, kills: 0, damage: 0, healing: 0, deaths: 0, ...(this.progress.stats.heroRecords || {})[def.id] };
-    const R = L.records, x = L.side, w = (W - R.gap) / 2;
-    [['RUNS', r.runs], ['BEST FLOOR', r.bestFloor], ['KILLS', r.kills], ['DEATHS', r.deaths], ['DAMAGE', r.damage], ['HEALING', r.healing]].forEach(([label, v], i) => {
-      const bx = x + (i % 2) * (w + R.gap), by = R.y + Math.floor(i / 2) * (R.h + R.gap);
-      page.add(drawWindow(this.add.graphics(), bx, by, w, R.h));
-      this.text(page, bx + L.pad, by + 14, label, 'small', UI.dim);
-      this.text(page, bx + L.pad, by + 30, num(v), 'normal');
-    });
-    const y = R.y + 3 * (R.h + R.gap) + 4;
-    this.text(page, GAME_WIDTH / 2, y, 'Counted from runs played since this update.', 'small', UI.dim).setOrigin(0.5, 0);
-  }
-
-  // Full stats, then attack skill, support skill, perk and passive, each in a card.
-  drawKit(page, def) {
-    const x = L.side, P = L.pad, st = def.stats;
-    let y = L.kit.y;
-    const g = drawWindow(this.add.graphics(), x, y, W, 64);
-    page.add(g);
-    [['HP', st.health], ['ATK', st.attack], ['DEF', st.defense], ['RES', st.resist], ['CRIT', `${st.crit}%`], ['DODGE', `${st.evasion}%`]].forEach(([k, v], i) => {
-      const sx = x + P + (i % 3) * ((W - P * 2) / 3), sy = y + 20 + Math.floor(i / 3) * 24;
-      const a = this.text(page, sx, sy, k, 'small').setOrigin(0, 0.5);
-      this.text(page, sx + a.width + 8, sy, String(v), 'small', UI.gold).setOrigin(0, 0.5);
-    });
-    y += 64 + L.kit.gap;
-    const card = (head, color, extra, body) => {
-      const t = this.text(page, x + P, 0, body, 'small', UI.text, { wordWrap: { width: W - P * 2 }, lineSpacing: 6 });
-      const top = extra ? 56 : 40;
-      t.setY(y + top);
-      const h = top + t.height + P - 2;
-      page.addAt(drawWindow(this.add.graphics(), x, y, W, h), page.list.indexOf(t));
-      this.text(page, x + P, y + 12, head, 'normal', color, { wordWrap: { width: W - P * 2 } });
-      if (extra) this.text(page, x + P, y + 38, extra, 'small', UI.dim);
-      y += h + L.kit.gap;
-    };
-    const atk = skills[def.skills.attack], sup = skills[def.skills.support];
-    const perk = perkText(def);
-    card(`ATTACK - ${atk.name.toUpperCase()}`, hex(SKILL_COLORS.attack.ready + 0x303030), `every ${atk.cooldownMs / 1000}s`, atk.description);
-    card(`SUPPORT - ${sup.name.toUpperCase()}`, UI.green, `every ${sup.cooldownMs / 1000}s`, sup.description);
-    card(`PERK - ${def.perk.name.toUpperCase()}`, UI.gold, null, `Whole squad: ${perk}.`);
-    card(`PASSIVE - ${def.passive.name.toUpperCase()}`, UI.text, null, def.passive.description);
+  showEntry(def, onBack) {
+    glossaryPage(this, def, onBack);
   }
 
   close() {

@@ -1,8 +1,9 @@
 {
-  "_about": "Heroes button (HeroesScene, user's pick C: docs/proposals/menu/hero-page-variations.png right + glossary-heroes-spaced.png). LIST = 2-column grid (locked = shadow, short goal, progress bar). HERO PAGE = card: the hero's BANNER on top (session 57; banner = 113x59 art px at `scale`, src/assets/banners), the hero big on the dungeon floor with name + role, the look name (looks = skins, one 'CLASSIC' each for now) + dots, HP/ATK/DEF/RES strip, ARMOURY (looks: CLASSIC + shop looks, tap = try on; session 57 replaced LORE) and STATS. GLOSSARY ENTRY (entry layout) = the short page the Glossary's HEROES chapter opens; glossaryStyle = A kit / B story / C short (user picking). STATS = RECORDS (this hero's runs, kept from session 37 on) / KIT (skills, perk, passive). lore = 2-3 lines per hero (draft, user to review). shortGoals = the unlock goal in a list tile. shortNames = names too long for a list tile. heroPageStyle (1-5) / glossaryStyle (A-F) = the page styles drawn by scenes/heroes/heroPages.js (session 57: user picking).",
+  "_about": "Heroes button (HeroesScene + scenes/heroes/heroPages.js). LIST = 2-column grid (locked = shadow, short goal, progress bar). From the camp, a hero opens the HERO PAGE (session 57, user's pick 4 of 5): the hero standing in front of their BANNER (113x59 art px at layout.banner.scale, src/assets/banners), name + role, the player's RECORDS with this hero (runs, best floor, kills, deaths, damage, healing: progress.stats.heroRecords; user: 'not the hero stats, the playtime stats'), the LOOKS row (CLASSIC + shop looks, tap = try on, this visit only; wearing in fights still TODO), HERO DETAILS = the glossary card. From the Glossary, a hero opens the CARD (pick F of 6): hero, name + role/type, summary, HP/ATK/DEF/RES/CRIT/DODGE/SPEED, the kit one line each with icons. lore = 2-3 lines per hero (draft; not shown right now). shortGoals = the unlock goal in a list tile. shortNames = names too long for a list tile.",
   "lookName": "CLASSIC",
-  "heroPageStyle": 1,
-  "glossaryStyle": "A",
+  "recordsTitle": "YOUR RECORDS WITH THIS HERO",
+  "armouryTitle": "LOOKS (TAP TO TRY ON)",
+  "detailsButton": "HERO DETAILS",
   "armoury": {
     "owned": "OWNED",
     "currency": "GEMS",
@@ -103,6 +104,21 @@
       "headH": 150,
       "stageW": 110,
       "heroScale": 4
+    },
+    "page": {
+      "y": 72,
+      "h": 330,
+      "floorY": 178,
+      "feetDy": 300,
+      "heroScale": 6,
+      "lookH": 100,
+      "buttonH": 50
+    },
+    "card2": {
+      "y": 72,
+      "stageH": 170,
+      "heroScale": 4,
+      "feetDy": 150
     }
   }
 }

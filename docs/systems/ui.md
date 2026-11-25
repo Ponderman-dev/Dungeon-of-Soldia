@@ -183,10 +183,11 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
 - Door sound (user: plays early): Door.open() plays 'doorOpen' itself, `floorArt.json door.anim.soundDelayMs` (480)
   after the door starts, on the scene clock, so the sound's loud hit (~200ms into the file) lands on the slam.
 - SCENE EVENTS (session 51): a scene's own `this.events` listeners survive scene.stop / restart in Phaser. Any `this.events.on(Phaser.Scenes.Events.X, fn)` added in create() must be removed on SHUTDOWN (`this.events.once(SHUTDOWN, () => this.events.off(X, fn))`), or it piles up per visit (Base, Pause, fight HUD RESUME did). Test `scene-listeners.test.mjs`.
-- HEROES PAGE v2 + GLOSSARY HERO ENTRY (session 57; user: 'reduce the glossary hero, remake the hero page: two
-  different pages'; 'banner, stats, armoury, not lore'). HeroesScene: from the camp = list -> hero page with the
-  hero's BANNER in the art box (`entities/heroBanner.js`, src/assets/banners/<id>.png 113x59 at 3x, packed ?inline)
-  + the look being tried + stats strip + ARMOURY (replaces LORE: CLASSIC + shop looks, tap = try on, this visit
-  only; wearing in fights still TODO) + STATS. From the Glossary = list -> `showEntry` (short page): style A kit /
-  B story (the lore lives here now) / C short (heroPage.json glossaryStyle; dev ?ghero=X). User picks on the
-  review page (db `banners` doc 'glossaryStyle').
+- HEROES PAGES (session 57; user: 'two different pages'; picked on the review page from 5 + 6 styles). Code:
+  `scenes/heroes/heroPages.js` (HeroesScene calls it), data heroPage.json. From the camp = HERO PAGE (pick 4 'banner
+  backdrop'): the hero in front of their BANNER (`entities/heroBanner.js`, src/assets/banners/<id>.png 113x59 at 3x,
+  packed ?inline; drawn by docs/proposals/hero-banners/make-banners.py), name + role with a clear gap, the player's
+  RECORDS with this hero (runs / best floor / kills / deaths / damage / healing; user: 'not the hero stats, the
+  playtime stats'), LOOKS row (tap = try on, this visit only; wearing in fights TODO), HERO DETAILS = the card.
+  From the Glossary = the CARD (pick F): hero, name, role + type, summary, the 7 hero stats, kit one line each with
+  icons. Lore is not shown anywhere now (heroPage.json lore kept). showArmoury (bigger try-on page) is unused for now.

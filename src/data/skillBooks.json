@@ -29,8 +29,8 @@
     "sharpen": {
       "kind": "stat",
       "name": "Sharpen",
-      "text": "+12% skill power (damage, healing, shield or buff size).",
-      "power": 12
+      "text": "+15% skill power (damage, healing, shield or buff size).",
+      "power": 15
     },
     "swift": {
       "kind": "stat",
@@ -41,8 +41,8 @@
     "steady": {
       "kind": "stat",
       "name": "Steady Hands",
-      "text": "Wind-up 15% shorter.",
-      "windup": 15
+      "text": "Wind-up 25% shorter.",
+      "windup": 25
     },
     "lasting": {
       "kind": "stat",
@@ -64,7 +64,8 @@
           "damageMultiplier": 0.2,
           "damageType": "dark"
         }
-      ]
+      ],
+      "group": "ink"
     },
     "razorInk": {
       "kind": "modifier",
@@ -79,7 +80,8 @@
           "durationMs": 4000,
           "damageMultiplier": 0.2
         }
-      ]
+      ],
+      "group": "ink"
     },
     "emberInk": {
       "kind": "modifier",
@@ -95,7 +97,8 @@
           "damageMultiplier": 0.15,
           "damageType": "fire"
         }
-      ]
+      ],
+      "group": "ink"
     },
     "frostInk": {
       "kind": "modifier",
@@ -107,9 +110,10 @@
         {
           "status": "chill",
           "stacks": 2,
-          "durationMs": 5000
+          "durationMs": 3000
         }
-      ]
+      ],
+      "group": "ink"
     },
     "siphon": {
       "kind": "modifier",
@@ -175,8 +179,8 @@
       "tier": "common",
       "tag": "Damage",
       "name": "Heavy",
-      "text": "+20% skill power, but the cooldown is 8% longer.",
-      "power": 20,
+      "text": "+30% skill power, but the cooldown is 8% longer.",
+      "power": 30,
       "cooldown": -8
     },
     "quickDraw": {
@@ -184,16 +188,16 @@
       "tier": "common",
       "tag": "Tempo",
       "name": "Quick Draw",
-      "text": "Every fight starts with the skill half charged (half its cooldown already done).",
-      "fightStartCharge": 50
+      "text": "Every fight starts with the skill 35% charged (35% of its cooldown already done).",
+      "fightStartCharge": 35
     },
     "piercing": {
       "kind": "modifier",
       "tier": "common",
       "tag": "Damage",
       "name": "Piercing",
-      "text": "The skill's hits ignore 30% of the enemy's defense and resist.",
-      "armorPierce": 30
+      "text": "The skill's hits ignore 40% of the enemy's defense and resist.",
+      "armorPierce": 40
     },
     "secondWind": {
       "kind": "modifier",
@@ -240,8 +244,8 @@
       "tier": "rare",
       "tag": "Risk",
       "name": "Overcharge",
-      "text": "+60% skill power, but the wind-up is twice as long.",
-      "power": 60,
+      "text": "+80% skill power, but the wind-up is twice as long.",
+      "power": 80,
       "windupMultiplier": 2
     },
     "huntersInk": {
@@ -256,7 +260,8 @@
           "durationMs": 4000,
           "damageTakenPercent": 15
         }
-      ]
+      ],
+      "group": "ink"
     },
     "bloodPrice": {
       "kind": "modifier",
@@ -281,20 +286,21 @@
           "status": "shock",
           "durationMs": 3000
         }
-      ]
+      ],
+      "group": "ink"
     },
     "sunder": {
       "kind": "modifier",
       "tier": "rare",
       "tag": "Debuff",
       "name": "Sunder",
-      "text": "Every enemy the skill hits loses 20% of its defense for 5s.",
+      "text": "Every enemy the skill hits loses 30% of its defense for 6s.",
       "ink": [
         {
           "status": "armorBreak",
-          "durationMs": 5000,
+          "durationMs": 6000,
           "defenseFlat": 0,
-          "defensePercent": -20
+          "defensePercent": -30
         }
       ]
     },
@@ -310,7 +316,7 @@
           "bleed",
           "burn"
         ],
-        "perStack": 0.3,
+        "perStack": 0.5,
         "maxStacks": 20
       }
     },
@@ -331,10 +337,10 @@
       "tier": "rare",
       "tag": "Defense",
       "name": "Guardian",
-      "text": "Casting shields the most hurt ally for 10% of its max health for 4s.",
+      "text": "Casting shields the most hurt ally for 7% of its max health for 4s.",
       "allyShield": {
         "status": "shield",
-        "percentMaxHp": 10,
+        "percentMaxHp": 7,
         "durationMs": 4000
       }
     },
@@ -370,7 +376,7 @@
       "tier": "rare",
       "tag": "Risk",
       "name": "Glass Cannon",
-      "text": "+60% skill power, but after casting the caster has 15% less max health until the fight ends.",
+      "text": "+60% skill power, but after casting the caster has 10% less max health until the fight ends.",
       "power": 60,
       "selfApply": [
         {
@@ -380,7 +386,7 @@
           "mods": [
             {
               "stat": "health",
-              "percent": -15
+              "percent": -10
             }
           ]
         }
@@ -395,7 +401,7 @@
       "tornado": {
         "durationMs": 6000,
         "tickMs": 500,
-        "damageMultiplier": 1.0,
+        "damageMultiplier": 1,
         "max": 3,
         "hopEvery": 2
       },
@@ -465,7 +471,7 @@
       "tier": "legendary",
       "tag": "Damage",
       "name": "Elemental Storm",
-      "text": "Each hit turns into the element the enemy is weakest to (fire, ice, electric or dark). When it finds a weakness: 30% more damage, and the enemy deals 15% less damage for 3s.",
+      "text": "Each hit turns into the element the enemy is weakest to (fire, ice, electric or dark). Always +25% damage; when it finds a weakness: 30% more on top, and the enemy deals 15% less damage for 3s.",
       "elementalStorm": {
         "elements": [
           "fire",
@@ -480,8 +486,10 @@
             "durationMs": 3000,
             "attackPercent": -15
           }
-        ]
-      }
+        ],
+        "baseBonus": 25
+      },
+      "group": "element"
     },
     "titan": {
       "kind": "modifier",
@@ -612,9 +620,9 @@
       "skill": "death_coil3",
       "tag": "Summon",
       "name": "Bone Harvest",
-      "text": "A Death Coil kill raises 3 skeletons instead of one.",
+      "text": "A Death Coil kill raises 4 skeletons instead of one.",
       "patch": {
-        "raiseCount": 3
+        "raiseCount": 4
       }
     },
     "heavyChains": {
@@ -680,9 +688,9 @@
       "skill": "alch_barrage",
       "tag": "Area",
       "name": "Big Batch",
-      "text": "Flask Barrage throws 9 flasks instead of 5.",
+      "text": "Flask Barrage throws 11 flasks instead of 5.",
       "patch": {
-        "randomCount": 9
+        "randomCount": 11
       }
     },
     "purify": {
@@ -733,9 +741,9 @@
       "tier": "rare",
       "tag": "Control",
       "name": "Concussive",
-      "text": "Each hit has a 20% chance to Stun for 0.6s (bosses: half as long). Cooldown 15% longer.",
+      "text": "Each hit has a 30% chance to Stun for 0.6s (bosses: half as long). Cooldown 15% longer.",
       "onHitChance": {
-        "chance": 20,
+        "chance": 30,
         "apply": [
           {
             "status": "stun",
@@ -770,6 +778,87 @@
         "belowPercent": 40,
         "power": 75
       }
+    },
+    "fireRune": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Element",
+      "name": "Fire Rune",
+      "onlyKind": "attack",
+      "group": "element",
+      "element": "fire",
+      "power": 75,
+      "text": "The skill deals fire damage and +75% skill power. Attack skills only; one element per skill."
+    },
+    "iceRune": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Element",
+      "name": "Ice Rune",
+      "onlyKind": "attack",
+      "group": "element",
+      "element": "ice",
+      "power": 75,
+      "text": "The skill deals ice damage and +75% skill power. Attack skills only; one element per skill."
+    },
+    "stormRune": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Element",
+      "name": "Storm Rune",
+      "onlyKind": "attack",
+      "group": "element",
+      "element": "electric",
+      "power": 75,
+      "text": "The skill deals electric damage and +75% skill power. Attack skills only; one element per skill."
+    },
+    "shadowRune": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Element",
+      "name": "Shadow Rune",
+      "onlyKind": "attack",
+      "group": "element",
+      "element": "dark",
+      "power": 75,
+      "text": "The skill deals dark damage and +75% skill power. Attack skills only; one element per skill."
+    },
+    "holyRune": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Element",
+      "name": "Holy Rune",
+      "onlyKind": "attack",
+      "group": "element",
+      "element": "holy",
+      "power": 75,
+      "text": "The skill deals holy damage and +75% skill power. Attack skills only; one element per skill."
+    },
+    "mend": {
+      "kind": "modifier",
+      "tier": "common",
+      "tag": "Heal",
+      "name": "Mend",
+      "onlyKind": "support",
+      "allyHeal": {
+        "count": 1,
+        "percentMaxHp": 15,
+        "includeSelf": true
+      },
+      "text": "Casting heals the most hurt hero (the caster too) for 15% of its max health. Support skills only."
+    },
+    "greaterMend": {
+      "kind": "modifier",
+      "tier": "rare",
+      "tag": "Heal",
+      "name": "Greater Mend",
+      "onlyKind": "support",
+      "allyHeal": {
+        "count": 2,
+        "percentMaxHp": 20,
+        "includeSelf": true
+      },
+      "text": "Casting heals the 2 most hurt heroes (the caster too) for 20% of their max health. Support skills only."
     }
   },
   "cards": {

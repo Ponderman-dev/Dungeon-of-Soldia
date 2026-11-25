@@ -10,7 +10,7 @@ import { bookPageIconKey, skillIconKey } from '../entities/skillIconTexture.js';
 import { FRAMED_SIZE } from '../systems/itemIcons.js';
 import * as sfx from '../audio/sfx.js';
 import bookData from '../data/skillBooks.json';
-import { rollBookPages, pageFit } from '../systems/books.js';
+import { rollBookPages, pageFit, groupMate } from '../systems/books.js';
 import { SKILL_COLORS } from '../config.js';
 
 // The interface look (config.js UI, entities/uiKit.js): black windows, white lines, gold = chosen, pixel font.
@@ -387,7 +387,7 @@ export default class RewardScene extends Phaser.Scene {
         const bx = PAD + 76 + idx * (bw + 6);
         const by = y + 34;
         const fit = pageFit(hero, idx, page, limits);
-        const usable = fit === 'ok' || fit === 'replace';
+        const usable = fit === 'ok' || fit === 'replace' || fit === 'swap';
         const pages = slot.pages || [];
         const stats = pages.filter((p) => p.kind === 'stat').length;
         const mods = pages.filter((p) => p.kind === 'modifier').length;
@@ -402,11 +402,11 @@ export default class RewardScene extends Phaser.Scene {
         btn.paint(false);
         const IN = 12; // the text's gap from the box's frame (user: neater)
         this.fitText(bx + IN, by + IN - 2, skillDefs[slot.id].name, 13, usable ? UI.text : MUTE, bw - 2 * IN, 34, true);
-        const note = fit === 'dead' ? 'Fallen' : fit === 'full' ? 'Stat pages full' : fit === 'duplicate' ? 'Already has it' : fit === 'wrongSkill' ? 'Not this skill' : fit === 'replace' ? 'Full: replaces one' : `${stats}${limits.maxStatPages != null ? '/' + limits.maxStatPages : ''} stats\n${mods}${limits.modifierSlots != null ? '/' + limits.modifierSlots : ''} mods`;
+        const note = fit === 'dead' ? 'Fallen' : fit === 'full' ? 'Stat pages full' : fit === 'duplicate' ? 'Already has it' : fit === 'wrongSkill' ? 'Not this skill' : fit === 'replace' ? 'Full: replaces one' : fit === 'swap' ? `Swaps ${groupMate(slot.pages, page).name}` : `${stats}${limits.maxStatPages != null ? '/' + limits.maxStatPages : ''} stats\n${mods}${limits.modifierSlots != null ? '/' + limits.modifierSlots : ''} mods`;
         // The skill's own pixel icon (skillIcons.json, at the battle HUD's 2x) in the bottom-right corner (user, session 54)
         const iconKey = skillIconKey(this, slot.id), ICON = 32;
         if (iconKey) this.track(this.add.image(bx + bw - IN - ICON / 2 + 2, by + bh - IN - ICON / 2 + 4, iconKey).setScale(2).setAlpha(usable ? 1 : 0.4));
-        this.fitText(bx + IN, by + bh - 30 - IN + 6, note, 11, fit === 'replace' ? '#ffd9a0' : MUTE, bw - 2 * IN - (iconKey ? ICON + 2 : 0), 26); // shrinks to stay inside the box
+        this.fitText(bx + IN, by + bh - 30 - IN + 6, note, 11, fit === 'replace' || fit === 'swap' ? '#ffd9a0' : MUTE, bw - 2 * IN - (iconKey ? ICON + 2 : 0), 26); // shrinks to stay inside the box
         if (usable) this.track(this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive()).onPress(() => this.selectSkill(btn));
         this.skillButtons.push(btn);
       });

@@ -23,17 +23,22 @@ const pick = (a) => a[Math.floor(Math.random() * a.length)];
 function useBook(s, book) {
   const page = pick(rollBookPages(bookData, book, Math.random, s.heroes.filter((h) => h.alive).map((h) => h.def.id)));
   const spots = [];
-  for (const h of s.heroes) h.skills.forEach((_, i) => { const fit = pageFit(h, i, page, rules.books); if (fit === 'ok' || fit === 'replace') spots.push([h, i, fit]); });
+  for (const h of s.heroes) h.skills.forEach((_, i) => { const fit = pageFit(h, i, page, rules.books); if (fit === 'ok' || fit === 'replace' || fit === 'swap') spots.push([h, i, fit]); });
   if (!spots.length) return;
   const [h, i, fit] = pick(spots);
   const mods = (h.skills[i].pages || []).filter((p) => p.kind === 'modifier');
   s.addPage(h.uid, i, page, fit === 'replace' ? Math.floor(Math.random() * mods.length) : null);
 }
 
-// One run; `pageId` (or null) starts on the attack skill of every hero it fits.
+// One run; `pageId` (or null) starts on the attack skill of every hero it fits (a support-only page: the support
+// skill; a hero page: its own named skill, which may be a support skill).
 function playRun(sq, pageId) {
   const s = new BattleState({ heroDefs: sq.map((id) => all.find((h) => h.id === id)), enemyDefs, itemDefs, skillDefs, minionDefs, statusDefs, rules, damageTypes, leveling, rng: Math.random });
-  if (pageId) for (const h of s.heroes) h.skills.forEach((slot, i) => { if (slot.kind === 'attack') s.addPage(h.uid, i, pageOf(bookData, pageId)); });
+  if (pageId) {
+    const page = pageOf(bookData, pageId);
+    const want = page.hero ? null : page.onlyKind || 'attack';
+    for (const h of s.heroes) h.skills.forEach((slot, i) => { if ((!want || slot.kind === want) && pageFit(h, i, page, rules.books) === 'ok') s.addPage(h.uid, i, page); });
+  }
   for (const h of s.heroes) h.hp = h.maxHp;
   let floor = 1;
   for (; floor <= MAX; floor++) {
@@ -92,7 +97,7 @@ if (!isMainThread) {
     return { id, name: p.name, tier: p.kind === 'stat' ? 'stat' : p.tier, hero: p.hero || '', mean: d.reduce((a, b) => a + b, 0) / d.length, better: d.filter((x) => x > 0).length / d.length, worse: d.filter((x) => x < 0).length / d.length, n: d.length };
   }).sort((a, b) => b.mean - a.mean);
   const base = []; for (let si = 0; si < SQUADS.length; si++) for (let i = 0; i < N; i++) base.push(res.get(`null|${si}|${i}`));
-  console.log(`baseline (no page): mean floor ${(base.reduce((a, b) => a + b, 0) / base.length).toFixed(1)}, ${base.length} runs. Page = on the attack skill of all 3 heroes (hero page: its own hero only).`);
+  console.log(`baseline (no page): mean floor ${(base.reduce((a, b) => a + b, 0) / base.length).toFixed(1)}, ${base.length} runs. Page = on the attack skill of all 3 heroes (support-only page: support skill; hero page: its own hero's skill).`);
   console.log('rank  page               tier       floors+  deeper  shallower  runs');
   rows.forEach((x, k) => console.log(`${String(k + 1).padStart(3)}.  ${(x.name + (x.hero ? ` (${x.hero})` : '')).padEnd(26).slice(0, 26)} ${x.tier.padEnd(10)} ${(x.mean >= 0 ? '+' : '') + x.mean.toFixed(1).padStart(5)}  ${(x.better * 100).toFixed(0).padStart(4)}%  ${(x.worse * 100).toFixed(0).padStart(6)}%   ${x.n}`));
   const tiers = {}; for (const x of rows) (tiers[x.tier] = tiers[x.tier] || []).push(x.mean);

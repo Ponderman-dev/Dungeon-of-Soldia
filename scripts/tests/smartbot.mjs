@@ -65,12 +65,12 @@ function bestPageSpot(s, page) {
   const maxDps = Math.max(...living.map(dps));
   for (const h of living) h.skills.forEach((sk, i) => {
     const fit = pageFit(h, i, page, DATA.rules.books);
-    if (fit !== 'ok' && fit !== 'replace') return;
+    if (fit !== 'ok' && fit !== 'replace' && fit !== 'swap') return;
     const def = DATA.skillDefs[sk.id] || {};
     const isAttack = def.kind === 'attack';
-    const supportPage = ['bulwark', 'purify', 'rally', 'lasting', 'bloodPrice'].includes(page.id);
+    const supportPage = ['bulwark', 'purify', 'rally', 'lasting', 'bloodPrice', 'mend', 'greaterMend'].includes(page.id);
     let v = (GOOD_PAGES[page.id] || 1) * (isAttack === !supportPage ? 1.3 : 0.8) * (SKILL_HEROES[h.def.id] || 0.9) * (0.6 + 0.4 * dps(h) / maxDps);
-    if (fit === 'replace') v *= 0.6;
+    if (fit === 'replace' || fit === 'swap') v *= 0.6;
     if (!best || v > best[3]) best = [h, i, fit, v];
   });
   return best;

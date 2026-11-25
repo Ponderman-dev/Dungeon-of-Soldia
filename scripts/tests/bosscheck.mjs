@@ -18,7 +18,7 @@ const ids = all.map((h) => h.id), squads = [];
 for (let a = 0; a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) for (let c = b + 1; c < ids.length; c++) squads.push([ids[a], ids[b], ids[c]]);
 function useBook(s, book) {
   const page = pick(rollBookPages(bookData, book)), spots = [];
-  for (const h of s.heroes) h.skills.forEach((_, i) => { const fit = pageFit(h, i, page, rules.books); if (fit === 'ok' || fit === 'replace') spots.push([h, i, fit]); });
+  for (const h of s.heroes) h.skills.forEach((_, i) => { const fit = pageFit(h, i, page, rules.books); if (fit === 'ok' || fit === 'replace' || fit === 'swap') spots.push([h, i, fit]); });
   if (!spots.length) return;
   const [h, i, fit] = pick(spots);
   const mods = (h.skills[i].pages || []).filter((p) => p.kind === 'modifier');

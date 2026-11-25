@@ -22,7 +22,7 @@ const pick = (a) => a[Math.floor(Math.random() * a.length)];
 function useBook(s, book) {
   const page = pick(rollBookPages(bookData, book));
   const spots = [];
-  for (const h of s.heroes) h.skills.forEach((_, i) => { const fit = pageFit(h, i, page, rules.books); if (fit === 'ok' || fit === 'replace') spots.push([h, i, fit]); });
+  for (const h of s.heroes) h.skills.forEach((_, i) => { const fit = pageFit(h, i, page, rules.books); if (fit === 'ok' || fit === 'replace' || fit === 'swap') spots.push([h, i, fit]); });
   if (!spots.length) return;
   const [h, i, fit] = pick(spots);
   const mods = (h.skills[i].pages || []).filter((p) => p.kind === 'modifier');

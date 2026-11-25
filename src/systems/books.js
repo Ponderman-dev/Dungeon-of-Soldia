@@ -52,11 +52,20 @@ export function rollBookPages(data, book, rng = Math.random, heroIds = null, opt
   return [...out.filter((p) => p.kind === 'stat'), ...mods];
 }
 
-// A hero-only page (`hero`, `skill`) fits only that hero's named skill.
-export const heroPageFits = (hero, index, page) => !page.hero || (hero.def && hero.def.id === page.hero && (!page.skill || (hero.skills[index] && hero.skills[index].id === page.skill)));
+// A hero-only page (`hero`, `skill`) fits only that hero's named skill; a page with `onlyKind` ('attack' / 'support')
+// fits only that kind of skill (element pages: attack skills, Mend: support skills).
+export const heroPageFits = (hero, index, page) => {
+  const slot = hero.skills && hero.skills[index];
+  if (page.onlyKind && (!slot || slot.kind !== page.onlyKind)) return false;
+  return !page.hero || (hero.def && hero.def.id === page.hero && (!page.skill || (slot && slot.id === page.skill)));
+};
+
+// GROUPS (user, session 56: 'Inks are unstackable'): a skill holds at most ONE page of each `group` ('ink', 'element').
+// The page of the same group already on the skill (or undefined).
+export const groupMate = (pages, page) => (page.group ? (pages || []).find((p) => p.kind === 'modifier' && p.group === page.group && p.id !== page.id) : undefined);
 
 // Can `page` go on skill `index` of `hero`? 'ok', 'replace' (a modifier on a full skill: the player picks which
-// one it replaces), 'full' (no more stat pages), 'duplicate' (the skill has this modifier), 'wrongSkill' (a hero page
+// one it replaces), 'swap' (it takes the place of the page of its `group` on that skill), 'full' (no more stat pages), 'duplicate' (the skill has this modifier), 'wrongSkill' (a hero page
 // on another hero or skill) or 'dead'.
 export function pageFit(hero, index, page, limits = {}) {
   if (!hero.alive) return 'dead';
@@ -65,6 +74,7 @@ export function pageFit(hero, index, page, limits = {}) {
   if (page.kind === 'stat') return pages.filter((p) => p.kind === 'stat').length >= (limits.maxStatPages ?? Infinity) ? 'full' : 'ok';
   const mods = pages.filter((p) => p.kind === 'modifier');
   if (mods.some((p) => p.id === page.id)) return 'duplicate';
+  if (groupMate(pages, page)) return 'swap'; // takes the place of its group mate (one Ink / one element per skill)
   return mods.length >= (limits.modifierSlots ?? Infinity) ? 'replace' : 'ok'; // null = no limit
 }
 

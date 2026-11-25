@@ -44,8 +44,8 @@ ok('every page has a kind, name and text', Object.values(books).every((p) => ['s
   s.castSkill(k.uid, 0); const cd0 = k.skills[0].cooldownLeft, w0 = k.casting.total;
   const t = mk(['knight']); t.s.addPage(t.h[0].uid, 0, page('swift')); t.s.addPage(t.h[0].uid, 0, page('steady'));
   t.s.castSkill(t.h[0].uid, 0);
-  ok('Swift: cooldown 8% shorter', Math.abs(t.h[0].skills[0].cooldownLeft / cd0 - 0.92) < 0.001);
-  ok('Steady Hands: wind-up 15% shorter', Math.abs(t.h[0].casting.total / w0 - 0.85) < 0.001);
+  ok('Swift: cooldown shorter by its number', Math.abs(t.h[0].skills[0].cooldownLeft / cd0 - (1 - books.swift.cooldown / 100)) < 0.001);
+  ok('Steady Hands: wind-up shorter by its number', Math.abs(t.h[0].casting.total / w0 - (1 - books.steady.windup / 100)) < 0.001);
   const o = mk(['knight']); o.s.addPage(o.h[0].uid, 0, page('overcharge')); o.s.castSkill(o.h[0].uid, 0);
   ok('Overcharge: wind-up twice as long', Math.abs(o.h[0].casting.total / w0 - 2) < 0.001);
   const hs = mk(['knight']); hs.s.addPage(hs.h[0].uid, 0, page('hasty')); hs.s.castSkill(hs.h[0].uid, 0);
@@ -229,8 +229,8 @@ import { pageIconArt } from '../../src/systems/pageIcon.js';
   ok('Tempo: the other skill comes back 1.5s sooner', h[0].skills[1].cooldownLeft === 5000 - books.tempo.otherCooldownMs); }
 { const a = mk(['samurai'], 0), b = withPage('glassCannon', 0, ['samurai']); a.s.refreshStats(); b.s.refreshStats(); const mh = b.h[0].maxHp;
   const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
-  ok('Glass Cannon: +45% power', Math.abs(d1 / d0 - (1 + books.glassCannon.power / 100)) < 0.04, `${d0}->${d1}`);
-  ok('...and 15% less max health', Math.abs(b.h[0].maxHp / mh - 0.85) < 0.01, `${mh}->${b.h[0].maxHp}`);
+  ok('Glass Cannon: more power', Math.abs(d1 / d0 - (1 + books.glassCannon.power / 100)) < 0.04, `${d0}->${d1}`);
+  ok('...and less max health', Math.abs(b.h[0].maxHp / mh - (1 + books.glassCannon.selfApply[0].mods[0].percent / 100)) < 0.01, `${mh}->${b.h[0].maxHp}`);
   for (let i = 0; i < 100; i++) b.s.update(50);
   ok('...still after 5s (lasts the whole fight)', b.h[0].maxHp < mh);
   b.s.spawnEnemies(['goblin'], 2);
@@ -342,3 +342,31 @@ import { bossNumber } from '../../src/systems/books.js';
 { const { s, es, h } = withPage('coldIron', 0, ['bard']); s.placeLines(); s.castSkill(h[0].uid, 0);
   const n = Math.max(...es.map((e) => e.statuses.filter((x) => x.type === 'chill').length));
   ok(`Cold Iron: the hooked enemy gets ${books.coldIron.patch.addApply[0].stacks} Chill`, n === books.coldIron.patch.addApply[0].stacks, n); }
+// SESSION 56: one Ink / one element per skill (`group`), attack-only element runes, support-only Mend pages.
+{ const data = r('skillBooks.json'); const { s, h } = mk(['knight']); const k = h[0];
+  const inks = Object.keys(books).filter((id) => books[id].group === 'ink');
+  ok('every page named "Ink" is in the ink group', Object.entries(books).filter(([, p]) => / Ink$/.test(p.name)).every(([id]) => inks.includes(id)));
+  s.addPage(k.uid, 0, page(inks[0]));
+  ok('a second Ink on the same skill is a swap', pageFit(k, 0, pageOf(data, inks[1])) === 'swap');
+  const res = s.addPage(k.uid, 0, page(inks[1]));
+  ok('...it takes the old Ink\'s place (still one Ink)', res.ok && res.replaced.id === inks[0] && k.skills[0].pages.filter((p) => p.group === 'ink').length === 1 && k.skills[0].pages[0].id === inks[1]);
+  ok('...an Ink on the OTHER skill is fine', pageFit(k, 1, pageOf(data, inks[0])) === 'ok');
+  ok('...and non-ink pages still stack with it', s.addPage(k.uid, 0, page('siphon')).ok && s.addPage(k.uid, 0, page('sunder')).ok);
+  const runes = Object.keys(books).filter((id) => books[id].element);
+  ok('an element rune for every magic element', ['fire', 'ice', 'electric', 'dark', 'holy'].every((el) => runes.some((id) => books[id].element === el)));
+  ok('...runes go on attack skills only', pageFit(k, 0, pageOf(data, runes[0])) === 'ok' && pageFit(k, 1, pageOf(data, runes[0])) === 'wrongSkill' && s.addPage(k.uid, 1, page(runes[0])).reason === 'wrongSkill');
+  s.addPage(k.uid, 0, page(runes[0]));
+  ok('...one element per skill (another rune or Elemental Storm swaps it)', pageFit(k, 0, pageOf(data, runes[1])) === 'swap' && pageFit(k, 0, pageOf(data, 'elementalStorm')) === 'swap');
+  ok('Mend pages: support skills only', pageFit(k, 1, pageOf(data, 'mend')) === 'ok' && pageFit(k, 0, pageOf(data, 'mend')) === 'wrongSkill'); }
+for (const id of Object.keys(books).filter((x) => books[x].element)) {
+  const a = mk(['knight'], 0), b = withPage(id, 0, ['knight']);
+  for (const m of [a, b]) for (const e of m.es) { e.weak = []; e.stats.resist = 0; }
+  const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)); const ev = b.s.castSkill(b.h[0].uid, 0); const d1 = dmgOf(ev);
+  ok(`${books[id].name}: the skill's hits turn ${books[id].element}`, ev.filter((e) => e.type === 'attack' && e.skill).every((e) => e.damageType === books[id].element) && ev.some((e) => e.type === 'attack' && e.skill));
+  ok('...and hit harder by its power', d1 > d0 * (1 + books[id].power / 100) * 0.9, `${d0}->${d1}`); }
+for (const id of ['mend', 'greaterMend']) {
+  const { s, h } = withPage(id, 1, ['knight', 'rogue', 'archer']); const pct = books[id].allyHeal.percentMaxHp;
+  s.refreshStats(); const hp0 = [0.1, 0.2, 0.9].map((f, i) => (h[i].hp = Math.round(h[i].maxHp * f)));
+  const healed = (i) => h[i].hp - hp0[i] >= Math.floor((h[i].maxHp * pct) / 100);
+  s.castSkill(h[0].uid, 1);
+  ok(`${books[id].name}: heals the ${books[id].allyHeal.count} most hurt heroes (the caster counts) ${pct}%`, healed(0) && (books[id].allyHeal.count < 2 || healed(1)) && (books[id].allyHeal.count > 1 || !healed(1)) && !healed(2), `${hp0} -> ${h.map((x) => x.hp)}`); }

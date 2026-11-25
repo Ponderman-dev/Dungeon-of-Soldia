@@ -1,5 +1,5 @@
 import { weakResistMultiplier } from '../combat.js';
-import { heroPageFits } from '../books.js';
+import { heroPageFits, groupMate } from '../books.js';
 // Part of BattleState (mixed into its prototype at the bottom of ../BattleState.js; `this` is the BattleState).
 // Skill book pages (docs/systems/skill-books.md).
 
@@ -13,7 +13,7 @@ export const skillBooksMethods = {
     const hero = this.heroes.find((h) => h.uid === heroUid);
     const slot = hero && hero.skills[index];
     if (!slot || !hero.alive) return { ok: false, reason: 'noHero' };
-    if (!heroPageFits(hero, index, page)) return { ok: false, reason: 'wrongSkill' }; // a hero page: only its hero's named skill
+    if (!heroPageFits(hero, index, page)) return { ok: false, reason: 'wrongSkill' }; // a hero page: only its hero's named skill; onlyKind: only attack / support skills
     const lim = this.rules.books || {};
     const pages = (slot.pages = slot.pages || []);
     if (page.kind === 'stat') {
@@ -23,6 +23,8 @@ export const skillBooksMethods = {
     }
     const mods = pages.filter((p) => p.kind === 'modifier');
     if (mods.some((p) => p.id === page.id)) return { ok: false, reason: 'duplicate' };
+    const mate = groupMate(pages, page); // one Ink / one element per skill: the new one takes the old one's place
+    if (mate) { pages.splice(pages.indexOf(mate), 1, page); return { ok: true, replaced: mate }; }
     if (mods.length >= (lim.modifierSlots ?? Infinity)) { // null = no limit
       if (replace === null || !mods[replace]) return { ok: false, reason: 'full' };
       pages.splice(pages.indexOf(mods[replace]), 1, page);
@@ -70,7 +72,7 @@ export const skillBooksMethods = {
       if (m.grow) events.push({ type: 'grow', unit: hero, scale: m.grow.scale, durationMs: m.grow.durationMs }); // Titan (the scene makes the hero bigger)
       // Blood Price: the most hurt allies heal, the caster pays (never below 1 health).
       if (m.allyHeal) {
-        const allies = this.heroes.filter((h) => h.alive && h !== hero).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp).slice(0, m.allyHeal.count);
+        const allies = this.heroes.filter((h) => h.alive && (h !== hero || m.allyHeal.includeSelf)).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp).slice(0, m.allyHeal.count);
         for (const a of allies) this.healUnit(a, Math.round((a.maxHp * m.allyHeal.percentMaxHp) / 100), events, { by: hero });
       }
       if (m.selfCostPercent) {
@@ -157,11 +159,14 @@ export const skillBooksMethods = {
       out.armorPierce += m.armorPierce || 0;
       if (m.vsLow && (target.hp / target.maxHp) * 100 < m.vsLow.belowPercent) out.mult *= 1 + m.vsLow.power / 100;
       if (m.vsBig && (target.elite || (target.def && target.def.boss))) out.mult *= 1 + m.vsBig.power / 100;
+      // Element pages (Fire Rune...): every hit of the skill becomes that element.
+      if (m.element) out.damageType = () => m.element;
       // Elemental Storm: the hit turns into the element the target is weakest to (its own type stays on a tie).
       if (m.elementalStorm) {
         const score = (t) => (this.damageTypes[t] ? weakResistMultiplier(target, t, this.rules, this.damageTypes) : 0);
         out.damageType = (own) => m.elementalStorm.elements.reduce((best, t) => (score(t) > score(best) ? t : best), own);
         if (m.elementalStorm.weakBonus && m.elementalStorm.elements.some((t) => score(t) > 1)) out.mult *= 1 + m.elementalStorm.weakBonus / 100; // it found a weakness
+        if (m.elementalStorm.baseBonus) out.mult *= 1 + m.elementalStorm.baseBonus / 100; // always (session 56 buff)
       }
     }
     return out;

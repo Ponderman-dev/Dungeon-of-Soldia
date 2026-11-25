@@ -298,9 +298,9 @@ const heroWith = (id) => withPage(id, 0, [books[id].hero]);
   ok('Radiance: Holy Nova heals the 2 most hurt allies (without it: only 1)', m.h[1].hp > b1 && m.h[2].hp > b2 && n.h[2].hp === b2, `${b1}->${m.h[1].hp} ${b2}->${m.h[2].hp}`); }
 { const { s, es, h } = heroWith('boneHarvest'); for (const e of es) e.hp = 1; s.castSkill(h[0].uid, 0);
   ok('Bone Harvest: a Death Coil kill raises 2 skeletons', s.minions.filter((x) => x.holderUid === h[0].uid).length === books.boneHarvest.patch.raiseCount); }
-{ const a = mk(['bard'], 0), b = heroWith('massCharm'); a.s.castSkill(a.h[0].uid, 0); b.s.castSkill(b.h[0].uid, 0);
-  const ca = a.es.flatMap((e) => e.statuses).find((x) => x.type === 'charm'), cb = b.es.flatMap((e) => e.statuses).find((x) => x.type === 'charm');
-  ok('Mass Charm: Discord charms 1s longer', ca && cb && Math.abs(cb.total - ca.total - books.massCharm.patch.applyDurationAdd.charm) < 1, `${ca && ca.total} -> ${cb && cb.total}`); }
+{ const a = mk(['bard'], 0), b = heroWith('heavyChains'); a.s.castSkill(a.h[0].uid, 0); b.s.castSkill(b.h[0].uid, 0); // the Warden's Chain Hook
+  const ca = a.es.flatMap((e) => e.statuses).find((x) => x.type === 'stun'), cb = b.es.flatMap((e) => e.statuses).find((x) => x.type === 'stun');
+  ok('Heavy Chains: Chain Hook stuns 1s longer', ca && cb && Math.abs(cb.total - ca.total - books.heavyChains.patch.applyDurationAdd.stun) < 1, `${ca && ca.total} -> ${cb && cb.total}`); }
 { const { s, h } = heroWith('bigBatch'); let n = 0; n += s.castSkill(h[0].uid, 0).filter((e) => e.type === 'flask').length;
   for (let t = 0; t < 4000; t += 20) n += s.update(20).filter((e) => e.type === 'flask').length;
   ok('Big Batch: Flask Barrage throws 7 flasks', n === books.bigBatch.patch.randomCount, n); }

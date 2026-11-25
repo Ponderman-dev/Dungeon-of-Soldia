@@ -90,12 +90,12 @@
       "close": ["Nearly joined them.", "Death waved at me.", "Not yet, old friend."]
     },
     "bard": {
-      "start": ["A song begins!", "Give them a tale!", "Showtime!"],
-      "clear": ["Fine verse, that!", "Encore!", "Writing this down!", "What a show!", "La la... alive!", "The crowd goes wild!"],
-      "boss": ["A ballad for this!", "What a chorus!"],
-      "fallen": ["I'll sing your song.", "A brave verse."],
-      "hurt": ["Ouch! Off-key.", "The show goes on!", "A bruise for the ballad!"],
-      "close": ["Nearly my last song.", "Hold the applause...", "Too dramatic!"]
+      "start": ["Cells are ready.", "Nobody leaves.", "Visiting hours are over."],
+      "clear": ["Locked up tight.", "Case closed.", "Another one behind bars.", "Quiet in the block.", "Keys still jingle.", "Lights out."],
+      "boss": ["That one needs a bigger cell.", "Chains won't hold it long!"],
+      "fallen": ["I'll keep your cell empty.", "No more prisoners lost."],
+      "hurt": ["Rattled my keys.", "That's a write-up.", "Back in line!"],
+      "close": ["Nearly a jailbreak.", "Held by a thread.", "Too close to the bars."]
     },
     "alchemist": {
       "start": ["Flasks are full!", "Science time.", "Bring the samples!"],

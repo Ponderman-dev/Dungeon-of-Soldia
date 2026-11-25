@@ -182,6 +182,7 @@ export const movementMethods = {
     const heading = new Map(); // walker -> { x, y } its walking direction, d = px walked this update, slide = px it may still sidestep
     for (const u of units) {
       if (u.sidestep && (u.sidestep.left -= dt) <= 0) u.sidestep = null;
+      if (u.knock && u.knock.delay > 0) { u.knock.delay -= dt; continue; } // Chain Hook: held until the hook bites
       if (u.knock) {
         const t = Math.min(dt, u.knock.remaining);
         u.x += u.knock.vx * t;
@@ -191,6 +192,7 @@ export const movementMethods = {
         continue;
       }
       if (this.isStunned(u) || u.pending || u.casting || u.bossCast || u.def.object || u.dust || u.burrowed) continue; // frozen in place, busy, an object, underground
+      if (this.has(u, 'rooted')) continue; // Warden's Shackles: chained to the spot (it can still attack what is in reach)
       let goal = null;
       // A lit Kobold Sapper bomb is NOT avoided (user: it blocked walking and the bomb never hit): fighters keep going.
       if (u.walkTo && !this.has(u, 'fear')) {

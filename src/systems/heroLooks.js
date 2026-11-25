@@ -192,6 +192,26 @@ function shatterPx(g, x, y, ht, col, big, seed) {
 // The alchemist's hand (the flask he holds sits in front of his belly).
 const handAt = (u) => weaponMid(u, 0, 1);
 
+// ---- Warden helpers: iron colours, his hook tip, a chain of links, the hook's head ----
+const WARD = { light: 0xe4e8f0, iron: 0xa8aebb, dark: 0x5a5f6a, spark: 0xffd27a, dust: 0x8a7a68 };
+const hookTip = (u) => (u.wx != null ? { x: u.wx, y: u.wtop + 1 } : { x: u.x + u.hw + 1, y: u.top + 4 });
+// A chain from a to b: links alternate light / dark every 2 px with a little thickness, `wave` px of wobble while it flies.
+function chainPx(g, a, b, wave, t, al) {
+  const d = Math.hypot(b.x - a.x, b.y - a.y), n = Math.max(1, Math.round(d / 2)), nx = -(b.y - a.y) / (d || 1), ny = (b.x - a.x) / (d || 1);
+  for (let i = 0; i <= n; i++) {
+    const k = i / n, w = wave ? Math.sin(k * Math.PI * 3 - t / 40) * wave * Math.sin(k * Math.PI) : 0;
+    const x = a.x + (b.x - a.x) * k + nx * w, y = a.y + (b.y - a.y) * k + ny * w;
+    g.px(x, y, i % 2 ? WARD.light : WARD.dark, al);
+    if (i % 2) g.px(x + nx, y + ny, WARD.iron, al * 0.8);
+  }
+}
+// The hook's head at p, pointing along ang: a curved iron barb.
+function hookHeadPx(g, p, ang, al) {
+  const cx = Math.cos(ang), sy = Math.sin(ang), px = -sy, py = cx;
+  const pts = [[0, 0], [1, 0], [2, 0], [2, 1], [2, 2], [1, 2], [0, 3]];
+  for (const [f, s] of pts) g.rect(p.x + cx * f + px * s, p.y + sy * f + py * s, 1, 1, f === 2 ? C.white : WARD.light, al);
+}
+
 // Who a spell hits: in the game the cast's own targets (c.allHit), in the demo the enemies inside c.radius of `u`.
 // Returns [list name, bodies] so the tints colour the right fighters.
 const hitsOf = (c, u, R) => (c.allHit ? ['targets', c.targets] : ['enemies', c.enemies.filter((e) => Math.hypot(e.x - u.x, (e.y - u.y) * 1.4) <= R)]);
@@ -709,6 +729,65 @@ export const LOOKS = {
     if (kind === 'shield') { const op = easeOut(ph(ht, 60, 260)), R = u.hw + 5, RY = (u.y - u.top) / 2 + 4; for (let an = 0; an < Math.PI * 2; an += 0.08) if (rnd(Math.round(an * 50)) < op) g.px(u.x + Math.cos(an) * R, u.mid + Math.sin(an) * RY, Math.sin(an * 3 + t / 200) > 0.4 ? C.white : ALC.shield, 0.85 * fade); }
     return { draws: g.out, tints: [['targets', 0, ht < 70 && !hero ? [C.white, 0.85] : ht < 300 ? [col, 0.5 * (1 - ht / 300)] : !hero ? [ALC.poison, Math.round(0.3 * fade * 20) / 20] : null]] };
   },
+
+  // ---- Warden: iron chains, a hook, shackles; iron grey with a hot spark ----
+  // CHARGE: a loop of chain whirls over his raised hook (like a lasso), iron specks are pulled in, he pulses grey.
+  wardenCharge(q, c, t) {
+    const g = pen(); const u = c.caster, o = hookTip(u);
+    const cx = o.x, cy = o.y - 4, R = 3 + 3 * easeOut(q);
+    for (let i = 0; i < 10; i++) { const an = t / 70 + (i * Math.PI * 2) / 10; g.px(cx + Math.cos(an) * R, cy + Math.sin(an) * R * 0.4, i % 2 ? WARD.light : WARD.dark, 0.5 + 0.5 * q); }
+    g.line(o.x, o.y, cx + Math.cos(t / 70) * R, cy + Math.sin(t / 70) * R * 0.4, WARD.iron, 0.8); // the chain up to the whirl
+    for (let i = 0; i < 6; i++) { const s = (q * 1.4 + i / 6) % 1, an = rnd(i * 13) * Math.PI * 2, d = 18 * (1 - easeOut(s)); g.px(u.x + Math.cos(an) * d, u.mid + Math.sin(an) * d * 0.7, i % 2 ? WARD.iron : WARD.light, s * 0.9); }
+    if (Math.sin(t / 60) > 0.3) g.px(o.x, o.y - 1, C.white, q);
+    const pulse = 0.6 + 0.4 * Math.sin(t / 110);
+    return { draws: g.out, tints: [['caster', 0, [WARD.iron, Math.round((0.08 + 0.22 * q) * pulse * 20) / 20]]] };
+  },
+  // CHAIN HOOK: the hook flies out on its chain (hit = it bites), sparks + flash on the enemy, the chain stays taut
+  // while the enemy is dragged in (the rules slide it after pull.delayMs), then the chain reels back to his hand.
+  wardenHook(q, c, t) {
+    const g = pen(); const u = c.caster, e = c.targets[0], ms = q * LOOK_MS.wardenHook, hit = c.hitMs || 150;
+    if (!u || !e) return { draws: [] };
+    const o = hookTip(u), to = { x: e.x, y: e.mid };
+    const HOLD = hit + 420, BACK = HOLD + 260;
+    let head = null;
+    if (ms < hit) { const p = easeOut(ms / hit); head = { x: o.x + (to.x - o.x) * p, y: o.y + (to.y - o.y) * p }; }
+    else if (ms < HOLD) head = to;
+    else if (ms < BACK) { const p = easeOut((ms - HOLD) / (BACK - HOLD)); head = { x: to.x + (o.x - to.x) * p, y: to.y + (o.y - to.y) * p }; }
+    if (head) { chainPx(g, o, head, ms < hit ? 2 : 0, t, 1); hookHeadPx(g, head, Math.atan2(head.y - o.y, head.x - o.x), 1); }
+    const ht = ms - hit;
+    if (ht >= 0) {
+      if (ht < 90) g.disc(to.x, to.y, 3 + ht / 25, C.white, 1 - ht / 90);
+      for (let i = 0; i < 9; i++) { const p = ph(ht, 0, 320 + rnd(i) * 120); if (p <= 0 || p >= 1) continue; const an = rnd(i * 7 + 3) * Math.PI * 2, v = 6 + rnd(i * 5) * 9; g.px(to.x + Math.cos(an) * v * p, to.y + Math.sin(an) * v * p + p * p * 6, i % 3 ? WARD.spark : C.white, 1 - p); }
+    }
+    const tint = ht >= 0 && ht < 70 ? [C.white, 0.85] : ht >= 0 && ms < HOLD ? [WARD.iron, 0.3] : null;
+    return { draws: g.out, tints: [['targets', 0, tint]] };
+  },
+  // LOCKDOWN: he slams his chain down: an iron ring of chain spreads over the floor around him, a chain runs from him to
+  // every enemy in it and an iron band snaps shut round its middle (spark), the enemies go grey for a moment.
+  wardenLockdown(q, c, t) {
+    const g = pen(); const u = c.caster, ms = q * LOOK_MS.wardenLockdown, hit = c.hitMs || 300, R = c.radius || 50;
+    if (!u) return { draws: [] };
+    const fade = 1 - ph(ms, hit + 700, LOOK_MS.wardenLockdown);
+    if (ms < 160) for (let i = 0; i < 8; i++) { const p = ms / 160, an = (i / 8) * Math.PI * 2; g.px(u.x + Math.cos(an) * (3 + 8 * p), u.y + Math.sin(an) * (1 + 3 * p), WARD.dust, 1 - p); } // the slam: dust
+    const rp = easeOut(ph(ms, 60, hit)), rr = R * rp, ry = rr * 0.42;
+    for (let an = 0; an < Math.PI * 2; an += 0.11) { const k = Math.round(an / 0.11); g.px(u.x + Math.cos(an) * rr, u.y + Math.sin(an) * ry, k % 2 ? WARD.light : WARD.dark, 0.85 * fade); } // the chain ring
+    const [list, hitList] = hitsOf(c, u, R);
+    hitList.forEach((e, j) => {
+      const st = 60 + j * (c.staggerMs || 40), p = easeOut(ph(ms, st, hit + j * (c.staggerMs || 40)));
+      if (p <= 0) return;
+      const a = { x: u.x, y: u.mid }, b = { x: u.x + (e.x - u.x) * p, y: u.mid + (e.mid - u.mid) * p }; // body to body
+      chainPx(g, a, b, 0, t, 0.9 * fade);
+      const ht = ms - hit - j * (c.staggerMs || 40);
+      if (ht >= 0) {
+        // the shackle (user: 'in the middle of their body, simpler'): one iron band round its middle, snapping shut
+        const close = easeOut(ph(ht, 0, 120)), w = Math.round(e.hw + 1 + 3 * (1 - close));
+        g.rect(e.x - w, e.mid - 1, w * 2 + 1, 1, WARD.light, fade); g.rect(e.x - w, e.mid, w * 2 + 1, 1, WARD.dark, fade);
+        if (ht < 160) for (let i = 0; i < 6; i++) { const pp = ht / 160, an = rnd(i + j * 9) * Math.PI * 2; g.px(e.x + Math.cos(an) * (w + 4 * pp), e.mid + Math.sin(an) * 3 * pp - pp * 4, i % 2 ? WARD.spark : C.white, 1 - pp); }
+      }
+    });
+    const tints = hitList.map((e, j) => { const ht = ms - hit - j * (c.staggerMs || 40); return [list, j, ht >= 0 && ht < 70 ? [C.white, 0.8] : ht >= 0 && ht < 700 ? [WARD.iron, 0.35 * (1 - ht / 700)] : null]; });
+    return { draws: g.out, tints };
+  },
 };
 // How long each look runs (ms). A look's hit moment is c.hitMs (combat.json skillFx.look / wave / flask).
 export const LOOK_MS = {
@@ -720,5 +799,6 @@ export const LOOK_MS = {
   bardCharge: 600, bardChargeSong: 600, discordNew: 2300, marchNew: 1700, balladNew: 2200, changeSongNew: 2200,
   samuraiCharge: 700, windCutterNew: 1500, counterStance: 4000, counterCut: 760,
   alchCharge: 700, alchChargeBrew: 700, flaskThrow: 1900,
+  wardenCharge: 600, wardenHook: 1100, wardenLockdown: 1600,
 };
 

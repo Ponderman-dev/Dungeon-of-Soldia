@@ -175,7 +175,7 @@ export const eventsMethods = {
       const dash = DASH_BY_NAME[e.skill.name];
       if (dash && e.targets[0]) this.dashAt(caster, this.views.get(e.targets[0].uid), dash, e.moved); // Defense Bash, Multistrike
       caster.ch.castRelease(e.skill.kind); // the skill's own animation (not the normal swing)
-      if ((e.skill.target === 'enemy' || e.skill.target === 'allEnemies') && e.targets[0] && !e.skill.leap && !dash && !look) {
+      if ((e.skill.target === 'enemy' || e.skill.target === 'farthestEnemy' || e.skill.target === 'allEnemies') && e.targets[0] && !e.skill.leap && !dash && !look) {
         const t = this.views.get(e.targets[0].uid);
         caster.ch.lunge(t.ch.x, t.ch.y);
       }

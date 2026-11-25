@@ -8,6 +8,7 @@
     "taunt",
     "charm",
     "webbed",
+    "rooted",
     "tangled",
     "silence",
     "chill",
@@ -482,6 +483,7 @@
       "...0..."
     ]
   },
+  "rooted": {"palette":["0x1a1020","0x5a5f6a","0xc8d0dc"],"rows":["..000..",".02220.","020.020","020.020",".02220.","..010..",".00100."]},
   "webbed": {
     "palette": [
       "0x1a1020",

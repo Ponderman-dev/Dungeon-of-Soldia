@@ -1,6 +1,6 @@
 {
   "_about": "Settings screen (SettingsScene, logic systems/settings.js; user's pick D, docs/proposals/menu/settings-picked-D.png). Tabs of cards: 'bar' = a '-' 0..max '+' level, 'choice' = big buttons (chosen = FILLED gold), 'action' = one button. defaults = a new player's settings. layout = screen px (spacing rule: back 96x44 at 24,16; title y 76; 12-16px gaps; 16px inside boxes). vibration = buzz length and the least time between buzzes.",
-  "defaults": { "music": 7, "effects": 9, "battleSpeed": 1, "shake": true, "damageNumbers": true, "vibration": false },
+  "defaults": { "music": 7, "effects": 9, "battleSpeed": 1, "shake": true, "damageNumbers": true, "vibration": false, "skillAim": true },
   "vibration": { "ms": 30, "gapMs": 400 },
   "layout": {
     "side": 24,
@@ -40,6 +40,7 @@
         { "type": "choice", "id": "battleSpeed", "name": "BATTLE SPEED", "hint": "How fast fights play.", "options": [{ "label": "1X", "value": 1 }, { "label": "2X", "value": 2 }] },
         { "type": "choice", "id": "shake", "name": "SCREEN SHAKE", "hint": "Shake on big hits.", "options": [{ "label": "ON", "value": true }, { "label": "OFF", "value": false }] },
         { "type": "choice", "id": "damageNumbers", "name": "DAMAGE NUMBERS", "hint": "Numbers over the fighters.", "options": [{ "label": "ON", "value": true }, { "label": "OFF", "value": false }] },
+        { "type": "choice", "id": "skillAim", "name": "SKILL AIM", "hint": "One-enemy skills: tap the enemy.", "options": [{ "label": "TAP", "value": true }, { "label": "INSTANT", "value": false }] },
         { "type": "choice", "id": "vibration", "name": "VIBRATION", "hint": "Phone buzz when hit.", "options": [{ "label": "ON", "value": true }, { "label": "OFF", "value": false }] }
       ]
     },

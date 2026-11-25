@@ -53,10 +53,51 @@ export const skillsMethods = {
   // Taps a hero's skill: it goes on cooldown at once and starts winding up (castStart); it goes off
   // when the wind-up is done (see tickCasting). Instant if the wind-up time is 0.
   // Returns events (empty if the skill could not be cast).
-  castSkill(heroUid, index) {
+
+  // Warden's Chain Hook (`target: 'farthestEnemy'`): the enemy the player tapped or ordered him onto, else the
+  // FARTHEST one that can be hit (the archer or caster at the back).
+  farthestFoe(hero) {
+    const foes = this.targetableEnemies();
+    if (!foes.length) return null;
+    const order = this.orderOf(hero);
+    const picked = foes.find((e) => (order ? e === order : e.uid === this.focusUid));
+    if (picked) return picked;
+    let best = foes[0];
+    for (const e of foes) if (this.distance(hero, e) > this.distance(hero, best)) best = e;
+    return best;
+  },
+
+  // `pull: { gapPx, ms, delayMs }`: after delayMs the target is dragged to `gapPx` in front of the caster over `ms` (it uses the knockback
+  // slide, so it moves even while stunned). Bosses are never pulled (they do the shoving); its swing is dropped.
+  pullTo(hero, target, pull, events) {
+    if (!target.alive || target.def.boss || !this.hasPositions(hero) || !this.hasPositions(target)) return;
+    const dx = target.x - hero.x, dy = target.y - hero.y;
+    const d = Math.hypot(dx, dy);
+    const far = d - pull.gapPx;
+    if (far <= 1) return;
+    target.knock = { vx: (-dx / d) * far / pull.ms, vy: (-dy / d) * far / pull.ms, remaining: pull.ms, delay: pull.delayMs || 0 }; // delay: it slides once the hook bites (the look's hitMs)
+    if (target.pending) {
+      target.pending = null;
+      events.push({ type: 'attackCancel', unit: target, reason: 'pull' });
+    }
+    events.push({ type: 'pull', unit: hero, target, from: { x: target.x, y: target.y }, ms: pull.ms });
+  },
+  // TAP-TO-AIM (user): a skill that hits ONE enemy (target 'enemy' / 'farthestEnemy', no rotation, no random flasks) can
+  // be aimed: the player taps the skill, then the enemy. The scene asks aimable() whether to enter aim mode.
+  aimable(hero, index) {
+    const slot = hero && hero.skills[index];
+    if (!slot) return false;
+    const def = this.skillDefs[slot.id];
+    return !!def && !def.rotation && !def.random && (def.target === 'enemy' || def.target === 'farthestEnemy');
+  },
+
+  // aimUid (optional): the enemy the player tapped for an aimable skill. It is used when the skill goes off (after the
+  // wind-up) if that enemy can still be hit; otherwise the skill picks as usual (focus, nearest...).
+  castSkill(heroUid, index, aimUid = null) {
     const events = [];
     const hero = this.heroes.find((h) => h.uid === heroUid);
     if (!hero || !this.canCast(hero, index)) return events;
+    hero.aimUid = aimUid && this.aimable(hero, index) ? aimUid : null;
     const slot = hero.skills[index];
     const skill = this.currentSpell(hero, index);
     const book = this.pageTotals(slot); // skill book pages: shorter cooldown / wind-up (Swift, Steady Hands, Hasty, Overcharge)
@@ -133,6 +174,9 @@ export const skillsMethods = {
     }
     if (!echo && this.skillDefs[slot.id].rotation) slot.rotation = ((slot.rotation || 0) + 1) % this.skillDefs[slot.id].rotation.length; // next spell next time
 
+    // Tap-to-aim: the tapped enemy, if it is still alive and can be hit (used once; an Echo Rune repeat picks as usual).
+    const aimed = (skill.target === 'enemy' || skill.target === 'farthestEnemy') && hero.aimUid ? this.targetableEnemies().find((e) => e.uid === hero.aimUid) || null : null;
+    if (!echo) hero.aimUid = null;
     let targets;
     let zone = null;
     if (skill.random) targets = [];
@@ -140,6 +184,8 @@ export const skillsMethods = {
     else if (skill.target === 'squad') targets = this.squadUnits(); // every living hero and minion
     else if (skill.target === 'lowestAlly') targets = [this.lowestHealthPercent()];
     else if (skill.target === 'allEnemies') ({ targets, zone } = this.areaHit(hero, skill)); // an `area` skill hits only who stands in it
+    else if (aimed) targets = [aimed]; // tap-to-aim: the enemy the player tapped
+    else if (skill.target === 'farthestEnemy') targets = [this.farthestFoe(hero)]; // Warden's Chain Hook
     else targets = [this.pickTarget(hero)];
     targets = targets.filter(Boolean); // a pick can come back empty (no target left): never hit "nobody"
     if (!skill.random && !targets.length) {
@@ -247,6 +293,7 @@ export const skillsMethods = {
         for (const n of this.neighbours(target)) this.skillHit(hero, skill, slot.id, n, events, { multiplier: skill.splash.damageMultiplier, scale: echo ? echo.power : 1 });
       }
     }
+    if (skill.pull && targets[0]) this.pullTo(hero, targets[0], skill.pull, events); // Chain Hook: drag it over
     if (skill.secondBand) targets = [...targets, ...this.secondBandHit(hero, skill, slot.id, zone, targets, events)]; // Twin Crescent page
     // Wind Cutter v3 (`killCooldownCutPercent`): if the cast killed an enemy, its cooldown is cut.
     if (skill.killCooldownCutPercent && !echo && targets.some((t) => !t.alive)) {

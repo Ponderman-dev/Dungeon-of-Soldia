@@ -1,0 +1,97 @@
+{
+  "_about": "The Bard v3 kit (Battle Hymn, Lute, songs, Discord + Change Song), frozen when he became the Warden (session: Warden rework). Old mechanic tests use it; the code stays.",
+  "passive": {
+    "name": "Battle Hymn",
+    "description": "Squad items +35% stronger while he lives. Every 10s: a random squad boost for 5s (attack, speed, defense or regen).",
+    "hymn": {
+      "squadItemMultiplier": 1.35
+    },
+    "lute": {
+      "everyMs": 10000,
+      "durationMs": 5000,
+      "boosts": [
+        {
+          "name": "Lute: Attack",
+          "color": "0xff6b4a",
+          "mods": [
+            {
+              "stat": "attack",
+              "percent": 20
+            }
+          ]
+        },
+        {
+          "name": "Lute: Speed",
+          "color": "0xffe94d",
+          "mods": [
+            {
+              "stat": "attackEfficiency",
+              "percent": 20
+            }
+          ]
+        },
+        {
+          "name": "Lute: Defense",
+          "color": "0x6fb8ff",
+          "mods": [
+            {
+              "stat": "defense",
+              "percent": 30
+            },
+            {
+              "stat": "resist",
+              "percent": 30
+            }
+          ]
+        },
+        {
+          "name": "Lute: Regen",
+          "color": "0x6dff8f",
+          "regenPercentPerSec": 1.5
+        }
+      ]
+    },
+    "songs": {
+      "first": "march",
+      "durationMs": 5000,
+      "march": {
+        "attackSpeedPercent": 15,
+        "procChancePercent": 25,
+        "burst": {
+          "durationMs": 3000,
+          "mods": [
+            {
+              "stat": "attackEfficiency",
+              "percent": 30
+            }
+          ]
+        }
+      },
+      "ballad": {
+        "regenPercentPerSec": 0.6,
+        "healPercent": 25,
+        "burst": {
+          "healPercent": 8
+        }
+      }
+    }
+  },
+  "skills": {
+    "attack": "discord",
+    "support": "change_song"
+  },
+  "perk": {
+    "name": "Inspiration",
+    "mods": [
+      {
+        "stat": "evasion",
+        "flat": 6,
+        "growth": 0.2
+      }
+    ]
+  },
+  "provides": [
+    "heal",
+    "beat"
+  ]
+}

@@ -140,7 +140,7 @@ export const hudMethods = {
           .zone(x, SKILL_Y, SKILL_W + 6, SKILL_H + 6)
           .setInteractive()
           .setDepth(6)
-          .onPress(() => this.castFromUI(unit.uid, j), { instant: true }); // instant: a fight tap never waits
+          .onPress(() => this.pressSkill(unit.uid, j), { instant: true }); // instant: a fight tap never waits; one-enemy skills aim first (aim.js)
         return button;
       });
       // The hero's passive: a small gold-framed icon left of the skill squares; tap it to read what it does.
@@ -325,7 +325,10 @@ export const hudMethods = {
     // Sharpest Blade: the weapon glints gold when the next attack is a Heart Strike (a charged counter shows first).
     const charged = counter && view.unit.counterCount >= counter.every - 1;
     // Kinetic Coil: the weapon glows electric yellow when the next attack is its lightning strike.
-    view.ch.setGlow(charged ? Phaser.Display.Color.HexStringToColor(next || counter.color || '#c8a0ff').color : view.heartShown ? Number(itemFxData.sharpest_blade.glint) : view.coilShown ? Number(itemFxData.kinetic_coil.glint) : null);
+    // Warden: a counter with `readyLook` shows the charge as a pose (the hook floats up, ready) instead of a glow.
+    const ready = counter && counter.readyLook;
+    view.ch.setWeaponReady(charged && ready ? ready : null);
+    view.ch.setGlow(charged && !ready ? Phaser.Display.Color.HexStringToColor(next || counter.color || '#c8a0ff').color : view.heartShown ? Number(itemFxData.sharpest_blade.glint) : view.coilShown ? Number(itemFxData.kinetic_coil.glint) : null);
     // Status ICONS (statusIcons.json) in rows of 3 over the health bar, rows going up (a hero's item dots move
     // up above them). Stacking statuses (bleed, burn, poison, chill) show their
     // stack count just right of the icon. The icon pops up a little when it arrives or gains a stack.
@@ -450,7 +453,7 @@ export const hudMethods = {
   },
 
   // The player's Settings (systems/settings.js): battle speed runs the whole scene (fight, tweens, timers) faster;
-  // screen shake off = the camera never shakes; damage numbers off = popText skips numbers; vibration = buzz().
+  // screen shake off = the camera never shakes; damage numbers off = popText skips numbers; vibration = buzz(); skill aim (TAP / INSTANT) = aim.js.
   applySettings() {
     const set = readSettings(loadProgress(), settingsDefs);
     this.speed = set.battleSpeed;
@@ -461,6 +464,8 @@ export const hudMethods = {
     else delete cam.shake;
     this.showNumbers = set.damageNumbers;
     this.vibrate = set.vibration;
+    this.skillAim = set.skillAim; // SKILL AIM: TAP = one-enemy skills wait for an enemy tap (aim.js), INSTANT = fire at once
+    if (!this.skillAim && this.endAim) this.endAim();
     this.lastBuzz = -Infinity;
   },
 

@@ -1267,5 +1267,52 @@
     "castMs": 400,
     "songSwitch": true,
     "description": "Plays a 5s song, in turn. MARCH: squad +15% attack speed, +25% proc chance. BALLAD: squad regen 0.6%/s, item heals +25%."
+  },
+  "chain_hook": {
+    "name": "Chain Hook",
+    "short": "CH",
+    "kind": "attack",
+    "target": "farthestEnemy",
+    "cooldownMs": 8000,
+    "castMs": 500,
+    "damageMultiplier": 1.6,
+    "pull": {
+      "gapPx": 60,
+      "ms": 300,
+      "delayMs": 150
+    },
+    "apply": [
+      {
+        "status": "stun",
+        "durationMs": 2000
+      }
+    ],
+    "description": "Hooks the FARTHEST enemy (or the one you tapped): 160% damage, drags it to him and STUNS it 2s. Bosses are not dragged."
+  },
+  "lockdown": {
+    "name": "Lockdown",
+    "short": "LD",
+    "kind": "support",
+    "target": "allEnemies",
+    "area": {
+      "shape": "circle",
+      "at": "caster",
+      "radius": 150
+    },
+    "cooldownMs": 10000,
+    "castMs": 500,
+    "apply": [
+      {
+        "status": "weaken",
+        "durationMs": 4000,
+        "attackPercent": -30
+      },
+      {
+        "status": "chill",
+        "stacks": 2,
+        "durationMs": 4000
+      }
+    ],
+    "description": "Every enemy around him is WEAKENED (-30% damage) and gets 2 CHILL for 4s."
   }
 }

@@ -2,13 +2,13 @@
 import fs from 'fs';
 import BattleState from '../../src/systems/BattleState.js';
 import { loadItems } from '../../src/systems/items.js';
-import { frozenItems } from './util.mjs';
+import { frozenItems, bardV3 } from './util.mjs';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const rules = { ...r('combat.json'), skillWindUp: { defaultCastMs: 0 } };
 const heroes = r('heroes.json');
 const skills = Object.fromEntries(Object.entries(r('skills.json')).map(([k, v]) => [k, { ...v, castMs: 0 }]));
-const hero = (id) => heroes.find((h) => h.id === id);
+const hero = (id) => bardV3(heroes.find((h) => h.id === id)); // the Bard tests use his frozen v3 kit (he is the Warden now)
 const itemDefs = loadItems(frozenItems());
 // A squad (first = the hero under test) against `enemyIds`, standing in lines; nobody dodges or crits.
 const mk = (ids, enemyIds = ['goblin', 'goblin', 'goblin'], rng = Math.random) => {

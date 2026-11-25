@@ -103,6 +103,14 @@ const LOOPS = {
       if (rnd(k) < 0.7) { const x = (rnd(k + 1) - 0.5) * u.hw * 2.4, y = u.top + rnd(k + 2) * (u.bot - u.top); g.line(x, y, x + 2, y + 1, C.elec); g.line(x + 2, y + 1, x + 1, y + 3, C.white); }
     }
   },
+  rooted(g, u, t) { // Warden's Shackles: an iron cuff on each foot, chained to a stake in the floor (it rattles)
+    const f = Math.max(2, Math.round(u.hw * 0.45)), r = Math.sin(t / 90) > 0 ? 1 : 0;
+    for (const s of [-1, 1]) {
+      const x = s * f; g.px(x - 1, -1, 0xe4e8f0); g.px(x + 1, -1, 0xe4e8f0); g.px(x - 1, 0, 0x8c909c); g.px(x + 1, 0, 0x8c909c);
+      g.line(x, 1, 0, 3, (s > 0) === !!r ? 0xa8aebb : 0x5a5f6a, 0.95);
+    }
+    g.rect(0, 2, 1, 3, 0x5a5f6a); g.px(0, 2, 0xe4e8f0);
+  },
   fear(g, u, t) {
     const H = Math.max(1, u.bot - u.top);
     for (let i = 0; i < 4; i++) { const k = (t / 30 + i * 4) % H; g.px(-u.hw - 3, u.bot - k, C.dark, 0.7); g.px(u.hw + 3, u.bot - ((k + H / 2) % H), C.dark, 0.7); }

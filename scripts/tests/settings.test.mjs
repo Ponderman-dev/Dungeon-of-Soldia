@@ -28,3 +28,8 @@ ok('every default is one of its own choices', Object.entries(defs.defaults).ever
   changeSetting(p, defs, 'damageNumbers', false); saveProgress(p, s);
   ok('settings survive a save and load', readSettings(loadProgress(s), defs).damageNumbers === false);
   ok('DELETE SAVE wipes the save', deleteProgress(s) && !(SAVE_KEY in s.raw) && JSON.stringify(loadProgress(s)) === JSON.stringify(emptyProgress())); }
+// SKILL AIM (tap-to-aim on / off): on by default, INSTANT is a valid choice, nonsense falls back to the default.
+{ const p = emptyProgress();
+  ok('SKILL AIM is TAP for a new player', readSettings(p, defs).skillAim === true);
+  ok('...can be set to INSTANT', changeSetting(p, defs, 'skillAim', false) && readSettings(p, defs).skillAim === false);
+  p.settings.skillAim = 'sometimes'; ok('...a bad value falls back to TAP', readSettings(p, defs).skillAim === true); }

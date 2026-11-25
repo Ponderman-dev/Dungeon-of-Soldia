@@ -617,17 +617,17 @@
         "raiseCount": 3
       }
     },
-    "massCharm": {
+    "heavyChains": {
       "kind": "modifier",
       "tier": "hero",
       "hero": "bard",
-      "skill": "discord",
+      "skill": "chain_hook",
       "tag": "Control",
-      "name": "Mass Charm",
-      "text": "Discord charms 1s longer.",
+      "name": "Heavy Chains",
+      "text": "Chain Hook stuns 1s longer.",
       "patch": {
         "applyDurationAdd": {
-          "charm": 1000
+          "stun": 1000
         }
       }
     },

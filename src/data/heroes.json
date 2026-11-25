@@ -1421,238 +1421,198 @@
   },
   {
     "id": "bard",
-    "name": "Bard",
-    "role": "Support",
-    "color": "0xe060a8",
-    "summary": "Pure support: makes squad items stronger and plays boosts for the team.",
+    "name": "Warden",
+    "role": "Tank",
+    "color": "0x9aa0ac",
+    "summary": "The dungeon jailer: he chains enemies down so they can't hurt the squad.",
     "tips": [
-      "Battle Hymn: squad items (War Banner, Jolly Banner, Spotter's Lens, Last Stand Banner) work 35% stronger while he lives.",
-      "Every 10s of a fight his lute gives the squad a random boost: attack, speed, defense or regen.",
-      "Change Song plays March (faster attacks, item procs +25%) or Ballad (regen, item heals +25%) for 5s; they take turns.",
-      "Discord charms a group: they hit each other for 2.5s."
+      "Shackles: every 4th hit chains the enemy: it can't walk for 1.5s and deals 35% less damage for 4s.",
+      "Chain Hook drags the farthest enemy (an archer or caster at the back) to him and stuns it. Tap an enemy to pick who he hooks.",
+      "Lockdown weakens and chills every enemy around him.",
+      "Iron Grip: stuns, freezes, roots, chills and fears from the whole squad last longer."
     ],
-    "damageType": "ranged",
-    "shotLook": "note",
-    "height": 23,
+    "damageType": "melee",
+    "height": 24,
     "stats": {
-      "health": 90,
-      "attack": 13,
-      "defense": 4,
+      "health": 140,
+      "attack": 18,
+      "defense": 10,
       "resist": 8,
-      "evasion": 10,
-      "crit": 8,
+      "evasion": 3,
+      "crit": 5,
       "attackEfficiency": 100
     },
     "growthPercent": {
-      "health": 3,
+      "health": 5,
       "attack": 3
     },
     "growthFlat": {
-      "attackEfficiency": 0.3
+      "defense": 0.5,
+      "resist": 0.4
     },
     "skills": {
-      "attack": "discord",
-      "support": "change_song"
+      "attack": "chain_hook",
+      "support": "lockdown"
     },
     "perk": {
-      "name": "Inspiration",
+      "name": "Iron Grip",
       "mods": [
         {
-          "stat": "evasion",
-          "flat": 6,
-          "growth": 0.2
+          "special": "controlDuration",
+          "percent": 20,
+          "growth": 0.5
         }
       ]
     },
     "passive": {
-      "name": "Battle Hymn",
-      "description": "Squad items +35% stronger while he lives. Every 10s: a random squad boost for 5s (attack, speed, defense or regen).",
-      "hymn": {
-        "squadItemMultiplier": 1.35
-      },
-      "lute": {
-        "everyMs": 10000,
-        "durationMs": 5000,
-        "boosts": [
+      "name": "Shackles",
+      "description": "Every 4th hit chains the enemy: ROOTED 1.5s (can't walk) and it deals 35% less damage for 4s.",
+      "counter": {
+        "id": "shackles",
+        "label": "Shackles",
+        "color": "0xb8c0cc",
+        "every": 4,
+        "scope": "self",
+        "effect": "empower",
+        "firedLabel": "Shackled!",
+        "apply": [
           {
-            "name": "Lute: Attack",
-            "color": "0xff6b4a",
-            "mods": [
-              {
-                "stat": "attack",
-                "percent": 20
-              }
-            ]
+            "status": "rooted",
+            "durationMs": 1500
           },
           {
-            "name": "Lute: Speed",
-            "color": "0xffe94d",
-            "mods": [
-              {
-                "stat": "attackEfficiency",
-                "percent": 20
-              }
-            ]
-          },
-          {
-            "name": "Lute: Defense",
-            "color": "0x6fb8ff",
-            "mods": [
-              {
-                "stat": "defense",
-                "percent": 30
-              },
-              {
-                "stat": "resist",
-                "percent": 30
-              }
-            ]
-          },
-          {
-            "name": "Lute: Regen",
-            "color": "0x6dff8f",
-            "regenPercentPerSec": 1.5
+            "status": "weaken",
+            "durationMs": 4000,
+            "attackPercent": -35
           }
-        ]
-      },
-      "songs": {
-        "first": "march",
-        "durationMs": 5000,
-        "march": {
-          "attackSpeedPercent": 15,
-          "procChancePercent": 25,
-          "burst": {
-            "durationMs": 3000,
-            "mods": [
-              {
-                "stat": "attackEfficiency",
-                "percent": 30
-              }
-            ]
-          }
-        },
-        "ballad": {
-          "regenPercentPerSec": 0.6,
-          "healPercent": 25,
-          "burst": {
-            "healPercent": 8
-          }
+        ],
+        "readyLook": {
+          "angle": 0,
+          "liftPx": 13,
+          "outPx": 1.5,
+          "bobPx": 1,
+          "bobMs": 700,
+          "easeMs": 250
         }
       }
     },
     "parts": {
       "body": {
         "x": 0,
-        "y": -7.5,
-        "w": 10,
-        "h": 15,
-        "art": {
-          "palette": [
-            "0xf2c544",
-            "0xc8433a",
-            "0xf2c9a0",
-            "0x6b4a2a",
-            "0x3a2a2a"
-          ],
-          "rows": [
-            "..010101..",
-            ".01010101.",
-            ".01010101.",
-            ".01010101.",
-            ".01010101.",
-            ".01010101.",
-            ".01010101.",
-            ".20101012.",
-            "..333333..",
-            "..33..33..",
-            "..33..33..",
-            "..33..33..",
-            "..33..33..",
-            "..33..33..",
-            "..44..44.."
-          ]
-        },
+        "y": -8,
+        "w": 11,
+        "h": 16,
         "anchor": [
-          5,
-          7.5
+          5.5,
+          8
         ],
         "idle": {
           "dy": -1,
-          "duration": 480
+          "duration": 520
+        },
+        "art": {
+          "palette": [
+            "0x9aa0ac",
+            "0x5a4535",
+            "0xf2c544",
+            "0xe8b890",
+            "0x4e4858",
+            "0x2a2020",
+            "0x6a707c",
+            "0x7a5232"
+          ],
+          "rows": [
+            "00011111000",
+            "00061111000",
+            "01116111110",
+            "01111611110",
+            "01111161110",
+            "01111116110",
+            "31111111613",
+            ".777777727.",
+            ".444444422.",
+            ".444...442.",
+            ".44.....44.",
+            ".44.....44.",
+            ".44.....44.",
+            ".44.....44.",
+            ".55.....55.",
+            ".55.....55."
+          ]
         }
       },
       "head": {
         "x": 0,
-        "y": -19,
+        "y": -20,
         "w": 10,
         "h": 8,
-        "art": {
-          "palette": [
-            "0x7fd6ff",
-            "0xc8433a",
-            "0x8e2a2a",
-            "0x7a4a2a",
-            "0xf2c9a0",
-            "0x1a1020"
-          ],
-          "rows": [
-            ".........0",
-            "..11111.0.",
-            ".11111110.",
-            "111111111.",
-            ".2222222..",
-            ".3444444..",
-            ".3454453..",
-            "..444444.."
-          ]
-        },
         "anchor": [
           5,
           8
         ],
         "idle": {
           "dy": -1.5,
-          "duration": 480,
-          "delay": 110
+          "duration": 520,
+          "delay": 120
+        },
+        "art": {
+          "palette": [
+            "0x34303f",
+            "0x1e1a28",
+            "0xe8b890",
+            "0x1a1020",
+            "0x6b4a3a",
+            "0x7d8494"
+          ],
+          "rows": [
+            "..000000..",
+            ".00000000.",
+            "0055555500",
+            "0022222200",
+            "0232222320",
+            "0022222200",
+            ".00444400.",
+            "..044440.."
+          ]
         }
       },
       "weapon": {
-        "x": 4.5,
-        "y": -12,
-        "w": 5,
+        "x": 6.5,
+        "y": -13,
+        "w": 8,
         "h": 10,
-        "art": {
-          "palette": [
-            "0x3a2a1a",
-            "0x8a5a2a",
-            "0xc88a4a"
-          ],
-          "rows": [
-            "..0..",
-            "..00.",
-            "..1..",
-            "..1..",
-            "..1..",
-            ".222.",
-            "22222",
-            "22022",
-            "22222",
-            ".222."
-          ]
-        },
         "anchor": [
-          2.5,
+          3,
           9.5
         ],
         "idle": {
-          "angle": 5,
+          "angle": 8,
           "duration": 700
+        },
+        "art": {
+          "palette": [
+            "0xd4d8e0",
+            "0x8c909c",
+            "0x6a707c",
+            "0x6b4a2a"
+          ],
+          "rows": [
+            "...000..",
+            "..00000.",
+            "..00.00.",
+            "..00.00.",
+            "..00..0.",
+            "..11....",
+            "..21....",
+            "..12....",
+            "..33....",
+            "..33...."
+          ]
         }
       }
     },
     "provides": [
-      "heal",
-      "beat"
+      "control"
     ]
   },
   {

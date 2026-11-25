@@ -20,6 +20,9 @@ export const kitsV1 = (defs) => defs.map((h) => (V1[h.id] ? { ...h, passive: V1[
 // Item MECHANIC tests use a FROZEN copy of items.json (fixtures/items-frozen.json, taken in session 5), so tuning
 // item numbers in src/data/items.json never breaks them. Copy an item into the fixture only when it is NEW or its
 // effect SHAPE changes (then test the new mechanic). Data checks (icons, texts, drop odds) read the real file.
+// The Bard v3 kit (songs, Lute, Battle Hymn, Discord), frozen when the Bard became the Warden: old tests of those mechanics.
+const BARD_V3 = JSON.parse(fs.readFileSync(new URL('./fixtures/bard-v3-kit.json', import.meta.url), 'utf8'));
+export const bardV3 = (def) => (def && def.id === 'bard' ? { ...def, name: 'Bard', damageType: 'ranged', shotLook: 'note', passive: BARD_V3.passive, skills: BARD_V3.skills, perk: BARD_V3.perk } : def);
 export const frozenItems = () => JSON.parse(fs.readFileSync(new URL('./fixtures/items-frozen.json', import.meta.url), 'utf8'));
 // combat.json without the hero toughness tuning (heroDefense bonus, deathSave), for tests that check exact
 // defense numbers or killing blows of other mechanics.

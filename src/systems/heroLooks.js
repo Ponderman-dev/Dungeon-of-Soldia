@@ -762,8 +762,8 @@ export const LOOKS = {
     const tint = ht >= 0 && ht < 70 ? [C.white, 0.85] : ht >= 0 && ms < HOLD ? [WARD.iron, 0.3] : null;
     return { draws: g.out, tints: [['targets', 0, tint]] };
   },
-  // LOCKDOWN: he slams his chain down: an iron ring of chain spreads over the floor around him, a chain runs along the
-  // floor to every enemy in it and a shackle snaps shut round its feet (spark), the enemies go grey for a moment.
+  // LOCKDOWN: he slams his chain down: an iron ring of chain spreads over the floor around him, a chain runs from him to
+  // every enemy in it and an iron band snaps shut round its middle (spark), the enemies go grey for a moment.
   wardenLockdown(q, c, t) {
     const g = pen(); const u = c.caster, ms = q * LOOK_MS.wardenLockdown, hit = c.hitMs || 300, R = c.radius || 50;
     if (!u) return { draws: [] };
@@ -775,13 +775,14 @@ export const LOOKS = {
     hitList.forEach((e, j) => {
       const st = 60 + j * (c.staggerMs || 40), p = easeOut(ph(ms, st, hit + j * (c.staggerMs || 40)));
       if (p <= 0) return;
-      const a = { x: u.x, y: u.y }, b = { x: u.x + (e.x - u.x) * p, y: u.y + (e.y - u.y) * p };
+      const a = { x: u.x, y: u.mid }, b = { x: u.x + (e.x - u.x) * p, y: u.mid + (e.mid - u.mid) * p }; // body to body
       chainPx(g, a, b, 0, t, 0.9 * fade);
       const ht = ms - hit - j * (c.staggerMs || 40);
       if (ht >= 0) {
-        const close = easeOut(ph(ht, 0, 120)), w = e.hw * 0.6 + 3 - 2 * close; // the shackle snaps shut round its feet
-        g.ring(e.x, e.y + 1, w, WARD.dark, fade, 1); g.ring(e.x, e.y, w, WARD.iron, fade, 1); g.px(e.x - w, e.y, WARD.light, fade); g.px(e.x + w, e.y, WARD.light, fade);
-        if (ht < 160) for (let i = 0; i < 6; i++) { const pp = ht / 160, an = rnd(i + j * 9) * Math.PI * 2; g.px(e.x + Math.cos(an) * (w + 4 * pp), e.y - 1 + Math.sin(an) * 3 * pp - pp * 4, i % 2 ? WARD.spark : C.white, 1 - pp); }
+        // the shackle (user: 'in the middle of their body, simpler'): one iron band round its middle, snapping shut
+        const close = easeOut(ph(ht, 0, 120)), w = Math.round(e.hw + 1 + 3 * (1 - close));
+        g.rect(e.x - w, e.mid - 1, w * 2 + 1, 1, WARD.light, fade); g.rect(e.x - w, e.mid, w * 2 + 1, 1, WARD.dark, fade);
+        if (ht < 160) for (let i = 0; i < 6; i++) { const pp = ht / 160, an = rnd(i + j * 9) * Math.PI * 2; g.px(e.x + Math.cos(an) * (w + 4 * pp), e.mid + Math.sin(an) * 3 * pp - pp * 4, i % 2 ? WARD.spark : C.white, 1 - pp); }
       }
     });
     const tints = hitList.map((e, j) => { const ht = ms - hit - j * (c.staggerMs || 40); return [list, j, ht >= 0 && ht < 70 ? [C.white, 0.8] : ht >= 0 && ht < 700 ? [WARD.iron, 0.35 * (1 - ht / 700)] : null]; });

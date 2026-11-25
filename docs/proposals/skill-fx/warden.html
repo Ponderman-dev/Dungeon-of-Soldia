@@ -78,6 +78,7 @@ ul.ideas li b { color: var(--fg); font-weight: 600; }
   <header>
     <h1>The Warden: skills and icons</h1>
     <p class="lede">The new skill looks of the Warden (the jailer who replaced the Bard), drawn by the game's own effect code at the game's speed and size. Tap a scene to replay it. Mark each one OK or CHANGE and add a note; for each icon pick A or B.</p>
+    <p class="lede"><b>ROUND 2:</b> Chain Hook, the ready pose and Rooted were OK; your icon picks (Chain Hook B, Lockdown B, Shackles A) are now in the game. Lockdown is redone (gold <b>ROUND 2</b> tag): please mark it again.</p>
   </header>
   <div class="bar">
     <div class="seg" role="group" aria-label="Speed"><button id="sp1" aria-pressed="true">Normal</button><button id="sp4" aria-pressed="false">Slow x4</button></div>
@@ -123,9 +124,10 @@ function noteBox(docId, labelText, hint) {
   return { lab, ta, saved };
 }
 for (const s of S.SCENES) {
-  const doc = s.id;
+  const doc = s.round ? s.id + '@' + s.round : s.id; // a redone look gets a fresh note
   const card = document.createElement('div'); card.className = 'card';
   const h = document.createElement('h3'); h.textContent = s.name;
+  if (s.round) { const tg = document.createElement('span'); tg.className = 'tag'; tg.textContent = 'ROUND ' + s.round; h.append(tg); }
   const u = document.createElement('p'); u.className = 'users'; u.textContent = s.what;
   const cv = document.createElement('canvas'); cv.className = 'scene'; cv.width = S.W * S.Z; cv.height = S.H * S.Z; cv.tabIndex = 0;
   cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', s.name + ' (tap to replay)');
@@ -139,7 +141,9 @@ for (const s of S.SCENES) {
   btns.append(ok, chg);
   const n = noteBox(doc, 'NOTE ON ' + s.name.toUpperCase(), 'e.g. a longer chain, more sparks, slower, bigger shackle…');
   for (const [b, v] of [[ok, 'ok'], [chg, 'change']]) b.addEventListener('click', () => { const cur = (notes[doc] || {}).verdict; save(doc, { verdict: cur === v ? null : v }, n.saved); });
-  card.append(h, u, cv, btns, n.lab, n.ta, n.saved);
+  card.append(h, u);
+  if (s.round) { const w = document.createElement('p'); w.className = 'was'; w.innerHTML = '<b>Your note:</b> '; w.append(s.note); const d = document.createElement('p'); d.className = 'was'; d.innerHTML = '<b>Changed:</b> '; d.append(s.did); card.append(w, d); }
+  card.append(cv, btns, n.lab, n.ta, n.saved);
   document.getElementById('looks').append(card);
   ui[doc] = { card, ok, chg, ta: n.ta };
 }

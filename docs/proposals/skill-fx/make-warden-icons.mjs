@@ -1,6 +1,5 @@
 // Draws the Warden's icon OPTIONS (16x16, the skillIcons.json format: palette + rows, '0' = dark outline) and writes
-// them to docs/proposals/skill-fx/warden-icons.json. Option A of each also goes into src/data/skillIcons.json until the
-// user picks (review page). Run: node docs/proposals/skill-fx/make-warden-icons.mjs
+// them to docs/proposals/skill-fx/warden-icons.json. The picked option of each (PICKS) goes into src/data/skillIcons.json. Run: node docs/proposals/skill-fx/make-warden-icons.mjs
 import fs from 'node:fs';
 
 // palette: 0 outline, 1 light iron, 2 iron, 3 dark iron, 4 gold, 5 rust, 6 white
@@ -70,6 +69,8 @@ fs.writeFileSync(new URL('./warden-icons.json', import.meta.url), JSON.stringify
 // option A into the game until the user picks
 const P = new URL('../../../src/data/skillIcons.json', import.meta.url);
 const game = JSON.parse(fs.readFileSync(P, 'utf8'));
-for (const id of ['chain_hook', 'lockdown', 'passive_bard']) game[id] = icons[`${id}:${process.argv[2] || 'A'}`] || icons[`${id}:A`];
+// the user's picks (review round 1); a letter argument (A / B) overrides all
+const PICKS = { chain_hook: 'B', lockdown: 'B', passive_bard: 'A' };
+for (const id of Object.keys(PICKS)) game[id] = icons[`${id}:${process.argv[2] || PICKS[id]}`];
 fs.writeFileSync(P, JSON.stringify(game, null, 2) + '\n');
 console.log('icons:', Object.keys(icons).join(', '));

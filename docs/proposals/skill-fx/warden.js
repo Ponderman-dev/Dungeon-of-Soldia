@@ -68,7 +68,7 @@ function label(ctx, text, x, y, color = '#ffffff') { ctx.font = '8px "Press Star
 
 export const SCENES = [
   { id: 'hook', name: 'Chain Hook', ms: 4200, what: 'Wind-up: a loop of chain whirls over his raised hook. Then the hook flies out on its chain, bites the enemy at the back (flash + sparks), drags it to him, and the chain reels back. The enemy is stunned 2s.' },
-  { id: 'lockdown', name: 'Lockdown', ms: 3800, what: 'Same wind-up, then he slams his chain down: a ring of chain spreads over the floor around him, a chain runs to every enemy inside and a shackle snaps shut round its feet. They go grey (weakened) and chilled. The one outside the ring is not hit.' },
+  { id: 'lockdown', name: 'Lockdown', ms: 3800, round: 2, note: 'The shackle should be in the middle of their body, and make the shackle simpler.', did: 'The shackle is now one plain iron band round the middle of each enemy (light on top, dark below) that snaps shut, and the chain runs from his body to theirs.', what: 'Same wind-up, then he slams his chain down: a ring of chain spreads over the floor around him, a chain runs to every enemy inside and an iron band snaps shut round its middle. They go grey (weakened) and chilled. The one outside the ring is not hit.' },
   { id: 'ready', name: 'Shackles: hook ready, then the 4th hit', ms: 3600, what: 'After his 3rd hit the hook rises high and bobs (ready). The 4th hit lands and the enemy is ROOTED: cuffs on its feet, chained to a stake in the floor.' },
   { id: 'rooted', name: 'Rooted (close up)', ms: 2400, what: 'What a rooted enemy wears while it cannot walk (1.5s): a cuff on each foot, chained to a stake, rattling.' },
 ];

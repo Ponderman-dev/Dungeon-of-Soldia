@@ -4,7 +4,12 @@
 - SESSION 57 DID: battle floors play RPG 8 + RPG 10 (originals) taking turns, each repeated 2-4 times at random, a
   1.5 s fade + 3 s silence between (`docs/systems/sound.md` MUSIC, last note). Game page republished.
   Round 10 board (xD16 Battle 1/2, RPG 5/6/11) -> user: 'new sound is not good' (no detail).
-- NEXT: find more battle music for the board. Ask first what was wrong with round 10 (question tool, options).
+- NEXT: find more battle music for the board. Round 10 verdict: 'too simple and short' -> look for LONGER, richer
+  16-bit battle songs (more sections, like RPG 8 / 10), not short loops.
+- ALSO OPEN (session 57): HERO BANNERS proposal 1 on the reused review page (now titled 'Soldia Hero Banners', db
+  `banners`: doc id = hero id {verdict, note}; 'general' = note). `docs/proposals/hero-banners/make-banners.py` draws
+  10 lore scenes at 113x59 (3x = the hero page's 'YOUR PIXEL ART' box); `make-board.py` pastes them on REAL hero page
+  shots. User idea: the Heroes / Glossary hero page becomes a LORE page with the banner on top. Read the picks first.
 - Still KIV from before: Holy damage (don't change the Cleric until asked), a 'made by' credit name, Android sound
   without a tap, Settings HELP -> crypto help, the deep BUG HUNT + OPTIMIZATION + SECURITY CHECK.
 - PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').

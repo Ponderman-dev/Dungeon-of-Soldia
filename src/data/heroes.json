@@ -1485,7 +1485,14 @@
             "durationMs": 4000,
             "attackPercent": -35
           }
-        ]
+        ],
+        "readyLook": {
+          "angle": -180,
+          "liftPx": 3,
+          "bobPx": 1,
+          "bobMs": 700,
+          "easeMs": 250
+        }
       }
     },
     "parts": {

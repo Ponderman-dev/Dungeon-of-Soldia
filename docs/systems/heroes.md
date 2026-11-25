@@ -36,7 +36,8 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       Stats 140 health / 18 attack / 10 defense / 8 resist. TUNED (review.mjs 4 all x2): first try ~24.9 (last) ->
       ~29.0 (mean ~29.9, middle of the pack). Tests `warden.test.mjs`. LOOK (first draft, drawn in code, user can refine in the Studio): hooded jailer, iron shoulders, leather jerkin with
       a chain across it, gold keys at the belt; WEAPON = a chain hook that HANGS from his hand (anchor at the top of the
-      picture, it sways). Height 24. Skill effects still borrowed (Chain Hook = shieldBash, Lockdown = challenge).
+      picture, it sways). Height 24. SHACKLES CHARGED (3rd hit landed): no glow; the counter's `readyLook` (angle -180,
+      liftPx 3, bob) makes the hook swing up and float, ready (`Character.setWeaponReady()`, set in hud.js `drawChips()`). Skill effects still borrowed (Chain Hook = shieldBash, Lockdown = challenge).
     - **Bard** (OLD, replaced by the Warden) BATTLE HYMN (built session 6): `passive.hymn.squadItemMultiplier` 1.35 = squad items (items.json `type: 'squad'`:
       War Banner, Jolly Banner, Spotter's Lens, Last Stand Banner) x1.35 while he lives (`squadItemMult()` -> 7th arg of
       `computeHeroStats()`, which multiplies those items' effect factor: proc chances, specials, Last Stand shield/attack).

@@ -325,7 +325,10 @@ export const hudMethods = {
     // Sharpest Blade: the weapon glints gold when the next attack is a Heart Strike (a charged counter shows first).
     const charged = counter && view.unit.counterCount >= counter.every - 1;
     // Kinetic Coil: the weapon glows electric yellow when the next attack is its lightning strike.
-    view.ch.setGlow(charged ? Phaser.Display.Color.HexStringToColor(next || counter.color || '#c8a0ff').color : view.heartShown ? Number(itemFxData.sharpest_blade.glint) : view.coilShown ? Number(itemFxData.kinetic_coil.glint) : null);
+    // Warden: a counter with `readyLook` shows the charge as a pose (the hook floats up, ready) instead of a glow.
+    const ready = counter && counter.readyLook;
+    view.ch.setWeaponReady(charged && ready ? ready : null);
+    view.ch.setGlow(charged && !ready ? Phaser.Display.Color.HexStringToColor(next || counter.color || '#c8a0ff').color : view.heartShown ? Number(itemFxData.sharpest_blade.glint) : view.coilShown ? Number(itemFxData.kinetic_coil.glint) : null);
     // Status ICONS (statusIcons.json) in rows of 3 over the health bar, rows going up (a hero's item dots move
     // up above them). Stacking statuses (bleed, burn, poison, chill) show their
     // stack count just right of the icon. The icon pops up a little when it arrives or gains a stack.

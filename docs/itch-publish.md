@@ -34,10 +34,11 @@ On itch.io: your profile menu -> **Upload new project**.
    old one), keep "played in the browser" ticked, Save.
 4. Optional: post a devlog (itch.io Devlog tab). Drafts live in `docs/devlog/` (one file per update).
 
-## What playtesters will see (current build)
+## What playtesters will see (current build, 0.2.0)
 - Title screen (forest from above) -> tap -> the camp, a random unlocked hero walks in.
-- Camp: TO DUNGEON opens the squad screen. Glossary, Heroes, Leaderboard, Shop, Profile and Settings say
-  'Coming soon'. Sound effects are in (menus, camp, fights); no music yet.
+- Camp: EXPEDITION opens the squad screen; HEROES (hero pages with banners, records, try-on looks), GLOSSARY,
+  LEADERS, SHOP (looks; gems not for sale yet), profile and settings.
+- Music: title / camp, squad, battle floors (RPG 8 + 10 taking turns), bosses; sound effects everywhere.
 - Runs, unlocks and best floor are saved in the player's browser (clearing site data resets them).
 
 ## Good to ask testers

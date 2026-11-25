@@ -1,20 +1,45 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 58): MORE BATTLE MUSIC OPTIONS (board)
-- SESSION 57 DID: battle floors play RPG 8 + RPG 10 (originals) taking turns, each repeated 2-4 times at random, a
-  1.5 s fade + 3 s silence between (`docs/systems/sound.md` MUSIC, last note). Game page republished.
-  Round 10 board (xD16 Battle 1/2, RPG 5/6/11) -> user: 'new sound is not good' (no detail).
-- NEXT: find more battle music for the board. Round 10 verdict: 'too simple and short' -> look for LONGER, richer
-  16-bit battle songs (more sections, like RPG 8 / 10), not short loops.
-- ALSO OPEN (session 57): HERO BANNERS proposal 1 on the reused review page (now titled 'Soldia Hero Banners', db
-  `banners`: doc id = hero id {verdict, note}; 'general' = note). `docs/proposals/hero-banners/make-banners.py` draws
-  10 lore scenes at 113x59 (3x = the hero page's 'YOUR PIXEL ART' box); `make-board.py` pastes them on REAL hero page
-  shots. User idea: the Heroes / Glossary hero page becomes a LORE page with the banner on top. Read the picks first.
+## START HERE (session 58)
+- BRANCH: `main` has EVERYTHING (session 57 pushed to main; branch `session-57-battle-music` = the same). Start the
+  next branch from `main`. Version 0.2.0 (package.json); itch.io zip = `npm run build:itch` -> itch-page.html renamed
+  index.html, zipped at the top (docs/itch-publish.md). Session 57 ran in the Claude APP (cloud workspace), not Claude
+  Code: same repo, same rules; the user's own PC copy needs a `git pull`.
+- SESSION 57 DID (all on main, game page republished):
+  1. BATTLE MUSIC: battle floors play RPG Battle Theme 8 + 10 (the ORIGINAL Pixel-boy files, CC0) taking turns; each
+     turn repeats the song 2-4 times at random, fades 1.5 s, 3 s silence, then the other (music.json turnRepeats /
+     turnEndFadeSec / turnGapSec; systems/music.js turnSeconds; `docs/systems/sound.md` MUSIC, last note).
+  2. HERO BANNERS: one pixel scene per hero from their lore (src/assets/banners/<id>.png, 113x59 at 3x;
+     `entities/heroBanner.js`; drawn by `docs/proposals/hero-banners/make-banners.py`). All 10 in the game; the user
+     did not mark any as NO.
+  3. HEROES SCREEN = TWO PAGES (`scenes/heroes/heroPages.js`; picked from 5 + 6 styles on the review page):
+     camp > HEROES = HERO PAGE (pick 4): the hero in front of their banner, name + role under it, YOUR RECORDS (runs,
+     best floor, kills, deaths, damage, healing = progress.stats.heroRecords; user: 'not the hero stats, the playtime
+     stats'), LOOKS (tap = try on, this visit only), HERO DETAILS = the card. Glossary > HEROES = CARD (pick F): hero,
+     name, role + type, summary, STORY (lore rewritten to 4-5 sentences), STATS, the FULL kit with icons, PASSIVE
+     FIRST. The card SCROLLS (drag / wheel, `scrollable()`): the first scrolling menu page. Details: `docs/systems/ui.md`.
+- NEXT (user's open asks):
+  - MORE BATTLE MUSIC for the board. Round 10 (xD16 Battle 1/2, RPG 5/6/11) = NO: 'too simple and short'. Look for
+    LONGER, richer 16-bit battle songs (several sections, like RPG 8 / 10), full energy from beat 1. Licence: CC0 / CC BY
+    / CC BY-SA / Pixabay OK, NC / ND not OK; credit line in music.json + src/assets/music/LICENSE.txt + info.json.
+    Board = the reused review page (see below), make-board10.py pattern (`docs/proposals/music/`).
+  - TODO from this work: wearing a look in fights (try-on only now); `showArmoury` (bigger try-on page) is unused;
+    the Heroes LIST still shows no banner; docs/itch-publish.md 'What playtesters will see' is out of date.
+- REVIEW PAGE (CLAUDE.md 'reuse the Skill Effects page'): https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN, now
+  titled 'Soldia Heroes Pages'; db `banners` (picks: heroPageStyle '4', glossaryStyle 'F', per-hero banner verdicts)
+  and db `music` (all music verdicts, rounds 1-10). Swap its content per topic.
 - Still KIV from before: Holy damage (don't change the Cleric until asked), a 'made by' credit name, Android sound
   without a tap, Settings HELP -> crypto help, the deep BUG HUNT + OPTIMIZATION + SECURITY CHECK.
 - PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').
 
 ## How we work with this user
+- SESSION 57 lessons: 'show me options' = build the options IN THE GAME (one code path per style), screenshot the real
+  pages (Playwright on the dev server; `window.__game`, scene 'Heroes', call showHero / showEntry) for 2 heroes each,
+  put them on the review page with one PICK button per group (db), then apply the pick and DELETE the unused styles.
+  They want 5-6 options when unsure ('looks incomplete'). Word traps: 'stats' on the hero page meant PLAYTIME records,
+  not hero stats; 'the passive should be the highest' = listed first; 'armoury' = the looks. They pick fast on the
+  phone and say 'push to main' / 'give me a zip' at the end of a batch. Music: when new songs miss, they fall back to
+  their LOVES (RPG 8 / 10) in the game first, then want more options.
 - SESSION 56 lessons (skill book balance): 'bring the full list' = tables by tier; they gave ranges ('50-100%', '15-20%')
   + 'make it balanced': pick inside their range, then use pageruns to fix the strength with a SIDE COST (cooldown) rather
   than shrinking their number. Damage-only pages barely matter (skills = 15-40% of damage): shorter cooldowns and new

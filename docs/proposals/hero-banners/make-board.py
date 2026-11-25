@@ -1,9 +1,12 @@
 # HERO BANNERS pick page (session 57). Each card = the REAL hero page (game screenshot) with its proposed banner pasted
 # into the 'YOUR PIXEL ART' box, the lore line it is drawn from, LOVE / MAYBE / NO + a note.
 # Picks: db collection 'banners' on the reused review page (doc id = hero id: {key, verdict, note}).
-# Usage: python3 make-board.py <mock dir (from the scratch: page shots + banners)> <out dir>
+# + (session 57, second round) a PAGES section on top: the new Heroes page + Armoury (look only) and the 3 Glossary
+#   entry styles A / B / C (pick ONE: db doc 'glossaryStyle' {choice}). Shots from the dev server (?ghero=X).
+# Usage: python3 make-board.py <mock dir> <out dir> [<page shots dir>]
 import sys, os, json, shutil, html
 MOCK, OUT = sys.argv[1], sys.argv[2]
+SHOTS = sys.argv[3] if len(sys.argv) > 3 else None
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..')
 os.makedirs(os.path.join(OUT, 'b'), exist_ok=True)
 heroes = json.load(open(os.path.join(ROOT, 'src/data/heroes.json')))
@@ -22,6 +25,13 @@ cards = []
 for h in heroes:
     shutil.copy(os.path.join(MOCK, h['id'] + '.png'), os.path.join(OUT, 'b', h['id'] + '.png'))
     cards.append({'id': h['id'], 'name': h['name'], 'scene': SCENE[h['id']], 'lore': lore.get(h['id'], '')})
+PAGES = []
+if SHOTS:
+    for f in ['n_hero_knight', 'n_hero_necro', 'n_armoury_knight2'] + [f'n_entry_{st}_{h}' for st in 'ABC' for h in ('knight', 'necro')]:
+        shutil.copy(os.path.join(SHOTS, f + '.png'), os.path.join(OUT, 'b', f + '.png'))
+    PAGES = [{'id': 'A', 'name': 'A. KIT', 'text': 'Skills, perk and passive in full. No story.'},
+             {'id': 'B', 'name': 'B. STORY', 'text': 'The lore, how the hero fights, and a tip. Skills not listed.'},
+             {'id': 'C', 'name': 'C. SHORT', 'text': 'How the hero fights in one line, plus the skill names and cooldowns.'}]
 T = r'''<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Soldia Hero Banners</title>
@@ -48,14 +58,21 @@ main{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),
 .picks button:focus-visible,textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 textarea{width:100%;min-height:56px;font:16px system-ui;background:#14121c;color:var(--fg);border:2px solid var(--soft);padding:8px;resize:vertical}
 .general{grid-column:1/-1}
+#pages{padding:4px max(4vw,14px) 0;display:grid;gap:18px}#pages:empty{display:none}
+#pages h2.sec,main h2.sec{grid-column:1/-1;margin:6px 0 0;font:700 18px/1.3 "Courier New",monospace;color:var(--fg)}
+.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));gap:8px}
+.shots img{width:100%;height:auto;image-rendering:pixelated;border:1px solid var(--soft)}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px}
 </style></head><body>
-<header><h1>Hero banners · proposal 1</h1>
-<p class="lede">One pixel banner per hero, drawn from their lore. Each sits in the <b>YOUR PIXEL ART</b> box on the real hero page (113×59 pixels, shown 3× like the heroes). Mark each <b>LOVE / MAYBE / NO</b> and add a note if you want a change (other scene, colours, more detail…).</p>
+<header><h1>Heroes pages + banners</h1>
+<p class="lede">Your new Heroes page is in the game. Pick how the <b>Glossary</b> shows a hero (section 2). One pixel banner per hero, drawn from their lore. Each sits in the <b>YOUR PIXEL ART</b> box on the real hero page (113×59 pixels, shown 3× like the heroes). Mark each <b>LOVE / MAYBE / NO</b> and add a note if you want a change (other scene, colours, more detail…).</p>
 <p id="st">Connecting…</p></header>
+<section id="pages"></section>
 <main id="grid"></main>
 <script>
 {
 const CARDS = /*CARDS*/;
+const PAGES = /*PAGES*/;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const grid = document.getElementById('grid'), st = document.getElementById('st');
 grid.innerHTML = CARDS.map((c) => `<article class="card" id="c-${c.id}">
@@ -64,6 +81,14 @@ grid.innerHTML = CARDS.map((c) => `<article class="card" id="c-${c.id}">
   <div class="picks">${['love','maybe','no'].map((v) => `<button type="button" data-id="${c.id}" data-v="${v}">${v.toUpperCase()}</button>`).join('')}</div>
   <textarea data-note="${c.id}" placeholder="Note for ${esc(c.name)}…" aria-label="Note for ${esc(c.name)}"></textarea></article>`).join('')
   + `<article class="card general"><h2>ANYTHING ELSE</h2><p>About the whole set: style, size, lore page ideas…</p><textarea data-note="general" aria-label="General note"></textarea></article>`;
+const pg = document.getElementById('pages');
+if (PAGES.length) pg.innerHTML = `<h2 class="sec">1. Your new Heroes page (from the camp)</h2>
+  <article class="card"><p>Banner on top, the hero, stats, then <b>ARMOURY</b> (where LORE was) and <b>STATS</b>. Armoury = the hero's looks: tap one to try it on. This is already in the game.</p>
+  <div class="shots"><img src="b/n_hero_knight.png" alt="Knight hero page"><img src="b/n_hero_necro.png" alt="Necromage hero page"><img src="b/n_armoury_knight2.png" alt="Armoury, trying on Ember"></div></article>
+  <h2 class="sec">2. Glossary hero entry: pick ONE</h2><div class="opts">` + PAGES.map((o) => `<article class="card" id="g-${o.id}"><h2>${esc(o.name)}</h2><p>${esc(o.text)}</p>
+  <div class="shots"><img src="b/n_entry_${o.id}_knight.png" alt="${esc(o.name)} knight"><img src="b/n_entry_${o.id}_necro.png" alt="${esc(o.name)} necromage"></div>
+  <div class="picks"><button type="button" data-g="${o.id}">PICK ${o.id}</button></div></article>`).join('') + `</div><h2 class="sec">3. Banners (already in the game: mark any to change)</h2>`;
+pg.addEventListener('click', (e) => { const b = e.target.closest('button[data-g]'); if (b) save('glossaryStyle', { choice: b.dataset.g }); });
 let db = null; const state = {};
 function paint() {
   for (const c of CARDS) {
@@ -71,6 +96,8 @@ function paint() {
     el.classList.toggle('love', v === 'love'); el.classList.toggle('no', v === 'no');
     el.querySelectorAll('.picks button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
   }
+  const ch = (state.glossaryStyle || {}).choice;
+  PAGES.forEach((o) => { const el = document.getElementById('g-' + o.id); el.classList.toggle('love', ch === o.id); el.querySelector('button').classList.toggle('on', ch === o.id); });
   document.querySelectorAll('textarea').forEach((t) => { if (document.activeElement !== t) t.value = (state[t.dataset.note] || {}).note || ''; });
 }
 async function save(id, patch) {
@@ -89,5 +116,5 @@ paint();
 }
 </script></body></html>
 '''
-open(os.path.join(OUT, 'index.html'), 'w').write(T.replace('/*CARDS*/', json.dumps(cards)))
+open(os.path.join(OUT, 'index.html'), 'w').write(T.replace('/*CARDS*/', json.dumps(cards)).replace('/*PAGES*/', json.dumps(PAGES)))
 print(len(cards), 'cards ->', OUT)

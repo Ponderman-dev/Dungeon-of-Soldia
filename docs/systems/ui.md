@@ -183,3 +183,10 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
 - Door sound (user: plays early): Door.open() plays 'doorOpen' itself, `floorArt.json door.anim.soundDelayMs` (480)
   after the door starts, on the scene clock, so the sound's loud hit (~200ms into the file) lands on the slam.
 - SCENE EVENTS (session 51): a scene's own `this.events` listeners survive scene.stop / restart in Phaser. Any `this.events.on(Phaser.Scenes.Events.X, fn)` added in create() must be removed on SHUTDOWN (`this.events.once(SHUTDOWN, () => this.events.off(X, fn))`), or it piles up per visit (Base, Pause, fight HUD RESUME did). Test `scene-listeners.test.mjs`.
+- HEROES PAGE v2 + GLOSSARY HERO ENTRY (session 57; user: 'reduce the glossary hero, remake the hero page: two
+  different pages'; 'banner, stats, armoury, not lore'). HeroesScene: from the camp = list -> hero page with the
+  hero's BANNER in the art box (`entities/heroBanner.js`, src/assets/banners/<id>.png 113x59 at 3x, packed ?inline)
+  + the look being tried + stats strip + ARMOURY (replaces LORE: CLASSIC + shop looks, tap = try on, this visit
+  only; wearing in fights still TODO) + STATS. From the Glossary = list -> `showEntry` (short page): style A kit /
+  B story (the lore lives here now) / C short (heroPage.json glossaryStyle; dev ?ghero=X). User picks on the
+  review page (db `banners` doc 'glossaryStyle').

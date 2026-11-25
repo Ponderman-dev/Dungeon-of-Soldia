@@ -458,7 +458,7 @@ export const motionMethods = {
     const lists = { caster: [caster], targets: L && L.targets === 'squad' ? squad : views(e.targets), squad, enemies: views(this.state.enemies.filter((u) => u.alive)), minions };
     const frozen = {}; // last known bodies, for fighters that are gone mid-effect
     const bodies = (k) => lists[k].map((v, i) => (v.ch.active ? (frozen[k + i] = this.fxBody(v)) : frozen[k + i] || this.fxBody(v)));
-    const area = L && (L.radius === 'area' ? L.area && L.area.radius : L.radius === 'landSplash' ? L.landSplash && L.landSplash.radius : L.radius === 'holyNova' ? L.holyNova && L.holyNova.radius : 0);
+    const area = L && (L.radius === 'area' ? (e.zone && e.zone.radius) || (L.area && L.area.radius) : /* the cast's real zone: a page can grow it (Iron Circle) */ L.radius === 'landSplash' ? L.landSplash && L.landSplash.radius : L.radius === 'holyNova' ? L.holyNova && L.holyNova.radius : 0);
     const enemyAim = () => { const en = bodies('enemies'); return en.length ? { x: en.reduce((s2, b) => s2 + b.x, 0) / en.length, y: en.reduce((s2, b) => s2 + b.mid, 0) / en.length } : null; };
     this.addFx(CAST_MS[name], (q, now) => {
       const c = { caster: bodies('caster')[0], targets: bodies('targets'), squad: bodies('squad'), enemies: bodies('enemies'), minions: bodies('minions'), hitMs: L ? L.hitMs || 0 : (DASH_BY_NAME[e.skill.name] || {}).inMs || 0 };

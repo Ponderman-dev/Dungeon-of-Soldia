@@ -192,6 +192,8 @@ export const skillsMethods = {
       events.push({ type: 'castCancel', unit: hero, skill, reason: 'noTarget' });
       return;
     }
+    // Long Reach (pullCount): the hook also catches the next farthest enemies.
+    if (skill.pullCount > 1 && targets[0]) targets = [...targets, ...this.targetableEnemies().filter((e) => !targets.includes(e)).sort((a, b) => this.distance(hero, b) - this.distance(hero, a)).slice(0, skill.pullCount - 1)];
     if (skill.chain && targets[0]) targets = this.chainOrder(targets[0]); // Chain Lightning: through ALL enemies, nearest next
     if (skill.chain && skill.chainJumps !== undefined) targets = targets.slice(0, 1 + skill.chainJumps); // ...or `chainJumps` jumps (v3)
     const splash = (hero.specials && hero.specials.skillSplash) || 0; // Siege Cannon: % chance to hit the neighbours too
@@ -293,7 +295,8 @@ export const skillsMethods = {
         for (const n of this.neighbours(target)) this.skillHit(hero, skill, slot.id, n, events, { multiplier: skill.splash.damageMultiplier, scale: echo ? echo.power : 1 });
       }
     }
-    if (skill.pull && targets[0]) this.pullTo(hero, targets[0], skill.pull, events); // Chain Hook: drag it over
+    // Chain Hook: drag it over (Long Reach page: every target, the next one a bit further back so they don't stack).
+    if (skill.pull) targets.slice(0, skill.pullCount || 1).forEach((t, i) => this.pullTo(hero, t, i ? { ...skill.pull, gapPx: skill.pull.gapPx + i * 30 } : skill.pull, events));
     if (skill.secondBand) targets = [...targets, ...this.secondBandHit(hero, skill, slot.id, zone, targets, events)]; // Twin Crescent page
     // Wind Cutter v3 (`killCooldownCutPercent`): if the cast killed an enemy, its cooldown is cut.
     if (skill.killCooldownCutPercent && !echo && targets.some((t) => !t.alive)) {

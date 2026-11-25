@@ -126,6 +126,9 @@ export const skillBooksMethods = {
       if (P.extraHeals && out.holyNova) out.holyNova = { ...out.holyNova, extraHeals: P.extraHeals };
       if (P.secondBand) out.secondBand = P.secondBand;
       if (P.convergeEvery) out.convergeEvery = P.convergeEvery;
+      if (P.pullCount && out.pull) out.pullCount = P.pullCount; // Long Reach (Warden): Chain Hook drags more enemies
+      if (P.areaRadiusPercent && out.area) out.area = { ...out.area, radius: out.area.radius * (1 + P.areaRadiusPercent / 100) }; // Iron Circle
+      if (P.addApply) out.apply = [...(out.apply || []), ...P.addApply]; // Cold Iron: extra statuses on every hit
     }
     return out;
   },

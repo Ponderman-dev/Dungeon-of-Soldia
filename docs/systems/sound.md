@@ -261,3 +261,6 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   loop in one file, -16 LUFS, limiter, MONO 56k: 4.2 MB for 6 songs) and loopStart / seconds into music.json.
   Decoded lengths in the browser match music.json exactly (LAME gapless info). The game page grew 2.5 -> 9 MB.
   Test: `music.test.mjs` (data complete, files used, rules, scenes call play / refresh).
+- WARDEN SOUNDS (the Bard's lute strums removed, files deleted): `skill_chain_hook` = the metal clank (`picked/block`)
+  pitched 1.25 (a chain biting), `skill_lockdown` = the iron gate slam (`picked/gateSlam`), `shackles` = Kenney metal
+  bell impacts pitched 1.7 when the 4th hit roots (a counter can name its own `sound`; events.js `beat`).

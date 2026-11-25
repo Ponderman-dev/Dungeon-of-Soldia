@@ -268,7 +268,7 @@ import { pageIconArt } from '../../src/systems/pageIcon.js';
   ok('...not the same hero\'s other skill', pageFit(h[0], 1, pageOf(data, 'shockwave')) === 'wrongSkill' && s.addPage(h[0].uid, 1, page('shockwave')).reason === 'wrongSkill');
   ok('...and not another hero', pageFit(h[1], 0, pageOf(data, 'shockwave')) === 'wrongSkill' && s.addPage(h[1].uid, 0, page('shockwave')).reason === 'wrongSkill');
   const heroPages = Object.entries(books).filter(([, p]) => p.tier === 'hero');
-  ok('every hero page names a hero and that hero\'s real skill', heroPages.length === 10 && heroPages.every(([, p]) => Object.values(heroes.find((x) => x.id === p.hero).skills).includes(p.skill)));
+  ok('every hero has a hero page, and each names a hero and that hero\'s real skill', heroes.every((x) => heroPages.some(([, p]) => p.hero === x.id)) && heroPages.every(([, p]) => Object.values(heroes.find((x) => x.id === p.hero).skills).includes(p.skill)));
   ok('...one page per hero', new Set(heroPages.map(([, p]) => p.hero)).size === heroes.length); }
 const heroWith = (id) => withPage(id, 0, [books[id].hero]);
 { const { s, es, h } = heroWith('shockwave'); s.placeLines(); s.castSkill(h[0].uid, 0);
@@ -329,3 +329,16 @@ import { bossNumber } from '../../src/systems/books.js';
   ok('...3rd and 4th: hero page chance grows', Math.abs(rates[2].H - table[2].hero) < 0.02 && Math.abs(rates[3].H - table[3].hero) < 0.02, `${rates[2].H} ${rates[3].H}`);
   ok('...later bosses keep the last entry', Math.abs(rates[4].H - table[table.length - 1].hero) < 0.02 && rates[4].L === 1);
   ok('a golden book without bossNo still uses specials.golden', Math.abs(rate(undefined).L - real.specials.golden.legendary) < 0.02); }
+// Warden hero pages: Long Reach (Chain Hook drags 2), Iron Circle (Lockdown reaches further), Cold Iron (Chain Hook chills).
+{ const { s, es, h } = withPage('longReach', 0, ['bard']); s.placeLines(); es.forEach((e, i) => { e.x = h[0].x; e.y = h[0].y - 120 - i * 90; });
+  const ev = s.castSkill(h[0].uid, 0); const pulled = ev.filter((e) => e.type === 'pull').map((e) => e.target);
+  ok(`Long Reach: Chain Hook drags ${books.longReach.patch.pullCount} enemies (the farthest ones)`, pulled.length === books.longReach.patch.pullCount && pulled.includes(es[2]) && pulled.includes(es[1]));
+  ok('...and stuns both', [es[1], es[2]].every((e) => s.has(e, 'stun'))); }
+// Iron Circle: enemies 190px to the side (a Lockdown also always gets its current target)
+{ const R = (m) => { m.s.placeLines(); const w = m.h[0]; m.es.forEach((e, i) => { e.x = w.x + (i % 2 ? -1 : 1) * 190; e.y = w.y; }); m.s.castSkill(w.uid, 1); return m.es.filter((e) => s2has(m.s, e)).length; };
+  const s2has = (st, e) => st.has(e, 'weaken');
+  const plain = R(mk(['bard'], 0)), paged = R(withPage('ironCircle', 1, ['bard']));
+  ok(`Iron Circle: Lockdown reaches ${books.ironCircle.patch.areaRadiusPercent}% further (enemies 190px to the side: more of them hit)`, paged > plain, `${plain} -> ${paged}`); }
+{ const { s, es, h } = withPage('coldIron', 0, ['bard']); s.placeLines(); s.castSkill(h[0].uid, 0);
+  const n = Math.max(...es.map((e) => e.statuses.filter((x) => x.type === 'chill').length));
+  ok(`Cold Iron: the hooked enemy gets ${books.coldIron.patch.addApply[0].stacks} Chill`, n === books.coldIron.patch.addApply[0].stacks, n); }

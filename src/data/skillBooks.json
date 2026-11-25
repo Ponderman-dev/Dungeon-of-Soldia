@@ -631,6 +631,48 @@
         }
       }
     },
+    "longReach": {
+      "kind": "modifier",
+      "tier": "hero",
+      "hero": "bard",
+      "skill": "chain_hook",
+      "tag": "Control",
+      "name": "Long Reach",
+      "text": "Chain Hook hooks and drags 2 enemies.",
+      "patch": {
+        "pullCount": 2
+      }
+    },
+    "ironCircle": {
+      "kind": "modifier",
+      "tier": "hero",
+      "hero": "bard",
+      "skill": "lockdown",
+      "tag": "Control",
+      "name": "Iron Circle",
+      "text": "Lockdown reaches 50% further.",
+      "patch": {
+        "areaRadiusPercent": 50
+      }
+    },
+    "coldIron": {
+      "kind": "modifier",
+      "tier": "hero",
+      "hero": "bard",
+      "skill": "chain_hook",
+      "tag": "Control",
+      "name": "Cold Iron",
+      "text": "Chain Hook also gives 3 CHILL.",
+      "patch": {
+        "addApply": [
+          {
+            "status": "chill",
+            "stacks": 3,
+            "durationMs": 4000
+          }
+        ]
+      }
+    },
     "bigBatch": {
       "kind": "modifier",
       "tier": "hero",

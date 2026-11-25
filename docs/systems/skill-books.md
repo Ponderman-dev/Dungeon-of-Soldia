@@ -75,3 +75,8 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   carries `bossNo` (results.js `bossNumber(dungeon, floor)` from books.js); `rollBookPages(..., { bossNo })`; without
   bossNo the old `specials.golden` is used (older bots: review, rankitems, pageruns). smartbot passes bossNo.
   Smart curve median 39 (was 40, noise). Tests: skill-books.test.mjs last block, rooms.test.mjs dealer count.
+- **WARDEN HERO PAGES (the Warden replaced the Bard; Mass Charm -> Heavy Chains):** Heavy Chains (Chain Hook stun +1s,
+  `applyDurationAdd`), Long Reach (Chain Hook `pullCount` 2: the next farthest enemy is hooked too, pulled 30px further
+  back; `releaseSkill`), Iron Circle (Lockdown `areaRadiusPercent` 50: `area.radius` x1.5; the look's ring reads the
+  cast's real zone), Cold Iron (Chain Hook `addApply` 3 Chill 4s: a generic patch, adds statuses to every hit). He is
+  the only hero with 4 hero pages. Tests: skill-books.test.mjs (last block).

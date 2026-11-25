@@ -10,7 +10,7 @@ import unlocks from '../data/unlocks.json';
 import dungeons from '../data/dungeons.json';
 import shop from '../data/shop.json';
 import { lookDef } from '../systems/looks.js';
-import { heroBanner, hasBanner } from '../entities/heroBanner.js';
+import { heroPage, glossaryPage } from './heroes/heroPages.js';
 import { perkMods } from '../systems/party.js';
 import { loadProgress, isUnlocked, requirementProgress, describeRequirement } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
@@ -30,10 +30,10 @@ const STAT_SHORT = { attack: 'ATK', health: 'HP', defense: 'DEF', resist: 'RES',
 const num = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 const hex = (c) => '#' + c.toString(16).padStart(6, '0');
 const perkText = (def) => perkMods({ def, level: 1 }).map((m) => `${m.percent !== undefined ? `+${m.percent}%` : `+${m.flat}`} ${STAT_SHORT[m.stat] || ({ skillDamage: 'skill damage', regen: 'health/s', dotDamage: 'damage over time' })[m.special] || m.special}`).join(', ');
-// The Glossary entry style being picked (A / B / C): heroPage.json, or the dev url flag ?ghero=X.
-const glossaryStyle = () => {
-  try { if (import.meta.env.DEV) { const q = new URLSearchParams(window.location.search).get('ghero'); if (q) return q.toUpperCase(); } } catch { /* no url */ }
-  return D.glossaryStyle || 'A';
+// The page style being picked: heroPage.json, or a dev url flag (?hpage=N / ?ghero=X) for the screenshots.
+const pageStyle = (flag, fallback) => {
+  try { if (import.meta.env.DEV) { const q = new URLSearchParams(window.location.search).get(flag); if (q) return isNaN(Number(q)) ? q : Number(q); } } catch { /* no url */ }
+  return fallback;
 };
 
 export default class HeroesScene extends Phaser.Scene {
@@ -128,45 +128,18 @@ export default class HeroesScene extends Phaser.Scene {
 
   // ---- HERO PAGE (pick C) --------------------------------------------------------------------------
 
+  // The hero page: one of the 5 styles (heroes/heroPages.js; heroPage.json heroPageStyle, dev ?hpage=N).
   showHero(def) {
-    const page = this.newPage(), C = L.card, x = L.side, y = C.y, h = C.artH + C.floorH, cx = GAME_WIDTH / 2;
-    this.top(page, '< BACK', null, () => this.showList());
-    // One gold card: the art box on top (the user's own pixel art comes later), the dungeon floor under it.
-    page.add(drawWindow(this.add.graphics(), x, y, W, h, { line: gold(), fill: 0x14141c }));
-    // The banner, at a whole-number scale, centred in the box (heroPage.json banner).
-    const Bn = L.banner, bw0 = Bn.w * Bn.scale, bh0 = Bn.h * Bn.scale;
-    if (hasBanner(def.id)) page.add(heroBanner(this, def.id, Math.round(cx - Math.min(bw0, W - 4) / 2), y + Math.round((C.artH - bh0) / 2) + 1, Bn.scale, W - 4, C.artH - 2));
-    else this.text(page, cx, y + C.artH / 2, 'YOUR PIXEL ART', 'normal', UI.dim).setOrigin(0.5);
-    const fy = y + C.artH;
-    page.add(floorCrop(this, dungeons.A.tileColors[0], 200, x + 2, fy, W - 4, C.floorH - 2));
-    page.add(this.add.graphics().fillStyle(gold(), 1).fillRect(x + 2, fy, W - 4, 2));
-    // Name in a window, role in gold under it.
-    const name = this.text(page, cx, fy + C.nameY + 22, def.name.toUpperCase(), 'big').setOrigin(0.5);
-    const nw = name.width + 40;
-    page.addAt(drawWindow(this.add.graphics(), cx - nw / 2, fy + C.nameY, nw, 44), page.list.indexOf(name));
-    this.text(page, cx, fy + C.roleY + 10, (def.role || '').toUpperCase(), 'normal', UI.gold, { stroke: '#000000', strokeThickness: 4 }).setOrigin(0.5);
-    page.add(this.add.ellipse(cx, fy + C.feetDy, 90, 14, 0x000000, 0.35));
-    const looks = this.looksOf(def), wearing = looks.find((l) => l.id === this.tryOn[def.id]) || looks[0];
-    this.hero(page, def, cx, fy + C.feetDy, C.heroScale, false, wearing.look);
-    // The look being tried (ARMOURY): its name, one dot per look (gold = this one).
-    const look = this.text(page, cx, fy + C.lookY + 18, wearing.name.toUpperCase(), 'normal').setOrigin(0.5);
-    const lw = look.width + 32;
-    page.addAt(drawWindow(this.add.graphics(), cx - lw / 2, fy + C.lookY, lw, 36), page.list.indexOf(look));
-    const dots = this.add.graphics();
-    looks.forEach((l, i) => dots.fillStyle(l === wearing ? gold() : DIM, 1).fillRect(Math.round(cx - looks.length * 6 + i * 12 + 3), fy + C.lookY + 44, 6, 6));
-    page.add(dots);
-    // HP / ATK / DEF / RES strip.
-    const S = L.strip, st = def.stats;
-    page.add(drawWindow(this.add.graphics(), x, S.y, W, S.h));
-    [['HP', st.health], ['ATK', st.attack], ['DEF', st.defense], ['RES', st.resist]].forEach(([k, v], i) => {
-      const sx = x + L.pad + (i * (W - L.pad * 2)) / 4;
-      const a = this.text(page, sx, S.y + S.h / 2, k, 'small').setOrigin(0, 0.5);
-      this.text(page, sx + a.width + 8, S.y + S.h / 2, String(v), 'small', UI.gold).setOrigin(0, 0.5);
-    });
-    const B = L.buttons, bw = (W - B.gap) / 2;
-    this.button(page, x, B.y, bw, B.h, 'ARMOURY', () => { sfx.play('tap'); this.showArmoury(def); }, 'solid');
-    this.button(page, x + bw + B.gap, B.y, bw, B.h, 'STATS', () => { sfx.play('tap'); this.showStats(def, 'records'); }, 'solid');
+    heroPage(this, def, pageStyle('hpage', D.heroPageStyle || 1));
   }
+
+  // The look `def` is trying on (ARMOURY), CLASSIC by default.
+  wearing(def) {
+    const looks = this.looksOf(def);
+    return looks.find((l) => l.id === this.tryOn[def.id]) || looks[0];
+  }
+
+  perkText(def) { return perkText(def); }
 
   // ---- ARMOURY (looks) ---------------------------------------------------------------------------
 
@@ -182,7 +155,7 @@ export default class HeroesScene extends Phaser.Scene {
   showArmoury(def) {
     const page = this.newPage(), A = L.armoury, x = L.side, cx = GAME_WIDTH / 2;
     this.top(page, '< BACK', 'ARMOURY', () => this.showHero(def));
-    const looks = this.looksOf(def), wearing = looks.find((l) => l.id === this.tryOn[def.id]) || looks[0];
+    const looks = this.looksOf(def), wearing = this.wearing(def);
     page.add(drawWindow(this.add.graphics(), x, A.y, W, A.stageH, { line: gold(), fill: 0x14141c }));
     page.add(floorCrop(this, dungeons.A.tileColors[0], 200, x + 2, A.y + 2, W - 4, A.stageH - 4));
     page.add(this.add.ellipse(cx, A.y + A.feetDy, 80, 12, 0x000000, 0.35));
@@ -205,55 +178,10 @@ export default class HeroesScene extends Phaser.Scene {
     this.text(page, cx, ny, looks.length > 1 ? D.armoury.note : D.armoury.noneYet, 'small', UI.dim, { wordWrap: { width: W }, align: 'center' }).setOrigin(0.5, 0);
   }
 
-  // ---- GLOSSARY ENTRY (the short page, opened from the Glossary) ------------------------------------
+  // ---- GLOSSARY ENTRY (the short page, opened from the Glossary): one of 6 styles (heroes/heroPages.js) ------
 
-  // Hero on a floor strip, name + role beside it. Returns the y under it.
-  entryHead(page, def, y) {
-    const E = L.entry, x = L.side;
-    page.add(drawWindow(this.add.graphics(), x, y, W, E.headH, { line: gold(), fill: 0x14141c }));
-    page.add(floorCrop(this, dungeons.A.tileColors[0], 200, x + 2, y + 2, E.stageW, E.headH - 4));
-    page.add(this.add.ellipse(x + 2 + E.stageW / 2, y + E.headH - 18, 50, 9, 0x000000, 0.35));
-    this.hero(page, def, x + 2 + E.stageW / 2, y + E.headH - 18, E.heroScale);
-    const tx = x + E.stageW + 18;
-    this.text(page, tx, y + 22, def.name.toUpperCase(), 'big');
-    this.text(page, tx, y + 64, (def.role || '').toUpperCase(), 'normal', UI.gold);
-    const st = def.stats;
-    this.text(page, tx, y + 98, `HP ${st.health}  ATK ${st.attack}\nDEF ${st.defense}  RES ${st.resist}`, 'small', UI.text, { lineSpacing: 8 });
-    return y + E.headH + L.kit.gap;
-  }
-
-  // A window with a coloured title and wrapped text. Returns the y under it.
-  entryBox(page, y, title, body, color) {
-    const x = L.side, P = L.pad;
-    const t = this.text(page, x + P, y + P + 28, body, 'small', UI.text, { wordWrap: { width: W - P * 2 }, lineSpacing: 7 });
-    const h = t.height + P * 2 + 28;
-    page.addAt(drawWindow(this.add.graphics(), x, y, W, h), page.list.indexOf(t));
-    this.text(page, x + P, y + P, title, 'normal', color);
-    return y + h + L.kit.gap;
-  }
-
-  // Style A = KIT (skills, perk, passive), B = STORY (lore + how it fights), C = SHORT (how it fights + skill names).
   showEntry(def) {
-    const page = this.newPage();
-    this.top(page, '< BACK', null, () => this.showList());
-    const style = glossaryStyle();
-    let y = this.entryHead(page, def, L.entry.y);
-    const atk = skills[def.skills.attack], sup = skills[def.skills.support];
-    if (style === 'B') {
-      y = this.entryBox(page, y, 'STORY', D.lore[def.id] || '???', UI.gold);
-      if (def.summary) y = this.entryBox(page, y, 'IN A FIGHT', def.summary, UI.text);
-      if (def.tips && def.tips.length) this.entryBox(page, y, 'TIP', def.tips[0], UI.text);
-    } else if (style === 'C') {
-      if (def.summary) y = this.entryBox(page, y, 'IN A FIGHT', def.summary, UI.text);
-      const line = (k, v) => `${k}: ${v}`;
-      this.entryBox(page, y, 'KIT', [line('ATTACK', `${atk.name} (${atk.cooldownMs / 1000}s)`), line('SUPPORT', `${sup.name} (${sup.cooldownMs / 1000}s)`),
-        line('PERK', def.perk.name), line('PASSIVE', def.passive.name)].join('\n'), UI.gold);
-    } else {
-      y = this.entryBox(page, y, `ATTACK - ${atk.name.toUpperCase()}`, `Every ${atk.cooldownMs / 1000}s. ${atk.description}`, hex(SKILL_COLORS.attack.ready + 0x303030));
-      y = this.entryBox(page, y, `SUPPORT - ${sup.name.toUpperCase()}`, `Every ${sup.cooldownMs / 1000}s. ${sup.description}`, UI.green);
-      y = this.entryBox(page, y, `PERK - ${def.perk.name.toUpperCase()}`, `Whole squad: ${perkText(def)}.`, UI.gold);
-      this.entryBox(page, y, `PASSIVE - ${def.passive.name.toUpperCase()}`, def.passive.description, UI.text);
-    }
+    glossaryPage(this, def, String(pageStyle('ghero', D.glossaryStyle || 'A')).toUpperCase());
   }
 
   // ---- STATS: RECORDS / KIT ------------------------------------------------------------------------

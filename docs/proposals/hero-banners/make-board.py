@@ -1,7 +1,8 @@
 # HERO BANNERS pick page (session 57). Each card = the REAL hero page (game screenshot) with its proposed banner pasted
 # into the 'YOUR PIXEL ART' box, the lore line it is drawn from, LOVE / MAYBE / NO + a note.
 # Picks: db collection 'banners' on the reused review page (doc id = hero id: {key, verdict, note}).
-# + (session 57, second round) a PAGES section on top: the new Heroes page + Armoury (look only) and the 3 Glossary
+# + (session 57) PAGES sections on top: 5 hero page styles + 6 Glossary entry styles (pick ONE each: db docs
+#   'heroPageStyle' / 'glossaryStyle' {choice}); old note:: the new Heroes page + Armoury (look only) and the 3 Glossary
 #   entry styles A / B / C (pick ONE: db doc 'glossaryStyle' {choice}). Shots from the dev server (?ghero=X).
 # Usage: python3 make-board.py <mock dir> <out dir> [<page shots dir>]
 import sys, os, json, shutil, html
@@ -25,13 +26,28 @@ cards = []
 for h in heroes:
     shutil.copy(os.path.join(MOCK, h['id'] + '.png'), os.path.join(OUT, 'b', h['id'] + '.png'))
     cards.append({'id': h['id'], 'name': h['name'], 'scene': SCENE[h['id']], 'lore': lore.get(h['id'], '')})
-PAGES = []
+PAGES = []   # [group id, title, help, [options]]; each option = {id, name, text, shots}
 if SHOTS:
-    for f in ['n_hero_knight', 'n_hero_necro', 'n_armoury_knight2'] + [f'n_entry_{st}_{h}' for st in 'ABC' for h in ('knight', 'necro')]:
-        shutil.copy(os.path.join(SHOTS, f + '.png'), os.path.join(OUT, 'b', f + '.png'))
-    PAGES = [{'id': 'A', 'name': 'A. KIT', 'text': 'Skills, perk and passive in full. No story.'},
-             {'id': 'B', 'name': 'B. STORY', 'text': 'The lore, how the hero fights, and a tip. Skills not listed.'},
-             {'id': 'C', 'name': 'C. SHORT', 'text': 'How the hero fights in one line, plus the skill names and cooldowns.'}]
+    HP = [('1', '1. CLASSIC+', 'Banner, the hero big with name + role, a stat grid, ARMOURY / KIT buttons, how the hero fights.'),
+          ('2', '2. STAT BARS', 'Banner, the hero, every stat as a bar (compared with the best hero), ARMOURY / KIT buttons.'),
+          ('3', '3. SIDE BY SIDE', 'Banner; hero left, name + type + every stat right; the looks right on the page; KIT button.'),
+          ('4', '4. BANNER BACKDROP', 'The hero stands in front of the banner; stat grid; the looks on the page; KIT button.'),
+          ('5', '5. TABS', 'Banner + name, then STATS (open first) / ARMOURY / KIT tabs.')]
+    GL = [('A', 'A. KIT', 'Hero + stats, then every skill, perk and passive in full with icons.'),
+          ('B', 'B. STORY', 'Small banner, the lore, stats, how the hero fights, a tip.'),
+          ('C', 'C. SHORT', 'Hero + stats, how the hero fights, the kit one line each with icons.'),
+          ('D', 'D. SHEET', 'Name, hero, stat bars, the kit one line each.'),
+          ('E', 'E. TABS', 'Hero, then OVERVIEW (stat bars, how it fights, tip) / SKILLS / STORY tabs.'),
+          ('F', 'F. CARD', 'The hero big, a short intro, stats, the kit one line each.')]
+    def grp(gid, title, help, opts, pre):
+        out = []
+        for oid, name, text in opts:
+            shots = [f'{pre}{oid}_knight', f'{pre}{oid}_necro']
+            for sh in shots: shutil.copy(os.path.join(SHOTS, sh + '.png'), os.path.join(OUT, 'b', sh + '.png'))
+            out.append({'id': oid, 'name': name, 'text': text, 'shots': shots})
+        return [gid, title, help, out]
+    PAGES = [grp('heroPageStyle', '1. Hero page (camp > HEROES): pick ONE', 'Stats are on the page in every style. Name and role now have a gap.', HP, 'h'),
+             grp('glossaryStyle', '2. Glossary > HEROES: pick ONE', 'The shorter page the Glossary opens.', GL, 'g')]
 T = r'''<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Soldia Hero Banners</title>
@@ -65,7 +81,7 @@ textarea{width:100%;min-height:56px;font:16px system-ui;background:#14121c;color
 .opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px}
 </style></head><body>
 <header><h1>Heroes pages + banners</h1>
-<p class="lede">Your new Heroes page is in the game. Pick how the <b>Glossary</b> shows a hero (section 2). One pixel banner per hero, drawn from their lore. Each sits in the <b>YOUR PIXEL ART</b> box on the real hero page (113×59 pixels, shown 3× like the heroes). Mark each <b>LOVE / MAYBE / NO</b> and add a note if you want a change (other scene, colours, more detail…).</p>
+<p class="lede">Pick ONE style for the hero page (section 1) and ONE for the Glossary hero (section 2): each shows the Knight and the Necromage. One pixel banner per hero, drawn from their lore. Each sits in the <b>YOUR PIXEL ART</b> box on the real hero page (113×59 pixels, shown 3× like the heroes). Mark each <b>LOVE / MAYBE / NO</b> and add a note if you want a change (other scene, colours, more detail…).</p>
 <p id="st">Connecting…</p></header>
 <section id="pages"></section>
 <main id="grid"></main>
@@ -82,13 +98,10 @@ grid.innerHTML = CARDS.map((c) => `<article class="card" id="c-${c.id}">
   <textarea data-note="${c.id}" placeholder="Note for ${esc(c.name)}…" aria-label="Note for ${esc(c.name)}"></textarea></article>`).join('')
   + `<article class="card general"><h2>ANYTHING ELSE</h2><p>About the whole set: style, size, lore page ideas…</p><textarea data-note="general" aria-label="General note"></textarea></article>`;
 const pg = document.getElementById('pages');
-if (PAGES.length) pg.innerHTML = `<h2 class="sec">1. Your new Heroes page (from the camp)</h2>
-  <article class="card"><p>Banner on top, the hero, stats, then <b>ARMOURY</b> (where LORE was) and <b>STATS</b>. Armoury = the hero's looks: tap one to try it on. This is already in the game.</p>
-  <div class="shots"><img src="b/n_hero_knight.png" alt="Knight hero page"><img src="b/n_hero_necro.png" alt="Necromage hero page"><img src="b/n_armoury_knight2.png" alt="Armoury, trying on Ember"></div></article>
-  <h2 class="sec">2. Glossary hero entry: pick ONE</h2><div class="opts">` + PAGES.map((o) => `<article class="card" id="g-${o.id}"><h2>${esc(o.name)}</h2><p>${esc(o.text)}</p>
-  <div class="shots"><img src="b/n_entry_${o.id}_knight.png" alt="${esc(o.name)} knight"><img src="b/n_entry_${o.id}_necro.png" alt="${esc(o.name)} necromage"></div>
-  <div class="picks"><button type="button" data-g="${o.id}">PICK ${o.id}</button></div></article>`).join('') + `</div><h2 class="sec">3. Banners (already in the game: mark any to change)</h2>`;
-pg.addEventListener('click', (e) => { const b = e.target.closest('button[data-g]'); if (b) save('glossaryStyle', { choice: b.dataset.g }); });
+pg.innerHTML = PAGES.map(([gid, title, help, opts]) => `<h2 class="sec">${esc(title)}</h2><p class="lede">${esc(help)}</p><div class="opts">` + opts.map((o) => `<article class="card" id="g-${gid}-${o.id}"><h2>${esc(o.name)}</h2><p>${esc(o.text)}</p>
+  <div class="shots">${o.shots.map((f) => `<img src="b/${f}.png" alt="${esc(o.name)}" width="390" height="844">`).join('')}</div>
+  <div class="picks"><button type="button" data-gid="${gid}" data-g="${o.id}">PICK ${esc(o.id)}</button></div></article>`).join('') + '</div>').join('') + (PAGES.length ? '<h2 class="sec">3. Banners (already in the game: mark any to change)</h2>' : '');
+pg.addEventListener('click', (e) => { const b = e.target.closest('button[data-g]'); if (b) save(b.dataset.gid, { choice: b.dataset.g }); });
 let db = null; const state = {};
 function paint() {
   for (const c of CARDS) {
@@ -96,8 +109,7 @@ function paint() {
     el.classList.toggle('love', v === 'love'); el.classList.toggle('no', v === 'no');
     el.querySelectorAll('.picks button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
   }
-  const ch = (state.glossaryStyle || {}).choice;
-  PAGES.forEach((o) => { const el = document.getElementById('g-' + o.id); el.classList.toggle('love', ch === o.id); el.querySelector('button').classList.toggle('on', ch === o.id); });
+  for (const [gid, , , opts] of PAGES) { const ch = (state[gid] || {}).choice; opts.forEach((o) => { const el = document.getElementById(`g-${gid}-${o.id}`); el.classList.toggle('love', ch === o.id); el.querySelector('button').classList.toggle('on', ch === o.id); }); }
   document.querySelectorAll('textarea').forEach((t) => { if (document.activeElement !== t) t.value = (state[t.dataset.note] || {}).note || ''; });
 }
 async function save(id, patch) {

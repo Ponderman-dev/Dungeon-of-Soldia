@@ -1,12 +1,14 @@
 {
-  "_about": "Heroes button (HeroesScene, user's pick C: docs/proposals/menu/hero-page-variations.png right + glossary-heroes-spaced.png). LIST = 2-column grid (locked = shadow, short goal, progress bar). HERO PAGE = card: the hero's BANNER on top (session 57; banner = 113x59 art px at `scale`, src/assets/banners), the hero big on the dungeon floor with name + role, the look name (looks = skins, one 'CLASSIC' each for now) + dots, HP/ATK/DEF/RES strip, ARMOURY (looks: CLASSIC + shop looks, tap = try on; session 57 replaced LORE) and STATS. GLOSSARY ENTRY (entry layout) = the short page the Glossary's HEROES chapter opens; glossaryStyle = A kit / B story / C short (user picking). STATS = RECORDS (this hero's runs, kept from session 37 on) / KIT (skills, perk, passive). lore = 2-3 lines per hero (draft, user to review). shortGoals = the unlock goal in a list tile. shortNames = names too long for a list tile.",
+  "_about": "Heroes button (HeroesScene, user's pick C: docs/proposals/menu/hero-page-variations.png right + glossary-heroes-spaced.png). LIST = 2-column grid (locked = shadow, short goal, progress bar). HERO PAGE = card: the hero's BANNER on top (session 57; banner = 113x59 art px at `scale`, src/assets/banners), the hero big on the dungeon floor with name + role, the look name (looks = skins, one 'CLASSIC' each for now) + dots, HP/ATK/DEF/RES strip, ARMOURY (looks: CLASSIC + shop looks, tap = try on; session 57 replaced LORE) and STATS. GLOSSARY ENTRY (entry layout) = the short page the Glossary's HEROES chapter opens; glossaryStyle = A kit / B story / C short (user picking). STATS = RECORDS (this hero's runs, kept from session 37 on) / KIT (skills, perk, passive). lore = 2-3 lines per hero (draft, user to review). shortGoals = the unlock goal in a list tile. shortNames = names too long for a list tile. heroPageStyle (1-5) / glossaryStyle (A-F) = the page styles drawn by scenes/heroes/heroPages.js (session 57: user picking).",
   "lookName": "CLASSIC",
+  "heroPageStyle": 1,
   "glossaryStyle": "A",
   "armoury": {
     "owned": "OWNED",
     "currency": "GEMS",
     "note": "Tap a look to try it on. Buy looks in the SHOP.",
-    "noneYet": "More looks are coming. Looks never change stats."
+    "noneYet": "More looks are coming. Looks never change stats.",
+    "soon": "More looks coming"
   },
   "shortNames": {
     "necromancer": "NECRO"

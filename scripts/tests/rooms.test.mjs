@@ -38,7 +38,7 @@ ok('never two rooms in a row', roomForFloor(rooms, dungeon, 6, 'treasure', alway
   const s = mk(); const t = {}; for (let i = 0; i < 300; i++) for (const it of rollChoices({ itemDefs, rules: rw, floor: 10, count: 3, heroes: s.heroes, odds: rooms.kinds.mimic.rewardOdds })) t[it.rarity] = 1;
   ok('Mimic prize: only rare and epic', Object.keys(t).sort().join() === 'epic,rare', Object.keys(t).join()); }
 
-// Dealer: contents.dealer different pages (session 46: 1 stat + 2 modifier)
+// Dealer: contents.dealer different pages (session 59: 1 stat + 3 modifier)
 { const b = r('skillBooks.json'), want = b.contents.dealer, n = want.stat + want.modifier; let bad = 0; for (let i = 0; i < 200; i++) { const p = rollBookPages(b, 'dealer'); if (p.length !== n || new Set(p.map((x) => x.id)).size !== n || p.filter((x) => x.kind === 'stat').length !== want.stat) bad++; }
   ok(`dealer offers ${n} different pages`, bad === 0); }
 

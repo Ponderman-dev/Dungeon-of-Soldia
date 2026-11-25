@@ -229,7 +229,7 @@ export const roomMethods = {
     });
   },
 
-  // The dealer opens a book of 3 pages (skillBooks.json contents.dealer: 1 stat + 2 modifier).
+  // The dealer opens a book of 4 pages (skillBooks.json contents.dealer: 1 stat + 3 modifier, user session 59).
   visitDealer(after) {
     if (!this.state.heroes.some((h) => h.alive)) return after();
     this.openRewardSheet([bookData.cards.dealer], after, 'THE SKILL DEALER');

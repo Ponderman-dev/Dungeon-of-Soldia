@@ -903,7 +903,7 @@
       "type": "book",
       "rarity": "epic",
       "name": "Skill Dealer",
-      "description": "Choose 1 of 3 pages and put it on one hero's skill for the rest of the run."
+      "description": "Choose 1 of 4 pages and put it on one hero's skill for the rest of the run."
     }
   },
   "contents": {
@@ -917,7 +917,7 @@
     },
     "dealer": {
       "stat": 1,
-      "modifier": 2
+      "modifier": 3
     }
   }
 }

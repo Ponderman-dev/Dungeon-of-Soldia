@@ -5,7 +5,7 @@
 export const pageOf = (data, id) => ({ id, ...data.pages[id] });
 
 // The pages a book shows: `contents[book]` says how many stat and modifier pages (blue: 2 stat + 1 modifier,
-// golden: 3 modifiers, dealer: 2 + 3). No page twice in one book. Each modifier page rolls its TIER from
+// golden: 3 modifiers, dealer: 1 + 3). No page twice in one book. Each modifier page rolls its TIER from
 // `tierOdds[book]`; then `specials[book]` may upgrade one modifier page to a legendary and (rolled separately) another
 // to a hero-only page. Hero pages only for `heroIds` (the living squad). An empty tier falls back to the next lower one.
 const TIER_ORDER = ['common', 'rare', 'legendary', 'hero'];

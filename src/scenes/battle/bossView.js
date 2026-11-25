@@ -196,7 +196,7 @@ export const bossViewMethods = {
           if (at) this.addFx(bossFx.PLATE_BREAK_MS, (q) => bossFx.plateBreakFx(q, at), ['boss', 'plateBreak']); }
         this.cameras.main.shake(140, 0.004);
         return true;
-      case 'immuneStatus': if (v) this.popText(v, 'Immune', '#aaaaaa'); return true;
+      case 'immuneStatus': if (v) this.popText(v, e.resist ? 'Resist' : 'Immune', '#aaaaaa'); return true; // resist = a boss's break-free time
       case 'enrage':
         if (!v) return true;
         v.ch.flash(0xff2a2a, 300);

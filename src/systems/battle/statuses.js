@@ -60,6 +60,20 @@ export const statusesMethods = {
       events.push({ type: 'immuneStatus', unit: target, status: spec.status }); // Frost Warden: no Chill / Freeze
       return;
     }
+    // BREAK-FREE (user, session 59: bosses got frozen / stunned again and again): a boss that was stunned or frozen
+    // cannot be stunned or frozen again until combat.json bossBreakFree.ms after it ended (its own moves on itself
+    // still work). 'Resist' pops once per window.
+    const BF = this.rules.bossBreakFree;
+    if (BF && target.def.boss && source !== target && BF.statuses.includes(spec.status)) {
+      const now = this.floorMs || 0;
+      if (now < (target.breakFreeUntil ?? -Infinity)) {
+        if (!target.resistShown) events.push({ type: 'immuneStatus', unit: target, status: spec.status, resist: true });
+        target.resistShown = true;
+        return;
+      }
+      target.breakFreeUntil = now + (spec.durationMs ?? info.durationMs ?? 0) * (target.def.statusDurationScale ?? 1) + BF.ms;
+      target.resistShown = false;
+    }
     if (target.def.heat) this.heatFromStatus(target, spec.status, events);
     if (info.debuff && target.side === 'enemy' && source && source.side === 'hero') (target.debuffedBy = target.debuffedBy || new Set()).add(source.uid); // who has debuffed it (Dirty Fighting)
     if (target.streak && ['stun', 'freeze', 'fear'].includes(spec.status)) target.streak = { uid: null, count: 0 }; // Brawler's Streak combo is lost

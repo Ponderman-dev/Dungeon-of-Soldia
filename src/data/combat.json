@@ -101,6 +101,14 @@
     "_about": "Soul Lantern: every `every` squad kills (from pick-up) each lantern gives +1% health, attack, attack speed and +1 flat defense.",
     "every": 7
   },
+  "bossBreakFree": {
+    "_about": "Bosses (session 59, user: no perma-freeze / perma-stun): after a stun or freeze on a boss ENDS, the boss cannot be stunned or frozen again for `ms` (a 'Resist' pops). The window is counted from when the control was put on: its duration (already halved by the boss's statusDurationScale) + ms. A boss's own moves on itself are never blocked.",
+    "statuses": [
+      "stun",
+      "freeze"
+    ],
+    "ms": 3000
+  },
   "minions": {
     "_about": "Minion rules (D4b). upkeep: while a hero's MINION ITEMS have live minions the holder pays this per minion item (percent of the level stat, like item effects; hero passives like the Necromancer's skeletons cost nothing). revivalFloors: a dead greater minion comes back after this many floors are cleared. copyStatBonus: each extra copy of a greater-minion item adds this share of its health and attack (no second minion). itemWeakCap: the shared cap of weak minions from a hero's items. upkeepWeakScale: weak spawner items cost this much of the full upkeep (greater = full). rangedTargetWeight: in an enemy's random target pick a RANGED minion counts as this much of a normal target (user: half as often). Boosters (Bone Charm, Overseer's Whistle, Grave Dust, Necro Crown) cost nothing and reach every minion.",
     "upkeepAttackSpeedPercent": -12,

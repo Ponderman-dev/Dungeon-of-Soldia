@@ -34,7 +34,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       (`applyStatus()`). Hero page `heavyChains` (Chain Hook stun +1s) replaced `massCharm`. Old Bard kit frozen in
       `scripts/tests/fixtures/bard-v3-kit.json` (`bardV3()` in util.mjs); its code (songs, lute, hymn, charm) stays.
       Stats 140 health / 18 attack / 10 defense / 8 resist. TUNED (review.mjs 4 all x2): first try ~24.9 (last) ->
-      ~29.0 (mean ~29.9, middle of the pack). Tests `warden.test.mjs`. LOOK (first draft, drawn in code, user can refine in the Studio): hooded jailer, iron shoulders, leather jerkin with
+      ~29.0 (mean ~29.9, middle of the pack). Tests `warden.test.mjs`. Menu colour iron grey 0x9aa0ac. KIV (user): his shop skin is still the Bard's "Jester" (shop.json), redo it when the shop is worked on. LOOK (first draft, drawn in code, user can refine in the Studio): hooded jailer, iron shoulders, leather jerkin with
       a chain across it, gold keys at the belt; WEAPON = a chain hook held UP like a sword (user: 'up from the start'),
       point facing out, drawn with 2-px lines (1-px lines lose pixels when the weapon turns). Height 24. SHACKLES CHARGED (3rd hit landed): no glow; the counter's `readyLook` (liftPx 13,
       outPx 1.5, bob 1px, no turn; user: 'like he is extending his arm') makes the hook rise high, ready (`Character.setWeaponReady()`, set in hud.js `drawChips()`). Skill effects still borrowed (Chain Hook = shieldBash, Lockdown = challenge).

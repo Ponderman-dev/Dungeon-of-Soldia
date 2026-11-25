@@ -1,9 +1,11 @@
 {
   "_about": "Heroes button (HeroesScene + scenes/heroes/heroPages.js). LIST = 2-column grid (locked = shadow, short goal, progress bar). From the camp, a hero opens the HERO PAGE (session 57, user's pick 4 of 5): the hero standing in front of their BANNER (113x59 art px at layout.banner.scale, src/assets/banners), name + role, the player's RECORDS with this hero (runs, best floor, kills, deaths, damage, healing: progress.stats.heroRecords; user: 'not the hero stats, the playtime stats'), the LOOKS row (CLASSIC + shop looks, tap = try on, this visit only; wearing in fights still TODO), HERO DETAILS = the glossary card. From the Glossary, a hero opens the CARD (pick F of 6): hero, name + role/type, summary, HP/ATK/DEF/RES/CRIT/DODGE/SPEED, the kit one line each with icons. lore = 2-3 lines per hero (draft; not shown right now). shortGoals = the unlock goal in a list tile. shortNames = names too long for a list tile.",
   "lookName": "CLASSIC",
-  "recordsTitle": "YOUR RECORDS WITH THIS HERO",
-  "armouryTitle": "LOOKS (TAP TO TRY ON)",
+  "recordsTitle": "YOUR RECORDS",
+  "armouryTitle": "LOOKS - TAP TO TRY ON",
   "detailsButton": "HERO DETAILS",
+  "storyTitle": "STORY",
+  "statsTitle": "STATS",
   "armoury": {
     "owned": "OWNED",
     "currency": "GEMS",
@@ -21,16 +23,16 @@
     "runs": "{value} runs"
   },
   "lore": {
-    "knight": "Once the captain of Soldia's gate. When the gate fell to the things below, the Knight walked down into the dark to finish the fight in person.",
-    "berserker": "Thrown out of three war camps for starting fights. The dungeon is the first place that never asks for calm.",
-    "rogue": "Stole one coin too many from the wrong lord. Down here nobody checks a purse, and the treasure has no owners left.",
-    "archer": "A hunter from the forest around the tower. When the beasts of the woods began crawling out of the dungeon, the hunt moved underground.",
-    "samurai": "A wandering blade bound by an old master's last order: one perfect cut, at the bottom of the deepest dungeon.",
-    "mage": "Fire, ice and storm in one stubborn student. Expelled for melting the academy library; down here, only monsters are left to burn.",
-    "cleric": "A healer from the chapel of the dawn. Where the light does not reach, someone has to carry it.",
-    "necromancer": "Studied death to stop it, and learned to borrow it instead. The bones down here answer to a gentle voice.",
-    "bard": "Kept the keys of the dungeon's deepest cells, until the prisoners got out. Now he goes down to lock them up again.",
-    "alchemist": "Every bottle is an experiment, and every experiment explodes. Down here, that is a feature."
+    "knight": "Once the captain of Soldia's gate. When the gate fell to the things below, he was the last one standing in the breach, and he never forgave himself for the ones who were not. He sealed the city with his own shield and walked down into the dark to finish the fight in person. He does not count the floors. He counts the doors still left to close.",
+    "berserker": "Thrown out of three war camps for starting fights, and out of a fourth for finishing them too fast. Every captain said the same thing: learn to wait. The dungeon is the first place that never asks for calm. Down here the enemies keep coming, the drums never stop, and for once nobody tells him to put the axe down.",
+    "rogue": "Stole one coin too many from the wrong lord, and spent a whole winter running from his hounds. The only place they would not follow was the stair under the old tower. Down here nobody checks a purse, the locks are older and slower, and the treasure has no owners left. He tells himself it is only about the gold. He keeps a map of every floor anyway.",
+    "archer": "A hunter from the forest around the tower, who could follow a deer's track by moonlight. When the beasts of the woods began crawling out of the dungeon, sick and wrong, she followed their tracks back to the source. The hunt moved underground. She still marks every kill with a notch on her bow, and the bow is running out of wood.",
+    "samurai": "A wandering blade bound by an old master's last order: one perfect cut, at the bottom of the deepest dungeon. He buried his master under a red sky and has not drawn his sword without reason since. Every enemy is practice. Every floor is one step closer. He does not know what waits at the bottom, only that it must be cut once, and cleanly.",
+    "mage": "Fire, ice and storm in one stubborn student. Expelled for melting the academy library, she insists the fire was an experiment and the experiment was a success. The masters took her books and her robe, but not her spells. Down here there are no rules about what may be burned, frozen or struck, and only monsters are left to complain.",
+    "cleric": "A healer from the chapel of the dawn, where the first light of the day is kept like a treasure. When the dark spread up from the dungeon, the chapel's candles began to go out one by one. She took the last flame and went down to find where the dark begins. Where the light does not reach, someone has to carry it.",
+    "necromancer": "Studied death to stop it, after the plague took everyone in his village. He never found a cure. Instead he learned to borrow death for a while and give it back. The bones down here once belonged to adventurers who came before, and they answer to a gentle voice. He asks them politely. They have never once said no.",
+    "bard": "Kept the keys of the dungeon's deepest cells for twenty quiet years. Then the things below broke every lock at once, and the prisoners got out. The keys still hang from his belt, heavier than ever. Now he goes down floor by floor to lock them up again, one chain at a time, and he never loses a prisoner twice.",
+    "alchemist": "Every bottle is an experiment, and every experiment explodes. He was banned from three towns, two guilds and one very angry bridge. The dungeon is the only lab with no neighbours to complain and endless strange ingredients to try. He calls the monsters 'test subjects'. Down here, the explosions are a feature."
   },
   "layout": {
     "side": 24,
@@ -107,18 +109,19 @@
     },
     "page": {
       "y": 72,
-      "h": 330,
+      "h": 300,
       "floorY": 178,
-      "feetDy": 300,
+      "feetDy": 288,
       "heroScale": 6,
-      "lookH": 100,
+      "recordH": 46,
+      "lookH": 96,
       "buttonH": 50
     },
     "card2": {
       "y": 72,
-      "stageH": 170,
+      "stageH": 150,
       "heroScale": 4,
-      "feetDy": 150
+      "feetDy": 134
     }
   }
 }

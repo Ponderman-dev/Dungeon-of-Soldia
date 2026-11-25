@@ -34,7 +34,9 @@ On itch.io: your profile menu -> **Upload new project**.
    old one), keep "played in the browser" ticked, Save.
 4. Optional: post a devlog (itch.io Devlog tab). Drafts live in `docs/devlog/` (one file per update).
 
-## What playtesters will see (current build, 0.2.0)
+## What playtesters will see (current build, 0.2.1)
+- 0.2.1: a LOADING bar before the title (no first-visit stutter), smoother page slide-ins, SKILL AIM starts on INSTANT
+  (a skill fires at once at the usual target; TAP = tap the enemy too, in Settings > GAME).
 - Title screen (forest from above) -> tap -> the camp, a random unlocked hero walks in.
 - Camp: EXPEDITION opens the squad screen; HEROES (hero pages with banners, records, try-on looks), GLOSSARY,
   LEADERS, SHOP (looks; gems not for sale yet), profile and settings.

@@ -1,6 +1,6 @@
 {
   "_about": "Settings screen (SettingsScene, logic systems/settings.js; user's pick D, docs/proposals/menu/settings-picked-D.png). Tabs of cards: 'bar' = a '-' 0..max '+' level, 'choice' = big buttons (chosen = FILLED gold), 'action' = one button. defaults = a new player's settings. layout = screen px (spacing rule: back 96x44 at 24,16; title y 76; 12-16px gaps; 16px inside boxes). vibration = buzz length and the least time between buzzes.",
-  "defaults": { "music": 7, "effects": 9, "battleSpeed": 1, "shake": true, "damageNumbers": true, "vibration": false, "skillAim": true },
+  "defaults": { "music": 7, "effects": 9, "battleSpeed": 1, "shake": true, "damageNumbers": true, "vibration": false, "skillAim": false },
   "vibration": { "ms": 30, "gapMs": 400 },
   "layout": {
     "side": 24,

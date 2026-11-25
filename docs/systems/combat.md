@@ -47,4 +47,5 @@ All numbers below go in JSON/config so they are easy to tune.
   enemyUid)`: `hero.aimUid` is kept through the wind-up and used in `releaseSkill()` if that enemy can still be hit (else
   the usual pick; an Echo Rune repeat picks as usual). Tap the glowing button again = cancel (skill stays ready); another
   skill button = leave aim and press it; empty floor = nothing. Aim ends by itself when the skill can't go off. Other
-  skills (area, band, Mage rotation, Cleric, Alchemist) fire at once as before. Tests `aim.test.mjs`.
+  skills (area, band, Mage rotation, Cleric, Alchemist) fire at once as before. Settings GAME tab SKILL AIM: TAP (default)
+  / INSTANT (= the old way for every skill; settings.json `skillAim`, read in `applySettings()`). Tests `aim.test.mjs`.

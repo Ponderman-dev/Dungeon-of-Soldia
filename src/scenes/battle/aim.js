@@ -3,7 +3,8 @@
 // and the next tap on an enemy fires the skill at it (BattleState.castSkill(uid, index, enemyUid)). Tapping the glowing
 // button again cancels (the skill stays ready); another skill button = leave aim mode and press that one; a tap on the
 // empty floor does nothing (no accidental squad walk). Aim mode ends by itself when the skill can no longer be cast
-// (hero stunned / dead, the fight ends) or no enemy is left. Numbers: combat.json `aim`.
+// (hero stunned / dead, the fight ends) or no enemy is left. Numbers: combat.json `aim`. Settings SKILL AIM (TAP / INSTANT,
+// settings.json `skillAim`): INSTANT = every skill fires at once like before.
 import { GAME_WIDTH, GAME_HEIGHT, UI } from '../../config.js';
 import combatRules from '../../data/combat.json';
 import * as sfx from '../../audio/sfx.js';
@@ -22,7 +23,7 @@ export const aimMethods = {
     if (this.mode !== 'fighting') return;
     const hero = this.state.heroes.find((h) => h.uid === heroUid);
     if (!hero || !this.state.canCast(hero, index)) return this.castFromUI(heroUid, index); // not ready: as before (nothing happens)
-    if (!this.state.aimable(hero, index) || !this.state.targetableEnemies().length) return this.castFromUI(heroUid, index);
+    if (this.skillAim === false || !this.state.aimable(hero, index) || !this.state.targetableEnemies().length) return this.castFromUI(heroUid, index); // Settings SKILL AIM: INSTANT = as before
     this.startAim(heroUid, index);
   },
 

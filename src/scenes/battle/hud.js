@@ -453,7 +453,7 @@ export const hudMethods = {
   },
 
   // The player's Settings (systems/settings.js): battle speed runs the whole scene (fight, tweens, timers) faster;
-  // screen shake off = the camera never shakes; damage numbers off = popText skips numbers; vibration = buzz().
+  // screen shake off = the camera never shakes; damage numbers off = popText skips numbers; vibration = buzz(); skill aim (TAP / INSTANT) = aim.js.
   applySettings() {
     const set = readSettings(loadProgress(), settingsDefs);
     this.speed = set.battleSpeed;
@@ -464,6 +464,8 @@ export const hudMethods = {
     else delete cam.shake;
     this.showNumbers = set.damageNumbers;
     this.vibrate = set.vibration;
+    this.skillAim = set.skillAim; // SKILL AIM: TAP = one-enemy skills wait for an enemy tap (aim.js), INSTANT = fire at once
+    if (!this.skillAim && this.endAim) this.endAim();
     this.lastBuzz = -Infinity;
   },
 

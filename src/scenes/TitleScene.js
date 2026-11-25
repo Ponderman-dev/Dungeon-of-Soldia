@@ -5,6 +5,7 @@ import pkg from '../../package.json';
 import { skyLayer, twinkleSpots, moonLayers, cloudLayer, canopyLayer } from '../systems/titleArt.js';
 import { layerTexture } from '../entities/pixelLayer.js';
 import { drawWindow, uiText, drawGear } from '../entities/uiKit.js';
+import { warmUpSteps, drawAllOnce } from '../entities/warmUp.js';
 import { loadProgress } from '../systems/progress.js';
 import * as sfx from '../audio/sfx.js';
 import * as music from '../audio/music.js';
@@ -20,7 +21,7 @@ export default class TitleScene extends Phaser.Scene {
     super('Title');
   }
 
-  create() {
+  create(data) {
     music.play('title');
     this.busy = false;
     this.modal = null; // (the scene is reused: a Settings flag from last time must not stick)
@@ -53,6 +54,65 @@ export default class TitleScene extends Phaser.Scene {
 
     this.drawUi();
     this.input.on('pointerup', () => this.start());
+    if (data && data.intro) this.intro();
+  }
+
+  // INTRO (session 58, user: 'logo, then the sky goes down to the current screen'): the game opens up in the night sky
+  // with the logo and the LOADING bar while every picture is made once (entities/warmUp.js: no first-visit stutter on
+  // the pages), then the bar fades, the camera glides down to the forest (the logo stays put) and the rest of the
+  // title fades in. Numbers: title.json intro.
+  intro() {
+    const I = title.intro, cam = this.cameras.main, cx = GAME_WIDTH / 2, t0 = performance.now();
+    this.busy = true; // no TAP TO START (or Settings) until the title is in
+    cam.scrollY = -I.rise;
+    // More night sky above the title's sky: its darkest colour and some dim stars.
+    this.add.rectangle(0, -I.rise, GAME_WIDTH, I.rise, Number(title.sky.colors[0])).setOrigin(0).setDepth(DEPTH.sky);
+    let seed = title.seed * 7919;
+    const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+    for (let i = 0; i < I.stars; i++) {
+      const col = title.stars.colors[Math.floor(rnd() * title.stars.colors.length)];
+      this.add.rectangle(Math.floor(rnd() * GAME_WIDTH / P) * P, -I.rise + Math.floor(rnd() * I.rise / P) * P, P, P, Number(col)).setOrigin(0).setDepth(DEPTH.sky);
+    }
+    // The logo stays on the screen while the world moves; everything else waits.
+    for (const o of this.logo) o.setScrollFactor(0);
+    const rest = this.ui.filter((o) => !this.logo.includes(o));
+    this.tweens.killTweensOf(this.tap); // its blink starts again once the title is in
+    for (const o of rest) o.setAlpha(0);
+    // The LOADING bar under the logo.
+    const gold = Phaser.Display.Color.HexStringToColor(UI.gold).color, bx = Math.round(cx - I.barW / 2);
+    const frame = drawWindow(this.add.graphics(), bx, I.barY, I.barW, I.barH).setScrollFactor(0).setDepth(DEPTH.ui);
+    const fill = this.add.graphics().setScrollFactor(0).setDepth(DEPTH.ui);
+    const steps = warmUpSteps(this), total = steps.length;
+    const show = () => fill.clear().fillStyle(gold, 1).fillRect(bx + 4, I.barY + 4, Math.round((I.barW - 8) * (1 - steps.length / total)), I.barH - 8);
+    show();
+    const glide = () => {
+      this.tweens.add({ targets: [frame, fill], alpha: 0, duration: I.barFadeMs, onComplete: () => { frame.destroy(); fill.destroy(); } });
+      this.tweens.add({ targets: cam, scrollY: 0, duration: I.glideMs, ease: I.ease, onComplete: () => {
+        for (const o of this.logo) o.setScrollFactor(1); // the camera is home: same spot
+        this.tweens.add({ targets: rest, alpha: 1, duration: I.uiFadeMs, onComplete: () => { this.blinkTap(); this.busy = false; } });
+      } });
+    };
+    const next = async () => {
+      const t = performance.now();
+      while (steps.length && performance.now() - t < I.stepMs) {
+        try { await steps.shift()(); } catch (e) { console.warn('warm-up step failed', e); }
+      }
+      show();
+      if (steps.length) return this.time.delayedCall(0, next);
+      // Every picture drawn once, hidden behind the sky above (the graphics card gets them now), then the glide.
+      const imgs = drawAllOnce(this).map((o) => o.setPosition(0, -I.rise / 2).setDepth(DEPTH.sky - 1));
+      this.events.once(Phaser.Scenes.Events.RENDER, () => this.time.delayedCall(0, () => {
+        imgs.forEach((o) => o.destroy());
+        this.time.delayedCall(Math.max(0, I.minMs - (performance.now() - t0)), glide);
+      }));
+    };
+    this.time.delayedCall(0, next);
+  }
+
+  // TAP TO START blinks softly.
+  blinkTap() {
+    const S = title.start;
+    this.tweens.add({ targets: this.tap, alpha: S.blinkAlpha, duration: S.blinkMs, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
 
   update(time, delta) {
@@ -71,8 +131,9 @@ export default class TitleScene extends Phaser.Scene {
     ];
     // TAP TO START (user, session 40): no button box (a tap ANYWHERE starts), just the words, smaller, blinking softly.
     const S = title.start;
-    const tap = uiText(this, cx, S.y, S.text, S.size, '#ffffff', outline).setOrigin(0.5); // white: the title keeps its own colours (user: salmon looked weird)
-    this.tweens.add({ targets: tap, alpha: S.blinkAlpha, duration: S.blinkMs, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }); // a soft blink
+    const tap = (this.tap = uiText(this, cx, S.y, S.text, S.size, '#ffffff', outline).setOrigin(0.5)); // white: the title keeps its own colours (user: salmon looked weird)
+    this.blinkTap(); // a soft blink
+    this.logo = ui.slice(); // the two logo lines (the intro keeps them on the screen)
     ui.push(tap);
     // Best floor (user: unreadable small): the big pixel font in gold on a dark strip.
     const best = loadProgress().stats.bestFloor;

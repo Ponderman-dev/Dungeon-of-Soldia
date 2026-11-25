@@ -22,6 +22,7 @@ import items from '../data/items.json';
 import statusIcons from '../data/statusIcons.json';
 import shop from '../data/shop.json';
 import dungeons from '../data/dungeons.json';
+import floorArt from '../data/floorArt.json';
 
 const defsOf = (o) => Object.entries(o).filter(([k, v]) => !k.startsWith('_') && v && typeof v === 'object' && v.parts).map(([, v]) => v);
 const MENU_WALL_H = 200; // the menu pages' floor (floorCrop) and the battle floors share this wall height
@@ -44,9 +45,9 @@ export function warmUpSteps(scene) {
   });
   steps.push(() => { for (const [id, it] of Object.entries(items)) { itemIconKey(scene, id, it.rarity); bareIconKey(scene, id); } });
   steps.push(() => { for (const id of Object.keys(statusIcons)) if (!id.startsWith('_')) statusIconKey(scene, id); });
-  // The floors: the menu pages' floor, then each battle floor of the first dungeon (the first fights).
-  steps.push(() => floorTextureKey(scene, dungeons.A.tileColors[0], 0, MENU_WALL_H));
-  for (const tint of dungeons.A.tileColors.slice(1)) steps.push(() => floorTextureKey(scene, tint, 0, MENU_WALL_H));
+  // The floors: every battle floor of the dungeon (each colour x each variant: 24, then they repeat; the first is
+  // also the menu pages' floor). Made on the walk to a new floor before, a small stutter at the door.
+  for (let v = 0; v < floorArt.variants; v++) for (const tint of dungeons.A.tileColors) steps.push(() => floorTextureKey(scene, tint, v, MENU_WALL_H));
   // The Profile banners (crops of the title forest: working the forest out is slow, ~80 ms).
   for (const id of profileBannerIds()) steps.push(() => profileBannerKey(scene, id));
   // Banners are PNGs decoded by the browser: wait for each one.

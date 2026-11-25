@@ -125,14 +125,14 @@ ok('Spiderling: EVERY hit poisons (a weak poison)', enemies.spiderling.onHit.som
   ok('...spread out: hardly any spike lands near a recent one', near <= 5, near); // out of 40 (after 8 tries it takes the spot anyway)
   const ev3 = run(s2, 10000);
   ok('...only once', !ev3.some((e) => e.type === 'spikeWarn'));
-  // Frozen Rest: below 25% he summons 3 Ice Knights and heals while frozen (can still be hit)
+  // Frozen Rest: below 25% he summons his Ice Knight(s) and heals while frozen (can still be hit)
   const { s: s3, es: es3 } = mk(['frost_warden'], 60); const w3 = es3[0]; w3.stats.attack = 0;
   const rest = w3.def.abilities.find((a) => a.id === 'ice_knights');
   w3.abilities.forEach((x) => { if (x.def.id !== 'ice_knights') x.done = true, x.timer = 1e9; });
   w3.hp = Math.floor(w3.maxHp * 0.24); const before = w3.hp;
   run(s3, rest.castMs + rest.channel.ticks * rest.channel.intervalMs + 300);
   const knights = s3.enemies.filter((e) => e.alive && e.def.id === 'ice_knight');
-  ok('Frozen Rest: 3 Ice Knights join the fight', knights.length === rest.summon.count, knights.length);
+  ok('Frozen Rest: ' + rest.summon.count + ' Ice Knight(s) join the fight', knights.length === rest.summon.count, knights.length);
   const healed = (w3.hp - before) / w3.maxHp * 100;
   ok('...and he heals about 20% of his health', Math.abs(healed - rest.channel.ticks * rest.channel.healSelfPercent) < 1.5, healed.toFixed(1));
   ok('...he can still be hit meanwhile', !s3.untargetable(w3));

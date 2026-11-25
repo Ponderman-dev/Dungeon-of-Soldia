@@ -2,7 +2,8 @@
 // Scenes only say WHERE we are: music.play('title' | 'camp' | 'squad' | 'battle' | 'boss' | 'gameOver').
 // - The same song keeps playing when the next screen uses it too (title -> camp, battle floor -> battle floor).
 // - A new song crossfades in (fadeSec). Each file = an intro, then a part that repeats (loopStart .. end of file).
-// - A screen with a LIST of songs (battle floors): they take turns; each plays once through, then fades into the next.
+// - A screen with a LIST of songs (battle floors: RPG 8, RPG 10): they take turns; each repeats a random number of
+//   times (music.json turnRepeats), fades out, a short silence (turnGapSec), then the next one.
 // - MUSIC volume (Settings) and the mute button: refresh(). Browsers only allow sound after the first tap: until then
 //   the wanted song waits and starts on the first tap.
 // Files are packed into the game code (Vite `?inline`) and unpacked by hand (NOT fetch: the claude.ai preview frame
@@ -84,15 +85,23 @@ async function start(id, screen, fadeSec) {
   src.start(now);
   fadeOut(current, fadeSec);
   current = { id, screen, src, gain, timer: null };
-  // A list screen's song: when it has played once (intro + loop), the next song takes its turn.
+  // A list screen's song (battle floors): it repeats a random number of times (rules.turnSeconds), fades out at the
+  // end of its last repeat, a short silence (turnGapSec: breathing room), then the next song starts at full energy.
+  // During the silence `current` is still this song, so a new floor does not restart anything.
   if (isTurnTrack(screen)) {
-    const fade = musicData.turnFadeSec ?? 2;
+    const endFade = musicData.turnEndFadeSec ?? 1.5;
+    const gap = musicData.turnGapSec ?? 3;
+    const playSec = rules.turnSeconds({ ...t, seconds: buf.duration }, musicData);
     const v = current;
     v.timer = setTimeout(() => {
       if (current !== v || wanted !== screen) return;
-      turns[screen] = (turns[screen] || 0) + 1;
-      start(trackFor(screen, turns[screen]), screen, fade);
-    }, Math.max(1, buf.duration - fade) * 1000);
+      fadeOut(v, endFade);
+      v.timer = setTimeout(() => {
+        if (current !== v || wanted !== screen) return;
+        turns[screen] = (turns[screen] || 0) + 1;
+        start(trackFor(screen, turns[screen]), screen, 0.05);
+      }, (endFade + gap) * 1000);
+    }, Math.max(1, playSec - endFade) * 1000);
   }
 }
 

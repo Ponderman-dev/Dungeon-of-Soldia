@@ -1,28 +1,12 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 57): BATTLE-FLOOR MUSIC SEARCH (continue)
-- BRANCH: `main` has EVERYTHING (session 56 merged in). Start the next branch from `main`.
-- SESSION 56 DID (instead of music, all on main): SKILL BOOKS round 2 (`docs/systems/skill-books.md`, last 2 notes):
-  5 element RUNES (rare, attack only, +75%), MEND / GREATER MEND (support only, heal 15% / 20%, longer cooldown),
-  ONE INK / ONE ELEMENT PER SKILL (`group`, a new one swaps the old), nerfs (Guardian, Frost Ink, Quick Draw) and buffs
-  of every weak page; pageruns.mjs now puts support pages on the support skill. Smart curve median 39 (unchanged).
-  Also on main (a parallel session): the BARD IS NOW THE WARDEN (jailer tank, `id` still 'bard'; Chain Hook, Lockdown,
-  Shackles, 4 hero pages). Old lute music / sounds removed.
-- NEXT TASK (user, end of session 56): the search for BATTLE-FLOOR music. Today battle floors are SILENT
-  (`src/data/music.json` screen 'battle' = null; user, session 53: 'the battle floor songs are not good, remove
-  everything'). Every other screen has its song (title/camp xDeviruchi, squad RPG Battle 12, boss boss_final).
-- READ FIRST: `docs/systems/sound.md` MUSIC section only (what they LOVED / said NO to, rounds 1-5, FINAL PICKS, MUSIC
-  PLAYER; `make-game-music.py` makes the game files). Board = the reused Skill Effects page (url in sound.md, db `music`).
-- WHAT THEY LIKE: RETRO RPG tracks (Pixel-boy RPG pack, xDeviruchi, Eric Skiff chiptune), full energy from beat 1 (no
-  slow starts), simple, 8-bit / 16-bit. NOT: cyber / synthwave, gothic, cheery town / open-land vibes, our own code
-  songs never landed. A battle LIST takes turns (music.json supports a list). They may bring their OWN files (zip in
-  chat): licence check (CC0 / CC BY / CC BY-SA / Pixabay OK; NC / ND not OK), credit line in music.json.
-- How: ask with the question tool first (mood, where to look, own files or my search), then a SMALL board round
-  (few options, LOVE / MAYBE / NO), then the pick into the game (music.json + make-game-music.py, `music.test.mjs`).
-- KIV (user): HOLY damage (Cleric's smite / holy_nova still holy; user said 'we don't have holy'; session 56 they asked
-  for a Holy Rune page, so holy is OK as a page): don't change the Cleric until asked. Open: a 'made by' name for the
-  credits; Android must allow sound without a tap; Settings HELP -> crypto help at the Solana integration; the deep BUG
-  HUNT + OPTIMIZATION + SECURITY CHECK (plan: session-51 note in `docs/handoff-archive.md`).
+## START HERE (session 58): MORE BATTLE MUSIC OPTIONS (board)
+- SESSION 57 DID: battle floors play RPG 8 + RPG 10 (originals) taking turns, each repeated 2-4 times at random, a
+  1.5 s fade + 3 s silence between (`docs/systems/sound.md` MUSIC, last note). Game page republished.
+  Round 10 board (xD16 Battle 1/2, RPG 5/6/11) -> user: 'new sound is not good' (no detail).
+- NEXT: find more battle music for the board. Ask first what was wrong with round 10 (question tool, options).
+- Still KIV from before: Holy damage (don't change the Cleric until asked), a 'made by' credit name, Android sound
+  without a tap, Settings HELP -> crypto help, the deep BUG HUNT + OPTIMIZATION + SECURITY CHECK.
 - PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').
 
 ## How we work with this user

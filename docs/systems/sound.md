@@ -261,6 +261,15 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   loop in one file, -16 LUFS, limiter, MONO 56k: 4.2 MB for 6 songs) and loopStart / seconds into music.json.
   Decoded lengths in the browser match music.json exactly (LAME gapless info). The game page grew 2.5 -> 9 MB.
   Test: `music.test.mjs` (data complete, files used, rules, scenes call play / refresh).
+- SESSION 57: BATTLE FLOORS HAVE MUSIC AGAIN. ROUND 10 BOARD (`make-board10.py <sources> <out>`; same board page,
+  now titled 'Soldia Music Board', db `music`): xD16 Battle 1 + 2, Pixel-boy RPG 5 / 6 / 11, + RPG 8 / 10 originals.
+  User: 'new sound is not good; get RPG 8 and 10 in the game first'. IN THE GAME: battle = ['rb8', 'rb10'] = the
+  ORIGINAL files (make-game-music.py ids rb8 / rb10, whole-file loops; the 3rd arg rebuilds only those ids). User:
+  'extend randomly, play right after each other with a breathing room in the mid' = each turn repeats the song a
+  random whole number of times (music.json turnRepeats [2, 4]; systems/music.js turnSeconds), fades out at the end
+  of the last repeat (turnEndFadeSec 1.5), silence (turnGapSec 3), then the other song at full energy (turnFadeSec
+  is gone). Browser check (timers sped up 50x): rb8 -> rb10 -> rb8 ... with 103-207 s / 123-247 s turns, boss
+  takes over. Next: more board options (ask what was wrong with round 10 first).
 - WARDEN SOUNDS (the Bard's lute strums removed, files deleted): `skill_chain_hook` = the metal clank (`picked/block`)
   pitched 1.25 (a chain biting), `skill_lockdown` = the iron gate slam (`picked/gateSlam`), `shackles` = Kenney metal
   bell impacts pitched 1.7 when the 4th hit roots (a counter can name its own `sound`; events.js `beat`).

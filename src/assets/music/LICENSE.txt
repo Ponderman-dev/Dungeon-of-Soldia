@@ -3,6 +3,7 @@ Music in this folder (see src/data/music.json and docs/systems/sound.md MUSIC):
   (https://xdeviruchi.itch.io/8-bit-fantasy-adventure-music-pack), CC BY-SA 4.0
   (https://creativecommons.org/licenses/by-sa/4.0/). Changes: levelled, mono. This file stays CC BY-SA 4.0.
   The game's credits must say: Music "Title Theme" by xDeviruchi (CC BY-SA 4.0).
-- squad.mp3, boss_final.mp3: Pixel-boy / Sparklin Labs,
+- squad.mp3, boss_final.mp3, rb8.mp3, rb10.mp3: Pixel-boy / Sparklin Labs,
   RPG Battle System music themes 8, 10, 12, 14 (github.com/sparklinlabs/superpowers-asset-packs), CC0.
-  Rearranged for the game (cut, reordered, tempo / key changes) by docs/proposals/music/make-mixes.py.
+  Rearranged for the game (cut, reordered, tempo / key changes) by docs/proposals/music/make-mixes.py (rb8 / rb10: the original
+  themes 8 and 10, only levelled and made mono).

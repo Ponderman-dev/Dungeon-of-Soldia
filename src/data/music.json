@@ -1,14 +1,22 @@
 {
-  "_about": "Music (src/audio/music.js; picks + tools in docs/systems/sound.md MUSIC). screens: which track each screen plays; a LIST = those tracks take turns (each plays its intro + loop once, then fades into the next). tracks: file in src/assets/music/<file>.mp3, loopStart = seconds where the repeating part starts (it repeats to the end of the file), written by docs/proposals/music/make-game-music.py. volume = music loudness at MUSIC 10 (the Settings bar scales it; 0.5 drowned the sound effects, user: now 0.2). null = silence (battle floors: user removed the battle songs; boss floors: silent until the boss's roar is over, then 'boss' (BattleScene.startFighting); descent: the squad song fades out on BEGIN DESCENT). fadeSec = crossfade between screens, turnFadeSec = crossfade when battle songs take turns. The defeat screen (GameOverScene) changes nothing: the floor's song plays on.",
+  "_about": "Music (src/audio/music.js; picks + tools in docs/systems/sound.md MUSIC). screens: which track each screen plays; a LIST = those tracks take turns (each plays its intro + loop once, then fades into the next). tracks: file in src/assets/music/<file>.mp3, loopStart = seconds where the repeating part starts (it repeats to the end of the file), written by docs/proposals/music/make-game-music.py. volume = music loudness at MUSIC 10 (the Settings bar scales it; 0.5 drowned the sound effects, user: now 0.2). null = silence (boss floors: silent until the boss's roar is over, then 'boss' (BattleScene.startFighting); descent: the squad song fades out on BEGIN DESCENT). fadeSec = crossfade between screens, BATTLE FLOORS (session 57, user: 'RPG 8 and 10 in the game, extend randomly, play right after each other with a breathing room in the mid'): the list takes turns; each turn the song repeats a random whole number of times in turnRepeats [min, max], fades out over turnEndFadeSec at the end of its last repeat, then turnGapSec of silence, then the other song starts at full energy. The defeat screen (GameOverScene) changes nothing: the floor's song plays on.",
   "volume": 0.2,
   "fadeSec": 1.0,
-  "turnFadeSec": 2.5,
+  "turnRepeats": [
+    2,
+    4
+  ],
+  "turnEndFadeSec": 1.5,
+  "turnGapSec": 3.0,
   "screens": {
     "title": "title",
     "camp": "title",
     "squad": "squad",
     "descent": null,
-    "battle": null,
+    "battle": [
+      "rb8",
+      "rb10"
+    ],
     "boss": "boss_final"
   },
   "tracks": {
@@ -29,6 +37,18 @@
       "file": "boss_final",
       "loopStart": 0.0,
       "seconds": 128.859
+    },
+    "rb8": {
+      "file": "rb8",
+      "loopStart": 0.0,
+      "seconds": 51.692,
+      "credit": "Pixel-boy / Sparklin Labs, RPG Battle Theme 8, CC0"
+    },
+    "rb10": {
+      "file": "rb10",
+      "loopStart": 0.0,
+      "seconds": 61.714,
+      "credit": "Pixel-boy / Sparklin Labs, RPG Battle Theme 10, CC0"
     }
   }
 }

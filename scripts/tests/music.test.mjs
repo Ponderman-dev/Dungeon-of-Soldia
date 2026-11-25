@@ -1,7 +1,7 @@
 // Music (session 53): music.json is complete (every screen's songs exist, every song has its file and a loop point
 // inside it), the rules pick the right song, and the scenes tell the player where we are.
 import fs from 'fs';
-import { trackFor, isTurnTrack, musicGain } from '../../src/systems/music.js';
+import { trackFor, isTurnTrack, musicGain, turnSeconds } from '../../src/systems/music.js';
 import { readSettings, cardOf } from '../../src/systems/settings.js';
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const read = (p) => JSON.parse(fs.readFileSync(new URL('../../' + p, import.meta.url)));
@@ -20,7 +20,12 @@ ok('every music file is played by some screen (no dead weight in the page)', dea
 ok('title and camp share the title song (it keeps playing between them)', trackFor('title', 0, data) === trackFor('camp', 0, data));
 const fake = { screens: { floors: ['a', 'b', 'c'] } };
 ok('a LIST screen takes turns and wraps around (rule kept for later)', isTurnTrack('floors', fake) && ['a', 'b', 'c', 'a'].every((id, i) => trackFor('floors', i, fake) === id));
-ok('battle floors are silent (user removed the battle songs)', trackFor('battle', 0, data) === null);
+ok('battle floors take turns: RPG 8, then RPG 10 (session 57)', isTurnTrack('battle', data) && trackFor('battle', 0, data) === 'rb8' && trackFor('battle', 1, data) === 'rb10' && trackFor('battle', 2, data) === 'rb8');
+const [lo, hi] = data.turnRepeats, t8 = data.tracks.rb8;
+ok('a battle song repeats a random WHOLE number of times inside turnRepeats', lo >= 1 && hi >= lo
+  && Math.abs(turnSeconds(t8, data, 0) - t8.seconds * lo) < 1e-9 && Math.abs(turnSeconds(t8, data, 0.9999) - t8.seconds * hi) < 1e-9
+  && [0.1, 0.4, 0.6, 0.95].every((r) => Number.isInteger(Math.round(turnSeconds(t8, data, r) / t8.seconds * 1e6) / 1e6)));
+ok('a short breathing pause between battle songs (1-6 s, with a fade-out first)', data.turnGapSec >= 1 && data.turnGapSec <= 6 && data.turnEndFadeSec > 0);
 ok('boss floors play one song, not a list', !isTurnTrack('boss', data) && !!trackFor('boss', 0, data));
 ok('BEGIN DESCENT is silent', trackFor('descent', 0, data) === null);
 ok('the defeat screen keeps the floor song (GameOverScene never calls music.play)', !/music\.play\(/.test(fs.readFileSync(new URL('../../src/scenes/GameOverScene.js', import.meta.url), 'utf8')));

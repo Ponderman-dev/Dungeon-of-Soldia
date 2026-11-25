@@ -125,16 +125,20 @@ export function refresh() {
 // The first tap anywhere unlocks sound, then the waiting song starts. The app hidden (phone home button, other tab):
 // the music pauses; back: it goes on.
 if (typeof window !== 'undefined') {
+  // PHONE FIX (user: no music on the phone): a finger's pointerdown does NOT count as a 'tap' for the browser's
+  // sound rule (only pointerup / touchend / click do), and the old code tried once on pointerdown, then gave up for
+  // good. Now every tap kind tries, and keeps trying until the sound really runs. The listeners stay: when the phone
+  // pauses the sound (app hidden, a call) and it can't resume by itself, the next tap brings it back.
   const unlock = () => {
     const a = audioContext();
-    if (!a) return;
-    const go = () => { unlocked = true; apply(); };
-    if (a.state === 'suspended') a.resume().then(go, () => {}); else go();
-    window.removeEventListener('pointerdown', unlock, true);
-    window.removeEventListener('keydown', unlock, true);
+    if (!a || document.hidden) return;
+    const go = () => {
+      if (a.state !== 'running') return;
+      if (!unlocked) { unlocked = true; apply(); }
+    };
+    if (a.state === 'running') go(); else a.resume().then(go, () => {});
   };
-  window.addEventListener('pointerdown', unlock, true);
-  window.addEventListener('keydown', unlock, true);
+  for (const kind of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']) window.addEventListener(kind, unlock, true);
   // Try at once too: the Android app lets sound start without a tap (its web view is set up with
   // mediaPlaybackRequiresUserGesture = false), so the title song plays as the game opens. A browser says no
   // (the context stays 'suspended') and the first tap starts it instead.

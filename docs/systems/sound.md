@@ -48,6 +48,11 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
 - UNUSED FILES REMOVED (session 51): 31 sound files no cue used (146 KB) were deleted (git history has them); `sounds.test.mjs` now fails if a packed file is not used by a cue. To try an old sound again, restore it from git (`git log --diff-filter=D --name-only -- src/assets/sounds`).
 
 ## MUSIC (sessions 52-53; IN THE GAME since session 53)
+- PHONE FIX (user: no music on the phone): `music.js` unlocked only on the first `pointerdown`, which a FINGER does not
+  count as a tap for the browser's sound rule, then never tried again. Now pointerdown / pointerup / touchend / click /
+  keydown all try `resume()`, until the context really runs; the listeners stay (a later tap revives sound the phone
+  paused). Not checked on a real phone by me (headless Chromium ignores the tap rule). iPhone: the silent switch also
+  mutes web sound.
 - No music system in the game yet; Settings already has a MUSIC bar (`settings.json` `music`, 0-10) waiting for it.
 - MUSIC BOARD = the reused Skill Effects page https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN (CLAUDE.md: reuse it).
   4 screens: title + camp, squad, battle, boss. Each = 2 CODE SONGS + free CC0 tracks. The user marks each LOVE /

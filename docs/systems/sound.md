@@ -273,3 +273,8 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
 - WARDEN SOUNDS (the Bard's lute strums removed, files deleted): `skill_chain_hook` = the metal clank (`picked/block`)
   pitched 1.25 (a chain biting), `skill_lockdown` = the iron gate slam (`picked/gateSlam`), `shackles` = Kenney metal
   bell impacts pitched 1.7 when the 4th hit roots (a counter can name its own `sound`; events.js `beat`).
+- SESSION 59 (user): BATTLE SONGS LONGER, LESS PAUSE, SILENCE BEFORE A BOSS. Each battle turn now lasts about 5-6
+  minutes (music.json `turnSeconds` [300, 360] replaces `turnRepeats`; still whole repeats of the loop: rb8 6-7x,
+  rb10 5-6x), `turnEndFadeSec` 1, `turnGapSec` 1. New silent screen `bossWait`: played when the squad starts walking
+  to the door and the NEXT floor is a boss floor (roomMethods.goToNextFloor) and by buildFloor on a boss floor (it
+  used to play 'battle' there: the battle song ran on through the boss roar). The boss song still starts after the roar.

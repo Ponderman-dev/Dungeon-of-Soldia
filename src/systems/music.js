@@ -13,14 +13,16 @@ export function isTurnTrack(screen, data) {
   return Array.isArray(data.screens[screen]);
 }
 
-// How long one turn of a list song plays (session 57): its intro once, then its loop part repeated a random whole
-// number of times in data.turnRepeats [min, max] (whole repeats: it always ends on the end of a loop, a musical
-// ending). rand = Math.random() or a fixed number for tests.
+// How long one turn of a list song plays: its intro once, then its loop part repeated a whole number of times
+// (it always ends on the end of a loop, a musical ending) so the turn lasts about a random time inside
+// data.turnSeconds [min, max] (session 59, user: '5-6 minutes each'; the nearest whole repeat, at least one).
+// rand = Math.random() or a fixed number for tests.
 export function turnSeconds(track, data, rand = Math.random()) {
-  const [lo, hi] = data.turnRepeats || [1, 1];
-  const n = lo + Math.min(hi - lo, Math.floor(rand * (hi - lo + 1)));
+  const [lo, hi] = data.turnSeconds || [0, 0];
   const loopStart = track.loopStart || 0;
-  return loopStart + (track.seconds - loopStart) * n;
+  const loop = track.seconds - loopStart;
+  const n = Math.max(1, Math.round((lo + rand * (hi - lo) - loopStart) / loop));
+  return loopStart + loop * n;
 }
 
 // Loudness 0..1 from the save: the MUSIC bar (0..max) times music.json volume; 0 when muted.

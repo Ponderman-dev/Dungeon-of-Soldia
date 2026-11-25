@@ -21,13 +21,15 @@ ok('title and camp share the title song (it keeps playing between them)', trackF
 const fake = { screens: { floors: ['a', 'b', 'c'] } };
 ok('a LIST screen takes turns and wraps around (rule kept for later)', isTurnTrack('floors', fake) && ['a', 'b', 'c', 'a'].every((id, i) => trackFor('floors', i, fake) === id));
 ok('battle floors take turns: RPG 8, then RPG 10 (session 57)', isTurnTrack('battle', data) && trackFor('battle', 0, data) === 'rb8' && trackFor('battle', 1, data) === 'rb10' && trackFor('battle', 2, data) === 'rb8');
-const [lo, hi] = data.turnRepeats, t8 = data.tracks.rb8;
-ok('a battle song repeats a random WHOLE number of times inside turnRepeats', lo >= 1 && hi >= lo
-  && Math.abs(turnSeconds(t8, data, 0) - t8.seconds * lo) < 1e-9 && Math.abs(turnSeconds(t8, data, 0.9999) - t8.seconds * hi) < 1e-9
-  && [0.1, 0.4, 0.6, 0.95].every((r) => Number.isInteger(Math.round(turnSeconds(t8, data, r) / t8.seconds * 1e6) / 1e6)));
+const [lo, hi] = data.turnSeconds;
+for (const id of ['rb8', 'rb10']) { const t = data.tracks[id], loop = t.seconds - (t.loopStart || 0);
+  const all = [0, 0.1, 0.4, 0.6, 0.95, 0.9999].map((r) => turnSeconds(t, data, r));
+  ok(id + ': a turn lasts about turnSeconds (' + lo / 60 + '-' + hi / 60 + ' min), whole repeats', all.every((x) => x > lo - loop / 2 - 1e-6 && x < hi + loop / 2 + 1e-6
+    && Number.isInteger(Math.round(((x - (t.loopStart || 0)) / loop) * 1e6) / 1e6)), all.map((x) => (x / 60).toFixed(1)).join(' ')); }
 ok('a short breathing pause between battle songs (1-6 s, with a fade-out first)', data.turnGapSec >= 1 && data.turnGapSec <= 6 && data.turnEndFadeSec > 0);
 ok('boss floors play one song, not a list', !isTurnTrack('boss', data) && !!trackFor('boss', 0, data));
 ok('BEGIN DESCENT is silent', trackFor('descent', 0, data) === null);
+ok('walking into a boss floor is silent (bossWait)', trackFor('bossWait', 0, data) === null);
 ok('the defeat screen keeps the floor song (GameOverScene never calls music.play)', !/music\.play\(/.test(fs.readFileSync(new URL('../../src/scenes/GameOverScene.js', import.meta.url), 'utf8')));
 ok('music sits under the sound effects (volume at most 0.3, user: 0.5 drowned them)', data.volume > 0 && data.volume <= 0.3);
 const full = musicGain({ settings: { music: cardOf(defs, 'music').max } }, data, defs, readSettings, cardOf);

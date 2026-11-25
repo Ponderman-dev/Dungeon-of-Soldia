@@ -373,7 +373,8 @@ export default class BattleScene extends Phaser.Scene {
       if (i >= 0) lineUp.elites = [i];
     }
     const enemies = this.state.spawnEnemies(lineUp, n);
-    music.play('battle'); // battle floors are silent (user); a boss floor too, until the boss has roared (startFighting)
+    if (this.dungeon.bosses && this.dungeon.bosses[n]) music.play('bossWait'); // a boss floor is silent until the boss has roared (startFighting)
+    else music.play('battle');
     const L = combatRules.movement.layout;
     const spots = enemySpots(enemies, { width: GAME_WIDTH, y: ENEMY_Y, perRow: L.enemyPerRow, rowGap: L.enemyRowGap, room: { rowRoom: L.rowRoom, eliteRowRoom: L.eliteRowRoom, maxGap: L.enemyRowGapMax }, top: L.enemyY + L.topMarginY });
     enemies.forEach((unit, i) => this.makeView(unit, spots[i].x, spots[i].y, container));

@@ -3,7 +3,7 @@
 // - The same song keeps playing when the next screen uses it too (title -> camp, battle floor -> battle floor).
 // - A new song crossfades in (fadeSec). Each file = an intro, then a part that repeats (loopStart .. end of file).
 // - A screen with a LIST of songs (battle floors: RPG 8, RPG 10): they take turns; each repeats a random number of
-//   times (music.json turnRepeats), fades out, a short silence (turnGapSec), then the next one.
+//   times (about music.json turnSeconds), fades out, a short silence (turnGapSec), then the next one.
 // - MUSIC volume (Settings) and the mute button: refresh(). Browsers only allow sound after the first tap: until then
 //   the wanted song waits and starts on the first tap.
 // Files are packed into the game code (Vite `?inline`) and unpacked by hand (NOT fetch: the claude.ai preview frame

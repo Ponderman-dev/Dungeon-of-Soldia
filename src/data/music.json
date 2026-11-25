@@ -1,13 +1,13 @@
 {
-  "_about": "Music (src/audio/music.js; picks + tools in docs/systems/sound.md MUSIC). screens: which track each screen plays; a LIST = those tracks take turns (each plays its intro + loop once, then fades into the next). tracks: file in src/assets/music/<file>.mp3, loopStart = seconds where the repeating part starts (it repeats to the end of the file), written by docs/proposals/music/make-game-music.py. volume = music loudness at MUSIC 10 (the Settings bar scales it; 0.5 drowned the sound effects, user: now 0.2). null = silence (boss floors: silent until the boss's roar is over, then 'boss' (BattleScene.startFighting); descent: the squad song fades out on BEGIN DESCENT). fadeSec = crossfade between screens, BATTLE FLOORS (session 57, user: 'RPG 8 and 10 in the game, extend randomly, play right after each other with a breathing room in the mid'): the list takes turns; each turn the song repeats a random whole number of times in turnRepeats [min, max], fades out over turnEndFadeSec at the end of its last repeat, then turnGapSec of silence, then the other song starts at full energy. The defeat screen (GameOverScene) changes nothing: the floor's song plays on.",
+  "_about": "Music (src/audio/music.js; picks + tools in docs/systems/sound.md MUSIC). screens: which track each screen plays; a LIST = those tracks take turns (each plays its intro + loop once, then fades into the next). tracks: file in src/assets/music/<file>.mp3, loopStart = seconds where the repeating part starts (it repeats to the end of the file), written by docs/proposals/music/make-game-music.py. volume = music loudness at MUSIC 10 (the Settings bar scales it; 0.5 drowned the sound effects, user: now 0.2). null = silence (bossWait, session 59 user: the song fades out as the squad walks into the door to a boss floor, the boss floor is silent until the boss's roar is over, then 'boss' (BattleScene.startFighting); descent: the squad song fades out on BEGIN DESCENT). fadeSec = crossfade between screens, BATTLE FLOORS (session 57, user: 'RPG 8 and 10 in the game, extend randomly, play right after each other with a breathing room in the mid'): the list takes turns; each turn the song repeats a whole number of times so it lasts about a random time in turnSeconds [min, max] (session 59, user: 5-6 minutes each), fades out over turnEndFadeSec at the end of its last repeat, then turnGapSec of silence (session 59: 1 s, 'not too much breathing room'), then the other song starts at full energy. The defeat screen (GameOverScene) changes nothing: the floor's song plays on.",
   "volume": 0.2,
   "fadeSec": 1.0,
-  "turnRepeats": [
-    2,
-    4
+  "turnSeconds": [
+    300,
+    360
   ],
-  "turnEndFadeSec": 1.5,
-  "turnGapSec": 3.0,
+  "turnEndFadeSec": 1.0,
+  "turnGapSec": 1.0,
   "screens": {
     "title": "title",
     "camp": "title",
@@ -17,7 +17,8 @@
       "rb8",
       "rb10"
     ],
-    "boss": "boss_final"
+    "boss": "boss_final",
+    "bossWait": null
   },
   "tracks": {
     "title": {

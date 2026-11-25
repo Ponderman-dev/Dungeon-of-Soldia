@@ -4,6 +4,7 @@ import { GAME_WIDTH, GAME_HEIGHT, UI } from '../config.js';
 import { drawWindow } from '../entities/uiKit.js';
 import Character from '../entities/Character.js';
 import * as sfx from '../audio/sfx.js';
+import * as music from '../audio/music.js';
 import roomRules from '../data/rooms.json';
 import roomProps from '../data/roomProps.json';
 import bookData from '../data/skillBooks.json';
@@ -269,6 +270,7 @@ export const roomMethods = {
   // Through the door to the next floor (after a won fight or a finished room).
   goToNextFloor() {
     this.showSlots(false);
+    if (this.dungeon.bosses && this.dungeon.bosses[this.floor + 1]) music.play('bossWait'); // the song fades out as the squad walks into the door to a boss (user, session 59)
     this.heroesWalkToDoor(() => {
       this.removeFallenHeroes();
       this.slideToNextFloor(() => this.beginFloor());

@@ -12,10 +12,11 @@ const kill = (s, h) => { const ev = []; s.killUnit(h, ev); return ev; };
 
 // The squad is Knight, Rogue, Archer
 { const s = mk(); ok('squad of 3: Knight, Rogue, Archer', s.heroes.map((h) => h.name).join() === 'Knight,Rogue,Archer'); }
-// Perks help everyone from the start: Knight +8 defense +5% health, Rogue +10 evasion, Archer +8% attack speed
+// Perks help everyone from the start: Knight +8 defense +5% health, Rogue +evasion (heroes.json), Archer +8% attack speed
 { const s = mk(); const [k, ro, a] = s.heroes;
   ok('Knight perk: +5% max health and +8 defense for all', Math.abs(k.maxHp - base('Knight').health * 1.05) < 1 && Math.abs(ro.maxHp - base('Rogue').health * 1.05) < 1 && Math.abs(ro.stats.defense - (base('Rogue').defense + 8)) < 0.01, `${k.maxHp} ${ro.maxHp}`);
-  ok('Rogue perk: +10 evasion for all', Math.abs(k.stats.evasion - (base('Knight').evasion + 10)) < 0.01 && Math.abs(a.stats.evasion - (base('Archer').evasion + 10)) < 0.01);
+  const shadow = r('heroes.json').find((h) => h.id === 'rogue').perk.mods[0].flat;
+  ok(`Rogue perk: +${shadow} evasion for all`, Math.abs(k.stats.evasion - (base('Knight').evasion + shadow)) < 0.01 && Math.abs(a.stats.evasion - (base('Archer').evasion + shadow)) < 0.01);
   ok('Archer perk: +8% attack speed for all', Math.abs(k.stats.attackEfficiency - base('Knight').attackEfficiency * 1.08) < 0.01 && Math.abs(ro.stats.attackEfficiency - base('Rogue').attackEfficiency * 1.08) < 0.01);
   ok('new heroes start at full health', k.hp === k.maxHp && ro.hp === ro.maxHp); }
 // The perk grows with the hero's level

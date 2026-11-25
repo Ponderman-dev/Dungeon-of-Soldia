@@ -348,7 +348,7 @@
     "color": "0x9a5ad8",
     "summary": "Fast hits, many procs, bleeding enemies.",
     "tips": [
-      "Dirty Fighting: 15% of his hits make the enemy Bleed, and enemies he has debuffed miss 20% of their attacks on him.",
+      "Dirty Fighting: 15% of his hits make the enemy Bleed, and enemies he has debuffed miss 10% of their attacks on him.",
       "Multistrike: 5 quick hits on one enemy; every hit Bleeds and rolls his on-hit items.",
       "Attack speed, double hits and on-hit items love him. Smoke Bomb is the squad's escape: evasion + blind."
     ],
@@ -488,14 +488,14 @@
       "mods": [
         {
           "stat": "evasion",
-          "flat": 10,
-          "growth": 0.25
+          "flat": 5,
+          "growth": 0.125
         }
       ]
     },
     "passive": {
       "name": "Dirty Fighting",
-      "description": "15% on hit: BLEED. Enemies he debuffed miss 20% of their attacks on him.",
+      "description": "15% on hit: BLEED. Enemies he debuffed miss 10% of their attacks on him.",
       "procs": [
         {
           "proc": "onAttack",
@@ -513,7 +513,7 @@
         }
       ],
       "dirtyFighting": {
-        "missPercent": 20
+        "missPercent": 10
       }
     },
     "provides": [

@@ -214,6 +214,8 @@ export const skillBooksMethods = {
       const dealt = (result.amount || 0) - (result.absorbed || 0);
       if (m.siphonPercent && dealt > 0) this.healUnit(hero, Math.max(1, Math.round((dealt * m.siphonPercent) / 100)), events);
       if (m.ink && target.alive) for (const spec of m.ink) this.applyStatus(target, spec, hero, `book_${m.id}`, events);
+      // Giant Slayer: an elite or boss it hits also gets `vsBig.apply` (a Mark: the whole squad hits it harder).
+      if (m.vsBig && m.vsBig.apply && target.alive && (target.elite || (target.def && target.def.boss))) for (const spec of m.vsBig.apply) this.applyStatus(target, spec, hero, `book_${m.id}`, events);
       // Detonate: the target's poison / bleed / burn stacks go off at once (a bonus hit per stack) and are used up.
       if (m.detonate && target.alive) {
         const gone = target.statuses.filter((st) => m.detonate.statuses.includes(st.type));

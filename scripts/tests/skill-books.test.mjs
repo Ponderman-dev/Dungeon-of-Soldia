@@ -288,16 +288,16 @@ const heroWith = (id) => withPage(id, 0, [books[id].hero]);
   const before = es.map((e) => e.hp); s.castSkill(h[0].uid, 0);
   ok('Twin Crescent: Wind Cutter also slashes the row behind (not further)', es[0].hp < before[0] && es[1].hp < before[1] && es[2].hp === before[2]); }
 { const { s, h } = heroWith('convergence'); let ev = [];
-  for (let i = 0; i < 3; i++) { h[0].skills[0].cooldownLeft = 0; ev = s.castSkill(h[0].uid, 0); for (let t = 0; t < 1000; t += 20) ev = ev.concat(s.update(20)); }
+  for (let i = 0; i < books.convergence.patch.convergeEvery; i++) { h[0].skills[0].cooldownLeft = 0; ev = s.castSkill(h[0].uid, 0); for (let t = 0; t < 1000; t += 20) ev = ev.concat(s.update(20)); }
   const casts = ev.filter((e) => e.type === 'cast').map((e) => e.skill.name);
-  ok('Convergence: the 3rd cast fires all three spells', ev.some((e) => e.type === 'proc' && e.label === 'Convergence!') && new Set(casts).size === 3, casts.join(', ')); }
+  ok(`Convergence: cast no. ${books.convergence.patch.convergeEvery} fires all three spells`, ev.some((e) => e.type === 'proc' && e.label === 'Convergence!') && new Set(casts).size === 3, casts.join(', ')); }
 { const m = mk(['cleric', 'knight', 'rogue'], 0); m.s.refreshStats(); m.s.addPage(m.h[0].uid, 0, page('radiance'));
   const n = mk(['cleric', 'knight', 'rogue'], 0); n.s.refreshStats();
   for (const x of [m, n]) { x.h[1].hp = Math.round(x.h[1].maxHp * 0.2); x.h[2].hp = Math.round(x.h[2].maxHp * 0.3); }
   const b1 = m.h[1].hp, b2 = m.h[2].hp; m.s.castSkill(m.h[0].uid, 0); n.s.castSkill(n.h[0].uid, 0);
   ok('Radiance: Holy Nova heals the 2 most hurt allies (without it: only 1)', m.h[1].hp > b1 && m.h[2].hp > b2 && n.h[2].hp === b2, `${b1}->${m.h[1].hp} ${b2}->${m.h[2].hp}`); }
 { const { s, es, h } = heroWith('boneHarvest'); for (const e of es) e.hp = 1; s.castSkill(h[0].uid, 0);
-  ok('Bone Harvest: a Death Coil kill raises 2 skeletons', s.minions.filter((x) => x.holderUid === h[0].uid).length === books.boneHarvest.patch.raiseCount); }
+  ok('Bone Harvest: a Death Coil kill raises its skeletons', s.minions.filter((x) => x.holderUid === h[0].uid).length >= books.boneHarvest.patch.raiseCount); }
 { const a = mk(['bard'], 0), b = heroWith('heavyChains'); a.s.castSkill(a.h[0].uid, 0); b.s.castSkill(b.h[0].uid, 0); // the Warden's Chain Hook
   const ca = a.es.flatMap((e) => e.statuses).find((x) => x.type === 'stun'), cb = b.es.flatMap((e) => e.statuses).find((x) => x.type === 'stun');
   ok('Heavy Chains: Chain Hook stuns 1s longer', ca && cb && Math.abs(cb.total - ca.total - books.heavyChains.patch.applyDurationAdd.stun) < 1, `${ca && ca.total} -> ${cb && cb.total}`); }
@@ -370,3 +370,8 @@ for (const id of ['mend', 'greaterMend']) {
   const healed = (i) => h[i].hp - hp0[i] >= Math.floor((h[i].maxHp * pct) / 100);
   s.castSkill(h[0].uid, 1);
   ok(`${books[id].name}: heals the ${books[id].allyHeal.count} most hurt heroes (the caster counts) ${pct}%`, healed(0) && (books[id].allyHeal.count < 2 || healed(1)) && (books[id].allyHeal.count > 1 || !healed(1)) && !healed(2), `${hp0} -> ${h.map((x) => x.hp)}`); }
+for (const elite of [true, false]) { const { s, es, h } = withPage('giantSlayer', 0, ['knight']); es.forEach((e) => { e.elite = elite ? {} : null; }); s.placeLines(); s.castSkill(h[0].uid, 0);
+  const marked = es.filter((e) => e.statuses.some((x) => x.type === 'mark')).length;
+  ok(`Giant Slayer: ${elite ? 'an elite it hits is Marked' : '...a normal enemy is not'}`, elite ? marked >= 1 : marked === 0, marked); }
+{ const { s, h } = heroWith('boneHarvest'); s.castSkill(h[0].uid, 0);
+  ok('Bone Harvest: every cast raises a page skeleton, even without a kill', s.minions.some((x) => x.holderUid === h[0].uid)); }

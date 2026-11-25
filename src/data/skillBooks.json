@@ -234,9 +234,16 @@
       "tier": "common",
       "tag": "Damage",
       "name": "Giant Slayer",
-      "text": "+30% skill power against elites and bosses.",
+      "text": "+60% skill power against elites and bosses, and they are Marked for 4s (+15% damage taken from everyone).",
       "vsBig": {
-        "power": 30
+        "power": 60,
+        "apply": [
+          {
+            "status": "mark",
+            "durationMs": 4000,
+            "damageTakenPercent": 15
+          }
+        ]
       }
     },
     "overcharge": {
@@ -596,9 +603,9 @@
       "skill": "mage_rotation",
       "tag": "Power",
       "name": "Convergence",
-      "text": "Every 3rd Elemental Rotation cast also fires the other two spells.",
+      "text": "Every 2nd Elemental Rotation cast also fires the other two spells.",
       "patch": {
-        "convergeEvery": 3
+        "convergeEvery": 2
       }
     },
     "radiance": {
@@ -620,9 +627,14 @@
       "skill": "death_coil3",
       "tag": "Summon",
       "name": "Bone Harvest",
-      "text": "A Death Coil kill raises 4 skeletons instead of one.",
+      "text": "Every Death Coil cast raises 1 weak skeleton (max 2), a kill raises 4 instead of one, and its cooldown is 20% shorter.",
       "patch": {
         "raiseCount": 4
+      },
+      "cooldown": 20,
+      "summon": {
+        "minion": "skeleton",
+        "max": 2
       }
     },
     "heavyChains": {
@@ -670,16 +682,17 @@
       "skill": "chain_hook",
       "tag": "Control",
       "name": "Cold Iron",
-      "text": "Chain Hook also gives 3 CHILL.",
+      "text": "Chain Hook also gives 4 CHILL, and its cooldown is 20% shorter.",
       "patch": {
         "addApply": [
           {
             "status": "chill",
-            "stacks": 3,
+            "stacks": 4,
             "durationMs": 4000
           }
         ]
-      }
+      },
+      "cooldown": 20
     },
     "bigBatch": {
       "kind": "modifier",
@@ -688,10 +701,11 @@
       "skill": "alch_barrage",
       "tag": "Area",
       "name": "Big Batch",
-      "text": "Flask Barrage throws 11 flasks instead of 5.",
+      "text": "Flask Barrage throws 11 flasks instead of 5, and its cooldown is 20% shorter.",
       "patch": {
         "randomCount": 11
-      }
+      },
+      "cooldown": 20
     },
     "purify": {
       "kind": "modifier",

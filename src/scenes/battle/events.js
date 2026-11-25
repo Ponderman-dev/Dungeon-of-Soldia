@@ -258,6 +258,7 @@ export const eventsMethods = {
       // and a big burst (rings, rays, sparks) on its target (or around the attacker for a heal beat).
       this.drawChips(this.views.get(e.holder.uid));
       if (!e.fired) return;
+      if (e.counter.sound) sfx.play(e.counter.sound); // the counter's own sound (Warden's Shackles: cuffs clink shut)
       const v = this.views.get(e.unit.uid);
       const color = Phaser.Display.Color.HexStringToColor(e.color || e.counter.color || '#c8a0ff').color;
       v.ch.flash(color, 160);

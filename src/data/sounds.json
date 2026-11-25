@@ -374,11 +374,12 @@
       "always": true
     },
     "skill_chain_hook": {
-      "volume": 0.3,
+      "volume": 0.45,
+      "pitch": 1.25,
       "pitchJitter": 0.06,
       "minGapMs": 120,
-      "file": "picked/skill_discord",
-      "source": "pixabay_mandolin-strum-high-g-chord-100702.mp3",
+      "file": "picked/block",
+      "source": "Warden: the game's metal clank (block, new_100-cc0-sfx-metal-04) pitched up = a chain biting",
       "always": true
     },
     "skill_challenge": {
@@ -398,11 +399,11 @@
       "always": true
     },
     "skill_lockdown": {
-      "volume": 0.3,
-      "pitchJitter": 0.06,
+      "volume": 0.5,
+      "pitchJitter": 0.05,
       "minGapMs": 120,
-      "file": "picked/skill_change_song",
-      "source": "pixabay_mandolin-strum-high-g-chord-100702.mp3",
+      "file": "picked/gateSlam",
+      "source": "Warden: the iron gate slam (gateSlam) = cells locking",
       "always": true
     },
     "skill_multistrike": {
@@ -459,6 +460,18 @@
       "minGapMs": 120,
       "file": "picked/grace",
       "source": "yours_fast-magic-game-spell-883.mp3"
+    },
+    "shackles": {
+      "volume": 0.35,
+      "pitch": 1.7,
+      "pitchJitter": 0.05,
+      "minGapMs": 200,
+      "files": [
+        "kenney/impactBell_heavy_000",
+        "kenney/impactBell_heavy_001",
+        "kenney/impactBell_heavy_002"
+      ],
+      "source": "Warden Shackles (4th hit roots): Kenney metal bell impacts pitched up = cuffs clinking shut"
     }
   },
   "maxVoices": 8

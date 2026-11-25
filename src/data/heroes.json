@@ -1493,7 +1493,8 @@
           "bobPx": 1,
           "bobMs": 700,
           "easeMs": 250
-        }
+        },
+        "sound": "shackles"
       }
     },
     "parts": {

@@ -1,38 +1,36 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 58)
-- BRANCH: `main` has EVERYTHING (session 57 pushed to main; branch `session-57-battle-music` = the same). Start the
-  next branch from `main`. Version 0.2.0 (package.json); itch.io zip = `npm run build:itch` -> itch-page.html renamed
-  index.html, zipped at the top (docs/itch-publish.md). Session 57 ran in the Claude APP (cloud workspace), not Claude
-  Code: same repo, same rules; the user's own PC copy needs a `git pull`.
-- SESSION 57 DID (all on main, game page republished):
-  1. BATTLE MUSIC: battle floors play RPG Battle Theme 8 + 10 (the ORIGINAL Pixel-boy files, CC0) taking turns; each
-     turn repeats the song 2-4 times at random, fades 1.5 s, 3 s silence, then the other (music.json turnRepeats /
-     turnEndFadeSec / turnGapSec; systems/music.js turnSeconds; `docs/systems/sound.md` MUSIC, last note).
-  2. HERO BANNERS: one pixel scene per hero from their lore (src/assets/banners/<id>.png, 113x59 at 3x;
-     `entities/heroBanner.js`; drawn by `docs/proposals/hero-banners/make-banners.py`). All 10 in the game; the user
-     did not mark any as NO.
-  3. HEROES SCREEN = TWO PAGES (`scenes/heroes/heroPages.js`; picked from 5 + 6 styles on the review page):
-     camp > HEROES = HERO PAGE (pick 4): the hero in front of their banner, name + role under it, YOUR RECORDS (runs,
-     best floor, kills, deaths, damage, healing = progress.stats.heroRecords; user: 'not the hero stats, the playtime
-     stats'), LOOKS (tap = try on, this visit only), HERO DETAILS = the card. Glossary > HEROES = CARD (pick F): hero,
-     name, role + type, summary, STORY (lore rewritten to 4-5 sentences), STATS, the FULL kit with icons, PASSIVE
-     FIRST. The card SCROLLS (drag / wheel, `scrollable()`): the first scrolling menu page. Details: `docs/systems/ui.md`.
-- NEXT (user's open asks):
-  - MORE BATTLE MUSIC for the board. Round 10 (xD16 Battle 1/2, RPG 5/6/11) = NO: 'too simple and short'. Look for
-    LONGER, richer 16-bit battle songs (several sections, like RPG 8 / 10), full energy from beat 1. Licence: CC0 / CC BY
-    / CC BY-SA / Pixabay OK, NC / ND not OK; credit line in music.json + src/assets/music/LICENSE.txt + info.json.
-    Board = the reused review page (see below), make-board10.py pattern (`docs/proposals/music/`).
-  - TODO from this work: wearing a look in fights (try-on only now); `showArmoury` (bigger try-on page) is unused;
-    the Heroes LIST still shows no banner; docs/itch-publish.md 'What playtesters will see' is out of date.
-- REVIEW PAGE (CLAUDE.md 'reuse the Skill Effects page'): https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN, now
-  titled 'Soldia Heroes Pages'; db `banners` (picks: heroPageStyle '4', glossaryStyle 'F', per-hero banner verdicts)
-  and db `music` (all music verdicts, rounds 1-10). Swap its content per topic.
-- Still KIV from before: Holy damage (don't change the Cleric until asked), a 'made by' credit name, Android sound
-  without a tap, Settings HELP -> crypto help, the deep BUG HUNT + OPTIMIZATION + SECURITY CHECK.
-- PUBLISH the game page only at the end of a batch of visible changes (CLAUDE.md 'Preview pages').
+## START HERE (session 59): REDO THE SHIELD TOTEM
+- BRANCH: `main` has EVERYTHING (session 58 pushed to main). Start the next branch from `main`. Version 0.2.1.
+- NEXT TASK (user: 'redo totem shield'): the user did not say HOW yet. FIRST ask what they want changed (question tool,
+  options: the rule / the numbers / the look / where it stands), then build. Today: rare item `shield_totem`
+  (items.json: greater minion + `totemBlock` 4% per copy, 'totem +50% health' per stack, no upkeep); the totem =
+  minions.json `shield_totem` (`object: true`: never moves or attacks; placed beside the middle hero, combat.json
+  `minions.totemAheadPx` 30 / `totemSidePx` -56; vanishes when a floor is won). Every hero blocks while it stands
+  (`totemBlock()` in systems/battle/stats.js, 60% cap shared). History of its numbers: docs/item-decisions.md
+  (search 'Shield Totem'; the newest line wins), docs/systems/items.md + minions.md. Test: `shield-totem.test.mjs`.
+  Balance check after: `node scripts/tests/itemruns.mjs 3 shield_totem`.
+- SESSION 58 DID (all on main; game page republished; itch zip 0.2.1 given to the user):
+  1. FPS ON PAGE OPEN (user: Seeker phone, 2025 mid tier, itch.io in Brave): pages slide in only after their first
+     draws (`pageEnter`, uiKit); Profile banners made once (`entities/profileBanner.js`, 800 -> 133 ms); glossary card
+     scrolls under a backdrop strip instead of a mask (Phaser 4 masks = filters, slow). docs/systems/ui.md last part.
+  2. LOADING + TITLE INTRO: game opens up in the night sky with a gold LOADING bar while `entities/warmUp.js` makes
+     every picture once; then the camera glides down, THEN the logo drops in, then TAP TO START (title-base.md
+     section 0, title.json `intro`). The user asked for loading-screen LOOK options on the review page: NOT done yet.
+  3. SKILL AIM default = INSTANT (settings.json; user: 'attack skills auto instead of tap' meant THIS, not auto-cast).
+- OPEN from session 58: does Brave still stutter on the Seeker? (if yes: try Shields off; small text reads canvas
+  pixels back = `snapCanvas` in uiKit, which Brave slows). infoWindow.js + the squad grid still use masks.
+- Still open from before: MORE BATTLE MUSIC (longer, richer 16-bit, CC0 / CC BY / CC BY-SA / Pixabay; board =
+  `docs/proposals/music/`), looks in fights, Heroes LIST banners, Holy damage (don't touch the Cleric until asked),
+  'made by' credit, Android sound without a tap, Settings HELP, the deep BUG HUNT / OPTIMIZATION / SECURITY CHECK.
+- REVIEW PAGE (reuse it): https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN ('Soldia Heroes Pages'; db `banners`,
+  `music`). PUBLISH the game page only at the end of a batch of visible changes.
 
 ## How we work with this user
+- SESSION 58 lessons: 'X auto instead of tap' was a SETTING DEFAULT, not a new feature: when a word could mean a
+  setting that exists, ask with the question tool BEFORE building. 'Show me' = put it on the game page (they don't read
+  screenshots in chat). Measure stutter with a 4x slowed CPU on a production build (frame times + camera position
+  per frame); the first visit to a page was the slow one. Keep their ORDER words exact ('finish the glide, THEN the logo').
 - SESSION 57 lessons: 'show me options' = build the options IN THE GAME (one code path per style), screenshot the real
   pages (Playwright on the dev server; `window.__game`, scene 'Heroes', call showHero / showEntry) for 2 heroes each,
   put them on the review page with one PICK button per group (db), then apply the pick and DELETE the unused styles.

@@ -389,17 +389,27 @@ export const buttonTextColor = (enabled = true, pressed = false, primary = false
 // Returns the rectangle (pages make it block taps).
 export function pageBackdrop(scene, bg) {
   const rect = scene.add.rectangle(0, 0, scene.scale.width, scene.scale.height, UI.pageBg ?? bg).setOrigin(0);
-  if (UI.dither) {
-    const [, b, c] = UI.dither, key = `dither-${b}-${c}`;
-    if (!scene.textures.exists(key)) {
-      const t = scene.textures.createCanvas(key, c * 2, c * 2), ctx = t.getContext();
-      ctx.fillStyle = '#' + b.toString(16).padStart(6, '0');
-      ctx.fillRect(c, 0, c, c); ctx.fillRect(0, c, c, c);
-      t.refresh();
-    }
-    scene.add.tileSprite(0, 0, scene.scale.width, scene.scale.height, key).setOrigin(0);
-  }
+  if (UI.dither) scene.add.tileSprite(0, 0, scene.scale.width, scene.scale.height, ditherKey(scene)).setOrigin(0);
   return rect;
+}
+// The dither checker's texture (UI.dither = [a, b, cellPx]), made once. Returns its key.
+function ditherKey(scene) {
+  const [, b, c] = UI.dither, key = `dither-${b}-${c}`;
+  if (!scene.textures.exists(key)) {
+    const t = scene.textures.createCanvas(key, c * 2, c * 2), ctx = t.getContext();
+    ctx.fillStyle = '#' + b.toString(16).padStart(6, '0');
+    ctx.fillRect(c, 0, c, c); ctx.fillRect(0, c, c, c);
+    t.refresh();
+  }
+  return key;
+}
+// The page background's top `h` px again (same colour + dither, lined up with it), returned as [rect, tile?] to put
+// OVER content that scrolls up under a page's top bar: a cover instead of a mask (session 58: a Phaser 4 mask is a
+// filter that redraws the content every frame and stalls the first time it is used = the glossary card stuttered).
+export function backdropStrip(scene, h) {
+  const out = [scene.add.rectangle(0, 0, scene.scale.width, h, UI.pageBg).setOrigin(0)];
+  if (UI.dither) out.push(scene.add.tileSprite(0, 0, scene.scale.width, h, ditherKey(scene)).setOrigin(0));
+  return out;
 }
 // A title strip across the top of a panel h px tall, `i` px inside the panel's left/top edge.
 export function drawStrip(g, x, y, w, h) {

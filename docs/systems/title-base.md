@@ -2,6 +2,14 @@
 
 User's sketch + picks (2026-10-21). Flow: Title -> walk into the dungeon -> one hero walks in -> Base -> 'To dungeon' -> Squad.
 
+## 0. LOADING (BootScene, session 58)
+- Boot loads the font, then shows LOADING + a gold bar while `entities/warmUp.js` makes every pixel picture once
+  (heroes + shop looks, enemies, minions, room props, skill / item / status icons, banners, menu + dungeon A floors,
+  the font's letters), ~12 ms of work per frame; then draws each picture once under the cover (the graphics card gets
+  it) and starts 'Title'. Why: pictures were made the first time a page needed them = the first visit to the Heroes
+  page / glossary card stuttered (user, itch build). About 1 s on a slow phone. Pruning after bosses
+  (textureCache.js) may remove some again; they are then remade when needed.
+
 ## 1. Title page (TitleScene; Boot starts 'Title') — BUILT
 - User's pick F (after rejecting a far 'pointy pines + castle' view and 3 other designs: user wants a THICK forest seen
   FROM ABOVE, round tree tops, not uniform/pointy; the tower far away; logo not at the top; Slay the Spire feel).

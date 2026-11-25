@@ -191,6 +191,9 @@ note: "black menu with white strokes like the early Dragon Quest style of UI").
   playtime stats'), LOOKS row (tap = try on, this visit only; wearing in fights TODO), HERO DETAILS = the card.
   From the Glossary = the CARD (pick F): hero, name, role + type, summary, STORY (lore, 4-5 sentences since session
   57), STATS, then the FULL kit with icons, PASSIVE FIRST (user), then attack, support, perk. The card SCROLLS (drag /
-  wheel; `scrollable()` in heroPages.js: masked body container + a thin bar, like infoWindow.js). Neater pass (user):
+  wheel; `scrollable()` in heroPages.js: body container + a thin bar; NO mask since session 58: the body scrolls under
+  `backdropStrip()` (uiKit: the page background's top strip) with the top bar moved over it. A Phaser 4 mask is a filter
+  that redraws the content every frame and stalls the first time = the card stuttered; infoWindow.js and the squad
+  grid still use masks). Neater pass (user):
   no text over the banner art; name + role under the card; YOUR RECORDS and LOOKS are SECTIONS (window + DUSK title
   strip, salmon title) with cells divided by thin lines. showArmoury (bigger try-on page) is unused for now.

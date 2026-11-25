@@ -6,7 +6,7 @@
 // Drawing only, no rules. Data: heroPage.json (layout.page / layout.card2), heroes.json, skills.json.
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, SKILL_COLORS, UI } from '../../config.js';
-import { drawWindow, drawStrip } from '../../entities/uiKit.js';
+import { drawWindow, drawStrip, backdropStrip } from '../../entities/uiKit.js';
 import { floorCrop } from '../../entities/floorTexture.js';
 import { heroBanner, hasBanner } from '../../entities/heroBanner.js';
 import { skillIconKey } from '../../entities/skillIconTexture.js';
@@ -129,11 +129,15 @@ function recordCells(s, page, def, x, y, w, rh) {
 }
 
 // Drag (or mouse wheel) scrolls `body` between the top bar (viewTop) and the screen bottom; a thin bar shows where.
+// `page` holds only the top bar and `body` when this is called.
 function scrollable(s, page, body, viewTop, bottom) {
   const viewH = GAME_HEIGHT - viewTop, contentH = bottom + 16 - viewTop, max = Math.max(0, contentH - viewH);
   if (!max) return;
-  const maskG = s.make.graphics({ add: false }).fillStyle(0xffffff, 1).fillRect(0, viewTop, GAME_WIDTH, viewH);
-  body.enableFilters().filters.external.addMask(maskG);
+  // The content scrolls up UNDER a strip of page background, and the top bar (BACK) is moved over that strip
+  // (session 58: no mask, see uiKit backdropStrip).
+  const bar0 = page.list.filter((o) => o !== body);
+  page.add(backdropStrip(s, viewTop));
+  for (const o of bar0) page.bringToTop(o);
   const bar = s.add.graphics(); page.add(bar);
   let at = 0, drag = null;
   const set = (v) => {
@@ -146,7 +150,7 @@ function scrollable(s, page, body, viewTop, bottom) {
   const up = () => { drag = null; };
   const wheel = (p, o, dx, dy) => set(at + dy);
   s.input.on('pointerdown', down); s.input.on('pointermove', move); s.input.on('pointerup', up); s.input.on('wheel', wheel);
-  body.once('destroy', () => { s.input.off('pointerdown', down); s.input.off('pointermove', move); s.input.off('pointerup', up); s.input.off('wheel', wheel); maskG.destroy(); });
+  body.once('destroy', () => { s.input.off('pointerdown', down); s.input.off('pointermove', move); s.input.off('pointerup', up); s.input.off('wheel', wheel); });
   set(0);
 }
 

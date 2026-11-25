@@ -555,6 +555,7 @@ export const skillsMethods = {
   // A heal that really restored health is a "heal received": the Lost Cleric's Grimoire reacts to it.
   // Returns the health restored.
   healUnit(unit, amount, events, opts = {}) {
+    if (unit.def.hitsToKill) return 0; // Shield Totem: counts hits, healing does not give them back
     const raw = Math.round(amount * (opts.aura === false ? 1 : this.regenAura().factor));
     const room = unit.maxHp - unit.hp;
     const got = Math.min(room, raw);

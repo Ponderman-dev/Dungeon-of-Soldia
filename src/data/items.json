@@ -136,7 +136,7 @@
     "rarity": "rare",
     "type": "special",
     "scope": "self",
-    "description": "Summons a Shield Totem. While it stands, every hero blocks 4% of hits. No upkeep.",
+    "description": "Summons a Shield Totem that falls after 4 hits and stands up again 30s later. While it stands, every hero blocks 4% of hits. No upkeep.",
     "effects": [
       {
         "greaterMinion": "shield_totem",
@@ -147,7 +147,7 @@
         "percent": 4
       }
     ],
-    "perStack": "+4% block, totem +50% health",
+    "perStack": "+4% block, totem +2 hits (max 10)",
     "provides": [
       "minion",
       "shield"

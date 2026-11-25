@@ -109,7 +109,7 @@
     "copyStatBonus": 0.5,
     "itemWeakCap": 4,
     "maxPerHero": 6,
-    "totemAheadPx": 30,
+    "totemAheadPx": 48,
     "totemSidePx": -56,
     "holderBonusShare": 0.5,
     "upkeepWeakScale": 0.5,

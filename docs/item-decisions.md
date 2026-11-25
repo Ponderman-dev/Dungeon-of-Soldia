@@ -573,3 +573,6 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   when it arrives (`rangedHitMs`); the shot killed it / it died meanwhile -> another enemy. Archer Volley +1 arrow per
   Quiver unchanged. Full runs, a ranged hero holds it (10 runs x 3 squads): old 0/1/3 copies 28.0 / -0.4 / +1.8;
   NEW 27.3 / +2.1 / +7.0 (stronger: focus fire kills faster).
+- [built session 59] SHIELD TOTEM v2 (user): stands a bit higher; falls after 4 HITS (any size) with 1 copy, +2 hits
+  per extra copy, max 10; dead -> back 30s later (fight time), NOT at every floor start (keeps the hits it took
+  between floors). Block aura unchanged (4% per copy). Details: docs/systems/minions.md 'Session 59'.

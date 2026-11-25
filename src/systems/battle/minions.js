@@ -92,8 +92,9 @@ export const minionsMethods = {
           st.timer = this.spawnDelay(src.spec, src.copies);
           // Weak minions are there from the START of every fight (user's choice), then more come on the timer.
           for (let i = 0; i < (src.spec.atFloorStart ?? 1) * (src.burst || 1); i++) this.spawnMinion(hero, src, events);
-        } else if (src.kind === 'greater' && st.wait <= 0 && !this.minions.some((m) => m.holderUid === hero.uid && m.sourceKey === src.key)) {
-          this.spawnMinion(hero, src, events);
+        } else if (src.kind === 'greater' && st.wait <= 0 && !(st.respawnMs > 0) && !this.minions.some((m) => m.holderUid === hero.uid && m.sourceKey === src.key)) {
+          const m = this.spawnMinion(hero, src, events);
+          if (m && st.hitsTaken) { m.hp = Math.max(1, m.maxHp - st.hitsTaken); st.hitsTaken = 0; } // Shield Totem: the same totem as last floor
         }
       }
     }
@@ -112,7 +113,13 @@ export const minionsMethods = {
     this.thunders = []; // a Thunderstruck circle still growing when the floor is won just goes away
     this.spirits = [];
     for (const m of [...this.minions]) {
-      if (!m.greater || m.def.object) this.vanishMinion(m, 'floorEnd', events); // the Shield Totem too (user, session 50: it must not follow the squad; it stands up again at the next fight)
+      if (m.def.object) {
+        // Shield Totem: it does not walk with the squad (user, session 50), but it is the SAME totem at the next fight:
+        // the hits it took are remembered (user, session 59: no fresh totem at every floor start).
+        const holder = this.heroes.find((h) => h.uid === m.holderUid);
+        if (holder) this.sourceState(holder, m.sourceKey).hitsTaken = m.maxHp - m.hp;
+        this.vanishMinion(m, 'floorEnd', events);
+      } else if (!m.greater) this.vanishMinion(m, 'floorEnd', events);
       else { m.floors++; m.floorRevived = false; } // a greater minion that survived the floor (Spirit Knight grows; Phoenix can revive again)
     }
     for (const hero of this.heroes) {
@@ -141,6 +148,12 @@ export const minionsMethods = {
   tickSpawner(hero, dt, events) {
     if (!this.enemies.some((e) => e.alive)) return; // only while there is a fight
     for (const src of hero.minionSources || []) {
+      if (src.kind === 'greater') {
+        // Shield Totem: a dead totem stands up again `respawnMs` after it died (fight time only; the rest carries over floors).
+        const st = this.sourceState(hero, src.key);
+        if (st.respawnMs > 0 && (st.respawnMs -= dt) <= 0) { st.respawnMs = 0; this.spawnMinion(hero, src, events); }
+        continue;
+      }
       if (src.kind !== 'weak' || src.onHit) continue;
       const st = this.sourceState(hero, src.key);
       st.timer -= dt;
@@ -223,7 +236,11 @@ export const minionsMethods = {
     this.gainSoul(events); // Necromancer's Legion
     this.explodeMinion(m, events); // Mimic, Grave Dust
     const holder = this.heroes.find((h) => h.uid === m.holderUid);
-    if (m.greater && holder) this.sourceState(holder, m.sourceKey).wait = this.rules.minions.revivalFloors;
+    if (m.greater && holder) {
+      const st = this.sourceState(holder, m.sourceKey);
+      if (m.def.respawnMs) { st.respawnMs = m.def.respawnMs; st.hitsTaken = 0; } // Shield Totem: back after 30 s of fighting, whole again
+      else st.wait = this.rules.minions.revivalFloors;
+    }
     this.refreshStats();
   },
 
@@ -293,8 +310,16 @@ export const minionsMethods = {
     const scale = (1 + bonus * ((m.copies || 1) - 1)) * growth * (1 + boost.bone / 100) * lvl;
     const ratio = m.maxHp > 0 ? m.hp / m.maxHp : 1;
     const hpScale = m.greater ? 1 : 1 + (boost.weakHealth || 0) / 100; // Overseer's Whistle: weak minions are tougher
-    m.maxHp = Math.max(1, Math.round(raw.health * scale * hpScale));
-    m.hp = Math.min(m.maxHp, Math.round(m.maxHp * ratio));
+    if (m.def.hitsToKill) {
+      // Shield Totem: its health is a number of HITS (hitsToKill, +hitsPerCopy per extra copy, at most hitsMax);
+      // boosters do not change it, and a new copy adds its hits on top of the ones already taken.
+      const lost = m.maxHp > 0 ? m.maxHp - m.hp : 0;
+      m.maxHp = Math.min(m.def.hitsMax ?? Infinity, m.def.hitsToKill + (m.def.hitsPerCopy || 0) * ((m.copies || 1) - 1));
+      m.hp = Math.max(1, m.maxHp - lost);
+    } else {
+      m.maxHp = Math.max(1, Math.round(raw.health * scale * hpScale));
+      m.hp = Math.min(m.maxHp, Math.round(m.maxHp * ratio));
+    }
     m.baseStats = { ...raw, health: m.maxHp, attack: Math.round(raw.attack * scale) };
     if (!m.greater) m.baseStats.attackEfficiency = raw.attackEfficiency * (1 + boost.weakSpeed / 100);
     const stats = { ...m.baseStats };

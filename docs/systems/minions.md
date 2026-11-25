@@ -12,3 +12,11 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
 - **Session 50 (user):** the Shield Totem VANISHES when a floor is won (endFloor: greater minions with `def.object`), so it
   never walks with the squad into rooms; it stands up again (full health) at the next fight. It stands in the GAP left of
   the middle hero (`totemSidePx` -56, `totemAheadPx` 30), not in the centre on top of the middle hero.
+- **Session 59 (user): SHIELD TOTEM v2.** Its health is HITS: `hitsToKill` 4, +`hitsPerCopy` 2 per extra copy, at most
+  `hitsMax` 10 (minions.json; every hit takes exactly 1 in `dealDamage` / the hit path; boosters do not change it).
+  Damage over time (`tickDots`) and healing (`healUnit`) do nothing to it. Dead -> stands up again `respawnMs` 30000
+  of FIGHT time later (source state `respawnMs`, ticked in `tickSpawner`, carries over floors; NOT revivalFloors).
+  It still vanishes when a floor is won, but the hits it took are kept (`hitsTaken`) and the SAME totem stands at the
+  next fight; a dead one does NOT come back free at floor start. Stands higher: `totemAheadPx` 30 -> 48.
+  Test: `totem-hits.test.mjs`. Full runs (12 per number, front hero 0/1/3/8 copies): old +5.0 / +9.8 / +14.8,
+  new -2.4 / -0.2 / +5.7 (much weaker; numbers not retuned yet, waiting on the user).

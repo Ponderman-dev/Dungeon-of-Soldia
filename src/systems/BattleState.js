@@ -696,6 +696,7 @@ export default class BattleState {
     // Mirror Buckler: a RANGED or MAGIC enemy hit on the holder may bounce back at the attacker (the holder takes nothing).
     if (!result.dodged && attacker.side === 'enemy' && target.side === 'hero' && !target.minion && attacker.alive && this.mirrorBounce(attacker, target, result, opts, events)) return result;
     let dealt = null;
+    if (!result.dodged && target.def.hitsToKill && result.amount > 0) result.amount = 1; // Shield Totem: every hit takes exactly one
     if (!result.dodged) {
       dealt = this.dealDamage(target, result.amount, events);
       if (dealt.immune) {
@@ -811,6 +812,7 @@ export default class BattleState {
   // Returns { lost (health lost), absorbed (taken by shields), immune, broken }.
   dealDamage(target, amount, events = null) {
     if (this.has(target, 'invulnerable')) return { lost: 0, absorbed: 0, immune: true, broken: [] };
+    if (target.def.hitsToKill && amount > 0) amount = 1; // Shield Totem (minions.json hitsToKill): it dies after a number of HITS, whatever their size
     if (target.elite && amount > 0) target.elite.unhit = 0; // a Shielded elite's shield only regrows while it is left alone
     let left = amount;
     let absorbed = 0;

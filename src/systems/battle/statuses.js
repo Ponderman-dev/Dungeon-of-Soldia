@@ -213,6 +213,7 @@ export const statusesMethods = {
   // Damage over time: all stacks of one kind (bleed, burn, poison) tick together every `tickMs`
   // (statuses.json). One tick = the sum of every stack's damage, shown as one number.
   tickDots(unit, dt, events) {
+    if (unit.def.hitsToKill) return; // Shield Totem: only real hits count, damage over time does nothing to it
     for (const type of Object.keys(unit.dotClocks)) {
       const stacks = unit.statuses.filter((s) => s.type === type);
       if (!stacks.length) {

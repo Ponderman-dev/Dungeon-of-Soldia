@@ -666,7 +666,7 @@
     "hitsToKill": 4,
     "hitsPerCopy": 2,
     "hitsMax": 10,
-    "respawnMs": 15000,
+    "respawnMs": 20000,
     "parts": {
       "body": {
         "x": 0,

@@ -14,3 +14,4 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   ended (window = the halved duration + 3 s, counted from when it landed; `statuses.js applyStatus`, `breakFreeUntil`
   on the boss, measured on `floorMs`). A blocked try shows 'Resist' once per window (event `immuneStatus` + `resist`).
   A boss's own statuses on itself (Vharox grounded) are never blocked. Test: `boss-breakfree.test.mjs`.
+  Bot (bosscheck 2 40): Brood Mother squad wins 53% -> 45%.

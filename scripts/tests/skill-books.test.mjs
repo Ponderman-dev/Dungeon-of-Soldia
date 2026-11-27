@@ -191,8 +191,9 @@ import { pageIconArt } from '../../src/systems/pageIcon.js';
   const d0 = dmgOf(a.s.castSkill(a.h[0].uid, 0)), d1 = dmgOf(b.s.castSkill(b.h[0].uid, 0));
   const c = mk(['knight'], 0); for (const e of c.es) e.stats.defense = e.stats.resist = 60 * (1 - books.piercing.armorPierce / 100); const d2 = dmgOf(c.s.castSkill(c.h[0].uid, 0));
   ok('Piercing: hits as if the enemy had 15% less defense', d1 > d0 && Math.abs(d1 - d2) <= 2, `${d0} -> ${d1} (want ${d2})`); }
-{ const { s, h } = withPage('secondWind', 0, ['knight']); h[0].hp = 50000; s.castSkill(h[0].uid, 0);
-  ok('Second Wind: casting heals the caster 4% of max health', Math.abs(h[0].hp - 50000 - h[0].maxHp * books.secondWind.selfHealPercent / 100) <= 1, h[0].hp); }
+{ const { s, h } = withPage('mend', 0, ['knight']); h[0].hp = 50000; s.castSkill(h[0].uid, 0);
+  ok('Mend: casting an ATTACK skill heals the caster ' + books.mend.selfHealPercent + '% of max health', Math.abs(h[0].hp - 50000 - h[0].maxHp * books.mend.selfHealPercent / 100) <= 1, h[0].hp);
+  ok('Second Wind page is gone (user, session 59)', !books.secondWind); }
 { const { s, h } = withPage('momentum', 0, ['knight']); s.castSkill(h[0].uid, 0);
   const got = []; for (let i = 0; i < books.momentum.momentum.attacks + 1; i++) got.push(s.spendMomentum(h[0]));
   ok('Momentum: the next 3 basic attacks get +20%, then none', got.slice(0, -1).every((x) => x === books.momentum.momentum.damagePercent) && got[got.length - 1] === 0, got.join(' '));

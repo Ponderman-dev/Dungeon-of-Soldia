@@ -199,14 +199,6 @@
       "text": "The skill's hits ignore 40% of the enemy's defense and resist.",
       "armorPierce": 40
     },
-    "secondWind": {
-      "kind": "modifier",
-      "tier": "common",
-      "tag": "Heal",
-      "name": "Second Wind",
-      "text": "Casting heals the caster 4% of its max health.",
-      "selfHealPercent": 4
-    },
     "momentum": {
       "kind": "modifier",
       "tier": "common",

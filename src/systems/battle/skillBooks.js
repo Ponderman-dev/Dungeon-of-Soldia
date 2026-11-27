@@ -56,7 +56,7 @@ export const skillBooksMethods = {
     for (const m of mods) {
       for (const spec of m.selfApply || []) this.applyStatus(hero, spec, hero, `book_${m.id}`, events);
       for (const spec of m.squadApply || []) for (const u of this.squadUnits()) this.applyStatus(u, spec, hero, `book_${m.id}`, events);
-      // Second Wind: the caster heals a % of its max health.
+      // Mend: the caster heals a % of its max health.
       if (m.selfHealPercent) this.healUnit(hero, Math.round((hero.maxHp * m.selfHealPercent) / 100), events);
       // Momentum: the caster's next basic attacks hit harder (landAttack spends them).
       if (m.momentum) { hero.momentum = { left: m.momentum.attacks, percent: m.momentum.damagePercent }; events.push({ type: 'proc', unit: hero, label: 'Momentum!' }); }

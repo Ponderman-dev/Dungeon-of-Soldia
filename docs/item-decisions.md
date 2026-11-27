@@ -584,3 +584,4 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - [built session 59] GAG RUNE (user: silence was useless): when a stun / freeze from the holder ENDS, the enemy is
   EXPOSED: Mark +25% damage taken for 3s, +1s per extra rune (`st.gag` tag, applied on expiry in tickStatuses).
   Full runs (front hero 0/1/3/8 copies, 12 runs): Cinder Cloak +7.1/+5.5/+20.3, Gag Rune +3.8/+8.3/+7.5.
+- [built session 59] PHOENIX HATCHLING (user: 'way better regen'): the Phoenix regenerates 6%/s (was 2%/s).

@@ -1456,7 +1456,7 @@
     "rarity": "legendary",
     "type": "minion",
     "scope": "self",
-    "description": "Summons a Phoenix (fire, BURN). Regen 2%/s, revives once per floor. It gets half this hero's +fire.",
+    "description": "Summons a Phoenix (fire, BURN). Regen 6%/s, revives once per floor. It gets half this hero's +fire.",
     "effects": [
       {
         "greaterMinion": "phoenix"

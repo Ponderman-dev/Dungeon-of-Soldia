@@ -644,7 +644,7 @@
         "damageType": "fire"
       }
     ],
-    "regenPercent": 2,
+    "regenPercent": 6,
     "reviveOncePerFloor": 50
   },
   "shield_totem": {

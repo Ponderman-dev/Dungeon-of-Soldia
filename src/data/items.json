@@ -1084,14 +1084,14 @@
     "rarity": "common",
     "type": "special",
     "scope": "self",
-    "description": "Heals 0.2% of max health per second in fights.",
+    "description": "Heals 0.35% of max health per second in fights.",
     "effects": [
       {
         "special": "regen",
-        "percent": 0.2
+        "percent": 0.35
       }
     ],
-    "perStack": "+0.2% regen"
+    "perStack": "+0.35% regen"
   },
   "spiked_aegis": {
     "name": "Spiked Aegis",

@@ -873,11 +873,28 @@
     "rarity": "epic",
     "type": "onhit",
     "scope": "self",
-    "description": "Burns from this hero deal +40% damage, and when a Burn ends the enemy explodes for 150% fire damage nearby.",
+    "description": "15% on attack: Burn 3s. Burns from this hero deal +80% damage; when one ends the enemy explodes for 150% fire nearby.",
     "effects": [
       {
+        "proc": "onAttack",
+        "chance": 15,
+        "chancePerExtra": 5,
+        "unique": true,
+        "label": "Burn!",
+        "targets": "target",
+        "apply": [
+          {
+            "status": "burn",
+            "durationMs": 3000,
+            "damageMultiplier": 0.25,
+            "damageType": "fire"
+          }
+        ]
+      },
+      {
         "special": "magmaBurn",
-        "percent": 40
+        "percent": 80,
+        "perExtra": 40
       },
       {
         "special": "eruption",
@@ -887,9 +904,10 @@
       }
     ],
     "dropWeight": 90,
-    "perStack": "+40% burn damage, +75% explosion",
+    "perStack": "+5% Burn chance, +40% burn damage, +75% explosion",
     "provides": [
-      "fire"
+      "fire",
+      "burn"
     ]
   },
   "shatter_hammer": {

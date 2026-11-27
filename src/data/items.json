@@ -1500,7 +1500,7 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "Every floor starts with 1 extra minion of this hero's kind, 20% stronger. +1 weak minion allowed.",
+    "description": "Every floor starts with 1 extra minion of this hero's kind, twice as strong (a captain). +1 weak minion allowed.",
     "effects": [
       {
         "special": "whistleCap",
@@ -1509,13 +1509,13 @@
       },
       {
         "special": "whistleSummon",
-        "percent": 20,
-        "perExtra": 15
+        "percent": 100,
+        "perExtra": 25
       }
     ],
     "dropWeight": 70,
     "needs": "minion",
-    "perStack": "+15% stronger floor-start minion"
+    "perStack": "+25% stronger captain"
   },
   "grave_dust": {
     "name": "Grave Dust",

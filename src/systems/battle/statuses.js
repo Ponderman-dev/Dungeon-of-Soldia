@@ -27,19 +27,15 @@ export const statusesMethods = {
 
   // A shield was broken: tell the scene, and run its `onBreak` effect if it has one
   // (Bone Ward: bone shards hit every enemy of the holder for damageMultiplier x the caster's attack).
-  breakEffects(unit, broken, events) {
-    // Spiked Aegis SHIELD BREAK BLAST (user, session 59): when a shield on the holder breaks, spikes burst out:
-    // `shieldBlast`% of its attack as melee damage to every enemy within shieldBlastRadius px + its `shieldBlastSpec`
-    // (a 1s stun). Once per break, however many shields broke together.
+  breakEffects(unit, broken, events, breaker = null) {
+    // Spiked Aegis SHIELD BREAK SPIKES (user, session 59): when an enemy breaks a shield on the holder, spikes hit THAT
+    // enemy only: `shieldBlast`% of the holder's attack as melee damage + `shieldBlastSpec` (a 1s stun). Once per break,
+    // however many shields broke together. No breaker (damage over time) = no spikes.
     const sp = unit.side === 'hero' && unit.alive && unit.specials;
-    if (broken.length && sp && sp.shieldBlast) {
-      const R = sp.shieldBlastRadius || 100;
-      const near = this.enemies.filter((e) => e.alive && !this.untargetable(e) && (!this.hasPositions(e) || !this.hasPositions(unit) || Math.hypot(e.x - unit.x, e.y - unit.y) <= R));
-      events.push({ type: 'proc', unit, label: 'Spikes!', itemId: 'spiked_aegis' });
-      for (const foe of near) {
-        this.strike(unit, foe, events, { multiplier: sp.shieldBlast / 100, damageType: 'melee', item: true });
-        if (foe.alive && sp.shieldBlastSpec) this.applyStatus(foe, sp.shieldBlastSpec, unit, 'spiked_aegis', events);
-      }
+    if (broken.length && sp && sp.shieldBlast && breaker && breaker.alive && breaker.side === 'enemy') {
+      events.push({ type: 'proc', unit, label: 'Spikes!', itemId: 'spiked_aegis', target: breaker });
+      this.strike(unit, breaker, events, { multiplier: sp.shieldBlast / 100, damageType: 'melee', item: true });
+      if (breaker.alive && sp.shieldBlastSpec) this.applyStatus(breaker, sp.shieldBlastSpec, unit, 'spiked_aegis', events);
     }
     for (const shield of broken) {
       events.push({ type: 'shieldBreak', unit, status: shield });

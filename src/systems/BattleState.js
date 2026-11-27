@@ -712,7 +712,7 @@ export default class BattleState {
     if (!result.dodged && target.def.adapt && target.alive && target.hp > 0) this.adaptTo(target, opts.damageType || attacker.hitType || attacker.damageType, events); // Crystal Sentinel
     if (opts.projectile) events.push({ type: 'projectile', from: opts.from || attacker, to: target, kind: opts.projectile });
     events.push({ type: 'attack', attacker, target, result, skill: opts.skill, damageType: opts.damageType || attacker.damageType, basic: !!opts.basic, ghastly: !!opts.ghastly, noImpact: !!opts.noImpact }); // noImpact: the scene draws its own look (Thunderstruck)
-    if (dealt) this.breakEffects(target, dealt.broken, events);
+    if (dealt) this.breakEffects(target, dealt.broken, events, attacker);
     if (!result.dodged) this.afterItemHit(attacker, target, opts, events);
     if (!result.dodged && (opts.damageType || attacker.hitType || attacker.damageType) === 'dark') this.storeDark(attacker, result.amount - (result.absorbed || 0), events);
     // Frozen Demon Head: the holder's ice damage (the hit's own or its ice riders) fills the Head (not the spikes).

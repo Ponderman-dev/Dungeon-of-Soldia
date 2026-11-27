@@ -413,7 +413,7 @@ export const bossMethods = {
     const amount = Math.max(1, Math.round((t.maxHp * pct) / 100));
     const d = this.dealDamage(t, amount, events);
     events.push({ type, unit: t, from: u, amount: d.immune ? 0 : amount - d.absorbed });
-    this.breakEffects(t, d.broken, events);
+    this.breakEffects(t, d.broken, events, u);
     if (t.hp <= 0 && t.alive) this.killUnit(t, events, u);
     return d.immune ? 0 : amount;
   },

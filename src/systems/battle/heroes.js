@@ -26,7 +26,7 @@ export const heroesMethods = {
     if (part <= 0) return amount;
     const d = this.dealDamage(k, part, events);
     events.push({ type: 'intercepted', unit: k, ally: target, amount: d.immune ? 0 : part - d.absorbed });
-    this.breakEffects(k, d.broken, events);
+    this.breakEffects(k, d.broken, events, attacker);
     if (!d.immune) this.afterHit(attacker, k, part - d.absorbed, events); // his Bulwark Plate / Spite Mail reflect it
     if (k.hp <= 0 && k.alive) this.killUnit(k, events, attacker);
     return amount - part;

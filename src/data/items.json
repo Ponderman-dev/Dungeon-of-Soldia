@@ -1098,7 +1098,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "Shields on this hero are 10% bigger; melee attackers take 60% back while shielded. A breaking shield bursts: 200% damage around + 1s stun.",
+    "description": "Shields on this hero are 10% bigger; melee attackers take 60% back while shielded. The enemy that breaks its shield takes 200% damage and is stunned 1s.",
     "effects": [
       {
         "special": "shieldThorns",
@@ -1112,7 +1112,6 @@
         "special": "shieldBlast",
         "percent": 200,
         "perExtra": 100,
-        "radius": 100,
         "spec": {
           "status": "stun",
           "durationMs": 1000

@@ -854,12 +854,8 @@
       "tag": "Heal",
       "name": "Mend",
       "onlyKind": "support",
-      "allyHeal": {
-        "count": 1,
-        "percentMaxHp": 15,
-        "includeSelf": true
-      },
-      "text": "Casting heals the most hurt hero (the caster too) for 15% of its max health, but the cooldown is 25% longer. Support skills only.",
+      "selfHealPercent": 15,
+      "text": "Casting heals the caster 15% of its own max health, but the cooldown is 25% longer. Support skills only.",
       "cooldown": -25
     },
     "greaterMend": {
@@ -873,8 +869,8 @@
         "percentMaxHp": 20,
         "includeSelf": true
       },
-      "text": "Casting heals the 2 most hurt heroes (the caster too) for 20% of their max health, but the cooldown is 40% longer. Support skills only.",
-      "cooldown": -40
+      "text": "Casting heals the 2 most hurt heroes (the caster too) for 20% of their max health, but the cooldown is 25% longer. Support skills only.",
+      "cooldown": -25
     }
   },
   "cards": {

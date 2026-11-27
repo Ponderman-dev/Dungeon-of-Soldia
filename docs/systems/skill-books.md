@@ -93,3 +93,7 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   Steady 25, Sharpen 15, Heavy 30, Overcharge 80, Piercing 40. Runes ranked +1.2 (Shadow) to +3.7 (Holy). Still weak
   after this round: Big Batch, Bone Harvest, Convergence, Cold Iron (Warden), Giant Slayer. pageruns now puts a
   support-only page (and a support hero page like Iron Circle) on the SUPPORT skill. Smart curve median 39 (unchanged).
+- **SESSION 59 (user):** MEND now heals the CASTER 15% (`selfHealPercent`, no ally heal; still -25% cooldown, support only);
+  GREATER MEND cooldown cost 40% -> 25%. pageruns 12 (attack skill of all 3, support pages on support): before
+  Blood Price +6.1, Mend +4.3, Greater Mend +3.4, Second Wind +1.4; after Greater Mend +7.6, Blood Price +5.8,
+  Second Wind +1.1, Mend +0.9 (a self-heal on a support caster rarely matters: Mend is weak now).

@@ -1500,21 +1500,22 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "+1 weak minion allowed. Weak minions attack 25% faster.",
+    "description": "Every floor starts with 1 extra minion of this hero's kind, 20% stronger. +1 weak minion allowed.",
     "effects": [
       {
         "special": "whistleCap",
-        "percent": 1
+        "percent": 1,
+        "unique": true
       },
       {
-        "special": "whistleSpeed",
-        "percent": 25,
-        "perExtra": 10
+        "special": "whistleSummon",
+        "percent": 20,
+        "perExtra": 15
       }
     ],
     "dropWeight": 70,
     "needs": "minion",
-    "perStack": "+1 weak minion, +10% speed"
+    "perStack": "+15% stronger floor-start minion"
   },
   "grave_dust": {
     "name": "Grave Dust",

@@ -97,6 +97,15 @@ export const minionsMethods = {
           if (m && st.hitsTaken) { m.hp = Math.max(1, m.maxHp - st.hitsTaken); st.hitsTaken = 0; } // Shield Totem: the same totem as last floor
         }
       }
+      // OVERSEER'S WHISTLE (user, session 59): once per floor, at the start, ONE extra minion of the holder's own weak kind
+      // (its first weak source: the Necromancer's skeleton, a Rat Cage rat...) that is `whistleSummon`% stronger (20, +15
+      // per extra whistle: health and attack). It has the whistle's +1 slot, so it pushes nobody out.
+      const ws = hero.specials.whistleSummon;
+      const wsrc = ws && (hero.minionSources || []).find((x) => x.kind === 'weak' && !x.onHit);
+      if (wsrc) {
+        const m = this.spawnMinion(hero, wsrc, events);
+        if (m) { m.whistleBoost = ws; this.refreshMinionStats(m); m.hp = m.maxHp; events.push({ type: 'proc', unit: hero, label: 'Whistle!', itemId: 'overseers_whistle' }); }
+      }
     }
     return events;
   },
@@ -307,7 +316,7 @@ export const minionsMethods = {
     const holder = this.heroes.find((h) => h.uid === m.holderUid);
     const legion = holder && holder.def.passive && holder.def.passive.legion;
     const lvl = legion && m.def.id === legion.minion ? 1 + ((legion.perLevelPercent || 0) * ((holder.level || 1) - 1)) / 100 : 1; // Legion: his skeletons level up with him
-    const scale = (1 + bonus * ((m.copies || 1) - 1)) * growth * (1 + boost.bone / 100) * lvl;
+    const scale = (1 + bonus * ((m.copies || 1) - 1)) * growth * (1 + boost.bone / 100) * lvl * (1 + (m.whistleBoost || 0) / 100); // Overseer's Whistle minion
     const ratio = m.maxHp > 0 ? m.hp / m.maxHp : 1;
     const hpScale = m.greater ? 1 : 1 + (boost.weakHealth || 0) / 100; // Overseer's Whistle: weak minions are tougher
     if (m.def.hitsToKill) {

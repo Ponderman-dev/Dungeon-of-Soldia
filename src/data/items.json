@@ -1098,7 +1098,7 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "Shields on this hero are 10% bigger. While it has a shield, melee attackers take 60% of their hit back.",
+    "description": "Shields on this hero are 10% bigger; melee attackers take 60% back while shielded. A breaking shield bursts: 200% damage around + 1s stun.",
     "effects": [
       {
         "special": "shieldThorns",
@@ -1107,11 +1107,21 @@
       {
         "special": "shieldBonus",
         "percent": 10
+      },
+      {
+        "special": "shieldBlast",
+        "percent": 200,
+        "perExtra": 100,
+        "radius": 100,
+        "spec": {
+          "status": "stun",
+          "durationMs": 1000
+        }
       }
     ],
     "dropWeight": 80,
     "needs": "shield",
-    "perStack": "+60% reflected while shielded, +10% shields"
+    "perStack": "+60% reflected, +10% shields, +100% burst damage"
   },
   "provokers_horn": {
     "name": "Provoker's Horn",

@@ -29,7 +29,7 @@ const pick = (a, rng) => a[Math.floor(rng() * a.length)];
 const DEFENSIVE = new Set(['padded_vest', 'riposte_cloak', 'heart_charm', 'shield_totem', 'bulwark_plate', 'tough_skin', 'mage_cloak', 'iron_will_talisman', 'warding_charm', 'spite_mail', 'martyrs_shield', 'provokers_horn', 'phoenix_feather', 'second_wind_flask', 'mirror_buckler', 'spirit_axe', 'fire_heart', 'overheal_ring', 'heart_of_the_beast', 'feather_boots', 'spiked_aegis', 'lost_clerics_grimoire']);
 const TEAM = new Set(['war_banner', 'jolly_banner', 'spotters_lens', 'aid_kit', 'bandage_roll', 'soul_lantern', 'giantslayers_brand']);
 const SKILLY = new Set(['hourglass', 'conductors_baton', 'echo_rune', 'scholars_bookmark', 'siege_cannon']);
-const ELEMENT = { kindling: 'fire', frost_charm: 'ice', storm_charm: 'electric', shadow_charm: 'dark' };
+const ELEMENT = { ember_charm: 'fire', frost_charm: 'ice', storm_charm: 'electric', shadow_charm: 'dark' };
 const SKILL_HEROES = { mage: 1.3, cleric: 1.2, alchemist: 1.3, bard: 1.2, archer: 1.1, necromancer: 1.1 };
 // Modifier pages a sensible player likes (others are taken only if nothing better shows up).
 const GOOD_PAGES = { sharpen: 3, swift: 3, steady: 2, lasting: 2, aftershock: 4, ricochet: 4, siphon: 3, bulwark: 3, emberInk: 3, venomInk: 3, razorInk: 3, frostInk: 3, huntersInk: 3, titan: 3, rally: 3, concussive: 3, purify: 2, roar: 2, gravecall: 2, bloodPrice: 2, cyclone: 2, desperate: 1, overcharge: 1, reckless: 1, hasty: 1 };

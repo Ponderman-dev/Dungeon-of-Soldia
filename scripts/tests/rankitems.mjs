@@ -22,7 +22,7 @@ const MAX = 170, STEP = 50, TIMEOUT = 300000;
 const seeded = (seed) => () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const fits = (hero, tag) => (hero.provides || []).includes(tag) || hero.damageType === tag || (tag === 'melee' && hero.damageType === 'melee') || (tag === 'ranged' && hero.damageType === 'ranged');
-const ENABLER = { minion: 'rat_cage', bomb: 'fire_bombs', burn: 'kindling', poison: 'venom_fang', bleed: 'serrated_edge', fire: 'kindling', ice: 'frost_charm', electric: 'storm_charm', dark: 'shadow_charm', freeze: 'chill_band', cc: 'chill_band', shield: 'warding_charm', taunt: 'provokers_horn', heal: 'bandage_roll' };
+const ENABLER = { minion: 'rat_cage', bomb: 'fire_bombs', burn: 'cinder_cloak', poison: 'venom_fang', bleed: 'serrated_edge', fire: 'ember_charm', ice: 'frost_charm', electric: 'storm_charm', dark: 'shadow_charm', freeze: 'chill_band', cc: 'chill_band', shield: 'warding_charm', taunt: 'provokers_horn', heal: 'bandage_roll' };
 // Which hero holds the item, and which enabler (if any) it needs in this squad.
 function holderFor(sq, item) {
   const needs = [].concat(item.needs || []);

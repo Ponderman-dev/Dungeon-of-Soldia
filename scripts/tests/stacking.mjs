@@ -16,7 +16,7 @@ const FLOOR = 18, LEVEL = 12, LIMIT = 240000;
 // Who holds the item: a hero who can actually use it.
 const HOLDER = {
   archer: ['eagle_eye'],
-  mage: ['kindling', 'frost_charm', 'storm_charm', 'frozen_thunderbolt', 'magma_core', 'echo_rune', 'hourglass', 'siege_cannon', 'metronome'],
+  mage: ['ember_charm', 'frost_charm', 'storm_charm', 'frozen_thunderbolt', 'magma_core', 'echo_rune', 'hourglass', 'siege_cannon', 'metronome'],
   necromancer: ['shadow_charm', 'plague_flask', 'bone_charm', 'overseers_whistle', 'grave_dust', 'necro_crown'],
   bard: ['conductors_baton'],
   knight: ['provokers_horn', 'spite_mail', 'martyrs_shield', 'bulwark_plate', 'padded_vest', 'spiked_aegis', 'warding_charm', 'shield_totem', 'tough_skin', 'heart_charm', 'gag_rune', 'mage_cloak', 'fire_heart'],

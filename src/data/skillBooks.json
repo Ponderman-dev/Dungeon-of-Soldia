@@ -853,10 +853,8 @@
       "tier": "common",
       "tag": "Heal",
       "name": "Mend",
-      "onlyKind": "support",
-      "selfHealPercent": 15,
-      "text": "Casting heals the caster 15% of its own max health, but the cooldown is 25% longer. Support skills only.",
-      "cooldown": -25
+            "selfHealPercent": 15,
+      "text": "Casting heals the caster 15% of its own max health."
     },
     "greaterMend": {
       "kind": "modifier",

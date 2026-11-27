@@ -97,3 +97,5 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   GREATER MEND cooldown cost 40% -> 25%. pageruns 12 (attack skill of all 3, support pages on support): before
   Blood Price +6.1, Mend +4.3, Greater Mend +3.4, Second Wind +1.4; after Greater Mend +7.6, Blood Price +5.8,
   Second Wind +1.1, Mend +0.9 (a self-heal on a support caster rarely matters: Mend is weak now).
+  Then (user: options 1 + 2): MEND has NO cooldown cost and works on ANY skill (attack too): pageruns 12 Mend +6.2,
+  Greater Mend +7.7, Second Wind +1.1 (Second Wind = a smaller Mend now: open question for the user).

@@ -586,3 +586,4 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
   Full runs (front hero 0/1/3/8 copies, 12 runs): Cinder Cloak +7.1/+5.5/+20.3, Gag Rune +3.8/+8.3/+7.5.
 - [built session 59] PHOENIX HATCHLING (user: 'way better regen'): the Phoenix regenerates 6%/s (was 2%/s).
 - [built session 59] VITAL BAND (user: 'stronger but fit for common', no extra health): regen 0.35%/s per copy (was 0.2%). itemruns 3: 1/3/8 copies -0.2/+4.1/+11.9 -> +3.2/+10.9/+11.8 (Heart Charm +9.4/+14.0/+16.9).
+- [built session 59] CONQUEROR'S FLAG 'KILLS = POWER' (user): holder kills still heal the others 10% (+5 per extra), and each one gives every living hero +5% attack until the floor ends (buff 'buff:conqueror', untilFightEnd, max +50%; specials conquerAttack / conquerAttackCap). Best build (Archer, 32 runs): 1x +0.4 -> +3.1, 3x +3.4 -> +4.7; front-hero itemruns 8: +0.8 / +1.5 / +2.1. Still weak for a legendary.

@@ -2694,12 +2694,22 @@
     "rarity": "legendary",
     "type": "special",
     "scope": "self",
-    "description": "Every enemy this hero kills heals the OTHER living heroes 10% max health.",
+    "description": "Every enemy this hero kills heals the OTHER living heroes 10% and gives the squad +5% attack for the floor (max +50%).",
     "effects": [
       {
         "special": "conqueror",
         "percent": 10,
         "perExtra": 5
+      },
+      {
+        "special": "conquerAttack",
+        "percent": 5,
+        "unique": true
+      },
+      {
+        "special": "conquerAttackCap",
+        "percent": 50,
+        "unique": true
       }
     ],
     "dropWeight": 90,

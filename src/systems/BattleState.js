@@ -891,6 +891,14 @@ export default class BattleState {
         const others = this.heroes.filter((h) => h.alive && h !== killer);
         if (others.length) events.push({ type: 'proc', unit: killer, label: 'Conquer!', itemId: 'conquerors_flag' });
         for (const h of others) this.healUnit(h, (h.maxHp * conq) / 100 / this.regenAura().factor, events);
+        // KILLS = POWER (user, session 59): every holder kill also gives every living hero +conquerAttack% attack until
+        // the floor ends (one squad buff that grows per kill, up to conquerAttackCap%; untilFightEnd).
+        const step = killer.specials.conquerAttack || 0;
+        if (step > 0) for (const h of this.heroes.filter((x) => x.alive)) {
+          const cur = h.statuses.find((st) => st.key === 'buff:conqueror');
+          const pct = Math.min(killer.specials.conquerAttackCap || Infinity, ((cur && cur.mods[0].percent) || 0) + step);
+          this.applyStatus(h, { status: 'buff', durationMs: 1e9, untilFightEnd: true, mods: [{ stat: 'attack', percent: pct }] }, killer, 'conqueror', events);
+        }
       }
       // Quick Fingers: every kill cuts the killer's skill cooldowns.
       const cut = killer.specials.killCooldownMs || 0;

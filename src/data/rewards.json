@@ -2,7 +2,7 @@
   "choices": 3,
   "bossRarities": ["epic", "epic", "legendary"],
   "_bossRarities": "A boss floor's item reward: one card of each of these rarities (user, session 25), no potion or book card. The golden book still comes after.",
-  "potionChance": 0.05,
+  "potionChance": 0.15,
   "rarityOdds": [
     { "fromFloor": 1, "odds": { "common": 67, "rare": 28, "epic": 4.5, "legendary": 0.5 } },
     { "fromFloor": 11, "odds": { "common": 58, "rare": 32, "epic": 8.5, "legendary": 1.5 } },

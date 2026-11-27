@@ -122,12 +122,12 @@ const CYC = hero('mage').passive.elementCycle;
 const ROT = skills[hero('mage').skills.attack].rotation;
 const spellAt = (s, a, i) => { a.skills[0].rotation = i; return s.currentSpell(a, 0); };
 { const { s, a } = mk(['mage']); const plain = [0, 1, 2].map((i) => spellAt(s, a, i));
-  s.giveItem(a.uid, 'kindling'); s.giveItem(a.uid, 'frost_charm'); s.giveItem(a.uid, 'storm_charm'); s.giveItem(a.uid, 'storm_charm');
+  s.giveItem(a.uid, 'ember_charm'); s.giveItem(a.uid, 'frost_charm'); s.giveItem(a.uid, 'storm_charm'); s.giveItem(a.uid, 'storm_charm');
   const [fb, nova, chain] = [0, 1, 2].map((i) => spellAt(s, a, i));
   ok(`Charms: Kindling = Fireball +${ROT[0].charm.damagePercent}% (and its splash)`, Math.abs(fb.damageMultiplier / plain[0].damageMultiplier - (1 + ROT[0].charm.damagePercent / 100)) < 1e-9 && fb.splash.damageMultiplier > plain[0].splash.damageMultiplier);
   ok(`...Frost Charm = Nova +${ROT[1].charm.damagePercent}% damage, +${ROT[1].charm.radiusPercent}% size`, nova.damageMultiplier > plain[1].damageMultiplier && Math.abs(nova.area.radius / plain[1].area.radius - (1 + ROT[1].charm.radiusPercent / 100)) < 1e-9);
   ok(`...Storm Charm = +${ROT[2].charm.jumps} Chain jumps each`, chain.chainJumps === plain[2].chainJumps + 2 * ROT[2].charm.jumps, `${plain[2].chainJumps} -> ${chain.chainJumps}`);
-  ok('...charms held by OTHER heroes do not grow her spells', (() => { const x = mk(['mage', 'knight']); x.s.giveItem(x.h[1].uid, 'kindling'); return spellAt(x.s, x.a, 0).damageMultiplier === plain[0].damageMultiplier; })()); }
+  ok('...charms held by OTHER heroes do not grow her spells', (() => { const x = mk(['mage', 'knight']); x.s.giveItem(x.h[1].uid, 'ember_charm'); return spellAt(x.s, x.a, 0).damageMultiplier === plain[0].damageMultiplier; })()); }
 { const { s, es, a } = mk(['mage'], Array(8).fill('goblin')); es.forEach((e, n) => { e.x = 60 + n * 35; e.y = es[0].y; }); a.skills[0].rotation = 2;
   const chainHits = () => { const ev = [...cast(s, a, 'attack')]; for (let t = 0; t < 1500; t += 20) ev.push(...s.update(20)); return ev.filter((e) => e.type === 'attack' && e.attacker === a && e.skill).length; };
   a.timer = -1e12; const n0 = chainHits();

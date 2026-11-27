@@ -144,7 +144,7 @@ export const itemReactionsMethods = {
   },
 
   // Skins: a MELEE hit on the holder. Frost Mantle (FROST SKIN, session 31): `frostMantle`% (100 = every attacker) to
-  // give the attacker 1 Chill. Ember Charm (BURNING SKIN): the attacker is Burned (`burningSkinSpec`, 3s) for
+  // give the attacker 1 Chill. Cinder Cloak (BURNING SKIN): the attacker is Burned (`burningSkinSpec`, 3s) for
   // `burningSkin`% of the holder's attack per tick (20, +4 per extra copy). A sure effect pops no icon (every hit).
   frostMantle(attacker, target, events) {
     const sp = target.specials;

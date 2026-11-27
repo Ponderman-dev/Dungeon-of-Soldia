@@ -42,8 +42,8 @@ function pickWeighted(list, weightOf, rng) {
 // Each card: 1) roll a RARITY with the floor's odds, 2) pick an item of that rarity by its drop weight.
 // An item is only offered if at least one living hero could take it. If a rarity has nothing left,
 // it is skipped (the other rarities share its chance).
-// Very rarely (potionChance) one of the choices is replaced by the Shared Potion, which heals
-// the whole party. The potion is only offered when some living hero is hurt.
+// Sometimes (potionChance) the Shared Potion, which heals the whole party, comes as an EXTRA card after the others
+// (user, session 59: a 4th option, not one of the 3). The potion is only offered when some living hero is hurt.
 // `offered` (a Set kept for the run): items with `oncePerRun` (Soul Lantern) are never offered again once they were on a
 // card; rollChoices adds them to it. `odds` (optional) replaces the floor's rarity odds (the Mimic's prize: rare/epic only).
 // `bump` (after a fight with an elite): that many random cards roll their rarity one step higher (common > rare > epic >
@@ -73,7 +73,7 @@ export function rollChoices({ itemDefs, count, heroes, rules, floor = 1, potionC
   const potion = Object.values(itemDefs).find((item) => item.kind === 'potion');
   const hurt = heroes.some((h) => h.alive && h.hp < h.maxHp);
   if (potion && hurt && choices.length && rng() < potionChance) {
-    choices[Math.floor(rng() * choices.length)] = potion;
+    choices.push(potion);
   }
   return choices;
 }

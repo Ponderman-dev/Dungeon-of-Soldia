@@ -4,7 +4,7 @@
   "youRank": { "week": 214, "allTime": 1873 },
   "week": [
     { "name": "Ironmaw", "heroes": ["knight", "rogue", "cleric"], "floor": 112, "bosses": 5, "kills": 2914, "ms": 2892000, "endedBy": "brood_mother", "items": ["whetstone", "lucky_coin", "war_banner", "heart_charm", "spirit_axe", "exploiters_lens"] },
-    { "name": "Solkid", "heroes": ["mage", "necromancer", "bard"], "floor": 97, "bosses": 4, "kills": 2410, "ms": 2510000, "endedBy": "morthul", "items": ["kindling", "catalyst_vial", "ghastly_fire", "soul_lantern"] },
+    { "name": "Solkid", "heroes": ["mage", "necromancer", "bard"], "floor": 97, "bosses": 4, "kills": 2410, "ms": 2510000, "endedBy": "morthul", "items": ["ember_charm", "catalyst_vial", "ghastly_fire", "soul_lantern"] },
     { "name": "Dragonbr.", "heroes": ["samurai", "archer", "cleric"], "floor": 88, "bosses": 4, "kills": 2150, "ms": 2302000, "endedBy": "orcBrute", "items": ["sharp_edge", "eagle_eye", "quiver_of_plenty"] },
     { "name": "Pixelpal", "heroes": ["berserker", "rogue", "archer"], "floor": 74, "bosses": 3, "kills": 1790, "ms": 1980000, "endedBy": "golem", "items": ["bloodlust_mask", "venom_fang"] },
     { "name": "Nightowl", "heroes": ["knight", "mage", "cleric"], "floor": 71, "bosses": 3, "kills": 1702, "ms": 1914000, "endedBy": "frost_warden", "items": ["spite_mail", "frost_charm", "aid_kit"] },

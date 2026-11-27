@@ -548,9 +548,9 @@
             "damageMultiplier": 0.35
           }
         ],
-        "description": "Fireball: a big fire hit on one enemy, splash on its neighbours, sets Burn. Each Kindling she holds: +30% Fireball and splash.",
+        "description": "Fireball: a big fire hit on one enemy, splash on its neighbours, sets Burn. Each Ember Charm she holds: +30% Fireball and splash.",
         "charm": {
-          "item": "kindling",
+          "item": "ember_charm",
           "damagePercent": 30,
           "splashPercent": 30
         }

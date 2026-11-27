@@ -212,19 +212,21 @@ for (const [id, st] of [['ember_charm', 'burn'], ['venom_fang', 'poison'], ['tho
   const rg = rate('venom_fang', 1, 'poison', 12000, 0, sq), kn = rate('venom_fang', 1, 'poison', 12000, 1, sq);
   ok('Rogue: item debuffs 25% likelier (8% -> 10%), others stay 8%', within(rg, 0.10, 0.012) && within(kn, 0.08, 0.012), `${rg} / ${kn}`); }
 
-// Gag Rune
-{ const { s, es, k } = mk(['goblin']); give(s, k, 'gag_rune');
-  s.applyStatus(es[0], { status: 'stun', durationMs: 1000 }, k, 'x', []);
-  const sil = es[0].statuses.find((x) => x.type === 'silence');
-  ok('Gag Rune: a stun the holder causes also Silences for 2s', sil && sil.remaining === 2000);
-  es[0].statuses = []; s.applyStatus(es[0], { status: 'freeze', durationMs: 1000 }, k, 'x', []); ok('...a freeze too', es[0].statuses.some((x) => x.type === 'silence'));
-  es[0].statuses = []; s.applyStatus(es[0], { status: 'poison', durationMs: 1000, damageMultiplier: 1, damageType: 'dark' }, k, 'x', []); ok('...but no silence for other debuffs', !es[0].statuses.some((x) => x.type === 'silence'));
-  es[0].statuses = []; s.applyStatus(es[0], { status: 'stun', durationMs: 1000 }, s.heroes[1], 'x', []); ok('...and none when ANOTHER hero stuns', !es[0].statuses.some((x) => x.type === 'silence'));
-  give(s, k, 'gag_rune', 2); es[0].statuses = []; s.applyStatus(es[0], { status: 'stun', durationMs: 1000 }, k, 'x', []);
-  ok('...3 runes: 4s (+1s per extra copy)', es[0].statuses.find((x) => x.type === 'silence').remaining === 4000); }
+// Gag Rune (session 59): when the holder's stun / freeze ENDS, the enemy is exposed (a Mark: more damage taken)
+{ const { s, es, k } = mk(['goblin']); give(s, k, 'gag_rune'); const G = itemDefs.gag_rune.effects[0], e = es[0];
+  const mark = () => e.statuses.find((x) => x.type === 'mark' && x.key === 'mark:gag_rune');
+  const run = (ms) => { for (let t = 0; t < ms; t += 50) s.tickStatuses(50, []); };
+  s.applyStatus(e, { status: 'stun', durationMs: 1000 }, k, 'x', []);
+  ok('Gag Rune: nothing while the stun lasts', !mark() && !e.statuses.some((x) => x.type === 'silence'));
+  run(1050); ok('...when it ends: +' + G.spec.damageTakenPercent + '% damage taken for ' + G.durationMs / 1000 + 's', mark() && mark().damageTakenPercent === G.spec.damageTakenPercent && Math.abs(mark().remaining - G.durationMs) <= 50);
+  e.statuses = []; s.applyStatus(e, { status: 'freeze', durationMs: 1000 }, k, 'x', []); run(1050); ok('...a freeze too', !!mark());
+  e.statuses = []; s.applyStatus(e, { status: 'stun', durationMs: 1000 }, s.heroes[1], 'x', []); run(1050); ok('...and nothing when ANOTHER hero stuns', !mark());
+  give(s, k, 'gag_rune', 2); e.statuses = []; s.applyStatus(e, { status: 'stun', durationMs: 1000 }, k, 'x', []); run(1050);
+  ok('...3 runes: +' + G.spec.perExtraMs / 1000 + 's per extra copy', Math.abs(mark().remaining - (G.durationMs + 2 * G.spec.perExtraMs)) <= 50); }
 { const { s, es, k } = mk(['goblin']); give(s, k, 'chill_band'); give(s, k, 'gag_rune');
   for (let i = 0; i < 5; i++) s.applyStatus(es[0], { status: 'chill', durationMs: 5000 }, k, 'c', []);
-  ok('a freeze from 5 Chill stacks also gags (Chill sources count)', es[0].statuses.some((x) => x.type === 'freeze') && es[0].statuses.some((x) => x.type === 'silence')); }
+  const frozen = es[0].statuses.some((x) => x.type === 'freeze'); for (let t = 0; t < 10000 && es[0].statuses.some((x) => x.type === 'freeze'); t += 50) s.tickStatuses(50, []);
+  ok('a freeze from 5 Chill stacks also exposes when it ends (Chill sources count)', frozen && es[0].statuses.some((x) => x.key === 'mark:gag_rune')); }
 }
 
 // ================= was items-g.test.mjs =================

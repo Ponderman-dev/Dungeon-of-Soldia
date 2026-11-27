@@ -15,7 +15,7 @@ export const skillsMethods = {
   },
 
   // Mage's spells grow with their element charm (`charm: { item, damagePercent, splashPercent, radiusPercent, jumps }`,
-  // per copy the caster holds): Kindling = bigger Fireball, Frost Charm = bigger Nova, Storm Charm = more Chain jumps.
+  // per copy the caster holds): Ember Charm = bigger Fireball, Frost Charm = bigger Nova, Storm Charm = more Chain jumps.
   charmed(hero, spell) {
     const c = spell.charm;
     const n = c && hero.items ? hero.items.filter((i) => i === c.item).length : 0;

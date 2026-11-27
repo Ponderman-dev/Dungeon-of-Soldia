@@ -408,11 +408,11 @@
   },
   "shared_potion": {
     "name": "Shared Potion",
-    "rarity": "legendary",
+    "rarity": "potion",
     "type": "potion",
     "kind": "potion",
-    "healPercent": 25,
-    "description": "Every living hero heals 25% of max health."
+    "healPercent": 40,
+    "description": "Every living hero heals 40% of max health."
   },
   "sucker_punch_glove": {
     "name": "Sucker Punch Glove",
@@ -527,48 +527,33 @@
     "dropWeight": 80,
     "perStack": "3 less damage"
   },
-  "kindling": {
-    "name": "Kindling",
-    "rarity": "common",
-    "type": "onhit",
+  "cinder_cloak": {
+    "name": "Cinder Cloak",
+    "rarity": "rare",
+    "type": "special",
     "scope": "self",
-    "description": "+10% fire damage (Burn too), inflict fire damage on attacks, 10% on attack: Burn 3s.",
+    "description": "+15 resist. Melee attackers that hit this hero are Burned for 3s.",
     "effects": [
       {
-        "damageBonus": "fire",
-        "percent": 10
+        "stat": "resist",
+        "flat": 15
       },
       {
-        "proc": "onAttack",
-        "chance": 100,
-        "label": "Fire hit",
-        "silent": true,
-        "strike": {
-          "damageMultiplier": 0.1,
+        "special": "burningSkin",
+        "percent": 20,
+        "perExtra": 4,
+        "spec": {
+          "status": "burn",
+          "durationMs": 3000,
           "damageType": "fire"
-        },
-        "mergeCopies": true
-      },
-      {
-        "proc": "onAttack",
-        "chance": 10,
-        "label": "Burn!",
-        "targets": "target",
-        "unique": true,
-        "apply": [
-          {
-            "status": "burn",
-            "durationMs": 3000,
-            "damageMultiplier": 0.2,
-            "damageType": "fire"
-          }
-        ]
+        }
       }
     ],
-    "perStack": "+10% fire damage, +10% of attack as fire",
     "provides": [
+      "burn",
       "fire"
-    ]
+    ],
+    "perStack": "+15 resist, +20% burn damage"
   },
   "frost_charm": {
     "name": "Frost Charm",
@@ -685,31 +670,31 @@
   },
   "ember_charm": {
     "name": "Ember Charm",
-    "rarity": "rare",
-    "type": "special",
+    "rarity": "common",
+    "type": "onhit",
     "scope": "self",
-    "description": "+15 resist. Melee attackers that hit this hero are Burned for 3s.",
+    "description": "+10% fire damage (Burn too), inflict fire damage on attacks.",
     "effects": [
       {
-        "stat": "resist",
-        "flat": 15
+        "damageBonus": "fire",
+        "percent": 10
       },
       {
-        "special": "burningSkin",
-        "percent": 20,
-        "perExtra": 4,
-        "spec": {
-          "status": "burn",
-          "durationMs": 3000,
+        "proc": "onAttack",
+        "chance": 100,
+        "label": "Fire hit",
+        "silent": true,
+        "strike": {
+          "damageMultiplier": 0.1,
           "damageType": "fire"
-        }
+        },
+        "mergeCopies": true
       }
     ],
+    "perStack": "+10% fire damage, +10% of attack as fire",
     "provides": [
-      "burn",
       "fire"
-    ],
-    "perStack": "+15 resist, +20% burn damage"
+    ]
   },
   "venom_fang": {
     "name": "Venom Fang",
@@ -852,16 +837,21 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "Stuns and freezes from this hero also Silence the enemy for 2s.",
+    "description": "When a stun or freeze from this hero ends, the enemy takes 25% more damage for 3s.",
     "effects": [
       {
         "special": "gagRune",
-        "percent": 1
+        "percent": 1,
+        "durationMs": 3000,
+        "spec": {
+          "damageTakenPercent": 25,
+          "perExtraMs": 1000
+        }
       }
     ],
     "dropWeight": 80,
     "needs": "cc",
-    "perStack": "+1s silence"
+    "perStack": "+1s exposed"
   },
   "executioners_axe": {
     "name": "Executioner's Axe",

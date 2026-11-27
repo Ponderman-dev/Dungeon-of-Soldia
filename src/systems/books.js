@@ -83,7 +83,9 @@ export function pageFit(hero, index, page, limits = {}) {
 export function maybeAddBook(choices, data, heroes, chance, rng = Math.random) {
   if (!choices.length || !heroes.some((h) => h.alive) || rng() >= chance) return choices;
   const out = [...choices];
-  out[Math.floor(rng() * out.length)] = data.cards.blue;
+  const items = out.map((c, i) => i).filter((i) => out[i].kind !== 'potion'); // never on the potion's spot
+  if (!items.length) return choices;
+  out[items[Math.floor(rng() * items.length)]] = data.cards.blue;
   return out;
 }
 

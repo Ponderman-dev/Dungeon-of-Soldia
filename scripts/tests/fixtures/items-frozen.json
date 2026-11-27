@@ -823,16 +823,21 @@
     "rarity": "epic",
     "type": "special",
     "scope": "self",
-    "description": "Stuns and freezes from this hero also Silence the enemy for 2s.",
+    "description": "When a stun or freeze from this hero ends, the enemy takes 25% more damage for 3s.",
     "effects": [
       {
         "special": "gagRune",
-        "percent": 1
+        "percent": 1,
+        "durationMs": 3000,
+        "spec": {
+          "damageTakenPercent": 25,
+          "perExtraMs": 1000
+        }
       }
     ],
     "dropWeight": 80,
     "needs": "cc",
-    "perStack": "+1s silence"
+    "perStack": "+1s exposed"
   },
   "executioners_axe": {
     "name": "Executioner's Axe",

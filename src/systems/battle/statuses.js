@@ -173,10 +173,13 @@ export const statusesMethods = {
     if (spec.status === 'bleed' && source && source.specials && source.specials.thousandCuts && !spec.extra && source.side === 'hero') {
       this.applyStatus(target, { ...spec, extra: true }, source, `${skillId}_extra`, events);
     }
-    // Gag Rune: a stun or freeze the holder causes also Silences the enemy (2s, +1s per extra copy).
+    // Gag Rune (session 59, user: 'silence was useless'): a stun or freeze the holder puts on an enemy is TAGGED; when
+    // it ENDS the enemy is EXPOSED: a Mark (`gagRuneSpec`, +25% damage taken) for gagRuneMs (3s) + perExtraMs per extra rune.
     const gag = source && source.specials && source.specials.gagRune;
     if (gag && target.side === 'enemy' && source.side === 'hero' && (spec.status === 'stun' || spec.status === 'freeze')) {
-      this.applyStatus(target, { status: 'silence', durationMs: (1 + gag) * 1000 }, source, 'gag_rune', events);
+      const st = target.statuses.find((x) => x.key === key);
+      const G = source.specials.gagRuneSpec || {};
+      if (st) st.gag = { sourceUid: source.uid, damageTakenPercent: G.damageTakenPercent ?? 25, durationMs: (source.specials.gagRuneMs || 3000) + (G.perExtraMs || 0) * (gag - 1) };
     }
 
     // Enough chill: the unit freezes and the chill is used up.
@@ -212,6 +215,11 @@ export const statusesMethods = {
         if (status.remaining > 0) continue;
         unit.statuses.splice(unit.statuses.indexOf(status), 1);
         if (status.type === 'burn') burnsEnded.push(status);
+        if (status.gag && !unit.statuses.some((x) => x.type === status.type)) { // Gag Rune: the stun / freeze is over: the enemy is exposed
+          const src = this.heroes.find((h) => h.uid === status.gag.sourceUid) || null;
+          this.applyStatus(unit, { status: 'mark', durationMs: status.gag.durationMs, damageTakenPercent: status.gag.damageTakenPercent }, src, 'gag_rune', events);
+          events.push({ type: 'proc', unit: src || unit, label: 'Exposed!', itemId: 'gag_rune', target: unit });
+        }
         if (status.type === 'buff') buffEnded = true;
         events.push({ type: 'status', unit, change: 'expire', status });
         if (status.type === 'invulnerable' && status.healPercentOnEnd > 0) {

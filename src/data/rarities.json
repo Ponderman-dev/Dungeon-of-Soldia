@@ -1,4 +1,15 @@
 {
+  "potion": {
+    "_about": "Not a drop rarity (rewards.json odds never roll it): the Shared Potion's own green card look (user, session 59: 'not legendary, confusing; make it green').",
+    "label": "POTION",
+    "color": "0x3fbf5a",
+    "frame": {
+      "edge": "0x3fbf5a",
+      "fill": "0x123a1c",
+      "hi": "0x9ef0ad",
+      "line": 2
+    }
+  },
   "common": {
     "label": "COMMON",
     "color": "0x8f8aa3",

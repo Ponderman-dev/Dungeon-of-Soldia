@@ -30,6 +30,9 @@ const ok = (n, c, x = '') => console.log(c ? 'PASS' : 'FAIL', n, x);
 { const s = mk(); let n = 0; const T = 4000; s.heroes[0].hp -= 10;
   for (let i = 0; i < T; i++) { const ch = rollChoices({ itemDefs, rules: rw, count: 3, heroes: s.heroes, potionChance: 0.05, rng: Math.random }); if (ch.some((x) => x.kind === 'potion')) n++; }
   ok('potion offered ~5% when hurt', n / T > 0.03 && n / T < 0.07, `${(100 * n / T).toFixed(1)}%`); }
+{ const s = mk(); s.heroes[0].hp = 1; const ch = rollChoices({ itemDefs, rules: rw, count: 3, heroes: s.heroes, potionChance: 1, rng: Math.random });
+  ok('the potion is an EXTRA 4th card (3 items + potion)', ch.length === 4 && ch[3].kind === 'potion' && ch.slice(0, 3).every((x) => x.kind !== 'potion'));
+  const p = itemDefs.shared_potion; ok('potion: own green look, not legendary, heals 40%', p.rarity === 'potion' && p.healPercent === 40, p.rarity); }
 { const s = mk(); let n = 0; for (let i = 0; i < 2000; i++) if (rollChoices({ itemDefs, rules: rw, count: 3, heroes: s.heroes, potionChance: 1, rng: Math.random }).some((x) => x.kind === 'potion')) n++;
   ok('potion never offered when nobody is hurt', n === 0); }
 // rarity frequency

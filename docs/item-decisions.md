@@ -576,3 +576,11 @@ Strong rares left alone: Chill Band, Gargoyle Idol, Feather Boots, Provoker's Ho
 - [built session 59] SHIELD TOTEM v2 (user): stands a bit higher; falls after 4 HITS (any size) with 1 copy, +2 hits
   per extra copy, max 10; dead -> back 20s later (fight time; tried 30s, 15s), NOT at every floor start (keeps the hits it took
   between floors). Block aura unchanged (4% per copy). Details: docs/systems/minions.md 'Session 59'.
+- [built session 59] SHARED POTION (user): 15% of reward screens (was 5%), an EXTRA 4th card (not one of the 3; a
+  book card never takes its spot), heals 40% (was 25%), not legendary: own green look (rarities.json `potion`).
+- [built session 59] EMBER CHARM = the FIRE CHARM like the other charms (common, +10% fire damage, +10% of attack as
+  fire; the Mage's Fireball grows per Ember Charm). KINDLING REMOVED; its slot = NEW CINDER CLOAK (rare) = the old
+  Ember Charm (+15 resist, melee attackers Burned 3s, 20% +4 per extra; icon = Mage Cloak in fire colours).
+- [built session 59] GAG RUNE (user: silence was useless): when a stun / freeze from the holder ENDS, the enemy is
+  EXPOSED: Mark +25% damage taken for 3s, +1s per extra rune (`st.gag` tag, applied on expiry in tickStatuses).
+  Full runs (front hero 0/1/3/8 copies, 12 runs): Cinder Cloak +7.1/+5.5/+20.3, Gag Rune +3.8/+8.3/+7.5.

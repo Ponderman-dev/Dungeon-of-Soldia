@@ -414,8 +414,18 @@ export const itemAttacksMethods = {
       const receivers = (to) => (to === 'selfAndAlly' ? (ally = ally || this.randomAlly(hero), ally ? [hero, ally] : [hero]) : to === 'squad' ? this.squadUnits() : to === 'target' ? (enemy && landed ? [enemy] : []) : to === 'self' ? [hero] : targets);
       // A proc that can't do anything (its enemy died or the attack missed) doesn't go off at all, so its
       // icon never pops for nothing.
-      if (!(damages && foe) && !(proc.apply || []).some((spec) => receivers(spec.to).length)) continue;
+      const rallied = proc.minionRally ? this.minions.filter((m) => m.alive) : []; // Overseer's Whistle: needs a living minion
+      if (!(damages && foe) && !rallied.length && !(proc.apply || []).some((spec) => receivers(spec.to).length)) continue;
       if (!proc.silent) events.push({ type: 'proc', unit: hero, label: proc.label, itemId: proc.itemId, target: foe || ctx.target || null });
+      // OVERSEER'S WHISTLE (user, session 59): every living minion heals `healPercent`% of its max health and gets
+      // +attackPercent% attack and +speedPercent% attack speed for durationMs.
+      if (rallied.length) {
+        const R = proc.minionRally;
+        for (const m of rallied) {
+          this.healUnit(m, (m.maxHp * R.healPercent) / 100, events, { aura: false });
+          this.applyStatus(m, { status: 'buff', durationMs: R.durationMs, mods: [{ stat: 'attack', percent: R.attackPercent }, { stat: 'attackEfficiency', percent: R.speedPercent }] }, hero, 'whistle', events);
+        }
+      }
       if (proc.doubleHit && foe) { const dh = this.strike(hero, foe, events); if (!dh.dodged) this.addCombo(hero, foe, 1, events); }
       if (debuffs && enemy && ctx.hit !== false && !String(proc.itemId).startsWith('passive_')) this.addCombo(hero, enemy, 1, events); // Rogue: a debuff item proc = a combo point
       if (proc.strike && foe && !(ctx.folded && proc.mergeCopies)) { // folded: already inside the hit (riders)

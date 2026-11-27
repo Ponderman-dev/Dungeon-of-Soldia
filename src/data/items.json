@@ -1500,7 +1500,7 @@
     "rarity": "rare",
     "type": "minion",
     "scope": "self",
-    "description": "Every floor starts with 1 extra minion of this hero's kind, twice as strong (a captain). +1 weak minion allowed.",
+    "description": "+1 weak minion allowed. 5% on attack: all minions heal 30% and get +40% attack and attack speed for 4s.",
     "effects": [
       {
         "special": "whistleCap",
@@ -1508,14 +1508,22 @@
         "unique": true
       },
       {
-        "special": "whistleSummon",
-        "percent": 100,
-        "perExtra": 25
+        "proc": "onAttack",
+        "chance": 5,
+        "chancePerExtra": 2,
+        "unique": true,
+        "label": "Whistle!",
+        "minionRally": {
+          "healPercent": 30,
+          "attackPercent": 40,
+          "speedPercent": 40,
+          "durationMs": 4000
+        }
       }
     ],
     "dropWeight": 70,
     "needs": "minion",
-    "perStack": "+25% stronger captain"
+    "perStack": "+2% whistle chance"
   },
   "grave_dust": {
     "name": "Grave Dust",

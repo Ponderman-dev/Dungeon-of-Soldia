@@ -1,32 +1,43 @@
 # Handoff (phase H). Short on purpose: only the current state. Old sessions: `docs/handoff-archive.md` (search it).
 
-## START HERE (session 59): REDO THE SHIELD TOTEM
-- BRANCH: `main` has EVERYTHING (session 58 pushed to main). Start the next branch from `main`. Version 0.2.1.
-- NEXT TASK (user: 'redo totem shield'): the user did not say HOW yet. FIRST ask what they want changed (question tool,
-  options: the rule / the numbers / the look / where it stands), then build. Today: rare item `shield_totem`
-  (items.json: greater minion + `totemBlock` 4% per copy, 'totem +50% health' per stack, no upkeep); the totem =
-  minions.json `shield_totem` (`object: true`: never moves or attacks; placed beside the middle hero, combat.json
-  `minions.totemAheadPx` 30 / `totemSidePx` -56; vanishes when a floor is won). Every hero blocks while it stands
-  (`totemBlock()` in systems/battle/stats.js, 60% cap shared). History of its numbers: docs/item-decisions.md
-  (search 'Shield Totem'; the newest line wins), docs/systems/items.md + minions.md. Test: `shield-totem.test.mjs`.
-  Balance check after: `node scripts/tests/itemruns.mjs 3 shield_totem`.
-- SESSION 58 DID (all on main; game page republished; itch zip 0.2.1 given to the user):
-  1. FPS ON PAGE OPEN (user: Seeker phone, 2025 mid tier, itch.io in Brave): pages slide in only after their first
-     draws (`pageEnter`, uiKit); Profile banners made once (`entities/profileBanner.js`, 800 -> 133 ms); glossary card
-     scrolls under a backdrop strip instead of a mask (Phaser 4 masks = filters, slow). docs/systems/ui.md last part.
-  2. LOADING + TITLE INTRO: game opens up in the night sky with a gold LOADING bar while `entities/warmUp.js` makes
-     every picture once; then the camera glides down, THEN the logo drops in, then TAP TO START (title-base.md
-     section 0, title.json `intro`). The user asked for loading-screen LOOK options on the review page: NOT done yet.
-  3. SKILL AIM default = INSTANT (settings.json; user: 'attack skills auto instead of tap' meant THIS, not auto-cast).
-- OPEN from session 58: does Brave still stutter on the Seeker? (if yes: try Shields off; small text reads canvas
-  pixels back = `snapCanvas` in uiKit, which Brave slows). infoWindow.js + the squad grid still use masks.
-- Still open from before: MORE BATTLE MUSIC (longer, richer 16-bit, CC0 / CC BY / CC BY-SA / Pixabay; board =
-  `docs/proposals/music/`), looks in fights, Heroes LIST banners, Holy damage (don't touch the Cleric until asked),
-  'made by' credit, Android sound without a tap, Settings HELP, the deep BUG HUNT / OPTIMIZATION / SECURITY CHECK.
+## START HERE (session 60): ITEM / HEALING TUNING (continue), game page NOT republished yet
+- BRANCH: `main` has EVERYTHING (session 59 pushed to main). Start the next branch from `main`. Version 0.2.2
+  (itch zip 0.2.2 given mid-session: it has the totem / music / Warden / boss resist / dealer changes, NOT the later
+  item and page changes below).
+- USER: 'don't update the game page yet, a lot of work still': NO republish until they say so (commit + push only).
+- NEXT: ask what they want next. Likely more balance from the HEALING ANALYSIS (session 59 list: only the Cleric
+  heals others steadily, Alchemist brew random, 6 heroes no healing; lifesteal thin (Bloodlust Mask legendary,
+  Harvest Scythe crit-only); Conqueror's Flag probably the strongest healer; 7 unused old skills in skills.json:
+  smite, divine_shield, ballad_of_rest, change_song, mystery_brew, blood_pact, savage_leap (check refs before deleting)).
+- SESSION 59 DID (all on main; details in docs/item-decisions.md 'session 59' + systems docs):
+  1. SHIELD TOTEM v2: falls after 4 HITS (+2 per copy, max 10; DoT/heals do nothing), back 20s after dying (fight
+     time), keeps its hits between floors (no fresh totem each floor), stands higher (`totemAheadPx` 48). Much weaker
+     than before in the bot; user chose 20s after trying 30 / 15. minions.md 'Session 59', `totem-hits.test.mjs`.
+  2. MUSIC: battle turns 5-6 min (`turnSeconds` [300, 360]), 1s fade + 1s gap; silent `bossWait` screen from the
+     door walk into a boss floor until the roar (the battle song used to play on). NOT heard in a browser yet.
+  3. FROST WARDEN: Frozen Rest calls 1 Ice Knight (was 3). bosscheck 60 = 3% wins (was 0%; docs say 55%: the tool
+     and the docs disagree, not looked into).
+  4. BOSS BREAK-FREE: no stun/freeze again until 3s after the last one ended ('Resist' pops once), combat.json
+     `bossBreakFree`. Brood Mother 53% -> 45%. bosses.md last part, `boss-breakfree.test.mjs`.
+  5. SKILL DEALER: 4 pages (1 stat + 3 modifier), pick 1.
+  6. ITEMS: SHARED POTION = extra 4th card, 15%, heals 40%, green (rarities.json `potion`); EMBER CHARM = fire charm
+     like the others; KINDLING removed -> CINDER CLOAK (old Ember Charm: resist + burn melee attackers; icon = Mage
+     Cloak in fire colours, a real cloak drawing not done); GAG RUNE = when the holder's stun/freeze ENDS the enemy
+     gets a Mark +25% damage taken 3s (+1s per extra; shows as MARK); PHOENIX regen 6%/s; VITAL BAND 0.35%/s regen.
+  7. PAGES: MEND = caster heals 15%, any skill, no cooldown cost; GREATER MEND cooldown cost 25% (was 40%); SECOND
+     WIND PAGE REMOVED (the Second Wind Flask item stays). pageruns 12: Greater Mend +7.7, Mend +6.2, Blood Price ~+6.
+- Still open: loading-screen LOOK options, Brave stutter on the Seeker?, MORE BATTLE MUSIC, looks in fights, Heroes
+  LIST banners, Holy damage (don't touch the Cleric until asked), 'made by' credit, Android sound without a tap,
+  Settings HELP, the deep BUG HUNT / OPTIMIZATION / SECURITY CHECK.
 - REVIEW PAGE (reuse it): https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN ('Soldia Heroes Pages'; db `banners`,
-  `music`). PUBLISH the game page only at the end of a batch of visible changes.
+  `music`).
 
 ## How we work with this user
+- SESSION 59 lessons: they send many small requests in a row, often with voice-typo words ('sharp portion' = Shared
+  Potion, 'man / greater man' = Mend / Greater Mend, 'merchsnt' = Skill Dealer): read the closest real name, say which
+  one you took. Short answers with a missing number: pick one, say it, give the test-run numbers. When a wording has 2+
+  meanings ('4 skill books') ask with the question tool first. They stop runs mid-way ('ditch it', 'no add extra
+  health'): undo at once, no argument. Messages can arrive mid-turn: finish the current step, then do theirs.
 - SESSION 58 lessons: 'X auto instead of tap' was a SETTING DEFAULT, not a new feature: when a word could mean a
   setting that exists, ask with the question tool BEFORE building. 'Show me' = put it on the game page (they don't read
   screenshots in chat). Measure stutter with a 4x slowed CPU on a production build (frame times + camera position

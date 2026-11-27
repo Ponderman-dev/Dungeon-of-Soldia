@@ -1,5 +1,31 @@
-# Handoff ARCHIVE (sessions 2-57, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
+# Handoff ARCHIVE (sessions 2-58, newest first). Old notes only: SEARCH it (grep) for a detail, don't read it whole.
 The current handoff is `docs/handoff-phase-h.md`.
+
+## SESSION 58 (archived; started as): START HERE session 59 (session 59 did the SHIELD TOTEM + a balance batch)
+- BRANCH: `main` has EVERYTHING (session 58 pushed to main). Start the next branch from `main`. Version 0.2.1.
+- NEXT TASK (user: 'redo totem shield'): the user did not say HOW yet. FIRST ask what they want changed (question tool,
+  options: the rule / the numbers / the look / where it stands), then build. Today: rare item `shield_totem`
+  (items.json: greater minion + `totemBlock` 4% per copy, 'totem +50% health' per stack, no upkeep); the totem =
+  minions.json `shield_totem` (`object: true`: never moves or attacks; placed beside the middle hero, combat.json
+  `minions.totemAheadPx` 30 / `totemSidePx` -56; vanishes when a floor is won). Every hero blocks while it stands
+  (`totemBlock()` in systems/battle/stats.js, 60% cap shared). History of its numbers: docs/item-decisions.md
+  (search 'Shield Totem'; the newest line wins), docs/systems/items.md + minions.md. Test: `shield-totem.test.mjs`.
+  Balance check after: `node scripts/tests/itemruns.mjs 3 shield_totem`.
+- SESSION 58 DID (all on main; game page republished; itch zip 0.2.1 given to the user):
+  1. FPS ON PAGE OPEN (user: Seeker phone, 2025 mid tier, itch.io in Brave): pages slide in only after their first
+     draws (`pageEnter`, uiKit); Profile banners made once (`entities/profileBanner.js`, 800 -> 133 ms); glossary card
+     scrolls under a backdrop strip instead of a mask (Phaser 4 masks = filters, slow). docs/systems/ui.md last part.
+  2. LOADING + TITLE INTRO: game opens up in the night sky with a gold LOADING bar while `entities/warmUp.js` makes
+     every picture once; then the camera glides down, THEN the logo drops in, then TAP TO START (title-base.md
+     section 0, title.json `intro`). The user asked for loading-screen LOOK options on the review page: NOT done yet.
+  3. SKILL AIM default = INSTANT (settings.json; user: 'attack skills auto instead of tap' meant THIS, not auto-cast).
+- OPEN from session 58: does Brave still stutter on the Seeker? (if yes: try Shields off; small text reads canvas
+  pixels back = `snapCanvas` in uiKit, which Brave slows). infoWindow.js + the squad grid still use masks.
+- Still open from before: MORE BATTLE MUSIC (longer, richer 16-bit, CC0 / CC BY / CC BY-SA / Pixabay; board =
+  `docs/proposals/music/`), looks in fights, Heroes LIST banners, Holy damage (don't touch the Cleric until asked),
+  'made by' credit, Android sound without a tap, Settings HELP, the deep BUG HUNT / OPTIMIZATION / SECURITY CHECK.
+- REVIEW PAGE (reuse it): https://claude.ai/artifact/NySVH2UUozwNNSYuky9xBN ('Soldia Heroes Pages'; db `banners`,
+  `music`). PUBLISH the game page only at the end of a batch of visible changes.
 
 ## SESSION 57 (archived; started as): START HERE session 58 (session 58 did PAGE FPS + LOADING INTRO)
 - BRANCH: `main` has EVERYTHING (session 57 pushed to main; branch `session-57-battle-music` = the same). Start the

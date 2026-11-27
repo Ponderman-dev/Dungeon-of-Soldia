@@ -347,7 +347,7 @@ export const effectsMethods = {
   itemProc(e, v) {
     const spec = itemFxData[e.itemId];
     if (!(spec && spec.noPop)) { // frequent simple procs (Quiver, Metronome) stay quiet: no icon, no sound
-      sfx.play('itemProc');
+      sfx.play((spec && spec.sound) || 'itemProc'); // an item can have its own sound (itemFx.json `sound`: Overseer's Whistle)
       this.iconPop(v, e.itemId);
     }
     if (spec && spec.text) this.popText(v, spec.text, spec.textColor || '#cfe8ff'); // e.g. Mirror Buckler: 'Reflected!'

@@ -212,6 +212,13 @@
       "volume": 0.5,
       "source": "doorOpen_E.mp3"
     },
+    "whistle": {
+      "volume": 0.28,
+      "pitchJitter": 0.04,
+      "minGapMs": 400,
+      "file": "picked/whistle",
+      "source": "Overseer's Whistle (session 59): made with ffmpeg (two pea-whistle blasts, 2.75 kHz + trill), our own sound"
+    },
     "itemProc": {
       "volume": 0.2,
       "pitchJitter": 0.06,

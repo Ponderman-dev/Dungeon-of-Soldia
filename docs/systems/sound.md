@@ -278,3 +278,4 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
   rb10 5-6x), `turnEndFadeSec` 1, `turnGapSec` 1. New silent screen `bossWait`: played when the squad starts walking
   to the door and the NEXT floor is a boss floor (roomMethods.goToNextFloor) and by buildFloor on a boss floor (it
   used to play 'battle' there: the battle song ran on through the boss roar). The boss song still starts after the roar.
+- ITEM SOUNDS (session 59): an item can have its own proc sound: itemFx.json `sound` = a sounds.json cue (else the shared `itemProc`; effects.js itemProc). Overseer's Whistle = cue `whistle` = `picked/whistle.mp3`, MADE with ffmpeg (two pea-whistle blasts at 2.75 kHz + 38 Hz trill + breath noise, 0.6 s; aevalsrc command in the session 59 commit message).

@@ -12,3 +12,4 @@ Free for commercial games, no credit needed. A picked file keeps its source name
 Round 7 (2026-10-19): files whose cue has `source: pixabay_...` come from Pixabay (pixabay.com), Pixabay Content
 License: free in games, also commercially, no credit needed; never sell or share the files on their own (as a pack).
 Creators and links: docs/credits-sounds.md.
+whistle.mp3: made for this game with ffmpeg (session 59), no outside source, no licence needed.

@@ -9,7 +9,8 @@ const listed = Object.keys(data).filter((k) => !k.startsWith('_') && k !== 'icon
 ok('itemFx.json only names real items', listed.every((id) => items[id]), listed.filter((id) => !items[id]).join());
 const withFx = listed.filter((id) => data[id].effect); // an entry may only switch the icon pop off (noPop)
 ok('every named effect exists', withFx.every((id) => fx.ITEM_MS[data[id].effect] > 0), withFx.filter((id) => !fx.ITEM_MS[data[id].effect]).join());
-ok('entries without an effect are only switches (noPop) or a popup text', listed.filter((id) => !data[id].effect).every((id) => data[id].noPop === true || typeof data[id].text === 'string'));
+ok('entries without an effect are only switches (noPop), a popup text or a sound', listed.filter((id) => !data[id].effect).every((id) => data[id].noPop === true || typeof data[id].text === 'string' || typeof data[id].sound === 'string'));
+ok('every item sound is a real cue', listed.filter((id) => data[id].sound).every((id) => JSON.parse(fs.readFileSync(new URL('../../src/data/sounds.json', import.meta.url))).cues[data[id].sound]));
 ok('every item has an icon to pop', Object.keys(items).filter((k) => !k.startsWith('_')).every((id) => r('itemIcons.json')[id]));
 const clean = (d) => Array.isArray(d) && d.every((p) => p.length === 6 && p.every((v) => typeof v === 'number' && !Number.isNaN(v)));
 const a = { x: 20, y: 40 }, b = { x: 70, y: 38 }, u = { x: 70, y: 50, top: 28, mid: 39, bot: 50, hw: 6 };

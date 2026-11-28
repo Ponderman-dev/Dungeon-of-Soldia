@@ -22,6 +22,8 @@ const W = GAME_WIDTH - G.side * 2;
 const heroDef = (id) => heroes.find((h) => h.id === id);
 const enemyDef = (id) => (enemies[id] ? { id, ...enemies[id] } : null);
 const shortName = (name) => name.replace(/^The /, '').split(' the ')[0]; // 'Grukk the War Drum' -> 'Grukk'
+// A white copies number in the icon's bottom-right corner (like the reward screen), only when 2+.
+const copiesText = (scene, rx, by, n, px) => scene.add.text(rx, by, String(n), { fontFamily: UI.font, fontSize: `${px}px`, color: '#ffffff', stroke: '#000000', strokeThickness: Math.max(3, px / 3) }).setOrigin(1, 1);
 const num = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); // 48 210
 
 export default class GameOverScene extends Phaser.Scene {
@@ -157,6 +159,8 @@ export default class GameOverScene extends Phaser.Scene {
     for (const id of held) {
       if (ix + size > x + W - P) { ix = x + P; iy += size + C.iconGap; }
       box.add(this.add.image(ix, iy, itemIconKey(this, id, items[id].rarity)).setOrigin(0).setScale(sc));
+      const n = (h.copies && h.copies[id]) || 1;
+      if (n > 1) box.add(copiesText(this, ix + size + 2, iy + size + 2, n, 8 * sc));
       ix += size + C.iconGap;
     }
     // Who felled them: the enemy's sprite with its name in red.
@@ -217,6 +221,7 @@ export default class GameOverScene extends Phaser.Scene {
       const cx = x + (i % cols) * (cell + gap), cy = I.y + Math.floor(i / cols) * (cell + gap);
       page.add(drawWindow(this.add.graphics(), cx, cy, cell, cell, { line: it.id === pick ? gold() : UI.line }));
       if (items[it.id]) page.add(this.add.image(cx + cell / 2, cy + cell / 2, itemIconKey(this, it.id, items[it.id].rarity)).setScale(sc));
+      if (it.copies > 1) page.add(copiesText(this, cx + cell - 3, cy + cell - 2, it.copies, many ? 8 : 12));
       page.add(this.add.zone(cx, cy, cell, cell).setOrigin(0).setInteractive({ useHandCursor: true }).onPress(() => {
         if (it.id !== pick) { sfx.play('tap'); this.showItems(it.id); }
       }));

@@ -68,13 +68,14 @@ export function finishRun(rs, heroUnits, { floor, kills, ms, bestBefore = 0, bos
       damage: Math.round(h.damage), healing: Math.round(h.healing), taken: Math.round(h.taken), kills: h.kills,
       fellFloor: h.fellFloor ?? floor, killer: h.killer,
       items: [...new Set(u.items || [])],
+      copies: (u.items || []).reduce((c, id) => ({ ...c, [id]: (c[id] || 0) + 1 }), {}), // id -> copies held
     };
   });
   const items = [];
   for (const h of heroes) for (const id of h.items) {
     const it = items.find((x) => x.id === id);
-    if (it) it.heldBy.push(h.name);
-    else items.push({ id, heldBy: [h.name] });
+    const n = h.copies[id] || 1, who = n > 1 ? `${h.name} x${n}` : h.name;
+    if (it) { it.heldBy.push(who); it.copies += n; } else items.push({ id, heldBy: [who], copies: n });
   }
   const next = bossFloors.map(Number).filter((f) => f > floor).sort((a, b) => a - b)[0] || null;
   return {

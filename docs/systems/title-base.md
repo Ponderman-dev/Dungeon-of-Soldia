@@ -208,6 +208,8 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   (newRunStats at Battle create, countEvents in showEvents, finishRun in onLoss). BattleState events now carry who did
   it: heal `by` (skill/item heals that name a healer, else the healed hero), dot `shares` (uid -> part of the tick).
   Minions count for their holder; slow regen is not counted as healing. Test: run-stats.test.mjs.
+  COPIES (user, 2026-11-28): the summary keeps `copies` (id -> n) per hero and per item; a white number on the icon
+  (2+ copies only, like the reward screen) on the hero card and the ITEMS page; "Held by Knight x2, Cleric."
 - GAME OVER (replaces today's `BattleScene.showDefeat()`) PICKED B (`gameover-picked-B.png`; others tried:
   `gameover-variations.png`; a first all-on-one-page try was 'not neat'). User wants EVERYTHING, split by taps: red
   SQUAD DEFEATED; run card = FLOOR / TIME / KILLS in 3 columns + gold 'NEW BEST!' tag + old best; the 3 heroes on the

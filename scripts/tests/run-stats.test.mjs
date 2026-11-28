@@ -52,6 +52,7 @@ const mk = (ids, enemies, floor = 1) => {
   k.items = ['heart_charm', 'heart_charm', 'war_banner']; c.items = ['heart_charm'];
   const sum = finishRun(rs, s.heroes, { floor: 47, kills: 312, ms: 1453000, bestBefore: 41, bossFloors: ['20', '40', '60', '80'] });
   ok('summary: NEW BEST over the old best, next boss after the floor', sum.newBest && sum.oldBest === 41 && sum.nextBoss === 60);
-  ok('summary: one item entry per kind with every holder', sum.items.length === 2 && sum.items[0].heldBy.join() === 'Knight,Cleric', JSON.stringify(sum.items));
+  ok('summary: one item entry per kind with every holder', sum.items.length === 2 && sum.items[0].heldBy.join() === 'Knight x2,Cleric', JSON.stringify(sum.items));
+  ok('summary: copies kept per hero and per item', sum.heroes[0].copies.heart_charm === 2 && sum.items[0].copies === 3 && sum.items[0].heldBy[0] === 'Knight x2', JSON.stringify(sum.items));
   ok('summary: a hero still standing "fell" on the last floor', sum.heroes[2].fellFloor === 47); }
 ok('clock: 24:13 and 1:02:09', clockText(1453000) === '24:13' && clockText(3729000) === '1:02:09');

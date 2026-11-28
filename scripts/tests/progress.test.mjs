@@ -66,3 +66,13 @@ ok('with only 2 unlocked, random gives 2 (no crash)', randomSquad(['a', 'b']).le
   ok('next unlock = the one closest to its goal', nextUnlock(heroDefs, mid, unlocks) === 'bard');
   const all = emptyProgress(); all.unlockAll = true;
   ok('nothing locked: no next unlock', nextUnlock(heroDefs, all, unlocks) === null); }
+// Recent runs with their codes (newest first, capped).
+{ const p = emptyProgress();
+  for (let i = 0; i < 25; i++) recordRun(p, { code: `SOL-TEST-${i}`, floor: i + 1, kills: 1 });
+  const r = p.stats.recentRuns;
+  ok('recent runs: newest first, kept to 20', r.length === 20 && r[0].code === 'SOL-TEST-24' && r[0].floor === 25);
+  recordRun(p, { floor: 2, kills: 0 }); ok('a run without a code adds no entry', p.stats.recentRuns.length === 20 && p.stats.recentRuns[0].code === 'SOL-TEST-24'); }
+{ const store = new Map(); const storage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) };
+  const p = emptyProgress(); recordRun(p, { code: 'SOL-AAAA-BBBB-CCCC', floor: 40, kills: 145, ms: 1000, heroes: ['knight', 'rogue', 'cleric'] });
+  saveProgress(p, storage); const back = loadProgress(storage).stats.recentRuns;
+  ok('recent runs survive save + load (cleaning)', back.length === 1 && back[0].code === 'SOL-AAAA-BBBB-CCCC' && back[0].floor === 40 && back[0].heroes.length === 3 && back[0].at > 1.7e12, JSON.stringify(back)); }

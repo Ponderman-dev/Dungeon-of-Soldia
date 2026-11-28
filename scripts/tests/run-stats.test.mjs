@@ -1,7 +1,7 @@
 // Run stats for the game-over summary (src/systems/runStats.js): counted from BattleState's events.
 import fs from 'fs';
 import BattleState from '../../src/systems/BattleState.js';
-import { newRunStats, countEvents, finishRun, clockText } from '../../src/systems/runStats.js';
+import { newRunStats, countEvents, finishRun, clockText, makeRunCode } from '../../src/systems/runStats.js';
 const r = (f) => JSON.parse(fs.readFileSync(new URL('../../src/data/' + f, import.meta.url)));
 const ok = (name, cond, extra = '') => console.log(cond ? 'PASS' : 'FAIL', name, extra);
 const heroes = r('heroes.json'), byId = (id) => heroes.find((h) => h.id === id);
@@ -55,4 +55,7 @@ const mk = (ids, enemies, floor = 1) => {
   ok('summary: one item entry per kind with every holder', sum.items.length === 2 && sum.items[0].heldBy.join() === 'Knight x2,Cleric', JSON.stringify(sum.items));
   ok('summary: copies kept per hero and per item', sum.heroes[0].copies.heart_charm === 2 && sum.items[0].copies === 3 && sum.items[0].heldBy[0] === 'Knight x2', JSON.stringify(sum.items));
   ok('summary: a hero still standing "fell" on the last floor', sum.heroes[2].fellFloor === 47); }
+{ const codes = new Set(Array.from({ length: 20000 }, () => makeRunCode()));
+  ok('run code: SOL-XXXX-XXXX-XXXX, no look-alike characters, unique', codes.size === 20000 && [...codes].every((c) => /^SOL-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{4}$/.test(c)));
+  const rs2 = newRunStats([]); ok('run code: made at run start and kept in the summary', finishRun(rs2, [], { floor: 3, kills: 1, ms: 0 }).code === rs2.code); }
 ok('clock: 24:13 and 1:02:09', clockText(1453000) === '24:13' && clockText(3729000) === '1:02:09');

@@ -1054,20 +1054,20 @@
     "area": {
       "shape": "circle",
       "at": "caster",
-      "radius": 150
+      "radius": 200
     },
     "cooldownMs": 13000,
     "castMs": 500,
     "apply": [
       {
         "status": "taunt",
-        "durationMs": 3000
+        "durationMs": 4500
       }
     ],
     "selfApply": [
       {
         "status": "buff",
-        "durationMs": 3000,
+        "durationMs": 4500,
         "mods": [
           {
             "stat": "defense",
@@ -1076,7 +1076,7 @@
         ]
       }
     ],
-    "description": "TAUNT every enemy around him for 3s. +30 defense."
+    "description": "TAUNT every enemy around him for 4.5s. +30 defense."
   },
   "blood_pact": {
     "name": "Blood Pact",

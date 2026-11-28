@@ -71,6 +71,9 @@ Moved out of CLAUDE.md (2026-10-17). Keep this file up to date when the system c
       his next skill with `grudgeCharged` is +`perReflectPercent` 10% per charge, then charges reset (`grudge` events; scene:
       orange bar under his health bar, gold when full). DEFENSE BASH (`defense_bash`, old `knight_bash` stays): damage
       multiplier 1 + `defenseMultiplier` 3 x defense / attack (in `skillHit()`), 1.5s stun, 9s. CHALLENGE unchanged.
+      CHALLENGE BUFF (user, 2026-11-28, after a floor-40 Brood Mother loss where the Knight took no more hits than the
+      Cleric): radius 150 -> 200px, taunt AND its +30 defense 3s -> 4.5s (13s cooldown kept). review.mjs 3 all: knight
+      29.0 -> 29.6 avg floor (cleric still 1st 31.9), overall mean 28.2 -> 28.1, Brood Mother won 35/57 -> 40/59.
       review.mjs 3 all (x2): avg floor ~29 -> 29.4 / 29.2 (unchanged, 3rd-4th).
     - **Berserker** BRAWLER (built session 6): RAGE / Frenzy / Bloodrage REMOVED from him (code stays). BLOODTHIRST
       (`passive.bloodthirst`, `tickBloodthirst()`): below `belowPercent` 50% health `hero.thirst` = +`attackPercent` 40% attack

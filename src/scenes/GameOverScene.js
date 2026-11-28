@@ -93,6 +93,7 @@ export default class GameOverScene extends Phaser.Scene {
     }
     this.drawStrip(page);
     this.text(page, x, G.tapHint.y, G.tapHint.text, 'small', UI.dim);
+    if (this.summary.code) this.text(page, x + W, G.tapHint.y, `RUN ${this.summary.code}`, 'small', UI.dim).setOrigin(1, 0); // the run's code (runStats makeRunCode)
     this.cardBox = this.add.container(0, 0);
     page.add(this.cardBox);
     this.drawHeroCard();

@@ -6,7 +6,7 @@ export const SAVE_KEY = 'dungeon-of-soldia-save-v1';
 export function emptyProgress() {
   return {
     version: 1,
-    stats: { bestFloor: 0, totalKills: 0, totalFloors: 0, runs: 0, bossesBeaten: 0, bossIds: [], playMs: 0, itemsFound: 0, heroRuns: {}, deaths: 0, heroRecords: {} },
+    stats: { bestFloor: 0, totalKills: 0, totalFloors: 0, runs: 0, bossesBeaten: 0, bossIds: [], playMs: 0, itemsFound: 0, heroRuns: {}, deaths: 0, heroRecords: {}, recentRuns: [] },
     profile: {}, // name, profile hero, banner (ProfileScene; defaults in profile.json)
     achievements: [], // ids earned (systems/achievements.js)
     seen: { met: [], beaten: {}, statuses: [], items: [] }, // the Glossary's memory (systems/glossary.js)
@@ -56,6 +56,9 @@ export function cleanProgress(data) {
   stats.heroRuns = counts(st.heroRuns);
   stats.heroRecords = {};
   for (const [id, r] of Object.entries(isObj(st.heroRecords) ? st.heroRecords : {})) if (isObj(r)) stats.heroRecords[id] = counts(r);
+  // Recent runs (recordRun): only well-formed entries, max RECENT_RUNS.
+  stats.recentRuns = (Array.isArray(st.recentRuns) ? st.recentRuns : []).filter((r) => isObj(r) && typeof r.code === 'string' && r.code.length <= 40)
+    .slice(0, RECENT_RUNS).map((r) => ({ code: r.code, floor: count(r.floor), kills: count(r.kills), ms: count(r.ms), heroes: strings(r.heroes).slice(0, 3), at: Number.isFinite(r.at) && r.at > 0 ? Math.floor(r.at) : 0 })); // at = a date in ms (past the 1e12 counter cap)
   const seen = isObj(data.seen) ? data.seen : {};
   const profile = {};
   for (const [k, v] of Object.entries(isObj(data.profile) ? data.profile : {})) if (typeof v === 'string') profile[k] = v.slice(0, 40);
@@ -100,10 +103,12 @@ export function deleteProgress(storage = defaultStorage()) {
   }
 }
 
+const RECENT_RUNS = 20;
+
 // A run is over: add its results to the saved stats. `floor` is the floor the squad died on (reaching a
 // floor counts), `kills` the enemies killed in the run. Optional (the Profile's stats): `ms` run time, `bosses` the
 // boss ids beaten, `items` item copies held at the end, `heroes` the squad's hero ids (each fell = one death).
-export function recordRun(progress, { floor, kills, ms = 0, bosses = [], items = 0, heroes = [], heroStats = [] }) {
+export function recordRun(progress, { code = null, floor, kills, ms = 0, bosses = [], items = 0, heroes = [], heroStats = [] }) {
   const s = progress.stats;
   s.runs += 1;
   s.totalKills += kills || 0;
@@ -114,6 +119,8 @@ export function recordRun(progress, { floor, kills, ms = 0, bosses = [], items =
   s.bossIds = [...new Set([...(s.bossIds || []), ...bosses])];
   s.itemsFound = (s.itemsFound || 0) + items;
   s.deaths = (s.deaths || 0) + heroes.length;
+  // The last RECENT_RUNS runs with their code (newest first), so a shared run code can be looked up later.
+  if (code) s.recentRuns = [{ code, floor, kills: kills || 0, ms, heroes: heroes.slice(), at: Date.now() }, ...(s.recentRuns || [])].slice(0, RECENT_RUNS);
   s.heroRuns = { ...(s.heroRuns || {}) };
   for (const id of heroes) s.heroRuns[id] = (s.heroRuns[id] || 0) + 1;
   // Per-hero records (Heroes page STATS): heroStats = the run summary's heroes (runStats.js finishRun).

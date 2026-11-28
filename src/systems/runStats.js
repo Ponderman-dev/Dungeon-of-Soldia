@@ -4,10 +4,25 @@
 // Minions count for their holder. Healing = heals that name a healer (skills, items) or land on the hero themself
 // (lifesteal, item heals); slow regen over time is not counted.
 
+// A code for the run (user: to share or report a run): SOL-XXXX-XXXX-XXXX, 12 letters/digits that can't be mixed up
+// (no 0/O, 1/I/L). 31^12 = ~7.9e17 codes, drawn with the browser's crypto random, so even across every player two runs
+// practically never share one (10 million runs: ~0.006% chance of any repeat). `rand` = a 0..1 function (tests).
+const CODE_CHARS = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+const cryptoRand = () => {
+  const c = globalThis.crypto;
+  if (!c || !c.getRandomValues) return Math.random();
+  return c.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
+};
+export function makeRunCode(rand = cryptoRand) {
+  let c = '';
+  for (let i = 0; i < 12; i++) c += CODE_CHARS[Math.floor(rand() * CODE_CHARS.length)];
+  return `SOL-${c.slice(0, 4)}-${c.slice(4, 8)}-${c.slice(8)}`;
+}
+
 export function newRunStats(heroUnits) {
   const heroes = {};
   for (const h of heroUnits) heroes[h.uid] = { uid: h.uid, id: h.def.id, name: h.def.name, damage: 0, healing: 0, taken: 0, kills: 0, fellFloor: null, killer: null, lastHitBy: null };
-  return { heroes, bosses: [] };
+  return { code: makeRunCode(), heroes, bosses: [] };
 }
 
 // The hero record a unit counts for (a minion: its holder's), or null for enemies.
@@ -79,7 +94,7 @@ export function finishRun(rs, heroUnits, { floor, kills, ms, bestBefore = 0, bos
   }
   const next = bossFloors.map(Number).filter((f) => f > floor).sort((a, b) => a - b)[0] || null;
   return {
-    floor, kills, ms: Math.round(ms),
+    code: rs.code || makeRunCode(), floor, kills, ms: Math.round(ms),
     itemCount: heroUnits.reduce((n, u) => n + (u.items || []).length, 0), // item copies held at the end
     newBest: floor > bestBefore, oldBest: bestBefore,
     heroes, bosses: rs.bosses.slice(), items, nextBoss: next,

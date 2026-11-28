@@ -210,6 +210,9 @@ Next ideas: the user's drawn logo (Studio), real screens behind the NPCs, settin
   Minions count for their holder; slow regen is not counted as healing. Test: run-stats.test.mjs.
   COPIES (user, 2026-11-28): the summary keeps `copies` (id -> n) per hero and per item; a white number on the icon
   (2+ copies only, like the reward screen) on the hero card and the ITEMS page; "Held by Knight x2, Cleric."
+  RUN CODE (user, 2026-11-28): every run gets `SOL-XXXX-XXXX-XXXX` (`runStats.makeRunCode()`, crypto random, 31^12
+  codes so players never share one in practice), made at Battle create, shown right of "Tap a hero." as
+  "RUN <code>", saved in `progress.stats.recentRuns` (last 20, newest first: code, floor, kills, ms, heroes, at).
 - GAME OVER (replaces today's `BattleScene.showDefeat()`) PICKED B (`gameover-picked-B.png`; others tried:
   `gameover-variations.png`; a first all-on-one-page try was 'not neat'). User wants EVERYTHING, split by taps: red
   SQUAD DEFEATED; run card = FLOOR / TIME / KILLS in 3 columns + gold 'NEW BEST!' tag + old best; the 3 heroes on the
